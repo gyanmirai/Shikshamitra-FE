@@ -34,7 +34,7 @@ export function NavList({
 
   const navItemRef = useRef<HTMLButtonElement | null>(null);
 
-  const active = useActiveLink(data.path, !!data.children);
+  const active = useActiveLink(data?.path || '', !!data.children);
 
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -71,7 +71,7 @@ export function NavList({
       disabled={data.disabled}
       hasChild={!!data.children}
       open={data.children && openMenu}
-      externalLink={isExternalLink(data.path)}
+      externalLink={isExternalLink(data?.path || '')}
       enabledRootRedirect={enabledRootRedirect}
       // styles
       slotProps={depth === 1 ? slotProps?.rootItem : slotProps?.subItem}
