@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 
 import { usePathname } from 'src/routes/hooks';
 import { isExternalLink } from 'src/routes/utils';
-import { useActiveLink } from 'src/routes/hooks/use-active-link';
 
 import { NavItem } from './nav-item';
 import { navSectionClasses } from '../classes';
@@ -12,20 +11,32 @@ import type { NavListProps, NavSubListProps } from '../types';
 
 // ----------------------------------------------------------------------
 
-export function NavList({ data, render, depth, slotProps, enabledRootRedirect }: NavListProps) {
+export function NavList({
+  data,
+  render,
+  depth,
+  slotProps,
+  enabledRootRedirect,
+  isSubLayout = false,
+}: NavListProps) {
   const pathname = usePathname();
-  const removeTrailingSlash = data.path.match(/\/$/);
+  const removeTrailingSlash = pathname.replace(/\/$/, '');
 
-  const active = useActiveLink(data.path, !!data.children);
+  const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
+  // const active = useActiveLink(data.path, !!data.children);
+  const active = isSubLayout ? removeTrailingSlash === data.path : currentModule === data._action;
 
-  const [openMenu, setOpenMenu] = useState(active);
+  const [openMenu, setOpenMenu] = useState(false);
 
   useEffect(() => {
-    if (!active) {
-      handleCloseMenu();
+    const recur = (menuData: NavListProps['data'][]): NavListProps['data'] | undefined =>
+      menuData?.find(
+        (i) => i.path === removeTrailingSlash || (i?.children?.length && recur(i?.children))
+      );
+    if (recur(data.children)) {
+      setOpenMenu(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [data, removeTrailingSlash]);
 
   const handleToggleMenu = useCallback(() => {
     if (data.children) {
@@ -36,7 +47,6 @@ export function NavList({ data, render, depth, slotProps, enabledRootRedirect }:
   const handleCloseMenu = useCallback(() => {
     setOpenMenu(false);
   }, []);
-  console.log(removeTrailingSlash, '===', data.path);
   const renderNavItem = (
     <NavItem
       render={render}
@@ -48,11 +58,11 @@ export function NavList({ data, render, depth, slotProps, enabledRootRedirect }:
       caption={data.caption}
       // state
       depth={depth}
-      active={removeTrailingSlash?.includes(data.path)}
+      active={active || openMenu}
       disabled={data.disabled}
       hasChild={!!data.children}
       open={data.children && openMenu}
-      externalLink={isExternalLink(data.path)}
+      externalLink={isExternalLink(data?.path || '')}
       enabledRootRedirect={enabledRootRedirect}
       // styles
       slotProps={depth === 1 ? slotProps?.rootItem : slotProps?.subItem}
@@ -88,6 +98,7 @@ export function NavList({ data, render, depth, slotProps, enabledRootRedirect }:
             depth={depth}
             slotProps={slotProps}
             enabledRootRedirect={enabledRootRedirect}
+            isSubLayout={isSubLayout}
           />
         </NavCollapse>
       </NavLi>
@@ -100,7 +111,14 @@ export function NavList({ data, render, depth, slotProps, enabledRootRedirect }:
 
 // ----------------------------------------------------------------------
 
-function NavSubList({ data, render, depth, slotProps, enabledRootRedirect }: NavSubListProps) {
+function NavSubList({
+  data,
+  render,
+  depth,
+  slotProps,
+  enabledRootRedirect,
+  isSubLayout,
+}: NavSubListProps) {
   return (
     <NavUl sx={{ gap: 'var(--nav-item-gap)' }}>
       {data.map((list) => (
@@ -111,6 +129,7 @@ function NavSubList({ data, render, depth, slotProps, enabledRootRedirect }: Nav
           depth={depth + 1}
           slotProps={slotProps}
           enabledRootRedirect={enabledRootRedirect}
+          isSubLayout={isSubLayout}
         />
       ))}
     </NavUl>

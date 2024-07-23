@@ -11,9 +11,35 @@ import { navSubData } from 'src/layouts/config-nav-dashboard';
 import { Scrollbar } from '../scrollbar';
 import CustomAccordion from '../custom-accordian';
 import { StyledNavItem } from '../nav-section/mini/nav-item';
-import { sharedStyles, navSectionClasses } from '../nav-section';
+import { sharedStyles, navSectionClasses, NavSectionVertical } from '../nav-section';
 
 const SubLayout = ({ children }: any) => {
+  const pathname = usePathname();
+  const removeLastSlash = pathname.replace(/\/$/, '');
+  const [currentModule] = removeLastSlash.split('/').filter((x) => x);
+  const currentData = navSubData[`/${currentModule}` as keyof typeof navSubData];
+
+  return (
+    <Box display="flex" height="100%" gap={2}>
+      {currentData?.length > 0 && (
+        <Scrollbar
+          fillContent
+          sx={{ height: '100%', maxWidth: 200, width: '100%', boxShadow: 'var(--shadows-4)' }}
+        >
+          <NavSectionVertical
+            data={currentData}
+            sx={{ p: 1, flex: '1 1 auto', width: '100%' }}
+            isSubLayout
+          />
+        </Scrollbar>
+      )}
+      <Scrollbar sx={{ flexGrow: 1, p: 1, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
+        {children}
+      </Scrollbar>
+    </Box>
+  );
+};
+const SubLayout1 = ({ children }: any) => {
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
@@ -28,9 +54,10 @@ const SubLayout = ({ children }: any) => {
           </Scrollbar>
         </Paper>
       )}
-      <Paper elevation={4} sx={{ flexGrow: 1, p: 2, overflow: 'auto' }}>
+
+      <Scrollbar sx={{ flexGrow: 1, p: 1, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
         {children}
-      </Paper>
+      </Scrollbar>
     </Box>
   );
 };

@@ -30,6 +30,7 @@ export function NavList({
 
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
+  const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
 
   const navItemRef = useRef<HTMLButtonElement | null>(null);
 
@@ -66,7 +67,7 @@ export function NavList({
       caption={data.caption}
       // state
       depth={depth}
-      active={removeTrailingSlash?.includes(data._action)}
+      active={currentModule === data._action}
       disabled={data.disabled}
       hasChild={!!data.children}
       open={data.children && openMenu}

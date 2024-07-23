@@ -36,8 +36,9 @@ export type NavItemStateProps = {
 };
 
 export type NavItemBaseProps = {
-  path: string;
+  path?: string;
   title: string;
+  _action?: string;
   children?: any;
   caption?: string;
   roles?: string[];
@@ -57,6 +58,7 @@ export type NavListProps = {
   data: NavItemBaseProps;
   render?: NavItemBaseProps['render'];
   enabledRootRedirect?: NavItemStateProps['enabledRootRedirect'];
+  isSubLayout?: boolean;
 };
 
 export type NavSubListProps = Omit<NavListProps, 'data'> & {
@@ -73,5 +75,7 @@ export type NavSectionProps = Omit<NavListProps, 'data' | 'depth'> & {
   data: {
     subheader?: string;
     items: NavItemBaseProps[];
+    _action?: string;
+    isSubLayout?: boolean;
   }[];
 };

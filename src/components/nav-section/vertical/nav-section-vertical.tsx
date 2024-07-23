@@ -20,6 +20,7 @@ export function NavSectionVertical({
   slotProps,
   enabledRootRedirect,
   cssVars: overridesVars,
+  isSubLayout = false,
 }: NavSectionProps) {
   const theme = useTheme();
   const cssVars = {
@@ -30,7 +31,7 @@ export function NavSectionVertical({
   return (
     <Stack component="nav" className={navSectionClasses.vertical.root} sx={{ ...cssVars, ...sx }}>
       <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-        {data.map((group) => (
+        {data?.map((group) => (
           <Group
             key={group.subheader ?? group.items[0].title}
             subheader={group.subheader}
@@ -38,6 +39,7 @@ export function NavSectionVertical({
             render={render}
             slotProps={slotProps}
             enabledRootRedirect={enabledRootRedirect}
+            isSubLayout={isSubLayout}
           />
         ))}
       </NavUl>
@@ -47,7 +49,14 @@ export function NavSectionVertical({
 
 // ----------------------------------------------------------------------
 
-function Group({ items, render, subheader, slotProps, enabledRootRedirect }: NavGroupProps) {
+function Group({
+  items,
+  render,
+  subheader,
+  slotProps,
+  enabledRootRedirect,
+  isSubLayout = false,
+}: NavGroupProps) {
   const [open, setOpen] = useState(true);
 
   const handleToggle = useCallback(() => {
@@ -64,6 +73,7 @@ function Group({ items, render, subheader, slotProps, enabledRootRedirect }: Nav
           depth={1}
           slotProps={slotProps}
           enabledRootRedirect={enabledRootRedirect}
+          isSubLayout={isSubLayout}
         />
       ))}
     </NavUl>

@@ -32,7 +32,6 @@ export function NavVertical({
   ...other
 }: NavVerticalProps) {
   const theme = useTheme();
-  console.log(data, '[][][');
 
   const renderNavVertical = (
     <>

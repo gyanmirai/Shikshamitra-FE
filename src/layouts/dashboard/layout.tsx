@@ -207,7 +207,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
 
 // ----------------------------------------------------------------------
 
-function useNavColorVars(
+export function useNavColorVars(
   theme: Theme,
   settings: SettingsState
 ): Record<'layout' | 'section', CSSObject> {

@@ -15,8 +15,8 @@ const CustomStepper: React.FC<CustomStepperProps> = ({ steps, activeStep }) => (
   <Box sx={{ width: '100%' }}>
     <Stepper activeStep={activeStep} alternativeLabel>
       {steps.map((label, index) => (
-        <Step key={label} sx={{ '& svg': { height: '30px', width: '30px' } }}>
-          <StepLabel>{label}</StepLabel>
+        <Step key={label} sx={{ '& svg': { height: '28px', width: '28px' } }}>
+          <StepLabel sx={{ '& span': { fontSize: '12px' } }}>{label}</StepLabel>
         </Step>
       ))}
     </Stepper>

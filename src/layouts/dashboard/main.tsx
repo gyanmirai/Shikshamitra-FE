@@ -6,7 +6,6 @@ import type { ContainerProps } from '@mui/material/Container';
 
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
-import Container from '@mui/material/Container';
 
 import { layoutClasses } from 'src/layouts/classes';
 
@@ -60,18 +59,18 @@ export function DashboardContent({
   const layoutQuery: Breakpoint = 'lg';
 
   return (
-    <Container
+    <Box
       className={layoutClasses.content}
-      maxWidth={settings.compactLayout ? maxWidth : false}
+      // maxWidth={settings.compactLayout ? maxWidth : false}
       sx={{
         display: 'flex',
         flex: '1 1 auto',
         flexDirection: 'column',
         pt: 'var(--layout-dashboard-content-pt)',
         pb: 'var(--layout-dashboard-content-pb)',
-        [theme.breakpoints.up(layoutQuery)]: {
-          px: 'var(--layout-dashboard-content-px)',
-        },
+        // [theme.breakpoints.up(layoutQuery)]: {
+        //   px: 'var(--layout-dashboard-content-px)',
+        // },
         ...(disablePadding && {
           p: {
             xs: 0,
@@ -86,6 +85,6 @@ export function DashboardContent({
       {...other}
     >
       {children}
-    </Container>
+    </Box>
   );
 }

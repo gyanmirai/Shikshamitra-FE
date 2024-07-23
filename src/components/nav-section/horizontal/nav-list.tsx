@@ -29,6 +29,8 @@ export function NavList({
   const theme = useTheme();
 
   const pathname = usePathname();
+  const removeTrailingSlash = pathname.replace(/\/$/, '');
+  const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
 
   const navItemRef = useRef<HTMLButtonElement | null>(null);
 
@@ -65,7 +67,7 @@ export function NavList({
       caption={data.caption}
       // state
       depth={depth}
-      active={active}
+      active={currentModule === data._action}
       disabled={data.disabled}
       hasChild={!!data.children}
       open={data.children && openMenu}

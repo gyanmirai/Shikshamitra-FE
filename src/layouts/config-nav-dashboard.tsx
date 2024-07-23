@@ -5,7 +5,6 @@ import {
   securityPath,
   dashboardPath,
   assessmentPath,
-  studentListPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -61,7 +60,7 @@ export const navData = [
       { title: 'Dashboard', path: dashboardPath, icon: ICONS.dashboard, _action: 'dashboard' },
       {
         title: 'Student',
-        path: '/student/dashboard',
+        path: '/student/profile',
         icon: ICONS.student,
         _action: 'student',
       },
@@ -94,55 +93,38 @@ export const navData = [
 const studentModule = {
   [studentPath]: [
     {
-      title: 'Student Dashboard',
-      _action: 'student-dashboard',
+      subheader: '',
       items: [
         {
-          title: 'dashboard',
-          _action: 'dashboard',
-          path: '/student/dashboard',
+          title: 'Student Dashboard',
+          _action: 'student-dashboard',
+          path: '',
+          children: [
+            {
+              title: 'Over View',
+              _action: 'overView',
+              path: '/student/overview',
+            },
+            {
+              title: 'Student profile',
+              _action: 'profile',
+              path: '/student/profile',
+              // items: [
+              //   {
+              //     title: 'View / Edit',
+              //     _action: 'view-edit',
+              //     path: '/student/view',
+              //   },
+              // ],
+            },
+            // { title: 'Records', path: studentListPath },
+            // { title: 'Student/Dashboard', path: '/student/no-of-student' },
+            // { title: 'Transport/Heat-Map', path: '/student/no-of-student' },
+            // { title: 'Bulk-Update', path: '/student/no-of-student' },
+            // { title: 'Reports', path: '/student/no-of-student' },
+          ],
         },
-        { title: 'Add/EnrollMent', path: studentListPath },
-        { title: 'Student/Dashboard', path: '/student/no-of-student' },
-        { title: 'Transport/Heat-Map', path: '/student/no-of-student' },
-        { title: 'Bulk-Update', path: '/student/no-of-student' },
-        { title: 'Reports', path: '/student/no-of-student' },
       ],
-    },
-    {
-      title: 'Student Profile',
-      _action: 'student-Profile',
-      items: [
-        { title: 'Add', _action: 'add', path: '/student/add' },
-        { title: 'View / Edit', path: '/student/view-edit' },
-      ],
-    },
-
-    {
-      title: 'Announcement',
-      _action: 'announcement',
-
-      items: [
-        { title: 'SMS Notification', path: '/student/certificate' },
-        { title: 'Email', path: '/student/certificate' },
-        { title: 'Voice Notes', path: '/student/certificate' },
-        { title: 'Reports', path: '/student/change-class' },
-      ],
-    },
-    {
-      title: 'Performance',
-      _action: 'performance',
-      items: [
-        { title: 'Academic View', path: '/student/hello' },
-        { title: 'Other Activity', path: '/student/hello' },
-        { title: 'General Overview / Relationship', path: '/student/hello' },
-        { title: 'Reports', path: '/student/hello' },
-      ],
-    },
-    {
-      title: 'Certificates',
-      _action: 'certificates',
-      items: [{ title: '', path: '/student/hello' }],
     },
   ],
 };
