@@ -33,9 +33,15 @@ const SubLayout = ({ children }: any) => {
           />
         </Scrollbar>
       )}
-      <Scrollbar sx={{ flexGrow: 1, p: 1, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
-        {children}
-      </Scrollbar>
+      <Box
+        sx={{
+          flexGrow: 1,
+          p: 1,
+          boxShadow: 'var(--shadows-4)',
+        }}
+      >
+        <Box sx={{ maxWidth: '1440px', width: '100%', mx: 'auto' }}>{children}</Box>
+      </Box>
     </Box>
   );
 };

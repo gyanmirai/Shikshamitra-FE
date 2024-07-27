@@ -27,6 +27,7 @@ export function NavList({
   enabledRootRedirect,
 }: NavListProps) {
   const theme = useTheme();
+  console.log(data, 'data');
 
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
@@ -91,7 +92,7 @@ export function NavList({
   // Has children
   if (data.children) {
     return (
-      <NavLi disabled={data.disabled}>
+      <NavLi sx={data?.style || {}} disabled={data.disabled}>
         {renderNavItem}
 
         <Popover
@@ -136,7 +137,11 @@ export function NavList({
   }
 
   // Default
-  return <NavLi disabled={data.disabled}>{renderNavItem}</NavLi>;
+  return (
+    <NavLi disabled={data.disabled} sx={data?.style || {}}>
+      {renderNavItem}
+    </NavLi>
+  );
 }
 
 // ----------------------------------------------------------------------

@@ -47,6 +47,7 @@ export type NavItemBaseProps = {
   slotProps?: NavItemSlotProps;
   icon?: string | React.ReactNode;
   info?: string[] | React.ReactNode;
+  style?: any;
 };
 
 export type NavItemProps = ButtonBaseProps & NavItemStateProps & NavItemBaseProps;

@@ -5,15 +5,17 @@ import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { useState } from 'react';
 import { useFormik } from 'formik';
+import { useState, useCallback } from 'react';
 
-import Stack from '@mui/material/Stack';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Box, Button, TextField, IconButton } from '@mui/material';
+import { Tab, Box, Card, Stack, Button, TextField } from '@mui/material';
+
+import { useTabs } from 'src/hooks/use-tabs';
 
 import { Iconify } from 'src/components/iconify';
-import CustomStepper from 'src/components/custom-stepper';
+import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs';
 
 const generalFormFields: Fieldtypes[] = [
   {
@@ -335,6 +337,7 @@ const validationSchemas = [
 const dob = dayjs(new Date('2000-01-01'));
 export function StudentInformation() {
   const [activeStep, setActiveStep] = useState(0);
+  const [isEdit, setIsEdit] = useState(false);
   const onSubmit = (_val: any) => {};
   const formik = useFormik({
     initialValues: {
@@ -400,24 +403,212 @@ export function StudentInformation() {
     },
   });
 
+  const [open, setOpen] = useState('General');
+
+  const handleToggle = useCallback((tab: string) => {
+    setOpen((prev) => (prev === tab ? '' : tab));
+  }, []);
+
+  // const tabs = ['General', 'Admission', 'Communication', 'Family'];
+
+  const TABS = [
+    { value: 'general', label: 'General' },
+    { value: 'admission', label: 'Admission' },
+    { value: 'communication', label: 'Contact Deails' },
+    { value: 'family', label: 'Family Details' },
+  ];
+  const tabs = useTabs('general');
+  const activeTabIndex = TABS.findIndex((tab) => tab.value === tabs.value);
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <CustomStepper
+    <Box
+      sx={{
+        '& input': { fontSize: '12px' },
+        '& label': { fontSize: '12px' },
+      }}
+    >
+      <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
+        <Button
+          onClick={() => setIsEdit(!isEdit)}
+          variant="outlined"
+          size="small"
+          startIcon={
+            <Iconify
+              icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
+              sx={{ cursor: 'poniter', height: 18, width: 18 }}
+            />
+          }
+        >
+          {isEdit ? 'Save' : 'Edit'}
+        </Button>
+      </Stack>
+      <form onSubmit={formik.handleSubmit}>
+        {/* {tabs.map((tab, index) => (
+          <Fragment key={index}>
+            <Subheader data-title={tab} open={open === tab} onClick={() => handleToggle(tab)}>
+              {tab}
+            </Subheader>
+
+            <Collapse in={open === tab} sx={{ mt: '4px' }}>
+              {' '}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 3,
+                  '& .Mui-disabled': {
+                    color: (theme) => `${theme.palette.text.primary} !important`,
+                    '-webkit-text-fill-color': 'unset',
+                    cursor: 'no-drop',
+                  },
+                  '& .MuiInputLabel-shrink.Mui-disabled': {
+                    color: (theme) => `${theme.palette.text.disabled} !important`,
+                  },
+                }}
+              >
+                {fields[index].map(({ otherProps = {}, ...field }) => (
+                  <Box maxWidth="220px" key={field.name} width="100%">
+                    {field.type === 'date' ? (
+                      <DatePicker
+                        label={field.label}
+                        value={
+                          formik.values[field.name as keyof typeof formik.values] as Dayjs | null
+                        }
+                        onChange={(value) => field.onChange(value, formik)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error:
+                              formik.touched[field.name as keyof typeof formik.touched] &&
+                              Boolean(formik.errors[field.name as keyof typeof formik.errors]),
+                            helperText:
+                              formik.touched[field.name as keyof typeof formik.touched] &&
+                              (formik.errors[field.name as keyof typeof formik.errors] as string),
+                            size: 'small',
+                            disabled: !isEdit,
+                          },
+                        }}
+                        disabled={!isEdit}
+                        {...otherProps}
+                      />
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label={field.label}
+                        name={field.name}
+                        size="small"
+                        type={field.type || 'text'}
+                        value={formik.values[field.name as keyof typeof formik.values]}
+                        onChange={(e) => field.onChange(e, formik)}
+                        error={
+                          formik.touched[field.name as keyof typeof formik.touched] &&
+                          Boolean(formik.errors[field.name as keyof typeof formik.errors])
+                        }
+                        helperText={
+                          formik.touched[field.name as keyof typeof formik.touched] &&
+                          (formik.errors[field.name as keyof typeof formik.errors] as string)
+                        }
+                        disabled={!isEdit}
+                        {...otherProps}
+                      />
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            </Collapse>
+          </Fragment>
+        ))} */}
+
+        {/* <CustomStepper
         activeStep={activeStep}
         steps={['General', 'Admission', 'Communication', 'Family Information']}
-      />
-      <Box
-        sx={{
-          '& input': { fontSize: '12px' },
-          '& label': { fontSize: '12px' },
-        }}
-      >
-        <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
-          <IconButton>
-            <Iconify icon="solar:pen-bold" sx={{ cursor: 'poniter' }} />
-          </IconButton>
-        </Stack>
-        <Box
+      /> */}
+        <Card
+          sx={{
+            px: 1,
+            '& *': { fontSize: '12px !important', '& svg': { fontSize: '18px !important' } },
+          }}
+        >
+          <CustomTabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            variant="fullWidth"
+            slotProps={{ tab: { px: 0 } }}
+          >
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} />
+            ))}
+          </CustomTabs>
+
+          <Scrollbar sx={{ minHeight: 384 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 3,
+                mt: 2,
+                '& .Mui-disabled': {
+                  color: (theme) => `${theme.palette.text.primary} !important`,
+                  '-webkit-text-fill-color': 'unset',
+                  cursor: 'no-drop',
+                },
+                '& .MuiInputLabel-shrink.Mui-disabled': {
+                  color: (theme) => `${theme.palette.text.disabled} !important`,
+                },
+              }}
+            >
+              {fields[activeTabIndex]?.map(({ otherProps = {}, ...field }) => (
+                <Box maxWidth="210px" key={field.name} width="100%">
+                  {field.type === 'date' ? (
+                    <DatePicker
+                      label={field.label}
+                      value={
+                        formik.values[field.name as keyof typeof formik.values] as Dayjs | null
+                      }
+                      onChange={(value) => field.onChange(value, formik)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error:
+                            formik.touched[field.name as keyof typeof formik.touched] &&
+                            Boolean(formik.errors[field.name as keyof typeof formik.errors]),
+                          helperText:
+                            formik.touched[field.name as keyof typeof formik.touched] &&
+                            (formik.errors[field.name as keyof typeof formik.errors] as string),
+                          size: 'small',
+                          disabled: !isEdit,
+                        },
+                      }}
+                      disabled={!isEdit}
+                      {...otherProps}
+                    />
+                  ) : (
+                    <TextField
+                      fullWidth
+                      label={field.label}
+                      name={field.name}
+                      size="small"
+                      type={field.type || 'text'}
+                      value={formik.values[field.name as keyof typeof formik.values]}
+                      onChange={(e) => field.onChange(e, formik)}
+                      error={
+                        formik.touched[field.name as keyof typeof formik.touched] &&
+                        Boolean(formik.errors[field.name as keyof typeof formik.errors])
+                      }
+                      helperText={
+                        formik.touched[field.name as keyof typeof formik.touched] &&
+                        (formik.errors[field.name as keyof typeof formik.errors] as string)
+                      }
+                      disabled={!isEdit}
+                      {...otherProps}
+                    />
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
+        </Card>
+
+        {/* <Box
           sx={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -441,10 +632,10 @@ export function StudentInformation() {
                         formik.touched[field.name as keyof typeof formik.touched] &&
                         (formik.errors[field.name as keyof typeof formik.errors] as string),
                       size: 'small',
-                      disabled: true,
+                      disabled: !isEdit,
                     },
                   }}
-                  disabled
+                  disabled={!isEdit}
                   {...otherProps}
                 />
               ) : (
@@ -464,7 +655,7 @@ export function StudentInformation() {
                     formik.touched[field.name as keyof typeof formik.touched] &&
                     (formik.errors[field.name as keyof typeof formik.errors] as string)
                   }
-                  disabled
+                  disabled={!isEdit}
                   {...otherProps}
                 />
               )}
@@ -486,9 +677,9 @@ export function StudentInformation() {
           >
             {activeStep === fields.length - 1 ? 'Submit' : 'Next'}
           </Button>
-        </Box>
-      </Box>
-    </form>
+        </Box> */}
+      </form>
+    </Box>
   );
 }
 

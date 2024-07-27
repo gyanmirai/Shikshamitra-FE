@@ -2,6 +2,7 @@ import {
   hrPath,
   financePath,
   studentPath,
+  settingPath,
   securityPath,
   dashboardPath,
   assessmentPath,
@@ -9,6 +10,7 @@ import {
 
 import { CONFIG } from 'src/config-global';
 
+import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -64,10 +66,20 @@ export const navData = [
         icon: ICONS.student,
         _action: 'student',
       },
-      { title: 'Security', path: securityPath, icon: ICONS.security, _action: 'security' },
+      { title: 'Security', path: '/security/role', icon: ICONS.security, _action: 'security' },
       { title: 'Finance', path: financePath, icon: ICONS.dashboard, _action: 'finance' },
       { title: 'Assessment', path: assessmentPath, icon: ICONS.dashboard, _action: 'assessment' },
       { title: 'HR', path: hrPath, icon: ICONS.dashboard, _action: 'hr' },
+      // {
+      //   title: 'Setting',
+      //   path: hrPath,
+      //   icon: ICONS.dashboard,
+      //   _action: 'setting',
+      //   style: {
+      //     height: '100%',
+      //     justifyContent: 'end',
+      //   },
+      // },
     ],
   },
   /**
@@ -89,6 +101,20 @@ export const navData = [
   //   ],
   // },
 ];
+
+export const settingMenu = {
+  title: 'Setting',
+  path: '/setting/basic-information',
+  icon: (
+    <Iconify
+      icon="ci:settings"
+      sx={{ height: '18px !important', width: '18px !important' }}
+      height={18}
+      width={18}
+    />
+  ),
+  _action: 'setting',
+};
 
 const studentModule = {
   [studentPath]: [
@@ -132,39 +158,53 @@ const studentModule = {
 const securityModule = {
   [securityPath]: [
     {
-      title: 'Security Dashboard',
-      _action: 'security-dashboard',
+      suheader: '',
       items: [
-        { title: 'User', path: '/security/user' },
-        { title: 'Role', path: '/security/role' },
-        { title: 'Permission', path: '/security/permission' },
-        { title: 'Group', path: '/security/group' },
-        { title: 'User Role', path: '/security/user-role' },
-        { title: 'User Permission', path: '/security/user-permission' },
-        { title: 'User Group', path: '/security/user-group' },
+        {
+          title: 'Role And Permission',
+          path: '',
+          _action: 'role-and-permission',
+          children: [
+            {
+              title: 'Role',
+              path: '/security/role',
+              _action: 'role',
+            },
+            {
+              title: 'Permission',
+              path: '/security/permission',
+              _action: 'permission',
+            },
+          ],
+        },
       ],
-    },
-    {
-      title: 'User Module Access',
-      _action: 'user-module-access',
-      items: [{ title: 'User', path: '/security/user' }],
-    },
-    {
-      title: 'Permission Management',
-      _action: 'permission-management',
-      items: [{ title: 'User', path: '/security/user' }],
-    },
-    {
-      title: 'Role Management',
-      _action: 'role-management',
-      items: [{ title: 'User', path: '/security/user' }],
-    },
-    {
-      title: 'Employee/Student Login Management',
-      _action: 'login-management',
-      items: [{ title: 'User', path: '/security/user' }],
     },
   ],
 };
 
-export const navSubData = { ...studentModule, ...securityModule };
+const settingModule = {
+  [settingPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Basic Information',
+          path: '/setting/basic-information',
+          _action: 'basic-information',
+        },
+        {
+          title: 'Academic Year Setup',
+          path: '/setting/academic-year-setup',
+          _action: 'academic-year-setup',
+        },
+        {
+          title: 'Curriculum Setup',
+          path: '/setting/curriculum-setup',
+          _action: 'curriculum-setup',
+        },
+      ],
+    },
+  ],
+};
+
+export const navSubData = { ...studentModule, ...securityModule, ...settingModule };

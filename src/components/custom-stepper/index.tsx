@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import { useFormik } from 'formik';
 
-import { Box, Step, Stepper, useTheme, StepLabel } from '@mui/material';
+import { Box, Step, Button, Stepper, StepLabel } from '@mui/material';
 
-import { varAlpha } from 'src/theme/styles';
+// const steps = ['Personal Information', 'Contact Information', 'Review'];
 
 interface CustomStepperProps {
   steps: string[];
@@ -25,40 +26,82 @@ const CustomStepper: React.FC<CustomStepperProps> = ({ steps, activeStep }) => (
 
 export default CustomStepper;
 
-const SVGComponent = ({ active, index, ...props }: any) => {
-  const theme = useTheme();
+interface CustomStepperWithFormikProps {
+  activeStep: number;
+  initialValues: any;
+  steps: string[];
+  handleNext: (value: any) => void;
+  handleBack: () => void;
+  validationSchema: any;
+  renderItem: (formik: any) => React.ReactNode;
+  onStepClick?: (index: number, label: string, formik: any) => void;
+}
+
+export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
+  activeStep,
+  initialValues,
+  steps,
+  handleNext,
+  handleBack,
+  validationSchema,
+  renderItem,
+  onStepClick = () => {},
+}) => {
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    enableReinitialize: true,
+    validateOnMount: true,
+    onSubmit: (values) => {
+      console.log(values);
+      handleNext(values);
+    },
+  });
+
+  console.log(formik, 'formik');
 
   return (
-    <svg
-      width="60px"
-      height="60px"
-      viewBox="0 0 48 48"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ fill: active ? varAlpha(theme.palette.primary.mainChannel) : 'transparent' }}
-    >
-      <title>label-solid</title>
-      <g id="Layer_2" data-name="Layer 2">
-        <g id="invisible_box" data-name="invisible box">
-          <rect width="48" height="48" fill="none" />
-        </g>
-        <g id="icons_Q2" data-name="icons Q2">
-          <path
-            style={{ strokeWidth: '1px', stroke: theme.palette.primary.main }}
-            d="M33.5,9H4a2,2,0,0,0-2,2V37a2,2,0,0,0,2,2H33.5a.9.9,0,0,0,.8-.4L45.6,25.2a2.1,2.1,0,0,0,0-2.4L34.3,9.4a.9.9,0,0,0-.8-.4Z"
-          />
-        </g>
-      </g>
-      <text
-        x="45%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill={active ? theme.palette.common.white : theme.palette.primary.main}
-        fontSize={12}
-        fontWeight="bold"
+    <Box sx={{ width: '100%' }}>
+      <Stepper activeStep={activeStep} alternativeLabel>
+        {steps.map((label: string, index: number) => (
+          <Step
+            key={label}
+            sx={{ cursor: 'pointer' }}
+            onClick={() => {
+              onStepClick?.(index, label, formik);
+            }}
+          >
+            <StepLabel sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}>
+              {label}
+            </StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+      <Box
+        component="form"
+        sx={{
+          '& input': { fontSize: '12px' },
+          '& label': { fontSize: '12px' },
+        }}
+        onSubmit={formik.handleSubmit}
       >
-        {index + 1}
-      </text>
-    </svg>
+        {formik && renderItem({ formik, activeStep })}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Button size="small" variant="outlined" disabled={activeStep === 0} onClick={handleBack}>
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            size="small"
+            // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
+          >
+            {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+          </Button>
+        </Box>
+      </Box>
+    </Box>
   );
 };
+// export default CustomStepperWithFormik;

@@ -180,11 +180,9 @@ const Attendance = () => {
                               : today
                                 ? 'transparent !important'
                                 : '',
-                          color: absent ? `white !important` : '',
+                          ...(absent ? { color: 'white !important' } : {}),
                           border: (theme) =>
-                            today || isHalfDay
-                              ? `2px solid ${isHalfDay ? theme.palette.error.main : theme.palette.primary.main}`
-                              : 'none !important',
+                            today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                           ...(isHalfDay
                             ? {
                                 '&::before': {
@@ -193,8 +191,8 @@ const Attendance = () => {
                                   top: '0',
                                   left: '0',
 
-                                  width: '100%',
-                                  height: '50%',
+                                  width: '50%',
+                                  height: '100%',
                                   backgroundColor: (theme) =>
                                     `${theme.palette.error.main} !important`,
                                   border: '2px solid transparent',
@@ -203,7 +201,7 @@ const Attendance = () => {
                               }
                             : {}),
                         }}
-                        disabled={isSunday || props.disabled}
+                        disabled={isSunday || isHoliday || props.disabled}
                       />
                     </Badge>
                   </Tooltip>

@@ -117,7 +117,7 @@ export function Subheader({
         icon={open ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
         sx={{
           left: -4,
-          opacity: 0,
+          opacity: 1,
           position: 'absolute',
           transition: (theme) =>
             theme.transitions.create(['opacity'], {
@@ -189,6 +189,7 @@ export function NavLi({
       sx={{
         display: 'flex',
         flexDirection: 'column',
+
         ...(disabled && { cursor: 'not-allowed' }),
         ...sx,
       }}

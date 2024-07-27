@@ -10,6 +10,8 @@ import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
+import { settingMenu } from '../config-nav-dashboard';
+
 // ----------------------------------------------------------------------
 
 export type NavVerticalProps = NavSectionProps & {
@@ -101,6 +103,25 @@ export function NavVertical({
         }}
       /> */}
       {isNavMini ? renderNavMini : renderNavVertical}
+      {/* <NavList depth={1} data={settingMenu} cssVars={cssVars} /> */}
+      {isNavMini ? (
+        <NavSectionMini
+          data={[{ items: [settingMenu] }]}
+          sx={{
+            pb: 2,
+            px: 0.5,
+            ...hideScrollY,
+            flex: '1 1 auto',
+            overflowY: 'auto',
+            '& ul': {
+              justifyContent: 'end',
+            },
+          }}
+          // {...other}
+        />
+      ) : (
+        <NavSectionVertical data={[{ items: [settingMenu] }]} sx={{ px: 2, flex: '1 1 auto' }} />
+      )}
     </Box>
   );
 }

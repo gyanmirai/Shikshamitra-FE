@@ -47,8 +47,8 @@ export function NavSectionMini({
 
 function Group({ items, render, slotProps, enabledRootRedirect, cssVars }: NavGroupProps) {
   return (
-    <NavLi>
-      <NavUl sx={{ gap: 'var(--nav-item-gap)' }}>
+    <NavLi sx={{ height: '100%' }}>
+      <NavUl sx={{ gap: 'var(--nav-item-gap)', height: '100%' }}>
         {items.map((list) => (
           <NavList
             key={list.title}
