@@ -2,32 +2,34 @@
 
 import type { IconButtonProps } from '@mui/material/IconButton';
 
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
 import { useState, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
 import Drawer from '@mui/material/Drawer';
-import Tooltip from '@mui/material/Tooltip';
-import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import { Button, TextField, DialogActions } from '@mui/material';
 
-import { dashboardPath } from 'src/routes/paths';
 import { useRouter, usePathname } from 'src/routes/hooks';
 
-import { _mock } from 'src/_mock';
 import { varAlpha } from 'src/theme/styles';
+import { logout } from 'src/redux/user/userSlice';
+import { useChangePasswordMutation } from 'src/redux/user/userApi';
 
 import { Label } from 'src/components/label';
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateAvatar } from 'src/components/animate';
+import CustomDialog from 'src/components/customDialog';
 
 import { useMockedUser } from 'src/auth/hooks';
 
-import { UpgradeBlock } from './nav-upgrade';
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
 
@@ -51,7 +53,15 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   const { user } = useMockedUser();
 
+  const { userInfo } = useSelector((state: any) => state.user);
+
+  console.log(userInfo, 'userInfo');
+
   const [open, setOpen] = useState(false);
+
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const dispatch = useDispatch();
 
   const handleOpenDrawer = useCallback(() => {
     setOpen(true);
@@ -59,8 +69,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   const handleCloseDrawer = useCallback(() => {
     setOpen(false);
-    router.push('/login');
-  }, [router]);
+  }, []);
 
   const handleClickItem = useCallback(
     (path: string) => {
@@ -82,7 +91,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         },
       }}
     >
-      {user?.displayName?.charAt(0).toUpperCase()}
+      ABC
     </AnimateAvatar>
   );
 
@@ -96,6 +105,13 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         sx={sx}
         {...other}
       />
+      <CustomDialog
+        title="Change Password"
+        open={openDialog}
+        handleClose={() => setOpenDialog(false)}
+      >
+        <ChangedPasswordForm handleClose={() => setOpenDialog(false)} sessionData={{}} />
+      </CustomDialog>
 
       <Drawer
         open={open}
@@ -114,17 +130,19 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         <Scrollbar>
           <Stack alignItems="center" sx={{ pt: 8 }}>
             {renderAvatar}
-
-            <Typography variant="subtitle1" noWrap sx={{ mt: 2 }}>
-              {user?.displayName}
+            <Label sx={{ mt: 1 }} color="primary">
+              {userInfo?.role}
+            </Label>
+            <Typography variant="subtitle1" noWrap sx={{ mt: 1 }}>
+              {userInfo?.given_name}
             </Typography>
 
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
-              {user?.email}
+              {userInfo?.email}
             </Typography>
           </Stack>
 
-          <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" sx={{ p: 3 }}>
+          {/* <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" sx={{ p: 3 }}>
             {[...Array(3)].map((_, index) => (
               <Tooltip
                 key={_mock.fullName(index + 1)}
@@ -148,8 +166,8 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
                 <Iconify icon="mingcute:add-line" />
               </IconButton>
             </Tooltip>
-          </Stack>
-
+          </Stack> */}
+          {/* 
           <Stack
             sx={{
               py: 3,
@@ -188,17 +206,118 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
                 </MenuItem>
               );
             })}
-          </Stack>
+          </Stack> */}
 
-          <Box sx={{ px: 2.5, py: 3 }}>
+          {/* <Box sx={{ px: 2.5, py: 3 }}>
             <UpgradeBlock />
-          </Box>
+          </Box> */}
         </Scrollbar>
 
         <Box sx={{ p: 2.5 }}>
-          <SignOutButton onClose={handleCloseDrawer} />
+          <Button sx={{ mb: 2 }} variant="contained" fullWidth onClick={() => setOpenDialog(true)}>
+            Change Password
+          </Button>
+          <SignOutButton
+            onClose={async () => {
+              router.push('/auth/logout');
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('refresh_token');
+              dispatch(logout());
+              handleCloseDrawer();
+            }}
+          />
         </Box>
       </Drawer>
     </>
   );
 }
+
+const ChangedPasswordForm = ({ handleClose, sessionData }: any) => {
+  const [changePassword] = useChangePasswordMutation();
+
+  const formik = useFormik({
+    initialValues: {
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+    validationSchema: Yup.object({
+      oldPassword: Yup.string().required('Old Password is required'),
+      newPassword: Yup.string().required('New Password is required'),
+      confirmPassword: Yup.string()
+        .required('Confirm Password is required')
+        .oneOf([Yup.ref('newPassword')], 'Passwords must match'),
+    }),
+    onSubmit: async (values) => {
+      console.log(values, 'values');
+      const res = await changePassword({
+        data: {
+          currentPassword: values.oldPassword,
+          newPassword: values.newPassword,
+        },
+        token: sessionData?.accessToken,
+      });
+      console.log(res, '============');
+      if (!res.error) {
+        toast.success('Password changed successfully');
+        handleClose();
+      } else {
+        // @ts-ignore
+        toast.error(res?.error?.data?.error?.message || 'Something went wrong');
+      }
+    },
+  });
+  return (
+    <form onSubmit={formik.handleSubmit}>
+      <Scrollbar
+        sx={{
+          p: 3,
+          bgcolor: 'background.neutral',
+        }}
+      >
+        <TextField
+          fullWidth
+          size="small"
+          name="oldPassword"
+          label="Old Password"
+          type="password"
+          value={formik.values.oldPassword}
+          onChange={formik.handleChange}
+          error={formik.touched.oldPassword && Boolean(formik.errors.oldPassword)}
+          helperText={formik.touched.oldPassword && formik.errors.oldPassword}
+          sx={{ mb: 3 }}
+        />
+        <TextField
+          fullWidth
+          size="small"
+          name="newPassword"
+          label="New Password"
+          type="password"
+          value={formik.values.newPassword}
+          onChange={formik.handleChange}
+          error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
+          helperText={formik.touched.newPassword && formik.errors.newPassword}
+          sx={{ mb: 3 }}
+        />
+        <TextField
+          fullWidth
+          size="small"
+          name="confirmPassword"
+          label="Confirm Password"
+          type="password"
+          value={formik.values.confirmPassword}
+          onChange={formik.handleChange}
+          error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+          helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+          sx={{ mb: 3 }}
+        />
+      </Scrollbar>
+      <DialogActions sx={{ flexShrink: 0 }}>
+        <Button onClick={() => handleClose()}>Cancel</Button>
+        <Button type="submit" variant="contained">
+          Submit
+        </Button>
+      </DialogActions>
+    </form>
+  );
+};

@@ -27,7 +27,6 @@ export function NavList({
   enabledRootRedirect,
 }: NavListProps) {
   const theme = useTheme();
-  console.log(data, 'data');
 
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');

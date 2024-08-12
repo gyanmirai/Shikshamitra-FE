@@ -18,6 +18,7 @@ interface CreateTableDropdownProps {
   placeholder: string;
   sx?: any;
   multiple?: boolean;
+  creatable?: boolean;
   [key: string]: any;
 }
 
@@ -30,6 +31,9 @@ const CreateTableDropdown = ({
   placeholder,
   sx,
   multiple = false,
+  creatable = true,
+  helperText,
+  error,
   ...other
 }: CreateTableDropdownProps) => {
   const [data, setData] = React.useState<FilmOptionType[]>([]);
@@ -39,7 +43,7 @@ const CreateTableDropdown = ({
 
   return (
     <Autocomplete
-      noOptionsText="Not Created Board Yet"
+      noOptionsText="No options"
       value={value}
       multiple={multiple}
       onChange={(_event, newValue: any) => {
@@ -49,8 +53,8 @@ const CreateTableDropdown = ({
           });
         } else if (newValue && newValue.inputValue) {
           if (setOptions) {
-            setOptions((pre) => [
-              ...pre,
+            setOptions([
+              ...options,
               {
                 name: newValue.inputValue,
               },
@@ -65,9 +69,11 @@ const CreateTableDropdown = ({
           }
 
           // Create a new value from the user input
-          setValue({
-            name: newValue.inputValue,
-          });
+          if (creatable) {
+            setValue({
+              name: newValue.inputValue,
+            });
+          }
         } else {
           setValue(newValue);
         }
@@ -78,7 +84,7 @@ const CreateTableDropdown = ({
         const { inputValue } = params;
         // Suggest the creation of a new value
         const isExisting = opt.filter((option: any) => inputValue === option.name).length;
-        if (inputValue !== '' && !isExisting) {
+        if (creatable && inputValue !== '' && !isExisting) {
           filtered.push({
             inputValue,
             name: `Add "${inputValue}"`,
@@ -131,7 +137,15 @@ const CreateTableDropdown = ({
       sx={{ ...sx }}
       freeSolo
       size="small"
-      renderInput={(params) => <TextField {...params} size="small" label={placeholder} />}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          size="small"
+          label={placeholder}
+          helperText={helperText}
+          error={error}
+        />
+      )}
       {...other}
     />
   );

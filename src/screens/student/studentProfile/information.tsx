@@ -9,13 +9,14 @@ import { useFormik } from 'formik';
 import { useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Tab, Box, Card, Stack, Button, TextField } from '@mui/material';
+import { Tab, Box, Card, Stack, MenuItem, MenuList, TextField } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 
 const generalFormFields: Fieldtypes[] = [
   {
@@ -427,19 +428,25 @@ export function StudentInformation() {
       }}
     >
       <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
-        <Button
-          onClick={() => setIsEdit(!isEdit)}
-          variant="outlined"
-          size="small"
-          startIcon={
-            <Iconify
-              icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
-              sx={{ cursor: 'poniter', height: 18, width: 18 }}
-            />
-          }
-        >
-          {isEdit ? 'Save' : 'Edit'}
-        </Button>
+        <ThreeDotsActions
+          placement="right-top"
+          actions={({ popover }) => (
+            <MenuList>
+              <MenuItem
+                onClick={() => {
+                  setIsEdit(!isEdit);
+                  popover.onClose();
+                }}
+              >
+                <Iconify
+                  icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
+                  sx={{ cursor: 'poniter', height: 18, width: 18 }}
+                />
+                {isEdit ? 'Save' : 'Edit'}
+              </MenuItem>
+            </MenuList>
+          )}
+        />
       </Stack>
       <form onSubmit={formik.handleSubmit}>
         {/* {tabs.map((tab, index) => (

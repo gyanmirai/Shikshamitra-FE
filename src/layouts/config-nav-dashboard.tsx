@@ -166,14 +166,19 @@ const securityModule = {
           _action: 'role-and-permission',
           children: [
             {
-              title: 'Role',
+              title: 'Role Management',
               path: '/security/role',
               _action: 'role',
             },
             {
-              title: 'Permission',
+              title: 'Role Assignment',
               path: '/security/permission',
               _action: 'permission',
+            },
+            {
+              title: 'Access Control',
+              path: '/security/access-control',
+              _action: 'access-control',
             },
           ],
         },
@@ -193,8 +198,8 @@ const settingModule = {
           _action: 'basic-information',
         },
         {
-          title: 'Academic Year Setup',
-          path: '/setting/academic-year-setup',
+          title: 'Academic Setup',
+          path: '/setting/academic-setup',
           _action: 'academic-year-setup',
         },
         {

@@ -22,10 +22,7 @@ const SubLayout = ({ children }: any) => {
   return (
     <Box display="flex" height="100%" gap={2}>
       {currentData?.length > 0 && (
-        <Scrollbar
-          fillContent
-          sx={{ height: '100%', maxWidth: 200, width: '100%', boxShadow: 'var(--shadows-4)' }}
-        >
+        <Scrollbar fillContent sx={{ height: '100%', width: '18%', boxShadow: 'var(--shadows-4)' }}>
           <NavSectionVertical
             data={currentData}
             sx={{ p: 1, flex: '1 1 auto', width: '100%' }}
@@ -35,12 +32,17 @@ const SubLayout = ({ children }: any) => {
       )}
       <Box
         sx={{
-          flexGrow: 1,
+          // flexGrow: 1,
           p: 1,
           boxShadow: 'var(--shadows-4)',
+          width: '82%',
         }}
       >
-        <Box sx={{ maxWidth: '1440px', width: '100%', mx: 'auto' }}>{children}</Box>
+        <Scrollbar
+          sx={{ maxWidth: '1440px', width: '100%', mx: 'auto', height: '100%', overflow: 'auto' }}
+        >
+          {children}
+        </Scrollbar>
       </Box>
     </Box>
   );

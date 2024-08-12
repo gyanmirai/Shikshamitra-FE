@@ -37,3 +37,6 @@ public/*
 
 #api
 **/api/*
+
+**/auth/*
+**/session/*

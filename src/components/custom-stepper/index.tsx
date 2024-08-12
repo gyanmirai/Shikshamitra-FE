@@ -53,12 +53,9 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     enableReinitialize: true,
     validateOnMount: true,
     onSubmit: (values) => {
-      console.log(values);
       handleNext(values);
     },
   });
-
-  console.log(formik, 'formik');
 
   return (
     <Box sx={{ width: '100%' }}>

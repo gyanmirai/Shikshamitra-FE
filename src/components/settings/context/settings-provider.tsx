@@ -1,10 +1,12 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
-import { useMemo, useState, useCallback, createContext } from 'react';
+import { useDispatch } from 'react-redux';
+import { useMemo, useState, useEffect, useCallback, createContext } from 'react';
 
 import { useCookies } from 'src/hooks/use-cookies';
 import { useLocalStorage } from 'src/hooks/use-local-storage';
+
+import { getUser } from 'src/redux/user/userSlice';
 
 import { STORAGE_KEY, defaultSettings } from '../config-settings';
 
@@ -25,11 +27,19 @@ export function SettingsProvider({
 }: SettingsProviderProps) {
   const cookies = useCookies<SettingsState>(STORAGE_KEY, settings, defaultSettings);
 
-  const localStorage = useLocalStorage<SettingsState>(STORAGE_KEY, settings);
+  const customLocalstorage = useLocalStorage<SettingsState>(STORAGE_KEY, settings);
 
-  const values = caches === 'cookie' ? cookies : localStorage;
+  const values = caches === 'cookie' ? cookies : customLocalstorage;
 
   const [openDrawer, setOpenDrawer] = useState(false);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // @ts-ignore
+    dispatch(getUser());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onToggleDrawer = useCallback(() => {
     setOpenDrawer((prev) => !prev);
@@ -63,8 +73,8 @@ export function SettingsProvider({
   );
 
   return (
-    <SessionProvider>
-      <SettingsContext.Provider value={memoizedValue}>{children}</SettingsContext.Provider>
-    </SessionProvider>
+    // <SessionProvider>
+    <SettingsContext.Provider value={memoizedValue}>{children}</SettingsContext.Provider>
+    // </SessionProvider>
   );
 }

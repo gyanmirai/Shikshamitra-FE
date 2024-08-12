@@ -2,118 +2,74 @@
 
 import React from 'react';
 
-import {
-  Box,
-  Paper,
-  Table,
-  Switch,
-  TableRow,
-  TableCell,
-  TextField,
-  TableHead,
-  TableBody,
-  Autocomplete,
-  TableContainer,
-} from '@mui/material';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 
-const options = ['Admin', 'Teacher', 'Parent', 'Student', 'Security'];
-const userOptions = ['Parth', 'Jeet', 'Jignesh'];
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
+import DataTable from 'src/components/commonTable';
+
 const Permission = () => {
-  const [value, setValue] = React.useState<string | null>(options[0]);
-  const [user, setUser] = React.useState<string | null>(userOptions[0]);
-  const [inputValue, setInputValue] = React.useState('');
+  const [value, setValue] = React.useState<Record<any, any> | null>(null);
 
+  const { data: roles, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRolesQuery,
+  });
   return (
-    <Box>
+    <Box p={1}>
       <Box display="flex" gap={2}>
         <Autocomplete
+          options={roles?.items || []}
+          getOptionLabel={(option: any) => option.name}
+          id="controlled-demo"
           value={value}
-          onChange={(event: any, newValue: string | null) => {
+          loading={isLoading}
+          sx={{ maxWidth: 300, width: '100%' }}
+          onChange={(event: any, newValue: any | null) => {
             setValue(newValue);
           }}
-          inputValue={inputValue}
-          onInputChange={(event, newInputValue) => {
-            setInputValue(newInputValue);
-          }}
-          id="controllable-states-demo"
-          options={options}
-          sx={{ width: 300 }}
           size="small"
-          renderInput={(params) => <TextField {...params} size="small" label="Select role" />}
-        />
-        <Autocomplete
-          value={user}
-          onChange={(event: any, newValue: string | null) => {
-            setUser(newValue);
-          }}
-          // inputValue={inputValue}
-          // onInputChange={(event, newInputValue) => {
-          //   setInputValue(newInputValue);
-          // }}
-          id="controllable-states-demo"
-          options={userOptions}
-          sx={{ width: 300 }}
-          size="small"
-          renderInput={(params) => (
-            <TextField {...params} size="small" label="Select User/Employee" />
-          )}
+          renderInput={(params) => <TextField {...params} size="small" label="Roles" />}
         />
       </Box>
       <br />
-
-      <TableContainer component={Paper} sx={{ '& *': { fontSize: '12px' } }}>
-        <Table stickyHeader aria-label="sticky table" size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Module</TableCell>
-              <TableCell>Sub Module</TableCell>
-              <TableCell>View</TableCell>
-              <TableCell>Edit</TableCell>
-              <TableCell>Delete</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>dashboard</TableCell>
-              <TableCell>dashboard</TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell rowSpan={2}>security</TableCell>
-              <TableCell>role</TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>permission</TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-              <TableCell>
-                <Switch defaultChecked size="small" />
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {value?.name && (
+        <DataTable
+          columns={[
+            {
+              key: 'name',
+              label: 'Role',
+            },
+            {
+              key: 'user',
+              label: 'Users',
+              render: (row: any) => (
+                <ul style={{ listStyleType: 'bullet' }}>
+                  {row?.user?.map((user: string, index: number) => <li key={index}>{user}</li>)}
+                </ul>
+              ),
+            },
+            {
+              label: 'Actions',
+              key: 'name',
+              render: (row: any) => (
+                <Box>
+                  <Button variant="contained" size="small">
+                    Assign Users
+                  </Button>
+                </Box>
+              ),
+            },
+          ]}
+          data={[
+            {
+              name: value?.name || '',
+              user: ['parth', 'jignesh'],
+            },
+          ]}
+        />
+      )}
     </Box>
   );
 };

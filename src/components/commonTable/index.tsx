@@ -13,6 +13,7 @@ import {
   TableContainer,
   TableSortLabel,
   TablePagination,
+  CircularProgress,
 } from '@mui/material';
 
 interface Column<T> {
@@ -35,6 +36,7 @@ interface TableProps<T> {
   handleChangeRowsPerPage?: (value: Record<string, string | number | keyof T | null>) => void;
   handleSearch?: (value: Record<string, string | number | keyof T | null>) => void;
   isSearchable?: boolean;
+  isLoading?: boolean;
 }
 
 interface TableState<T> {
@@ -58,6 +60,7 @@ function DataTable<T>({
   handleChangeRowsPerPage,
   handleSearch,
   isSearchable = false,
+  isLoading = false,
 }: TableProps<T>) {
   const [state, setState] = useState<TableState<T>>({
     totalItems,
@@ -157,21 +160,29 @@ function DataTable<T>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, index) => (
-              <TableRow hover key={index}>
-                {columns.map((column) => (
-                  <TableCell
-                    scope="row"
-                    // padding="none"
-                    key={String(column.key)}
-                    align={column.numeric ? 'right' : 'left'}
-                    sx={{ fontSize: '12px' }}
-                  >
-                    {column?.render ? column.render(row) : String(row[column.key])}
-                  </TableCell>
-                ))}
+            {!isLoading ? (
+              data.map((row, index) => (
+                <TableRow hover key={index}>
+                  {columns.map((column) => (
+                    <TableCell
+                      scope="row"
+                      // padding="none"
+                      key={String(column.key)}
+                      align={column.numeric ? 'right' : 'left'}
+                      sx={{ fontSize: '12px' }}
+                    >
+                      {column?.render ? column.render({ ...row, index }) : String(row[column.key])}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="left">
+                  <CircularProgress size={20} />
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
