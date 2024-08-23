@@ -6,259 +6,317 @@ import type { FormikProps } from 'formik';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Tab, Box, Card, Stack, MenuItem, MenuList, TextField } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Tab,
+  Box,
+  Card,
+  Stack,
+  Button,
+  TextField,
+  Accordion,
+  Typography,
+  CardContent,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+
+import type { StudentTabsComponentType } from '.';
 
 const generalFormFields: Fieldtypes[] = [
   {
-    name: 'grNo',
-    label: 'Gr No',
-    onChange: (e: any, formik: FormikProps<any>) => {
-      formik.handleChange(e);
-    },
-    otherProps: {},
+    sectionName: 'Basic details',
+    fields: [
+      {
+        name: 'grNo',
+        label: 'Gr No',
+        onChange: (e: any, formik: FormikProps<any>) => {
+          formik.handleChange(e);
+        },
+        otherProps: {},
+      },
+      { name: 'surname', label: 'Surname', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'name', label: 'Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'middleName', label: 'Middle Name', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'dob',
+        label: 'Date of Birth',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'gender', label: 'Gender', onChange: (e, formik) => {}, otherProps: {} },
+    ],
   },
-  { name: 'surname', label: 'Surname', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'name', label: 'Name', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'middleName', label: 'Middle Name', onChange: (e, formik) => {}, otherProps: {} },
   {
-    name: 'dob',
-    label: 'Date of Birth',
-    type: 'date',
-    onChange: (e, formik) => {},
-    otherProps: {},
+    sectionName: 'Address',
+    fields: [
+      { name: 'adharNo', label: 'Adhar No', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'religion', label: 'Religion', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'familyCast', label: 'Family Cast', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'castCategory', label: 'Cast Category', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'motherTongue', label: 'Mother Tongue', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'nationality', label: 'Nationality', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'birthPlace', label: 'Birth Place', onChange: (e, formik) => {}, otherProps: {} },
+    ],
   },
-  { name: 'gender', label: 'Gender', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'adharNo', label: 'Adhar No', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'religion', label: 'Religion', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'familyCast', label: 'Family Cast', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'castCategory', label: 'Cast Category', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'motherTongue', label: 'Mother Tongue', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'nationality', label: 'Nationality', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'birthPlace', label: 'Birth Place', onChange: (e, formik) => {}, otherProps: {} },
 ];
 
 const admissionFormFields: Fieldtypes[] = [
   {
-    name: 'admissionDate',
-    label: 'Admission Date',
-    type: 'date',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'admissionStandard',
-    label: 'Admission Standard',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'admissionFormNumber',
-    label: 'Admission Form Number',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'previousSchool', label: 'Previous School', onChange: (e, formik) => {}, otherProps: {} },
-  { name: 'admissionQuota', label: 'Admission Quota', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'previousSchoolLeftDate',
-    label: 'Previous School Left Date',
-    type: 'date',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'previousLCDate',
-    label: 'Previous LC Date',
-    type: 'date',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'previousLCNumber',
-    label: 'Previous LC Number',
-    onChange: (e, formik) => {},
-    otherProps: {},
+    sectionName: 'Admission Details',
+    fields: [
+      {
+        name: 'admissionDate',
+        label: 'Admission Date',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'admissionStandard',
+        label: 'Admission Standard',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'admissionFormNumber',
+        label: 'Admission Form Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'previousSchool',
+        label: 'Previous School',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'admissionQuota',
+        label: 'Admission Quota',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'previousSchoolLeftDate',
+        label: 'Previous School Left Date',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'previousLCDate',
+        label: 'Previous LC Date',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'previousLCNumber',
+        label: 'Previous LC Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
   },
 ];
 
 const communicationFields: Fieldtypes[] = [
   {
-    name: 'parentContactNumber',
-    label: 'Parent Contact Number',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'parentEmail', label: 'Parent Email', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'studentContactNo',
-    label: 'Student Contact Number',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'studentEmail', label: 'Student Email', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'whatsAppContactNo',
-    label: 'WhatsApp Contact Number',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'localAddress', label: 'Local Address', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'permanentAddress',
-    label: 'Permanent Address',
-    onChange: (e, formik) => {},
-    otherProps: {},
+    sectionName: 'Communication Details',
+    fields: [
+      {
+        name: 'parentContactNumber',
+        label: 'Parent Contact Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'parentEmail', label: 'Parent Email', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'studentContactNo',
+        label: 'Student Contact Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'studentEmail', label: 'Student Email', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'whatsAppContactNo',
+        label: 'WhatsApp Contact Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
   },
   {
-    name: 'emergencyAddress',
-    label: 'Emergency Address',
-    onChange: (e, formik) => {},
-    otherProps: {},
+    sectionName: 'Address',
+    fields: [
+      { name: 'localAddress', label: 'Local Address', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'permanentAddress',
+        label: 'Permanent Address',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'emergencyAddress',
+        label: 'Emergency Address',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
   },
 ];
 
 const familyFields: Fieldtypes[] = [
-  { name: 'fatherName', label: 'Father Name', onChange: (e, formik) => {}, otherProps: {} },
   {
-    name: 'fatherDob',
-    label: 'Father Date of Birth',
-    type: 'date',
-    onChange: (e, formik) => {},
-    otherProps: {},
+    sectionName: 'Father Details',
+    fields: [
+      { name: 'fatherName', label: 'Father Name', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'fatherDob',
+        label: 'Father Date of Birth',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherOccupation',
+        label: 'Father Occupation',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherQualification',
+        label: 'Father Qualification',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherContactNo',
+        label: 'Father Contact Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'fatherMail', label: 'Father Mail', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'fatherExStudent',
+        label: 'Father Ex-student',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherPassoutYear',
+        label: 'Father Pass out Year',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherOfficeContactNo',
+        label: 'Father Office Contact No',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherOfficeAddress',
+        label: 'Father Office Address',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherDesignation',
+        label: 'Father Designation',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherOrganization',
+        label: 'Father Organization',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherAadharNo',
+        label: 'Father Aadhar No',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
   },
   {
-    name: 'fatherOccupation',
-    label: 'Father Occupation',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherQualification',
-    label: 'Father Qualification',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherContactNo',
-    label: 'Father Contact Number',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'fatherMail', label: 'Father Mail', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'fatherExStudent',
-    label: 'Father Ex-student',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherPassoutYear',
-    label: 'Father Pass out Year',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherOfficeContactNo',
-    label: 'Father Office Contact No',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherOfficeAddress',
-    label: 'Father Office Address',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherDesignation',
-    label: 'Father Designation',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherOrganization',
-    label: 'Father Organization',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'fatherAadharNo',
-    label: 'Father Aadhar No',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'motherName', label: 'Mother Name', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'motherDob',
-    label: 'Mother Date of Birth',
-    type: 'date',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherOccupation',
-    label: 'Mother Occupation',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherQualification',
-    label: 'Mother Qualification',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherContactNo',
-    label: 'Mother Contact No',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  { name: 'motherMail', label: 'Mother Mail', onChange: (e, formik) => {}, otherProps: {} },
-  {
-    name: 'motherOfficeContactNo',
-    label: 'Mother Office Contact No',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherOfficeAddress',
-    label: 'Mother Office Address',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherDesignation',
-    label: 'Mother Designation',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherOrganization',
-    label: 'Mother Organization',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherAnnualIncome',
-    label: 'Mother Annual Income',
-    onChange: (e, formik) => {},
-    otherProps: {},
-  },
-  {
-    name: 'motherAadharNo',
-    label: 'Mother Aadhar No',
-    onChange: (e, formik) => {},
-    otherProps: {},
+    sectionName: 'Mother Details',
+    fields: [
+      { name: 'motherName', label: 'Mother Name', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'motherDob',
+        label: 'Mother Date of Birth',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherOccupation',
+        label: 'Mother Occupation',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherQualification',
+        label: 'Mother Qualification',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherContactNo',
+        label: 'Mother Contact No',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'motherMail', label: 'Mother Mail', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'motherOfficeContactNo',
+        label: 'Mother Office Contact No',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherOfficeAddress',
+        label: 'Mother Office Address',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherDesignation',
+        label: 'Mother Designation',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherOrganization',
+        label: 'Mother Organization',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherAnnualIncome',
+        label: 'Mother Annual Income',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'motherAadharNo',
+        label: 'Mother Aadhar No',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
   },
 ];
 
@@ -334,9 +392,15 @@ const validationSchemas = [
   communicationValidationSchema,
   familyValidationSchema,
 ];
+const TABS = [
+  { value: 'general', label: 'General' },
+  { value: 'admission', label: 'Admission' },
+  { value: 'communication', label: 'Contact Deails' },
+  { value: 'family', label: 'Family Details' },
+];
 
 const dob = dayjs(new Date('2000-01-01'));
-export function StudentInformation() {
+export function StudentInformation(props: StudentTabsComponentType) {
   const [activeStep, setActiveStep] = useState(0);
   const [isEdit, setIsEdit] = useState(false);
   const onSubmit = (_val: any) => {};
@@ -404,22 +468,26 @@ export function StudentInformation() {
     },
   });
 
-  const [open, setOpen] = useState('General');
+  const [expanded, setExpanded] = useState<string | false>(false);
 
-  const handleToggle = useCallback((tab: string) => {
-    setOpen((prev) => (prev === tab ? '' : tab));
-  }, []);
+  const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpanded(isExpanded ? panel : false);
+  };
 
   // const tabs = ['General', 'Admission', 'Communication', 'Family'];
 
-  const TABS = [
-    { value: 'general', label: 'General' },
-    { value: 'admission', label: 'Admission' },
-    { value: 'communication', label: 'Contact Deails' },
-    { value: 'family', label: 'Family Details' },
-  ];
   const tabs = useTabs('general');
-  const activeTabIndex = TABS.findIndex((tab) => tab.value === tabs.value);
+  const activeTabIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === tabs.value),
+    [tabs.value]
+  );
+
+  useEffect(() => {
+    if (activeTabIndex >= 0) {
+      setExpanded(fields[activeTabIndex][0].sectionName);
+    }
+  }, [activeTabIndex]);
+
   return (
     <Box
       sx={{
@@ -427,112 +495,11 @@ export function StudentInformation() {
         '& label': { fontSize: '12px' },
       }}
     >
-      <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
-        <ThreeDotsActions
-          placement="right-top"
-          actions={({ popover }) => (
-            <MenuList>
-              <MenuItem
-                onClick={() => {
-                  setIsEdit(!isEdit);
-                  popover.onClose();
-                }}
-              >
-                <Iconify
-                  icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
-                  sx={{ cursor: 'poniter', height: 18, width: 18 }}
-                />
-                {isEdit ? 'Save' : 'Edit'}
-              </MenuItem>
-            </MenuList>
-          )}
-        />
-      </Stack>
       <form onSubmit={formik.handleSubmit}>
-        {/* {tabs.map((tab, index) => (
-          <Fragment key={index}>
-            <Subheader data-title={tab} open={open === tab} onClick={() => handleToggle(tab)}>
-              {tab}
-            </Subheader>
-
-            <Collapse in={open === tab} sx={{ mt: '4px' }}>
-              {' '}
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 3,
-                  '& .Mui-disabled': {
-                    color: (theme) => `${theme.palette.text.primary} !important`,
-                    '-webkit-text-fill-color': 'unset',
-                    cursor: 'no-drop',
-                  },
-                  '& .MuiInputLabel-shrink.Mui-disabled': {
-                    color: (theme) => `${theme.palette.text.disabled} !important`,
-                  },
-                }}
-              >
-                {fields[index].map(({ otherProps = {}, ...field }) => (
-                  <Box maxWidth="220px" key={field.name} width="100%">
-                    {field.type === 'date' ? (
-                      <DatePicker
-                        label={field.label}
-                        value={
-                          formik.values[field.name as keyof typeof formik.values] as Dayjs | null
-                        }
-                        onChange={(value) => field.onChange(value, formik)}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error:
-                              formik.touched[field.name as keyof typeof formik.touched] &&
-                              Boolean(formik.errors[field.name as keyof typeof formik.errors]),
-                            helperText:
-                              formik.touched[field.name as keyof typeof formik.touched] &&
-                              (formik.errors[field.name as keyof typeof formik.errors] as string),
-                            size: 'small',
-                            disabled: !isEdit,
-                          },
-                        }}
-                        disabled={!isEdit}
-                        {...otherProps}
-                      />
-                    ) : (
-                      <TextField
-                        fullWidth
-                        label={field.label}
-                        name={field.name}
-                        size="small"
-                        type={field.type || 'text'}
-                        value={formik.values[field.name as keyof typeof formik.values]}
-                        onChange={(e) => field.onChange(e, formik)}
-                        error={
-                          formik.touched[field.name as keyof typeof formik.touched] &&
-                          Boolean(formik.errors[field.name as keyof typeof formik.errors])
-                        }
-                        helperText={
-                          formik.touched[field.name as keyof typeof formik.touched] &&
-                          (formik.errors[field.name as keyof typeof formik.errors] as string)
-                        }
-                        disabled={!isEdit}
-                        {...otherProps}
-                      />
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            </Collapse>
-          </Fragment>
-        ))} */}
-
-        {/* <CustomStepper
-        activeStep={activeStep}
-        steps={['General', 'Admission', 'Communication', 'Family Information']}
-      /> */}
         <Card
           sx={{
             px: 1,
-            '& *': { fontSize: '12px !important', '& svg': { fontSize: '18px !important' } },
+            '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
           }}
         >
           <CustomTabs
@@ -546,13 +513,27 @@ export function StudentInformation() {
             ))}
           </CustomTabs>
 
-          <Scrollbar sx={{ minHeight: 384 }}>
-            <Box
+          <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
+            <Button
+              startIcon={
+                <Iconify
+                  icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
+                  sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
+                />
+              }
+              onClick={() => {
+                setIsEdit(!isEdit);
+                // popover.onClose();
+              }}
+            >
+              {isEdit ? 'Save' : 'Edit'}
+            </Button>
+          </Stack>
+          <Card sx={{ backgroundColor: (theme) => theme.palette.background.paper }}>
+            <CardContent
               sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 3,
-                mt: 2,
+                width: '100%',
+                p: 0,
                 '& .Mui-disabled': {
                   color: (theme) => `${theme.palette.text.primary} !important`,
                   '-webkit-text-fill-color': 'unset',
@@ -563,137 +544,92 @@ export function StudentInformation() {
                 },
               }}
             >
-              {fields[activeTabIndex]?.map(({ otherProps = {}, ...field }) => (
-                <Box maxWidth="210px" key={field.name} width="100%">
-                  {field.type === 'date' ? (
-                    <DatePicker
-                      label={field.label}
-                      value={
-                        formik.values[field.name as keyof typeof formik.values] as Dayjs | null
-                      }
-                      onChange={(value) => field.onChange(value, formik)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          error:
-                            formik.touched[field.name as keyof typeof formik.touched] &&
-                            Boolean(formik.errors[field.name as keyof typeof formik.errors]),
-                          helperText:
-                            formik.touched[field.name as keyof typeof formik.touched] &&
-                            (formik.errors[field.name as keyof typeof formik.errors] as string),
-                          size: 'small',
-                          disabled: !isEdit,
-                        },
-                      }}
-                      disabled={!isEdit}
-                      {...otherProps}
-                    />
-                  ) : (
-                    <TextField
-                      fullWidth
-                      label={field.label}
-                      name={field.name}
-                      size="small"
-                      type={field.type || 'text'}
-                      value={formik.values[field.name as keyof typeof formik.values]}
-                      onChange={(e) => field.onChange(e, formik)}
-                      error={
-                        formik.touched[field.name as keyof typeof formik.touched] &&
-                        Boolean(formik.errors[field.name as keyof typeof formik.errors])
-                      }
-                      helperText={
-                        formik.touched[field.name as keyof typeof formik.touched] &&
-                        (formik.errors[field.name as keyof typeof formik.errors] as string)
-                      }
-                      disabled={!isEdit}
-                      {...otherProps}
-                    />
-                  )}
-                </Box>
+              {fields[activeTabIndex]?.map(({ sectionName, fields: allField }) => (
+                <Accordion expanded={expanded === sectionName} onChange={handleChange(sectionName)}>
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1bh-content"
+                    id="panel1bh-header"
+                  >
+                    <Typography sx={{ width: '33%', flexShrink: 0, fontWeight: 500 }}>
+                      {sectionName}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box display="flex" gap={2} flexWrap="wrap">
+                      {allField.map(({ otherProps = {}, ...field }) => (
+                        <Box maxWidth="210px" key={field.name} width="100%">
+                          {field.type === 'date' ? (
+                            <DatePicker
+                              label={field.label}
+                              value={
+                                formik.values[
+                                  field.name as keyof typeof formik.values
+                                ] as Dayjs | null
+                              }
+                              onChange={(value) => field.onChange(value, formik)}
+                              slotProps={{
+                                textField: {
+                                  fullWidth: true,
+                                  error:
+                                    formik.touched[field.name as keyof typeof formik.touched] &&
+                                    Boolean(
+                                      formik.errors[field.name as keyof typeof formik.errors]
+                                    ),
+                                  helperText:
+                                    formik.touched[field.name as keyof typeof formik.touched] &&
+                                    (formik.errors[
+                                      field.name as keyof typeof formik.errors
+                                    ] as string),
+                                  size: 'small',
+                                  disabled: !isEdit,
+                                },
+                              }}
+                              disabled={!isEdit}
+                              {...otherProps}
+                            />
+                          ) : (
+                            <TextField
+                              fullWidth
+                              label={field.label}
+                              name={field.name}
+                              size="small"
+                              type={field.type || 'text'}
+                              value={formik.values[field.name as keyof typeof formik.values]}
+                              onChange={(e) => field.onChange(e, formik)}
+                              error={
+                                formik.touched[field.name as keyof typeof formik.touched] &&
+                                Boolean(formik.errors[field.name as keyof typeof formik.errors])
+                              }
+                              helperText={
+                                formik.touched[field.name as keyof typeof formik.touched] &&
+                                (formik.errors[field.name as keyof typeof formik.errors] as string)
+                              }
+                              disabled={!isEdit}
+                              {...otherProps}
+                            />
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
               ))}
-            </Box>
-          </Scrollbar>
+            </CardContent>
+          </Card>
         </Card>
-
-        {/* <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 3,
-          }}
-        >
-          {fields[activeStep].map(({ otherProps = {}, ...field }) => (
-            <Box maxWidth="220px" key={field.name} width="100%">
-              {field.type === 'date' ? (
-                <DatePicker
-                  label={field.label}
-                  value={formik.values[field.name as keyof typeof formik.values] as Dayjs | null}
-                  onChange={(value) => field.onChange(value, formik)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      error:
-                        formik.touched[field.name as keyof typeof formik.touched] &&
-                        Boolean(formik.errors[field.name as keyof typeof formik.errors]),
-                      helperText:
-                        formik.touched[field.name as keyof typeof formik.touched] &&
-                        (formik.errors[field.name as keyof typeof formik.errors] as string),
-                      size: 'small',
-                      disabled: !isEdit,
-                    },
-                  }}
-                  disabled={!isEdit}
-                  {...otherProps}
-                />
-              ) : (
-                <TextField
-                  fullWidth
-                  label={field.label}
-                  name={field.name}
-                  size="small"
-                  type={field.type || 'text'}
-                  value={formik.values[field.name as keyof typeof formik.values]}
-                  onChange={(e) => field.onChange(e, formik)}
-                  error={
-                    formik.touched[field.name as keyof typeof formik.touched] &&
-                    Boolean(formik.errors[field.name as keyof typeof formik.errors])
-                  }
-                  helperText={
-                    formik.touched[field.name as keyof typeof formik.touched] &&
-                    (formik.errors[field.name as keyof typeof formik.errors] as string)
-                  }
-                  disabled={!isEdit}
-                  {...otherProps}
-                />
-              )}
-            </Box>
-          ))}
-        </Box>
-        <Box display="flex" justifyContent="flex-end" gap={2} sx={{ mt: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={() => setActiveStep((prev) => prev - 1)}
-            disabled={activeStep === 0}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => activeStep !== fields.length - 1 && setActiveStep((prev) => prev + 1)}
-            type="submit"
-          >
-            {activeStep === fields.length - 1 ? 'Submit' : 'Next'}
-          </Button>
-        </Box> */}
       </form>
     </Box>
   );
 }
 
 interface Fieldtypes {
-  name: string;
-  label: string;
-  onChange: (e: any, formik: FormikProps<any>) => void;
-  otherProps?: Record<string, any>;
-  type?: undefined | string;
+  sectionName: string;
+  fields: {
+    name: string;
+    label: string;
+    onChange: (e: any, formik: FormikProps<any>) => void;
+    otherProps: Record<string, any>;
+    type?: undefined | string;
+  }[];
 }

@@ -9,14 +9,14 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
-  Tab,
   Box,
-  Tabs,
+  Select,
   Button,
   MenuList,
   MenuItem,
+  InputLabel,
+  FormControl,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
@@ -40,13 +40,13 @@ import ThreeDotsActions from '../three-dots-actions';
 
 interface AcademicYear {
   id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
+  creationTime?: string;
+  creatorId?: string;
+  lastModificationTime?: string;
+  lastModifierId?: string;
   name: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 const YearSetup = () => {
@@ -163,11 +163,13 @@ const YearSetup = () => {
       <Box
         display="flex"
         alignItems="center"
+        justifyContent="space-between"
         gap={1}
-        boxShadow="var(--shadows-4)"
-        py={currentTabs.length ? 0 : 1}
+        // boxShadow="var(--shadows-4)"
+
+        py={1}
       >
-        <Box flexGrow={1} display="flex" alignItems="center" maxWidth="85%" width="100%">
+        {/* <Box flexGrow={1} display="flex" alignItems="center" maxWidth="85%" width="100%">
           {!isGetLoading ? (
             currentTabs.length > 0 && (
               <Tabs
@@ -201,6 +203,36 @@ const YearSetup = () => {
           ) : (
             <CircularProgress size={20} />
           )}
+        </Box> */}
+        {/* @ts-ignore */}
+        <Box display="flex" alignIItems="center" gap={2}>
+          <FormControl sx={{ minWidth: 150 }} size="small">
+            <InputLabel id="academic-year-select-label" size="small">
+              Academic Year
+            </InputLabel>
+            <Select
+              labelId="academic-year-select-label"
+              id="academic-year-select"
+              value={tabs.value}
+              label="Academic Year"
+              onChange={(e) => tabs.setValue(e.target.value)}
+              size="small"
+            >
+              {currentTabs.map((tab: AcademicYear) => (
+                <MenuItem key={tab.id} value={tab.id}>
+                  {tab.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <ThreeDotsActions
+            onClickThreeDots={(e) => {
+              // e.stopPropagation();
+              const data = currentTabs.find((item: any) => item.id === tabs.value);
+              setEditData(data as AcademicYear);
+            }}
+            actions={actions}
+          />
         </Box>
 
         <Button
@@ -232,6 +264,7 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
     popupConfig: {
       success: true,
       successMessage: 'Academic Year added Successfully',
+      // error: true,
     },
   });
   const [updateYear, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -245,11 +278,15 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
 
   const formik = useFormik({
     initialValues: {
-      startDate: dayjs().year(dayjs().year()).month(2).date(1),
-      endDate: dayjs()
-        .year(dayjs().year() + 1)
-        .month(1)
-        .endOf('month'),
+      startDate: editData
+        ? dayjs(editData.startDate)
+        : dayjs().year(dayjs().year()).month(2).date(1),
+      endDate: editData
+        ? dayjs(editData.endDate)
+        : dayjs()
+            .year(dayjs().year() + 1)
+            .month(1)
+            .endOf('month'),
     },
     validationSchema: Yup.object().shape({
       startDate: Yup.date().required('Start Date is required'),

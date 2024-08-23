@@ -6,8 +6,6 @@ import ListItemText from '@mui/material/ListItemText';
 import { Card, IconButton, Typography } from '@mui/material';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 
-import { varAlpha, bgGradient } from 'src/theme/styles';
-
 import { Label } from 'src/components/label';
 
 export type IUserProfileCover = {
@@ -32,10 +30,11 @@ export function ProfileCover({
   return (
     <Card
       sx={{
-        ...bgGradient({
-          color: `0deg, ${varAlpha(theme.vars.palette.primary.darkerChannel, 0.8)}, ${varAlpha(theme.vars.palette.primary.darkerChannel, 0.8)}`,
-          imgUrl: coverUrl,
-        }),
+        // ...bgGradient({
+        //   color: `0deg, ${varAlpha(theme.vars.palette.primary.darkerChannel, 0.8)}, ${varAlpha(theme.vars.palette.primary.darkerChannel, 0.8)}`,
+        //   imgUrl: coverUrl,
+        // }),
+        bgcolor: theme.vars.palette.action.selected,
         height: 1,
         color: 'text.primary',
       }}
@@ -45,7 +44,7 @@ export function ProfileCover({
           sx={{ height: '40px', width: '40px', p: 0 }}
           onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
         >
-          <KeyboardBackspaceIcon />
+          <KeyboardBackspaceIcon sx={{ color: 'primary.main' }} />
         </IconButton>
         <Box sx={{ p: 1 }}>
           <Typography variant="caption" fontWeight="bold">
@@ -67,19 +66,19 @@ export function ProfileCover({
       </Box>
       <Stack
         direction={{ xs: 'column', md: 'row' }}
-        sx={{
-          left: { md: 24 },
-          bottom: { md: 50 },
-          zIndex: { md: 10 },
-          pt: { xs: 6, md: 0 },
-          position: { md: 'absolute' },
-        }}
+        sx={{ pl: 1 }}
+        // sx={{
+        //   left: { md: 24 },
+        //   bottom: { md: 50 },
+        //   zIndex: { md: 10 },
+        //   pt: { xs: 6, md: 0 },
+        //   position: { md: 'absolute' },
+        // }}
       >
         <Avatar
           alt={name}
           src={avatarUrl}
           sx={{
-            mx: 'auto',
             width: { xs: 64, md: 128 },
             height: { xs: 64, md: 128 },
             border: `solid 2px ${theme.vars.palette.common.white}`,
@@ -102,11 +101,23 @@ export function ProfileCover({
               sx: { opacity: 0.48 },
             }}
           />
-          <Typography variant="caption" fontWeight="bold">
-            <Label variant="soft" color="success">
-              Active
-            </Label>
-          </Typography>
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Typography variant="caption" fontWeight="bold">
+              <Label variant="soft" color="info">
+                GSEB
+              </Label>
+              &nbsp;
+              <Label variant="soft" color="info">
+                ENG-Primary
+              </Label>
+            </Typography>
+
+            <Typography variant="caption" fontWeight="bold" mt={1}>
+              <Label variant="soft" color="success">
+                Active
+              </Label>
+            </Typography>
+          </Box>
         </Box>
       </Stack>
     </Card>

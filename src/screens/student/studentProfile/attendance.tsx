@@ -2,11 +2,25 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
-import { Box, Paper, Badge, Button, Tooltip, Typography, ButtonGroup } from '@mui/material';
+import {
+  Box,
+  Card,
+  Stack,
+  Paper,
+  Badge,
+  Button,
+  Divider,
+  Tooltip,
+  Typography,
+  ButtonGroup,
+} from '@mui/material';
 
-import DataTable from 'src/components/commonTable';
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AttendanceChart, YearlyAttendance } from './attendanceChart';
+
+import type { StudentTabsComponentType } from '.';
 
 type DotProps = {
   sx?: React.CSSProperties;
@@ -41,8 +55,8 @@ const Dot: React.FC<DotProps> = ({
   </Box>
 );
 
-const Attendance = () => {
-  const [activeButton, setActiveButton] = useState('monthly');
+const Attendance = (props: StudentTabsComponentType) => {
+  const [activeButton, setActiveButton] = useState<'monthly' | 'yearly'>('monthly');
 
   return (
     <Box
@@ -62,48 +76,68 @@ const Attendance = () => {
         <Dot color="info.main">50% - 70%</Dot>
         <Dot color="error.main">{'<50%'}</Dot>
       </Box>
-      <Box display="flex" gap={3} alignItems="center" sx={{ flexWrap: 'wrap', mb: 2 }}>
-        <Typography variant="h6" fontSize="14px !important" fontWeight="bold">
-          Overall Attendance Percentage :{' '}
-          <Box
-            component="span"
-            sx={{
-              border: (theme) => `2px dashed ${theme.palette.text.primary}`,
-              p: 1,
-              color: (theme) => theme.palette.primary.main,
-              borderRadius: '5px',
-              fontSize: '14px !important',
-              fontWeight: 'bold',
-            }}
+      <Stack direction="row" spacing={2} alignItems="center">
+        <Card
+          elevation={3}
+          sx={{
+            py: 2,
+            textAlign: 'center',
+            typography: 'h4',
+            maxWidth: '250px',
+            width: '100%',
+          }}
+        >
+          <Stack
+            direction="row"
+            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
           >
-            {' '}
-            92%{' '}
-          </Box>
-        </Typography>
-        <ButtonGroup color="inherit" variant="outlined" aria-label="outlined button group">
-          <Button
-            size="small"
-            variant={activeButton === 'yearly' ? 'contained' : 'outlined'}
-            sx={{ borderRadius: '5px' }}
-            onClick={() => setActiveButton('yearly')}
-          >
-            Year Wise Trends
-          </Button>
-          <Button
-            size="small"
-            variant={activeButton === 'monthly' ? 'contained' : 'outlined'}
-            sx={{ borderRadius: '5px' }}
-            onClick={() => setActiveButton('monthly')}
-          >
-            Month Wise Trends
-          </Button>
-        </ButtonGroup>
-      </Box>
+            <Stack width={1}>
+              <Box fontSize="14px">
+                Overall Attendance Percentage &nbsp;
+                <Label variant="soft" color="success">
+                  90%
+                </Label>
+              </Box>
+            </Stack>
+          </Stack>
+        </Card>
+      </Stack>
+      <Divider sx={{ my: 2 }} />
       <Box display="flex" gap={3} sx={{ flexWrap: 'wrap', mb: 2 }}>
         <Box flexGrow={1}>
           {activeButton === 'monthly' ? (
             <AttendanceChart
-              title="Attendance progress"
+              title={
+                <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
+                  Attendance progress{' '}
+                  <ButtonGroup
+                    color="inherit"
+                    variant="outlined"
+                    aria-label="outlined button group"
+                  >
+                    <Button
+                      size="small"
+                      variant={
+                        (activeButton as 'yearly' | 'monthly') === 'yearly'
+                          ? 'contained'
+                          : 'outlined'
+                      }
+                      sx={{ borderRadius: '5px' }}
+                      onClick={() => setActiveButton('yearly')}
+                    >
+                      Year Wise Trends
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={activeButton === 'monthly' ? 'contained' : 'outlined'}
+                      sx={{ borderRadius: '5px' }}
+                      onClick={() => setActiveButton('monthly')}
+                    >
+                      Month Wise Trends
+                    </Button>
+                  </ButtonGroup>
+                </Box>
+              }
               chart={{
                 series: [
                   { label: 'Present', value: 75 },
@@ -111,12 +145,45 @@ const Attendance = () => {
                   { label: 'Seek Leave', value: 20 },
                   { label: 'Family Function', value: 5 },
                 ],
-                // colors: [colors.red[500], colors.blue[500], colors.green[500], colors.yellow[500]],
               }}
             />
           ) : (
             <YearlyAttendance
-              title="Yearly Attendance"
+              title={
+                <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
+                  Attendance progress{' '}
+                  <ButtonGroup
+                    color="inherit"
+                    variant="outlined"
+                    aria-label="outlined button group"
+                  >
+                    <Button
+                      size="small"
+                      variant={
+                        (activeButton as 'yearly' | 'monthly') === 'yearly'
+                          ? 'contained'
+                          : 'outlined'
+                      }
+                      sx={{ borderRadius: '5px' }}
+                      onClick={() => setActiveButton('yearly')}
+                    >
+                      Year Wise Trends
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={
+                        (activeButton as 'yearly' | 'monthly') === 'monthly'
+                          ? 'contained'
+                          : 'outlined'
+                      }
+                      sx={{ borderRadius: '5px' }}
+                      onClick={() => setActiveButton('monthly')}
+                    >
+                      Month Wise Trends
+                    </Button>
+                  </ButtonGroup>
+                </Box>
+              }
               // subheader="(+43%) than last year"
               chart={{
                 categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
@@ -143,8 +210,8 @@ const Attendance = () => {
               },
             }}
             slots={{
-              day: (props: any) => {
-                const { day, today } = props;
+              day: (prop: any) => {
+                const { day, today } = prop;
                 const absent = day.format('DD-MM-YYYY') === '22-07-2024';
                 const isSunday = day.day() === 0;
                 const isHalfDay = day.format('DD-MM-YYYY') === '17-07-2024';
@@ -168,7 +235,7 @@ const Attendance = () => {
                       color="warning"
                     >
                       <PickersDay
-                        {...props}
+                        {...prop}
                         day={day}
                         sx={{
                           position: 'relative',
@@ -180,7 +247,9 @@ const Attendance = () => {
                               : today
                                 ? 'transparent !important'
                                 : '',
-                          ...(absent ? { color: 'white !important' } : {}),
+                          ...(absent
+                            ? { color: 'white !important' }
+                            : { color: (theme) => `${theme.palette.text.primary} !important` }),
                           border: (theme) =>
                             today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                           ...(isHalfDay
@@ -201,7 +270,7 @@ const Attendance = () => {
                               }
                             : {}),
                         }}
-                        disabled={isSunday || isHoliday || props.disabled}
+                        disabled={isSunday || isHoliday || prop.disabled}
                       />
                     </Badge>
                   </Tooltip>
@@ -211,7 +280,7 @@ const Attendance = () => {
           />
         </Paper>
       </Box>
-      <DataTable
+      <CustomizableTable
         data={[
           {
             date: '18/07/2024',
@@ -227,10 +296,10 @@ const Attendance = () => {
           },
         ]}
         columns={[
-          { key: 'date', label: 'Date', width: '10%' },
-          { key: 'status', label: 'Status', width: '10%' },
-          { key: 'reason', label: 'Reason', width: '10%' },
-          { key: 'remarks', label: 'Remarks', width: '20%' },
+          { id: 'date', label: 'Date', minWidth: '10%' },
+          { id: 'status', label: 'Status', minWidth: '10%' },
+          { id: 'reason', label: 'Reason', minWidth: '10%' },
+          { id: 'remarks', label: 'Remarks', minWidth: '20%' },
         ]}
       />
     </Box>

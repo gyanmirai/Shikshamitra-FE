@@ -235,6 +235,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
           getLazyQuery={useLazyGetMediumByIdQuery}
           name="Organization"
           dataKey="educationMediumStages"
+          isParent
           children={{
             id: 'class',
             name: 'Class',

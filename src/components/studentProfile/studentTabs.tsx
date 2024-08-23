@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-import { Box, Tab, Tabs } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -44,6 +44,11 @@ const TABS = [
     label: 'Communications',
     icon: <Iconify icon="maki:communications-tower" width={22} />,
   },
+  {
+    value: 'Transportation',
+    label: 'transportation',
+    icon: <Iconify icon="solar:bus-bold" width={22} />,
+  },
 ];
 const StudentTabs = () => {
   const tabs = useTabs('information');
@@ -56,7 +61,7 @@ const StudentTabs = () => {
       <Tabs
         value={tabs.value}
         onChange={tabs.onChange}
-        sx={{ mb: 2, '& .MuiTabs-flexContainer': { gap: 2 } }}
+        sx={{ mb: 2, '& .MuiTabs-flexContainer': { gap: 1 } }}
       >
         {TABS.map((tab) => (
           <Tab

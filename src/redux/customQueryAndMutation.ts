@@ -22,31 +22,28 @@ function useQueryAndMutation<T>({
   currentQueryAndMutation,
   params,
   options = {},
+  popupConfig,
+}: IQueryAndMutation<T>) {
   popupConfig = {
     error: true,
     errorMessage: 'Something went wrong',
     success: false,
     successMessage: 'Fetch Success',
-  },
-}: IQueryAndMutation<T>) {
+    ...popupConfig,
+  };
   const resp = currentQueryAndMutation(params, options);
   const { isSuccess, isError, error } = type === 'query' ? resp : resp[1];
+
   useEffect(() => {
     if (isError && popupConfig.error) {
-      toast.error(error?.data?.message || popupConfig.errorMessage);
+      toast.error(error?.data?.error?.message || popupConfig.errorMessage);
     }
+  }, [error, isError, popupConfig.error, popupConfig.errorMessage]);
+  useEffect(() => {
     if (isSuccess && popupConfig.success) {
       toast.success(popupConfig.successMessage);
     }
-  }, [
-    error,
-    isError,
-    isSuccess,
-    popupConfig.error,
-    popupConfig.errorMessage,
-    popupConfig.success,
-    popupConfig.successMessage,
-  ]);
+  }, [isSuccess, popupConfig.success, popupConfig.successMessage]);
 
   return resp;
 }

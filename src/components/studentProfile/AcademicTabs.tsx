@@ -18,7 +18,7 @@ const TABS = [
 const AcademicTabs = () => {
   const tabs = useTabs('dashboard');
   return (
-    <Card sx={{ '& *': { fontSize: '12px !important', '& svg': { fontSize: '18px !important' } } }}>
+    <Card sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}>
       <CustomTabs
         value={tabs.value}
         onChange={tabs.onChange}

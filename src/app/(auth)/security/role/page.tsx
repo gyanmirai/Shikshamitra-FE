@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Box,
@@ -28,7 +28,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 // import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import _ from 'lodash';
 import * as Yup from 'yup';
+
+import { organizePermissions } from 'src/utils/permissionConvertData';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -297,7 +300,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
           />
 
           <ModuleTable
-            data={modulePermissionData}
+            data={organizePermissions(modulePermissionData)}
             allPermissions={allPermissions}
             setAllPermissions={setAllPermissions}
           />
@@ -331,7 +334,7 @@ const ModuleTable = ({ data, allPermissions, setAllPermissions }: any) => {
       <Table stickyHeader size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Module</TableCell>
+            <TableCell>Modules</TableCell>
             <TableCell> </TableCell>
           </TableRow>
         </TableHead>
@@ -341,6 +344,7 @@ const ModuleTable = ({ data, allPermissions, setAllPermissions }: any) => {
               item={item}
               handlePermissionClick={handlePermissionClick}
               allPermissions={allPermissions}
+              setAllPermissions={setAllPermissions}
             />
           ))}
         </TableBody>
@@ -349,21 +353,8 @@ const ModuleTable = ({ data, allPermissions, setAllPermissions }: any) => {
   );
 };
 
-const RowComponent = ({ item, handlePermissionClick, allPermissions }: any) => {
+const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermissions }: any) => {
   const collapse = useBoolean();
-  const { permissions } = item;
-
-  const subData = useMemo(
-    () =>
-      permissions
-        .filter((i: any) => !i.parentName)
-        .map((i: any) => ({
-          ...i,
-          permissions: permissions.filter((j: any) => i.name === j.parentName),
-        })),
-    [permissions]
-  );
-
   const renderSecondary = useCallback(
     (data: any, allPer: any) => (
       <TableRow>
@@ -377,11 +368,50 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions }: any) => {
           colSpan={3}
         >
           {data.map((ite: any) => (
-            <Paper sx={{ m: 1, display: 'flex', gap: 1, p: 1, justifyContent: 'space-between' }}>
-              <Box>{ite?.displayName}</Box>
+            <Paper
+              sx={{
+                m: 1,
+                display: 'flex',
+                gap: 1,
+                p: 1,
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Box display="flex" alignItems="center">
+                <Checkbox
+                  checked={ite.children.every(
+                    (el: any) => !!allPermissions.find((i: any) => i.name === el.name).isGranted
+                  )}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      const newData = ite.children.map((el: any) => ({
+                        ...el,
+                        isGranted: true,
+                      }));
+                      const uniqData = _.unionBy([...newData, ...allPermissions], 'name');
+                      setAllPermissions(uniqData);
+                    } else {
+                      const removeItem = allPermissions.map((el: any) =>
+                        ite.children.some((i: any) => i.name === el.name)
+                          ? { ...el, isGranted: false }
+                          : el
+                      );
+                      setAllPermissions(removeItem);
+                    }
+                  }}
+                />
+                {ite?.displayName}
+              </Box>
               <Box flexGrow={1}>
-                <Stack direction="row" spacing={1} gap={1} flexWrap="wrap">
-                  {ite.permissions.map((el: any) => {
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  gap={1}
+                  flexWrap="wrap"
+                  justifyContent="flex-end"
+                >
+                  {ite.children.map((el: any) => {
                     const isGranted = allPer.find((i: any) => i.name === el.name)?.isGranted;
                     return (
                       <Label
@@ -400,7 +430,7 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions }: any) => {
         </Collapse>
       </TableRow>
     ),
-    [collapse.value, handlePermissionClick]
+    [allPermissions, collapse.value, handlePermissionClick, setAllPermissions]
   );
   return (
     <>
@@ -431,7 +461,7 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions }: any) => {
         </TableCell>
       </TableRow>
 
-      {renderSecondary(subData, allPermissions)}
+      {renderSecondary(item.children, allPermissions)}
     </>
   );
 };

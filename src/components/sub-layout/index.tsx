@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
-import { Box, List, Paper, useTheme, ListItem, ListItemButton } from '@mui/material';
+import { Box, List, useTheme, ListItem, ListItemButton } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
@@ -20,9 +20,21 @@ const SubLayout = ({ children }: any) => {
   const currentData = navSubData[`/${currentModule}` as keyof typeof navSubData];
 
   return (
-    <Box display="flex" height="100%" gap={2}>
+    <Box
+      display="flex"
+      height="100%"
+      gap={2}
+      // sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+    >
       {currentData?.length > 0 && (
-        <Scrollbar fillContent sx={{ height: '100%', width: '18%', boxShadow: 'var(--shadows-4)' }}>
+        <Scrollbar
+          fillContent
+          sx={{
+            height: '100%',
+            width: '18%',
+            boxShadow: 'var(--shadows-3)',
+          }}
+        >
           <NavSectionVertical
             data={currentData}
             sx={{ p: 1, flex: '1 1 auto', width: '100%' }}
@@ -34,8 +46,8 @@ const SubLayout = ({ children }: any) => {
         sx={{
           // flexGrow: 1,
           p: 1,
-          boxShadow: 'var(--shadows-4)',
-          width: '82%',
+          boxShadow: 'var(--shadows-3)',
+          width: currentData?.length ? '82%' : '100%',
         }}
       >
         <Scrollbar
@@ -44,28 +56,6 @@ const SubLayout = ({ children }: any) => {
           {children}
         </Scrollbar>
       </Box>
-    </Box>
-  );
-};
-const SubLayout1 = ({ children }: any) => {
-  const pathname = usePathname();
-  const removeLastSlash = pathname.replace(/\/$/, '');
-  const [currentModule] = removeLastSlash.split('/').filter((x) => x);
-  const currentData = navSubData[`/${currentModule}` as keyof typeof navSubData];
-
-  return (
-    <Box display="flex" height="100%" gap={2}>
-      {currentData?.length > 0 && (
-        <Paper elevation={4} sx={{ height: '100%', maxWidth: 250, width: '100%', py: 1, pl: 1 }}>
-          <Scrollbar fillContent sx={{ height: '100%' }}>
-            <RenderSubModule data={currentData} />
-          </Scrollbar>
-        </Paper>
-      )}
-
-      <Scrollbar sx={{ flexGrow: 1, p: 1, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
-        {children}
-      </Scrollbar>
     </Box>
   );
 };

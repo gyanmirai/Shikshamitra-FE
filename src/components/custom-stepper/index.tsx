@@ -30,10 +30,10 @@ interface CustomStepperWithFormikProps {
   activeStep: number;
   initialValues: any;
   steps: string[];
-  handleNext: (value: any) => void;
+  handleNext: (isLastStep: boolean, value: any) => void;
   handleBack: () => void;
   validationSchema: any;
-  renderItem: (formik: any) => React.ReactNode;
+  renderItem: ({ formik, activeStep }: { formik: any; activeStep: number }) => React.ReactNode;
   onStepClick?: (index: number, label: string, formik: any) => void;
 }
 
@@ -53,12 +53,12 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     enableReinitialize: true,
     validateOnMount: true,
     onSubmit: (values) => {
-      handleNext(values);
+      handleNext(activeStep === steps.length - 1, values);
     },
   });
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%', p: 2 }}>
       <Stepper activeStep={activeStep} alternativeLabel>
         {steps.map((label: string, index: number) => (
           <Step
@@ -101,4 +101,3 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     </Box>
   );
 };
-// export default CustomStepperWithFormik;

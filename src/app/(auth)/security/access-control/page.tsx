@@ -1,5 +1,7 @@
 import React from 'react';
 
-const AccessControl = () => <div>AccessControl</div>;
+import AccessControlScreen from 'src/screens/AccessControl';
+
+const AccessControl = () => <AccessControlScreen />;
 
 export default AccessControl;

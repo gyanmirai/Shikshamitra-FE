@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import type { UseTabsReturn } from 'src/hooks/use-tabs';
+
+import { useMemo } from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Tab, Card, Tabs, Button } from '@mui/material';
@@ -9,14 +11,17 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
-import DataTable from 'src/components/commonTable';
 import { EmptyContent } from 'src/components/empty-content';
-import StudentSearch from 'src/components/studentProfile/studentSearch';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Records from './records';
+import Finance from './finance';
 import Academic from './academic';
+import Document from './document';
 import Attendance from './attendance';
 import { ProfileCover } from './profile-cover';
+import StudentDashboard from './studentDashboard';
 import { StudentInformation } from './information';
 
 const students = [
@@ -26,6 +31,10 @@ const students = [
     rollNo: '001',
     GrNo: 'GR001',
     class: '10th',
+    division: 'A',
+    medium: 'GUJ',
+    organization: 'Primary',
+    board: 'CBSE',
   },
   {
     id: 2,
@@ -33,6 +42,10 @@ const students = [
     rollNo: '002',
     GrNo: 'GR002',
     class: '10th',
+    division: 'B',
+    medium: 'ENG',
+    organization: 'Primary',
+    board: 'ICSE',
   },
   {
     id: 3,
@@ -40,6 +53,10 @@ const students = [
     rollNo: '003',
     GrNo: 'GR003',
     class: '10th',
+    division: 'A',
+    medium: 'ENG',
+    organization: 'Secondary',
+    board: 'ICSE',
   },
   {
     id: 4,
@@ -47,6 +64,10 @@ const students = [
     rollNo: '004',
     GrNo: 'GR004',
     class: '10th',
+    division: 'D',
+    medium: 'ENG',
+    organization: 'Secondary',
+    board: 'GSEB',
   },
   {
     id: 5,
@@ -54,102 +75,101 @@ const students = [
     rollNo: '005',
     GrNo: 'GR005',
     class: '10th',
+    division: 'E',
+    medium: 'GUJ',
+    organization: 'Primary',
+    board: 'GSEB',
   },
 ];
 
+export interface StudentTabsComponentType {
+  tabs?: UseTabsReturn;
+}
+
 const TABS = [
+  {
+    value: 'dashboard',
+    label: 'Dashboard',
+    icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <StudentDashboard {...props} />,
+  },
   {
     value: 'information',
     label: 'Information',
-    icon: <Iconify icon="solar:user-id-bold" width={22} />,
-    component: (props: Record<string, string>) => <StudentInformation {...props} />,
+    icon: <Iconify icon="solar:user-id-bold" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <StudentInformation {...props} />,
   },
   {
     value: 'attendance',
     label: 'Attendance',
-    icon: <Iconify icon="solar:bill-list-bold" width={22} />,
-    component: (props: Record<string, string>) => <Attendance {...props} />,
+    icon: <Iconify icon="solar:bill-list-bold" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Attendance {...props} />,
   },
   {
     value: 'academic',
     label: 'Academic',
-    icon: <Iconify icon="solar:square-academic-cap-bold" width={22} />,
-    component: (props: Record<string, string>) => <Academic {...props} />,
+    icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Academic {...props} />,
   },
   {
     value: 'records',
     label: 'Records',
-    icon: <Iconify icon="vaadin:records" width={22} />,
-    component: (props: Record<string, string>) => <Records {...props} />,
+    icon: <Iconify icon="vaadin:records" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Records {...props} />,
   },
-  { value: 'finance', label: 'Finance', icon: <Iconify icon="map:finance" width={22} /> },
-  { value: 'documents', label: 'Documents', icon: <Iconify icon="ion:documents" width={22} /> },
+  {
+    value: 'finance',
+    label: 'Finance',
+    icon: <Iconify icon="map:finance" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Finance {...props} />,
+  },
+  {
+    value: 'documents',
+    label: 'Documents',
+    icon: <Iconify icon="ion:documents" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Document {...props} />,
+  },
   {
     value: 'communications',
     label: 'Communications',
-    icon: <Iconify icon="maki:communications-tower" width={22} />,
+    icon: <Iconify icon="maki:communications-tower" width={20} />,
+  },
+  {
+    value: 'Transportation',
+    label: 'transportation',
+    icon: <Iconify icon="solar:bus-bold" width={20} />,
   },
 ];
 export function StudentProfile() {
   const [searchParams, setSearchParams] = useSearchParam();
-  const tabs = useTabs('information');
+  const tabs = useTabs('dashboard');
 
-  const [filterData, setFilterData] = useState<
-    {
-      name: string;
-      rollNo: string;
-      GrNo: string;
-      id: number;
-    }[]
-  >([]);
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
 
-  const handelSearch = useCallback(
-    (value: string) => {
-      const filteredData = value
-        ? students.filter((item) => item.name.toLowerCase().includes(value.toLowerCase()))
-        : [];
-
-      setSearchParams({ searchValue: value, isSearch: 'true', student: '' });
-      setFilterData(filteredData);
-    },
-    [setSearchParams]
-  );
-
-  const handleChange = (value: string) => {
-    handelSearch(value);
-  };
-
   const currentStudent = students.find((item) => item.id === Number(searchParams?.student));
 
-  useEffect(() => {
-    if (searchParams?.isSearch === 'true' && searchParams?.searchValue) {
-      handelSearch(searchParams?.searchValue);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   return (
     <>
-      {(searchParams?.isSearch === 'true' || !searchParams?.isSearch) && (
-        <StudentSearch value={searchParams?.searchValue} handleChange={handleChange} />
-      )}
-
-      {searchParams?.isSearch === 'true' &&
-        (filterData.length ? (
-          <DataTable
-            data={filterData}
+      {!currentStudent &&
+        (students.length ? (
+          <CustomizableTable
+            data={students}
             columns={[
-              { key: 'name', label: 'Name', width: '10%' },
-              { key: 'rollNo', label: 'Roll No', width: '10%' },
-              { key: 'GrNo', label: 'Gr No', width: '10%' },
+              { id: 'name', label: 'Name' },
+              { id: 'rollNo', label: 'Roll No' },
+              { id: 'GrNo', label: 'Gr No' },
+              { id: 'board', label: 'Board' },
+              { id: 'medium', label: 'Medium' },
+              { id: 'organization', label: 'Organization' },
+              { id: 'class', label: 'Class' },
+              { id: 'division', label: 'Division' },
               {
-                key: 'name',
+                id: 'action',
                 label: 'Action',
-                width: '10%',
-                render: (row) => (
+                render: (value, row) => (
                   <Button
                     onClick={() => {
                       setSearchParams({
@@ -171,9 +191,19 @@ export function StudentProfile() {
         ))}
       {currentStudent && (
         <>
+          <CustomBreadcrumbs
+            heading={currentActiveComponent?.label}
+            links={[
+              { name: 'Student' },
+              { name: 'Student Profile' },
+              { name: currentActiveComponent?.label },
+            ]}
+            sx={{ px: 1, pb: 1 }}
+          />
           <Card sx={{ mb: 3, height: 290 }}>
             <ProfileCover
-              role={currentStudent?.class}
+              // eslint-disable-next-line jsx-a11y/aria-role
+              role={`${currentStudent?.class} - ${currentStudent?.division}`}
               name={currentStudent?.name}
               avatarUrl="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
               coverUrl=""
@@ -182,7 +212,6 @@ export function StudentProfile() {
 
             <Box
               display="flex"
-              justifyContent={{ xs: 'center', md: 'flex-end' }}
               sx={{
                 width: 1,
                 bottom: 0,
@@ -192,7 +221,12 @@ export function StudentProfile() {
                 bgcolor: 'background.paper',
               }}
             >
-              <Tabs value={tabs.value} onChange={tabs.onChange}>
+              <Tabs
+                value={tabs.value}
+                onChange={tabs.onChange}
+                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+                role="tablist"
+              >
                 {TABS.map((tab) => (
                   <Tab
                     sx={{ fontSize: '12px' }}
@@ -200,13 +234,14 @@ export function StudentProfile() {
                     value={tab.value}
                     icon={tab.icon}
                     label={tab.label}
+                    role="tab"
                   />
                 ))}
               </Tabs>
             </Box>
           </Card>
           {/* <Scrollbar sx={{ height: '100%', overflowY: 'auto' }}> */}
-          {currentActiveComponent?.component && <currentActiveComponent.component />}
+          {currentActiveComponent?.component && <currentActiveComponent.component tabs={tabs} />}
           {/* </Scrollbar> */}
         </>
       )}

@@ -29,7 +29,16 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
               });
               localStorage.setItem('access_token', newTokenSet.data.access_token);
               localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);
+              config.headers = config.headers || {};
+              config.headers.Authorization = `Bearer ${newTokenSet.data.access_token}`;
             } catch (error) {
+              // Clear cookies
+              document.cookie.split(';').forEach((c) => {
+                document.cookie = c
+                  .replace(/^ +/, '')
+                  .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+              });
+
               window.location.href = '/auth/login';
             }
           } else {
@@ -83,7 +92,6 @@ export const apiClient = createAxiosInstance(process.env.NEXT_PUBLIC_API_URL || 
 export const axiosBaseQuery =
   ({ baseUrl } = { baseUrl: '' }) =>
   async ({ url, method = 'get', data, params, headers, ...props }: any) => {
-    console.log({ url, method, data, params, headers }, '==========');
     try {
       const result = await apiClient({
         url: baseUrl + url,

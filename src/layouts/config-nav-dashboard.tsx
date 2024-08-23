@@ -48,6 +48,7 @@ const ICONS = {
   parameter: icon('ic-parameter'),
   student: icon('ic-student'),
   security: icon('ic-security'),
+  hr: icon('ic-hr'),
 };
 
 // ----------------------------------------------------------------------
@@ -69,7 +70,7 @@ export const navData = [
       { title: 'Security', path: '/security/role', icon: ICONS.security, _action: 'security' },
       { title: 'Finance', path: financePath, icon: ICONS.dashboard, _action: 'finance' },
       { title: 'Assessment', path: assessmentPath, icon: ICONS.dashboard, _action: 'assessment' },
-      { title: 'HR', path: hrPath, icon: ICONS.dashboard, _action: 'hr' },
+      { title: 'HR', path: '/hr/dashboard', icon: ICONS.hr, _action: 'hr' },
       // {
       //   title: 'Setting',
       //   path: hrPath,
@@ -143,6 +144,11 @@ const studentModule = {
               //   },
               // ],
             },
+            {
+              title: 'Attendance',
+              _action: 'overView',
+              path: '/student/overview',
+            },
             // { title: 'Records', path: studentListPath },
             // { title: 'Student/Dashboard', path: '/student/no-of-student' },
             // { title: 'Transport/Heat-Map', path: '/student/no-of-student' },
@@ -212,4 +218,117 @@ const settingModule = {
   ],
 };
 
-export const navSubData = { ...studentModule, ...securityModule, ...settingModule };
+const hrModule = {
+  [hrPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/hr/dashboard',
+          _action: 'dashboard',
+        },
+        {
+          title: 'Employee',
+          path: '',
+          _action: 'employee',
+          children: [
+            {
+              title: 'Employee Enroll',
+              path: '/hr/employee',
+              _action: 'employee',
+            },
+            {
+              title: 'Personal Information',
+              path: '/hr/personal-information',
+              _action: 'personal-information',
+            },
+            {
+              title: 'Qualifications and Certifications',
+              path: '/hr/qualifications-and-certifications',
+              _action: 'qualifications-and-certifications',
+            },
+            {
+              title: 'Employment History',
+              path: '/hr/employment-history',
+              _action: 'employment-history',
+            },
+          ],
+        },
+        {
+          title: 'Payroll Management',
+          path: '',
+          _action: 'payroll-management',
+          children: [
+            {
+              title: 'Salary Calculation and Disbursement',
+              path: '/hr/salary-calculation-and-disbursement',
+              _action: 'salary-calculation-and-disbursement',
+            },
+            {
+              title: 'Tax and PF Deductions',
+              path: '/hr/tax-and-pf-deductions',
+              _action: 'tax-and-pf-deductions',
+            },
+            {
+              title: 'Payslip Generation',
+              path: '/hr/payslip-generation',
+              _action: 'payslip-generation',
+            },
+          ],
+        },
+        {
+          title: 'Attendance and Leave Management',
+          path: '',
+          _action: 'attendance-and-leave-management',
+          children: [
+            {
+              title: 'Biometric Integration',
+              path: '/hr/biometric-integration',
+              _action: 'biometric-integration',
+            },
+            {
+              title: 'Leave Requests and Approvals',
+              path: '/hr/leave-requests-and-approvals',
+              _action: 'leave-requests-and-approvals',
+            },
+            {
+              title: 'Attendance Tracking',
+              path: '/hr/attendance-tracking',
+              _action: 'attendance-tracking',
+            },
+          ],
+        },
+        {
+          title: 'Professional Development',
+          path: '',
+          _action: 'professional-development',
+          children: [
+            {
+              title: 'Training and Workshops',
+              path: '/hr/training-and-workshops',
+              _action: 'training-and-workshops',
+            },
+            {
+              title: 'Performance Appraisals',
+              path: '/hr/performance-appraisals',
+              _action: 'performance-appraisals',
+            },
+            {
+              title: 'Certification Tracking',
+              path: '/hr/certification-tracking',
+              _action: 'certification-tracking',
+            },
+          ],
+        },
+        {
+          title: 'Reports',
+          path: '/hr/reports',
+          _action: 'reports',
+        },
+      ],
+    },
+  ],
+};
+
+export const navSubData = { ...studentModule, ...securityModule, ...settingModule, ...hrModule };

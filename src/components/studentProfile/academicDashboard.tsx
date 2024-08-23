@@ -2,9 +2,9 @@ import type { CardProps } from '@mui/material';
 
 import { useState, useCallback } from 'react';
 
-import { Box, Card, Paper, Alert, useTheme, Typography } from '@mui/material';
+import { Box, Card, Stack, Alert, Divider, useTheme, CardHeader, Typography } from '@mui/material';
 
-import DataTable from '../commonTable';
+import CustomizableTable from '../customizabaleTable';
 import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 
 import type { ChartOptions } from '../chart';
@@ -22,13 +22,33 @@ const AcademicDashboard = () => {
         You need to increase your performance in Mathematics. Focus on improving your scores in this
         subject.
       </Alert>
-      <Paper sx={{ p: 2, mt: 3, display: 'flex', gap: 2 }} elevation={2}>
+      <Card sx={{ py: 3, textAlign: 'center', typography: 'h4' }}>
+        <Stack
+          direction="row"
+          divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+        >
+          <Stack width={1}>
+            87.5%
+            <Box component="span" sx={{ color: 'text.secondary', typography: 'body2' }}>
+              Current Percentage
+            </Box>
+          </Stack>
+
+          <Stack width={1}>
+            90%-95%
+            <Box component="span" sx={{ color: 'text.secondary', typography: 'body2' }}>
+              Predicted Percentage
+            </Box>
+          </Stack>
+        </Stack>
+      </Card>
+      {/* <Paper sx={{ p: 2, mt: 3, display: 'flex', gap: 2 }} elevation={2}>
         <Box display="flex" flexDirection="column" gap={1}>
           <Typography variant="h6">
             <Box
               component="span"
               sx={{
-                outline: `2px dashed ${theme.palette.text.primary}`,
+                outline: `dashed 2px ${theme.vars.palette.divider}`,
                 p: 1,
                 color: theme.palette.primary.main,
                 borderRadius: '5px',
@@ -46,7 +66,7 @@ const AcademicDashboard = () => {
             <Box
               component="span"
               sx={{
-                outline: `2px dashed ${theme.palette.text.primary}`,
+                outline: `dashed 2px ${theme.vars.palette.divider}`,
                 p: 1,
                 color: theme.palette.warning.main,
                 borderRadius: '5px',
@@ -65,11 +85,12 @@ const AcademicDashboard = () => {
             onChange={handleChangeSeries}
           />
         </Box>
-      </Paper>
+      </Paper> */}
       <EcommerceYearlySales
-        title="Current Percentage 87.5%"
-        subheader="(+43%) than last year"
+        title="Academic Trends"
+        subheader=""
         selectedSeries={selectedSeries}
+        handleChangeSeries={handleChangeSeries}
         chart={{
           categories: ['01/01', '07/02', '09/03', '01/04'],
           series: [
@@ -159,7 +180,7 @@ const AcademicDashboard = () => {
           ],
         }}
       />
-      <DataTable
+      <CustomizableTable
         data={[
           {
             date: '01-01-2024',
@@ -173,15 +194,15 @@ const AcademicDashboard = () => {
           },
         ]}
         columns={[
-          { key: 'date', label: 'Date', width: '10%' },
-          { key: 'category', label: 'Category', width: '10%' },
+          { id: 'date', label: 'Date' },
+          { id: 'category', label: 'Category' },
           {
-            key: 'marks',
+            id: 'marks',
             label: 'Marks',
-            width: '10%',
-            render: (row) => (
+
+            render: (val, row) => (
               <>
-                {Object.entries(row.marks).map(([key, value]) => (
+                {Object.entries(row.marks).map(([key, value]: any) => (
                   <Typography key={key} variant="subtitle2">
                     {key} : {value}
                   </Typography>
@@ -201,6 +222,7 @@ type Props = CardProps & {
   title?: string;
   subheader?: string;
   selectedSeries: string;
+  handleChangeSeries: (value: string) => void;
   chart: {
     colors?: string[];
     categories?: string[];
@@ -215,7 +237,14 @@ type Props = CardProps & {
   };
 };
 
-export function EcommerceYearlySales({ title, subheader, chart, selectedSeries, ...other }: Props) {
+export function EcommerceYearlySales({
+  title,
+  subheader,
+  chart,
+  selectedSeries,
+  handleChangeSeries,
+  ...other
+}: Props) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
@@ -230,18 +259,18 @@ export function EcommerceYearlySales({ title, subheader, chart, selectedSeries, 
 
   return (
     <Card {...other}>
-      {/* <CardHeader
-          title={title}
-          subheader={subheader}
-          action={
-            <ChartSelect
-              options={chart.series.map((item) => item.name)}
-              value={selectedSeries}
-              onChange={handleChangeSeries}
-            />
-          }
-          sx={{ mb: 3 }}
-        /> */}
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        action={
+          <ChartSelect
+            options={chart.series.map((item) => item.name)}
+            value={selectedSeries}
+            onChange={handleChangeSeries}
+          />
+        }
+        sx={{ mb: 3 }}
+      />
 
       <ChartLegends
         colors={chartOptions?.colors}

@@ -13,7 +13,7 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 // ----------------------------------------------------------------------
 
 type Props = CardProps & {
-  title?: string;
+  title?: any;
   subheader?: string;
   chart: {
     colors?: string[];
@@ -25,10 +25,10 @@ type Props = CardProps & {
   };
 };
 
-export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
+export function AttendanceChart({ title, subheader, chart, ...other }: any) {
   const theme = useTheme();
 
-  const chartSeries = chart.series.map((item) => item.value);
+  const chartSeries = chart.series.map((item: any) => item.value);
 
   const chartColors = chart.colors ?? [
     theme.palette.primary.main,
@@ -40,7 +40,7 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
     colors: chartColors,
-    labels: chart.series.map((item) => item.label),
+    labels: chart.series.map((item: any) => item.label),
     stroke: { width: 0 },
     dataLabels: { enabled: true, dropShadow: { enabled: false } },
     tooltip: {
@@ -78,7 +78,7 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
 }
 
 type Props1 = CardProps & {
-  title?: string;
+  title?: any;
   subheader?: string;
   chart: {
     colors?: string[];
@@ -91,7 +91,7 @@ type Props1 = CardProps & {
   };
 };
 
-export function YearlyAttendance({ title, subheader, chart, ...other }: Props1) {
+export function YearlyAttendance({ title, subheader, chart, ...other }: any) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [

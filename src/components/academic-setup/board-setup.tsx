@@ -73,7 +73,6 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
   const confirm = useBoolean(false);
 
   const isInitial = useRef<null | string>(null);
-  console.log(tabs.value, 'p[p[p[p[p[p');
   useEffect(() => {
     if (boards?.items) {
       const filterItems = boards?.items.filter(

@@ -55,8 +55,6 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   const { userInfo } = useSelector((state: any) => state.user);
 
-  console.log(userInfo, 'userInfo');
-
   const [open, setOpen] = useState(false);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -249,7 +247,6 @@ const ChangedPasswordForm = ({ handleClose, sessionData }: any) => {
         .oneOf([Yup.ref('newPassword')], 'Passwords must match'),
     }),
     onSubmit: async (values) => {
-      console.log(values, 'values');
       const res = await changePassword({
         data: {
           currentPassword: values.oldPassword,
@@ -257,7 +254,6 @@ const ChangedPasswordForm = ({ handleClose, sessionData }: any) => {
         },
         token: sessionData?.accessToken,
       });
-      console.log(res, '============');
       if (!res.error) {
         toast.success('Password changed successfully');
         handleClose();

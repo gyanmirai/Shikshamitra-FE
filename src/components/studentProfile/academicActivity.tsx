@@ -1,4 +1,4 @@
-import DataTable from '../commonTable';
+import CustomizableTable from '../customizabaleTable';
 
 const AcademicActivity = () => {
   const studentActivityData = [
@@ -10,11 +10,11 @@ const AcademicActivity = () => {
   ];
 
   const columns: any = [
-    { key: 'activity', label: 'Activity' },
-    { key: 'date', label: 'Date' },
+    { id: 'activity', label: 'Activity' },
+    { id: 'date', label: 'Date' },
   ];
 
-  return <DataTable columns={columns} data={studentActivityData} />;
+  return <CustomizableTable columns={columns} data={studentActivityData} />;
 };
 
 export default AcademicActivity;

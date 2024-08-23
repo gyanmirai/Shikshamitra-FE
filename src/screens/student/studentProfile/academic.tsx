@@ -2,6 +2,8 @@ import React from 'react';
 
 import AcademicTabs from 'src/components/studentProfile/AcademicTabs';
 
-const Academic = () => <AcademicTabs />;
+import type { StudentTabsComponentType } from '.';
+
+const Academic = (props: StudentTabsComponentType) => <AcademicTabs />;
 
 export default Academic;

@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { Tab, Box, Card, List, ListItem, Typography } from '@mui/material';
+import { Tab, Box, Card, List, ListItem, Typography, CardHeader, CardContent } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -10,12 +10,14 @@ import DataTable from 'src/components/commonTable';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 
+import type { StudentTabsComponentType } from '.';
+
 const TABS = [
   { value: 'behavioral', label: 'Behavioral' },
   { value: 'health', label: 'Health' },
 ];
 
-const Records = () => {
+const Records = (props: StudentTabsComponentType) => {
   const tabs = useTabs('behavioral');
   const renderTabs = (
     <CustomTabs
@@ -30,7 +32,7 @@ const Records = () => {
     </CustomTabs>
   );
   return (
-    <Card sx={{ '& *': { fontSize: '12px !important' } }}>
+    <Box sx={{ '& *': { fontSize: '12px !important' } }}>
       {renderTabs}
 
       <Scrollbar sx={{ minHeight: 384 }}>
@@ -39,7 +41,7 @@ const Records = () => {
           {tabs.value === 'health' && <RenderHealthRecord />}
         </Box>
       </Scrollbar>
-    </Card>
+    </Box>
   );
 };
 
@@ -47,7 +49,45 @@ export default Records;
 
 const RenderBehavioralRecord = () => (
   <>
-    <Typography variant="h6">Disciplinary Incidents:</Typography>
+    <Box display="flex" gap={1}>
+      <Card elevation={3}>
+        <CardHeader
+          title="Merits and Achievements"
+          sx={{
+            '& .MuiCardHeader-title': {
+              fontWeight: 'bold',
+              fontSize: '14px !important',
+            },
+          }}
+        />
+        <CardContent sx={{ p: 1 }}>
+          <List>
+            <ListItem>- Honor Roll (2022-2023)</ListItem>
+            <ListItem>- Volunteer of the Month (May 2023)</ListItem>
+          </List>
+        </CardContent>
+      </Card>
+      <Card elevation={3}>
+        <CardHeader
+          title="Extracurricular Activities"
+          sx={{
+            '& .MuiCardHeader-title': {
+              fontWeight: 'bold',
+              fontSize: '14px !important',
+            },
+          }}
+        />
+        <CardContent sx={{ p: 1 }}>
+          <List>
+            <ListItem>- Soccer Team</ListItem>
+            <ListItem>- Art Club</ListItem>
+          </List>
+        </CardContent>
+      </Card>
+    </Box>
+    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '14px !important' }}>
+      Disciplinary Incidents
+    </Typography>
 
     <DataTable
       data={[{ date: '2023-03-15', incident: 'Disrupting Class', actionTaken: 'Warning' }]}
@@ -57,12 +97,14 @@ const RenderBehavioralRecord = () => (
         { key: 'actionTaken', label: 'Action Taken' },
       ]}
     />
-    <Typography variant="h6">Merits and Achievements:</Typography>
-    <List>
-      <ListItem>Honor Roll (2022-2023)</ListItem>
-      <ListItem>Volunteer of the Month (May 2023)</ListItem>
-    </List>
-    <Typography variant="h6">Counseling Sessions:</Typography>
+    {/* <Typography variant="h6">Merits and Achievements:</Typography>
+      <List>
+        <ListItem>Honor Roll (2022-2023)</ListItem>
+        <ListItem>Volunteer of the Month (May 2023)</ListItem>
+      </List> */}
+    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '14px !important' }}>
+      Counseling Sessions:
+    </Typography>
     <DataTable
       data={[{ date: '2023-03-15', reason: 'Academic Support' }]}
       columns={[
@@ -70,31 +112,67 @@ const RenderBehavioralRecord = () => (
         { key: 'reason', label: 'Reason' },
       ]}
     />
-    <Typography variant="h6">Extracurricular Activities:</Typography>
+    {/* <Typography variant="h6">Extracurricular Activities:</Typography>
     <List>
       <ListItem>Soccer Team</ListItem>
       <ListItem>Art Club</ListItem>
-    </List>
+    </List> */}
   </>
 );
 
 const RenderHealthRecord = () => (
-  <>
-    <Typography variant="h6">Medical History:</Typography>
-    <List>
-      <ListItem>Asthma</ListItem>
-      <ListItem>Allergies to Peanuts</ListItem>
-    </List>
-    <Typography variant="h6">Vaccination Records:</Typography>
-    <List>
-      <ListItem>MMR (2021)</ListItem>
-      <ListItem>Tetanus (2022)</ListItem>
-    </List>
-    <Typography variant="h6">Recent Health Check-up:</Typography>
-    <List>
-      <ListItem>Height: 165 cm</ListItem>
-      <ListItem>Height: 165 cm</ListItem>
-      <ListItem>Blood Pressure: 120/80 mmHg</ListItem>
-    </List>
-  </>
+  <Box display="flex" gap={1}>
+    <Card elevation={3} sx={{ flexGrow: 1 }}>
+      <CardHeader
+        title="Medical History"
+        sx={{
+          '& .MuiCardHeader-title': {
+            fontWeight: 'bold',
+            fontSize: '14px !important',
+          },
+        }}
+      />
+      <CardContent sx={{ p: 1 }}>
+        <List>
+          <ListItem>- Asthma</ListItem>
+          <ListItem>- Allergies to Peanuts</ListItem>
+        </List>
+      </CardContent>
+    </Card>
+    <Card elevation={3} sx={{ flexGrow: 1 }}>
+      <CardHeader
+        title="Vaccination Records"
+        sx={{
+          '& .MuiCardHeader-title': {
+            fontWeight: 'bold',
+            fontSize: '14px !important',
+          },
+        }}
+      />
+      <CardContent sx={{ p: 1 }}>
+        <List>
+          <ListItem>- MMR (2021)</ListItem>
+          <ListItem>- Tetanus (2022)</ListItem>
+        </List>
+      </CardContent>
+    </Card>
+    <Card elevation={3} sx={{ flexGrow: 1 }}>
+      <CardHeader
+        title="Recent Health Check-up"
+        sx={{
+          '& .MuiCardHeader-title': {
+            fontWeight: 'bold',
+            fontSize: '14px !important',
+          },
+        }}
+      />
+      <CardContent sx={{ p: 1 }}>
+        <List>
+          <ListItem>- Height: 165 cm</ListItem>
+          <ListItem>- Height: 165 cm</ListItem>
+          <ListItem>- Blood Pressure: 120/80 mmHg</ListItem>
+        </List>
+      </CardContent>
+    </Card>
+  </Box>
 );

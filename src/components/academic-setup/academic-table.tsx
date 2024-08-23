@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 
 import Table from '@mui/material/Table';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableCell from '@mui/material/TableCell';
 import {
   Paper,
+  Button,
   MenuList,
   MenuItem,
   Collapse,
@@ -29,17 +31,6 @@ import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 
 // ----------------------------------------------------------------------
-
-interface EducationMediumStage {
-  id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  educationMediumId: string;
-  name: string;
-  standards: Standard[];
-}
 
 interface Standard {
   id: string;
@@ -62,9 +53,7 @@ interface Division {
   strength: number;
   standardId: string;
 }
-interface AcademicTableProps {
-  mediumId: string;
-}
+
 interface CustomAcademicTableProps {
   id: string;
   name: string;
@@ -73,6 +62,7 @@ interface CustomAcademicTableProps {
   formComp: (props: any) => React.ReactNode;
   children?: CustomAcademicTableProps;
   dataKey: string;
+  isParent?: boolean;
 }
 
 export const CustomAcademicTable = ({
@@ -83,12 +73,12 @@ export const CustomAcademicTable = ({
   name,
   children = undefined,
   dataKey,
+  isParent = false,
 }: CustomAcademicTableProps) => {
   const [getData, { data, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: getLazyQuery,
   });
-  console.log(children, 'children');
   useEffect(() => {
     getData(id);
   }, [getData, id]);
@@ -116,16 +106,28 @@ export const CustomAcademicTable = ({
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: '10%' }} />
-            <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {name}{' '}
-              <Iconify
+            <TableCell>
+              {name} {/* {isParent && ( */}
+              {/* <Iconify
                 icon="zondicons:add-solid"
                 sx={{ color: 'primary.main', cursor: 'pointer' }}
                 onClick={handleAdd}
-              />
+              /> */}
+              {/* )} */}
             </TableCell>
-            {/* <TableCell align="center">Class</TableCell>
-            <TableCell align="center">Division</TableCell> */}
+            {children && <TableCell align="center">Total {children.name}</TableCell>}
+            <TableCell align="center">Action</TableCell>
+            <TableCell align="right">
+              <Button
+                variant="outlined"
+                startIcon={<Add />}
+                // sx={{ maxWidth: '15%', width: '100%' }}
+                size="small"
+                onClick={handleAdd}
+              >
+                {name}
+              </Button>
+            </TableCell>
           </TableRow>
         </TableHead>
 
@@ -271,6 +273,9 @@ function CollapsibleTableRow({
 }: CollapsibleTableRowProps) {
   const collapsible = useBoolean();
   const confirm = useBoolean(false);
+  const [childEditData, setChildEditData] = useState<CustomAcademicTableProps | undefined>(
+    undefined
+  );
   const [deleteOrganization, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: deleteMutation,
@@ -279,6 +284,7 @@ function CollapsibleTableRow({
       successMessage: `${name} deleted Successfully`,
     },
   });
+  const childModal = useBoolean(false);
 
   const actions = useCallback(
     ({ popover }: any) => (
@@ -303,13 +309,39 @@ function CollapsibleTableRow({
           <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
           Edit
         </MenuItem>
+        {/* {children && (
+          <MenuItem
+            onClick={() => {
+              childModal.onTrue();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="ic:baseline-add" sx={{ height: '16px', width: '16px' }} />
+            Create {childEditData?.name}
+          </MenuItem>
+        )} */}
       </MenuList>
     ),
     [confirm, modal]
   );
-
+  const onCloseDialog = async () => {
+    setChildEditData(undefined);
+    // await getData(id);
+    childModal.onFalse();
+    // collapsible.onFalse();
+    // setTimeout(() => {
+    //   collapsible.onTrue();
+    // }, 1000);
+  };
   return (
     <>
+      <CustomDialog
+        title={`Create ${childEditData?.name || ''}`}
+        handleClose={onCloseDialog}
+        open={childModal.value}
+      >
+        {childEditData?.formComp({ editData: null, onCloseDialog, id: row.id })}
+      </CustomDialog>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -335,7 +367,7 @@ function CollapsibleTableRow({
           </LoadingButton>
         }
       />
-      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} hover>
         <TableCell>
           {children && (
             <IconButton
@@ -351,14 +383,24 @@ function CollapsibleTableRow({
             </IconButton>
           )}
         </TableCell>
-        <TableCell component="th" scope="row">
-          {`${row.name}${row?.strength ? ` (${row.strength})` : ''}`}
-          <ThreeDotsActions onClickThreeDots={() => setEditData(row)} actions={actions} />
-        </TableCell>
+        <TableCell>{`${row.name}${row?.strength ? ` (${row.strength})` : ''}`}</TableCell>
+        {children && <TableCell align="center">{row[children.dataKey].length}</TableCell>}
         {/* <TableCell align="right">{row.calories}</TableCell>
         <TableCell align="right">{row.fat}</TableCell>
         <TableCell align="right">{row.carbs}</TableCell>
         <TableCell align="right">{row.protein}</TableCell> */}
+        <TableCell align="center">
+          <ThreeDotsActions
+            onClickThreeDots={() => {
+              setEditData(row);
+              if (children) {
+                setChildEditData(children);
+              }
+            }}
+            actions={actions}
+          />
+        </TableCell>
+        <TableCell align="right" />
       </TableRow>
 
       <TableRow>
