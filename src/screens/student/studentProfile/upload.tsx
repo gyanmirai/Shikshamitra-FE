@@ -6,7 +6,7 @@ import { UploadAvatar } from 'src/components/upload';
 
 const Upload = ({ ...other }) => {
   const [value, setValue] = useState('');
-  const [error, seterror] = useState({ message: '' });
+  const [error] = useState({ message: '' });
   const onDrop = (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
 

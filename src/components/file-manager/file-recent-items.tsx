@@ -5,13 +5,11 @@ import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
@@ -42,7 +40,7 @@ export function FileRecentItem({ file, onDelete, sx, ...other }: Props) {
 
   const details = useBoolean();
 
-  const favorite = useBoolean(file.isFavorited);
+  // const favorite = useBoolean(file.isFavorited);
 
   const [inviteEmail, setInviteEmail] = useState('');
 
@@ -113,22 +111,22 @@ export function FileRecentItem({ file, onDelete, sx, ...other }: Props) {
     />
   );
 
-  const renderAvatar = (
-    <AvatarGroup
-      max={3}
-      sx={{
-        [`& .${avatarGroupClasses.avatar}`]: {
-          width: 24,
-          height: 24,
-          '&:first-of-type': { fontSize: 12 },
-        },
-      }}
-    >
-      {file.shared?.map((person: any) => (
-        <Avatar key={person.id} alt={person.name} src={person.avatarUrl} />
-      ))}
-    </AvatarGroup>
-  );
+  // const renderAvatar = (
+  //   <AvatarGroup
+  //     max={3}
+  //     sx={{
+  //       [`& .${avatarGroupClasses.avatar}`]: {
+  //         width: 24,
+  //         height: 24,
+  //         '&:first-of-type': { fontSize: 12 },
+  //       },
+  //     }}
+  //   >
+  //     {file.shared?.map((person: any) => (
+  //       <Avatar key={person.id} alt={person.name} src={person.avatarUrl} />
+  //     ))}
+  //   </AvatarGroup>
+  // );
 
   return (
     <>

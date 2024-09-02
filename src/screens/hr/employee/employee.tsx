@@ -1,16 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Paper, Button } from '@mui/material';
+import { Paper, Button, MenuList, MenuItem } from '@mui/material';
+
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import EmployeeFrom from './employee-form';
+import EmployeeView from './employee-view';
 
 const emploeeData = [
   {
@@ -2148,56 +2153,114 @@ const emploeeData = [
   },
 ];
 const HrEmployee = () => {
+  const [searchParams, setSearchParams] = useSearchParam();
   const [open, setOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  console.log(editData);
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              // confirm.onTrue();
+              setSearchParams({ employee: row?.PunchId });
+              pop.onClose();
+            }}
+            sx={{ color: 'info.main' }}
+          >
+            <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
+            View
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              // modal.onTrue();
+              setOpen(true);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+            Edit
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [setSearchParams]
+  );
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Employee"
-        links={[{ name: 'HR' }, { name: 'Employee' }]}
-        sx={{ px: 1 }}
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Add />}
-            onClick={() => setOpen(true)}
-          >
-            Add Employee
-          </Button>
-        }
-      />
-      <Paper sx={{ px: 1, py: 2 }}>
-        <CustomizableTable
-          columns={[
-            { id: 'Organization', label: 'Organization' },
-            { id: 'Code', label: 'Code' },
-            { id: 'Name', label: 'Name' },
-            { id: 'FirstName', label: 'First Name' },
-            { id: 'MiddleName', label: 'Middle Name' },
-            { id: 'EmployeeDesignation', label: 'Role' },
-            {
-              id: 'StatusName',
-              label: 'Status',
-              render(value, row) {
-                return (
-                  <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
-                    {value}
-                  </Label>
-                );
-              },
-            },
-          ]}
-          data={emploeeData}
-        />
-        <CustomDialog
-          maxWidth="md"
-          open={open}
-          handleClose={() => setOpen(false)}
-          title="Add Employee"
-        >
-          <EmployeeFrom />
-        </CustomDialog>
-      </Paper>
+      {!searchParams?.employee ? (
+        <>
+          {' '}
+          <CustomBreadcrumbs
+            heading="Employee"
+            links={[{ name: 'HR' }, { name: 'Employee' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Add />}
+                onClick={() => setOpen(true)}
+              >
+                Add Employee
+              </Button>
+            }
+          />
+          <Paper sx={{ px: 1, py: 2 }}>
+            <CustomizableTable
+              columns={[
+                { id: 'Organization', label: 'Organization' },
+                { id: 'Code', label: 'Code' },
+                { id: 'Name', label: 'Name' },
+                { id: 'FirstName', label: 'First Name' },
+                { id: 'MiddleName', label: 'Middle Name' },
+                { id: 'EmployeeDesignation', label: 'Role' },
+                {
+                  id: 'StatusName',
+                  label: 'Status',
+                  render(value, row) {
+                    return (
+                      <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
+                        {value}
+                      </Label>
+                    );
+                  },
+                },
+                {
+                  id: 'actions',
+                  label: 'Actions',
+                  isSort: false,
+                  render(value, row) {
+                    return (
+                      <ThreeDotsActions
+                        onClickThreeDots={() => {
+                          setEditData(row);
+                        }}
+                        actions={(props) => actions({ ...props, row })}
+                        placement="right-top"
+                      />
+                    );
+                  },
+                },
+              ]}
+              data={emploeeData}
+            />
+            <CustomDialog
+              maxWidth="lg"
+              open={open}
+              handleClose={() => setOpen(false)}
+              title="Add Employee"
+            >
+              <EmployeeFrom />
+            </CustomDialog>
+          </Paper>{' '}
+        </>
+      ) : (
+        <EmployeeView setSearchParams={setSearchParams} />
+      )}
     </>
   );
 };

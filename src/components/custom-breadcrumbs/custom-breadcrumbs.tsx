@@ -74,7 +74,7 @@ export function CustomBreadcrumbs({
 
 // ----------------------------------------------------------------------
 
-function Separator() {
+export function Separator() {
   return (
     <Box
       component="span"

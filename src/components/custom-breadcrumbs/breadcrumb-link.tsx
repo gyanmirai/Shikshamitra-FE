@@ -1,3 +1,5 @@
+import type { BoxProps } from '@mui/material/Box';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
@@ -7,13 +9,13 @@ import type { BreadcrumbsLinkProps } from './types';
 
 // ----------------------------------------------------------------------
 
-type Props = {
+type Props = BoxProps & {
   disabled: boolean;
   activeLast?: boolean;
   link: BreadcrumbsLinkProps;
 };
 
-export function BreadcrumbsLink({ link, activeLast, disabled }: Props) {
+export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props) {
   const styles = {
     typography: 'body2',
     alignItems: 'center',
@@ -53,5 +55,10 @@ export function BreadcrumbsLink({ link, activeLast, disabled }: Props) {
     );
   }
 
-  return <Box sx={styles}> {renderContent} </Box>;
+  return (
+    <Box sx={styles} {...props}>
+      {' '}
+      {renderContent}{' '}
+    </Box>
+  );
 }

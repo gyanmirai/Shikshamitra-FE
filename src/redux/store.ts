@@ -9,6 +9,7 @@ import userReducer from './user/userSlice';
 import { boardApi } from './board/boardApi';
 import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
+import { tenantApi } from './tenant/tenantApi';
 import { divisionApi } from './division/divisionApi';
 import { permissionApi } from './permission/permissionApi';
 import { organizationApi } from './oraganization/oraganization';
@@ -25,6 +26,7 @@ const store: Store = configureStore({
     [classApi.reducerPath]: classApi.reducer,
     [divisionApi.reducerPath]: divisionApi.reducer,
     [yearApi.reducerPath]: yearApi.reducer,
+    [tenantApi.reducerPath]: tenantApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -36,7 +38,8 @@ const store: Store = configureStore({
       .concat(organizationApi.middleware)
       .concat(classApi.middleware)
       .concat(divisionApi.middleware)
-      .concat(yearApi.middleware),
+      .concat(yearApi.middleware)
+      .concat(tenantApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

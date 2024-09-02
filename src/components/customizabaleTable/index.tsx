@@ -15,8 +15,8 @@ import {
   Box,
   Menu,
   Chip,
-  Table,
   Paper,
+  Table,
   Select,
   Button,
   Switch,
@@ -38,6 +38,7 @@ import {
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
+import { Scrollbar } from '../scrollbar';
 import { ComponentBlock } from '../component-block';
 
 interface Column {
@@ -79,7 +80,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sortColumn, setSortColumn] = useState('');
+  // const [sortColumn, setSortColumn] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [columnVisibility, setColumnVisibility] = useState<{ [key: string]: boolean }>(
     columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {})
@@ -463,109 +464,105 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       )}
       <Box px="2px">
         <ComponentBlock>
-          <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
-            <TableHead>
-              <TableRow>
-                {columns.some((column) => column.children) && <TableCell />}
-                {columns.map(
-                  (column) =>
-                    columnVisibility[column.id] && (
-                      <TableCell
-                        key={column.id}
-                        align={column.align || 'center'}
-                        sx={{ fontSize: '14px', minWidth: column.minWidth }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            cursor: column.isSort !== false ? 'pointer' : 'default',
-                            userSelect: 'none',
-                            fontWeight: 'bold',
-                          }}
-                          onClick={() => column.isSort !== false && handleSort(column.id)}
+          <Scrollbar sx={{ overflow: 'auto', maxHeight: '70vh' }}>
+            <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
+              <TableHead>
+                <TableRow>
+                  {columns.some((column) => column.children) && <TableCell />}
+                  {columns.map(
+                    (column) =>
+                      columnVisibility[column.id] && (
+                        <TableCell
+                          key={column.id}
+                          align={column.align || 'center'}
+                          sx={{ fontSize: '14px', minWidth: column.minWidth }}
                         >
-                          {column.label}
-                          {column.isSort !== false && (
-                            <>
-                              {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                                <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
-                                  {sorts.findIndex((sort) => sort.column === column.id) + 1}
-                                </Box>
-                              )}
-                              <IconButton
-                                size="small"
-                                sx={{
-                                  opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
-                                }}
-                              >
-                                {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                'asc' ? (
-                                  <ArrowUpwardIcon fontSize="inherit" />
-                                ) : (
-                                  <ArrowDownwardIcon fontSize="inherit" />
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              cursor: column.isSort !== false ? 'pointer' : 'default',
+                              userSelect: 'none',
+                              fontWeight: 'bold',
+                            }}
+                            onClick={() => column.isSort !== false && handleSort(column.id)}
+                          >
+                            {column.label}
+                            {column.isSort !== false && (
+                              <>
+                                {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                                  <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
+                                    {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                                  </Box>
                                 )}
-                              </IconButton>
-                            </>
-                          )}
-                          {/* {column.isSort !== false && (
-                            <IconButton
-                              size="small"
-                              sx={{ opacity: sortColumn === column.id ? 1 : 0 }}
-                            >
-                              {sortDirection === 'asc' ? (
-                                <ArrowUpwardIcon fontSize="inherit" />
-                              ) : (
-                                <ArrowDownwardIcon fontSize="inherit" />
-                              )}
-                            </IconButton>
-                          )} */}
-                        </Box>
-                      </TableCell>
-                    )
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedData.map((row, index) => (
-                <React.Fragment key={index}>
-                  <TableRow hover tabIndex={-1}>
-                    {columns.some((column) => column.children) && (
-                      <TableCell sx={{ fontSize: '12px' }}>
-                        <IconButton size="small" onClick={() => handleExpandRow(index)}>
-                          {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                      </TableCell>
-                    )}
-                    {columns.map(
-                      (column) =>
-                        columnVisibility[column.id] && (
-                          <TableCell key={column.id} align={column.align} sx={{ fontSize: '12px' }}>
-                            {column.render
-                              ? column.render(row[column.id], row)
-                              : _.get(row, column.id, '-')}
-                          </TableCell>
-                        )
-                    )}
-                  </TableRow>
-                  {columns.some((column) => column.children) && (
-                    <TableRow>
-                      <TableCell
-                        style={{ paddingBottom: 0, paddingTop: 0 }}
-                        colSpan={columns.length + 1}
-                      >
-                        <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
-                          <Box sx={{ margin: 1 }}>
-                            {columns.map((column) => column.children && column.children(row))}
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    opacity: sorts.find((sort) => sort.column === column.id)
+                                      ? 1
+                                      : 0,
+                                  }}
+                                >
+                                  {sorts.find((sort) => sort.column === column.id)?.direction ===
+                                  'asc' ? (
+                                    <ArrowUpwardIcon fontSize="inherit" />
+                                  ) : (
+                                    <ArrowDownwardIcon fontSize="inherit" />
+                                  )}
+                                </IconButton>
+                              </>
+                            )}
                           </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                      )
                   )}
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedData.map((row, index) => (
+                  <React.Fragment key={index}>
+                    <TableRow hover tabIndex={-1}>
+                      {columns.some((column) => column.children) && (
+                        <TableCell sx={{ fontSize: '12px' }}>
+                          <IconButton size="small" onClick={() => handleExpandRow(index)}>
+                            {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </TableCell>
+                      )}
+                      {columns.map(
+                        (column) =>
+                          columnVisibility[column.id] && (
+                            <TableCell
+                              key={column.id}
+                              align={column.align}
+                              sx={{ fontSize: '12px' }}
+                            >
+                              {column.render
+                                ? column.render(row[column.id], row)
+                                : _.get(row, column.id, '-')}
+                            </TableCell>
+                          )
+                      )}
+                    </TableRow>
+                    {columns.some((column) => column.children) && (
+                      <TableRow>
+                        <TableCell
+                          style={{ paddingBottom: 0, paddingTop: 0 }}
+                          colSpan={columns.length + 1}
+                        >
+                          <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                            <Box sx={{ margin: 1 }}>
+                              {columns.map((column) => column.children && column.children(row))}
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </Scrollbar>
           <Paper
             elevation={1}
             sx={{

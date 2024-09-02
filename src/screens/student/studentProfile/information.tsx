@@ -401,7 +401,7 @@ const TABS = [
 
 const dob = dayjs(new Date('2000-01-01'));
 export function StudentInformation(props: StudentTabsComponentType) {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep] = useState(0);
   const [isEdit, setIsEdit] = useState(false);
   const onSubmit = (_val: any) => {};
   const formik = useFormik({

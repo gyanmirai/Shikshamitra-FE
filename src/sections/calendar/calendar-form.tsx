@@ -6,14 +6,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
-import { Switch } from '@mui/material';
-import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
-import { MobileDateTimePicker } from '@mui/x-date-pickers';
 
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter } from 'src/utils/format-time';
@@ -21,9 +18,9 @@ import { fIsAfter } from 'src/utils/format-time';
 import { createEvent, updateEvent, deleteEvent } from 'src/actions/calendar';
 
 import { toast } from 'src/components/snackbar';
+import { Form } from 'src/components/hook-form';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
@@ -63,7 +60,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }: Props) {
   const {
     reset,
     watch,
-    control,
+    // control,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
@@ -112,40 +109,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }: Props) {
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
-      <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
-        <Stack spacing={3}>
-          <Field.Text name="title" label="Title" />
-
-          <Field.Text name="description" label="Description" multiline rows={3} />
-
-          <Switch name="allDay" checked />
-
-          <MobileDateTimePicker name="start" label="Start date" />
-
-          <MobileDateTimePicker
-            name="end"
-            label="End date"
-            slotProps={{
-              textField: {
-                error: dateError,
-                helperText: dateError ? 'End date must be later than start date' : null,
-              },
-            }}
-          />
-
-          {/* <Controller
-            name="color"
-            control={control}
-            render={({ field }) => (
-              <ColorPicker
-                selected={field.value as string}
-                onSelectColor={(color) => field.onChange(color as string)}
-                colors={colorOptions}
-              />
-            )}
-          /> */}
-        </Stack>
-      </Scrollbar>
+      <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>Hello</Scrollbar>
 
       <DialogActions sx={{ flexShrink: 0 }}>
         {!!currentEvent?.id && (

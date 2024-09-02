@@ -11,10 +11,8 @@ import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
 
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
 import Dialog from '@mui/material/Dialog';
 import { useTheme } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -22,16 +20,15 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
 
-import { updateEvent } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
+import { updateEvent, useGetEvents } from 'src/actions/calendar';
 
 import { StyledCalendar } from '../styles';
 import { useEvent } from '../hooks/use-event';
 import { CalendarForm } from '../calendar-form';
 import { useCalendar } from '../hooks/use-calendar';
 import { CalendarToolbar } from '../calendar-toolbar';
-import { CalendarFiltersResult } from '../calendar-filters-result';
 
 // ----------------------------------------------------------------------
 
@@ -40,17 +37,7 @@ export function CalendarView() {
 
   const openFilters = useBoolean();
 
-  const events = [
-    {
-      id: 'e99f09a7-dd88-49d5-b1c8-1daf80c2d7b2',
-      title: 'Doctors Appointment',
-      allDay: false,
-      color: '#ff0000',
-      description: '-',
-      start: '2024-07-08T03:10:32+00:00',
-      end: '2024-07-08T06:40:32+00:00',
-    },
-  ];
+  const { events, eventsLoading } = useGetEvents();
 
   const filters = useSetState<ICalendarFilters>({
     colors: [],
@@ -77,13 +64,13 @@ export function CalendarView() {
     onInitialView,
     //
     openForm,
-    onOpenForm,
+    // onOpenForm,
     onCloseForm,
     //
     selectEventId,
     selectedRange,
     //
-    onClickEventInFilters,
+    // onClickEventInFilters,
   } = useCalendar();
 
   const currentEvent = useEvent(events, selectEventId, selectedRange, openForm);
@@ -97,44 +84,44 @@ export function CalendarView() {
 
   const dataFiltered = applyFilter({ inputData: events, filters: filters.state, dateError });
 
-  const renderResults = (
-    <CalendarFiltersResult
-      filters={filters}
-      totalResults={dataFiltered.length}
-      sx={{ mb: { xs: 3, md: 5 } }}
-    />
-  );
+  // const renderResults = (
+  //   <CalendarFiltersResult
+  //     filters={filters}
+  //     totalResults={dataFiltered.length}
+  //     sx={{ mb: { xs: 3, md: 5 } }}
+  //   />
+  // );
 
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
 
   return (
     <>
       <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
-        <Stack
+        {/* <Stack
           direction="row"
           alignItems="center"
           justifyContent="space-between"
           sx={{ mb: { xs: 3, md: 5 } }}
         >
-          <Typography variant="h4">&nbsp; &nbsp; Attendance Calendar</Typography>
-          {/* <Button
+          <Typography variant="h4">Calendar</Typography>
+          <Button
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={onOpenForm}
           >
             New event
-          </Button> */}
-        </Stack>
+          </Button>
+        </Stack> */}
 
-        {canReset && renderResults}
+        {/* {canReset && renderResults} */}
 
-        <Card sx={{ ...flexProps, minHeight: '50vh' }}>
+        <Card sx={{ ...flexProps, minHeight: '70vh' }}>
           <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
             <CalendarToolbar
               date={fDate(date)}
               view={view}
               canReset={canReset}
-              loading={false}
+              loading={eventsLoading}
               onNextDate={onDateNext}
               onPrevDate={onDatePrev}
               onToday={onDateToday}

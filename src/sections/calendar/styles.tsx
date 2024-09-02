@@ -134,7 +134,4 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
     '& .fc-list-event-time': { color: theme.vars.palette.text.secondary },
   },
   '& .fc .fc-list-table': { '& th, td': { borderColor: 'transparent' } },
-  '& .fc-scroller': {
-    overFlow: 'auto',
-  },
 }));

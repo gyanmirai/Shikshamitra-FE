@@ -6,11 +6,9 @@ import { Box } from '@mui/material';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const EmployeeViewScreen = () => {
-  const a = null;
-  return (
-    <Box>
-      {/* <DataTable
+const EmployeeViewScreen = () => (
+  <Box>
+    {/* <DataTable
         columns={[
           { label: 'Name', key: 'name' },
           { label: 'Role', key: 'role' },
@@ -20,21 +18,20 @@ const EmployeeViewScreen = () => {
         ]}
         data={[]}
       /> */}
-      <CustomizableTable
-        columns={[
-          {
-            id: 'name',
-            label: 'Name',
-          },
-          { id: 'role', label: 'Role' },
-          { id: 'board', label: 'Board' },
-          { label: 'Organization', id: 'organization' },
-          { label: 'Action', id: 'action' },
-        ]}
-        data={[]}
-      />
-    </Box>
-  );
-};
+    <CustomizableTable
+      columns={[
+        {
+          id: 'name',
+          label: 'Name',
+        },
+        { id: 'role', label: 'Role' },
+        { id: 'board', label: 'Board' },
+        { label: 'Organization', id: 'organization' },
+        { label: 'Action', id: 'action' },
+      ]}
+      data={[]}
+    />
+  </Box>
+);
 
 export default EmployeeViewScreen;

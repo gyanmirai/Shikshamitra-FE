@@ -106,6 +106,7 @@ const Attendance = (props: StudentTabsComponentType) => {
       <Box display="flex" gap={3} sx={{ flexWrap: 'wrap', mb: 2 }}>
         <Box flexGrow={1}>
           {activeButton === 'monthly' ? (
+            // @ts-ignore
             <AttendanceChart
               title={
                 <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">

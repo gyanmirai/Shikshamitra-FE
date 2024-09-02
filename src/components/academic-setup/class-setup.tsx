@@ -89,9 +89,9 @@ const ClassSetup = ({ organizationId }: ClassSetupProps) => {
     modal.onTrue();
   };
 
-  const handleSetTeb = (value: Record<string, any>) => {
-    tabs.setValue(value?.data?.id);
-  };
+  // const handleSetTeb = (value: Record<string, any>) => {
+  //   tabs.setValue(value?.data?.id);
+  // };
 
   const onCloseDialog = () => {
     modal.onFalse();
@@ -249,7 +249,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
     }),
     onSubmit: async (values) => {
       if (editData) {
-        const res = await updateOrganization({
+        await updateOrganization({
           id: editData.id,
           body: {
             name: values.class,
@@ -257,7 +257,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           },
         });
       } else {
-        const res = await addOrganization({
+        await addOrganization({
           name: values.class,
 
           educationMediumStageId: organizationId,

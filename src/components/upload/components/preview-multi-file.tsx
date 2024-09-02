@@ -62,7 +62,7 @@ export function MultiFilePreview({
       {renderFirstNode}
 
       {files.map((file) => {
-        const { name, size } = fileData(file);
+        const { name } = fileData(file);
 
         if (thumbnail) {
           return (

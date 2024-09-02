@@ -25,7 +25,7 @@ type Props = CardProps & {
   };
 };
 
-export function AttendanceChart({ title, subheader, chart, ...other }: any) {
+export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
   const chartSeries = chart.series.map((item: any) => item.value);

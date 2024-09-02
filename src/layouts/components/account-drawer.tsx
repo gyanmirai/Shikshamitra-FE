@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Button, TextField, DialogActions } from '@mui/material';
 
-import { useRouter, usePathname } from 'src/routes/hooks';
+import { useRouter } from 'src/routes/hooks';
 
 import { varAlpha } from 'src/theme/styles';
 import { logout } from 'src/redux/user/userSlice';
@@ -49,7 +49,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   const router = useRouter();
 
-  const pathname = usePathname();
+  // const pathname = usePathname();
 
   const { user } = useMockedUser();
 
@@ -69,13 +69,13 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
     setOpen(false);
   }, []);
 
-  const handleClickItem = useCallback(
-    (path: string) => {
-      handleCloseDrawer();
-      router.push(path);
-    },
-    [handleCloseDrawer, router]
-  );
+  // const handleClickItem = useCallback(
+  //   (path: string) => {
+  //     handleCloseDrawer();
+  //     router.push(path);
+  //   },
+  //   [handleCloseDrawer, router]
+  // );
 
   const renderAvatar = (
     <AnimateAvatar

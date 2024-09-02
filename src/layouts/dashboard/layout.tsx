@@ -4,7 +4,6 @@ import type { SettingsState } from 'src/components/settings';
 import type { NavSectionProps } from 'src/components/nav-section';
 import type { Theme, SxProps, CSSObject, Breakpoint } from '@mui/material/styles';
 
-import { useSelector } from 'react-redux';
 import { useMemo, useEffect } from 'react';
 
 import Alert from '@mui/material/Alert';
@@ -42,7 +41,7 @@ export type DashboardLayoutProps = {
 
 export function DashboardLayout({ sx, children, data, session }: DashboardLayoutProps) {
   const theme = useTheme();
-  const { userInfo } = useSelector((state: any) => state.user);
+  // const { userInfo } = useSelector((state: any) => state.user);
 
   const mobileNavOpen = useBoolean();
 

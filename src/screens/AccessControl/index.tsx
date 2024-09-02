@@ -88,164 +88,146 @@ const AccessControlScreen = () => {
 
 export default AccessControlScreen;
 
-const UserScreenStep = ({ formik }: any) => {
-  const a = null;
-  return (
-    <Autocomplete
-      options={[]}
-      getOptionLabel={(option: any) => option.name}
-      id="controlled-demo"
-      value={formik.values.user}
-      loading={false}
-      sx={{ maxWidth: 300, width: '100%' }}
-      onChange={(event: any, newValue: any | null) => {
-        formik.setFieldValue('user', newValue);
-      }}
-      size="small"
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label="Select User"
-          helperText={formik.touched.user && formik.errors.user}
-          error={formik.touched.user && Boolean(formik.errors.user)}
-        />
-      )}
-    />
-  );
-};
+const UserScreenStep = ({ formik }: any) => (
+  <Autocomplete
+    options={[]}
+    getOptionLabel={(option: any) => option.name}
+    id="controlled-demo"
+    value={formik.values.user}
+    loading={false}
+    sx={{ maxWidth: 300, width: '100%' }}
+    onChange={(event: any, newValue: any | null) => {
+      formik.setFieldValue('user', newValue);
+    }}
+    size="small"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="small"
+        label="Select User"
+        helperText={formik.touched.user && formik.errors.user}
+        error={formik.touched.user && Boolean(formik.errors.user)}
+      />
+    )}
+  />
+);
 
-const BoardScreenStep = ({ formik }: any) => {
-  const a = null;
-  return (
-    <Autocomplete
-      options={[]}
-      getOptionLabel={(option: any) => option.name}
-      id="controlled-demo"
-      value={formik.values.board}
-      loading={false}
-      sx={{ maxWidth: 300, width: '100%' }}
-      onChange={(event: any, newValue: any | null) => {
-        formik.setFieldValue('board', newValue);
-      }}
-      size="small"
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label="Select Board"
-          helperText={formik.touched.board && formik.errors.board}
-          error={formik.touched.board && Boolean(formik.errors.board)}
-        />
-      )}
-    />
-  );
-};
+const BoardScreenStep = ({ formik }: any) => (
+  <Autocomplete
+    options={[]}
+    getOptionLabel={(option: any) => option.name}
+    id="controlled-demo"
+    value={formik.values.board}
+    loading={false}
+    sx={{ maxWidth: 300, width: '100%' }}
+    onChange={(event: any, newValue: any | null) => {
+      formik.setFieldValue('board', newValue);
+    }}
+    size="small"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="small"
+        label="Select Board"
+        helperText={formik.touched.board && formik.errors.board}
+        error={formik.touched.board && Boolean(formik.errors.board)}
+      />
+    )}
+  />
+);
 
-const MediumScreenStep = ({ formik }: any) => {
-  const a = null;
-  return (
-    <Autocomplete
-      options={[]}
-      getOptionLabel={(option: any) => option.name}
-      id="controlled-demo"
-      value={formik.values.medium}
-      loading={false}
-      sx={{ maxWidth: 300, width: '100%' }}
-      onChange={(event: any, newValue: any | null) => {
-        formik.setFieldValue('medium', newValue);
-      }}
-      size="small"
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label="Select Medium"
-          helperText={formik.touched.medium && formik.errors.medium}
-          error={formik.touched.medium && Boolean(formik.errors.medium)}
-        />
-      )}
-    />
-  );
-};
+const MediumScreenStep = ({ formik }: any) => (
+  <Autocomplete
+    options={[]}
+    getOptionLabel={(option: any) => option.name}
+    id="controlled-demo"
+    value={formik.values.medium}
+    loading={false}
+    sx={{ maxWidth: 300, width: '100%' }}
+    onChange={(event: any, newValue: any | null) => {
+      formik.setFieldValue('medium', newValue);
+    }}
+    size="small"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="small"
+        label="Select Medium"
+        helperText={formik.touched.medium && formik.errors.medium}
+        error={formik.touched.medium && Boolean(formik.errors.medium)}
+      />
+    )}
+  />
+);
 
-const OrganizationScreenStep = ({ formik }: any) => {
-  const a = null;
-  return (
-    <Autocomplete
-      options={[]}
-      getOptionLabel={(option: any) => option.name}
-      id="controlled-demo"
-      value={formik.values.organization}
-      loading={false}
-      sx={{ maxWidth: 300, width: '100%' }}
-      onChange={(event: any, newValue: any | null) => {
-        formik.setFieldValue('organization', newValue);
-      }}
-      size="small"
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label="Select Organization"
-          helperText={formik.touched.organization && formik.errors.organization}
-          error={formik.touched.organization && Boolean(formik.errors.organization)}
-        />
-      )}
-    />
-  );
-};
+const OrganizationScreenStep = ({ formik }: any) => (
+  <Autocomplete
+    options={[]}
+    getOptionLabel={(option: any) => option.name}
+    id="controlled-demo"
+    value={formik.values.organization}
+    loading={false}
+    sx={{ maxWidth: 300, width: '100%' }}
+    onChange={(event: any, newValue: any | null) => {
+      formik.setFieldValue('organization', newValue);
+    }}
+    size="small"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="small"
+        label="Select Organization"
+        helperText={formik.touched.organization && formik.errors.organization}
+        error={formik.touched.organization && Boolean(formik.errors.organization)}
+      />
+    )}
+  />
+);
 
-const ClassScreenStep = ({ formik }: any) => {
-  const a = null;
-  return (
-    <Autocomplete
-      options={[]}
-      getOptionLabel={(option: any) => option.name}
-      id="controlled-demo"
-      value={formik.values.class}
-      loading={false}
-      sx={{ maxWidth: 300, width: '100%' }}
-      onChange={(event: any, newValue: any | null) => {
-        formik.setFieldValue('class', newValue);
-      }}
-      size="small"
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label="Select Class"
-          helperText={formik.touched.class && formik.errors.class}
-          error={formik.touched.class && Boolean(formik.errors.class)}
-        />
-      )}
-    />
-  );
-};
+const ClassScreenStep = ({ formik }: any) => (
+  <Autocomplete
+    options={[]}
+    getOptionLabel={(option: any) => option.name}
+    id="controlled-demo"
+    value={formik.values.class}
+    loading={false}
+    sx={{ maxWidth: 300, width: '100%' }}
+    onChange={(event: any, newValue: any | null) => {
+      formik.setFieldValue('class', newValue);
+    }}
+    size="small"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="small"
+        label="Select Class"
+        helperText={formik.touched.class && formik.errors.class}
+        error={formik.touched.class && Boolean(formik.errors.class)}
+      />
+    )}
+  />
+);
 
-const DivisionScreenStep = ({ formik }: any) => {
-  const a = null;
-  return (
-    <Autocomplete
-      options={[]}
-      getOptionLabel={(option: any) => option.name}
-      id="controlled-demo"
-      value={formik.values.division}
-      loading={false}
-      sx={{ maxWidth: 300, width: '100%' }}
-      onChange={(event: any, newValue: any | null) => {
-        formik.setFieldValue('division', newValue);
-      }}
-      size="small"
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label="Select Division"
-          helperText={formik.touched.division && formik.errors.division}
-          error={formik.touched.division && Boolean(formik.errors.division)}
-        />
-      )}
-    />
-  );
-};
+const DivisionScreenStep = ({ formik }: any) => (
+  <Autocomplete
+    options={[]}
+    getOptionLabel={(option: any) => option.name}
+    id="controlled-demo"
+    value={formik.values.division}
+    loading={false}
+    sx={{ maxWidth: 300, width: '100%' }}
+    onChange={(event: any, newValue: any | null) => {
+      formik.setFieldValue('division', newValue);
+    }}
+    size="small"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="small"
+        label="Select Division"
+        helperText={formik.touched.division && formik.errors.division}
+        error={formik.touched.division && Boolean(formik.errors.division)}
+      />
+    )}
+  />
+);

@@ -14,6 +14,9 @@ import { Box, Card, Stack, TextField, Typography } from '@mui/material';
 
 import { fData } from 'src/utils/format-number';
 
+import { useAddTenantMutation } from 'src/redux/tenant/tenantApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import { UploadAvatar } from 'src/components/upload';
 
 interface FormValues {
@@ -26,6 +29,7 @@ interface FormValues {
   country: string;
   contactNumber: string;
   emailAddress: string;
+  password: string;
 }
 
 const validationSchema = Yup.object().shape({
@@ -65,6 +69,14 @@ const validationSchema = Yup.object().shape({
 });
 
 const BasicInformationForm: React.FC<any> = () => {
+  const [addTenant, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddTenantMutation,
+    popupConfig: {
+      success: true,
+      successMessage: 'Tenant Added Successfully',
+    },
+  });
   const { values, errors, touched, handleChange, handleSubmit, setFieldValue } =
     useFormik<FormValues>({
       initialValues: {
@@ -77,10 +89,16 @@ const BasicInformationForm: React.FC<any> = () => {
         country: '',
         contactNumber: '',
         emailAddress: '',
+        password: '',
       },
       validationSchema,
       onSubmit: (formValues: FormikValues) => {
         console.log(formValues);
+        addTenant({
+          name: formValues.instituteName,
+          adminEmailAddress: formValues.emailAddress,
+          adminPassword: formValues.password,
+        });
       },
     });
   return (
@@ -226,12 +244,27 @@ const BasicInformationForm: React.FC<any> = () => {
                   onChange={handleChange}
                   error={touched.emailAddress && Boolean(errors.emailAddress)}
                   helperText={touched.emailAddress && errors.emailAddress}
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid xs={4}>
+                <TextField
+                  fullWidth
+                  size="medium"
+                  name="password"
+                  label="Password"
+                  type="password"
+                  value={values.password}
+                  onChange={handleChange}
+                  error={touched.password && Boolean(errors.password)}
+                  helperText={touched.password && errors.password}
+                  autoComplete="off"
                 />
               </Grid>
             </Grid>
 
             <Stack alignItems="flex-end" sx={{ mt: 3, height: '100%', justifyContent: 'flex-end' }}>
-              <LoadingButton type="submit" variant="contained" loading={false}>
+              <LoadingButton type="submit" variant="contained" loading={isLoading}>
                 Save changes
               </LoadingButton>
             </Stack>

@@ -5,6 +5,8 @@ import { useFormik } from 'formik';
 
 import { Box, Step, Button, Stepper, StepLabel } from '@mui/material';
 
+import { Scrollbar } from '../scrollbar';
+
 // const steps = ['Personal Information', 'Contact Information', 'Review'];
 
 interface CustomStepperProps {
@@ -82,7 +84,10 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         }}
         onSubmit={formik.handleSubmit}
       >
-        {formik && renderItem({ formik, activeStep })}
+        <Scrollbar sx={{ maxHeight: '50vh' }}>
+          {' '}
+          {formik && renderItem({ formik, activeStep })}
+        </Scrollbar>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
           <Button size="small" variant="outlined" disabled={activeStep === 0} onClick={handleBack}>
             Back

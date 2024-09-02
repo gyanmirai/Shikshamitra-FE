@@ -1,27 +1,24 @@
 'use client';
 
 import React from 'react';
-import * as Yup from 'yup';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@mui/material';
 
-import type { ILogin } from './type';
-
-const validationSchema = Yup.object({
-  email: Yup.string().email('Invalid email address').required('Email is required'),
-  password: Yup.string().required('Password is required'),
-});
+// const validationSchema = Yup.object({
+//   email: Yup.string().email('Invalid email address').required('Email is required'),
+//   password: Yup.string().required('Password is required'),
+// });
 
 const LoginPage = () => {
   const route = useRouter();
-  const initialValues: ILogin = {
-    email: '',
-    password: '',
-  };
-  const handleSubmitForm = (values: ILogin) => {
-    route.push('/');
-  };
+  // const initialValues: ILogin = {
+  //   email: '',
+  //   password: '',
+  // };
+  // const handleSubmitForm = (values: ILogin) => {
+  //   route.push('/');
+  // };
 
   return (
     <Button

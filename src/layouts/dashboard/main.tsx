@@ -9,8 +9,6 @@ import { useTheme } from '@mui/material/styles';
 
 import { layoutClasses } from 'src/layouts/classes';
 
-import { useSettingsContext } from 'src/components/settings';
-
 // ----------------------------------------------------------------------
 
 type MainProps = BoxProps & {
@@ -54,7 +52,7 @@ export function DashboardContent({
 }: DashboardContentProps) {
   const theme = useTheme();
 
-  const settings = useSettingsContext();
+  // const settings = useSettingsContext();
 
   const layoutQuery: Breakpoint = 'lg';
 

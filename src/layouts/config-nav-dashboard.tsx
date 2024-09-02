@@ -49,6 +49,11 @@ const ICONS = {
   student: icon('ic-student'),
   security: icon('ic-security'),
   hr: icon('ic-hr'),
+  finance: icon('ic-finance'),
+  communication: icon('ic-communication'),
+  library: icon('ic-library'),
+  transport: icon('ic-transport'),
+  hostel: icon('ic-hostel'),
 };
 
 // ----------------------------------------------------------------------
@@ -67,10 +72,24 @@ export const navData = [
         icon: ICONS.student,
         _action: 'student',
       },
+      {
+        title: 'Academic & Assesment',
+        path: assessmentPath,
+        icon: ICONS.dashboard,
+        _action: 'assessment',
+      },
+      { title: 'HR/Staff', path: '/hr/dashboard', icon: ICONS.hr, _action: 'hr' },
+      { title: 'Finance', path: financePath, icon: ICONS.finance, _action: 'finance' },
+      {
+        title: 'Communication',
+        path: financePath,
+        icon: ICONS.communication,
+        _action: 'communication',
+      },
+      { title: 'Library', path: financePath, icon: ICONS.library, _action: 'library' },
+      { title: 'Transport', path: financePath, icon: ICONS.transport, _action: 'transport' },
+      { title: 'Hostel', path: financePath, icon: ICONS.hostel, _action: 'transport' },
       { title: 'Security', path: '/security/role', icon: ICONS.security, _action: 'security' },
-      { title: 'Finance', path: financePath, icon: ICONS.dashboard, _action: 'finance' },
-      { title: 'Assessment', path: assessmentPath, icon: ICONS.dashboard, _action: 'assessment' },
-      { title: 'HR', path: '/hr/dashboard', icon: ICONS.hr, _action: 'hr' },
       // {
       //   title: 'Setting',
       //   path: hrPath,
@@ -104,12 +123,12 @@ export const navData = [
 ];
 
 export const settingMenu = {
-  title: 'Setting',
+  title: 'Institute Setup',
   path: '/setting/basic-information',
   icon: (
     <Iconify
-      icon="ci:settings"
-      sx={{ height: '18px !important', width: '18px !important' }}
+      icon="emojione-monotone:school"
+      sx={{ height: '20px !important', width: '20px !important' }}
       height={18}
       width={18}
     />
@@ -123,37 +142,257 @@ const studentModule = {
       subheader: '',
       items: [
         {
-          title: 'Student Dashboard',
-          _action: 'student-dashboard',
+          title: 'Student Enrollment',
           path: '',
+          _action: 'student-enrollment',
           children: [
             {
-              title: 'Over View',
-              _action: 'overView',
-              path: '/student/overview',
+              title: 'Dashboard',
+              path: '/student/enrollment/dashboard',
+              _action: 'student-enrollment-dashboard',
             },
             {
-              title: 'Student profile',
-              _action: 'profile',
+              title: 'New Inquiry',
+              path: '/student/enrollment/inquiry',
+              _action: 'student-enrollment-inquiry',
+            },
+            {
+              title: 'Registration',
+              path: '/student/enrollment/registration',
+              _action: 'student-enrollment-registration',
+            },
+            {
+              title: 'Admission',
+              path: '/student/enrollment/admission',
+              _action: 'student-enrollment-admission',
+            },
+            {
+              title: 'Follow-up',
+              path: '/student/enrollment/follow-up',
+              _action: 'student-enrollment-follow-up',
+            },
+            {
+              title: 'Entrance Exam',
+              path: '/student/enrollment/entrance-exam',
+              _action: 'student-enrollment-entrance-exam',
+            },
+
+            {
+              title: 'Enrollment Status Tracking',
+              path: '/student/enrollment/enrollment-status-tracking',
+              _action: 'student-enrollment-enrollment-status-tracking',
+            },
+            {
+              title: 'Reports',
+              path: '/student/enrollment/reports',
+              _action: 'student-enrollment-reports',
+            },
+            {
+              title: 'Setting',
+              path: '/student/enrollment/setting',
+              _action: 'student-enrollment-setting',
+            },
+          ],
+        },
+        {
+          title: 'Student Records',
+          path: '',
+          _action: 'student-records',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/student/overview',
+              _action: 'student-overview',
+            },
+            {
+              title: 'Student List',
               path: '/student/profile',
-              // items: [
-              //   {
-              //     title: 'View / Edit',
-              //     _action: 'view-edit',
-              //     path: '/student/view',
-              //   },
-              // ],
+              _action: 'student-profile',
+            },
+            {
+              title: 'Upload Student Photo',
+              path: '/student/upload-student-photo',
+              _action: 'student-upload-student-photo',
+            },
+            {
+              title: 'Upload Student Documents',
+              path: '/student/upload-student-documents',
+              _action: 'student-upload-student-documents',
+            },
+            {
+              title: 'Student I-Card',
+              path: '/student/student-i-card',
+              _action: 'student-i-card',
+            },
+            {
+              title: 'Student Sibling',
+              path: '/student/student-sibling',
+              _action: 'student-sibling',
             },
             {
               title: 'Attendance',
-              _action: 'overView',
-              path: '/student/overview',
+              path: '',
+              _action: 'student-attendance',
+              children: [
+                {
+                  title: 'Take Attendance',
+                  path: '/student/attendance/take-attendance',
+                  _action: 'student-attendance-take-attendance',
+                },
+                {
+                  title: 'Daily Attendance Tracking',
+                  path: '/student/attendance/daily-attendance-tracking',
+                  _action: 'student-attendance-daily-attendance-tracking',
+                },
+                {
+                  title: 'Leave And Absent Records',
+                  path: '/student/attendance/leave-and-absent-records',
+                  _action: 'student-attendance-leave-and-absent-records',
+                },
+                {
+                  title: 'Setting',
+                  path: '/student/attendance/setting',
+                  _action: 'student-attendance-setting',
+                },
+                {
+                  title: 'Reports',
+                  path: '/student/attendance/reports',
+                  _action: 'student-attendance-reports',
+                },
+              ],
             },
-            // { title: 'Records', path: studentListPath },
-            // { title: 'Student/Dashboard', path: '/student/no-of-student' },
-            // { title: 'Transport/Heat-Map', path: '/student/no-of-student' },
-            // { title: 'Bulk-Update', path: '/student/no-of-student' },
-            // { title: 'Reports', path: '/student/no-of-student' },
+            {
+              title: 'Student Management',
+              path: '',
+              _action: 'student-management',
+              children: [
+                {
+                  title: 'GR No. Generation',
+                  path: '/student/management/gr-no-generation',
+                  _action: 'student-management-gr-no-generation',
+                },
+                {
+                  title: 'Roll No. Generation',
+                  path: '/student/management/roll-no-generation',
+                  _action: 'student-management-roll-no-generation',
+                },
+                {
+                  title: 'Change Division',
+                  path: '/student/management/change-division',
+                  _action: 'student-management-change-division',
+                },
+                {
+                  title: 'Change Class',
+                  path: '/student/management/change-class',
+                  _action: 'student-management-change-class',
+                },
+                {
+                  title: 'Bulk Data Update',
+                  path: '/student/management/bulk-data-update',
+                  _action: 'student-management-bulk-data-update',
+                },
+                {
+                  title: 'Bulk Student Add',
+                  path: '/student/management/bulk-student-add',
+                  _action: 'student-management-bulk-student-add',
+                },
+              ],
+            },
+            {
+              title: 'Certificates',
+              path: '',
+              _action: 'student-certificates',
+              children: [
+                {
+                  title: 'Bonafied Certificates',
+                  path: '/student/certificates/bonafied',
+                  _action: 'student-certificates-bonafied',
+                  children: [
+                    {
+                      title: 'Individual',
+                      path: '/student/certificates/bonafied/individual',
+                      _action: 'student-certificates-bonafied-individual',
+                    },
+                    {
+                      title: 'Bulk',
+                      path: '/student/certificates/bonafied/bulk',
+                      _action: 'student-certificates-bonafied-bulk',
+                    },
+                  ],
+                },
+                {
+                  title: 'First Trial Certificates',
+                  path: '/student/certificates/first-trial',
+                  _action: 'student-certificates-first-trial',
+                  children: [
+                    {
+                      title: 'Individual',
+                      path: '/student/certificates/first-trial/individual',
+                      _action: 'student-certificates-first-trial-individual',
+                    },
+                    {
+                      title: 'Bulk',
+                      path: '/student/certificates/first-trial/bulk',
+                      _action: 'student-certificates-first-trial-bulk',
+                    },
+                  ],
+                },
+                {
+                  title: 'Leaving Certificates',
+                  path: '/student/certificates/leaving',
+                  _action: 'student-certificates-leaving',
+                  children: [
+                    {
+                      title: 'Individual',
+                      path: '/student/certificates/leaving/individual',
+                      _action: 'student-certificates-leaving-individual',
+                    },
+                    {
+                      title: 'Bulk',
+                      path: '/student/certificates/leaving/bulk',
+                      _action: 'student-certificates-leaving-bulk',
+                    },
+                  ],
+                },
+                {
+                  title: 'Character Certificates',
+                  path: '/student/certificates/character',
+                  _action: 'student-certificates-character',
+                  children: [
+                    {
+                      title: 'Individual',
+                      path: '/student/certificates/character/individual',
+                      _action: 'student-certificates-character-individual',
+                    },
+                    {
+                      title: 'Bulk',
+                      path: '/student/certificates/character/bulk',
+                      _action: 'student-certificates-character-bulk',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              title: 'Student Custom Search',
+              path: '/student/custom-search',
+              _action: 'student-custom-search',
+            },
+            {
+              title: 'Student Reports',
+              path: '/student/reports',
+              _action: 'student-reports',
+            },
+            {
+              title: 'Student Summary Reports',
+              path: '/student/summary-reports',
+              _action: 'student-summary-reports',
+            },
+            {
+              title: 'Setting',
+              path: '/student/setting',
+              _action: 'student-setting',
+            },
           ],
         },
       ],
@@ -238,21 +477,21 @@ const hrModule = {
               path: '/hr/employee',
               _action: 'employee',
             },
-            {
-              title: 'Personal Information',
-              path: '/hr/personal-information',
-              _action: 'personal-information',
-            },
-            {
-              title: 'Qualifications and Certifications',
-              path: '/hr/qualifications-and-certifications',
-              _action: 'qualifications-and-certifications',
-            },
-            {
-              title: 'Employment History',
-              path: '/hr/employment-history',
-              _action: 'employment-history',
-            },
+            // {
+            //   title: 'Personal Information',
+            //   path: '/hr/personal-information',
+            //   _action: 'personal-information',
+            // },
+            // {
+            //   title: 'Qualifications and Certifications',
+            //   path: '/hr/qualifications-and-certifications',
+            //   _action: 'qualifications-and-certifications',
+            // },
+            // {
+            //   title: 'Employment History',
+            //   path: '/hr/employment-history',
+            //   _action: 'employment-history',
+            // },
           ],
         },
         {
@@ -289,7 +528,7 @@ const hrModule = {
             },
             {
               title: 'Leave Requests and Approvals',
-              path: '/hr/leave-requests-and-approvals',
+              path: '/hr/leave-requests',
               _action: 'leave-requests-and-approvals',
             },
             {

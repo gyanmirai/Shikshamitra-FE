@@ -32,16 +32,16 @@ import ThreeDotsActions from '../three-dots-actions';
 
 // ----------------------------------------------------------------------
 
-interface Standard {
-  id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  name: string;
-  divisions: Division[];
-  educationMediumStageId: string;
-}
+// interface Standard {
+//   id: string;
+//   creationTime: string;
+//   creatorId: string;
+//   lastModificationTime: string;
+//   lastModifierId: string;
+//   name: string;
+//   divisions: Division[];
+//   educationMediumStageId: string;
+// }
 
 interface Division {
   id: string;

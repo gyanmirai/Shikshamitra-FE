@@ -180,7 +180,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
     currentQueryAndMutation: useUpdatePermissionMutation,
   });
 
-  const [addRole, { isLoading, isSuccess }] = useQueryAndMutation({
+  const [addRole, { isSuccess }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddRoleMutation,
     popupConfig: {

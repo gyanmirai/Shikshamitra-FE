@@ -84,9 +84,9 @@ const DivisionSetup = ({ classId }: DivisionSetupProps) => {
     modal.onTrue();
   };
 
-  const handleSetTeb = (value: Record<string, any>) => {
-    tabs.setValue(value?.data?.id);
-  };
+  // const handleSetTeb = (value: Record<string, any>) => {
+  //   tabs.setValue(value?.data?.id);
+  // };
 
   const onCloseDialog = () => {
     modal.onFalse();
@@ -242,7 +242,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
     }),
     onSubmit: async (values) => {
       if (editData) {
-        const res = await updatedivision({
+        await updatedivision({
           id: editData.id,
           body: {
             name: values.division,
@@ -251,7 +251,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           },
         });
       } else {
-        const res = await addDivision({
+        await addDivision({
           name: values.division,
           standardId: classId,
           strength: values.strength,

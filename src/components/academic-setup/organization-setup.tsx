@@ -86,9 +86,9 @@ const OrganizationSetup = ({ mediumId }: OrganizationSetupProps) => {
     modal.onTrue();
   };
 
-  const handleSetTeb = (value: Record<string, any>) => {
-    tabs.setValue(value?.data?.id);
-  };
+  // const handleSetTeb = (value: Record<string, any>) => {
+  //   tabs.setValue(value?.data?.id);
+  // };
 
   const onCloseDialog = () => {
     modal.onFalse();
@@ -242,7 +242,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
     }),
     onSubmit: async (values) => {
       if (editData) {
-        const res = await updateOrganization({
+        await updateOrganization({
           id: editData.id,
           body: {
             name: values.organization,
@@ -250,7 +250,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           },
         });
       } else {
-        const res = await addOrganization({
+        await addOrganization({
           name: values.organization,
           educationMediumId: mediumId,
         });

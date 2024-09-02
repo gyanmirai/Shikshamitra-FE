@@ -44,9 +44,9 @@ export function NavList({
     }
   }, [data.children]);
 
-  const handleCloseMenu = useCallback(() => {
-    setOpenMenu(false);
-  }, []);
+  // const handleCloseMenu = useCallback(() => {
+  //   setOpenMenu(false);
+  // }, []);
   const renderNavItem = (
     <NavItem
       render={render}

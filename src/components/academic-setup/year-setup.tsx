@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -50,7 +50,7 @@ interface AcademicYear {
 }
 
 const YearSetup = () => {
-  const { data: years, isLoading: isGetLoading } = useQueryAndMutation({
+  const { data: years } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
     options: {
@@ -72,7 +72,7 @@ const YearSetup = () => {
   const modal = useBoolean(false);
   const confirm = useBoolean(false);
 
-  const isInitial = useRef<null | string>(null);
+  // const isInitial = useRef<null | string>(null);
   useEffect(() => {
     if (years?.items?.length) {
       const filterItems = years?.items;

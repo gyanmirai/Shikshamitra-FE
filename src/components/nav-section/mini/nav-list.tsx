@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material/styles';
 
 import { usePathname } from 'src/routes/hooks';
 import { isExternalLink } from 'src/routes/utils';
-import { useActiveLink } from 'src/routes/hooks/use-active-link';
 
 import { paper } from 'src/theme/styles';
 
@@ -34,7 +33,7 @@ export function NavList({
 
   const navItemRef = useRef<HTMLButtonElement | null>(null);
 
-  const active = useActiveLink(data?.path || '', !!data.children);
+  // const active = useActiveLink(data?.path || '', !!data.children);
 
   const [openMenu, setOpenMenu] = useState(false);
 
