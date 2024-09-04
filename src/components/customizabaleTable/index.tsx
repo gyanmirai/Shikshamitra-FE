@@ -50,6 +50,7 @@ interface Column {
   children?: (row: Data) => React.ReactNode;
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
+  sticky?: boolean;
 }
 
 interface Data {
@@ -475,7 +476,16 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                         <TableCell
                           key={column.id}
                           align={column.align || 'center'}
-                          sx={{ fontSize: '14px', minWidth: column.minWidth }}
+                          sx={{
+                            fontSize: '14px',
+                            minWidth: column.minWidth,
+                            position: column.sticky ? 'sticky' : 'static',
+                            left: column.sticky ? 0 : 'auto',
+                            zIndex: column.sticky ? 2 : 'auto',
+                            backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                            boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                            ...(column.sticky ? { backgroundImage: 'none' } : {}),
+                          }}
                         >
                           <Box
                             sx={{
@@ -535,7 +545,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             <TableCell
                               key={column.id}
                               align={column.align}
-                              sx={{ fontSize: '12px' }}
+                              sx={{
+                                fontSize: '12px',
+                                position: column.sticky ? 'sticky' : 'static',
+                                left: column.sticky ? 0 : 'auto',
+                                zIndex: column.sticky ? 2 : 'auto',
+                                backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                                boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                              }}
                             >
                               {column.render
                                 ? column.render(row[column.id], row)

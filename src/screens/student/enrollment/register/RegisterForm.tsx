@@ -4,10 +4,11 @@ import * as Yup from 'yup';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, TextField, IconButton } from '@mui/material';
+import { Box, Slide, Divider, TextField, IconButton } from '@mui/material';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -203,20 +204,99 @@ const communicationFields: FieldsType[] = [
     label: 'Parent Contact Number',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="parentContactNumber"
+          value={formik.values.parentContactNumber}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('parentContactNumber', value);
+          }}
+          label="Parent Contact Number"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={formik.touched.parentContactNumber && Boolean(formik.errors.parentContactNumber)}
+        />
+      );
+    },
   },
-  { name: 'parentEmail', label: 'Parent Email', type: 'email', otherProps: {} },
+  {
+    name: 'parentEmail',
+    label: 'Parent Email',
+    type: 'email',
+    otherProps: {
+      InputProps: {
+        startAdornment: (
+          <>
+            <Iconify icon="arcticons:googlemail" />{' '}
+            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+          </>
+        ),
+      },
+    },
+  },
   {
     name: 'studentContactNo',
     label: 'Student Contact Number',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="studentContactNo"
+          value={formik.values.studentContactNo}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('studentContactNo', value);
+          }}
+          label="Student Contact Number"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={formik.touched.studentContactNo && Boolean(formik.errors.studentContactNo)}
+        />
+      );
+    },
   },
-  { name: 'studentEmail', label: 'Student Email', type: 'email', otherProps: {} },
+  {
+    name: 'studentEmail',
+    label: 'Student Email',
+    type: 'email',
+    otherProps: {
+      InputProps: {
+        startAdornment: (
+          <>
+            <Iconify icon="arcticons:googlemail" />{' '}
+            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+          </>
+        ),
+      },
+    },
+  },
   {
     name: 'whatsAppContactNo',
     label: 'WhatsApp Contact Number',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="whatsAppContactNo"
+          value={formik.values.whatsAppContactNo}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('whatsAppContactNo', value);
+          }}
+          label="Whatsapp Number"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={formik.touched.whatsAppContactNo && Boolean(formik.errors.whatsAppContactNo)}
+        />
+      );
+    },
   },
   { name: 'localAddress', label: 'Local Address', type: 'text', otherProps: {} },
   {
@@ -258,8 +338,38 @@ const familyFields: FieldsType[] = [
     label: 'Father Contact Number',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="fatherContactNo"
+          value={formik.values.fatherContactNo}
+          onChange={(value) => {
+            formik.setFieldValue('fatherContactNo', value);
+          }}
+          label="Father Contact Number"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
+        />
+      );
+    },
   },
-  { name: 'fatherMail', label: 'Father Mail', otherProps: {}, type: 'text' },
+  {
+    name: 'fatherMail',
+    label: 'Father Mail',
+    otherProps: {
+      InputProps: {
+        startAdornment: (
+          <>
+            <Iconify icon="arcticons:googlemail" />{' '}
+            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+          </>
+        ),
+      },
+    },
+    type: 'text',
+  },
   {
     name: 'fatherExStudent',
     label: 'Father Ex-student',
@@ -277,6 +387,24 @@ const familyFields: FieldsType[] = [
     label: 'Father Office Contact No',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="fatherOfficeContactNo"
+          value={formik.values.fatherOfficeContactNo}
+          onChange={(value) => {
+            formik.setFieldValue('fatherOfficeContactNo', value);
+          }}
+          label="Father Office Contact No"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={
+            formik.touched.fatherOfficeContactNo && Boolean(formik.errors.fatherOfficeContactNo)
+          }
+        />
+      );
+    },
   },
   {
     name: 'fatherOfficeAddress',
@@ -328,13 +456,61 @@ const familyFields: FieldsType[] = [
     label: 'Mother Contact No',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="motherContactNo"
+          value={formik.values.motherContactNo}
+          onChange={(value) => {
+            formik.setFieldValue('motherContactNo', value);
+          }}
+          label="Mother Contact No"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
+        />
+      );
+    },
   },
-  { name: 'motherMail', label: 'Mother Mail', otherProps: {}, type: 'text' },
+  {
+    name: 'motherMail',
+    label: 'Mother Mail',
+    otherProps: {
+      InputProps: {
+        startAdornment: (
+          <>
+            <Iconify icon="arcticons:googlemail" />{' '}
+            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+          </>
+        ),
+      },
+    },
+    type: 'text',
+  },
   {
     name: 'motherOfficeContactNo',
     label: 'Mother Office Contact No',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="motherOfficeContactNo"
+          value={formik.values.motherOfficeContactNo}
+          onChange={(value) => {
+            formik.setFieldValue('motherOfficeContactNo', value);
+          }}
+          label="Mother Office Contact No"
+          sx={{ maxWidth: '160px', width: '100%' }}
+          error={
+            formik.touched.motherOfficeContactNo && Boolean(formik.errors.motherOfficeContactNo)
+          }
+        />
+      );
+    },
   },
   {
     name: 'motherOfficeAddress',
@@ -375,6 +551,7 @@ const allFields = [
   familyFields,
   communicationFields,
 ];
+const steps = ['General', 'Documents', 'Family Information', 'Communication'];
 
 const RegisterForm = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -435,7 +612,7 @@ const RegisterForm = () => {
         motherAnnualIncome: '',
         motherAadharNo: '',
       }}
-      steps={['General', 'Documents', 'Family Information', 'Communication']}
+      steps={steps}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
@@ -448,66 +625,85 @@ const RegisterForm = () => {
 
         setActiveStep(activeStep + 1);
       }}
-      renderItem={({ activeStep: step, formik }: any) => (
-        <Box display="flex" gap={2}>
-          {step === 0 && (
-            <Box flexGrow={1} display="flex" alignItems="center">
-              <UploadAvatar
-                maxSize={3145728}
-                onDrop={(acceptedFiles: File[]) => {
-                  const value = acceptedFiles[0];
-                  formik.setFieldValue('photo', value);
-                }}
-                value={formik.values.photo}
-                error={formik.touched.photo && Boolean(formik.errors.photo)}
-              />
-            </Box>
-          )}
-          <Box p={2} display={step === 1 ? 'block' : 'flex'} flexWrap="wrap" gap={2}>
-            {' '}
-            {allFields[step].map((field) =>
-              field.renderComp ? (
-                field.renderComp({ formik, field })
-              ) : field.type === 'date' ? (
-                <DatePicker
-                  label={field.label}
-                  name={field.name}
-                  value={formik.values[field.name]}
-                  format="DD/MM/YYYY"
-                  onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                  sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                  slotProps={{
-                    textField: {
-                      placeholder: field.placeholder,
-                      size: 'small',
-                      helperText: formik.touched[field.name] && formik.errors[field.name],
-                      error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                    },
-                  }}
-                />
-              ) : (
-                <TextField
-                  key={field.name}
-                  type={field.type}
-                  size="small"
-                  label={field.label}
-                  name={field.name}
-                  placeholder={field.placeholder}
-                  value={formik.values[field.name]}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                  helperText={formik.touched[field.name] && formik.errors[field.name]}
-                  sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                  {...(field?.otherProps || {})}
-                />
-              )
-            )}
-          </Box>
-        </Box>
-      )}
+      renderItem={({ activeStep: step, formik }: any) => <FormSlider step={step} formik={formik} />}
     />
   );
 };
 
 export default RegisterForm;
+
+const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
+  const containerRef = React.useRef<HTMLElement>(null);
+  return (
+    <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
+      {steps.map(
+        (_, index) =>
+          index === step && (
+            <Slide
+              in={index === step}
+              container={containerRef.current}
+              direction="left"
+              key={index}
+            >
+              <Box display="flex" gap={2}>
+                {step === 0 && (
+                  <Box flexGrow={1} display="flex" alignItems="center">
+                    <UploadAvatar
+                      maxSize={3145728}
+                      onDrop={(acceptedFiles: File[]) => {
+                        const value = acceptedFiles[0];
+                        formik.setFieldValue('photo', value);
+                      }}
+                      value={formik.values.photo}
+                      error={formik.touched.photo && Boolean(formik.errors.photo)}
+                    />
+                  </Box>
+                )}
+                <Box p={2} display={step === 1 ? 'block' : 'flex'} flexWrap="wrap" gap={2}>
+                  {' '}
+                  {allFields[step].map((field: FieldsType) =>
+                    field.renderComp ? (
+                      field.renderComp({ formik, field })
+                    ) : field.type === 'date' ? (
+                      <DatePicker
+                        label={field.label}
+                        name={field.name}
+                        value={formik.values[field.name]}
+                        format="DD/MM/YYYY"
+                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                        sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                        slotProps={{
+                          textField: {
+                            placeholder: field.placeholder,
+                            size: 'small',
+                            helperText: formik.touched[field.name] && formik.errors[field.name],
+                            error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                          },
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        key={field.name}
+                        type={field.type}
+                        size="small"
+                        label={field.label}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        value={formik.values[field.name]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                        helperText={formik.touched[field.name] && formik.errors[field.name]}
+                        sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                        {...(field?.otherProps || {})}
+                      />
+                    )
+                  )}
+                </Box>
+              </Box>
+            </Slide>
+          )
+      )}
+    </Box>
+  );
+};

@@ -1,5 +1,6 @@
 import 'src/global.css';
-
+// import 'react-phone-input-2/lib/style.css';
+import 'react-phone-number-input/style.css';
 // ----------------------------------------------------------------------
 
 import type { Viewport } from 'next';

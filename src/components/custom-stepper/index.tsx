@@ -84,7 +84,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         }}
         onSubmit={formik.handleSubmit}
       >
-        <Scrollbar sx={{ maxHeight: '50vh' }}>
+        <Scrollbar sx={{ height: '40vh' }}>
           {' '}
           {formik && renderItem({ formik, activeStep })}
         </Scrollbar>

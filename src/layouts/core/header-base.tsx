@@ -1,26 +1,36 @@
 import type { NavSectionProps } from 'src/components/nav-section';
 
+import { isEmpty } from 'lodash';
+import { useState, useEffect } from 'react';
+import useLocalStorage from 'use-local-storage';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import { CircularProgress } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
+
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Logo } from 'src/components/logo';
 
 import { HeaderSection } from './header-section';
 import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
+import { BoardPopover } from '../components/board-popover';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
+import { WorkspacesPopover, type WorkspacesPopoverProps } from '../components/workspaces-popover';
 
 import type { HeaderSectionProps } from './header-section';
 import type { AccountDrawerProps } from '../components/account-drawer';
 import type { ContactsPopoverProps } from '../components/contacts-popover';
 import type { LanguagePopoverProps } from '../components/language-popover';
-import type { WorkspacesPopoverProps } from '../components/workspaces-popover';
 import type { NotificationsDrawerProps } from '../components/notifications-drawer';
 
 // ----------------------------------------------------------------------
@@ -107,6 +117,41 @@ export function HeaderBase({
 }: HeaderBaseProps) {
   const theme = useTheme();
 
+  const { data: yearData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetYearQuery,
+  });
+
+  const { data: boardsData, isLoading: isBoardsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+
+  const [academicYear, setAcademicYear] = useLocalStorage<Record<string, any>>('academicYear', {});
+  const [boards, setBoards] = useState([]);
+  const [board, setBoard] = useLocalStorage<Record<string, any>>('board', {});
+
+  useEffect(() => {
+    // @ts-ignore
+    if (!academicYear?.id) {
+      if (yearData) {
+        setAcademicYear(yearData.items[0]);
+      }
+    } else if (academicYear?.id && !yearData?.items.length) {
+      setAcademicYear({});
+    }
+  }, [yearData, academicYear, setAcademicYear]);
+
+  useEffect(() => {
+    if (!isEmpty(academicYear) && boardsData) {
+      const filterData = boardsData.items.filter(
+        (bo: any) => bo.academicYearId === academicYear?.id
+      );
+      setBoards(filterData);
+      setBoard(filterData[0]);
+    }
+  }, [boardsData, academicYear, setBoards, setBoard]);
+
   return (
     <HeaderSection
       sx={sx}
@@ -134,7 +179,9 @@ export function HeaderBase({
             <StyledDivider data-slot="divider" />
 
             {/* -- Workspace popover -- */}
-            {/* {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />} */}
+            {/* {workspaces && !isLoading && (
+              <WorkspacesPopover data-slot="workspaces" data={yearData?.items || []} />
+            )} */}
 
             {slots?.leftAreaEnd}
           </>
@@ -162,6 +209,29 @@ export function HeaderBase({
                 >
                   Need help?
                 </Link>
+              )}
+
+              {workspaces &&
+                (!isLoading ? (
+                  <WorkspacesPopover
+                    data-slot="workspaces"
+                    workspace={academicYear}
+                    setWorkspace={setAcademicYear}
+                    data={yearData?.items || []}
+                  />
+                ) : (
+                  <CircularProgress size={16} />
+                ))}
+
+              {!isBoardsLoading ? (
+                <BoardPopover
+                  data-slot="boards"
+                  board={board}
+                  setBoard={setBoard}
+                  data={boards || []}
+                />
+              ) : (
+                <CircularProgress size={16} />
               )}
 
               {/* -- Searchbar -- */}

@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Slide,
   Select,
   MenuItem,
   TextField,
@@ -619,6 +620,15 @@ const allFields: FieldsType[][] = [
   PerformanceAndDevelopmentFields,
 ];
 
+const steps = [
+  'Personal Information',
+  'Family Information',
+  'Documents',
+  'Work Experience',
+  'Payroll',
+  'Performance and Development',
+];
+
 const EmployeeFrom = () => {
   const [activeStep, setActiveStep] = useState(0);
   return (
@@ -697,14 +707,7 @@ const EmployeeFrom = () => {
         punchId: '',
         shiftName: '',
       }}
-      steps={[
-        'Personal Information',
-        'Family Information',
-        'Documents',
-        'Work Experience',
-        'Payroll',
-        'Performance and Development',
-      ]}
+      steps={steps}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
@@ -717,66 +720,85 @@ const EmployeeFrom = () => {
 
         setActiveStep(activeStep + 1);
       }}
-      renderItem={({ activeStep: step, formik }: any) => (
-        <Box display="flex" gap={2}>
-          {step === 0 && (
-            <Box flexGrow={1} display="flex" alignItems="center">
-              <UploadAvatar
-                maxSize={3145728}
-                onDrop={(acceptedFiles: File[]) => {
-                  const value = acceptedFiles[0];
-                  formik.setFieldValue('photo', value);
-                }}
-                value={formik.values.photo}
-                error={formik.touched.photo && Boolean(formik.errors.photo)}
-              />
-            </Box>
-          )}
-          <Box p={2} display={step === 2 ? 'block' : 'flex'} flexWrap="wrap" gap={2}>
-            {' '}
-            {allFields[step].map((field) =>
-              field.renderComp ? (
-                field.renderComp({ formik, field })
-              ) : field.type === 'date' ? (
-                <DatePicker
-                  label={field.label}
-                  name={field.name}
-                  value={formik.values[field.name]}
-                  format="DD/MM/YYYY"
-                  onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                  sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                  slotProps={{
-                    textField: {
-                      placeholder: field.placeholder,
-                      size: 'small',
-                      helperText: formik.touched[field.name] && formik.errors[field.name],
-                      error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                    },
-                  }}
-                />
-              ) : (
-                <TextField
-                  key={field.name}
-                  type={field.type}
-                  size="small"
-                  label={field.label}
-                  name={field.name}
-                  placeholder={field.placeholder}
-                  value={formik.values[field.name]}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                  helperText={formik.touched[field.name] && formik.errors[field.name]}
-                  sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                  {...(field?.otherProps || {})}
-                />
-              )
-            )}
-          </Box>
-        </Box>
-      )}
+      renderItem={({ activeStep: step, formik }: any) => <FormSlider step={step} formik={formik} />}
     />
   );
 };
 
 export default EmployeeFrom;
+
+const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
+  const containerRef = React.useRef<HTMLElement>(null);
+  return (
+    <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
+      {steps.map(
+        (_, index) =>
+          index === step && (
+            <Slide
+              in={index === step}
+              container={containerRef.current}
+              direction="left"
+              key={index}
+            >
+              <Box display="flex" gap={2}>
+                {step === 0 && (
+                  <Box flexGrow={1} display="flex" alignItems="center">
+                    <UploadAvatar
+                      maxSize={3145728}
+                      onDrop={(acceptedFiles: File[]) => {
+                        const value = acceptedFiles[0];
+                        formik.setFieldValue('photo', value);
+                      }}
+                      value={formik.values.photo}
+                      error={formik.touched.photo && Boolean(formik.errors.photo)}
+                    />
+                  </Box>
+                )}
+                <Box p={2} display={step === 2 ? 'block' : 'flex'} flexWrap="wrap" gap={2}>
+                  {' '}
+                  {allFields[step].map((field) =>
+                    field.renderComp ? (
+                      field.renderComp({ formik, field })
+                    ) : field.type === 'date' ? (
+                      <DatePicker
+                        label={field.label}
+                        name={field.name}
+                        value={formik.values[field.name]}
+                        format="DD/MM/YYYY"
+                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                        sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                        slotProps={{
+                          textField: {
+                            placeholder: field.placeholder,
+                            size: 'small',
+                            helperText: formik.touched[field.name] && formik.errors[field.name],
+                            error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                          },
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        key={field.name}
+                        type={field.type}
+                        size="small"
+                        label={field.label}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        value={formik.values[field.name]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                        helperText={formik.touched[field.name] && formik.errors[field.name]}
+                        sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                        {...(field?.otherProps || {})}
+                      />
+                    )
+                  )}
+                </Box>
+              </Box>
+            </Slide>
+          )
+      )}
+    </Box>
+  );
+};

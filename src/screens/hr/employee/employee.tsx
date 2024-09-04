@@ -2253,6 +2253,11 @@ const HrEmployee = () => {
               open={open}
               handleClose={() => setOpen(false)}
               title="Add Employee"
+              paperProps={{
+                sx: {
+                  maxHeight: '70vh',
+                },
+              }}
             >
               <EmployeeFrom />
             </CustomDialog>

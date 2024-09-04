@@ -19,7 +19,7 @@ export function ComponentBlock({ title, sx, children, ...other }: ComponentBlock
       sx={{
         // p: 2,
         overflow: 'hidden',
-        gap: 2,
+        gap: 0,
         width: 1,
         flexWrap: 'wrap',
         borderRadius: 1.5,

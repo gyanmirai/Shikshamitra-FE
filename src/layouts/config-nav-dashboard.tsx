@@ -209,58 +209,27 @@ const studentModule = {
               path: '/student/profile',
               _action: 'student-profile',
             },
-            {
-              title: 'Upload Student Photo',
-              path: '/student/upload-student-photo',
-              _action: 'student-upload-student-photo',
-            },
-            {
-              title: 'Upload Student Documents',
-              path: '/student/upload-student-documents',
-              _action: 'student-upload-student-documents',
-            },
+            // {
+            //   title: 'Upload Student Photo',
+            //   path: '/student/upload-student-photo',
+            //   _action: 'student-upload-student-photo',
+            // },
+            // {
+            //   title: 'Upload Student Documents',
+            //   path: '/student/upload-student-documents',
+            //   _action: 'student-upload-student-documents',
+            // },
             {
               title: 'Student I-Card',
               path: '/student/student-i-card',
               _action: 'student-i-card',
             },
-            {
-              title: 'Student Sibling',
-              path: '/student/student-sibling',
-              _action: 'student-sibling',
-            },
-            {
-              title: 'Attendance',
-              path: '',
-              _action: 'student-attendance',
-              children: [
-                {
-                  title: 'Take Attendance',
-                  path: '/student/attendance/take-attendance',
-                  _action: 'student-attendance-take-attendance',
-                },
-                {
-                  title: 'Daily Attendance Tracking',
-                  path: '/student/attendance/daily-attendance-tracking',
-                  _action: 'student-attendance-daily-attendance-tracking',
-                },
-                {
-                  title: 'Leave And Absent Records',
-                  path: '/student/attendance/leave-and-absent-records',
-                  _action: 'student-attendance-leave-and-absent-records',
-                },
-                {
-                  title: 'Setting',
-                  path: '/student/attendance/setting',
-                  _action: 'student-attendance-setting',
-                },
-                {
-                  title: 'Reports',
-                  path: '/student/attendance/reports',
-                  _action: 'student-attendance-reports',
-                },
-              ],
-            },
+            // {
+            //   title: 'Student Sibling',
+            //   path: '/student/student-sibling',
+            //   _action: 'student-sibling',
+            // },
+
             {
               title: 'Student Management',
               path: '',
@@ -392,6 +361,34 @@ const studentModule = {
               title: 'Setting',
               path: '/student/setting',
               _action: 'student-setting',
+            },
+          ],
+        },
+        {
+          title: 'Attendance',
+          path: '',
+          _action: 'student-attendance',
+          children: [
+            {
+              title: 'Take Attendance',
+              path: '/student/attendance/take-attendance',
+              _action: 'student-attendance-take-attendance',
+            },
+
+            {
+              title: 'Reports',
+              path: '/student/attendance/reports',
+              _action: 'student-attendance-reports',
+            },
+            {
+              title: 'Leave & Absence',
+              path: '/student/attendance/leave-and-absent',
+              _action: 'student-attendance-leave-and-absent',
+            },
+            {
+              title: 'Setting',
+              path: '/student/attendance/setting',
+              _action: 'student-attendance-setting',
             },
           ],
         },

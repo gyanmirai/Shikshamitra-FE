@@ -88,14 +88,14 @@ const InquiryScreen = () => {
 
       <CustomizableTable
         columns={[
-          { id: 'inquiryNumber', label: 'Enquiry Number' },
+          { id: 'inquiryNumber', label: 'Enquiry Number', sticky: true },
           { id: 'organization', label: 'Organization' },
           { id: 'batchName', label: 'Batch Name' },
           { id: 'class', label: 'Class' },
           { id: 'studentName', label: 'Student Name' },
-          { id: 'dateOfBirth', label: 'Date of Birth' },
+          { id: 'dateOfBirth', label: 'DOB' },
           { id: 'age', label: 'Age' },
-          { id: 'dateOfInquiry', label: 'Date of Inquiry' },
+          { id: 'dateOfInquiry', label: 'DOI' },
           { id: 'gender', label: 'Gender' },
           { id: 'address', label: 'Address' },
           { id: 'parentsContactNo', label: 'Parents Co. No.' },

@@ -25,6 +25,7 @@ import { NavVertical } from './nav-vertical';
 import { NavHorizontal } from './nav-horizontal';
 import { _account } from '../config-nav-account';
 import { HeaderBase } from '../core/header-base';
+import { _workspaces } from '../config-nav-workspace';
 import { LayoutSection } from '../core/layout-section';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
 
@@ -94,7 +95,7 @@ export function DashboardLayout({ sx, children, data, session }: DashboardLayout
               ],
               account: _account,
               contacts: _contacts,
-              // workspaces: _workspaces,
+              workspaces: _workspaces,
               notifications: _notifications,
             }}
             slotsDisplay={{

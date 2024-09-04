@@ -1,4 +1,4 @@
-import type { DialogProps } from '@mui/material';
+import type { PaperProps, DialogProps } from '@mui/material';
 
 import React from 'react';
 
@@ -8,10 +8,19 @@ type CustomDialogProps = DialogProps & {
   handleClose: (event: {}, reason: 'backdropClick' | 'escapeKeyDown') => void;
   title: string;
   children: React.ReactNode;
+  paperProps?: PaperProps;
 };
 
-const CustomDialog = ({ open, handleClose, title, children, ...props }: CustomDialogProps) => {
+const CustomDialog = ({
+  open,
+  handleClose,
+  title,
+  children,
+  paperProps,
+  ...props
+}: CustomDialogProps) => {
   const theme = useTheme();
+  const { sx, ...paper } = paperProps || {};
   return (
     <Dialog
       open={open}
@@ -28,7 +37,9 @@ const CustomDialog = ({ open, handleClose, title, children, ...props }: CustomDi
           overflow: 'hidden',
           flexDirection: 'column',
           '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
+          ...(sx || {}),
         },
+        ...paper,
       }}
       {...props}
     >
@@ -37,5 +48,4 @@ const CustomDialog = ({ open, handleClose, title, children, ...props }: CustomDi
     </Dialog>
   );
 };
-
 export default CustomDialog;
