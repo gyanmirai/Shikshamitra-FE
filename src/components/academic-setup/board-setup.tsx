@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Tab,
   Box,
@@ -213,7 +212,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
             <CircularProgress size={20} />
           )}
         </Box>
-        <Button
+        {/* <Button
           variant="outlined"
           startIcon={<Add />}
           sx={{ maxWidth: '15%', width: '100%' }}
@@ -221,7 +220,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
           onClick={handelAddBoard}
         >
           Board
-        </Button>
+        </Button> */}
       </Box>
       {tabs.value && <MediumSetup boardId={tabs.value} />}
     </Box>

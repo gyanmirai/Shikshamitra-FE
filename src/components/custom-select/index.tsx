@@ -1,6 +1,6 @@
 import type { SxProps, SelectProps, FormControlProps, SelectChangeEvent } from '@mui/material';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Chip,
@@ -28,6 +28,7 @@ type CustomSelectProps<T extends string> = Omit<SelectProps<string>, 'onChange'>
   labelKey?: T;
   valueKey?: T;
   formControlProps?: FormControlProps;
+  isSearch?: boolean;
 };
 
 const CustomSelect = <T extends string>({
@@ -44,8 +45,18 @@ const CustomSelect = <T extends string>({
   labelKey = 'label' as T,
   valueKey = 'value' as T,
   formControlProps,
+  isSearch = false,
   ...props
 }: CustomSelectProps<T>): React.ReactElement => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredOptions, setFilteredOptions] = useState(options);
+
+  useEffect(() => {
+    setFilteredOptions(
+      options.filter((option) => option[labelKey].toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [searchTerm, options, labelKey]);
+
   const handleChange = (event: SelectChangeEvent<typeof value>) => {
     const selectedValue = event.target.value;
     onChange(selectedValue);
@@ -84,15 +95,16 @@ const CustomSelect = <T extends string>({
             : undefined
         }
         {...props}
+        onOpen={() => setSearchTerm('')}
       >
         {isLoading ? (
           <MenuItem disabled>
             <CircularProgress size={24} />
           </MenuItem>
-        ) : options.length === 0 ? (
+        ) : filteredOptions.length === 0 ? (
           <MenuItem disabled>{noOptionsMessage}</MenuItem>
         ) : (
-          options.map((option) => (
+          filteredOptions.map((option) => (
             <MenuItem key={option[valueKey]} value={option[valueKey]}>
               {multiple && (
                 <Checkbox checked={(value as string[]).indexOf(option[valueKey]) > -1} />

@@ -13,7 +13,14 @@ import {
   InputLabel,
   IconButton,
   FormControl,
+  CircularProgress,
 } from '@mui/material';
+
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import { useAddUserMutation } from 'src/redux/user/userApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useAddEmployeeMutation } from 'src/redux/employee/employeeApi';
+import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -31,87 +38,87 @@ interface FieldsType {
   renderComp?: (props: any) => React.ReactNode;
 }
 
-// const RenderOrganization = (props: any) => {
-//   const { data, isLoading } = useQueryAndMutation({
-//     type: 'query',
-//     currentQueryAndMutation: useGetOrganizationQuery,
-//   });
-//   const { formik } = props;
+const RenderOrganization = (props: any) => {
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetOrganizationQuery,
+  });
+  const { formik } = props;
 
-//   return (
-//     <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
-//       <InputLabel id="organization-select-label" size="small">
-//         Organization
-//       </InputLabel>
-//       <Select
-//         labelId="organization-select-label"
-//         id="organization-select"
-//         value={formik.values.organizationName}
-//         label="Organization"
-//         name="organizationName"
-//         disabled={isLoading}
-//         size="small"
-//         onChange={formik.handleChange}
-//       >
-//         {isLoading ? (
-//           <MenuItem value="">
-//             <CircularProgress size={24} />
-//           </MenuItem>
-//         ) : data?.items?.length ? (
-//           data?.items?.map((org: any) => (
-//             <MenuItem key={org.id} value={org.id}>
-//               {org.name}
-//             </MenuItem>
-//           ))
-//         ) : (
-//           <MenuItem value="">
-//             <em>No Organization Found</em>
-//           </MenuItem>
-//         )}
-//       </Select>
-//     </FormControl>
-//   );
-// };
-// const RenderRole = (props: any) => {
-//   const { data, isLoading } = useQueryAndMutation({
-//     type: 'query',
-//     currentQueryAndMutation: useGetRolesQuery,
-//   });
-//   const { formik } = props;
-//   return (
-//     <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
-//       <InputLabel id="Roles-select-label" size="small">
-//         Roles
-//       </InputLabel>
-//       <Select
-//         labelId="Roles-select-label"
-//         id="Roles-select"
-//         value={formik.values.role}
-//         label="Roles"
-//         disabled={isLoading}
-//         name="role"
-//         size="small"
-//         onChange={formik.handleChange}
-//       >
-//         {isLoading ? (
-//           <MenuItem value="">
-//             <CircularProgress size={24} />
-//           </MenuItem>
-//         ) : data?.items?.length ? (
-//           data?.items?.map((org: any) => (
-//             <MenuItem key={org.id} value={org.id}>
-//               {org.name}
-//             </MenuItem>
-//           ))
-//         ) : (
-//           <MenuItem value="">
-//             <em>No Organization Found</em>
-//           </MenuItem>
-//         )}
-//       </Select>
-//     </FormControl>
-//   );
-// };
+  return (
+    <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
+      <InputLabel id="organization-select-label" size="small">
+        Organization
+      </InputLabel>
+      <Select
+        labelId="organization-select-label"
+        id="organization-select"
+        value={formik.values.organizationName}
+        label="Organization"
+        name="organizationName"
+        disabled={isLoading}
+        size="small"
+        onChange={formik.handleChange}
+      >
+        {isLoading ? (
+          <MenuItem value="">
+            <CircularProgress size={24} />
+          </MenuItem>
+        ) : data?.items?.length ? (
+          data?.items?.map((org: any) => (
+            <MenuItem key={org.id} value={org.id}>
+              {org.name}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem value="">
+            <em>No Organization Found</em>
+          </MenuItem>
+        )}
+      </Select>
+    </FormControl>
+  );
+};
+const RenderRole = (props: any) => {
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRolesQuery,
+  });
+  const { formik } = props;
+  return (
+    <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
+      <InputLabel id="Roles-select-label" size="small">
+        Roles
+      </InputLabel>
+      <Select
+        labelId="Roles-select-label"
+        id="Roles-select"
+        value={formik.values.role}
+        label="Roles"
+        disabled={isLoading}
+        name="role"
+        size="small"
+        onChange={formik.handleChange}
+      >
+        {isLoading ? (
+          <MenuItem value="">
+            <CircularProgress size={24} />
+          </MenuItem>
+        ) : data?.items?.length ? (
+          data?.items?.map((org: any) => (
+            <MenuItem key={org.id} value={org.id}>
+              {org.name}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem value="">
+            <em>No Roles Found</em>
+          </MenuItem>
+        )}
+      </Select>
+    </FormControl>
+  );
+};
 
 const InformationFields: FieldsType[] = [
   {
@@ -119,7 +126,7 @@ const InformationFields: FieldsType[] = [
     label: 'Organization Name',
     name: 'organizationName',
     placeholder: 'Enter Organization Name',
-    // renderComp: RenderOrganization,
+    renderComp: (props) => <RenderOrganization {...props} />,
   },
   {
     type: 'text',
@@ -287,7 +294,7 @@ const InformationFields: FieldsType[] = [
     label: 'Role',
     name: 'role',
     placeholder: 'Enter Role',
-    // renderComp: RenderRole,
+    renderComp: (props) => <RenderRole {...props} />,
   },
   {
     type: 'text',
@@ -631,6 +638,14 @@ const steps = [
 
 const EmployeeFrom = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [addEmployee, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEmployeeMutation,
+  });
+  const [addUser] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddUserMutation,
+  });
   return (
     <CustomStepperWithFormik
       initialValues={{
@@ -715,8 +730,95 @@ const EmployeeFrom = () => {
       validationSchema={Yup.object({
         name: Yup.string(),
       })}
-      handleNext={(isLastStep, values) => {
-        if (isLastStep) return;
+      handleNext={async (isLastStep, values) => {
+        if (isLastStep) {
+          try {
+            const res = await addUser({
+              userName: `${values.firstName}${values.lastName}`,
+              name: values.firstName,
+              surname: values.lastName,
+              email: values.email,
+              phoneNumber: values.mobileNo,
+              isActive: true,
+              lockoutEnabled: true,
+              roleNames: [],
+              password: 'Test@123',
+            });
+            console.log(res, '========');
+            // addEmployee({
+            //   userId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+            //   organizationName: values.organizationName,
+            //   code: values.code,
+            //   lastName: values.lastName,
+            //   firstName: values.firstName,
+            //   middleName: values.middleName,
+            //   shortName: values.shortName,
+            //   status: values.status,
+            //   dateOfBirth: values.dob,
+            //   familyCast: values.familyCast,
+            //   castType: 0,
+            //   gender: 0,
+            //   religion: values.religion,
+            //   maritalStatus: 0,
+            //   bloodGroup: values.bloodGroup,
+            //   mobileNo: values.mobileNo,
+            //   email: values.email,
+            //   address: values.address,
+            //   department: values.department,
+            //   designation: values.designation,
+            //   dateOfJoining: values.dateOfJoining,
+            //   photo: values.photo,
+            //   employeeGroup: values.employeeGroup,
+            //   qualification: values.qualification,
+            //   role: values.role,
+            //   identificationMark1: values.identificationMark1,
+            //   identificationMark2: values.identificationMark2,
+            //   identificationMark3: values.identificationMark3,
+            //   fatherDetails: {
+            //     name: values.fatherName,
+            //     occupation: values.fatherOccupation,
+            //     contactNo: values.fatherContactNo,
+            //     address: values.fatherAddress,
+            //   },
+            //   motherDetails: {
+            //     name: values.motherName,
+            //     occupation: values.motherOccupation,
+            //     contactNo: values.motherContactNo,
+            //     address: values.motherAddress,
+            //   },
+            //   spouseDetails: {
+            //     name: values.spouseName,
+            //     occupation: values.spouseOccupation,
+            //     contactNo: values.spouseContactNo,
+            //     address: values.spouseAddress,
+            //   },
+            //   bankDetails: {
+            //     bankName: values.bankName,
+            //     branchName: values.branchName,
+            //     accountHolderName: values.accountHolderName,
+            //     accountNumber: values.accountNumber,
+            //     ifscCode: values.ifscCode,
+            //   },
+            //   workExperiences: [
+            //     {
+            //       employeeId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+            //       organizationName: 'string',
+            //       organizationAddress: 'string',
+            //       fromDate: '2024-09-05',
+            //       toDate: '2024-09-05',
+            //       department: 'string',
+            //       designation: 'string',
+            //       responsibilities: 'string',
+            //       references: 'string',
+            //     },
+            //   ],
+            //   profilePicture: values.photo,
+            // });
+          } catch (error) {
+            console.log(error);
+          }
+          return;
+        }
 
         setActiveStep(activeStep + 1);
       }}

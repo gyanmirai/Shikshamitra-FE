@@ -237,13 +237,13 @@ const studentModule = {
               children: [
                 {
                   title: 'GR No. Generation',
-                  path: '/student/management/gr-no-generation',
-                  _action: 'student-management-gr-no-generation',
+                  path: '/student/management/gr-generation',
+                  _action: 'student-management-gr-generation',
                 },
                 {
                   title: 'Roll No. Generation',
-                  path: '/student/management/roll-no-generation',
-                  _action: 'student-management-roll-no-generation',
+                  path: '/student/management/roll-generation',
+                  _action: 'student-management-roll-generation',
                 },
                 {
                   title: 'Change Division',
@@ -370,6 +370,11 @@ const studentModule = {
           _action: 'student-attendance',
           children: [
             {
+              title: 'Dashboard',
+              path: '/student/attendance/dashboard',
+              _action: 'student-attendance-dashboard',
+            },
+            {
               title: 'Take Attendance',
               path: '/student/attendance/take-attendance',
               _action: 'student-attendance-take-attendance',
@@ -382,8 +387,13 @@ const studentModule = {
             },
             {
               title: 'Leave & Absence',
-              path: '/student/attendance/leave-and-absent',
-              _action: 'student-attendance-leave-and-absent',
+              path: '/student/attendance/leave-absent',
+              _action: 'student-attendance-leave-absent',
+            },
+            {
+              title: 'Notifications History',
+              path: '/student/attendance/notification',
+              _action: 'student-attendance-notification',
             },
             {
               title: 'Setting',
@@ -532,6 +542,11 @@ const hrModule = {
               title: 'Attendance Tracking',
               path: '/hr/attendance-tracking',
               _action: 'attendance-tracking',
+            },
+            {
+              title: 'Setting',
+              path: '/hr/setting',
+              _action: 'setting',
             },
           ],
         },

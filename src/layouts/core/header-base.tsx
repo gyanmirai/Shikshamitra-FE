@@ -1,8 +1,9 @@
+import type { RootState } from 'src/redux/store';
 import type { NavSectionProps } from 'src/components/nav-section';
 
 import { isEmpty } from 'lodash';
 import { useState, useEffect } from 'react';
-import useLocalStorage from 'use-local-storage';
+import { useDispatch, useSelector } from 'react-redux';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -15,6 +16,7 @@ import { RouterLink } from 'src/routes/components';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setCurrentYear, setCurrentBoard } from 'src/redux/globalState/globalSlice';
 
 import { Logo } from 'src/components/logo';
 
@@ -116,6 +118,8 @@ export function HeaderBase({
   ...other
 }: HeaderBaseProps) {
   const theme = useTheme();
+  const dispatch = useDispatch();
+  const { currentYear, currentBoard } = useSelector((state: RootState) => state.globalState);
 
   const { data: yearData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -126,31 +130,26 @@ export function HeaderBase({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
-
-  const [academicYear, setAcademicYear] = useLocalStorage<Record<string, any>>('academicYear', {});
   const [boards, setBoards] = useState([]);
-  const [board, setBoard] = useLocalStorage<Record<string, any>>('board', {});
-
   useEffect(() => {
-    // @ts-ignore
-    if (!academicYear?.id) {
+    if (!currentYear?.id) {
       if (yearData) {
-        setAcademicYear(yearData.items[0]);
+        dispatch(setCurrentYear(yearData.items[0]));
       }
-    } else if (academicYear?.id && !yearData?.items.length) {
-      setAcademicYear({});
+    } else if (currentYear?.id && !yearData?.items.length && !isLoading) {
+      dispatch(setCurrentYear({}));
     }
-  }, [yearData, academicYear, setAcademicYear]);
+  }, [currentYear?.id, dispatch, isLoading, yearData]);
 
   useEffect(() => {
-    if (!isEmpty(academicYear) && boardsData) {
+    if (!isEmpty(currentYear) && boardsData) {
       const filterData = boardsData.items.filter(
-        (bo: any) => bo.academicYearId === academicYear?.id
+        (bo: any) => bo.academicYearId === currentYear?.id
       );
       setBoards(filterData);
-      setBoard(filterData[0]);
+      dispatch(setCurrentBoard(filterData[0]));
     }
-  }, [boardsData, academicYear, setBoards, setBoard]);
+  }, [boardsData, currentYear, dispatch]);
 
   return (
     <HeaderSection
@@ -215,8 +214,8 @@ export function HeaderBase({
                 (!isLoading ? (
                   <WorkspacesPopover
                     data-slot="workspaces"
-                    workspace={academicYear}
-                    setWorkspace={setAcademicYear}
+                    workspace={currentYear || {}}
+                    setWorkspace={(value) => dispatch(setCurrentYear(value))}
                     data={yearData?.items || []}
                   />
                 ) : (
@@ -226,8 +225,8 @@ export function HeaderBase({
               {!isBoardsLoading ? (
                 <BoardPopover
                   data-slot="boards"
-                  board={board}
-                  setBoard={setBoard}
+                  board={currentBoard || {}}
+                  setBoard={(value) => dispatch(setCurrentBoard(value))}
                   data={boards || []}
                 />
               ) : (

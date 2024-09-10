@@ -47,6 +47,7 @@ interface Column {
   minWidth?: number | string;
   align?: 'right' | 'left' | 'center';
   render?: (value: any, row: Data) => React.ReactNode;
+  renderColumn?: (value: Column) => React.ReactNode;
   children?: (row: Data) => React.ReactNode;
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
@@ -497,7 +498,11 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             }}
                             onClick={() => column.isSort !== false && handleSort(column.id)}
                           >
-                            {column.label}
+                            <Box display="flex" alignItems="center" flexDirection="column" gap={1}>
+                              {column.label}
+
+                              {column?.renderColumn?.(column)}
+                            </Box>
                             {column.isSort !== false && (
                               <>
                                 {sorts.findIndex((sort) => sort.column === column.id) > -1 && (

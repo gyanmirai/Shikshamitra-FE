@@ -51,7 +51,14 @@ const SubLayout = ({ children }: any) => {
         }}
       >
         <Scrollbar
-          sx={{ maxWidth: '1440px', width: '100%', mx: 'auto', height: '100%', overflow: 'auto' }}
+          sx={{
+            maxWidth: '1440px',
+            width: '100%',
+            mx: 'auto',
+            height: '100%',
+            overflow: 'auto',
+            '& .simplebar-content': { height: '100%' },
+          }}
         >
           {children}
         </Scrollbar>

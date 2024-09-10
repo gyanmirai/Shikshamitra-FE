@@ -1,92 +1,62 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 
-import {
-  Box,
-  Button,
-  Dialog,
-  MenuList,
-  MenuItem,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
+import { Add, Send } from '@mui/icons-material';
+import { Box, Button, TextField, IconButton, DialogActions, InputAdornment } from '@mui/material';
 
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { varAlpha } from 'src/theme/styles';
+
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-interface Inquiry {
-  id: number;
-  date: string;
-  status: 'interested' | 'not interested' | 'pending';
-  remark: string;
-  communicationHistory: string[];
-  reminderDate?: string;
-}
-
 const FollowUpScreen: React.FC = () => {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
 
-  useEffect(() => {
-    // Fetch inquiries from API
-    // For now, we'll use mock data
-    setInquiries([
-      {
-        id: 1,
-        date: '2023-05-01',
-        status: 'interested',
-        remark: 'Promising candidate',
-        communicationHistory: ['Initial contact made'],
-      },
-      {
-        id: 2,
-        date: '2023-05-02',
-        status: 'not interested',
-        remark: 'Not a good fit',
-        communicationHistory: ['Follow-up call made'],
-      },
-      {
-        id: 3,
-        date: '2023-05-03',
-        status: 'pending',
-        remark: '',
-        communicationHistory: [],
-        reminderDate: '2023-05-10',
-      },
-    ]);
-  }, []);
+  // Dummy data
+  const dummyData = [
+    {
+      id: 1,
+      name: 'John Doe',
+      board: 'CBSE',
+      medium: 'English',
+      organization: 'Primary',
+      class: '10th',
+      status: 'Interested',
+      remark: 'Wants to join next month',
+      reminderDate: '2023-06-15',
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      board: 'ICSE',
+      medium: 'English',
+      organization: 'Pre-Primary',
+      class: '12th',
+      status: 'Pending',
+      remark: 'Needs more information',
+      reminderDate: '2023-06-20',
+    },
+    {
+      id: 3,
+      name: 'Mike Johnson',
+      board: 'State Board',
+      medium: 'Hindi',
+      organization: 'Primary',
+      class: '8th',
+      status: 'Not Interested',
+      remark: 'Prefers another school',
+      reminderDate: null,
+    },
+  ];
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedInquiry(null);
   };
-  const actions = useCallback(
-    ({ popover }: any) => (
-      <MenuList>
-        <MenuItem sx={{ color: 'error.main' }}>
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            // modal.onTrue();
-            // popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-      </MenuList>
-    ),
-    []
-  );
-
   return (
     <Box>
       <CustomBreadcrumbs
@@ -96,82 +66,85 @@ const FollowUpScreen: React.FC = () => {
       />
       <CustomizableTable
         columns={[
-          { id: 'date', label: 'Date' },
-          { id: 'status', label: 'Status' },
+          { id: 'name', label: 'Name' },
+          { id: 'board', label: 'Board' },
+          { id: 'medium', label: 'Medium' },
+          { id: 'organization', label: 'Organization' },
+          { id: 'class', label: 'class' },
+          // { id: 'status', label: 'Status' },
           { id: 'remark', label: 'Remark' },
           { id: 'reminderDate', label: 'Reminder Date' },
           {
-            id: 'actions',
-            label: 'Actions',
+            id: 'conversation',
+            label: 'Conversation',
             isSort: false,
+            align: 'center',
             render(value, row) {
-              return <ThreeDotsActions actions={actions} placement="right-top" />;
+              return (
+                <IconButton
+                  sx={{
+                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                    color: (theme) => theme.palette.primary.main,
+                    '&:hover': {
+                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                    },
+                    height: '24px',
+                    width: '24px',
+                  }}
+                  onClick={() => setOpenDialog(true)}
+                >
+                  <Add sx={{ height: '18px', width: '18px' }} />
+                </IconButton>
+              );
             },
           },
         ]}
-        data={inquiries}
+        data={dummyData}
       />
-      {/* <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Remark</TableCell>
-              <TableCell>Reminder Date</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {inquiries.map((inquiry) => (
-              <TableRow key={inquiry.id}>
-                <TableCell>{inquiry.date}</TableCell>
-                <TableCell>
-                  <Select
-                    value={inquiry.status}
-                    onChange={(e) =>
-                      handleStatusChange(
-                        inquiry.id,
-                        e.target.value as 'interested' | 'not interested' | 'pending'
-                      )
-                    }
-                  >
-                    <MenuItem value="interested">Interested</MenuItem>
-                    <MenuItem value="not interested">Not Interested</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={inquiry.remark}
-                    onChange={(e) => handleRemarkChange(inquiry.id, e.target.value)}
-                  />
-                </TableCell>
-                <TableCell>{inquiry.reminderDate || 'N/A'}</TableCell>
-                <TableCell>
-                  <Button onClick={() => handleOpenDialog(inquiry)}>View History</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer> */}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Communication History</DialogTitle>
-        <DialogContent>
-          {selectedInquiry && (
-            <ul>
-              {selectedInquiry.communicationHistory.map((communication, index) => (
-                <li key={index}>{communication}</li>
-              ))}
-            </ul>
-          )}
-        </DialogContent>
+      <CustomDialog open={openDialog} handleClose={handleCloseDialog} title="Communication History">
+        <Scrollbar
+          sx={{
+            p: 3,
+            bgcolor: 'background.neutral',
+            height: '350px',
+            position: 'relative',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              right: 16,
+              left: 16,
+              zIndex: 1000,
+            }}
+          >
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Type a message..."
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton>
+                      <Send />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+        </Scrollbar>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Close</Button>
+          <Button onClick={handleCloseDialog} variant="outlined" color="error">
+            Close
+          </Button>
+          <Button onClick={handleCloseDialog} variant="contained">
+            Submit
+          </Button>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
     </Box>
   );
 };

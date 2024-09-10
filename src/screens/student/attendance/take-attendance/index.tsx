@@ -1,8 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
-import useLocalStorage from 'use-local-storage';
+import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
 import { Box, Avatar, Button, Divider, Typography, DialogActions } from '@mui/material';
@@ -29,16 +30,29 @@ const TakeAttendanceScreen = () => {
   const [classes, setClass] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const [currentBoard] = useLocalStorage<Record<string, any>>('board', {});
+  const { currentBoard } = useSelector((state: RootState) => state.globalState);
   const [getBoard, { data: boardData }] = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useLazyGetBoardByIdQuery,
   });
   useEffect(() => {
     if (currentBoard?.id) {
-      getBoard(currentBoard.id);
+      if (boardData) {
+        setAllMediums(boardData?.educationMediums || []);
+        setMedium(boardData?.educationMediums?.[0]?.id || '');
+      } else {
+        getBoard(currentBoard.id);
+      }
+    } else {
+      setAllMediums([]);
+      setMedium('');
     }
-  }, [currentBoard, getBoard]);
+  }, [boardData, currentBoard?.id, getBoard]);
+
+  useEffect(() => {
+    setAllMediums(boardData?.educationMediums || []);
+    setMedium(boardData?.educationMediums?.[0]?.id || '');
+  }, [boardData]);
 
   useEffect(() => {
     setAllMediums(boardData?.educationMediums || []);
@@ -67,11 +81,46 @@ const TakeAttendanceScreen = () => {
 
   // Dummy data for the table
   const dummyData = [
-    { rollNo: '1', name: 'John Doe', grNo: 'GR001', attendance: 'Present' },
-    { rollNo: '2', name: 'Jane Smith', grNo: 'GR002', attendance: 'Absent' },
-    { rollNo: '3', name: 'Alice Johnson', grNo: 'GR003', attendance: 'Present' },
-    { rollNo: '4', name: 'Bob Williams', grNo: 'GR004', attendance: 'Present' },
-    { rollNo: '5', name: 'Charlie Brown', grNo: 'GR005', attendance: 'Absent' },
+    {
+      rollNo: '1',
+      name: 'John Doe',
+      grNo: 'GR001',
+      attendance: 'Present',
+      attendancePercentage: '80%',
+      totalPresentDays: '20/25',
+    },
+    {
+      rollNo: '2',
+      name: 'Jane Smith',
+      grNo: 'GR002',
+      attendance: 'Absent',
+      attendancePercentage: '70%',
+      totalPresentDays: '18/25',
+    },
+    {
+      rollNo: '3',
+      name: 'Alice Johnson',
+      grNo: 'GR003',
+      attendance: 'Present',
+      attendancePercentage: '90%',
+      totalPresentDays: '22/25',
+    },
+    {
+      rollNo: '4',
+      name: 'Bob Williams',
+      grNo: 'GR004',
+      attendance: 'Present',
+      attendancePercentage: '85%',
+      totalPresentDays: '21/25',
+    },
+    {
+      rollNo: '5',
+      name: 'Charlie Brown',
+      grNo: 'GR005',
+      attendance: 'Absent',
+      attendancePercentage: '75%',
+      totalPresentDays: '19/25',
+    },
   ];
 
   return (
@@ -149,12 +198,14 @@ const TakeAttendanceScreen = () => {
               render(value, row) {
                 return (
                   <Box display="flex" alignItems="center" gap={1}>
-                    <Avatar title={value} />
+                    <Avatar sx={{ width: 30, height: 30 }} alt={value} title={value} />
                     {value}
                   </Box>
                 );
               },
             },
+            { id: 'totalPresentDays', label: 'Total Present Days' },
+            { id: 'attendancePercentage', label: 'Attendance Percentage' },
             {
               id: 'attendance',
               label: 'Attendance',

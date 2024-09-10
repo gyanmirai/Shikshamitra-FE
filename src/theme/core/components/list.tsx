@@ -33,10 +33,18 @@ const MuiListItemText: Components<Theme>['MuiListItemText'] = {
    *************************************** */
   styleOverrides: { root: { margin: 0 }, multiline: { margin: 0 } },
 };
+// MuiList-root
+const MuiList: Components<Theme>['MuiList'] = {
+  /** **************************************
+   * STYLE
+   *************************************** */
+  styleOverrides: { root: { margin: 0, height: '250px' } },
+};
 
 // ----------------------------------------------------------------------
 
 export const list = {
+  MuiList,
   MuiListItemIcon,
   MuiListItemAvatar,
   MuiListItemText,
