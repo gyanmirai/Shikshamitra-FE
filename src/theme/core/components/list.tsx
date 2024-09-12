@@ -38,7 +38,7 @@ const MuiList: Components<Theme>['MuiList'] = {
   /** **************************************
    * STYLE
    *************************************** */
-  styleOverrides: { root: { margin: 0, height: '250px' } },
+  styleOverrides: { root: { margin: 0, maxHeight: '250px' } },
 };
 
 // ----------------------------------------------------------------------

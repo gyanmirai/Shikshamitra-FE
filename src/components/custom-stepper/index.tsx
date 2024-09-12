@@ -79,7 +79,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       <Box
         component="form"
         sx={{
-          '& input': { fontSize: '12px' },
+          '& input': { fontSize: '14px' },
           '& label': { fontSize: '12px' },
         }}
         onSubmit={formik.handleSubmit}

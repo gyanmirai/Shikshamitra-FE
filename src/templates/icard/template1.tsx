@@ -10,8 +10,8 @@ const Template1 = ({ isShowSettings }: { isShowSettings: boolean }) => {
     grNo: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
     stdDiv: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
     address: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
-    phoneNo1: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
-    phoneNo2: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
+    // phoneNo1: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
+    // phoneNo2: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
     cardHeader: {
       fontSize: 16,
       fontWeight: 'normal',
@@ -115,8 +115,8 @@ const Template1 = ({ isShowSettings }: { isShowSettings: boolean }) => {
         { field: 'grNo', subField: 'Gr. No.' },
         { field: 'stdDiv', subField: 'Std / Div' },
         { field: 'address', subField: 'Address' },
-        { field: 'phoneNo1', subField: 'Phone No.1' },
-        { field: 'phoneNo2', subField: 'Phone No.2' },
+        // { field: 'phoneNo1', subField: 'Phone No.1' },
+        // { field: 'phoneNo2', subField: 'Phone No.2' },
       ]}
     />
   );

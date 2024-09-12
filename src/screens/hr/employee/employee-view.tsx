@@ -1,10 +1,15 @@
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 
 import { Tab, Box, Card, Tabs, Typography, ListItemText } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
+
+import { convertBase64Format } from 'src/utils/base64Formate';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -43,13 +48,25 @@ const TABS = [
 ];
 interface EmployeeViewProps {
   setSearchParams: any;
+  searchParams: any;
 }
-const EmployeeView = ({ setSearchParams }: EmployeeViewProps) => {
+const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   const tabs = useTabs('personalInformation');
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
+  const [getEmployById, { data: employee }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEmployeeByIdQuery,
+  });
+
+  useEffect(() => {
+    if (searchParams?.employee) {
+      getEmployById(searchParams?.employee.trim());
+    }
+  }, [getEmployById, searchParams?.employee]);
+
   return (
     <>
       <CustomBreadcrumbs
@@ -59,14 +76,14 @@ const EmployeeView = ({ setSearchParams }: EmployeeViewProps) => {
       />
       <Card sx={{ mb: 3, height: 290 }}>
         <EmployeeProfileCover
-          name="Abc"
-          avatarUrl="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
+          name={`${employee?.firstName} ${employee?.lastName}`}
+          avatarUrl={convertBase64Format(employee?.profilePicture)}
           setSearchParams={setSearchParams}
           extraContent={
             <Box sx={{ mt: 3, ml: { md: 3 }, textAlign: { xs: 'center', md: 'unset' } }}>
               <ListItemText
                 sx={{ textAlign: { xs: 'center', md: 'unset' } }}
-                primary="Abc"
+                primary={`${employee?.firstName} ${employee?.lastName}`}
                 secondary=""
                 primaryTypographyProps={{ typography: 'h4' }}
                 secondaryTypographyProps={{
@@ -80,7 +97,7 @@ const EmployeeView = ({ setSearchParams }: EmployeeViewProps) => {
               <Box display="flex" flexDirection="column" gap={1}>
                 <Typography variant="caption" fontWeight="bold" mt={1}>
                   <Label variant="soft" color="success">
-                    Teacher
+                    {employee?.role || 'Teacher'}
                   </Label>
                 </Typography>
                 <Typography variant="caption" fontWeight="bold">

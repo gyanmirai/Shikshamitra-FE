@@ -2,7 +2,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Issuer } from 'openid-client';
 
 export const clientConfig = {
-  url: 'https://localhost:44332/.well-known/openid-configuration',
+  url: `${process.env.NEXT_PUBLIC_API_URL}/.well-known/openid-configuration`,
   audience: process.env.NEXT_PUBLIC_API_URL,
   client_id: process.env.NEXT_PUBLIC_CLIENT_ID,
   scope: process.env.NEXT_PUBLIC_SCOPE,
@@ -29,4 +29,20 @@ export const isTokenExpired = (token: string) => {
   const expirationTime = decoded.exp! * 1000;
   const currentTime = new Date().getTime();
   return expirationTime < currentTime;
+};
+
+export const getCookie = async (key: string) => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  // const session = await getIronSession(, sessionOptions);
+  const cookies: { [key: string]: string } = document.cookie.split('; ').reduce(
+    (acc, cookie) => {
+      const [keys, value] = cookie.split('=');
+      acc[keys] = decodeURIComponent(value);
+      return acc;
+    },
+    {} as { [key: string]: string }
+  );
+  return cookies[key];
 };

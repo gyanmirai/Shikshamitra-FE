@@ -1,5 +1,6 @@
 import type { SxProps } from '@mui/material';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import React, { useState } from 'react';
 
@@ -16,17 +17,22 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+import { fileToBase64 } from 'src/utils/file-to-base64';
+import { convertBase64Format } from 'src/utils/base64Formate';
+
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useAddEmployeeMutation } from 'src/redux/employee/employeeApi';
 import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
+import { useAddEmployeeMutation, useUpdateEmployeeMutation } from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { UploadAvatar } from 'src/components/upload';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+
+import WorkExperiences from './work-experiance';
 
 interface FieldsType {
   type: string;
@@ -457,52 +463,10 @@ const CertificateFields: FieldsType[] = [
 ];
 export const WorkExperienceFields: FieldsType[] = [
   {
-    type: 'text',
-    label: 'Organization Name',
-    name: 'organizationName',
-    placeholder: 'Enter Organization Name',
-  },
-  {
-    type: 'text',
-    label: 'Organization Address',
-    name: 'organizationAddress',
-    placeholder: 'Enter Organization Address',
-  },
-  {
-    type: 'date',
-    label: 'From Date',
-    name: 'fromDate',
-    placeholder: 'Select From Date',
-  },
-  {
-    type: 'date',
-    label: 'To Date',
-    name: 'toDate',
-    placeholder: 'Select To Date',
-  },
-  {
-    type: 'text',
-    label: 'Department',
-    name: 'department',
-    placeholder: 'Enter Department',
-  },
-  {
-    type: 'text',
-    label: 'Designation',
-    name: 'designation',
-    placeholder: 'Enter Designation',
-  },
-  {
-    type: 'textarea',
-    label: 'Responsibilities',
-    name: 'responsibilities',
-    placeholder: 'Enter Responsibilities',
-  },
-  {
-    type: 'text',
-    label: 'References',
-    name: 'references',
-    placeholder: 'Enter References',
+    type: '',
+    label: 'Company Name',
+    name: 'companyName',
+    renderComp: (props) => <WorkExperiences {...props} />,
   },
 ];
 export const PayrollFields: FieldsType[] = [
@@ -636,7 +600,7 @@ const steps = [
   'Performance and Development',
 ];
 
-const EmployeeFrom = () => {
+const EmployeeFrom = ({ editData }: any) => {
   const [activeStep, setActiveStep] = useState(0);
   const [addEmployee, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -646,38 +610,47 @@ const EmployeeFrom = () => {
     type: 'mutation',
     currentQueryAndMutation: useAddUserMutation,
   });
+
+  const [updateEmployee] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEmployeeMutation,
+  });
   return (
     <CustomStepperWithFormik
       initialValues={{
-        organizationName: '',
-        code: '',
-        lastName: '',
-        firstName: '',
-        middleName: '',
-        shortName: '',
-        status: '',
-        dob: null,
-        familyCast: '',
-        castCategory: '',
-        gender: '',
-        religion: '',
-        maritalStatus: '',
-        bloodGroup: '',
-        mobileNo: '',
-        email: '',
-        address: '',
-        department: '',
-        designation: '',
-        dateOfJoining: null,
-        photo: '',
-        employeeGroup: '',
-        qualification: '',
-        userId: '',
-        password: '',
-        role: '',
-        identificationMark1: '',
-        identificationMark2: '',
-        identificationMark3: '',
+        organizationName: editData ? editData.organizationName : '',
+        code: editData ? editData.code : '',
+        lastName: editData ? editData.lastName : '',
+        firstName: editData ? editData.firstName : '',
+        middleName: editData ? editData.middleName : '',
+        shortName: editData ? editData.shortName : '',
+        status: editData ? editData.status : '',
+        dob: editData ? dayjs(editData.dateOfBirth, 'YYYY-MM-DD') : null,
+        familyCast: editData ? editData.familyCast : '',
+        castCategory: editData ? editData.castCategory : '',
+        gender: editData ? editData.gender : '',
+        religion: editData ? editData.religion : '',
+        maritalStatus: editData ? editData.maritalStatus : '',
+        bloodGroup: editData ? editData.bloodGroup : '',
+        mobileNo: editData ? editData.mobileNo : '',
+        email: editData ? editData.email : '',
+        address: editData ? editData.address : '',
+        department: editData ? editData.department : '',
+        designation: editData ? editData.designation : '',
+        dateOfJoining: editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : null,
+        photo: editData
+          ? editData.profilePicture
+            ? convertBase64Format(editData.profilePicture)
+            : ''
+          : '',
+        employeeGroup: editData ? editData.employeeGroup : '',
+        qualification: editData ? editData.qualification : '',
+        userId: editData ? editData.userId : '',
+
+        role: editData ? editData.role : '',
+        identificationMark1: editData ? editData.identificationMark1 : '',
+        identificationMark2: editData ? editData.identificationMark2 : '',
+        identificationMark3: editData ? editData.identificationMark3 : '',
         documents: [
           {
             name: 'root',
@@ -685,42 +658,41 @@ const EmployeeFrom = () => {
             children: [],
           },
         ],
-        fatherName: '',
-        fatherOccupation: '',
-        fatherContactNo: '',
-        fatherAddress: '',
-        motherName: '',
-        motherOccupation: '',
-        motherContactNo: '',
-        motherAddress: '',
-        spouseName: '',
-        spouseOccupation: '',
-        spouseContactNo: '',
-        spouseAddress: '',
-        aadharCard: '',
-        panCard: '',
-        degreeCertificates: '',
-        marksheet: '',
-        cheque: '',
-        expOrganizationName: '',
-        expOrganizationAddress: '',
-        expFromDate: null,
-        expToDate: null,
-        expDepartment: '',
-        expDesignation: '',
-        expResponsibilities: '',
-        expReferences: '',
-        bankName: '',
-        branchName: '',
-        accountHolderName: '',
-        accountNumber: '',
-        ifscCode: '',
-        pfType: '',
-        epfNumber: '',
-        uanNumber: '',
-        basicSalary: '',
-        punchId: '',
-        shiftName: '',
+        fatherName: editData ? editData.fatherDetails.name : '',
+        fatherOccupation: editData ? editData.fatherDetails.occupation : '',
+        fatherContactNo: editData ? editData.fatherDetails.contactNo : '',
+        fatherAddress: editData ? editData.fatherDetails.address : '',
+        motherName: editData ? editData.motherDetails.name : '',
+        motherOccupation: editData ? editData.motherDetails.occupation : '',
+        motherContactNo: editData ? editData.motherDetails.contactNo : '',
+        motherAddress: editData ? editData.motherDetails.address : '',
+        spouseName: editData ? editData.spouseDetails.name : '',
+        spouseOccupation: editData ? editData.spouseDetails.occupation : '',
+        spouseContactNo: editData ? editData.spouseDetails.contactNo : '',
+        spouseAddress: editData ? editData.spouseDetails.address : '',
+        // aadharCard:editData ? editData.aadharCard : '',
+        // panCard: '',
+        // degreeCertificates: '',
+        // marksheet: '',
+        // cheque: '',
+        experiences: editData
+          ? editData.workExperiences.map((i: any) => ({
+              ...i,
+              fromDate: dayjs(i.fromDate, 'YYYY-MM-DD'),
+              toDate: dayjs(i.toDate, 'YYYY-MM-DD'),
+            }))
+          : [],
+        bankName: editData ? editData.bankDetails.bankName : '',
+        branchName: editData ? editData.bankDetails.branchName : '',
+        accountHolderName: editData ? editData.bankDetails.accountHolderName : '',
+        accountNumber: editData ? editData.bankDetails.accountNumber : '',
+        ifscCode: editData ? editData.bankDetails.ifscCode : '',
+        // pfType: '',
+        // epfNumber: '',
+        // uanNumber: '',
+        // basicSalary: '',
+        // punchId: '',
+        // shiftName: '',
       }}
       steps={steps}
       activeStep={activeStep}
@@ -731,7 +703,73 @@ const EmployeeFrom = () => {
         name: Yup.string(),
       })}
       handleNext={async (isLastStep, values) => {
-        if (isLastStep) {
+        if (editData) {
+          updateEmployee({
+            id: editData.id,
+            body: {
+              userId: editData.userId,
+              organizationName: values.organizationName,
+              code: values.code,
+              lastName: values.lastName,
+              firstName: values.firstName,
+              middleName: values.middleName,
+              shortName: values.shortName,
+              status: values.status,
+              dateOfBirth: values.dob.format('YYYY-MM-DD'),
+              familyCast: values.familyCast,
+              castType: 0,
+              gender: 0,
+              religion: values.religion,
+              maritalStatus: 0,
+              bloodGroup: values.bloodGroup,
+              mobileNo: values.mobileNo,
+              email: values.email,
+              address: values.address,
+              department: values.department,
+              designation: values.designation,
+              dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+
+              employeeGroup: values.employeeGroup,
+              qualification: values.qualification,
+              role: values.role,
+              identificationMark1: values.identificationMark1,
+              identificationMark2: values.identificationMark2,
+              identificationMark3: values.identificationMark3,
+              fatherDetails: {
+                name: values.fatherName,
+                occupation: values.fatherOccupation,
+                contactNo: values.fatherContactNo,
+                address: values.fatherAddress,
+              },
+              motherDetails: {
+                name: values.motherName,
+                occupation: values.motherOccupation,
+                contactNo: values.motherContactNo,
+                address: values.motherAddress,
+              },
+              spouseDetails: {
+                name: values.spouseName,
+                occupation: values.spouseOccupation,
+                contactNo: values.spouseContactNo,
+                address: values.spouseAddress,
+              },
+              bankDetails: {
+                bankName: values.bankName,
+                branchName: values.branchName,
+                accountHolderName: values.accountHolderName,
+                accountNumber: values.accountNumber,
+                ifscCode: values.ifscCode,
+              },
+              workExperiences: values.experiences.map((i: any) => ({
+                ...i,
+                fromDate: i.fromDate.format('YYYY-MM-DD'),
+                toDate: i.toDate.format('YYYY-MM-DD'),
+                employeeId: editData.employeeId,
+              })),
+              profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+            },
+          });
+        } else if (isLastStep) {
           try {
             const res = await addUser({
               userName: `${values.firstName}${values.lastName}`,
@@ -744,76 +782,68 @@ const EmployeeFrom = () => {
               roleNames: [],
               password: 'Test@123',
             });
-            console.log(res, '========');
-            // addEmployee({
-            //   userId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-            //   organizationName: values.organizationName,
-            //   code: values.code,
-            //   lastName: values.lastName,
-            //   firstName: values.firstName,
-            //   middleName: values.middleName,
-            //   shortName: values.shortName,
-            //   status: values.status,
-            //   dateOfBirth: values.dob,
-            //   familyCast: values.familyCast,
-            //   castType: 0,
-            //   gender: 0,
-            //   religion: values.religion,
-            //   maritalStatus: 0,
-            //   bloodGroup: values.bloodGroup,
-            //   mobileNo: values.mobileNo,
-            //   email: values.email,
-            //   address: values.address,
-            //   department: values.department,
-            //   designation: values.designation,
-            //   dateOfJoining: values.dateOfJoining,
-            //   photo: values.photo,
-            //   employeeGroup: values.employeeGroup,
-            //   qualification: values.qualification,
-            //   role: values.role,
-            //   identificationMark1: values.identificationMark1,
-            //   identificationMark2: values.identificationMark2,
-            //   identificationMark3: values.identificationMark3,
-            //   fatherDetails: {
-            //     name: values.fatherName,
-            //     occupation: values.fatherOccupation,
-            //     contactNo: values.fatherContactNo,
-            //     address: values.fatherAddress,
-            //   },
-            //   motherDetails: {
-            //     name: values.motherName,
-            //     occupation: values.motherOccupation,
-            //     contactNo: values.motherContactNo,
-            //     address: values.motherAddress,
-            //   },
-            //   spouseDetails: {
-            //     name: values.spouseName,
-            //     occupation: values.spouseOccupation,
-            //     contactNo: values.spouseContactNo,
-            //     address: values.spouseAddress,
-            //   },
-            //   bankDetails: {
-            //     bankName: values.bankName,
-            //     branchName: values.branchName,
-            //     accountHolderName: values.accountHolderName,
-            //     accountNumber: values.accountNumber,
-            //     ifscCode: values.ifscCode,
-            //   },
-            //   workExperiences: [
-            //     {
-            //       employeeId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-            //       organizationName: 'string',
-            //       organizationAddress: 'string',
-            //       fromDate: '2024-09-05',
-            //       toDate: '2024-09-05',
-            //       department: 'string',
-            //       designation: 'string',
-            //       responsibilities: 'string',
-            //       references: 'string',
-            //     },
-            //   ],
-            //   profilePicture: values.photo,
-            // });
+            await addEmployee({
+              userId: res.data.id,
+              organizationName: values.organizationName,
+              code: values.code,
+              lastName: values.lastName,
+              firstName: values.firstName,
+              middleName: values.middleName,
+              shortName: values.shortName,
+              status: values.status,
+              dateOfBirth: values.dob.format('YYYY-MM-DD'),
+              familyCast: values.familyCast,
+              castType: 0,
+              gender: 0,
+              religion: values.religion,
+              maritalStatus: 0,
+              bloodGroup: values.bloodGroup,
+              mobileNo: values.mobileNo,
+              email: values.email,
+              address: values.address,
+              department: values.department,
+              designation: values.designation,
+              dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+
+              employeeGroup: values.employeeGroup,
+              qualification: values.qualification,
+              role: values.role,
+              identificationMark1: values.identificationMark1,
+              identificationMark2: values.identificationMark2,
+              identificationMark3: values.identificationMark3,
+              fatherDetails: {
+                name: values.fatherName,
+                occupation: values.fatherOccupation,
+                contactNo: values.fatherContactNo,
+                address: values.fatherAddress,
+              },
+              motherDetails: {
+                name: values.motherName,
+                occupation: values.motherOccupation,
+                contactNo: values.motherContactNo,
+                address: values.motherAddress,
+              },
+              spouseDetails: {
+                name: values.spouseName,
+                occupation: values.spouseOccupation,
+                contactNo: values.spouseContactNo,
+                address: values.spouseAddress,
+              },
+              bankDetails: {
+                bankName: values.bankName,
+                branchName: values.branchName,
+                accountHolderName: values.accountHolderName,
+                accountNumber: values.accountNumber,
+                ifscCode: values.ifscCode,
+              },
+              workExperiences: values.experiences.map((i: any) => ({
+                ...i,
+                fromDate: i.fromDate.format('YYYY-MM-DD'),
+                toDate: i.toDate.format('YYYY-MM-DD'),
+                employeeId: res.data.id,
+              })),
+              profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+            });
           } catch (error) {
             console.log(error);
           }
@@ -847,9 +877,10 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                   <Box flexGrow={1} display="flex" alignItems="center">
                     <UploadAvatar
                       maxSize={3145728}
-                      onDrop={(acceptedFiles: File[]) => {
+                      onDrop={async (acceptedFiles: File[]) => {
                         const value = acceptedFiles[0];
-                        formik.setFieldValue('photo', value);
+                        const base64 = await fileToBase64(value);
+                        formik.setFieldValue('photo', base64);
                       }}
                       value={formik.values.photo}
                       error={formik.touched.photo && Boolean(formik.errors.photo)}

@@ -232,40 +232,8 @@ const studentModule = {
 
             {
               title: 'Student Management',
-              path: '',
+              path: '/student/management',
               _action: 'student-management',
-              children: [
-                {
-                  title: 'GR No. Generation',
-                  path: '/student/management/gr-generation',
-                  _action: 'student-management-gr-generation',
-                },
-                {
-                  title: 'Roll No. Generation',
-                  path: '/student/management/roll-generation',
-                  _action: 'student-management-roll-generation',
-                },
-                {
-                  title: 'Change Division',
-                  path: '/student/management/change-division',
-                  _action: 'student-management-change-division',
-                },
-                {
-                  title: 'Change Class',
-                  path: '/student/management/change-class',
-                  _action: 'student-management-change-class',
-                },
-                {
-                  title: 'Bulk Data Update',
-                  path: '/student/management/bulk-data-update',
-                  _action: 'student-management-bulk-data-update',
-                },
-                {
-                  title: 'Bulk Student Add',
-                  path: '/student/management/bulk-student-add',
-                  _action: 'student-management-bulk-student-add',
-                },
-              ],
             },
             {
               title: 'Certificates',
@@ -342,21 +310,13 @@ const studentModule = {
                 },
               ],
             },
+
             {
-              title: 'Student Custom Search',
-              path: '/student/custom-search',
-              _action: 'student-custom-search',
-            },
-            {
-              title: 'Student Reports',
+              title: 'Reports',
               path: '/student/reports',
               _action: 'student-reports',
             },
-            {
-              title: 'Student Summary Reports',
-              path: '/student/summary-reports',
-              _action: 'student-summary-reports',
-            },
+
             {
               title: 'Setting',
               path: '/student/setting',
@@ -542,6 +502,11 @@ const hrModule = {
               title: 'Attendance Tracking',
               path: '/hr/attendance-tracking',
               _action: 'attendance-tracking',
+            },
+            {
+              title: 'Notifications History',
+              path: '/hr/attendance-notification',
+              _action: 'hr-attendance-notification',
             },
             {
               title: 'Setting',

@@ -5,6 +5,10 @@ import * as yup from 'yup';
 
 import { Box, TextField, Autocomplete } from '@mui/material';
 
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 const renderItem = {
@@ -23,7 +27,7 @@ const initialValues = {
 const validationSchema = {
   0: yup.object().shape({
     user: yup
-      .object({ name: yup.string().required('User is required') })
+      .object({ firstName: yup.string().required('User is required') })
       .required('User is required'),
   }),
   1: yup.object().shape({
@@ -88,57 +92,69 @@ const AccessControlScreen = () => {
 
 export default AccessControlScreen;
 
-const UserScreenStep = ({ formik }: any) => (
-  <Autocomplete
-    options={[]}
-    getOptionLabel={(option: any) => option.name}
-    id="controlled-demo"
-    value={formik.values.user}
-    loading={false}
-    sx={{ maxWidth: 300, width: '100%' }}
-    onChange={(event: any, newValue: any | null) => {
-      formik.setFieldValue('user', newValue);
-    }}
-    size="small"
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        size="small"
-        label="Select User"
-        helperText={formik.touched.user && formik.errors.user}
-        error={formik.touched.user && Boolean(formik.errors.user)}
-      />
-    )}
-  />
-);
+const UserScreenStep = ({ formik }: any) => {
+  const { data: employees, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeQuery,
+  });
+  return (
+    <Autocomplete
+      options={employees?.items || []}
+      getOptionLabel={(option: any) => `${option.lastName} ${option.firstName}`}
+      id="employees"
+      value={formik.values.user}
+      loading={isLoading}
+      sx={{ maxWidth: 300, width: '100%' }}
+      onChange={(event: any, newValue: any | null) => {
+        formik.setFieldValue('user', newValue);
+      }}
+      size="small"
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          size="small"
+          label="Select Employee"
+          helperText={formik.touched.user && formik.errors.user}
+          error={formik.touched.user && Boolean(formik.errors.user)}
+        />
+      )}
+    />
+  );
+};
 
-const BoardScreenStep = ({ formik }: any) => (
-  <Autocomplete
-    options={[]}
-    getOptionLabel={(option: any) => option.name}
-    id="controlled-demo"
-    value={formik.values.board}
-    loading={false}
-    sx={{ maxWidth: 300, width: '100%' }}
-    onChange={(event: any, newValue: any | null) => {
-      formik.setFieldValue('board', newValue);
-    }}
-    size="small"
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        size="small"
-        label="Select Board"
-        helperText={formik.touched.board && formik.errors.board}
-        error={formik.touched.board && Boolean(formik.errors.board)}
-      />
-    )}
-  />
-);
+const BoardScreenStep = ({ formik }: any) => {
+  const { data: boards, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  return (
+    <Autocomplete
+      options={boards?.items || []}
+      getOptionLabel={(option: any) => option.name}
+      id="controlled-demo"
+      value={formik.values.board}
+      loading={isLoading}
+      sx={{ maxWidth: 300, width: '100%' }}
+      onChange={(event: any, newValue: any | null) => {
+        formik.setFieldValue('board', newValue);
+      }}
+      size="small"
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          size="small"
+          label="Select Board"
+          helperText={formik.touched.board && formik.errors.board}
+          error={formik.touched.board && Boolean(formik.errors.board)}
+        />
+      )}
+    />
+  );
+};
 
 const MediumScreenStep = ({ formik }: any) => (
   <Autocomplete
-    options={[]}
+    options={formik.values.board?.educationMediums || []}
     getOptionLabel={(option: any) => option.name}
     id="controlled-demo"
     value={formik.values.medium}
@@ -162,7 +178,7 @@ const MediumScreenStep = ({ formik }: any) => (
 
 const OrganizationScreenStep = ({ formik }: any) => (
   <Autocomplete
-    options={[]}
+    options={formik.values.medium?.educationMediumStages || []}
     getOptionLabel={(option: any) => option.name}
     id="controlled-demo"
     value={formik.values.organization}
@@ -186,7 +202,7 @@ const OrganizationScreenStep = ({ formik }: any) => (
 
 const ClassScreenStep = ({ formik }: any) => (
   <Autocomplete
-    options={[]}
+    options={formik.values.organization?.standards || []}
     getOptionLabel={(option: any) => option.name}
     id="controlled-demo"
     value={formik.values.class}
@@ -210,7 +226,7 @@ const ClassScreenStep = ({ formik }: any) => (
 
 const DivisionScreenStep = ({ formik }: any) => (
   <Autocomplete
-    options={[]}
+    options={formik.values.class?.divisions || []}
     getOptionLabel={(option: any) => option.name}
     id="controlled-demo"
     value={formik.values.division}

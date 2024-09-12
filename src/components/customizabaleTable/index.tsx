@@ -39,6 +39,7 @@ import {
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
+import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
 
 interface Column {
@@ -534,54 +535,64 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedData.map((row, index) => (
-                  <React.Fragment key={index}>
-                    <TableRow hover tabIndex={-1}>
-                      {columns.some((column) => column.children) && (
-                        <TableCell sx={{ fontSize: '12px' }}>
-                          <IconButton size="small" onClick={() => handleExpandRow(index)}>
-                            {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                          </IconButton>
-                        </TableCell>
-                      )}
-                      {columns.map(
-                        (column) =>
-                          columnVisibility[column.id] && (
-                            <TableCell
-                              key={column.id}
-                              align={column.align}
-                              sx={{
-                                fontSize: '12px',
-                                position: column.sticky ? 'sticky' : 'static',
-                                left: column.sticky ? 0 : 'auto',
-                                zIndex: column.sticky ? 2 : 'auto',
-                                backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                                boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
-                              }}
-                            >
-                              {column.render
-                                ? column.render(row[column.id], row)
-                                : _.get(row, column.id, '-')}
-                            </TableCell>
-                          )
-                      )}
-                    </TableRow>
-                    {columns.some((column) => column.children) && (
-                      <TableRow>
-                        <TableCell
-                          style={{ paddingBottom: 0, paddingTop: 0 }}
-                          colSpan={columns.length + 1}
-                        >
-                          <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
-                            <Box sx={{ margin: 1 }}>
-                              {columns.map((column) => column.children && column.children(row))}
-                            </Box>
-                          </Collapse>
-                        </TableCell>
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((row, index) => (
+                    <React.Fragment key={index}>
+                      <TableRow hover tabIndex={-1}>
+                        {columns.some((column) => column.children) && (
+                          <TableCell sx={{ fontSize: '12px' }}>
+                            <IconButton size="small" onClick={() => handleExpandRow(index)}>
+                              {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            </IconButton>
+                          </TableCell>
+                        )}
+                        {columns.map(
+                          (column) =>
+                            columnVisibility[column.id] && (
+                              <TableCell
+                                key={column.id}
+                                align={column.align}
+                                sx={{
+                                  fontSize: '12px',
+                                  position: column.sticky ? 'sticky' : 'static',
+                                  left: column.sticky ? 0 : 'auto',
+                                  zIndex: column.sticky ? 2 : 'auto',
+                                  backgroundColor: column.sticky
+                                    ? 'background.paper'
+                                    : 'transparent',
+                                  boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                                }}
+                              >
+                                {column.render
+                                  ? column.render(row[column.id], row)
+                                  : _.get(row, column.id, '-')}
+                              </TableCell>
+                            )
+                        )}
                       </TableRow>
-                    )}
-                  </React.Fragment>
-                ))}
+                      {columns.some((column) => column.children) && (
+                        <TableRow>
+                          <TableCell
+                            style={{ paddingBottom: 0, paddingTop: 0 }}
+                            colSpan={columns.length + 1}
+                          >
+                            <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                              <Box sx={{ margin: 1 }}>
+                                {columns.map((column) => column.children && column.children(row))}
+                              </Box>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1}>
+                      <EmptyContent />
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </Scrollbar>
