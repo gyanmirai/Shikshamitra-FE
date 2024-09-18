@@ -23,9 +23,9 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
         if (token) {
           if (isTokenExpired(token)) {
             try {
-              const tokenSet = await axios(`/api/getToken`);
+              const refreshToken = localStorage.getItem('refresh_token');
               const newTokenSet = await axios.post(`/auth/refresh-token`, {
-                token: tokenSet.data.refresh_token,
+                token: refreshToken,
               });
               localStorage.setItem('access_token', newTokenSet.data.access_token);
               localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);

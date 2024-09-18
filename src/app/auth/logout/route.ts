@@ -1,7 +1,6 @@
 import { defaultSession, getSession } from '../../../lib';
 import { generators } from 'openid-client';
 import { clientConfig, getClient } from '../../../utils/client';
-import fs from 'fs/promises';
 
 export async function GET() {
   const session = await getSession();
@@ -14,7 +13,6 @@ export async function GET() {
   session.isLoggedIn = defaultSession.isLoggedIn;
   session.access_token = defaultSession.access_token;
   session.userInfo = defaultSession.userInfo;
-  await fs.writeFile('src/tokenSet.json', JSON.stringify({}));
   await session.save();
   return Response.redirect(endSession);
 }

@@ -42,7 +42,7 @@ export const CONFIG: ConfigValue = {
     name: 'Siksha Mitra',
     serverUrl: process.env.NEXT_PUBLIC_SERVER_URL ?? '',
     assetURL: process.env.NEXT_PUBLIC_ASSET_URL ?? '',
-    basePath: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:8083',
+    basePath: process.env.NEXT_PUBLIC_APP_URL ?? '' ?? 'http://localhost:8083',
     version: packageJson.version,
   },
   isStaticExport: JSON.parse(`${process.env.BUILD_STATIC_EXPORT}`),

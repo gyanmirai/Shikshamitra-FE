@@ -480,7 +480,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           align={column.align || 'center'}
                           sx={{
                             fontSize: '14px',
-                            minWidth: column.minWidth,
+                            width: column.minWidth,
                             position: column.sticky ? 'sticky' : 'static',
                             left: column.sticky ? 0 : 'auto',
                             zIndex: column.sticky ? 2 : 'auto',

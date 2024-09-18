@@ -1,6 +1,8 @@
 'use client';
 
-import { useDispatch } from 'react-redux';
+import type { RootState } from 'src/redux/store';
+
+import { useDispatch, useSelector } from 'react-redux';
 import { useMemo, useState, useEffect, useCallback, createContext } from 'react';
 
 import { useCookies } from 'src/hooks/use-cookies';
@@ -34,10 +36,12 @@ export function SettingsProvider({
   const [openDrawer, setOpenDrawer] = useState(false);
 
   const dispatch = useDispatch();
+  const { userInfo } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
-    // @ts-ignore
-    dispatch(getUser());
+    if (userInfo === null && !userInfo?.sub) {
+      dispatch(getUser() as any);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

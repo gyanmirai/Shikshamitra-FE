@@ -40,6 +40,14 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    addAccessControl: builder.mutation({
+      query: (body) => ({
+        url: '/app/academic-setup-permission/assign-permissions',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
   }),
 });
 
@@ -51,4 +59,5 @@ export const {
   useGetEmployeeByIdQuery,
   useGetEmployeeQuery,
   useUpdateEmployeeMutation,
+  useAddAccessControlMutation,
 } = employeeApi;

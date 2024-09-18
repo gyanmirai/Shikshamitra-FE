@@ -123,7 +123,7 @@ const CreateTableDropdown = ({
       renderTags={(values: any, getTagProps: any) =>
         values.map((option: FilmOptionType, index: number) => {
           const { key, ...tagProps } = getTagProps({ index });
-          return (
+          return option?.inputValue || option?.name ? (
             <Chip
               variant="outlined"
               label={option?.inputValue || option?.name || ''}
@@ -131,7 +131,7 @@ const CreateTableDropdown = ({
               size="small"
               {...tagProps}
             />
-          );
+          ) : null;
         })
       }
       sx={{ ...sx }}

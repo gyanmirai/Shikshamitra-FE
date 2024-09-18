@@ -134,7 +134,7 @@ export function HeaderBase({
   useEffect(() => {
     if (!currentYear?.id) {
       if (yearData) {
-        dispatch(setCurrentYear(yearData.items[0]));
+        dispatch(setCurrentYear(yearData?.items?.[0]));
       }
     } else if (currentYear?.id && !yearData?.items.length && !isLoading) {
       dispatch(setCurrentYear({}));

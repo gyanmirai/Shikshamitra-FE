@@ -2,12 +2,13 @@ import type { ButtonProps } from '@mui/material/Button';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 
 import Button from '@mui/material/Button';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { signOut } from 'src/auth/context/jwt/action';
+import { logout } from 'src/redux/user/userSlice';
 
 // ----------------------------------------------------------------------
 
@@ -20,18 +21,19 @@ export function SignOutButton({ onClose, ...other }: Props) {
   const router = useRouter();
 
   // const { checkUserSession } = useAuthContext();
-
+  const dispatch = useDispatch();
   const handleLogout = useCallback(async () => {
     try {
-      await signOut();
-      // await checkUserSession?.();
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      dispatch(logout());
+      router.push('/auth/logout');
 
       onClose?.();
-      router.refresh();
     } catch (error) {
       console.error(error);
     }
-  }, [onClose, router]);
+  }, [dispatch, onClose, router]);
 
   return (
     <Button fullWidth variant="soft" size="large" color="error" onClick={handleLogout} {...other}>

@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { getIronSession } from 'iron-session';
-import { SessionData, sessionOptions } from '../../../lib';
-import { cookies } from 'next/headers';
+
+import { getSession } from '../../../lib';
 
 export async function GET() {
   try {
+    const session = await getSession();
     const filePath = path.join(process.cwd(), 'src', 'tokenSet.json');
-    const response = await fs.readFile(filePath, 'utf-8');
+    let file;
+    try {
+      const response = await fs.readFile(filePath, 'utf-8');
 
-    return NextResponse.json(JSON.parse(response));
+      file = JSON.parse(response);
+    } catch (error) {
+      file = {};
+    }
+    const userInfo = file[session?.userInfo?.sub];
+    delete file[session?.userInfo?.sub as string];
+    await fs.writeFile('src/tokenSet.json', JSON.stringify(file));
+    console.log(userInfo, file, '==============>');
+    return NextResponse.json(userInfo || null);
   } catch (error) {
     console.log(error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -237,78 +237,78 @@ const studentModule = {
             },
             {
               title: 'Certificates',
-              path: '',
+              path: '/student/certificates',
               _action: 'student-certificates',
-              children: [
-                {
-                  title: 'Bonafied Certificates',
-                  path: '/student/certificates/bonafied',
-                  _action: 'student-certificates-bonafied',
-                  children: [
-                    {
-                      title: 'Individual',
-                      path: '/student/certificates/bonafied/individual',
-                      _action: 'student-certificates-bonafied-individual',
-                    },
-                    {
-                      title: 'Bulk',
-                      path: '/student/certificates/bonafied/bulk',
-                      _action: 'student-certificates-bonafied-bulk',
-                    },
-                  ],
-                },
-                {
-                  title: 'First Trial Certificates',
-                  path: '/student/certificates/first-trial',
-                  _action: 'student-certificates-first-trial',
-                  children: [
-                    {
-                      title: 'Individual',
-                      path: '/student/certificates/first-trial/individual',
-                      _action: 'student-certificates-first-trial-individual',
-                    },
-                    {
-                      title: 'Bulk',
-                      path: '/student/certificates/first-trial/bulk',
-                      _action: 'student-certificates-first-trial-bulk',
-                    },
-                  ],
-                },
-                {
-                  title: 'Leaving Certificates',
-                  path: '/student/certificates/leaving',
-                  _action: 'student-certificates-leaving',
-                  children: [
-                    {
-                      title: 'Individual',
-                      path: '/student/certificates/leaving/individual',
-                      _action: 'student-certificates-leaving-individual',
-                    },
-                    {
-                      title: 'Bulk',
-                      path: '/student/certificates/leaving/bulk',
-                      _action: 'student-certificates-leaving-bulk',
-                    },
-                  ],
-                },
-                {
-                  title: 'Character Certificates',
-                  path: '/student/certificates/character',
-                  _action: 'student-certificates-character',
-                  children: [
-                    {
-                      title: 'Individual',
-                      path: '/student/certificates/character/individual',
-                      _action: 'student-certificates-character-individual',
-                    },
-                    {
-                      title: 'Bulk',
-                      path: '/student/certificates/character/bulk',
-                      _action: 'student-certificates-character-bulk',
-                    },
-                  ],
-                },
-              ],
+              // children: [
+              //   {
+              //     title: 'Bonafied Certificates',
+              //     path: '/student/certificates/bonafied',
+              //     _action: 'student-certificates-bonafied',
+              //     children: [
+              //       {
+              //         title: 'Individual',
+              //         path: '/student/certificates/bonafied/individual',
+              //         _action: 'student-certificates-bonafied-individual',
+              //       },
+              //       {
+              //         title: 'Bulk',
+              //         path: '/student/certificates/bonafied/bulk',
+              //         _action: 'student-certificates-bonafied-bulk',
+              //       },
+              //     ],
+              //   },
+              //   {
+              //     title: 'First Trial Certificates',
+              //     path: '/student/certificates/first-trial',
+              //     _action: 'student-certificates-first-trial',
+              //     children: [
+              //       {
+              //         title: 'Individual',
+              //         path: '/student/certificates/first-trial/individual',
+              //         _action: 'student-certificates-first-trial-individual',
+              //       },
+              //       {
+              //         title: 'Bulk',
+              //         path: '/student/certificates/first-trial/bulk',
+              //         _action: 'student-certificates-first-trial-bulk',
+              //       },
+              //     ],
+              //   },
+              //   {
+              //     title: 'Leaving Certificates',
+              //     path: '/student/certificates/leaving',
+              //     _action: 'student-certificates-leaving',
+              //     children: [
+              //       {
+              //         title: 'Individual',
+              //         path: '/student/certificates/leaving/individual',
+              //         _action: 'student-certificates-leaving-individual',
+              //       },
+              //       {
+              //         title: 'Bulk',
+              //         path: '/student/certificates/leaving/bulk',
+              //         _action: 'student-certificates-leaving-bulk',
+              //       },
+              //     ],
+              //   },
+              //   {
+              //     title: 'Character Certificates',
+              //     path: '/student/certificates/character',
+              //     _action: 'student-certificates-character',
+              //     children: [
+              //       {
+              //         title: 'Individual',
+              //         path: '/student/certificates/character/individual',
+              //         _action: 'student-certificates-character-individual',
+              //       },
+              //       {
+              //         title: 'Bulk',
+              //         path: '/student/certificates/character/bulk',
+              //         _action: 'student-certificates-character-bulk',
+              //       },
+              //     ],
+              //   },
+              // ],
             },
 
             {

@@ -114,11 +114,6 @@ const StudentReportsScreen = () => {
                     label="List of reports"
                     size="small"
                   >
-                    <MenuItem value="employeeContactList">Employee Contact List</MenuItem>
-                    <MenuItem value="employeePanNumberList">Employee Pan Number list</MenuItem>
-                    <MenuItem value="employeeJoiningLetter">Employee Joining Letter</MenuItem>
-                    <MenuItem value="employeeAllDetail">Employee All Detail</MenuItem>
-                    <MenuItem value="employeeList">Employee List</MenuItem>
                     <MenuItem value="addressList">Address List</MenuItem>
                     <MenuItem value="birthdayReport">Birthday Report</MenuItem>
                     <MenuItem value="leftStudentList">Left Student List</MenuItem>

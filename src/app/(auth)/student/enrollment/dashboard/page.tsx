@@ -1,6 +1,6 @@
 import React from 'react';
 
-import EnrollmentDashboardScreen from 'src/screens/student/enrollment';
+import EnrollmentDashboardScreen from 'src/screens/student/enrollment/dashboard';
 
 const EnrollmentDashboard = () => <EnrollmentDashboardScreen />;
 

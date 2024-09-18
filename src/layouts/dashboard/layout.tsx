@@ -4,7 +4,7 @@ import type { SettingsState } from 'src/components/settings';
 import type { NavSectionProps } from 'src/components/nav-section';
 import type { Theme, SxProps, CSSObject, Breakpoint } from '@mui/material/styles';
 
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
@@ -37,12 +37,10 @@ export type DashboardLayoutProps = {
   data?: {
     nav?: NavSectionProps['data'];
   };
-  session?: any;
 };
 
-export function DashboardLayout({ sx, children, data, session }: DashboardLayoutProps) {
+export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
   const theme = useTheme();
-  // const { userInfo } = useSelector((state: any) => state.user);
 
   const mobileNavOpen = useBoolean();
 
@@ -60,11 +58,12 @@ export function DashboardLayout({ sx, children, data, session }: DashboardLayout
 
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
 
-  useEffect(() => {
-    if (session?.access_token) {
-      localStorage.setItem('access_token', session.access_token);
-    }
-  }, [session?.access_token]);
+  // const user = useSelector((state: RootState) => state.user);
+  // const router = useRouter();
+  // if (user.userInfo === null) {
+  //   router.replace('/auth/login');
+  //   return null;
+  // }
 
   return (
     <>

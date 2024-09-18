@@ -3,8 +3,6 @@ import type { IronSession, SessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 
-import { isTokenExpired } from './utils/client';
-
 export interface SessionData {
   isLoggedIn: boolean;
   access_token?: string;
@@ -36,30 +34,5 @@ export const sessionOptions: SessionOptions = {
 
 export async function getSession(): Promise<IronSession<SessionData>> {
   const session = await getIronSession<SessionData>(cookies(), sessionOptions);
-  try {
-    if (session?.access_token && isTokenExpired(session.access_token as string)) {
-      const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/getToken`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const token = await tokenRes.json();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: token.refresh_token }),
-      });
-      const data = await res.json();
-      session.access_token = data.access_token;
-      session.save();
-      return session;
-    }
-    return session;
-  } catch (e) {
-    console.log(e);
-    return session;
-  }
+  return session;
 }

@@ -21,7 +21,7 @@ import { organizationApi } from './oraganization/oraganization';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['globalState'],
+  whitelist: ['globalState', 'user'],
 };
 
 const reducers = combineReducers({

@@ -10,13 +10,12 @@ import SubLayout from 'src/components/sub-layout';
 
 const AuthLayout: React.FC<{ children: ReactNode }> = async ({ children }) => {
   const session = await getSession();
-
-  if (!session.isLoggedIn) {
+  if (!session?.userInfo?.sub) {
     redirect('/auth/login');
   }
 
   return (
-    <DashboardLayout session={{ access_token: session.access_token, userInfo: session.userInfo }}>
+    <DashboardLayout>
       <SubLayout>{children}</SubLayout>
     </DashboardLayout>
   );

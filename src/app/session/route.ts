@@ -6,12 +6,15 @@ export async function GET() {
     if (!session) {
       return Response.json({ defaultSession });
     }
-    return Response.json({
-      accessToken: session.access_token,
-      refreshToken: session.refresh_token,
-      isLoggedIn: session.isLoggedIn,
-      userInfo: session.userInfo,
-    });
+    return Response.json(
+      {
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        isLoggedIn: session.isLoggedIn,
+        userInfo: session.userInfo,
+      },
+      { status: 200 }
+    );
   } catch (e) {
     return Response.json({ error: e }, { status: 500 });
   }

@@ -45,7 +45,7 @@ const SubLayout = ({ children }: any) => {
       <Box
         sx={{
           // flexGrow: 1,
-          p: 1,
+
           boxShadow: 'var(--shadows-3)',
           width: currentData?.length ? '82%' : '100%',
         }}
@@ -57,6 +57,7 @@ const SubLayout = ({ children }: any) => {
             mx: 'auto',
             height: '100%',
             overflow: 'auto',
+            p: 2,
             '& .simplebar-content': { height: '100%' },
           }}
         >

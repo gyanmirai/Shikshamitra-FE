@@ -77,7 +77,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
       <Card sx={{ mb: 3, height: 290 }}>
         <EmployeeProfileCover
           name={`${employee?.firstName} ${employee?.lastName}`}
-          avatarUrl={convertBase64Format(employee?.profilePicture)}
+          avatarUrl={employee?.profilePicture && convertBase64Format(employee?.profilePicture)}
           setSearchParams={setSearchParams}
           extraContent={
             <Box sx={{ mt: 3, ml: { md: 3 }, textAlign: { xs: 'center', md: 'unset' } }}>

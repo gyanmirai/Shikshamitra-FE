@@ -18,7 +18,6 @@ import { Button, TextField, DialogActions } from '@mui/material';
 import { useRouter } from 'src/routes/hooks';
 
 import { varAlpha } from 'src/theme/styles';
-import { logout } from 'src/redux/user/userSlice';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
 
 import { Label } from 'src/components/label';
@@ -217,10 +216,6 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
           </Button>
           <SignOutButton
             onClose={async () => {
-              router.push('/auth/logout');
-              localStorage.removeItem('access_token');
-              localStorage.removeItem('refresh_token');
-              dispatch(logout());
               handleCloseDrawer();
             }}
           />
