@@ -10,4 +10,5 @@ export const financePath = '/finance';
 export const assessmentPath = '/assessment';
 export const securityPath = '/security';
 export const hrPath = '/hr';
+export const academicPath = '/academic';
 export const settingPath = '/setting';

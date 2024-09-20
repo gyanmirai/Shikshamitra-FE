@@ -4,8 +4,8 @@ import {
   studentPath,
   settingPath,
   securityPath,
+  academicPath,
   dashboardPath,
-  assessmentPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -74,7 +74,7 @@ export const navData = [
       },
       {
         title: 'Academic & Assesment',
-        path: assessmentPath,
+        path: '/academic/dashboard',
         icon: ICONS.dashboard,
         _action: 'assessment',
       },
@@ -467,19 +467,34 @@ const hrModule = {
           _action: 'payroll-management',
           children: [
             {
-              title: 'Salary Calculation and Disbursement',
-              path: '/hr/salary-calculation-and-disbursement',
-              _action: 'salary-calculation-and-disbursement',
+              title: 'Dashboard',
+              path: '/hr/payroll/dashboard',
+              _action: 'payroll-dashboard',
             },
             {
-              title: 'Tax and PF Deductions',
-              path: '/hr/tax-and-pf-deductions',
-              _action: 'tax-and-pf-deductions',
+              title: 'Import Attendance',
+              path: '/hr/payroll/import-attendance',
+              _action: 'payroll-import-attendance',
+            },
+            {
+              title: 'Pay Process',
+              path: '/hr/payroll/pay-process',
+              _action: 'pay-process',
+            },
+            {
+              title: 'Pay Process Preview',
+              path: '/hr/payroll/pay-process-preview',
+              _action: 'pay-process-preview',
             },
             {
               title: 'Payslip Generation',
-              path: '/hr/payslip-generation',
+              path: '/hr/payroll/payslip-generation',
               _action: 'payslip-generation',
+            },
+            {
+              title: 'Settings',
+              path: '/hr/payroll/setting',
+              _action: 'payroll-setting',
             },
           ],
         },
@@ -547,4 +562,76 @@ const hrModule = {
   ],
 };
 
-export const navSubData = { ...studentModule, ...securityModule, ...settingModule, ...hrModule };
+const academicModule = {
+  [academicPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/academic/dashboard',
+          _action: 'dashboard',
+        },
+        {
+          title: 'Curriculum Management',
+          path: '/academic/curriculum-management',
+          _action: 'curriculum-management',
+        },
+        {
+          title: 'Course Management',
+          path: '/academic/course-management',
+          _action: 'course-management',
+        },
+
+        {
+          title: 'Timetable & Schedule Management',
+          path: '/academic/timetable-schedule-management',
+          _action: 'timetable-schedule-management',
+        },
+        {
+          title: 'Examination & Assessment Management',
+          path: '/academic/examination-assessment-management',
+          _action: 'examination-assessment-management',
+        },
+        {
+          title: 'Learning Management System (LMS)',
+          path: '/academic/learning-management-system',
+          _action: 'learning-management-system',
+        },
+        {
+          title: 'Gradebook & Performance Tracking',
+          path: '/academic/gradebook-performance-tracking',
+          _action: 'gradebook-performance-tracking',
+        },
+        {
+          title: 'Student Progress & Analytics',
+          path: '/academic/student-progress-analytics',
+          _action: 'student-progress-analytics',
+        },
+        {
+          title: 'Resources/Content Library',
+          path: '/academic/resources-content-library',
+          _action: 'resources-content-library',
+        },
+        {
+          title: 'Parent-Teacher Communication',
+          path: '/academic/parent-teacher-communication',
+          _action: 'parent-teacher-communication',
+        },
+        {
+          title: 'Homework & Assignment Management',
+          path: '/academic/homework-assignment-management',
+          _action: 'homework-assignment-management',
+        },
+      ],
+    },
+  ],
+};
+
+export const navSubData = {
+  ...studentModule,
+  ...securityModule,
+  ...settingModule,
+  ...hrModule,
+  ...academicModule,
+};

@@ -2,22 +2,23 @@
 
 import React from 'react';
 
+import { Visibility } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, useTheme } from '@mui/material';
+import { Divider, useTheme, IconButton } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
-import { SeoIllustration } from 'src/assets/illustrations';
+// import { AttendanceGraph } from 'src/app/(auth)/student/overview/page';
 
+import { AttendanceGraph } from 'src/app/(auth)/student/overview/page';
+
+import CustomSelect from 'src/components/custom-select';
 import { svgColorClasses } from 'src/components/svg-color';
+import CustomizableTable from 'src/components/customizabaleTable';
+
+import { CalendarView } from 'src/sections/calendar/view';
 
 import { AppWidget } from './app-widget';
-import { AppWelcome } from './app-welcome';
-import { AppFeatured } from './app-featured';
-import { AppTopAuthors } from './app-top-authors';
 import { AppWidgetSummary } from './app-widget-summary';
-import { AppAreaInstalled } from './app-area-installed';
-import { AppCurrentDownload } from './app-current-download';
-import { AppTopInstalledCountries } from './app-top-installed-countries';
 
 export const _appFeatured = [...Array(3)].map((_, index) => ({
   id: `${index + 3}`,
@@ -74,175 +75,194 @@ export const _appAuthors = [...Array(3)].map((_, index) => ({
 const HrDashboard = () => {
   const theme = useTheme();
   return (
-    <Grid container spacing={3} width="100%">
-      <Grid xs={12} md={8}>
-        <AppWelcome
-          title={`Welcome back 👋 \n Parth`}
-          description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
-          img={<SeoIllustration hideBackground />}
-          action={
-            <Button variant="contained" color="primary">
-              Go now
-            </Button>
-          }
-        />
-      </Grid>
-
-      <Grid xs={12} md={4}>
-        <AppFeatured list={_appFeatured} />
-      </Grid>
-
-      <Grid xs={12} md={4}>
-        <AppWidgetSummary
-          title="Leave requests"
-          percent={2.6}
-          total={10}
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [15, 18, 12, 51, 68, 11, 39, 37],
-          }}
-        />
-      </Grid>
-
-      <Grid xs={12} md={4}>
-        <AppWidgetSummary
-          title="Open Positions"
-          percent={0.2}
-          total={12}
-          chart={{
-            colors: [theme.vars.palette.info.main],
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [20, 41, 63, 33, 28, 35, 50, 46],
-          }}
-        />
-      </Grid>
-
-      <Grid xs={12} md={4}>
-        <AppWidgetSummary
-          title="Upcoming Review"
-          percent={-0.1}
-          total={678}
-          chart={{
-            colors: [theme.vars.palette.error.main],
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [18, 19, 31, 8, 16, 37, 12, 33],
-          }}
-        />
-      </Grid>
-
-      <Grid xs={12} md={6} lg={4}>
-        <AppCurrentDownload
-          title="Total Employees"
-          subheader="Number of employees"
-          chart={{
-            series: [
-              { label: 'Female', value: 53345 },
-              { label: 'Male', value: 12244 },
-            ],
-          }}
-        />
-      </Grid>
-
-      <Grid xs={12} md={6} lg={8}>
-        <AppAreaInstalled
-          title="Organization"
-          subheader="(+43%) than last year"
-          chart={{
-            categories: [
-              'Jan',
-              'Feb',
-              'Mar',
-              'Apr',
-              'May',
-              'Jun',
-              'Jul',
-              'Aug',
-              'Sep',
-              'Oct',
-              'Nov',
-              'Dec',
-            ],
-            series: [
-              {
-                name: '2022',
-                data: [
-                  { name: 'Primary', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                  { name: 'Secondary', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                  {
-                    name: 'Higher-Secondary',
-                    data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16],
-                  },
-                ],
-              },
-              {
-                name: '2023',
-                data: [
-                  { name: 'Primary', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                  { name: 'Secondary', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                  { name: 'Higher-Secondary', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                ],
-              },
-              {
-                name: '2024',
-                data: [
-                  { name: 'Primary', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                  { name: 'Secondary', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                  { name: 'Higher-Secondary', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                ],
-              },
-            ],
-          }}
-        />
-      </Grid>
-
-      {/* <Grid xs={12} lg={8}>
-        <AppNewInvoice
-          title="New invoice"
-          tableData={_appInvoices}
-          headLabel={[
-            { id: 'id', label: 'Invoice ID' },
-            { id: 'category', label: 'Category' },
-            { id: 'price', label: 'Price' },
-            { id: 'status', label: 'Status' },
-            { id: '' },
-          ]}
-        />
-      </Grid> */}
-
-      {/* <Grid xs={12} md={6} lg={4}>
-        <AppTopRelated title="Related applications" list={_appRelated} />
-      </Grid> */}
-
-      <Grid xs={12} md={6} lg={4}>
-        <AppTopInstalledCountries title="Top installed countries" list={_appInstalled} />
-      </Grid>
-
-      <Grid xs={12} md={6} lg={4}>
-        <AppTopAuthors title="Top Employees" list={_appAuthors} />
-      </Grid>
-
-      <Grid xs={12} md={6} lg={4}>
-        <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-          <AppWidget
-            title="Conversion"
-            total={38566}
-            icon="solar:user-rounded-bold"
-            chart={{ series: 48 }}
+    <>
+      <Grid container spacing={3} width="100%">
+        <Grid xs={12}>
+          <CustomSelect
+            label="Organization"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
           />
-
-          <AppWidget
-            title="Applications"
-            total={55566}
-            icon="fluent:mail-24-filled"
+        </Grid>
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidgetSummary
+            title="Total Employees"
+            percent={null}
+            total={10000}
             chart={{
-              series: 75,
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [15, 18, 12, 51, 68, 11, 39, 37],
+            }}
+          />
+        </Grid>
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidgetSummary
+            title="Total Male Employees"
+            percent={null}
+            total={8000}
+            chart={{
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [15, 18, 12, 51, 68, 11, 39, 37],
+            }}
+          />
+        </Grid>
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidgetSummary
+            title="Total Female Employees"
+            percent={null}
+            total={2000}
+            chart={{
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [15, 18, 12, 51, 68, 11, 39, 37],
+            }}
+          />
+        </Grid>
+        <Grid xs={12}>
+          <Divider sx={{ borderStyle: 'doted' }} />
+        </Grid>
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidgetSummary
+            title="Leave requests"
+            percent={null}
+            total={10}
+            chart={{
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [15, 18, 12, 51, 68, 11, 39, 37],
+            }}
+          />
+        </Grid>
+
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidgetSummary
+            title="Open Positions"
+            percent={null}
+            total={12}
+            chart={{
+              colors: [theme.vars.palette.info.main],
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [20, 41, 63, 33, 28, 35, 50, 46],
+            }}
+          />
+        </Grid>
+
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidgetSummary
+            title="Upcoming Review"
+            percent={null}
+            total={678}
+            chart={{
+              colors: [theme.vars.palette.error.main],
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [18, 19, 31, 8, 16, 37, 12, 33],
+            }}
+          />
+        </Grid>
+      </Grid>
+      <Grid container spacing={3} width="100%">
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidget
+            title="Attendance Percentage"
+            total={89}
+            icon="solar:user-rounded-bold"
+            chart={{ series: 89 }}
+            renderComp={
+              <IconButton sx={{ color: 'black', zIndex: 10 }}>
+                <Visibility />
+              </IconButton>
+            }
+          />
+        </Grid>
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidget
+            title="Payroll Status"
+            total={10}
+            icon="fluent:payment-48-filled"
+            chart={{
+              series: 10,
               colors: [theme.vars.palette.info.light, theme.vars.palette.info.main],
             }}
+            renderComp={
+              <IconButton sx={{ color: 'black', zIndex: 10 }}>
+                <Visibility />
+              </IconButton>
+            }
             sx={{ bgcolor: 'info.dark', [`& .${svgColorClasses.root}`]: { color: 'info.light' } }}
           />
-        </Box>
+        </Grid>
+        <Grid xs={12} md={6} lg={4} xl={3}>
+          <AppWidget
+            title="Pending Leave Requests"
+            total={10}
+            icon="pepicons-pencil:leave-circle-filled"
+            chart={{
+              series: 10,
+              colors: [theme.vars.palette.warning.light, theme.vars.palette.warning.main],
+            }}
+            renderComp={
+              <IconButton sx={{ color: 'black', zIndex: 10 }}>
+                <Visibility />
+              </IconButton>
+            }
+            sx={{
+              bgcolor: 'warning.dark',
+              [`& .${svgColorClasses.root}`]: { color: 'warning.light' },
+            }}
+          />
+        </Grid>
+        <Grid xs={12} md={6}>
+          <AttendanceGraph
+            title="Attendance Analytics"
+            subheader="(+43%) than last year"
+            chart={{
+              series: [
+                {
+                  name: 'Weekly',
+                  categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+                  data: [
+                    { name: '', data: [24, 41, 35, 151, 49] },
+                    // { name: 'Savings', data: [24, 56, 77, 88, 99] },
+                    // { name: 'Investment', data: [40, 34, 77, 88, 99] },
+                  ],
+                },
+                {
+                  name: 'Monthly',
+                  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                  data: [
+                    { name: '', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
+                    // { name: 'Savings', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
+                    // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
+                  ],
+                },
+                {
+                  name: 'Yearly',
+                  categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                  data: [
+                    { name: '', data: [76, 42, 29, 41, 27, 96] },
+                    // { name: 'Savings', data: [46, 44, 24, 43, 44, 43] },
+                    // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
+                  ],
+                },
+              ],
+            }}
+          />
+        </Grid>
+        <Grid xs={12} md={6}>
+          <CustomizableTable
+            columns={[
+              { id: 'name', label: 'Name' },
+              { id: 'employeeId', label: 'Employee Id' },
+              { id: 'department', label: 'Department' },
+            ]}
+            data={[]}
+          />
+        </Grid>
+        <Grid xs={12}>
+          <CalendarView />
+        </Grid>
       </Grid>
-    </Grid>
+    </>
   );
 };
 

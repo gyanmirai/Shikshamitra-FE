@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // @ts-nocheck
 
 'use client';
@@ -7,10 +8,10 @@ import type { ColorType } from 'src/theme/core/palette';
 import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
-import dayjs from 'dayjs';
 
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, useTheme } from '@mui/material';
+import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
+import { Add, Report, TrackChanges } from '@mui/icons-material';
+import { Box, Card, Button, Divider, useTheme, CardHeader } from '@mui/material';
 
 import { fPercent, fShortenNumber } from 'src/utils/format-number';
 
@@ -19,71 +20,259 @@ import { varAlpha, bgGradient } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
-import { Chart, useChart } from 'src/components/chart';
+import { Scrollbar } from 'src/components/scrollbar';
+import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 const Overview = () => (
-  <Box>
-    <DatePicker
-      label="Year"
-      value={dayjs(new Date())}
-      // onChange={(value) => formik.setFieldValue('dob', value)}
-      views={['year']}
-      slotProps={{
-        textField: {
-          // fullWidth: true,
-        },
-      }}
-    />
-    <Box display="flex" flexWrap="wrap" width="100%" gap={2} mt={2}>
-      <Box>
-        <AnalyticsWidgetSummary
-          title="Total Students"
-          percent={2.6}
-          total={714000}
-          icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-          }
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [22, 8, 35, 50, 82, 84, 77, 12],
-          }}
-          sx={{ maxWidth: '320px', width: '100%' }}
-        />
-      </Box>
-      <Box>
-        <AnalyticsWidgetSummary
-          title="Total Male Students"
-          percent={2.6}
-          total={714000}
-          color="warning"
-          icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-          }
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [22, 8, 35, 50, 82, 84, 77, 12],
-          }}
-          sx={{ maxWidth: '320px', width: '100%' }}
-        />
-      </Box>
-      <Box>
-        <AnalyticsWidgetSummary
-          title="Total Female Students"
-          percent={2.6}
-          total={714000}
-          color="error"
-          icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-          }
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [22, 8, 35, 50, 82, 84, 77, 12],
-          }}
-          sx={{ maxWidth: '320px', width: '100%' }}
-        />
-      </Box>
-    </Box>
-  </Box>
+  <Grid2 container spacing={3}>
+    <Grid2 xs={12} md={6} lg={3}>
+      <AnalyticsWidgetSummary
+        title="Total Students"
+        percent={2.6}
+        total={714000}
+        icon={
+          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+        }
+        chart={{
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+      />
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={3}>
+      <AnalyticsWidgetSummary
+        title="Total Male Students"
+        percent={2.6}
+        total={714000}
+        color="warning"
+        icon={
+          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+        }
+        chart={{
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+      />
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={3}>
+      <AnalyticsWidgetSummary
+        title="Total Female Students"
+        percent={2.6}
+        total={714000}
+        color="error"
+        icon={
+          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+        }
+        chart={{
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+      />
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={3}>
+      <Card
+        sx={{
+          display: 'flex',
+          p: 3,
+        }}
+      >
+        <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ typography: 'subtitle2' }}>Quick Actions</Box>
+          <Box display="flex" gap={2} flexWrap="wrap" pt={2}>
+            <Button startIcon={<Add />} variant="contained" color="primary">
+              Add New Inquiry
+            </Button>
+            <Button startIcon={<TrackChanges />} variant="contained" color="warning">
+              Track Enrollment Status
+            </Button>
+            <Button startIcon={<Report />} variant="contained" color="error">
+              Generate Report
+            </Button>
+          </Box>
+        </Box>
+      </Card>
+    </Grid2>
+    <Grid2 xs={12} md={6} display="flex" gap={1}>
+      <Card
+        sx={{
+          display: 'flex',
+
+          p: 3,
+          width: '100%',
+        }}
+      >
+        <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ typography: 'subtitle2' }}>Recent Activities</Box>
+
+          <Scrollbar sx={{ mt: 1.5 }}>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: 'none',
+                padding: 0,
+                animation: 'scrollAnimation 10s linear infinite',
+                animationDelay: '1s',
+                '@keyframes scrollAnimation': {
+                  '0%': { transform: 'translateY(0)' },
+                  '100%': { transform: 'translateY(-100%)' },
+                },
+              }}
+            >
+              {[
+                'Student record updated',
+                'Student attendance updated',
+                'Student record updated',
+                'Student record updated',
+                'Student attendance updated',
+                'Student record updated',
+              ].map((exam, index) => (
+                <Box component="li" key={index} sx={{ mb: 1 }}>
+                  <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                    {exam}
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
+        </Box>
+      </Card>
+      <Card
+        sx={{
+          display: 'flex',
+
+          p: 3,
+          // mt: 1,
+          width: '100%',
+        }}
+      >
+        <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ typography: 'subtitle2' }}>Notifications</Box>
+
+          <Scrollbar sx={{ mt: 1.5 }}>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: 'none',
+                padding: 0,
+                animation: 'scrollAnimation 10s linear infinite',
+                animationDelay: '1s',
+                '@keyframes scrollAnimation': {
+                  '0%': { transform: 'translateY(0)' },
+                  '100%': { transform: 'translateY(-100%)' },
+                },
+              }}
+            >
+              {[
+                'Pending attendance update',
+                'Pending record updated',
+                'Pending attendance update',
+                'Pending attendance update',
+                'Pending record updated',
+                'Pending attendance update',
+              ].map((exam, index) => (
+                <Box component="li" key={index} sx={{ mb: 1 }}>
+                  <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                    {exam}
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
+        </Box>
+      </Card>
+    </Grid2>
+    <Grid2 xs={12} md={6}>
+      {/* <AttendanceOverview
+        title="Attendance Overview"
+        // subheader="Downloaded by operating system"
+        chart={{
+          series: [
+            { label: 'present', value: 30 },
+            { label: 'absent', value: 10 },
+          ],
+        }}
+      /> */}
+    </Grid2>
+    <Grid2 xs={12} md={6}>
+      <AttendanceGraph
+        title="Attendance Graph"
+        // subheader="Statistics on balance over time"
+        chart={{
+          series: [
+            {
+              name: 'Weekly',
+              categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+              data: [
+                { name: '', data: [24, 41, 35, 151, 49] },
+                // { name: 'Savings', data: [24, 56, 77, 88, 99] },
+                // { name: 'Investment', data: [40, 34, 77, 88, 99] },
+              ],
+            },
+            {
+              name: 'Monthly',
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              data: [
+                { name: '', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
+                // { name: 'Savings', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
+                // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
+              ],
+            },
+            {
+              name: 'Yearly',
+              categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+              data: [
+                { name: '', data: [76, 42, 29, 41, 27, 96] },
+                // { name: 'Savings', data: [46, 44, 24, 43, 44, 43] },
+                // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
+              ],
+            },
+          ],
+        }}
+      />
+    </Grid2>
+    <Grid2 xs={12} md={6}>
+      <AttendanceGraph
+        title="Enrollment Trends"
+        // subheader="Statistics on balance over time"
+        selectedSeriesName="Last 6 Months"
+        chart={{
+          series: [
+            {
+              name: 'Last 12 Months',
+              categories: [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+              ],
+              data: [
+                { name: '', data: [24, 41, 35, 151, 49, 151, 49, 151, 49, 151, 49, 151] },
+                // { name: 'Savings', data: [24, 56, 77, 88, 99] },
+                // { name: 'Investment', data: [40, 34, 77, 88, 99] },
+              ],
+            },
+            {
+              name: 'Last 6 Months',
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+              data: [
+                { name: '', data: [83, 112, 119, 88, 103, 112] },
+                // { name: 'Savings', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
+                // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
+              ],
+            },
+          ],
+        }}
+      />
+    </Grid2>
+  </Grid2>
 );
 
 export default Overview;
@@ -126,7 +315,7 @@ function AnalyticsWidgetSummary({
       },
     },
     tooltip: {
-      y: { formatter: (value) => value, title: { formatter: () => '' } },
+      // y: { formatter: (value) => value, title: { formatter: () => '' } },
     },
     ...chart.options,
   });
@@ -210,6 +399,166 @@ function AnalyticsWidgetSummary({
           position: 'absolute',
           color: `${color}.main`,
         }}
+      />
+    </Card>
+  );
+}
+
+type Props1 = CardProps & {
+  title?: string;
+  subheader?: string;
+  chart: {
+    colors?: string[];
+    series: {
+      label: string;
+      value: number;
+    }[];
+    options?: ChartOptions;
+  };
+};
+export function AttendanceOverview({ title, subheader, chart, ...other }: Props1): JSX.Element {
+  const theme = useTheme();
+
+  const chartColors = chart.colors ?? [
+    theme.palette.primary.dark,
+    theme.palette.primary.lighter,
+    theme.palette.primary.light,
+    theme.palette.primary.darker,
+  ];
+
+  const chartSeries = chart.series.map((item) => item.value);
+
+  const chartOptions = useChart({
+    chart: { sparkline: { enabled: true } },
+    colors: chartColors,
+    labels: chart.series.map((item) => item.label),
+    stroke: { width: 0 },
+    tooltip: {
+      y: {
+        formatter: (value: number) => fNumber(value),
+        title: { formatter: (seriesName: string) => `${seriesName}` },
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '72%',
+          labels: {
+            value: { formatter: (value: number | string) => fNumber(value) },
+            total: {
+              formatter: (w: {
+                globals: {
+                  seriesTotals: number[];
+                };
+              }) => {
+                const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                return fNumber(sum);
+              },
+            },
+          },
+        },
+      },
+    },
+    ...chart.options,
+  });
+
+  return (
+    <Card {...other}>
+      <CardHeader title={title} subheader={subheader} />
+
+      <Chart
+        type="donut"
+        series={chartSeries}
+        options={chartOptions}
+        width={{ xs: 240, xl: 260 }}
+        height={{ xs: 240, xl: 260 }}
+        sx={{ my: 6, mx: 'auto' }}
+      />
+
+      <Divider sx={{ borderStyle: 'dashed' }} />
+
+      <ChartLegends
+        labels={chartOptions?.labels}
+        colors={chartOptions?.colors}
+        sx={{ p: 3, justifyContent: 'center' }}
+      />
+    </Card>
+  );
+}
+
+type Props3 = CardProps & {
+  title?: string;
+  subheader?: string;
+  chart: {
+    colors?: string[];
+    series: {
+      name: string;
+      categories: string[];
+      data: {
+        name: string;
+        data: number[];
+      }[];
+    }[];
+    options?: ChartOptions;
+  };
+  selectedSeriesName?: string;
+};
+
+export function AttendanceGraph({ title, subheader, chart, selectedSeriesName, ...other }: Props3) {
+  const theme = useTheme();
+
+  const [selectedSeries, setSelectedSeries] = useState(selectedSeriesName || 'Yearly');
+
+  const currentSeries = chart.series.find((i) => i.name === selectedSeries);
+
+  const chartColors = chart.colors ?? [
+    theme.palette.primary.dark,
+    theme.palette.warning.main,
+    theme.palette.info.main,
+  ];
+
+  const chartOptions = useChart({
+    stroke: { width: 2, colors: ['transparent'] },
+    colors: chartColors,
+    xaxis: { categories: currentSeries?.categories },
+    tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
+    ...chart.options,
+  });
+
+  const handleChangeSeries = useCallback((newValue: string) => {
+    setSelectedSeries(newValue);
+  }, []);
+
+  return (
+    <Card {...other}>
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        action={
+          <ChartSelect
+            options={chart.series.map((item) => item.name)}
+            value={selectedSeries}
+            onChange={handleChangeSeries}
+          />
+        }
+        sx={{ mb: 3 }}
+      />
+
+      {/* <ChartLegends
+        colors={chartOptions?.colors}
+        labels={chart.series[0].data.map((item) => item.name)}
+        sublabels={[`+${fPercent(43)}`, `+${fPercent(3)}`, `+${fPercent(8)}`]}
+        values={[fCurrency(6789), fCurrency(1234), fCurrency(1012)]}
+        sx={{ px: 3, gap: 3 }}
+      /> */}
+
+      <Chart
+        type="bar"
+        series={currentSeries?.data}
+        options={chartOptions}
+        height={320}
+        loadingProps={{ sx: { p: 2.5 } }}
+        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
       />
     </Card>
   );

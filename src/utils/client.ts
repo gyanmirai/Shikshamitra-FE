@@ -1,6 +1,9 @@
 import { jwtDecode } from 'jwt-decode';
-import { Issuer } from 'openid-client';
+import { custom, Issuer } from 'openid-client';
 
+custom.setHttpOptionsDefaults({
+  timeout: 10000,
+});
 export const clientConfig = {
   url: `${process.env.NEXT_PUBLIC_API_URL}/.well-known/openid-configuration`,
   audience: process.env.NEXT_PUBLIC_API_URL,
@@ -15,12 +18,14 @@ export const clientConfig = {
 
 export async function getClient() {
   const abpIssuer = await Issuer.discover(clientConfig.url!);
+
   const client = new abpIssuer.Client({
     client_id: clientConfig.client_id!,
     response_types: ['code'],
     redirect_uris: [clientConfig.redirect_uri],
     token_endpoint_auth_method: 'none',
   });
+  client[custom.clock_tolerance] = 10000;
   return client;
 }
 

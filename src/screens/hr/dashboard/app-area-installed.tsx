@@ -28,12 +28,19 @@ type Props = CardProps & {
     }[];
     options?: ChartOptions;
   };
+  selectSeries?: string;
 };
 
-export function AppAreaInstalled({ title, subheader, chart, ...other }: Props) {
+export function AppAreaInstalled({
+  title,
+  subheader,
+  chart,
+  selectSeries,
+  ...other
+}: Props) {
   const theme = useTheme();
 
-  const [selectedSeries, setSelectedSeries] = useState('2023');
+  const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
 
   const chartColors = chart.colors ?? [
     theme.palette.primary.dark,

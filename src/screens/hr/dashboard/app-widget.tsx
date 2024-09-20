@@ -23,9 +23,10 @@ type Props = BoxProps & {
     series: number;
     options?: ChartOptions;
   };
+  renderComp?: React.ReactNode;
 };
 
-export function AppWidget({ title, total, icon, chart, sx, ...other }: Props) {
+export function AppWidget({ title, total, icon, chart, sx, renderComp, ...other }: Props) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
@@ -106,6 +107,7 @@ export function AppWidget({ title, total, icon, chart, sx, ...other }: Props) {
         <Box sx={{ typography: 'h4' }}>{fNumber(total)}</Box>
         <Box sx={{ typography: 'subtitle2', opacity: 0.64 }}>{title}</Box>
       </div>
+      {renderComp}
 
       <Iconify
         icon={icon}
