@@ -1,19 +1,16 @@
-/* eslint-disable react/prop-types */
-// @ts-nocheck
-
 'use client';
 
 import type { CardProps } from '@mui/material';
 import type { ColorType } from 'src/theme/core/palette';
 import type { ChartOptions } from 'src/components/chart';
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { Add, Report, TrackChanges } from '@mui/icons-material';
 import { Box, Card, Button, Divider, useTheme, CardHeader } from '@mui/material';
 
-import { fPercent, fShortenNumber } from 'src/utils/format-number';
+import { fNumber, fPercent, fCurrency, fShortenNumber } from 'src/utils/format-number';
 
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
