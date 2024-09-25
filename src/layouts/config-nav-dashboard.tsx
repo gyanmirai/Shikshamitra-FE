@@ -6,6 +6,7 @@ import {
   securityPath,
   academicPath,
   dashboardPath,
+  examinationPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -76,7 +77,13 @@ export const navData = [
         title: 'Academic & Assesment',
         path: '/academic/dashboard',
         icon: ICONS.dashboard,
-        _action: 'assessment',
+        _action: 'academic',
+      },
+      {
+        title: 'Examination & Assessment',
+        path: '/examination',
+        icon: ICONS.dashboard,
+        _action: 'examination',
       },
       { title: 'HR/Staff', path: '/hr/dashboard', icon: ICONS.hr, _action: 'hr' },
       { title: 'Finance', path: financePath, icon: ICONS.finance, _action: 'finance' },
@@ -588,11 +595,11 @@ const academicModule = {
           path: '/academic/timetable-schedule-management',
           _action: 'timetable-schedule-management',
         },
-        {
-          title: 'Examination & Assessment Management',
-          path: '/academic/examination-assessment-management',
-          _action: 'examination-assessment-management',
-        },
+        // {
+        //   title: 'Examination & Assessment Management',
+        //   path: '/academic/examination-assessment-management',
+        //   _action: 'examination-assessment-management',
+        // },
         {
           title: 'Learning Management System (LMS)',
           path: '/academic/learning-management-system',
@@ -627,11 +634,30 @@ const academicModule = {
     },
   ],
 };
-
+const examinationModule = {
+  [examinationPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Examination',
+          path: '/examination',
+          _action: 'examination',
+        },
+        {
+          title: 'Assessment',
+          path: '/assessment',
+          _action: 'assessment',
+        },
+      ],
+    },
+  ],
+};
 export const navSubData = {
   ...studentModule,
   ...securityModule,
   ...settingModule,
   ...hrModule,
   ...academicModule,
+  ...examinationModule,
 };

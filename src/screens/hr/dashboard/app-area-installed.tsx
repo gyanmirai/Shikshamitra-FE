@@ -31,13 +31,7 @@ type Props = CardProps & {
   selectSeries?: string;
 };
 
-export function AppAreaInstalled({
-  title,
-  subheader,
-  chart,
-  selectSeries,
-  ...other
-}: Props) {
+export function AppAreaInstalled({ title, subheader, chart, selectSeries, ...other }: Props) {
   const theme = useTheme();
 
   const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
@@ -70,11 +64,13 @@ export function AppAreaInstalled({
         title={title}
         subheader={subheader}
         action={
-          <ChartSelect
-            options={chart.series.map((item) => item.name)}
-            value={selectedSeries}
-            onChange={handleChangeSeries}
-          />
+          selectSeries ? (
+            <ChartSelect
+              options={chart.series.map((item) => item.name)}
+              value={selectedSeries}
+              onChange={handleChangeSeries}
+            />
+          ) : undefined
         }
         sx={{ mb: 3 }}
       />

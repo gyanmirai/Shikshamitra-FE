@@ -11,4 +11,5 @@ export const assessmentPath = '/assessment';
 export const securityPath = '/security';
 export const hrPath = '/hr';
 export const academicPath = '/academic';
+export const examinationPath = '/examination';
 export const settingPath = '/setting';
