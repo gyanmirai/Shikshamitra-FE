@@ -646,7 +646,7 @@ const examinationModule = {
         },
         {
           title: 'Assessment',
-          path: '/assessment',
+          path: '/examination/assessment',
           _action: 'assessment',
         },
       ],

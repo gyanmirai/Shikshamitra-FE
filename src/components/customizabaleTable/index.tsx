@@ -70,6 +70,7 @@ interface CustomizableTableProps {
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
   totalCount?: number;
+  handleRowClick?: (row: Data, index: number) => void;
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -80,6 +81,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
+  handleRowClick = () => {},
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -538,7 +540,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 {paginatedData.length > 0 ? (
                   paginatedData.map((row, index) => (
                     <React.Fragment key={index}>
-                      <TableRow hover tabIndex={-1}>
+                      <TableRow hover tabIndex={-1} onClick={() => handleRowClick(row, index)}>
                         {columns.some((column) => column.children) && (
                           <TableCell sx={{ fontSize: '12px' }}>
                             <IconButton size="small" onClick={() => handleExpandRow(index)}>
