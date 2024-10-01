@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { Box } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Box, MenuItem, MenuList } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const Gradebook = () => (
@@ -86,9 +87,30 @@ const Gradebook = () => (
         { id: 'assignments', label: 'Assignments' },
         { id: 'grade', label: 'Grade' },
         { id: 'weightedAverage', label: 'Weighted Average' },
-        { id: 'action', label: 'Action' },
+        {
+          id: 'action',
+          label: 'Action',
+          render(value, row) {
+            return (
+              <ThreeDotsActions
+                actions={() => (
+                  <MenuList>
+                    <MenuItem>Edit</MenuItem>
+                  </MenuList>
+                )}
+              />
+            );
+          },
+        },
       ]}
-      data={[]}
+      data={[
+        {
+          studentName: 'John',
+          assignments: 'Abc Quiz',
+          grade: 'A',
+          weightedAverage: '80%',
+        },
+      ]}
     />
   </Box>
 );

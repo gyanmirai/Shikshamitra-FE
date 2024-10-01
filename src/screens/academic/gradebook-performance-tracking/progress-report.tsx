@@ -406,7 +406,7 @@ const ProgressReport = () => (
 
 export default ProgressReport;
 
-function PerformanceOverTime({ title, subheader, chart, ...other }: any) {
+export function PerformanceOverTime({ title, subheader, chart, ...other }: any) {
   const theme = useTheme();
 
   // const [selectedSeries, setSelectedSeries] = useState('2023');

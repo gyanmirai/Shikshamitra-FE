@@ -94,7 +94,7 @@ export const background = {
 
 // Action
 export const baseAction = {
-  hover: varAlpha(grey['500Channel'], 0.08),
+  hover: varAlpha(grey['500Channel'], 0.16),
   selected: varAlpha(grey['500Channel'], 0.16),
   focus: varAlpha(grey['500Channel'], 0.24),
   disabled: varAlpha(grey['500Channel'], 0.8),

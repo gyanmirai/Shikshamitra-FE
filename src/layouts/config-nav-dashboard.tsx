@@ -69,7 +69,7 @@ export const navData = [
       { title: 'Dashboard', path: dashboardPath, icon: ICONS.dashboard, _action: 'dashboard' },
       {
         title: 'Student',
-        path: '/student/profile',
+        path: '/student/enrollment/dashboard',
         icon: ICONS.student,
         _action: 'student',
       },

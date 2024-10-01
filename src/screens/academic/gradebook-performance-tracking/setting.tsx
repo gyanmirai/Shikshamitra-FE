@@ -1,102 +1,205 @@
 import React from 'react';
 
-import AddIcon from '@mui/icons-material/Add';
+import { DatePicker } from '@mui/x-date-pickers';
 import {
-  Card,
+  Box,
   Grid,
   Button,
   Switch,
+  Divider,
+  Checkbox,
+  TextField,
   Typography,
-  CardContent,
-  FormControlLabel,
+  LinearProgress,
 } from '@mui/material';
 
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+
 const Setting = () => (
-  <Grid container spacing={3} style={{ padding: 20 }}>
-    {/* Grading Scales Section */}
-    <Grid item xs={12} md={6}>
-      <Card>
-        <CardContent>
-          <Typography variant="h5">Grading Scales</Typography>
-          <Button variant="contained" startIcon={<AddIcon />} style={{ marginBottom: 20 }}>
-            Add new grade scale
-          </Button>
-        </CardContent>
-      </Card>
+  <Grid container spacing={3}>
+    <Grid item xs={12}>
+      <Typography variant="h6" my={1}>
+        Grading Scales
+      </Typography>
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'standard', label: 'Standard' },
+          { value: 'advanced', label: 'Advanced' },
+          { value: 'custom', label: 'Custom' },
+        ]}
+        value="standard"
+        onChange={() => {}}
+        label="Grading System Selection"
+      />
+      <Typography variant="h6" my={1}>
+        Editable Grading Scale Table
+      </Typography>
+      <CustomizableTable
+        columns={[
+          { id: 'grade', label: 'Grade' },
+          {
+            id: 'range',
+            label: 'Range',
+          },
+        ]}
+        data={[
+          { id: 1, grade: 'A', range: '90-100' },
+          { id: 2, grade: 'B', range: '80-89' },
+          { id: 3, grade: 'C', range: '70-79' },
+          { id: 4, grade: 'D', range: '60-69' },
+          { id: 5, grade: 'F', range: '0-59' },
+        ]}
+      />
     </Grid>
-
-    {/* Weighting Assignments Section */}
     <Grid item xs={12} md={6}>
-      <Card>
-        <CardContent>
-          <Typography variant="h5">Weighting Assignments</Typography>
-          <Button variant="contained" startIcon={<AddIcon />} style={{ marginBottom: 20 }}>
-            Add new category
-          </Button>
-          {/* Example content for categories */}
-          <Typography>Assignment 1 - 50%</Typography>
-          <Typography>Assignment 2 - 50%</Typography>
-        </CardContent>
-      </Card>
+      <Typography variant="h6">Weighting Adjustments</Typography>
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'homework', label: 'Homework' },
+          { value: 'quiz', label: 'Quiz' },
+          { value: 'exam', label: 'Exam' },
+          { value: 'project', label: 'Project' },
+        ]}
+        value="homework"
+        onChange={() => {}}
+        label="Assignment Types"
+      />
+      &nbsp;
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'homework', label: 'Homework' },
+          { value: 'quiz', label: 'Quiz' },
+          { value: 'exam', label: 'Exam' },
+          { value: 'project', label: 'Project' },
+        ]}
+        value=""
+        onChange={() => {}}
+        label="Weighting Inputs"
+      />
+      <Typography variant="h6" my={1}>
+        Progress Visualization
+      </Typography>
+      <Box sx={{ width: '100%', my: 2 }}>
+        <LinearProgress variant="determinate" value={75} /> 75%
+      </Box>
+      <Button variant="contained">Add new categories</Button>
     </Grid>
-
-    {/* Notifications & Alerts Section */}
     <Grid item xs={12} md={6}>
-      <Card>
-        <CardContent>
-          <Typography variant="h5">Notifications & Alerts</Typography>
-          <FormControlLabel control={<Switch color="primary" />} label="Missing Grades Alert" />
-          <FormControlLabel
-            control={<Switch color="primary" />}
-            label="Overdue Assessments Alert"
-          />
-          <FormControlLabel control={<Switch color="primary" />} label="Performance Alerts" />
-        </CardContent>
-      </Card>
+      <Typography variant="h6">Grade Submission Settings</Typography>
+      <DatePicker
+        sx={{ maxWidth: '250px', width: '100%', my: 1 }}
+        label="Select Date"
+        slotProps={{ textField: { size: 'small' } }}
+      />
+      &nbsp;
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'homework', label: 'Homework' },
+          { value: 'quiz', label: 'Quiz' },
+          { value: 'exam', label: 'Exam' },
+          { value: 'project', label: 'Project' },
+        ]}
+        value="homework"
+        onChange={() => {}}
+        label="Assignment Types"
+      />
+      &nbsp;
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'homework', label: 'Homework' },
+          { value: 'quiz', label: 'Quiz' },
+          { value: 'exam', label: 'Exam' },
+          { value: 'project', label: 'Project' },
+        ]}
+        value="standard"
+        onChange={() => {}}
+        label="Who is allowed to submit or edit grades"
+      />
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+        <Switch checked={false} onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+        <Typography sx={{ mr: 2 }}>Reminders about upcoming grade submission deadlines</Typography>
+      </Box>
     </Grid>
-
-    {/* Grade Submission Settings Section */}
+    <Grid item xs={12}>
+      <Typography variant="h6" my={1}>
+        Notifications & Alerts
+      </Typography>
+      <Divider sx={{ my: 1 }} />
+    </Grid>
     <Grid item xs={12} md={6}>
-      <Card>
-        <CardContent>
-          <Typography variant="h5">Grade Submission Settings</Typography>
-          <FormControlLabel
-            control={<Switch color="primary" />}
-            label="Reminder about upcoming grade submission deadlines"
-          />
-          {/* Example date picker and other settings could go here */}
-          <Typography>Date Picker (Placeholder)</Typography>
-        </CardContent>
-      </Card>
+      <Typography variant="h6">Missing Grades Alert</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+        <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+        <Typography>Missing grades</Typography>
+      </Box>
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'homework', label: 'Homework' },
+          { value: 'quiz', label: 'Quiz' },
+          { value: 'exam', label: 'Exam' },
+          { value: 'project', label: 'Project' },
+        ]}
+        value="homework"
+        onChange={() => {}}
+        label="Frequency"
+      />
     </Grid>
+    <Grid item xs={12} md={6}>
+      <Typography variant="h6">Overdue Assessments Alert</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+        <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+        <Typography>Overdue assessments</Typography>
+      </Box>
+      <CustomSelect
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
+        options={[
+          { value: 'homework', label: 'Homework' },
+          { value: 'quiz', label: 'Quiz' },
+          { value: 'exam', label: 'Exam' },
+          { value: 'project', label: 'Project' },
+        ]}
+        value="homework"
+        onChange={() => {}}
+        label="Time-based alerts"
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <Typography variant="h6">Performance Alerts</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+        <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+        <Typography>Low-performance alerts</Typography>
+      </Box>
+      <TextField
+        label="alert if students drop below 60%"
+        size="small"
+        sx={{ maxWidth: '250px', width: '100%', my: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <Typography variant="h6">Performance Alerts</Typography>
 
-    {/* Dialog for Adding New Grade Scale */}
-    {/* <Dialog open={dialogOpen} onClose={handleDialogClose}>
-      <DialogTitle>Add New Grade Scale</DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          id="grade-name"
-          label="Grade Name"
-          type="text"
-          fullWidth
-          variant="standard"
-        />
-        <TextField
-          margin="dense"
-          id="grade-range"
-          label="Grade Range"
-          type="text"
-          fullWidth
-          variant="standard"
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleDialogClose}>Cancel</Button>
-        <Button onClick={handleDialogClose}>Save</Button>
-      </DialogActions>
-    </Dialog> */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+          <Typography>Email notification</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+          <Typography>SMS notification</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+          <Typography>Dashboard notification</Typography>
+        </Box>
+      </Box>
+    </Grid>
   </Grid>
 );
 

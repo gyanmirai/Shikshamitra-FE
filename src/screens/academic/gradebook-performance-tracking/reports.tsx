@@ -100,16 +100,6 @@ const Reports = () => (
         </Card>
       </Grid>
     </Grid>
-
-    {/* Download Buttons */}
-    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 4 }}>
-      <Button variant="contained" color="primary" sx={{ backgroundColor: '#3488e3' }}>
-        Download PDF
-      </Button>
-      <Button variant="contained" color="secondary" sx={{ backgroundColor: '#f85a40' }}>
-        Download CSV
-      </Button>
-    </Box>
   </Box>
 );
 
