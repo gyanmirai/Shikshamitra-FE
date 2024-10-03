@@ -36,5 +36,3 @@ build
 .eslintcache
 .unimportedrc.json
 tsconfig.tsbuildinfo
-
-certificates
