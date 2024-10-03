@@ -9,8 +9,13 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import Setting from './setting';
+import Favorite from './favorite';
 import Dashboard from './dashboard';
+import Categories from './categories';
 import AllResources from './all-resources';
+import SharedWithMe from './shared-with-me';
+import UploadContent from './upload-content';
 
 const TABS = [
   {
@@ -26,26 +31,26 @@ const TABS = [
   {
     value: 'categories',
     label: 'Categories',
-    component: () => '',
+    component: () => <Categories />,
   },
 
   {
     value: 'uploadContent',
     label: 'Upload Content',
-    component: () => '',
+    component: () => <UploadContent />,
   },
   {
     value: 'sharedWithMe',
     label: 'Shared with Me',
-    component: () => '',
+    component: () => <SharedWithMe />,
   },
   {
     value: 'favorites',
     label: 'Favorites',
-    component: () => '',
+    component: () => <Favorite />,
   },
 
-  { value: 'settings', label: 'Settings', component: () => '' },
+  { value: 'settings', label: 'Settings', component: () => <Setting /> },
 ];
 
 const ResourceContentLibraryScreen = () => {

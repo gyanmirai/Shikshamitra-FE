@@ -59,7 +59,7 @@ const CustomSelect = <T extends string>({
   };
 
   return (
-    <FormControl error={error} {...formControlProps}>
+    <FormControl error={error} sx={{ maxWidth: '250px', width: '100%' }} {...formControlProps}>
       <InputLabel size="small">{label}</InputLabel>
       <Select
         multiple={multiple}
