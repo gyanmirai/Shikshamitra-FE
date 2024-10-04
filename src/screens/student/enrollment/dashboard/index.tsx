@@ -646,7 +646,7 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
       bar: {
         horizontal: true,
         borderRadius: 2,
-        barHeight: '48%',
+        barHeight: '30%',
         dataLabels: { position: 'top' },
       },
     },

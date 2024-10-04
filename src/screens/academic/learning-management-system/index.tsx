@@ -15,12 +15,13 @@ import Assignment from './assignment';
 import ContentLibrary from './content-library';
 import ReportsAnalytics from './reports-analytics';
 import StudentProgressTracking from './student-progess-tacking';
+import Dashboard from './dashboard';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => '',
+    component: () => <Dashboard />,
   },
   {
     value: 'course',
