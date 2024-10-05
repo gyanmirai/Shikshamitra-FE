@@ -16,6 +16,7 @@ import ContentLibrary from './content-library';
 import ReportsAnalytics from './reports-analytics';
 import StudentProgressTracking from './student-progess-tacking';
 import Dashboard from './dashboard';
+import SettingScreen from './setting';
 
 const TABS = [
   {
@@ -46,7 +47,7 @@ const TABS = [
     component: () => <ReportsAnalytics />,
   },
 
-  { value: 'settings', label: 'Settings', component: () => '' },
+  { value: 'settings', label: 'Settings', component: () => <SettingScreen /> },
 ];
 
 const LearningManagementSystemScreen = () => {
