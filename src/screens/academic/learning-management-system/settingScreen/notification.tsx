@@ -6,34 +6,36 @@ import CustomSelect from 'src/components/custom-select'
 const NotificationSetting = () => {
     return (
         <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="h4">
+            <Typography variant="h6">
                 Custom Notifications
             </Typography>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
+                   
                 />
-                <Typography sx={{ ml: 1, mt: 1 }}>Assignment Deadlines</Typography>
+                <Typography>Assignment Deadlines</Typography>
             </Box>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
+                    
                 />
-                <Typography sx={{ ml: 1, mt: 1 }}>New Courses Published</Typography>
+                <Typography>New Courses Published</Typography>
             </Box>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
                 />
-                <Typography sx={{ ml: 1, mt: 1 }}>Quiz Remiders</Typography>
+                <Typography>Quiz Remiders</Typography>
             </Box>
-            <Typography variant="h4">
+            <Typography variant="h6">
                 Frequency Settings
             </Typography>
             <CustomSelect
-                options={[]}
+                options={[
+                    {value : "Daily", label : "Daily"},
+                    {value : "Weekly", label : "Weekly"},
+                ]}
                 value=""
-                label="Course"
+                label="Frequency"
                 onChange={() => { }}
                 formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }} />
         </Box>

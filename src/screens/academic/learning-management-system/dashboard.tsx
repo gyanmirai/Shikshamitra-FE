@@ -101,24 +101,16 @@ const Dashboard = () => {
                                         actions={() => (
                                             <MenuList>
                                                 <MenuItem>
-                                                    <Iconify icon="mdi:download" />
-
-                                                    <ListItemText>Download</ListItemText>
+                                                    <Iconify icon="solar:pen-bold" />
+                                                    <ListItemText>Edit</ListItemText>
                                                 </MenuItem>
                                                 <MenuItem>
-                                                    <Iconify icon="mdi:share" />
-
-                                                    <ListItemText>Share</ListItemText>
-                                                </MenuItem>
-                                                <MenuItem>
-                                                    <Iconify icon="mdi:star" />
-
-                                                    <ListItemText>Favorite</ListItemText>
+                                                    <Iconify icon="solar:trash-bin-trash-bold" />
+                                                    <ListItemText>Delete</ListItemText>
                                                 </MenuItem>
                                                 <MenuItem>
                                                     <Iconify icon="mdi:eye" />
-
-                                                    <ListItemText>Preview</ListItemText>
+                                                    <ListItemText>View Course</ListItemText>
                                                 </MenuItem>
                                             </MenuList>
                                         )}

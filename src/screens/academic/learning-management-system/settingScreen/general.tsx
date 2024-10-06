@@ -7,74 +7,66 @@ const GeneralSettings = () => {
     return (
         <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <CustomSelect
-                options={[]}
+                options={[
+                    { value: "A", label: "A" },
+                    { value: "B", label: "B" },
+                    { value: "C", label: "C" },
+                    { value: "D", label: "D" },
+                    { value: "E", label: "E" },
+                    { value: "F", label: "F" },
+                ]}
                 value=""
                 label="Course"
                 onChange={() => { }}
                 formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }} />
-            <TextField label="Assignment Title" sx={{ maxWidth: '250px', width: '100%' }} />
-            <Box sx={{ display: 'flex' }}>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{ ml: 1, mt: 1 }}>Attedance Policies</Typography>
+            <TextField label="Assignment Title" size='small' sx={{ maxWidth: '250px', width: '100%' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Switch/>
+                <Typography>Attedance Policies</Typography>
             </Box>
-            <Typography variant="h4">
+            <Typography variant="h6">
                 Permissions
             </Typography>
-            <Box sx={{ display: 'flex'}}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Checkbox onChange={() => { }} inputProps={{ 'aria-label': 'controlled' }} />
-                <Typography sx={{ ml: 1, mt: 1 }}>Admin</Typography>
+                <Typography>Admin</Typography>
             </Box>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Switch />
+                <Typography>Edit</Typography>
                 <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
                 />
-                <Typography sx={{ mt: 1 }}>Edit</Typography>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{mt: 1 }}>View</Typography>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{mt: 1 }}>Create</Typography>
+                <Typography>View</Typography>
+                <Switch/>
+                <Typography>Create</Typography>
             </Box>
-            <Box sx={{ display: 'flex'}}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Checkbox onChange={() => { }} inputProps={{ 'aria-label': 'controlled' }} />
-                <Typography sx={{mt: 1 }}>Teacher</Typography>
+                <Typography>Teacher</Typography>
             </Box>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center'  }}>
                 <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
+                    
                 />
-                <Typography sx={{ mt: 1 }}>Edit</Typography>
+                <Typography>Edit</Typography>
+                <Switch/>
+                <Typography>View</Typography>
                 <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
+                    
                 />
-                <Typography sx={{mt: 1 }}>View</Typography>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{mt: 1 }}>Create</Typography>
+                <Typography>Create</Typography>
             </Box>
-            <Box sx={{ display: 'flex'}}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Checkbox onChange={() => { }} inputProps={{ 'aria-label': 'controlled' }} />
-                <Typography sx={{mt: 1 }}>Assistant</Typography>
+                <Typography>Assistant</Typography>
             </Box>
-            <Box sx={{ display: 'flex' }}>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{mt: 1 }}>Edit</Typography>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{mt: 1 }}>View</Typography>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{mt: 1 }}>Create</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center'  }}>
+                <Switch/>
+                <Typography>Edit</Typography>
+                <Switch/>
+                <Typography>View</Typography>
+                <Switch/>
+                <Typography>Create</Typography>
             </Box>
         </Box>
     )

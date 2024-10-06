@@ -20,6 +20,7 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const HomeworkCreation = () => {
   const dialog = useBoolean();
@@ -30,29 +31,103 @@ const HomeworkCreation = () => {
           Create New Assignment
         </Button>
       </Box>
+      <CustomizableTable
+        columns={[
+          { id: 'classGrade', label: 'Class/Grade' },
+          { id: 'division', label: 'Division' },
+          { id: 'assignmentTitle', label: 'Assignment Title' },
+          { id: 'subject', label: 'Subject' },
+          { id: 'assignmentDesc', label: 'Assignment Description' },
+          { id: 'dueDate', label: 'Due Date' },
+          { id: 'time', label: 'time' },
+          { id: 'submissionType', label: 'Submission Type' },
+        ]}
+        data={[
+          {
+            classGrade: 'Math',
+            division: 'Jayvion Simon',
+            assignmentTitle: '25 Studet Enrolled',
+            subject: 'Math',
+            assignmentDesc: 'Math Tut',
+            dueDate: '10-05-24',
+            time: '08:30',
+            submissionType: "Online Text"
+          },
+          {
+            classGrade: 'Math',
+            division: 'Jayvion Simon',
+            assignmentTitle: '25 Studet Enrolled',
+            subject: 'Math',
+            assignmentDesc: 'Math Tut',
+            dueDate: '10-05-24',
+            time: '08:30',
+            submissionType: "Online Text"
+          },
+          {
+            classGrade: 'Math',
+            division: 'Jayvion Simon',
+            assignmentTitle: '25 Studet Enrolled',
+            subject: 'Math',
+            assignmentDesc: 'Math Tut',
+            dueDate: '10-05-24',
+            time: '08:30',
+            submissionType: "Online Text"
+          },
+          {
+            classGrade: 'Math',
+            division: 'Jayvion Simon',
+            assignmentTitle: '25 Studet Enrolled',
+            subject: 'Math',
+            assignmentDesc: 'Math Tut',
+            dueDate: '10-05-24',
+            time: '08:30',
+            submissionType: "Online Text"
+          },
+          {
+            classGrade: 'Math',
+            division: 'Jayvion Simon',
+            assignmentTitle: '25 Studet Enrolled',
+            subject: 'Math',
+            assignmentDesc: 'Math Tut',
+            dueDate: '10-05-24',
+            time: '08:30',
+            submissionType: "Online Text"
+          },
+        ]}
+      />
+
       <CustomDialog title="New Assignment" open={dialog.value} handleClose={dialog.onFalse}>
         <Box>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
             <Box display="flex" flexDirection="column" gap={2}>
-              <TextField label="Assignment Title" fullWidth />
               <CustomSelect
-                label="Class"
+                label="Class/Grade"
                 options={[]}
                 value=""
-                onChange={() => {}}
+                onChange={() => { }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
+              <CustomSelect
+                label="Division"
+                options={[]}
+                value=""
+                onChange={() => { }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+              <TextField label="Assignment Title" size="small" />
               <CustomSelect
                 label="Subject"
                 options={[]}
                 value=""
-                onChange={() => {}}
+                onChange={() => { }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
-              <TextField label="Description" fullWidth multiline rows={4} />
-
+              <TextField label="Assignment Description" fullWidth multiline rows={4} />
+              <Button variant="contained" sx={{ maxWidth: '200px', width: '100%' }} onClick={dialog.onFalse}>
+                Upload Files
+              </Button>
               <UploadBox
-                onDrop={() => {}}
+                onDrop={() => { }}
                 placeholder={
                   <Box
                     sx={{
@@ -94,30 +169,14 @@ const HomeworkCreation = () => {
                   label="In-person submission"
                 />
               </RadioGroup>
-
-              <FormControlLabel
-                control={<Checkbox />}
-                label="Assign to Multiple Classes"
-                sx={{ mt: 1 }}
-              />
-              <CustomSelect
-                label="Use Template"
-                options={[
-                  { value: 'essays', label: 'Essays' },
-                  { value: 'quizzes', label: 'Quizzes' },
-                ]}
-                value=""
-                onChange={() => {}}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
             </Box>
           </Scrollbar>
           <DialogActions>
-            <Button color="error" variant="outlined" onClick={dialog.onFalse}>
-              Cancel
+            <Button variant="contained" onClick={dialog.onFalse}>
+              Save Draft
             </Button>
             <Button variant="contained" onClick={dialog.onFalse}>
-              Create
+              Publish
             </Button>
           </DialogActions>
         </Box>
