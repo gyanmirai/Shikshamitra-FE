@@ -86,7 +86,7 @@ export const navData = [
         _action: 'examination',
       },
       { title: 'HR/Staff', path: '/hr/dashboard', icon: ICONS.hr, _action: 'hr' },
-      { title: 'Finance', path: financePath, icon: ICONS.finance, _action: 'finance' },
+      { title: 'Finance', path: '/finance/dashboard', icon: ICONS.finance, _action: 'finance' },
       {
         title: 'Communication',
         path: financePath,
@@ -431,6 +431,8 @@ const settingModule = {
   ],
 };
 
+
+
 const hrModule = {
   [hrPath]: [
     {
@@ -634,6 +636,7 @@ const academicModule = {
     },
   ],
 };
+
 const examinationModule = {
   [examinationPath]: [
     {
@@ -653,6 +656,59 @@ const examinationModule = {
     },
   ],
 };
+
+const financeModule = {
+  [financePath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/finance/dashboard',
+          _action: 'examination',
+        },
+        {
+          title: 'Fee Management',
+          path: '/finance/fee-management',
+          _action: 'fee-management',
+        },
+        {
+          title: 'Income Tracking',
+          path: '/finance/income-tracking',
+          _action: 'finance-income-tracking',
+        },
+        {
+          title: 'Expense Tracking',
+          path: '/finance/expense-tracking',
+          _action: 'finance-expense-tracking',
+        },
+        
+        {
+          title: 'Budgeting',
+          path: '/finance/budgeting',
+          _action: 'finance-budget',
+        },
+        {
+          title: 'Reports',
+          path: '/finance/reports',
+          _action: 'finance-reports',
+        },
+        {
+          title: 'Setting',
+          path: '/finance/settings',
+          _action: 'finance-settings',
+        },
+        {
+          title: 'User Roles/Permission',
+          path: '/finance/user-roles',
+          _action: 'finance-user-roles',
+        },
+
+      ],
+    },
+  ],
+};
+
 export const navSubData = {
   ...studentModule,
   ...securityModule,
@@ -660,4 +716,5 @@ export const navSubData = {
   ...hrModule,
   ...academicModule,
   ...examinationModule,
+  ...financeModule,
 };
