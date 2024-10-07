@@ -14,15 +14,15 @@ import Teacher from './teacher';
 import Subject from './subject';
 import Reports from './reports';
 import Settings from './settings';
-import Dashboard from './dashboard';
 import Curriculum from './curriculum';
 import CurriculumOverview from './curriculum-overview';
+import CarriculumDashboardTab from './dashboard/carriculum-dashboard-tab';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: () => <CarriculumDashboardTab />,
   },
   {
     value: 'curriculumOverview',

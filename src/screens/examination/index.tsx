@@ -16,12 +16,13 @@ import ExamOverview from './exam-overview';
 import ScheduleExam from './schedule-exam';
 import ResultReport from './result-report';
 import AssessmentManagement from './assessment-management';
+import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: () => <ExaminationDashboardTab />,
   },
   {
     value: 'examOverview',
