@@ -1,72 +1,73 @@
 "use client"
-import { Box, Button, Card, CardContent, Grid, List, ListItem, ListItemText, Switch, Typography } from '@mui/material'
-import React from 'react'
+import { Box, Button, Card, CardContent, CardHeader, Grid, List, ListItem, ListItemText, Switch, Tooltip, Typography } from '@mui/material'
+import React, { useState } from 'react'
 import CustomSelect from 'src/components/custom-select'
+import { Iconify } from 'src/components/iconify'
 import { Scrollbar } from 'src/components/scrollbar'
 
 const CourseManagementSetting = () => {
+    const [isCourseVisible, setIsCourseVisible] = useState(false)
     return (
-        <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="h6">
-                Course Templates
-            </Typography>
-
-            <Card sx={{ maxWidth: '500px', width: '100%', borderRadius: '8px' }}>
-                <Scrollbar style={{ maxHeight: '150px' }}>
-                    <CardContent sx={{padding : '8px'}}>
-                        <List sx={{ '& .MuiListItem-root': { py: 0.5 } }}>
-                            {['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5', 'Template 6'].map((template, index) => (
-                                <ListItem key={index}>
-                                    <ListItemText primary={template} />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </CardContent>
-                </Scrollbar>
-            </Card>
-
-            <Box
-                sx={{ display: 'flex', gap: 2, marginLeft: 25 }}
-            >
-                <Button
-                    color="secondary"
-                    variant="contained"
-                >
-                    New Template
-                </Button>
-                <Button color="primary" variant="contained">
-                    Edit
-                </Button>
-
-                <Button
-                    color="error"
-                    variant="contained"
-                >
-                    Delete
+        <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
+                <Button variant="contained">
+                    Manage Archieved Courses
                 </Button>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch/>
-                <Typography>Course Visibility</Typography>
-            </Box>
-            <CustomSelect
-                options={[
-                    {value : "allStudents", label : "All Students"},
-                    {value : "specificGrades", label : "Specific Grades"},
-                    {value : "customGroup", label : "Custom Group"}
-                ]}
-                value=""
-                label="Course Visibility"
-                onChange={() => { }}
-                formControlProps={{ sx: { maxWidth: '300px', width: '100%', marginTop: '5px' } }} />
-            <Button
-                color="secondary"
-                variant="contained"
-                sx={{ maxWidth: '250px', width: '100%', marginLeft: '20%' }}
-            >
-                Manage Archieved Courses
-            </Button>
-        </Box >
+            <Grid container spacing={4}>
+                <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Typography variant="h6">Course Templates</Typography>
+                        <Scrollbar style={{ maxHeight: '170px', border: '1px solid #e0e0e0', borderRadius: '4px' }}>
+                            <List sx={{ '& .MuiListItem-root': { py: 0.5 }, px: 2, pb: 2 }}>
+                                {['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5', 'Template 6'].map((template, index) => (
+                                    <ListItem key={index}>
+                                        <ListItemText primary={template} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Scrollbar>
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: "flex-end" }}>
+                            <Tooltip title="Add New Template">
+                                <Iconify icon="mdi:plus" sx={{ height: '22px', width: '22px', color: 'blue' }} />
+                            </Tooltip>
+                            <Tooltip title="Edit">
+                                <Iconify icon="solar:pen-bold" sx={{ height: '22px', width: '22px', color: 'green' }} />
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                                <Iconify
+                                    icon="solar:trash-bin-trash-bold"
+                                    sx={{ height: '22px', width: '22px', color: 'red' }}
+                                />
+                            </Tooltip>
+                        </Box>
+                    </Box>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Switch checked={isCourseVisible} onChange={(e) => (setIsCourseVisible(e.target.checked))} />
+                            <Typography>Course Visibility</Typography>
+                        </Box>
+                        {
+                            isCourseVisible &&
+                            <CustomSelect
+                                options={[
+                                    { value: "allStudents", label: "All Students" },
+                                    { value: "specificGrades", label: "Specific Grades" },
+                                    { value: "customGroup", label: "Custom Group" }
+                                ]}
+                                value=""
+                                label="Course Visibility"
+                                onChange={() => { }}
+                                formControlProps={{ sx: { maxWidth: '300px', width: '100%', marginTop: '5px' } }} />
+                        }
+                    </Box>
+                </Grid>
+            </Grid>
+        </Box>
+
     )
 }
 
