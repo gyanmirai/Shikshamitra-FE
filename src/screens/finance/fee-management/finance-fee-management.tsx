@@ -7,8 +7,8 @@ import { Box, Tab, Card, Button } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
-import FinanceStudentStructureOverview from './Tabs/finance-student-structure-overview';
 import FinanceFeeStructureOverview from './Tabs/finance-fee-structure-overview-tsx/finance-fee-structure-overview';
+import FinanceStudentStructureOverview from './Tabs/finanace-student-structure-overview.tsx/finance-student-structure-overview';
 
 
 const TABS = [{
