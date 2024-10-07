@@ -13,7 +13,8 @@ import Dashboard from './dashboard';
 import DueDateCalendar from './duedate-calendar';
 import HomeworkCreation from './homework-creation';
 import StudentSubmission from './student-submission';
-import AssignmentOverview from './assignment-overview';
+import Setting from './setting';
+import GradingAndFeedback from './gradingAndFeedback';
 
 const TABS = [
   {
@@ -22,16 +23,10 @@ const TABS = [
     component: () => <Dashboard />,
   },
   {
-    value: 'assignmentOverview',
-    label: 'Assignment Overview',
-    component: () => <AssignmentOverview />,
-  },
-  {
     value: 'homeworkCreation',
     label: 'Homework Creation',
     component: () => <HomeworkCreation />,
   },
-
   {
     value: 'dueDatesAndCalendar',
     label: 'Due Dates and Calendar',
@@ -42,8 +37,12 @@ const TABS = [
     label: 'Student Submissions',
     component: () => <StudentSubmission />,
   },
-
-  { value: 'settings', label: 'Settings', component: () => '' },
+  {
+    value: 'gradingAndFeedback',
+    label: 'Grading And Feedback',
+    component: () => <GradingAndFeedback />,
+  },
+  { value: 'settings', label: 'Settings', component: () => <Setting /> },
 ];
 
 const HomeworkAndAssignmentScreen = () => {

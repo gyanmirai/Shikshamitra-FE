@@ -7,7 +7,7 @@ import { Scrollbar } from 'src/components/scrollbar'
 const CourseManagementSetting = () => {
     return (
         <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="h4">
+            <Typography variant="h6">
                 Course Templates
             </Typography>
 
@@ -45,14 +45,16 @@ const CourseManagementSetting = () => {
                     Delete
                 </Button>
             </Box>
-            <Box sx={{ display: 'flex' }}>
-                <Switch
-                    inputProps={{ 'aria-label': 'Toggle view' }}
-                />
-                <Typography sx={{ ml: 1, mt: 1 }}>Course Visibility</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Switch/>
+                <Typography>Course Visibility</Typography>
             </Box>
             <CustomSelect
-                options={[]}
+                options={[
+                    {value : "allStudents", label : "All Students"},
+                    {value : "specificGrades", label : "Specific Grades"},
+                    {value : "customGroup", label : "Custom Group"}
+                ]}
                 value=""
                 label="Course Visibility"
                 onChange={() => { }}
