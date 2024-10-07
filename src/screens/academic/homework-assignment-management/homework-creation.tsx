@@ -165,7 +165,7 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
 
   return (
     <Box>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: "350px" }}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: "300px" }}>
         <Box display="flex" flexDirection="column" gap={2}>
           <CustomSelect
             label="Class"
@@ -187,6 +187,7 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
             disabled={!formik.values.class}
             labelKey="name"
             valueKey="id"
+            // multiple={true}
             options={divisionOptions}
             value={division}
             onChange={(val) => {
