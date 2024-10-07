@@ -14,6 +14,7 @@ import Dashboard from './dashboard';
 import ClassProgress from './class-progress';
 import ComparativeAnalytics from './comparative-analytics';
 import IndividualStudentProgress from './Individual-student-progress';
+import StudentProgressAnalyticsSetting from './settings/student-progress-analytics-setting';
 
 const TABS = [
   {
@@ -43,7 +44,7 @@ const TABS = [
     component: () => <Reports />,
   },
 
-  { value: 'settings', label: 'Settings', component: () => '' },
+  { value: 'settings', label: 'Settings', component: () => <StudentProgressAnalyticsSetting/> },
 ];
 
 const StudentProgressAnalyticsScreen = () => {

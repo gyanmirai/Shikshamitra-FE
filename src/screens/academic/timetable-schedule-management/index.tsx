@@ -10,18 +10,18 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Setting from './setting';
-import Dashboard from './dashboard';
 import NewTimetable from './new-timetable';
 import RoomAllocation from './room-allocation';
 import TeacherManagement from './teacher-management';
 import CurrentTimetableOverview from './current-timetable-overvirew';
+import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
+import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: () => <TimeScheduleManagementDashboardTab/>,
   },
   {
     value: 'currentTimetableOverview',
@@ -41,7 +41,7 @@ const TABS = [
   },
   { value: 'roomAllocation', label: 'Room Allocation', component: () => <RoomAllocation /> },
 
-  { value: 'settings', label: 'Settings', component: () => <Setting /> },
+  { value: 'settings', label: 'Settings', component: () => <TimeScheduleManagementsetting /> },
 ];
 
 const TimetableScheduleManagementScreen = () => {

@@ -15,12 +15,13 @@ import Setting from './setting';
 import GradeBook from './grade-book';
 import PendingAssessment from './pending-assessment';
 import CompletedAssessment from './completed-assessment';
+import AssessmentDashboardTab from './dashboard/assessment-dashboard-tab';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => '',
+    component: () => <AssessmentDashboardTab/>,
   },
   {
     value: 'pendingAssessment',

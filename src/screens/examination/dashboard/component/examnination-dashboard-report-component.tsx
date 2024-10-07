@@ -1,0 +1,63 @@
+import { Box, Typography } from '@mui/material'
+import Grid2 from '@mui/material/Unstable_Grid2'
+import { DatePicker } from '@mui/x-date-pickers'
+import React from 'react'
+import CustomSelect from 'src/components/custom-select'
+import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download'
+import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard'
+
+const ExamninationDashboardReportComponent = () => {
+  return (
+    <Box>
+      <Typography component="span" variant="h6" gutterBottom paddingTop="10px">
+        Reports Section
+
+      </Typography>
+      <Box display="flex" flexDirection="row" gap={3} sx={{ pb: "20px", pt: "20px" }}>
+        <CustomSelect
+          label="Class"
+          options={[]}
+          value=""
+          onChange={() => { }}
+          formControlProps={{ sx: { minWidth: 120 } }}
+        />
+        <CustomSelect
+          label="Subject"
+          options={[]}
+          value=""
+          onChange={() => { }}
+          formControlProps={{ sx: { minWidth: 120 } }}
+        />
+        <DatePicker
+          label="To Date"
+          format="DD-MM-YYYY"
+          slotProps={{ textField: { size: 'small' } }}
+        />
+        <DatePicker
+          label="End Date"
+          format="DD-MM-YYYY"
+          slotProps={{ textField: { size: 'small' } }}
+        />
+
+      </Box>
+
+      <Grid2 container spacing={3}>
+        <Grid2 xs={12} md={6}>
+          <AnalyticsCurrentVisits
+            title="Pass/Fail Rates"
+            chart={{
+              series: [
+                { label: 'Pass', value: 80 },
+                { label: 'Fail', value: 5 },
+
+              ],
+            }}
+            sx={{ boxShadow: '' }}
+          />
+        </Grid2>
+      </Grid2>
+    </Box>
+  )
+}
+
+export default ExamninationDashboardReportComponent
