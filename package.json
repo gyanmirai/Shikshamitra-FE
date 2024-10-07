@@ -6,7 +6,7 @@
   "private": true,
   "homepage": "/dashboard",
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm install && next dev",
     "start": "next start",
     "build": "next build",
     "build:window": "build-and-copy.bat",
