@@ -35,7 +35,7 @@ const nextConfig = {
   ...(isStaticExport === 'true' && {
     output: 'export',
   }),
-  reactStrictMode: true,
+  reactStrictMode: false,
   distDir: 'build',
   output: 'standalone',
 };

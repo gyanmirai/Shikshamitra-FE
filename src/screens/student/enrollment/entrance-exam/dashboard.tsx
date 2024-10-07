@@ -44,7 +44,10 @@ export const ResultForm = () => {
           //   height: 'calc(100vh - 150px)',
         }}
       >
-        <TextField label="Obtained Marks" size="small" fullWidth />
+        <Box display="flex" flexDirection="column" gap={2}>
+          <TextField label="Obtained Marks" size="small" fullWidth />
+          <TextField label="Total Marks" size="small" fullWidth />
+        </Box>
       </Scrollbar>
       <DialogActions sx={{ flexShrink: 0 }}>
         <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Add, Delete } from '@mui/icons-material';
+import { Add, RemoveCircle } from '@mui/icons-material';
 import { Box, Button, IconButton, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -28,15 +28,24 @@ const DocumentType = () => {
             isSort: false,
             render(value, row) {
               return (
-                <IconButton>
+                <IconButton color="error">
                   {' '}
-                  <Delete />
+                  <RemoveCircle />
                 </IconButton>
               );
             },
           },
         ]}
-        data={[]}
+        data={[
+          { document: 'Certificate_BonafiedTabular.pdf' },
+          { document: 'Certificate_Bonafied_Double.pdf' },
+          { document: 'Certificate_Bonafied_LetterHead.pdf' },
+          { document: 'Certificate_Bonafied_WithAddress.pdf' },
+          { document: 'Certificate_Bonafied_WithPreviousDetai' },
+          { document: 'Certificate_CBSETransfer.pdf' },
+          { document: 'Certificate_Transfer_CBSE.pdf' },
+          { document: 'First Trial Certificates.pdf' },
+        ]}
       />
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Document">
         <Box p={3}>

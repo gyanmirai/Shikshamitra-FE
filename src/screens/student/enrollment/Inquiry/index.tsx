@@ -3,17 +3,21 @@
 import type { Dayjs } from 'dayjs';
 
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -73,8 +77,8 @@ const InquiryScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="New Inquiry"
-        links={[{ name: 'Student' }, { name: 'New Inquiry' }]}
+        heading="Inquiry"
+        links={[{ name: 'Student' }, { name: 'Inquiry' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
@@ -82,7 +86,14 @@ const InquiryScreen = () => {
           </Button>
         }
       />
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        title="Inquiry"
+        paperProps={{
+          sx: { maxWidth: '800px', width: '100%' },
+        }}
+      >
         <InquiryForm handleClose={dialog.onFalse} />
       </CustomDialog>
 
@@ -102,6 +113,25 @@ const InquiryScreen = () => {
           { id: 'alternateContact', label: 'Alternate Contact Details' },
           { id: 'previousSchool', label: 'Previous School' },
           { id: 'inquiryPreferences', label: 'Enquiry Preferences' },
+          {
+            id: 'actions',
+            label: 'Actions',
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  actions={() => (
+                    <MenuList>
+                      <MenuItem>
+                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+                        Move To Registration
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              );
+            },
+          },
         ]}
         data={dummyData}
       />
@@ -114,7 +144,7 @@ export default InquiryScreen;
 const validationSchema = Yup.object().shape({
   inquiryNumber: Yup.string().required('Inquiry number is required'),
   organization: Yup.string().required('Organization is required'),
-  batchName: Yup.string().required('Batch name is required'),
+  academicYear: Yup.string().required('Academic Year is required'),
   class: Yup.string().required('Class is required'),
   lastName: Yup.string().required('Last name is required'),
   firstName: Yup.string().required('First name is required'),
@@ -141,7 +171,7 @@ const validationSchema = Yup.object().shape({
 interface FormikValues {
   inquiryNumber: string;
   organization: string;
-  batchName: string;
+  academicYear: string;
   class: string;
   lastName: string;
   firstName: string;
@@ -155,20 +185,28 @@ interface FormikValues {
   alternateContactDetails: string;
   previousSchool: string;
   inquiryPreferences: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  medium: string;
 }
 
 const InquiryForm = ({ handleClose }: any) => {
   const initialValues = {
-    inquiryNumber: '',
+    inquiryNumber: '12345',
     organization: '',
-    batchName: '',
+    medium: '',
+    academicYear: '',
     class: '',
     lastName: '',
+    city: '',
+    state: '',
+    pinCode: '',
     firstName: '',
     middleName: '',
     dateOfBirth: null,
     age: '',
-    dateOfInquiry: null,
+    dateOfInquiry: dayjs(new Date()),
     gender: '',
     address: '',
     parentsContactNo: '',
@@ -223,46 +261,40 @@ const InquiryForm = ({ handleClose }: any) => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Field
-                  as={TextField}
-                  select
-                  fullWidth
-                  size="small"
-                  name="organization"
-                  label="Organization"
-                  error={touched.organization && errors.organization}
-                  helperText={touched.organization && errors.organization}
-                >
-                  {/* Add organization options here */}
-                </Field>
+                <CustomSelect
+                  name="medium"
+                  label="Medium"
+                  options={[]}
+                  value={values.medium}
+                  onChange={(value) => setFieldValue('medium', value)}
+                  error={!!(touched.organization && errors.organization) || false}
+                  helperText={(touched.organization && errors.organization) || ''}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
               </Grid>
               <Grid item xs={12}>
-                <Field
-                  as={TextField}
-                  select
-                  fullWidth
-                  size="small"
-                  name="batchName"
-                  label="Batch Name"
-                  error={touched.batchName && errors.batchName}
-                  helperText={touched.batchName && errors.batchName}
-                >
-                  {/* Add batch name options here */}
-                </Field>
+                <CustomSelect
+                  name="academicYear"
+                  label="Academic Year"
+                  options={[]}
+                  value={values.academicYear}
+                  onChange={(value) => setFieldValue('academicYear', value)}
+                  error={!!(touched.academicYear && errors.academicYear) || false}
+                  helperText={(touched.academicYear && errors.academicYear) || ''}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
               </Grid>
               <Grid item xs={12}>
-                <Field
-                  as={TextField}
-                  select
-                  fullWidth
-                  size="small"
+                <CustomSelect
                   name="class"
                   label="Class"
-                  error={touched.class && errors.class}
-                  helperText={touched.class && errors.class}
-                >
-                  {/* Add class options here */}
-                </Field>
+                  options={[]}
+                  value={values.class}
+                  onChange={(value) => setFieldValue('class', value)}
+                  error={!!(touched.class && errors.class) || false}
+                  helperText={(touched.class && errors.class) || ''}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
               </Grid>
               <Grid item xs={4}>
                 <Field
@@ -313,6 +345,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   }}
                   slotProps={{
                     textField: {
+                      fullWidth: true,
                       size: 'small',
                       helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
                       error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
@@ -340,6 +373,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   slotProps={{
                     textField: {
                       size: 'small',
+                      fullWidth: true,
                       helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
                       error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
                     },
@@ -360,19 +394,41 @@ const InquiryForm = ({ handleClose }: any) => {
                   {/* Add gender options here */}
                 </Field>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid item xs={4}>
                 <Field
                   as={TextField}
                   fullWidth
                   size="small"
-                  name="address"
-                  label="Address"
-                  multiline
-                  rows={3}
-                  error={touched.address && errors.address}
-                  helperText={touched.address && errors.address}
+                  name="city"
+                  label="City"
+                  error={touched.city && errors.city}
+                  helperText={touched.city && errors.city}
                 />
               </Grid>
+              <Grid item xs={4}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="state"
+                  label="State"
+                  error={touched.state && errors.state}
+                  helperText={touched.state && errors.state}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="pinCode"
+                  label="Pincode"
+                  error={touched.pinCode && errors.pinCode}
+                  helperText={touched.pinCode && errors.pinCode}
+                />
+              </Grid>
+
               <Grid item xs={6}>
                 <Field
                   as={TextField}
