@@ -24,12 +24,13 @@ interface FieldsType {
 }
 
 const generalFormFields: FieldsType[] = [
-  {
-    name: 'grNo',
-    label: 'Gr No',
-    type: 'text',
-    otherProps: {},
-  },
+  // {
+  //   name: 'grNo',
+  //   label: 'Gr No',
+  //   type: 'text',
+  //   otherProps: {},
+  // },
+  { name: 'inquiryNo', label: 'Inquiry No', type: 'text', otherProps: { disabled: true } },
   { name: 'surname', label: 'Surname', type: 'text', otherProps: {} },
   { name: 'name', label: 'Name', type: 'text', otherProps: {} },
   { name: 'middleName', label: 'Middle Name', type: 'text', otherProps: {} },

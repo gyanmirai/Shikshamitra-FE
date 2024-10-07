@@ -29,12 +29,12 @@ const validationSchema = Yup.object().shape({
 });
 
 const initialValues = {
-  department: '',
-  status: '',
-  designation: '',
-  employeeType: '',
-  employeeGroup: '',
-  gender: '',
+  department: 'all',
+  status: 'all',
+  designation: 'all',
+  employeeType: 'all',
+  employeeGroup: 'all',
+  gender: 'all',
   report: '',
 };
 
@@ -70,11 +70,7 @@ const StudentReportsScreen = () => (
                       label="List of reports"
                       size="small"
                     >
-                      <MenuItem value="employeeContactList">Employee Contact List</MenuItem>
-                      <MenuItem value="employeePanNumberList">Employee Pan Number list</MenuItem>
-                      <MenuItem value="employeeJoiningLetter">Employee Joining Letter</MenuItem>
-                      <MenuItem value="employeeAllDetail">Employee All Detail</MenuItem>
-                      <MenuItem value="employeeList">Employee List</MenuItem>
+                      <MenuItem value="student">Student</MenuItem>
                     </Select>
                     <FormHelperText>{touched.report && errors.report}</FormHelperText>
                   </Field>
@@ -89,6 +85,7 @@ const StudentReportsScreen = () => (
                       label="Department"
                       size="small"
                     >
+                      <MenuItem value="all">All</MenuItem>
                       <MenuItem value="admin">Admin</MenuItem>
                       <MenuItem value="teachers">Teachers</MenuItem>
                       <MenuItem value="activity">Activity</MenuItem>
@@ -106,6 +103,7 @@ const StudentReportsScreen = () => (
                       label="Status"
                       size="small"
                     >
+                      <MenuItem value="all">All</MenuItem>
                       <MenuItem value="active">Active</MenuItem>
                       <MenuItem value="left">Left</MenuItem>
                       <MenuItem value="suspended">Suspended</MenuItem>
@@ -128,6 +126,7 @@ const StudentReportsScreen = () => (
                       label="Designation"
                       size="small"
                     >
+                      <MenuItem value="all">All</MenuItem>
                       <MenuItem value="admin">Admin</MenuItem>
                       <MenuItem value="principal">Principal</MenuItem>
                       <MenuItem value="clerk">Clerk</MenuItem>
@@ -153,6 +152,7 @@ const StudentReportsScreen = () => (
                       label="Employee Type"
                       size="small"
                     >
+                      <MenuItem value="all">All</MenuItem>
                       <MenuItem value="consultant">Consultant / Advisor</MenuItem>
                       <MenuItem value="probationer">Probationers</MenuItem>
                       <MenuItem value="regular">Regular</MenuItem>
@@ -174,6 +174,7 @@ const StudentReportsScreen = () => (
                       label="Employee Group"
                       size="small"
                     >
+                      <MenuItem value="all">All</MenuItem>
                       <MenuItem value="teaching">Teaching</MenuItem>
                       <MenuItem value="non-teaching">Non Teaching</MenuItem>
                     </Select>
@@ -190,6 +191,7 @@ const StudentReportsScreen = () => (
                       label="Gender"
                       size="small"
                     >
+                      <MenuItem value="all">All</MenuItem>
                       <MenuItem value="male">Male</MenuItem>
                       <MenuItem value="female">Female</MenuItem>
                       <MenuItem value="other">Other</MenuItem>

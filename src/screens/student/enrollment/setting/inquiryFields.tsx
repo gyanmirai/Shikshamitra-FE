@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Add, Delete } from '@mui/icons-material';
+import { Add, RemoveCircle } from '@mui/icons-material';
 import { Box, Button, IconButton, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -12,6 +12,15 @@ import CustomizableTable from 'src/components/customizabaleTable';
 const InquiryFields = () => {
   const [field, setField] = useState<string>('');
   const dialog = useBoolean();
+
+  const dummyData = [
+    { id: 1, fieldName: 'First Name' },
+    { id: 2, fieldName: 'Last Name' },
+    { id: 3, fieldName: 'Email' },
+    { id: 4, fieldName: 'Phone Number' },
+    { id: 5, fieldName: 'Date of Birth' },
+  ];
+
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end">
@@ -28,20 +37,31 @@ const InquiryFields = () => {
             isSort: false,
             render(value, row) {
               return (
-                <IconButton>
+                <IconButton color="error">
                   {' '}
-                  <Delete />
+                  <RemoveCircle />
                 </IconButton>
               );
             },
           },
         ]}
-        data={[]}
+        data={dummyData}
       />
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add New Field">
         <Box p={3}>
           <CustomSelect
-            options={[]}
+            options={[
+              { value: 'firstName', label: 'First Name' },
+              { value: 'lastName', label: 'Last Name' },
+              { value: 'email', label: 'Email' },
+              { value: 'phoneNumber', label: 'Phone Number' },
+              { value: 'dateOfBirth', label: 'Date of Birth' },
+              { value: 'address', label: 'Address' },
+              { value: 'gender', label: 'Gender' },
+              { value: 'studentId', label: 'Student ID' },
+              { value: 'gradeLevel', label: 'Grade Level' },
+              { value: 'major', label: 'Major' },
+            ]}
             value={field}
             label="select Field"
             onChange={(val: string | string[]) => {

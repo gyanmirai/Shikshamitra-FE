@@ -159,7 +159,7 @@ const studentModule = {
               _action: 'student-enrollment-dashboard',
             },
             {
-              title: 'New Inquiry',
+              title: 'Inquiry',
               path: '/student/enrollment/inquiry',
               _action: 'student-enrollment-inquiry',
             },
@@ -169,9 +169,9 @@ const studentModule = {
               _action: 'student-enrollment-registration',
             },
             {
-              title: 'Admission',
-              path: '/student/enrollment/admission',
-              _action: 'student-enrollment-admission',
+              title: 'Entrance Exam',
+              path: '/student/enrollment/entrance-exam',
+              _action: 'student-enrollment-entrance-exam',
             },
             {
               title: 'Follow-up',
@@ -179,9 +179,9 @@ const studentModule = {
               _action: 'student-enrollment-follow-up',
             },
             {
-              title: 'Entrance Exam',
-              path: '/student/enrollment/entrance-exam',
-              _action: 'student-enrollment-entrance-exam',
+              title: 'Admission',
+              path: '/student/enrollment/admission',
+              _action: 'student-enrollment-admission',
             },
 
             {

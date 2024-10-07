@@ -20,6 +20,9 @@ const EnrollmentStatusTrackingScreen = () => (
     <CustomizableTable
       columns={[
         { id: 'name', label: 'Name' },
+        { id: 'organization', label: 'Organization' },
+        { id: 'medium', label: 'Medium ' },
+        { id: 'class', label: 'Class ' },
         {
           id: 'progress',
           label: 'Progress',
@@ -73,9 +76,27 @@ const EnrollmentStatusTrackingScreen = () => (
         },
       ]}
       data={[
-        { name: 'John Doe', progress: 50, remainingSteps: ['Ad'] },
-        { name: 'Jane Smith', progress: 75, remainingSteps: [] },
-        { name: 'Bob Johnson', progress: 25, remainingSteps: [] },
+        {
+          name: 'John Doe',
+          organization: 'Primary',
+          medium: 'English',
+          class: '10th',
+          progress: 75,
+        },
+        {
+          name: 'Jane Smith',
+          organization: 'H-Primary',
+          medium: 'Spanish',
+          class: '8th',
+          progress: 50,
+        },
+        {
+          name: 'Mike Johnson',
+          organization: 'Primary',
+          medium: 'French',
+          class: '12th',
+          progress: 90,
+        },
       ]}
     />
   </Box>

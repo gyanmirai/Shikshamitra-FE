@@ -20,17 +20,6 @@ const AdmissionScreen = () => {
       <MenuList>
         <MenuItem
           onClick={() => {
-            // confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => {
             // modal.onTrue();
             popover.onClose();
           }}
