@@ -7,377 +7,54 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { FiberManualRecord } from '@mui/icons-material';
-import {
-  Box,
-  List,
-  Card,
-  alpha,
-  Button,
-  Divider,
-  ListItem,
-  useTheme,
-  CardHeader,
-  Typography,
-  ListItemIcon,
-  ListItemText,
-} from '@mui/material';
+import { Box, Card, alpha, Button, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
-import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableView from 'src/components/customizable-view';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
+import Overview from './overview';
+import TotalInquiries from './total-inquiries';
+import AdmissionOverTime from './admission-over-time';
+import OrganizationStatus from './organization-status';
+import BoardEnrollmentStatus from './board-enrollment-status';
+
+const dashBoardSections = [
+  <Overview />,
+  <BoardEnrollmentStatus />,
+  <OrganizationStatus />,
+  <TotalInquiries />,
+  <AdmissionOverTime />,
+];
+
 const EnrollmentDashboardScreen = () => {
   const theme = useTheme();
   const router = useRouter();
+
   const [sections, setSections] = useState([
     {
-      id: '1',
+      id: '0',
       title: 'Over View',
-      content: (
-        <Grid2 xs={6}>
-          <Box
-            sx={{
-              boxShadow: 'var(--shadows-2)',
-              height: '100%',
-
-              padding: '8px',
-              borderRadius: 2,
-            }}
-            display="flex"
-            flexDirection="column"
-            gap={2}
-          >
-            <Card
-              sx={{
-                p: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                flexGrow: 1,
-                background: varAlpha(theme.palette.primary.mainChannel, 0.21),
-                cursor: 'pointer',
-              }}
-              onClick={() => router.push('/student/enrollment/inquiry')}
-            >
-              <Iconify
-                icon="wpf:inspection"
-                sx={{ height: '32px', width: '32px', color: 'primary.main' }}
-              />
-
-              <Box>
-                <Typography variant="h6" color="primary.main">
-                  Inquiry
-                </Typography>
-                <Typography variant="h3" color="primary.main">
-                  700
-                </Typography>
-                <Typography variant="h5" color="primary.main">
-                  200 Female / 500 Male
-                </Typography>
-              </Box>
-            </Card>
-            <Card
-              sx={{
-                p: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                flexGrow: 1,
-                background: varAlpha(theme.palette.secondary.mainChannel, 0.21),
-                cursor: 'pointer',
-              }}
-              onClick={() => router.push('/student/enrollment/registration')}
-            >
-              <Iconify
-                icon="medical-icon:i-registration"
-                sx={{ height: '32px', width: '32px', color: 'secondary.main' }}
-              />
-
-              <Box>
-                <Typography variant="h6" color="secondary.main">
-                  Registration
-                </Typography>
-                <Typography variant="h3" color="secondary.main">
-                  700
-                </Typography>
-                <Typography variant="h5" color="secondary.main">
-                  200 Female / 500 Male
-                </Typography>
-              </Box>
-            </Card>
-            <Card
-              sx={{
-                p: 2,
-                flexGrow: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                background: varAlpha(theme.palette.warning.mainChannel, 0.21),
-                cursor: 'pointer',
-              }}
-              onClick={() => router.push('/student/enrollment/admission')}
-            >
-              <Iconify
-                icon="fluent-mdl2:open-enrollment"
-                sx={{ height: '32px', width: '32px', color: 'warning.main' }}
-              />
-
-              <Box>
-                <Typography variant="h6" color="warning.main">
-                  Admission
-                </Typography>
-                <Typography variant="h3" color="warning.main">
-                  700
-                </Typography>
-                <Typography variant="h5" color="warning.main">
-                  200 Female / 500 Male
-                </Typography>
-              </Box>
-            </Card>
-          </Box>
-        </Grid2>
-      ),
+    },
+    {
+      id: '1',
+      title: 'Board Enrollment Status',
     },
     {
       id: '2',
-      title: 'Board Enrollment Status',
-      content: (
-        <Grid2 xs={6} height="100%">
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={2}
-            sx={{
-              boxShadow: 'var(--shadows-2)',
-              height: '100%',
-              justifyContent: 'center',
-              padding: '8px',
-              borderRadius: 2,
-            }}
-          >
-            <AnalyticsConversionRates
-              title="Board Enrollment Status"
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: ['enrolled', 'pending', 'declined'],
-                series: [{ name: '', data: [44, 55, 41] }],
-              }}
-              sx={{ boxShadow: 'none' }}
-            />
-
-            <List>
-              <ListItem>
-                <ListItemIcon>
-                  <FiberManualRecord sx={{ fontSize: 8 }} />
-                </ListItemIcon>
-                <ListItemText primary="Total Enrolled Students - 500 Students Enrolled" />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <FiberManualRecord sx={{ fontSize: 8 }} />
-                </ListItemIcon>
-                <ListItemText primary="Pending Enrollments - 50 Pending" />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <FiberManualRecord sx={{ fontSize: 8 }} />
-                </ListItemIcon>
-                <ListItemText primary="Declined Applications - 20 Declined" />
-              </ListItem>
-            </List>
-          </Box>
-        </Grid2>
-      ),
+      title: 'Organization Status',
     },
     {
       id: '3',
-      title: 'Organization Status',
-      content: (
-        <Grid2 xs={6}>
-          <Box
-            sx={{
-              boxShadow: 'var(--shadows-2)',
-              height: '100%',
-              justifyContent: 'center',
-              padding: '8px',
-              borderRadius: 2,
-            }}
-            display="flex"
-            flexDirection="column"
-            gap={2}
-          >
-            <AnalyticsCurrentVisits
-              title="Organization Status"
-              chart={{
-                series: [
-                  { label: 'active', value: 100 },
-                  { label: 'inactive', value: 200 },
-                  { label: 'pending', value: 300 },
-                ],
-              }}
-              sx={{ boxShadow: 'none' }}
-            />
-            <List>
-              <ListItem>
-                <ListItemIcon>
-                  <FiberManualRecord sx={{ fontSize: 8 }} />
-                </ListItemIcon>
-                <ListItemText primary="Total Active Organizations - 20 Active Organizations" />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <FiberManualRecord sx={{ fontSize: 8 }} />
-                </ListItemIcon>
-                <ListItemText primary="Pending Approvals - 5 Pending Organizations" />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <FiberManualRecord sx={{ fontSize: 8 }} />
-                </ListItemIcon>
-                <ListItemText primary="Inactive Organizations - 2 Inactive Organizations" />
-              </ListItem>
-            </List>
-          </Box>
-        </Grid2>
-      ),
+      title: 'Total Inquiries',
     },
     {
       id: '4',
-      title: 'Total Inquiries',
-      content: (
-        <Grid2 xs={6}>
-          <Card sx={{ boxShadow: 'var(--shadows-2)', height: '100%', p: 2 }}>
-            <Box display="flex" justifyContent="space-between">
-              <Typography variant="h6">Total Inquiries</Typography>
-              <CustomSelect
-                options={[
-                  { label: 'Weekly', value: 'weekly' },
-                  { label: 'Monthly', value: 'monthly' },
-                  { label: 'Yearly', value: 'yearly' },
-                ]}
-                value="monthly"
-                onChange={() => {}}
-                label="select duration"
-                formControlProps={{
-                  sx: {
-                    maxWidth: '200px',
-                    width: '100%',
-                  },
-                }}
-              />
-            </Box>
-            <AnalyticsWebsiteVisits
-              title=""
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-
-                series: [
-                  {
-                    name: 'Funnel Series',
-                    data: [1380, 1100, 990, 880, 740, 548, 330, 200],
-                  },
-                ],
-                options: {
-                  plotOptions: {
-                    bar: {
-                      horizontal: true,
-                      isFunnel: true,
-                    },
-                  },
-                  dataLabels: {
-                    enabled: true,
-                    formatter(val, opt) {
-                      return `${opt.w.globals.labels[opt.dataPointIndex]}:  ${val}`;
-                    },
-                    dropShadow: {
-                      enabled: true,
-                    },
-                  },
-                },
-              }}
-              sx={{ boxShadow: 'none', height: '100%' }}
-            />
-          </Card>
-        </Grid2>
-      ),
-    },
-    {
-      id: '5',
       title: 'Admission over time',
-      content: (
-        <Grid2 xs={12}>
-          <EcommerceYearlySales
-            title="Admission over time"
-            subheader="(+43%) than last year"
-            chart={{
-              categories: [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ],
-              series: [
-                {
-                  name: '2022',
-                  data: [
-                    {
-                      name: 'Admission',
-                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                    },
-                    {
-                      name: 'Inquiry',
-                      data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                    },
-                    {
-                      name: 'Registration',
-                      data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                    },
-                  ],
-                },
-                {
-                  name: '2023',
-                  data: [
-                    {
-                      name: 'Admission',
-                      data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
-                    },
-                    {
-                      name: 'Inquiry',
-                      data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                    },
-                    {
-                      name: 'Registration',
-                      data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51],
-                    },
-                  ],
-                },
-              ],
-              colors: [
-                theme.palette.primary.main,
-                theme.palette.warning.main,
-                theme.palette.error.main,
-              ],
-            }}
-          />
-        </Grid2>
-      ),
     },
   ]);
   return (
@@ -446,136 +123,13 @@ const EnrollmentDashboardScreen = () => {
       <CustomizableView sections={sections} setSections={setSections} />
 
       <Grid2 container spacing={2}>
-        {sections.map((section: any) => section.content)}
+        {sections.map((section: any) => dashBoardSections[section.id])}
       </Grid2>
     </Box>
   );
 };
 
 export default EnrollmentDashboardScreen;
-
-type Props = CardProps & {
-  title?: string;
-  subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
-};
-
-export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Props) {
-  const theme = useTheme();
-
-  const chartSeries = chart.series.map((item) => item.value);
-
-  const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.warning.light,
-    theme.palette.info.dark,
-    theme.palette.error.main,
-  ];
-
-  const chartOptions = useChart({
-    chart: { sparkline: { enabled: true } },
-    colors: chartColors,
-    labels: chart.series.map((item) => item.label),
-    stroke: { width: 0 },
-    dataLabels: { enabled: true, dropShadow: { enabled: false } },
-    tooltip: {
-      y: {
-        formatter: (value: number) => fNumber(value),
-        title: { formatter: (seriesName: string) => `${seriesName}` },
-      },
-    },
-    plotOptions: { pie: { donut: { labels: { show: false } } } },
-    ...chart.options,
-  });
-
-  return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
-
-      <Chart
-        type="pie"
-        series={chartSeries}
-        options={chartOptions}
-        width={{ xs: 240, xl: 260 }}
-        height={{ xs: 240, xl: 260 }}
-        sx={{ my: 6, mx: 'auto' }}
-      />
-
-      <Divider sx={{ borderStyle: 'dashed' }} />
-
-      <ChartLegends
-        labels={chartOptions?.labels}
-        colors={chartOptions?.colors}
-        sx={{ p: 3, justifyContent: 'center' }}
-      />
-    </Card>
-  );
-}
-
-type Props1 = CardProps & {
-  title?: string;
-  subheader?: string;
-  chart: {
-    colors?: string[];
-    categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
-    options?: ChartOptions;
-  };
-};
-
-export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Props1) {
-  const theme = useTheme();
-
-  const chartColors = chart.colors ?? [
-    alpha(theme.palette.primary.dark, 0.8),
-    alpha(theme.palette.warning.main, 0.8),
-  ];
-
-  const chartOptions = useChart({
-    colors: chartColors,
-    stroke: {
-      width: 2,
-      colors: ['transparent'],
-    },
-    xaxis: {
-      categories: chart.categories,
-    },
-    legend: {
-      show: true,
-    },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
-    ...chart.options,
-  });
-
-  return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
-
-      <Chart
-        type="bar"
-        series={chart.series}
-        options={chartOptions}
-        height="100%"
-        loadingProps={{ sx: { p: 2.5 } }}
-        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
-      />
-    </Card>
-  );
-}
 
 type Props2 = CardProps & {
   title?: string;

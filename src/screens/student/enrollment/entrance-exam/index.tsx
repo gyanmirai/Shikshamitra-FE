@@ -46,6 +46,7 @@ export const ExamForm = () => {
     initialValues: {
       examDate: null,
       scheduleType: '',
+      totalMarks: '',
       isConfirmed: false,
       slots: [
         { label: '8:00 to 9:00 (6)', value: false },
@@ -97,7 +98,10 @@ export const ExamForm = () => {
             <Paper sx={{ p: 1, height: '100%' }}>
               <Grid container spacing={2}>
                 <Grid xs={4}>
-                  <TextField label="Exam Type" size="small" fullWidth />
+                  <TextField name="examType" label="Exam Type" size="small" fullWidth />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField name="totalMarks" label="Total Marks" size="small" fullWidth />
                 </Grid>
                 <Grid xs={4}>
                   <CustomSelect

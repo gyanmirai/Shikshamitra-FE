@@ -21,6 +21,8 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { CommunicationForm } from '../follow-up';
+
 const dummyData = [
   {
     inquiryNumber: 'INQ001',
@@ -73,7 +75,7 @@ const dummyData = [
 ];
 const InquiryScreen = () => {
   const dialog = useBoolean();
-
+  const followUpDialog = useBoolean();
   return (
     <Box>
       <CustomBreadcrumbs
@@ -126,6 +128,14 @@ const InquiryScreen = () => {
                         <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
                         Move To Registration
                       </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          followUpDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
+                        Follow Up
+                      </MenuItem>
                     </MenuList>
                   )}
                 />
@@ -135,6 +145,13 @@ const InquiryScreen = () => {
         ]}
         data={dummyData}
       />
+      <CustomDialog
+        open={followUpDialog.value}
+        handleClose={followUpDialog.onFalse}
+        title="Follow Up"
+      >
+        <CommunicationForm handleCloseDialog={followUpDialog.onFalse} />{' '}
+      </CustomDialog>
     </Box>
   );
 };
