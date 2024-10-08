@@ -16,15 +16,14 @@ import {
 
 import { varAlpha } from 'src/theme/styles';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
-import {
-  AnalyticsCurrentVisits,
-  AnalyticsWebsiteVisits,
-} from 'src/screens/student/enrollment/dashboard';
 
 import { Label } from 'src/components/label';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 // import { EcommerceYearlySales } from 'src/components/studentProfile/academicDashboard';
 
 const ProgressReport = () => (
