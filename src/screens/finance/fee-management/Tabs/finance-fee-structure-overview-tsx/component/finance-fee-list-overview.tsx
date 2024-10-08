@@ -7,7 +7,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions'
 
 const FinanceFeeListOverviewComponent = () => {
     return (
-        <Box>
+        <Box pb="20px" pt="10px">
             <TextField
                 fullWidth
                 name="Tuition Fees"
@@ -93,7 +93,7 @@ const FinanceFeeListOverviewComponent = () => {
           {
             class: '10th',
             studentName: 'Jayvion Simon',
-            feeType: 'Jayvion Simon',
+            feeType: 'Library Fees',
             amountDue: '$500',
             amountPaid: '$1000',
             dueDate: '01-01-2024',
@@ -103,7 +103,7 @@ const FinanceFeeListOverviewComponent = () => {
           {
             class: '10th',
             studentName: 'Jayvion Simon',
-            feeType: 'Jayvion Simon',
+            feeType: 'Tuition Fees',
             amountDue: '$500',
             amountPaid: '$1000',
             dueDate: '01-01-2024',
@@ -113,7 +113,7 @@ const FinanceFeeListOverviewComponent = () => {
           {
             class: '10th',
             studentName: 'Jayvion Simon',
-            feeType: 'Jayvion Simon',
+            feeType: 'Tuition Fees',
             amountDue: '$500',
             amountPaid: '$1000',
             dueDate: '01-01-2024',

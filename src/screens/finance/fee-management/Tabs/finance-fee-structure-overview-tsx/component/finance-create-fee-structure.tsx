@@ -1,94 +1,167 @@
 import React from 'react'
-import { Box, Button, TextField, Typography } from '@mui/material'
+import { Box, Button, DialogActions, FormControlLabel, Radio, RadioGroup, TextField, Typography } from '@mui/material'
 import Grid2 from '@mui/material/Unstable_Grid2'
 import CustomSelect from 'src/components/custom-select'
-import { DatePicker } from '@mui/x-date-pickers'
+import { DatePicker, TimePicker } from '@mui/x-date-pickers'
+import CustomDialog from 'src/components/customDialog'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'; 
+import { Scrollbar } from 'src/components/scrollbar'
+import CreateNewFeeStructure from '../data/createNewFeeStructure'
+import FeeStructureOverView from '../data/FeeStructure-interface'
 
-const FinanceCreateFeeStructureComponent = () => {
+
+interface FinanceCreateFeeStructureProps {
+    dialogValue: boolean; 
+    onClose: () => void;
+    onSave: (values: CreateNewFeeStructure) => void;
+    selectedEntry: FeeStructureOverView | null; 
+  }
+
+  const validationSchema = Yup.object({
+    classGrade: Yup.string().required('Required'),
+    tuitionFees: Yup.number().required('Required'),
+    discountPercentage: Yup.number().min(0, 'Must be at least 0').max(100, 'Must be at most 100').required('Required'),
+    libraryFees: Yup.number().required('Required'),
+    fixedReductions: Yup.number().required('Required'),
+    transportFees: Yup.number().required('Required'),
+    otherFees: Yup.number().required('Required'),
+    toDate: Yup.date().required('Required').nullable(),
+  });
+  
+
+const FinanceCreateFeeStructureComponent: React.FC<FinanceCreateFeeStructureProps>  = ({dialogValue, onClose, onSave, selectedEntry}) => {
+    const formik = useFormik({
+        initialValues: {
+          classGrade: selectedEntry?.classGrade || '',
+          tuitionFees: selectedEntry?.feeType  || '',
+          discountPercentage: '',
+          libraryFees: '',
+          fixedReductions: '',
+          transportFees: '',
+          otherFees: '',
+          toDate: null,
+         
+        },
+        // validationSchema: validationSchema,
+        onSubmit: (values: CreateNewFeeStructure) => {
+            console.log("Form Submitted:", values);
+            onSave(values); 
+          
+
+        },
+      });
+
+    
+    
     return (
         <>
-        <Typography component="span" variant="h6" >Create New Fee Structure</Typography>
-       
-        <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-            
-
-            {/* <Grid2 xl={2} >
-                <Button variant="contained" size="medium">Create New Fee Structure</Button>
-            </Grid2> */}
-
-
+        <CustomDialog title="New Assignment" open={dialogValue} handleClose={onClose}>
+            <Scrollbar>
+      <Box px="15px">
+        <form  onSubmit={formik.handleSubmit}>
+          <Box pt="10px" display="flex" flexDirection="column" gap={3}>
             <Grid2 xl={6}>
-                <Box display="flex" flexDirection="row" gap={3} >
-                    <CustomSelect
-                        label="Class/Grade"
-                        options={[]}
-                        value=""
-                        onChange={() => { }}
-                        formControlProps={{ sx: { minWidth: 205 } }}
-                    />
-                    <TextField
-                        name="Tuition Fees"
-                        label="Tuition Fees"
-                        // value={formik.values.description}
-                        // onChange={formik.handleChange}
-                        size="small"
-                    />
-                    <TextField
+              <Box py="8px" display="flex" flexDirection="row" gap={3}>
+                <CustomSelect
+                  label="Class/Grade"
+                  options={[
+                    { value: '10', label: '10' },
+                    { value: '11', label: '11' },
+                    { value: '12', label: '12' },
+                  ]}
+                  value={formik.values.classGrade}
+                  onChange={(e) => formik.setFieldValue('classGrade', "10")}
+                  formControlProps={{ sx: { minWidth: 195 } }}
+                />
+                <TextField
+                  name="tuitionFees"
+                  label="Tuition Fees"
+                  value={formik.values.tuitionFees}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={formik.touched.tuitionFees && Boolean(formik.errors.tuitionFees)}
+                  helperText={formik.touched.tuitionFees && formik.errors.tuitionFees}
+                />
+              </Box>
 
-                        name="Discount Percentage"
-                        label="Discount Percentage"
-                        // value={formik.values.description}
-                        // onChange={formik.handleChange}
-                        size="small"
-                    />
-                    <TextField
+              <Box py="8px" display="flex" flexDirection="row" gap={3}>
+                <TextField
+                  name="discountPercentage"
+                  label="Discount Percentage"
+                  value={formik.values.discountPercentage}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={formik.touched.discountPercentage && Boolean(formik.errors.discountPercentage)}
+                  helperText={formik.touched.discountPercentage && formik.errors.discountPercentage}
+                />
+                <TextField
+                  name="libraryFees"
+                  label="Library Fees"
+                  value={formik.values.libraryFees}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={formik.touched.libraryFees && Boolean(formik.errors.libraryFees)}
+                  helperText={formik.touched.libraryFees && formik.errors.libraryFees}
+                />
+              </Box>
 
-                        name="Library Fees"
-                        label="Library Fees"
-                        // value={formik.values.description}
-                        // onChange={formik.handleChange}
-                        size="small"
-                    />
+              <Box display="flex" flexDirection="row" gap={3} py="8px">
+                <TextField
+                  name="fixedReductions"
+                  label="Fixed Reductions"
+                  value={formik.values.fixedReductions}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={formik.touched.fixedReductions && Boolean(formik.errors.fixedReductions)}
+                  helperText={formik.touched.fixedReductions && formik.errors.fixedReductions}
+                />
+                <TextField
+                  name="transportFees"
+                  label="Transport Fees"
+                  value={formik.values.transportFees}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={formik.touched.transportFees && Boolean(formik.errors.transportFees)}
+                  helperText={formik.touched.transportFees && formik.errors.transportFees}
+                />
+              </Box>
+
+              <Box display="flex" flexDirection="row" gap={3} py="8px">
+                <Box width="200px">
+                  <DatePicker
+                    label="To Date"
+                    value={formik.values.toDate}
+                    onChange={(newValue) => formik.setFieldValue('toDate', newValue)}
+                    format="DD-MM-YYYY"
+                    slotProps={{ textField: { size: 'small' } }}
+                  />
                 </Box>
-                
-                <Box display="flex" flexDirection="row" gap={3} py="8px">
-                    <TextField
-
-                        name="Fixed Reductions"
-                        label="Fixed Reductions"
-                        // value={formik.values.description}
-                        // onChange={formik.handleChange}
-                        size="small"
-                    />
-                    <TextField
-                        name="Transport Fees"
-                        label="Transport Fees"
-                        // value={formik.values.description}
-                        // onChange={formik.handleChange}
-                        size="small"
-                    />
-                 <Box width="200px">
-                        <DatePicker
-                            label="To Date"
-                            format="DD-MM-YYYY"
-                            slotProps={{ textField: { size: 'small' } }}
-                        />
-                    </Box>
-                    <TextField
-                        name="Other Miscellaneous Fees"
-                        label="Other Miscellaneous Fees"
-                        size="small"
-                    />
-                
-                </Box>
-                
+                <TextField
+                  name="otherFees"
+                  label="Other Miscellaneous Fees"
+                  value={formik.values.otherFees}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={formik.touched.otherFees && Boolean(formik.errors.otherFees)}
+                  helperText={formik.touched.otherFees && formik.errors.otherFees}
+                />
+              </Box>
             </Grid2>
-            <Box justifyItems="flex-end"  justifyContent="flex-end" display="flex" flexDirection="row"  gap={3} pb="20px">
-                <Button variant='contained'>Preview</Button>
-                <Button variant='contained'>Save</Button>
-            </Box>
+          </Box>
 
-        </Box>
+          <DialogActions>
+            <Button variant="contained" onClick={onClose} size="small">
+              Preview
+            </Button>
+            <Button type="submit" variant="contained"size="small" >
+              Save
+            </Button>
+          </DialogActions>
+        </form>
+      </Box>
+      </Scrollbar>
+    </CustomDialog>
         </>
     )
 }
