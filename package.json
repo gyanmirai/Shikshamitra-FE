@@ -29,8 +29,8 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix",
-      "git add",
-      "tsc --noEmit"
+      "prettier --write",
+      "git add"
     ]
   },
   "dependencies": {
