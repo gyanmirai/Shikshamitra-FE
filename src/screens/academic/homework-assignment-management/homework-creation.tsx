@@ -57,9 +57,9 @@ const assignmentInitialValues: Assignment = {
   assignmentDesc: '',
   dueDate: null,
   time: null,
-  submissionType: "online_text",
-  status: "draft"
-}
+  submissionType: 'online_text',
+  status: 'draft',
+};
 
 const HomeworkCreation = () => {
   // const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
@@ -67,27 +67,24 @@ const HomeworkCreation = () => {
   const confirmDialog = useBoolean();
   const [assignmentData, setAssignmentData] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  console.log("assignemnt data---", assignmentData);
+  console.log('assignemnt data---', assignmentData);
 
   const handleSwitchChange = (assignment: Assignment) => {
-    console.log("handle switch change --", assignment);
+    console.log('handle switch change --', assignment);
 
-    if (assignment.status === "draft") {
-      setSelectedAssignment(assignment)
-      confirmDialog.onTrue()
-    }
-    else {
+    if (assignment.status === 'draft') {
+      setSelectedAssignment(assignment);
+      confirmDialog.onTrue();
+    } else {
       const updatedAssignments = assignmentData.map((item) =>
-        item.assignmentTitle === assignment.assignmentTitle
-          ? { ...item, status: 'draft' }
-          : item
+        item.assignmentTitle === assignment.assignmentTitle ? { ...item, status: 'draft' } : item
       );
       setAssignmentData(updatedAssignments);
     }
   };
 
   const handleConfirmStatusChange = () => {
-    console.log("handleConfirmStatusChange---");
+    console.log('handleConfirmStatusChange---');
 
     if (selectedAssignment) {
       const updatedAssignments = assignmentData.map((item) =>
@@ -96,11 +93,10 @@ const HomeworkCreation = () => {
           : item
       );
       setAssignmentData(updatedAssignments);
-
     }
     confirmDialog.onFalse();
     setSelectedAssignment(null);
-  }
+  };
   const handleSubmit = (values: Assignment, status: 'draft' | 'publish') => {
     console.log('handle submit calls===', values, status);
     const updatedValues = { ...values, status };
@@ -125,20 +121,28 @@ const HomeworkCreation = () => {
           { id: 'time', label: 'time' },
           { id: 'submissionType', label: 'Submission Type' },
           {
-            id: 'status', label: "Status", render(value, row) {
-              console.log("row ---", row);
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              console.log('row ---', row);
               return (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography sx={{ mr: 2 }} fontSize={10}>Draft</Typography>
-                    <Switch
-                      size='small'
-                      checked={row.status === "publish"}
-                      onChange={(e) => { handleSwitchChange(row as Assignment) }}
-                      inputProps={{ 'aria-label': 'Toggle view' }}
-                    />
-                    <Typography sx={{ ml: 1 }} fontSize={10}>Publish</Typography>
-                  </Box>
-              )
+                  <Typography sx={{ mr: 2 }} fontSize={10}>
+                    Draft
+                  </Typography>
+                  <Switch
+                    size="small"
+                    checked={row.status === 'publish'}
+                    onChange={(e) => {
+                      handleSwitchChange(row as Assignment);
+                    }}
+                    inputProps={{ 'aria-label': 'Toggle view' }}
+                  />
+                  <Typography sx={{ ml: 1 }} fontSize={10}>
+                    Publish
+                  </Typography>
+                </Box>
+              );
             },
           },
           {
@@ -171,20 +175,25 @@ const HomeworkCreation = () => {
       >
         <HomeWorkCreationForm onsubmit={handleSubmit} />
       </CustomDialog>
-      <CustomDialog title="Confirm Publication" open={confirmDialog.value} handleClose={confirmDialog.onFalse} maxWidth="sm">
+      <CustomDialog
+        title="Confirm Publication"
+        open={confirmDialog.value}
+        handleClose={confirmDialog.onFalse}
+        maxWidth="sm"
+      >
         <DialogContent>
-          <DialogContentText>
-            Are you sure to publish Assignment ?
-          </DialogContentText>
+          <DialogContentText>Are you sure to publish Assignment ?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={confirmDialog.onFalse} variant='contained' color='error'>Cancel</Button>
-          <Button onClick={handleConfirmStatusChange} autoFocus variant='contained' color='success'>
+          <Button onClick={confirmDialog.onFalse} variant="contained" color="error">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmStatusChange} autoFocus variant="contained" color="success">
             Confirm
           </Button>
         </DialogActions>
       </CustomDialog>
-    </Box >
+    </Box>
   );
 };
 
@@ -195,9 +204,9 @@ interface HomeWorkCreationFormProps {
 }
 
 const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit }) => {
-  const [classes, setClasses] = useState<string>("");
+  const [classes, setClasses] = useState<string>('');
   const [division, setDivision] = useState<any>([]);
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([])
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -224,10 +233,12 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
-                  const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
                   formik.setFieldValue('class', selectedClass?.name || '');
-                  setClasses(val as string)
-                  setDivisionOptions(selectedClass?.divisions || [])
+                  setClasses(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
@@ -244,29 +255,46 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
                 onChange={(val) => {
                   const selectedDivision = divisionOptions.find((i: Division) => i.id === val);
                   formik.setFieldValue('division', selectedDivision?.name || '');
-                  setDivision(val as string)
+                  setDivision(val as string);
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Assignment Title" size="small" name='assignmentTitle' value={formik.values.assignmentTitle} onChange={formik.handleChange} fullWidth />
+              <TextField
+                label="Assignment Title"
+                size="small"
+                name="assignmentTitle"
+                value={formik.values.assignmentTitle}
+                onChange={formik.handleChange}
+                fullWidth
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Subject"
                 options={[
-                  { value: "math", label: "Math" },
-                  { value: "science", label: "Science" }
+                  { value: 'math', label: 'Math' },
+                  { value: 'science', label: 'Science' },
                 ]}
                 value={formik.values.subject}
-                onChange={(val) => { formik.setFieldValue('subject', val) }}
+                onChange={(val) => {
+                  formik.setFieldValue('subject', val);
+                }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
           </Grid>
 
-          <TextField label="Assignment Description" fullWidth multiline rows={4} name='assignmentDesc' value={formik.values.assignmentDesc} onChange={formik.handleChange} />
+          <TextField
+            label="Assignment Description"
+            fullWidth
+            multiline
+            rows={4}
+            name="assignmentDesc"
+            value={formik.values.assignmentDesc}
+            onChange={formik.handleChange}
+          />
           <UploadBox
             onDrop={() => {}}
             placeholder={
@@ -293,33 +321,37 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <DatePicker
-                name='dueDate'
+                name="dueDate"
                 label="Due Date"
                 slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                 format="DD/MM/YYYY"
                 value={formik.values.dueDate ? dayjs(formik.values.dueDate) : null}
                 onChange={(date) => {
                   const formattedDate = date ? date.format('YYYY-MM-DD') : null;
-                  formik.setFieldValue('dueDate', formattedDate)
+                  formik.setFieldValue('dueDate', formattedDate);
                 }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TimePicker
-                name='time'
+                name="time"
                 label="Time Picker"
                 slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                 value={formik.values.time ? dayjs(formik.values.time) : null}
                 onChange={(time) => {
                   const formattedTime = time ? time.format('HH:mm') : null;
-                  formik.setFieldValue('time', formattedTime)
+                  formik.setFieldValue('time', formattedTime);
                 }}
               />
             </Grid>
           </Grid>
 
           <Typography variant="subtitle1">Submission Type</Typography>
-          <RadioGroup row value={formik.values.submissionType} onChange={(e) => formik.setFieldValue('submissionType', e.target.value)}>
+          <RadioGroup
+            row
+            value={formik.values.submissionType}
+            onChange={(e) => formik.setFieldValue('submissionType', e.target.value)}
+          >
             <FormControlLabel value="online_text" control={<Radio />} label="Online text" />
             <FormControlLabel value="file_upload" control={<Radio />} label="File upload" />
             <FormControlLabel
@@ -338,7 +370,7 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
           onClick={() => {
             onsubmit(formik.values, 'draft');
           }}
-          color='warning'
+          color="warning"
         >
           Save Draft
         </Button>

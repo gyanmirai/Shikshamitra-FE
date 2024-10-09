@@ -1,9 +1,8 @@
 interface studentFeePaymentStatusUpdated {
-    id:number,
-    paymentAmount: string,
-    paymentStatus: string,
-    date:string,
-    
-  }
+  id: number;
+  paymentAmount: string;
+  paymentStatus: string;
+  date: string;
+}
 
-  export default studentFeePaymentStatusUpdated
+export default studentFeePaymentStatusUpdated;

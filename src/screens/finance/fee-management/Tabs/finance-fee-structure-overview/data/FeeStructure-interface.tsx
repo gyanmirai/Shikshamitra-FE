@@ -1,14 +1,13 @@
 interface FeeStructureOverView {
-    classGrade: string;
-    // studentName: string;
-    feeType: string;
-    amount:String;
-    // amountDue: string;
-    // amountPaid: string;
-    dueDate: string;
-    status: string;
-    action: string;
-    
-  }
+  classGrade: string;
+  // studentName: string;
+  feeType: string;
+  amount: String;
+  // amountDue: string;
+  // amountPaid: string;
+  dueDate: string;
+  status: string;
+  action: string;
+}
 
-  export default FeeStructureOverView;
+export default FeeStructureOverView;

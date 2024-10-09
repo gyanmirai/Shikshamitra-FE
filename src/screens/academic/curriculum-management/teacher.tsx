@@ -10,43 +10,43 @@ import CustomizableTable from 'src/components/customizabaleTable';
 const Teacher = () => {
   const [teacherData, setTeacherData] = useState<any>([
     {
-      id : 1,
+      id: 1,
       subject: 'Mathematics',
       assignedTeacher: 'John Doe',
     },
     {
-      id : 2,
+      id: 2,
       subject: 'Science',
       assignedTeacher: 'Jane Smith',
     },
     {
-      id : 3,
+      id: 3,
       subject: 'English',
       assignedTeacher: 'Robert Johnson',
     },
     {
-      id : 4,
+      id: 4,
       subject: 'History',
       assignedTeacher: 'Emily Brown',
     },
     {
-      id : 5,
+      id: 5,
       subject: 'Physical Education',
       assignedTeacher: 'Michael Wilson',
     },
-  ])
+  ]);
 
-  console.log("teacher data---------", teacherData);
-  
+  console.log('teacher data---------', teacherData);
+
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const handleTeacherChange = (id : number, newTeacher : any) => {
-        const updatedData = teacherData.map((row : any, index : number)=>
-            row.id === id ? {...row, assignedTeacher : newTeacher} : row
-        )
-        setTeacherData(updatedData);
-        setEditingIndex(null)
-  }
+  const handleTeacherChange = (id: number, newTeacher: any) => {
+    const updatedData = teacherData.map((row: any, index: number) =>
+      row.id === id ? { ...row, assignedTeacher: newTeacher } : row
+    );
+    setTeacherData(updatedData);
+    setEditingIndex(null);
+  };
 
   return (
     <Box>
@@ -59,7 +59,7 @@ const Teacher = () => {
           options={[]}
           formControlProps={{ sx: { width: '200px' } }}
           value=""
-          onChange={(value) => { }}
+          onChange={(value) => {}}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
@@ -69,7 +69,7 @@ const Teacher = () => {
           options={[]}
           formControlProps={{ sx: { width: '200px' } }}
           value=""
-          onChange={(value) => { }}
+          onChange={(value) => {}}
         />
         <CustomSelect
           label="Subject"
@@ -77,14 +77,14 @@ const Teacher = () => {
           options={[]}
           formControlProps={{ sx: { width: '200px' } }}
           value=""
-          onChange={(value) => { }}
+          onChange={(value) => {}}
         />
       </Box>
       <CustomizableTable
         columns={[
           {
-             id : 'id',
-             label : 'Id',
+            id: 'id',
+            label: 'Id',
           },
           {
             id: 'subject',
@@ -94,20 +94,21 @@ const Teacher = () => {
             id: 'assignedTeacher',
             label: 'Assigned Teacher',
             render(value, row) {
-                return (editingIndex === row.id ? (
-                    <CustomSelect
-                       label = "Assigned Teacher"
-                       options = {[
-                          {value : "abc", label : "abc"},
-                          {value : "xyz", label : "xyz"},
-                          {value : "mnc",  label : "mnc"}
-                       ]}
-                       value={row.assignedTeacher}
-                       onChange = {(newTeacher) => handleTeacherChange(row.id, newTeacher)}
-                    />
-                ) : (row.assignedTeacher)
-              )
-            }
+              return editingIndex === row.id ? (
+                <CustomSelect
+                  label="Assigned Teacher"
+                  options={[
+                    { value: 'abc', label: 'abc' },
+                    { value: 'xyz', label: 'xyz' },
+                    { value: 'mnc', label: 'mnc' },
+                  ]}
+                  value={row.assignedTeacher}
+                  onChange={(newTeacher) => handleTeacherChange(row.id, newTeacher)}
+                />
+              ) : (
+                row.assignedTeacher
+              );
+            },
           },
           {
             id: 'action',
@@ -117,13 +118,17 @@ const Teacher = () => {
                 <ThreeDotsActions
                   actions={() => (
                     <MenuList>
-                      <MenuItem onClick={() => { }}>
+                      <MenuItem onClick={() => {}}>
                         <ListItemIcon>
                           <Edit />
                         </ListItemIcon>
                         <ListItemText>Edit</ListItemText>
                       </MenuItem>
-                      <MenuItem onClick={() => {setEditingIndex(row.id)}}>
+                      <MenuItem
+                        onClick={() => {
+                          setEditingIndex(row.id);
+                        }}
+                      >
                         <ListItemText>Reassign Teacher</ListItemText>
                       </MenuItem>
                     </MenuList>
@@ -136,7 +141,7 @@ const Teacher = () => {
         data={teacherData}
       />
     </Box>
-  )
+  );
 };
 
 export default Teacher;
