@@ -30,7 +30,6 @@ const dashBoardSections = [
   <TotalInquiries />,
   <AdmissionOverTime />,
 ];
-
 const EnrollmentDashboardScreen = () => {
   const theme = useTheme();
   const router = useRouter();
@@ -63,62 +62,62 @@ const EnrollmentDashboardScreen = () => {
         heading="Student Enrollment Dashboard"
         links={[{ name: 'Student' }, { name: 'Student Enrollment Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
-        action={
-          <CustomTooltip
-            placement="bottom"
-            arrow
-            title={
-              <Card
-                sx={{
-                  p: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  alignItems: 'center',
-                  boxShadow: 'none',
-                }}
-              >
-                <Button
-                  startIcon={<Iconify icon="mdi:user-add" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="primary"
-                  onClick={() => router.push('/student/enrollment/inquiry')}
+          action={
+            <CustomTooltip
+              placement="bottom"
+              arrow
+              title={
+                <Card
+                  sx={{
+                    p: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    alignItems: 'center',
+                    boxShadow: 'none',
+                  }}
                 >
-                  Add New Inquiry
-                </Button>
-                <Button
-                  startIcon={<Iconify icon="mingcute:search-line" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="secondary"
-                  onClick={() => router.push('/student/enrollment/enrollment-status-tracking')}
-                >
-                  Track Enrollment
-                </Button>
-                <Button
-                  startIcon={<Iconify icon="simple-icons:googledocs" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="warning"
-                  onClick={() => router.push('/student/enrollment/reports')}
-                >
-                  General Reports
-                </Button>
-                <Button
-                  startIcon={<Iconify icon="uis:calender" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="error"
-                >
-                  Schedule Exam
-                </Button>
-              </Card>
-            }
-          >
-            <Button startIcon={<Iconify icon="mdi:interaction-double-tap" />}>Quick Action</Button>
-          </CustomTooltip>
-        }
+                  <Button
+                    startIcon={<Iconify icon="mdi:user-add" />}
+                    variant="contained"
+                    sx={{ width: '100%' }}
+                    color="primary"
+                    onClick={() => router.push('/student/enrollment/inquiry')}
+                  >
+                    Add New Inquiry
+                  </Button>
+                  <Button
+                    startIcon={<Iconify icon="mingcute:search-line" />}
+                    variant="contained"
+                    sx={{ width: '100%' }}
+                    color="secondary"
+                    onClick={() => router.push('/student/enrollment/enrollment-status-tracking')}
+                  >
+                    Track Enrollment
+                  </Button>
+                  <Button
+                    startIcon={<Iconify icon="simple-icons:googledocs" />}
+                    variant="contained"
+                    sx={{ width: '100%' }}
+                    color="warning"
+                    onClick={() => router.push('/student/enrollment/reports')}
+                  >
+                    General Reports
+                  </Button>
+                  <Button
+                    startIcon={<Iconify icon="uis:calender" />}
+                    variant="contained"
+                    sx={{ width: '100%' }}
+                    color="error"
+                  >
+                    Schedule Exam
+                  </Button>
+                </Card>
+              }
+            >
+              <Button startIcon={<Iconify icon="mdi:interaction-double-tap" />}>Quick Action</Button>
+            </CustomTooltip>
+          }
       />
       <CustomizableView sections={sections} setSections={setSections} />
 

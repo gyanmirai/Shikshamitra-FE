@@ -11,7 +11,7 @@ import { Box, Chip, Typography } from '@mui/material';
 //   { id: '4', title: 'Section 4', content: 'Content for Section 4' },
 // ];
 
-const Dashboard = ({ sections, setSections }: any) => {
+const CustomizableView = ({ sections, setSections }: any) => {
   // const [sections, setSections] = useState(initialSections);
 
   const handleOnDragEnd = (result: any) => {
@@ -74,4 +74,4 @@ const Dashboard = ({ sections, setSections }: any) => {
   );
 };
 
-export default Dashboard;
+export default CustomizableView;

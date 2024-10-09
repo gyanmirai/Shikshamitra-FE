@@ -102,6 +102,7 @@ export function ProfileCover({
             }}
           />
           <Box display="flex" flexDirection="column" gap={1}>
+            <Typography variant="caption" >GR01</Typography>
             <Typography variant="caption" fontWeight="bold">
               <Label variant="soft" color="info">
                 GSEB

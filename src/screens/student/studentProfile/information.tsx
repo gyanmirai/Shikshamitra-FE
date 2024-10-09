@@ -35,37 +35,92 @@ const generalFormFields: Fieldtypes[] = [
   {
     sectionName: 'Basic details',
     fields: [
-      {
-        name: 'grNo',
-        label: 'Gr No',
-        onChange: (e: any, formik: FormikProps<any>) => {
-          formik.handleChange(e);
-        },
-        otherProps: {},
-      },
-      { name: 'surname', label: 'Surname', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'name', label: 'Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'rollNo', label: 'Roll No.', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'grNo', label: 'Gr. No.', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'lastName', label: 'Last Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'firstName', label: 'First Name', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'middleName', label: 'Middle Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'gender', label: 'Gender', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'className', label: 'Class Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'division', label: 'Division', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'feeCategory', label: 'Fee Category', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'status', label: 'Status', onChange: (e, formik) => {}, otherProps: {} },
       {
         name: 'dob',
-        label: 'Date of Birth',
+        label: 'Date Of birth',
         type: 'date',
         onChange: (e, formik) => {},
         otherProps: {},
       },
-      { name: 'gender', label: 'Gender', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'age', label: 'Age', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'dobWorld',
+        label: 'Date Of birth world',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'bloodGroup', label: 'BloodGroup', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'birthPlace', label: 'BirthPlace', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'birthTaluka', label: 'BirthTaluka', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'birthDistrict',
+        label: 'BirthDistrict',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'birthState', label: 'BirthState', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'birthCountry', label: 'BirthCountry', onChange: (e, formik) => {}, otherProps: {} },
     ],
   },
   {
-    sectionName: 'Address',
+    sectionName: 'Family Cast & Subcast',
     fields: [
-      { name: 'adharNo', label: 'Adhar No', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'religion', label: 'Religion', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'familyCast', label: 'Family Cast', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'familySubCast',
+        label: 'Family Sub Cast',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
       { name: 'castCategory', label: 'Cast Category', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'house', label: 'House', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'motherTongue', label: 'Mother Tongue', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'nationality', label: 'Nationality', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'birthPlace', label: 'Birth Place', onChange: (e, formik) => {}, otherProps: {} },
+    ],
+  },
+  {
+    sectionName: 'Government Register Number Detail',
+    fields: [
+      { name: 'UIDNumber', label: 'UID Number', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'adharNo', label: 'Adhaar Number', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'PENNumber', label: 'PEN Number', onChange: (e, formik) => {}, otherProps: {} },
+    ],
+  },
+  {
+    sectionName: 'Bank Detail',
+    fields: [
+      { name: 'bankName', label: 'Bank Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'bankBranch', label: 'Bank Branch', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'bankAccountNumber',
+        label: 'Bank Account Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'bankIFSCCode',
+        label: 'Bank IFSC Code',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'bankAccountHolderName',
+        label: 'Bank Account Holder Name',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
     ],
   },
 ];
@@ -75,21 +130,8 @@ const admissionFormFields: Fieldtypes[] = [
     sectionName: 'Admission Details',
     fields: [
       {
-        name: 'admissionDate',
-        label: 'Admission Date',
-        type: 'date',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'admissionStandard',
-        label: 'Admission Standard',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'admissionFormNumber',
-        label: 'Admission Form Number',
+        name: 'admissionCategory',
+        label: 'Admission Category',
         onChange: (e, formik) => {},
         otherProps: {},
       },
@@ -100,28 +142,71 @@ const admissionFormFields: Fieldtypes[] = [
         otherProps: {},
       },
       {
-        name: 'admissionQuota',
-        label: 'Admission Quota',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'previousSchoolLeftDate',
-        label: 'Previous School Left Date',
+        name: 'admissionDate',
+        label: 'Admission Date',
         type: 'date',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'previousLCDate',
-        label: 'Previous LC Date',
+        name: 'admissionFormNumber',
+        label: 'Admission Form Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'transferFrom',
+        label: 'Transfer From',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'passingYear',
+        label: 'Passing Year',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'leftStandard',
+        label: 'Left Standard',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'leftDate',
+        label: 'Left Date',
         type: 'date',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'previousLCNumber',
-        label: 'Previous LC Number',
+        name: 'lcDate',
+        label: 'LC Date',
+        type: 'date',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'leftReason',
+        label: 'Left Reason',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'lcNumber',
+        label: 'LC Number',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'admissionStandard',
+        label: 'Admission Standard',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'lcSubmitted',
+        label: 'LC Submitted',
         onChange: (e, formik) => {},
         otherProps: {},
       },
@@ -134,40 +219,119 @@ const communicationFields: Fieldtypes[] = [
     sectionName: 'Communication Details',
     fields: [
       {
-        name: 'parentContactNumber',
-        label: 'Parent Contact Number',
+        name: 'fatherContactNo',
+        label: 'Father Contact No.',
         onChange: (e, formik) => {},
         otherProps: {},
       },
-      { name: 'parentEmail', label: 'Parent Email', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'motherContactNo',
+        label: 'Mother Contact No.',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
       {
         name: 'studentContactNo',
-        label: 'Student Contact Number',
+        label: 'Student Contact No.',
         onChange: (e, formik) => {},
         otherProps: {},
       },
-      { name: 'studentEmail', label: 'Student Email', onChange: (e, formik) => {}, otherProps: {} },
       {
-        name: 'whatsAppContactNo',
-        label: 'WhatsApp Contact Number',
+        name: 'whatsappNo',
+        label: 'Whatsapp No.',
         onChange: (e, formik) => {},
         otherProps: {},
       },
     ],
   },
   {
-    sectionName: 'Address',
+    sectionName: 'Present Address',
     fields: [
-      { name: 'localAddress', label: 'Local Address', onChange: (e, formik) => {}, otherProps: {} },
       {
-        name: 'permanentAddress',
-        label: 'Permanent Address',
+        name: 'presentStreetLine1',
+        label: 'Street Line 1',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'emergencyAddress',
-        label: 'Emergency Address',
+        name: 'presentStreetLine2',
+        label: 'Street Line 2',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'presentPostalCode',
+        label: 'Postal Code',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'presentCity', label: 'City', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'presentState', label: 'State', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'presentContactNo',
+        label: 'Contact No.',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
+  },
+  {
+    sectionName: 'Permanent Address',
+    fields: [
+      {
+        name: 'permanentStreetLine1',
+        label: 'Street Line 1',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'permanentStreetLine2',
+        label: 'Street Line 2',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'permanentPostalCode',
+        label: 'Postal Code',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'permanentCity', label: 'City', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'permanentState', label: 'State', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'permanentContactNo',
+        label: 'Contact No.',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
+  },
+  {
+    sectionName: 'Emergency Address',
+    fields: [
+      {
+        name: 'emergencyStreetLine1',
+        label: 'Street Line 1',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'emergencyStreetLine2',
+        label: 'Street Line 2',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'emergencyPostalCode',
+        label: 'Postal Code',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'emergencyCity', label: 'City', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'emergencyState', label: 'State', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'emergencyContactNo',
+        label: 'Contact No.',
         onChange: (e, formik) => {},
         otherProps: {},
       },
@@ -179,72 +343,48 @@ const familyFields: Fieldtypes[] = [
   {
     sectionName: 'Father Details',
     fields: [
-      { name: 'fatherName', label: 'Father Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'fatherName', label: 'Name', onChange: (e, formik) => {}, otherProps: {} },
       {
         name: 'fatherDob',
-        label: 'Father Date of Birth',
+        label: 'DOB',
         type: 'date',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'fatherOccupation',
-        label: 'Father Occupation',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
         name: 'fatherQualification',
-        label: 'Father Qualification',
+        label: 'Qualification',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'fatherContactNo',
-        label: 'Father Contact Number',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      { name: 'fatherMail', label: 'Father Mail', onChange: (e, formik) => {}, otherProps: {} },
-      {
-        name: 'fatherExStudent',
-        label: 'Father Ex-student',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'fatherPassoutYear',
-        label: 'Father Pass out Year',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'fatherOfficeContactNo',
-        label: 'Father Office Contact No',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'fatherOfficeAddress',
-        label: 'Father Office Address',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'fatherDesignation',
-        label: 'Father Designation',
+        name: 'fatherOccupation',
+        label: 'Occupation',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
         name: 'fatherOrganization',
-        label: 'Father Organization',
+        label: 'Organization',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'fatherAadharNo',
-        label: 'Father Aadhar No',
+        name: 'fatherDesignation',
+        label: 'Designation',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      { name: 'fatherMail', label: 'Mail', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'fatherOfficeContactNo',
+        label: 'Office Contact No.',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'fatherAnnualIncome',
+        label: 'Annual Income',
         onChange: (e, formik) => {},
         otherProps: {},
       },
@@ -253,72 +393,76 @@ const familyFields: Fieldtypes[] = [
   {
     sectionName: 'Mother Details',
     fields: [
-      { name: 'motherName', label: 'Mother Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'motherName', label: 'Name', onChange: (e, formik) => {}, otherProps: {} },
       {
         name: 'motherDob',
-        label: 'Mother Date of Birth',
+        label: 'DOB',
         type: 'date',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'motherOccupation',
-        label: 'Mother Occupation',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
         name: 'motherQualification',
-        label: 'Mother Qualification',
+        label: 'Qualification',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
-        name: 'motherContactNo',
-        label: 'Mother Contact No',
+        name: 'motherOccupation',
+        label: 'Occupation',
         onChange: (e, formik) => {},
         otherProps: {},
       },
-      { name: 'motherMail', label: 'Mother Mail', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'motherMail', label: 'Mail', onChange: (e, formik) => {}, otherProps: {} },
       {
         name: 'motherOfficeContactNo',
-        label: 'Mother Office Contact No',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'motherOfficeAddress',
-        label: 'Mother Office Address',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'motherDesignation',
-        label: 'Mother Designation',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'motherOrganization',
-        label: 'Mother Organization',
+        label: 'Office Contact No.',
         onChange: (e, formik) => {},
         otherProps: {},
       },
       {
         name: 'motherAnnualIncome',
-        label: 'Mother Annual Income',
-        onChange: (e, formik) => {},
-        otherProps: {},
-      },
-      {
-        name: 'motherAadharNo',
-        label: 'Mother Aadhar No',
+        label: 'Annual Income',
         onChange: (e, formik) => {},
         otherProps: {},
       },
     ],
   },
 ];
+
+const healthFields: Fieldtypes[] = [
+  {
+    sectionName: 'Health Details',
+    fields: [
+      { name: 'identificationMark1', label: 'Identification Mark 1', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'identificationMark2', label: 'Identification Mark 2', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'isPhysicalDeformity', label: 'Is Physical Deformity', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'physicalDeformityRemark', label: 'Physical Deformity Remark', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'isMajorIllness', label: 'Is Major Illness', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'illnessRemark', label: 'Illness Remark', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'isAnyAllergy', label: 'Is any Allergy', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'allergyRemark', label: 'Allergy Remark', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'familyDoctorName', label: 'Family Doctor Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'familyDoctorContactNo', label: 'Family Doctor Contact no.', onChange: (e, formik) => {}, otherProps: {} },    ],
+  },
+];
+
+const transportFields: Fieldtypes[] = [
+  {
+    sectionName: 'Transport Details',
+    fields: [
+      { name: 'transportMode', label: 'Transport Mode', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'routeDestination', label: 'Route Destination', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'pickupTime', label: 'Pickup Time', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'dropTime', label: 'Drop Time', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'routeName', label: 'Route Name', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'pickupPoint', label: 'Pickup Point', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'dropPoint', label: 'Drop Point', onChange: (e, formik) => {}, otherProps: {} },
+      { name: 'transportationDetails', label: 'Transportation Details', onChange: (e, formik) => {}, otherProps: {} },
+    ],
+  },
+];
+
 
 const generalFormValidationSchema = Yup.object().shape({
   grNo: Yup.string().required('GR No is required'),
@@ -358,6 +502,29 @@ const communicationValidationSchema = Yup.object().shape({
   emergencyAddress: Yup.string(),
 });
 
+const healthValidationSchema = Yup.object().shape({
+  identificationMark1: Yup.string(),
+  identificationMark2: Yup.string(),
+  isPhysicalDeformity: Yup.boolean(),
+  physicalDeformityRemark: Yup.string(),
+  isMajorIllness: Yup.boolean(),
+  illnessRemark: Yup.string(),
+  isAnyAllergy: Yup.boolean(),
+  allergyRemark: Yup.string(),
+  familyDoctorName: Yup.string(),
+  familyDoctorContactNo: Yup.string().matches(/^\d{10}$/, 'Contact number must be 10 digits'),
+});
+const transportValidationSchema = Yup.object().shape({
+  transportMode: Yup.string(),
+  routeDestination: Yup.string(),
+  pickupTime: Yup.string(),
+  dropTime: Yup.string(),
+  routeName: Yup.string(),
+  pickupPoint: Yup.string(),
+  dropPoint: Yup.string(),
+  transportationDetails: Yup.string(),
+});
+
 const familyValidationSchema = Yup.object().shape({
   fatherName: Yup.string(),
   fatherDob: Yup.date(),
@@ -385,18 +552,22 @@ const familyValidationSchema = Yup.object().shape({
   motherAnnualIncome: Yup.number().positive(),
   motherAadharNo: Yup.string().matches(/^\d{12}$/, 'Aadhar No must be 12 digits'),
 });
-const fields = [generalFormFields, admissionFormFields, communicationFields, familyFields];
+const fields = [generalFormFields, admissionFormFields, communicationFields, familyFields, healthFields, transportFields];
 const validationSchemas = [
   generalFormValidationSchema,
   admissionFormValidationSchema,
   communicationValidationSchema,
   familyValidationSchema,
+  healthValidationSchema,
+  transportValidationSchema,
 ];
 const TABS = [
   { value: 'general', label: 'General' },
   { value: 'admission', label: 'Admission' },
   { value: 'communication', label: 'Contact Deails' },
-  { value: 'family', label: 'Family Details' },
+  { value: 'family', label: 'Family information' },
+  { value: 'health', label: 'Health' },
+  { value: 'transport', label: 'Transport' },
 ];
 
 const dob = dayjs(new Date('2000-01-01'));
@@ -407,8 +578,18 @@ export function StudentInformation(props: StudentTabsComponentType) {
   const formik = useFormik({
     initialValues: {
       grNo: 'GR001',
-      surname: 'Doe',
-      name: 'John',
+      rollNo: 1,
+      lastName: 'Doe',
+      firstName: 'John',
+      className: '12',
+      division: 'A',
+      feeCategory: 'General',
+      status: 'Active',
+      bloodGroup: 'A+',
+      birthTaluka: 'Surat',
+      birthDistrict: 'Surat',
+      birthState: 'Gujarat',
+      birthCountry: 'India',
       age: dayjs().diff(dob, 'year'),
       middleName: 'johnson',
       dob,

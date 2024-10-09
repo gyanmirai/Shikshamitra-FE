@@ -36,3 +36,5 @@ build
 .eslintcache
 .unimportedrc.json
 tsconfig.tsbuildinfo
+
+tokenSet.json
