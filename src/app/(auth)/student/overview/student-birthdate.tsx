@@ -15,7 +15,12 @@ import {
 } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
-import { Carousel, useCarousel, CarouselDotButtons, CarouselArrowBasicButtons } from 'src/components/carousel';
+import {
+  Carousel,
+  useCarousel,
+  CarouselDotButtons,
+  CarouselArrowBasicButtons,
+} from 'src/components/carousel';
 
 const StudentBirthDate = () => {
   const carousel = useCarousel({ loop: true }, [Autoplay({ playOnInit: true, delay: 2000 })]);

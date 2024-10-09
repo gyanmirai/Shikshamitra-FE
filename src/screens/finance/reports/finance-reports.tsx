@@ -1,9 +1,5 @@
-import React from 'react'
+import React from 'react';
 
-const FinanceReportsScreen = () => {
-  return (
-    <div>FinanceReports</div>
-  )
-}
+const FinanceReportsScreen = () => <div>FinanceReports</div>;
 
-export default FinanceReportsScreen
+export default FinanceReportsScreen;

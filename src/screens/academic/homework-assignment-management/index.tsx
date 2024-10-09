@@ -9,11 +9,11 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import Setting from './setting';
 import Dashboard from './dashboard';
 import DueDateCalendar from './duedate-calendar';
 import HomeworkCreation from './homework-creation';
 import StudentSubmission from './student-submission';
-import Setting from './setting';
 import GradingAndFeedback from './gradingAndFeedback';
 
 const TABS = [

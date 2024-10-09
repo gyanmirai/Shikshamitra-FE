@@ -249,7 +249,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                           zIndex: 1,
                           overflow: 'hidden',
                           fontWeight: disabled ? 400 : 600,
-                          bgcolor : backgroundColor,
+                          bgcolor: backgroundColor,
                           // background: (theme) =>
                           //   absent
                           //     ? `${theme.palette.error.main} !important`

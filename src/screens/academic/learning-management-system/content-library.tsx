@@ -225,55 +225,52 @@ const ContentLibrary = () => {
 
 export default ContentLibrary;
 
-const AddContent = () => {
-  const a = null;
-  return (
-    <Box>
-      {/* Content Type */}
+const AddContent = () => (
+  <Box>
+    {/* Content Type */}
 
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <Stack spacing={2}>
-          <CustomSelect
-            options={[]}
-            value=""
-            onChange={() => {}}
-            label="Select Content Type"
-            formControlProps={{ fullWidth: true }}
-          />
+    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+      <Stack spacing={2}>
+        <CustomSelect
+          options={[]}
+          value=""
+          onChange={() => {}}
+          label="Select Content Type"
+          formControlProps={{ fullWidth: true }}
+        />
 
-          <Upload />
+        <Upload />
 
-          {/* Field Name */}
-          <TextField label="Field name" variant="outlined" fullWidth margin="normal" size="small" />
+        {/* Field Name */}
+        <TextField label="Field name" variant="outlined" fullWidth margin="normal" size="small" />
 
-          {/* Description */}
-          <TextField
-            label="Description"
-            variant="outlined"
-            fullWidth
-            multiline
-            rows={4}
-            size="small"
-          />
+        {/* Description */}
+        <TextField
+          label="Description"
+          variant="outlined"
+          fullWidth
+          multiline
+          rows={4}
+          size="small"
+        />
 
-          {/* Set Availability */}
+        {/* Set Availability */}
 
-          <CustomSelect
-            options={[]}
-            value=""
-            onChange={() => {}}
-            label="availability"
-            formControlProps={{ fullWidth: true }}
-          />
+        <CustomSelect
+          options={[]}
+          value=""
+          onChange={() => {}}
+          label="availability"
+          formControlProps={{ fullWidth: true }}
+        />
 
-          <DatePicker label="Date" slotProps={{ textField: { size: 'small' } }} />
-        </Stack>
-      </Scrollbar>
+        <DatePicker label="Date" slotProps={{ textField: { size: 'small' } }} />
+      </Stack>
+    </Scrollbar>
 
-      <DialogActions>
-        {/* Submit Button */}
-        <Button variant="contained">Add Content</Button>
-      </DialogActions>
-    </Box>
-  );
-};
+    <DialogActions>
+      {/* Submit Button */}
+      <Button variant="contained">Add Content</Button>
+    </DialogActions>
+  </Box>
+);

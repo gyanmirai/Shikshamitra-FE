@@ -163,12 +163,22 @@ export function StudentProfile() {
           <CustomizableTable
             data={students}
             columns={[
-              { id: 'name', label: 'Name', render: (value, row) => (
+              {
+                id: 'name',
+                label: 'Name',
+                render: (value, row) => (
                   <Box style={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 32, height: 32,mr:1 }}src={row.avatarUrl} alt={row.name}  />
-                    <Typography component='span' fontSize="12px">{row.name}</Typography>
+                    <Avatar
+                      sx={{ width: 32, height: 32, mr: 1 }}
+                      src={row.avatarUrl}
+                      alt={row.name}
+                    />
+                    <Typography component="span" fontSize="12px">
+                      {row.name}
+                    </Typography>
                   </Box>
-                ), },
+                ),
+              },
               { id: 'rollNo', label: 'Roll No' },
               { id: 'GrNo', label: 'Gr No' },
               { id: 'board', label: 'Board' },

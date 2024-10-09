@@ -1,21 +1,19 @@
-import { Box } from '@mui/material'
-import React from 'react'
-import FinanceFeeStructureOverviewComponent from './component/finance-fee-structure-overview-component'
-import FinanceCreateFeeStructureComponent from './component/finance-create-fee-structure'
+import React from 'react';
+
+import { Box } from '@mui/material';
+
 // import FinanceFeeTrackingComponent from './component/finance-fee-tracking'
-import FinanceFeeListOverviewComponent from './component/finance-fee-list-overview'
+import FinanceFeeListOverviewComponent from './component/finance-fee-list-overview';
+import FinanceCreateFeeStructureComponent from './component/finance-create-fee-structure';
+import FinanceFeeStructureOverviewComponent from './component/finance-fee-structure-overview-component';
 
-const FinanceFeeStructureOverview = () => {
-    return (
-        <Box>
-            <FinanceFeeStructureOverviewComponent/>
-            <FinanceCreateFeeStructureComponent/>
-            {/* <FinanceFeeTrackingComponent /> */}
-            <FinanceFeeListOverviewComponent />
+const FinanceFeeStructureOverview = () => (
+  <Box>
+    <FinanceFeeStructureOverviewComponent />
+    <FinanceCreateFeeStructureComponent />
+    {/* <FinanceFeeTrackingComponent /> */}
+    <FinanceFeeListOverviewComponent />
+  </Box>
+);
 
-
-        </Box>
-    )
-}
-
-export default FinanceFeeStructureOverview
+export default FinanceFeeStructureOverview;

@@ -38,38 +38,38 @@ const initialValues = {
   division: {},
 };
 
-const validationSchema = {
-  0: yup.object().shape({
-    user: yup
-      .object({ firstName: yup.string().required('User is required') })
-      .required('User is required'),
-  }),
-  1: yup.object().shape({
-    board: yup
-      .object({ name: yup.string().required('board is required') })
-      .required('board is required'),
-  }),
-  2: yup.object().shape({
-    medium: yup
-      .object({ name: yup.string().required('medium is required') })
-      .required('medium is required'),
-  }),
-  3: yup.object().shape({
-    organization: yup
-      .object({ name: yup.string().required('organization is required') })
-      .required('organization is required'),
-  }),
-  4: yup.object().shape({
-    class: yup
-      .object({ name: yup.string().required('class is required') })
-      .required('class is required'),
-  }),
-  5: yup.object().shape({
-    division: yup
-      .object({ name: yup.string().required('division is required') })
-      .required('division is required'),
-  }),
-};
+// const validationSchema = {
+//   0: yup.object().shape({
+//     user: yup
+//       .object({ firstName: yup.string().required('User is required') })
+//       .required('User is required'),
+//   }),
+//   1: yup.object().shape({
+//     board: yup
+//       .object({ name: yup.string().required('board is required') })
+//       .required('board is required'),
+//   }),
+//   2: yup.object().shape({
+//     medium: yup
+//       .object({ name: yup.string().required('medium is required') })
+//       .required('medium is required'),
+//   }),
+//   3: yup.object().shape({
+//     organization: yup
+//       .object({ name: yup.string().required('organization is required') })
+//       .required('organization is required'),
+//   }),
+//   4: yup.object().shape({
+//     class: yup
+//       .object({ name: yup.string().required('class is required') })
+//       .required('class is required'),
+//   }),
+//   5: yup.object().shape({
+//     division: yup
+//       .object({ name: yup.string().required('division is required') })
+//       .required('division is required'),
+//   }),
+// };
 
 const AccessControlScreen = () => {
   const dialog = useBoolean();

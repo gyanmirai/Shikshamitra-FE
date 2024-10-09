@@ -1,6 +1,6 @@
 import React from 'react';
-import FinanceBudgetingScreen from 'src/screens/finance/budgeting/finance-budgeting';
 
+import FinanceBudgetingScreen from 'src/screens/finance/budgeting/finance-budgeting';
 
 const FinanceBudgeting = () => <FinanceBudgetingScreen />;
 

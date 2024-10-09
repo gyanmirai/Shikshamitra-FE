@@ -434,16 +434,67 @@ const healthFields: Fieldtypes[] = [
   {
     sectionName: 'Health Details',
     fields: [
-      { name: 'identificationMark1', label: 'Identification Mark 1', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'identificationMark2', label: 'Identification Mark 2', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'isPhysicalDeformity', label: 'Is Physical Deformity', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'physicalDeformityRemark', label: 'Physical Deformity Remark', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'isMajorIllness', label: 'Is Major Illness', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'illnessRemark', label: 'Illness Remark', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'isAnyAllergy', label: 'Is any Allergy', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'allergyRemark', label: 'Allergy Remark', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'familyDoctorName', label: 'Family Doctor Name', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'familyDoctorContactNo', label: 'Family Doctor Contact no.', onChange: (e, formik) => {}, otherProps: {} },    ],
+      {
+        name: 'identificationMark1',
+        label: 'Identification Mark 1',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'identificationMark2',
+        label: 'Identification Mark 2',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'isPhysicalDeformity',
+        label: 'Is Physical Deformity',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'physicalDeformityRemark',
+        label: 'Physical Deformity Remark',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'isMajorIllness',
+        label: 'Is Major Illness',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'illnessRemark',
+        label: 'Illness Remark',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'isAnyAllergy',
+        label: 'Is any Allergy',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'allergyRemark',
+        label: 'Allergy Remark',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'familyDoctorName',
+        label: 'Family Doctor Name',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'familyDoctorContactNo',
+        label: 'Family Doctor Contact no.',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+    ],
   },
 ];
 
@@ -451,18 +502,32 @@ const transportFields: Fieldtypes[] = [
   {
     sectionName: 'Transport Details',
     fields: [
-      { name: 'transportMode', label: 'Transport Mode', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'routeDestination', label: 'Route Destination', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'transportMode',
+        label: 'Transport Mode',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
+      {
+        name: 'routeDestination',
+        label: 'Route Destination',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
       { name: 'pickupTime', label: 'Pickup Time', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'dropTime', label: 'Drop Time', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'routeName', label: 'Route Name', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'pickupPoint', label: 'Pickup Point', onChange: (e, formik) => {}, otherProps: {} },
       { name: 'dropPoint', label: 'Drop Point', onChange: (e, formik) => {}, otherProps: {} },
-      { name: 'transportationDetails', label: 'Transportation Details', onChange: (e, formik) => {}, otherProps: {} },
+      {
+        name: 'transportationDetails',
+        label: 'Transportation Details',
+        onChange: (e, formik) => {},
+        otherProps: {},
+      },
     ],
   },
 ];
-
 
 const generalFormValidationSchema = Yup.object().shape({
   grNo: Yup.string().required('GR No is required'),
@@ -552,7 +617,14 @@ const familyValidationSchema = Yup.object().shape({
   motherAnnualIncome: Yup.number().positive(),
   motherAadharNo: Yup.string().matches(/^\d{12}$/, 'Aadhar No must be 12 digits'),
 });
-const fields = [generalFormFields, admissionFormFields, communicationFields, familyFields, healthFields, transportFields];
+const fields = [
+  generalFormFields,
+  admissionFormFields,
+  communicationFields,
+  familyFields,
+  healthFields,
+  transportFields,
+];
 const validationSchemas = [
   generalFormValidationSchema,
   admissionFormValidationSchema,

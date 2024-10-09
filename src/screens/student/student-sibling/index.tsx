@@ -35,7 +35,4 @@ const StudentSiblingScreen = () => {
 
 export default StudentSiblingScreen;
 
-const SiblingForm = () => {
-  const a = null;
-  return <Box>jh</Box>;
-};
+const SiblingForm = () => <Box>jh</Box>;

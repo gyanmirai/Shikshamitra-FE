@@ -1,6 +1,9 @@
-import Grid2 from '@mui/material/Unstable_Grid2';
 import React from 'react';
+
+import Grid2 from '@mui/material/Unstable_Grid2';
+
 import { CONFIG } from 'src/config-global';
+
 import { AnalyticsWidgetSummary } from 'src/sections/overview/analytics/analytics-widget-summary';
 
 const Overview = () => (

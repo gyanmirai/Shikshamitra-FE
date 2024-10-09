@@ -8,8 +8,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { StudentTabsComponentType } from '.';
 
-
-const GB = 1000000000 * 24;
+// const GB = 1000000000 * 24;
 
 const Document = (props: StudentTabsComponentType) => (
   <CustomizableTable

@@ -7,12 +7,12 @@ import { Box, Card, Button, Typography } from '@mui/material';
 
 import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
 import { CourseHoursSpent } from 'src/screens/hr/dashboard/course-hours-spent';
-import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const AcademicDashboardScreen = () => (
   <Box>
@@ -347,7 +347,7 @@ const AcademicDashboardScreen = () => (
       <Grid2 xs={12} md={6} lg={6} xl={4}>
         <CourseHoursSpent
           title="Performance Trend"
-          selected='Class1'
+          selected="Class1"
           chart={{
             series: [
               {

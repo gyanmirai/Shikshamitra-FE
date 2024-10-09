@@ -21,15 +21,15 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import OverviewCard from './overview';
 import StudentBirthDate from './student-birthdate';
 import EnrollmentsTrends from './enrollments-trends';
-import RecentActivitiesNotification from './recent-activities-notification';
 import StudentStrengthClassWise from './student-strength-class-wise';
+import RecentActivitiesNotification from './recent-activities-notification';
 
 const dashBoardSections = [
   <OverviewCard />,
   <RecentActivitiesNotification />,
   <StudentBirthDate />,
   <EnrollmentsTrends />,
-  <StudentStrengthClassWise/>
+  <StudentStrengthClassWise />,
 ];
 
 const Overview = () => {
@@ -54,7 +54,7 @@ const Overview = () => {
     {
       id: '4',
       title: 'Class Wise Student Strength ',
-    }
+    },
   ]);
   return (
     <Box>

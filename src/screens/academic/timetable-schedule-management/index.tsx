@@ -14,14 +14,14 @@ import NewTimetable from './new-timetable';
 import RoomAllocation from './room-allocation';
 import TeacherManagement from './teacher-management';
 import CurrentTimetableOverview from './current-timetable-overvirew';
-import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
+import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <TimeScheduleManagementDashboardTab/>,
+    component: () => <TimeScheduleManagementDashboardTab />,
   },
   {
     value: 'currentTimetableOverview',

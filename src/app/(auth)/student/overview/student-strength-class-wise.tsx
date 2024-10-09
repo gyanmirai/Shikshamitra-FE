@@ -1,6 +1,8 @@
-import { Card, Typography } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
 import React from 'react';
+
+import Grid from '@mui/material/Unstable_Grid2';
+import { Card, Typography } from '@mui/material';
+
 import { Chart, useChart } from 'src/components/chart';
 
 const StudentStrengthClassWise = () => {
@@ -12,7 +14,7 @@ const StudentStrengthClassWise = () => {
   });
   return (
     <Grid xs={12} md={6}>
-      <Card sx={{p: 3, boxShadow: 'var(--shadows-4)', height: '100%'}}>
+      <Card sx={{ p: 3, boxShadow: 'var(--shadows-4)', height: '100%' }}>
         <Typography variant="h6">Class Wise Strength</Typography>
         <Chart
           type="area"

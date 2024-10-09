@@ -1,160 +1,149 @@
+import React from 'react';
 
-import { Box, Card, Button, List, ListItem, ListItemText, Typography, CircularProgress } from '@mui/material'
-import Grid2 from '@mui/material/Unstable_Grid2'
-import React from 'react'
-import CustomSelect from 'src/components/custom-select'
-import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card'
-import { CalendarView } from 'src/sections/calendar/view'
+import Grid2 from '@mui/material/Unstable_Grid2';
+import {
+  Box,
+  Card,
+  List,
+  Button,
+  ListItem,
+  Typography,
+  ListItemText,
+  CircularProgress,
+} from '@mui/material';
+
+import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
+
+import CustomSelect from 'src/components/custom-select';
+
+import { CalendarView } from 'src/sections/calendar/view';
 
 const AssessmentDashboardOverviewComponent = () => {
+  const completedAssessments: string[] = ['one', 'two', 'three'];
+  // const pendingAssessments: string[] = ["one", "two", "three"];
+  return (
+    <Box>
+      <Box
+        sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
+      >
+        <Button color="secondary" variant="contained">
+          Create New Assessment
+        </Button>
+        <Button color="primary" variant="contained">
+          Review Pending Assesment
+        </Button>
 
-    const completedAssessments: string[] = ["one", "two", "three"];
-    const pendingAssessments: string[] = ["one", "two", "three"];
-    return (
-        <Box>
+        <Button color="warning" variant="contained">
+          Upload Assesment Result
+        </Button>
+      </Box>
 
-            <Box
-                sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
-            >
-                <Button color="secondary" variant="contained">
-                    Create New Assessment
-                </Button>
-                <Button color="primary" variant="contained">
-                    Review Pending Assesment
-                </Button>
+      <Grid2 container spacing={3}>
+        <Grid2 xs={12} md={6} lg={6}>
+          <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />{' '}
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={6}>
+          <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />{' '}
+        </Grid2>
+      </Grid2>
 
-                <Button
-
-                    color="warning"
-                    variant="contained"
+      <Grid2 container spacing={3}>
+        <Grid2 xs={12} md={6} lg={6}>
+          <Card sx={{ p: 3, height: '100%' }}>
+            <Typography component="span" variant="h6" gutterBottom>
+              Average Grades per Assessment
+            </Typography>
+            <Box display="flex" alignItems="center" mb={2}>
+              <Box position="relative" display="inline-flex" mr={2}>
+                <CircularProgress
+                  variant="determinate"
+                  value={73.9}
+                  size={60}
+                  thickness={4}
+                  color="success"
+                />
+                <Box
+                  top={0}
+                  left={0}
+                  bottom={0}
+                  right={0}
+                  position="absolute"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                    Upload Assesment Result
-                </Button>
+                  <Typography variant="caption" component="div">
+                    A+
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography>Math Assessment</Typography>
             </Box>
+          </Card>
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={6}>
+          <Card sx={{ p: 3, height: '100%' }}>
+            <Typography component="span" variant="h6" gutterBottom>
+              Top and Underperforming or Students
+            </Typography>
 
+            <Grid2 container>
+              <Grid2 lg={6}>
+                <List>
+                  {['Top Performing Students', 1, 2, 3].map((value, index) => (
+                    <ListItem key={value} disableGutters>
+                      <ListItemText
+                        sx={{ color: 'green' }}
+                        primary={index === 0 ? value : `Line item ${value}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid2>
 
-            <Grid2 container spacing={3} >
-                <Grid2 xs={12} md={6} lg={6}  >
-                    <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />        </Grid2>
-                <Grid2 xs={12} md={6} lg={6}  >
-                    <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />        </Grid2>
-
+              <Grid2 lg={6}>
+                <List>
+                  {['Underperforming Students', 1, 2, 3].map((value, index) => (
+                    <ListItem key={value} disableGutters>
+                      <ListItemText
+                        sx={{ color: 'red' }}
+                        primary={index === 0 ? value : `Line item ${value}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid2>
             </Grid2>
+          </Card>
+        </Grid2>
+      </Grid2>
 
+      <Box display="flex" flexDirection="row" gap={3} sx={{ pt: '20px', pb: '20px' }}>
+        <CustomSelect
+          label="Class"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 120 } }}
+        />
+        <CustomSelect
+          label="Subject"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 120 } }}
+        />
+        <CustomSelect
+          label="Teacher"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 120 } }}
+        />
+      </Box>
+      <CalendarView />
+    </Box>
+  );
+};
 
-
-
-            <Grid2 container spacing={3} >
-                <Grid2 xs={12} md={6} lg={6}>
-                    <Card sx={{ p: 3, height: "100%" }}>
-                        <Typography component="span" variant="h6" gutterBottom>
-                            Average Grades per Assessment
-                        </Typography>
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <Box position="relative" display="inline-flex" mr={2}>
-                                <CircularProgress
-                                    variant="determinate"
-                                    value={73.9}
-                                    size={60}
-                                    thickness={4}
-                                    color="success"
-                                />
-                                <Box
-                                    top={0}
-                                    left={0}
-                                    bottom={0}
-                                    right={0}
-                                    position="absolute"
-                                    display="flex"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                >
-                                    <Typography variant="caption" component="div">
-                                        A+
-                                    </Typography>
-                                </Box>
-                            </Box>
-                            <Typography>Math Assessment</Typography>
-                        </Box>
-                    </Card>
-                </Grid2>
-                <Grid2 xs={12} md={6} lg={6}>
-                    <Card sx={{ p: 3, height: "100%" }}>
-                        <Typography component="span" variant="h6" gutterBottom>
-                            Top and Underperforming or Students
-                        </Typography>
-
-                        <Grid2 container>
-                            <Grid2 lg={6}>
-                                <List>
-                                    {["Top Performing Students", 1, 2, 3,].map((value, index) => (
-                                        <ListItem
-                                            key={value}
-                                            disableGutters
-
-                                        >
-                                            <ListItemText sx={{ color: "green" }} primary={index == 0 ? value : `Line item ${value}`} />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Grid2>
-
-                            <Grid2 lg={6}>
-                                <List>
-                                    {["Underperforming Students", 1, 2, 3].map((value, index) => (
-                                        <ListItem
-                                            key={value}
-                                            disableGutters
-
-                                        >
-                                            <ListItemText sx={{ color: "red" }} primary={index == 0 ? value : `Line item ${value}`} />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Grid2>
-
-                        </Grid2>
-                    </Card>
-                </Grid2>
-
-
-
-
-
-
-            </Grid2>
-
-            <Box display="flex" flexDirection="row" gap={3} sx={{ pt: "20px", pb: "20px" }} >
-                <CustomSelect
-                    label="Class"
-                    options={[]}
-                    value=""
-                    onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 120 } }}
-                />
-                <CustomSelect
-                    label="Subject"
-                    options={[]}
-                    value=""
-                    onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 120 } }}
-                />
-                <CustomSelect
-                    label="Teacher"
-                    options={[]}
-                    value=""
-                    onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 120 } }}
-                />
-
-
-
-            </Box>
-            <CalendarView />
-
-
-        </Box>
-    )
-}
-
-export default AssessmentDashboardOverviewComponent
+export default AssessmentDashboardOverviewComponent;

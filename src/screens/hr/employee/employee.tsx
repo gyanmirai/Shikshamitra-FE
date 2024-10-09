@@ -57,7 +57,7 @@ const HrEmployee = () => {
     [setSearchParams]
   );
 
-  const { data: employee, isLoading } = useQueryAndMutation({
+  const { data: employee } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });

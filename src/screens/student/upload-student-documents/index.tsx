@@ -142,12 +142,8 @@ const UploadStudentDocumentsScreen = () => {
 
 export default UploadStudentDocumentsScreen;
 
-const UploadPhotoFlow = () => {
-  const [file, setFile] = useState<null | File>(null);
-
-  return (
-    <Box p={2}>
-      <Upload />
-    </Box>
-  );
-};
+const UploadPhotoFlow = () => (
+  <Box p={2}>
+    <Upload />
+  </Box>
+);

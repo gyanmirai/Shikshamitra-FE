@@ -1,9 +1,5 @@
-import React from 'react'
+import React from 'react';
 
-const FinanceUserRolesScreen = () => {
-  return (
-    <div>FinanceUserRoles</div>
-  )
-}
+const FinanceUserRolesScreen = () => <div>FinanceUserRoles</div>;
 
-export default FinanceUserRolesScreen
+export default FinanceUserRolesScreen;

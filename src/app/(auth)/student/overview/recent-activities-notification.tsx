@@ -1,6 +1,8 @@
-import { Box, Button, Card } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
 import React from 'react';
+
+import Grid2 from '@mui/material/Unstable_Grid2';
+import { Box, Card, Button } from '@mui/material';
+
 import { Scrollbar } from 'src/components/scrollbar';
 
 const RecentActivitiesNotification = () => (

@@ -28,7 +28,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 
-
 const personalInformationFields: Fieldtypes[] = [
   {
     sectionName: 'Basic Information',

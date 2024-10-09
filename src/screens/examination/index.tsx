@@ -11,7 +11,6 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Report from './report';
-import Dashboard from './dashboard';
 import ExamOverview from './exam-overview';
 import ScheduleExam from './schedule-exam';
 import ResultReport from './result-report';
