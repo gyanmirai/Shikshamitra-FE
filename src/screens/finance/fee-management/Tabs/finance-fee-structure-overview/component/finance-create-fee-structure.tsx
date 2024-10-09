@@ -55,7 +55,7 @@ const FinanceCreateFeeStructureComponent: React.FC<FinanceCreateFeeStructureProp
   });
 
   return (
-    <CustomDialog title="New Assignment" open={dialogValue} handleClose={onClose}>
+    <CustomDialog title="Create Fee Structure" open={dialogValue} handleClose={onClose}>
       <Scrollbar>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
@@ -154,10 +154,10 @@ const FinanceCreateFeeStructureComponent: React.FC<FinanceCreateFeeStructureProp
             </Box>
 
             <DialogActions>
-              <Button variant="contained" onClick={onClose} size="small">
-                Preview
+              <Button sx={{ backgroundColor: "lightblue", color: "blue" }} variant="contained" onClick={onClose} size="small">
+                Draft
               </Button>
-              <Button type="submit" variant="contained" size="small">
+              <Button sx={{ backgroundColor: "lightgreen", color: "darkgreen" }} type="submit" variant="contained" size="small">
                 Save
               </Button>
             </DialogActions>
