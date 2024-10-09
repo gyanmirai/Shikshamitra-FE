@@ -4,10 +4,11 @@ import { DatePicker } from '@mui/x-date-pickers';
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { Box, alpha, useTheme, Typography } from '@mui/material';
 
-import { AnalyticsWebsiteVisits } from 'src/screens/student/enrollment/dashboard';
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import CustomSelect from 'src/components/custom-select';
+
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const AssessmentDashboardReportComponent = () => {
   const theme = useTheme();

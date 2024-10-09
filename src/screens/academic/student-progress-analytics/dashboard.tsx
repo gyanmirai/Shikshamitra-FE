@@ -19,9 +19,9 @@ import {
   ListItemText,
 } from '@mui/material';
 
-import { AnalyticsWebsiteVisits } from 'src/screens/student/enrollment/dashboard';
-
 import CustomSelect from 'src/components/custom-select';
+
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 

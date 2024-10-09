@@ -15,12 +15,11 @@ import {
 } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
-import {
-  AnalyticsCurrentVisits,
-  AnalyticsWebsiteVisits,
-} from 'src/screens/student/enrollment/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const Dashboard = () => {
   const theme = useTheme();

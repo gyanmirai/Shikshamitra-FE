@@ -4,13 +4,11 @@ import { Box, Card, Grid, alpha, useTheme, CardHeader, Typography } from '@mui/m
 
 import { fNumber } from 'src/utils/format-number';
 
-import {
-  AnalyticsWebsiteVisits,
-  AnalyticsConversionRates,
-} from 'src/screens/student/enrollment/dashboard';
-
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { AnalyticsConversionRates } from 'src/sections/overview/analytics/analytics-conversion-rates';
 
 const PerformanceAnalytics = () => {
   const theme = useTheme();

@@ -1,7 +1,5 @@
 'use client';
 
-import type { Division } from 'src/types/school';
-
 import React, { useMemo, useState } from 'react';
 
 import { Save } from '@mui/icons-material';
@@ -153,12 +151,12 @@ const BulkDataUpdateScreen = () => {
 
 export default BulkDataUpdateScreen;
 
-interface TableDivisionDropDownProps {
-  allDivision: Division[];
-  division: string;
+// interface TableDivisionDropDownProps {
+//   allDivision: Division[];
+//   division: string;
 
-  onChange: (val: string | string[]) => void;
-}
+//   onChange: (val: string | string[]) => void;
+// }
 
 // const TableDivisionDropDown = ({
 //   allDivision,

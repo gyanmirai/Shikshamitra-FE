@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
-
-import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -39,6 +38,8 @@ export function OverviewFileView() {
   const [files, setFiles] = useState<(File | string)[]>([]);
 
   const upload = useBoolean();
+
+  const pathname = usePathname();
 
   const newFolder = useBoolean();
 
@@ -178,11 +179,7 @@ export function OverviewFileView() {
             />
 
             <Box sx={{ mt: 5 }}>
-              <FileManagerPanel
-                title="Folders"
-                link={paths.dashboard.fileManager}
-                onOpen={newFolder.onTrue}
-              />
+              <FileManagerPanel title="Folders" link={pathname} onOpen={newFolder.onTrue} />
 
               <Scrollbar sx={{ mb: 3, minHeight: 186 }}>
                 <Box sx={{ gap: 3, display: 'flex' }}>
@@ -197,11 +194,7 @@ export function OverviewFileView() {
                 </Box>
               </Scrollbar>
 
-              <FileManagerPanel
-                title="Recent files"
-                link={paths.dashboard.fileManager}
-                onOpen={upload.onTrue}
-              />
+              <FileManagerPanel title="Recent files" link={pathname} onOpen={upload.onTrue} />
 
               <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
                 {_files.slice(0, 5).map((file) => (
