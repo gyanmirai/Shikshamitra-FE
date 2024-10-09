@@ -431,8 +431,6 @@ const settingModule = {
   ],
 };
 
-
-
 const hrModule = {
   [hrPath]: [
     {
@@ -682,7 +680,7 @@ const financeModule = {
           path: '/finance/expense-tracking',
           _action: 'finance-expense-tracking',
         },
-        
+
         {
           title: 'Budgeting',
           path: '/finance/budgeting',
@@ -703,7 +701,6 @@ const financeModule = {
           path: '/finance/user-roles',
           _action: 'finance-user-roles',
         },
-
       ],
     },
   ],

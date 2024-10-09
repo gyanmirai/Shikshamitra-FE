@@ -1,11 +1,13 @@
-import { Label } from '@mui/icons-material'
-import { Box, MenuItem, MenuList, Typography } from '@mui/material'
-import { DatePicker } from '@mui/x-date-pickers'
-import React from 'react'
-import CustomSelect from 'src/components/custom-select'
-import CustomizableTable from 'src/components/customizabaleTable'
-import ThreeDotsActions from 'src/components/three-dots-actions'
-import { useBoolean } from 'src/hooks/use-boolean'
+import React from 'react';
+
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const ExaminationDashboardExamlistComponent = () => {
   const modal = useBoolean();
@@ -13,20 +15,20 @@ const ExaminationDashboardExamlistComponent = () => {
   const gradeScalingModal = useBoolean();
   return (
     <Box>
-      <Typography sx={{ pt: "20px", pb: "20px" }} >Exam List</Typography>
-      <Box display="flex" flexDirection="row" gap={3} sx={{ pb: "8px", pt: "20px" }}>
+      <Typography sx={{ pt: '20px', pb: '20px' }}>Exam List</Typography>
+      <Box display="flex" flexDirection="row" gap={3} sx={{ pb: '8px', pt: '20px' }}>
         <CustomSelect
           label="Class"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
         <CustomSelect
           label="Subject"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
 
@@ -40,7 +42,6 @@ const ExaminationDashboardExamlistComponent = () => {
           format="DD-MM-YYYY"
           slotProps={{ textField: { size: 'small' } }}
         />
-
       </Box>
       <CustomizableTable
         columns={[
@@ -49,7 +50,7 @@ const ExaminationDashboardExamlistComponent = () => {
           { id: 'examDate', label: 'Exam Date' },
           { id: 'examType', label: 'Exam Type' },
           { id: 'invigilator', label: 'Invigilator' },
-          { id: 'status',  label: 'Status' },
+          { id: 'status', label: 'Status' },
           {
             id: 'action',
             label: 'Action',
@@ -111,11 +112,10 @@ const ExaminationDashboardExamlistComponent = () => {
             status: 'Completed',
             action: 'View',
           },
-
         ]}
       />
     </Box>
-  )
-}
+  );
+};
 
-export default ExaminationDashboardExamlistComponent
+export default ExaminationDashboardExamlistComponent;

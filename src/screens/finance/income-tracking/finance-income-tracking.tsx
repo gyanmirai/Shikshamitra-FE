@@ -1,9 +1,5 @@
-import React from 'react'
+import React from 'react';
 
-const FinanceIncomeTrackingScreen = () => {
-  return (
-    <div>FinanceIncomeTracking</div>
-  )
-}
+const FinanceIncomeTrackingScreen = () => <div>FinanceIncomeTracking</div>;
 
-export default FinanceIncomeTrackingScreen
+export default FinanceIncomeTrackingScreen;

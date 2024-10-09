@@ -1,46 +1,44 @@
-import { Label } from '@mui/icons-material'
-import { Box, MenuItem, MenuList, Typography } from '@mui/material'
-import React from 'react'
-import CustomSelect from 'src/components/custom-select'
-import CustomizableTable from 'src/components/customizabaleTable'
-import ThreeDotsActions from 'src/components/three-dots-actions'
-import { useBoolean } from 'src/hooks/use-boolean'
+import React from 'react';
+
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const AssessmentDashboardListComponent = () => {
   const modal = useBoolean();
   const uploadModal = useBoolean();
   const gradeScalingModal = useBoolean();
   return (
-
     <Box>
       <Typography component="span" variant="h6" gutterBottom>
         Assessment List View
       </Typography>
-      <Box display="flex" flexDirection="row" gap={3} sx={{ pt: "20px", pb: "20px" }} >
+      <Box display="flex" flexDirection="row" gap={3} sx={{ pt: '20px', pb: '20px' }}>
         <CustomSelect
           label="Class"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
         <CustomSelect
           label="Subject"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
         <CustomSelect
           label="Teacher"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
-
-
-
       </Box>
       <CustomizableTable
         columns={[
@@ -49,11 +47,9 @@ const AssessmentDashboardListComponent = () => {
           { id: 'dueDate', label: 'Due Date' },
           { id: 'assignedTeach', label: 'Assigned Teach' },
 
-
           {
             id: 'status',
             label: 'Status',
-
           },
           {
             id: 'action',
@@ -98,8 +94,6 @@ const AssessmentDashboardListComponent = () => {
           },
         ]}
         data={[
-          
-
           {
             assessmentTitle: '10th Grade',
             subject: 'Mathematics',
@@ -116,11 +110,10 @@ const AssessmentDashboardListComponent = () => {
             status: 'Completed',
             action: 'View',
           },
-
         ]}
       />
     </Box>
-  )
-}
+  );
+};
 
-export default AssessmentDashboardListComponent
+export default AssessmentDashboardListComponent;

@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
@@ -16,15 +15,15 @@ import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const validationSchema = Yup.object().shape({
-  report: Yup.string().required('Report is required'),
-  department: Yup.string().required('Department is required'),
-  status: Yup.string().required('Status is required'),
-  designation: Yup.string().required('Designation is required'),
-  employeeType: Yup.string().required('Employee Type is required'),
-  employeeGroup: Yup.string().required('Employee Group is required'),
-  gender: Yup.string().required('Gender is required'),
-});
+// const validationSchema = Yup.object().shape({
+//   report: Yup.string().required('Report is required'),
+//   department: Yup.string().required('Department is required'),
+//   status: Yup.string().required('Status is required'),
+//   designation: Yup.string().required('Designation is required'),
+//   employeeType: Yup.string().required('Employee Type is required'),
+//   employeeGroup: Yup.string().required('Employee Group is required'),
+//   gender: Yup.string().required('Gender is required'),
+// });
 
 const initialValues = {
   report: '',

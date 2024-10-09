@@ -91,7 +91,7 @@ const BulkDataUpdateScreen = () => {
   const [subCategory, setSubCategory] = useState<string>('');
   const [allSubCategory, setAllSubCategory] = useState<{ name: string; id: string }[]>([]);
 
-  const [tableData, setTableData] = useState([
+  const [tableData] = useState([
     { id: 1, srNo: 1, grNo: 'GR001', name: 'John Doe', division: '' },
     { id: 2, srNo: 2, grNo: 'GR002', name: 'Jane Smith', division: '' },
     { id: 3, srNo: 3, grNo: 'GR003', name: 'Alice Johnson', division: '' },
@@ -160,20 +160,20 @@ interface TableDivisionDropDownProps {
   onChange: (val: string | string[]) => void;
 }
 
-const TableDivisionDropDown = ({
-  allDivision,
-  division,
+// const TableDivisionDropDown = ({
+//   allDivision,
+//   division,
 
-  onChange,
-}: TableDivisionDropDownProps) => (
-  <CustomSelect
-    options={allDivision}
-    label="Division"
-    value={division}
-    onChange={onChange}
-    labelKey="name"
-    valueKey="id"
-    formControlProps={{ sx: { width: '150px', textAlign: 'left' } }}
-    onClick={(e) => e.stopPropagation()}
-  />
-);
+//   onChange,
+// }: TableDivisionDropDownProps) => (
+//   <CustomSelect
+//     options={allDivision}
+//     label="Division"
+//     value={division}
+//     onChange={onChange}
+//     labelKey="name"
+//     valueKey="id"
+//     formControlProps={{ sx: { width: '150px', textAlign: 'left' } }}
+//     onClick={(e) => e.stopPropagation()}
+//   />
+// );

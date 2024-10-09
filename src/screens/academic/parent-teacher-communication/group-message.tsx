@@ -21,23 +21,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const GroupMessage = () => {
-  const [organization, setOrganization] = React.useState('');
-  const [classValue, setClassValue] = React.useState('');
-  const [event, setEvent] = React.useState('');
   const [group, setGroup] = React.useState('entireSchool');
-
-  const handleOrganizationChange = (ev: any) => {
-    setOrganization(ev.target.value);
-  };
-
-  const handleClassChange = (ev: any) => {
-    setClassValue(ev.target.value);
-  };
-
-  const handleEventChange = (ev: any) => {
-    setEvent(ev.target.value);
-  };
-
   const handleGroupChange = (ev: any) => {
     setGroup(ev.target.value);
   };

@@ -1,36 +1,38 @@
-import React, { FC, useState } from 'react';
+import type { Dayjs } from 'dayjs';
+import type { Division, Standards } from 'src/types/school';
+
+import dayjs from 'dayjs';
+import { useFormik } from 'formik';
+import React, { useState } from 'react';
 
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Radio,
   Button,
-  Checkbox,
+  Switch,
+  MenuList,
+  MenuItem,
   TextField,
   RadioGroup,
   Typography,
+  ListItemText,
   DialogActions,
   FormControlLabel,
-  Switch,
-  MenuList,
-  ListItemText,
-  MenuItem,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import { Division, Standards } from 'src/types/school';
-import { useFormik } from 'formik';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import dayjs, { Dayjs } from 'dayjs';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 interface Assignment {
   class: string;
@@ -45,16 +47,16 @@ interface Assignment {
 }
 
 const assignmentInitialValues: Assignment = {
-  class: "",
-  division: "",
-  assignmentTitle: "",
-  subject: "",
-  assignmentDesc: "",
+  class: '',
+  division: '',
+  assignmentTitle: '',
+  subject: '',
+  assignmentDesc: '',
   dueDate: null,
   time: null,
-  submissionType: "",
-  status: "draft"
-}
+  submissionType: '',
+  status: 'draft',
+};
 
 const HomeworkCreation = () => {
   const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
@@ -62,19 +64,18 @@ const HomeworkCreation = () => {
   const [assignmentData, setAssignmentData] = useState<Assignment[]>([]);
 
   const handleSwitchChange = (rowId: string) => {
-
-    setPublishStatus(prevStatus => ({
+    setPublishStatus((prevStatus) => ({
       ...prevStatus,
-      [rowId]: !prevStatus[parseInt(rowId)], 
+      [rowId]: !prevStatus[parseInt(rowId, 10)],
     }));
   };
 
   const handleSubmit = (values: Assignment, status: 'draft' | 'publish') => {
-    console.log("handle submit calls===", values, status);
+    console.log('handle submit calls===', values, status);
     const updatedValues = { ...values, status };
     setAssignmentData([...assignmentData, updatedValues]);
     dialog.onFalse();
-  }
+  };
   return (
     <Box>
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
@@ -93,22 +94,28 @@ const HomeworkCreation = () => {
           { id: 'time', label: 'time' },
           { id: 'submissionType', label: 'Submission Type' },
           {
-            id: 'status', label: "Status", render(value,row) {
-              const isPublish = publishStatus[row.id] || row.status === "publish";
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              const isPublish = publishStatus[row.id] || row.status === 'publish';
               return (
-                <>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography sx={{ mr: 2 }} fontSize={10}>Draft</Typography>
-                    <Switch
-                      size='small'
-                      checked={isPublish}
-                      onChange={(e)=>{handleSwitchChange(row.id)}}
-                      inputProps={{ 'aria-label': 'Toggle view' }}
-                    />
-                    <Typography sx={{ ml: 1 }} fontSize={10}>Publish</Typography>
-                  </Box>
-                </>
-              )
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography sx={{ mr: 2 }} fontSize={10}>
+                    Draft
+                  </Typography>
+                  <Switch
+                    size="small"
+                    checked={isPublish}
+                    onChange={(e) => {
+                      handleSwitchChange(row.id);
+                    }}
+                    inputProps={{ 'aria-label': 'Toggle view' }}
+                  />
+                  <Typography sx={{ ml: 1 }} fontSize={10}>
+                    Publish
+                  </Typography>
+                </Box>
+              );
             },
           },
           {
@@ -129,26 +136,32 @@ const HomeworkCreation = () => {
                 />
               );
             },
-          },]}
+          },
+        ]}
         data={assignmentData}
       />
-      <CustomDialog title="New Assignment" open={dialog.value} handleClose={dialog.onFalse} maxWidth={"md"}>
+      <CustomDialog
+        title="New Assignment"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        maxWidth="md"
+      >
         <HomeWorkCreationForm onsubmit={handleSubmit} />
       </CustomDialog>
-    </Box >
+    </Box>
   );
 };
 
 export default HomeworkCreation;
 
 interface HomeWorkCreationFormProps {
-  onsubmit: (values: Assignment, status: 'draft' | 'publish') => void
+  onsubmit: (values: Assignment, status: 'draft' | 'publish') => void;
 }
 
 const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit }) => {
-  const [classes, setClasses] = useState<string>("");
-  const [division, setDivision] = useState<string>("");
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([])
+  const [classes, setClasses] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -156,16 +169,14 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
 
   const formik = useFormik({
     initialValues: assignmentInitialValues,
-    onSubmit: values => {
-      console.log("values-------------", values);
-    }
-  })
-
-
+    onSubmit: (values) => {
+      console.log('values-------------', values);
+    },
+  });
 
   return (
     <Box>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: "300px" }}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
         <Box display="flex" flexDirection="column" gap={2}>
           <CustomSelect
             label="Class"
@@ -177,8 +188,8 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
             onChange={(val) => {
               const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
               formik.setFieldValue('class', selectedClass?.name || '');
-              setClasses(val as string)
-              setDivisionOptions(selectedClass?.divisions || [])
+              setClasses(val as string);
+              setDivisionOptions(selectedClass?.divisions || []);
             }}
             formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
           />
@@ -193,24 +204,40 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
             onChange={(val) => {
               const selectedDivision = divisionOptions.find((i: Division) => i.id === val);
               formik.setFieldValue('division', selectedDivision?.name || '');
-              setDivision(val as string)
+              setDivision(val as string);
             }}
             formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
           />
-          <TextField label="Assignment Title" size="small" name='assignmentTitle' value={formik.values.assignmentTitle} onChange={formik.handleChange} />
+          <TextField
+            label="Assignment Title"
+            size="small"
+            name="assignmentTitle"
+            value={formik.values.assignmentTitle}
+            onChange={formik.handleChange}
+          />
           <CustomSelect
             label="Subject"
             options={[
-              { value: "math", label: "Math" },
-              { value: "science", label: "Science" }
+              { value: 'math', label: 'Math' },
+              { value: 'science', label: 'Science' },
             ]}
             value={formik.values.subject}
-            onChange={(val) => { formik.setFieldValue('subject', val) }}
+            onChange={(val) => {
+              formik.setFieldValue('subject', val);
+            }}
             formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
           />
-          <TextField label="Assignment Description" fullWidth multiline rows={4} name='assignmentDesc' value={formik.values.assignmentDesc} onChange={formik.handleChange} />
+          <TextField
+            label="Assignment Description"
+            fullWidth
+            multiline
+            rows={4}
+            name="assignmentDesc"
+            value={formik.values.assignmentDesc}
+            onChange={formik.handleChange}
+          />
           <UploadBox
-            onDrop={() => { }}
+            onDrop={() => {}}
             placeholder={
               <Box
                 sx={{
@@ -233,55 +260,61 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
             }}
           />
           <DatePicker
-            name='dueDate'
+            name="dueDate"
             label="Due Date"
             slotProps={{ textField: { fullWidth: true, size: 'small' } }}
             format="DD/MM/YYYY"
             value={formik.values.dueDate ? dayjs(formik.values.dueDate) : null}
             onChange={(date) => {
               const formattedDate = date ? date.format('YYYY-MM-DD') : null;
-              formik.setFieldValue('dueDate', formattedDate)
+              formik.setFieldValue('dueDate', formattedDate);
             }}
           />
           <TimePicker
-            name='time'
+            name="time"
             label="Time Picker"
             slotProps={{ textField: { fullWidth: true, size: 'small' } }}
             value={formik.values.time ? dayjs(formik.values.time) : null}
             onChange={(time) => {
               const formattedTime = time ? time.format('HH:mm') : null;
-              formik.setFieldValue('time', formattedTime)
+              formik.setFieldValue('time', formattedTime);
             }}
           />
 
           <Typography variant="subtitle1">Submission Type</Typography>
-          <RadioGroup row value={formik.values.submissionType} onChange={(e) => formik.setFieldValue('submissionType', e.target.value)}>
-            <FormControlLabel value="online_text" control={<Radio defaultChecked/>} label="Online text" />
-            <FormControlLabel value="file_upload" control={<Radio />} label="File upload" />
+          <RadioGroup
+            row
+            value={formik.values.submissionType}
+            onChange={(e) => formik.setFieldValue('submissionType', e.target.value)}
+          >
             <FormControlLabel
-              value="in_person"
-              control={<Radio />}
-              label="In-person submission"
+              value="online_text"
+              control={<Radio defaultChecked />}
+              label="Online text"
             />
+            <FormControlLabel value="file_upload" control={<Radio />} label="File upload" />
+            <FormControlLabel value="in_person" control={<Radio />} label="In-person submission" />
           </RadioGroup>
         </Box>
       </Scrollbar>
       <DialogActions>
-        <Button variant="contained"
+        <Button
+          variant="contained"
           onClick={() => {
-            onsubmit(formik.values, 'draft')
+            onsubmit(formik.values, 'draft');
           }}
         >
           Save Draft
         </Button>
-        <Button variant="contained"
+        <Button
+          variant="contained"
           onClick={() => {
-            onsubmit(formik.values, 'publish')
+            onsubmit(formik.values, 'publish');
           }}
         >
           Publish
         </Button>
       </DialogActions>
     </Box>
-  )
-}
+  );
+};

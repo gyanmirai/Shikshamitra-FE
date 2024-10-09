@@ -77,20 +77,6 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
   );
 }
 
-type Props1 = CardProps & {
-  title?: any;
-  subheader?: string;
-  chart: {
-    colors?: string[];
-    categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
-    options?: ChartOptions;
-  };
-};
-
 export function YearlyAttendance({ title, subheader, chart, ...other }: any) {
   const theme = useTheme();
 

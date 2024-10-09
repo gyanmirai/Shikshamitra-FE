@@ -21,7 +21,7 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <AssessmentDashboardTab/>,
+    component: () => <AssessmentDashboardTab />,
   },
   {
     value: 'pendingAssessment',

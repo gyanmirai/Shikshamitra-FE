@@ -5,7 +5,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 import { useMemo } from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Tab, Card, Tabs, Button } from '@mui/material';
+import { Box, Tab, Card, Tabs, Button, Avatar, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -139,6 +139,11 @@ const TABS = [
     label: 'transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
   },
+  {
+    value: 'library',
+    label: 'Library',
+    icon: <Iconify icon="mdi:library" width={20} />,
+  },
 ];
 export function StudentProfile() {
   const [searchParams, setSearchParams] = useSearchParam();
@@ -158,7 +163,22 @@ export function StudentProfile() {
           <CustomizableTable
             data={students}
             columns={[
-              { id: 'name', label: 'Name' },
+              {
+                id: 'name',
+                label: 'Name',
+                render: (value, row) => (
+                  <Box style={{ display: 'flex', alignItems: 'center' }}>
+                    <Avatar
+                      sx={{ width: 32, height: 32, mr: 1 }}
+                      src={row.avatarUrl}
+                      alt={row.name}
+                    />
+                    <Typography component="span" fontSize="12px">
+                      {row.name}
+                    </Typography>
+                  </Box>
+                ),
+              },
               { id: 'rollNo', label: 'Roll No' },
               { id: 'GrNo', label: 'Gr No' },
               { id: 'board', label: 'Board' },

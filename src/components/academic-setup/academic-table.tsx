@@ -43,17 +43,6 @@ import ThreeDotsActions from '../three-dots-actions';
 //   educationMediumStageId: string;
 // }
 
-interface Division {
-  id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  name: string;
-  strength: number;
-  standardId: string;
-}
-
 interface CustomAcademicTableProps {
   id: string;
   name: string;

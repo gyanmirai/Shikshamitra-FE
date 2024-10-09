@@ -7,7 +7,6 @@ import { Save, Refresh } from '@mui/icons-material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const RollNoGenerationScreen = () => {
   const [arrangementType, setArrangementType] = useState('');

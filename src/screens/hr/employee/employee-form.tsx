@@ -602,7 +602,7 @@ const steps = [
 
 const EmployeeFrom = ({ editData }: any) => {
   const [activeStep, setActiveStep] = useState(0);
-  const [addEmployee, { isLoading }] = useQueryAndMutation({
+  const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEmployeeMutation,
   });

@@ -18,98 +18,95 @@ import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
 
-const PayrollDashboardScreen = () => {
-  const a = null;
-  return (
-    <Grid2 container spacing={2}>
-      <Grid2 xs={12} md={6} lg={3}>
-        <AnalyticsWidgetSummary
-          title="Total Employee"
-          percent={2.6}
-          total={714000}
-          icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-          }
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [22, 8, 35, 50, 82, 84, 77, 12],
-          }}
-        />
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={3}>
-        <AnalyticsWidgetSummary
-          title="Total Male Employee"
-          percent={2.6}
-          total={714000}
-          color="warning"
-          icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-          }
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [22, 8, 35, 50, 82, 84, 77, 12],
-          }}
-        />
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={3}>
-        <AnalyticsWidgetSummary
-          title="Total Female Employee"
-          percent={2.6}
-          total={714000}
-          color="error"
-          icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-          }
-          chart={{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-            series: [22, 8, 35, 50, 82, 84, 77, 12],
-          }}
-        />
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={3}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle2' }}>Quick Actions</Box>
-            <Box display="flex" gap={2} flexWrap="wrap" pt={2}>
-              <Button variant="contained" color="primary" sx={{ flexGrow: 1 }}>
-                Run Payroll
-              </Button>
-              <Button variant="contained" color="warning" sx={{ flexGrow: 1 }}>
-                Generate Payslip
-              </Button>
-              <Button variant="contained" color="error" sx={{ flexGrow: 1 }}>
-                View Report
-              </Button>
-            </Box>
-          </Box>
-        </Card>
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={4}>
-        <Card>
-          <CardHeader title="Monthly Payroll" />
-          <CardContent>Content</CardContent>
-        </Card>
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={4}>
-        <Card>
-          <CardHeader title="Payroll Overview" />
-          <CardContent>Content</CardContent>
-        </Card>
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={4}>
-        <Card>
-          <CardHeader title="Deductions & Adjustments" />
-          <CardContent>Content</CardContent>
-        </Card>
-      </Grid2>
+const PayrollDashboardScreen = () => (
+  <Grid2 container spacing={2}>
+    <Grid2 xs={12} md={6} lg={3}>
+      <AnalyticsWidgetSummary
+        title="Total Employee"
+        percent={2.6}
+        total={714000}
+        icon={
+          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+        }
+        chart={{
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+      />
     </Grid2>
-  );
-};
+    <Grid2 xs={12} md={6} lg={3}>
+      <AnalyticsWidgetSummary
+        title="Total Male Employee"
+        percent={2.6}
+        total={714000}
+        color="warning"
+        icon={
+          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+        }
+        chart={{
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+      />
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={3}>
+      <AnalyticsWidgetSummary
+        title="Total Female Employee"
+        percent={2.6}
+        total={714000}
+        color="error"
+        icon={
+          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+        }
+        chart={{
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+          series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+      />
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={3}>
+      <Card
+        sx={{
+          display: 'flex',
+          p: 3,
+        }}
+      >
+        <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ typography: 'subtitle2' }}>Quick Actions</Box>
+          <Box display="flex" gap={2} flexWrap="wrap" pt={2}>
+            <Button variant="contained" color="primary" sx={{ flexGrow: 1 }}>
+              Run Payroll
+            </Button>
+            <Button variant="contained" color="warning" sx={{ flexGrow: 1 }}>
+              Generate Payslip
+            </Button>
+            <Button variant="contained" color="error" sx={{ flexGrow: 1 }}>
+              View Report
+            </Button>
+          </Box>
+        </Box>
+      </Card>
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={4}>
+      <Card>
+        <CardHeader title="Monthly Payroll" />
+        <CardContent>Content</CardContent>
+      </Card>
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={4}>
+      <Card>
+        <CardHeader title="Payroll Overview" />
+        <CardContent>Content</CardContent>
+      </Card>
+    </Grid2>
+    <Grid2 xs={12} md={6} lg={4}>
+      <Card>
+        <CardHeader title="Deductions & Adjustments" />
+        <CardContent>Content</CardContent>
+      </Card>
+    </Grid2>
+  </Grid2>
+);
 
 export default PayrollDashboardScreen;
 

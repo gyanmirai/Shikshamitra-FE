@@ -44,7 +44,7 @@ const TABS = [
     component: () => <Reports />,
   },
 
-  { value: 'settings', label: 'Settings', component: () => <StudentProgressAnalyticsSetting/> },
+  { value: 'settings', label: 'Settings', component: () => <StudentProgressAnalyticsSetting /> },
 ];
 
 const StudentProgressAnalyticsScreen = () => {

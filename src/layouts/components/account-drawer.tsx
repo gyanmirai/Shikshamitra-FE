@@ -4,8 +4,8 @@ import type { IconButtonProps } from '@mui/material/IconButton';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -14,8 +14,6 @@ import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Button, TextField, DialogActions } from '@mui/material';
-
-import { useRouter } from 'src/routes/hooks';
 
 import { varAlpha } from 'src/theme/styles';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
@@ -46,7 +44,7 @@ export type AccountDrawerProps = IconButtonProps & {
 export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
   const theme = useTheme();
 
-  const router = useRouter();
+  // const router = useRouter();
 
   // const pathname = usePathname();
 
@@ -58,7 +56,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   const [openDialog, setOpenDialog] = useState(false);
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const handleOpenDrawer = useCallback(() => {
     setOpen(true);

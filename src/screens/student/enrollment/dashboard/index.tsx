@@ -30,9 +30,7 @@ const dashBoardSections = [
   <TotalInquiries />,
   <AdmissionOverTime />,
 ];
-
 const EnrollmentDashboardScreen = () => {
-  const theme = useTheme();
   const router = useRouter();
 
   const [sections, setSections] = useState([

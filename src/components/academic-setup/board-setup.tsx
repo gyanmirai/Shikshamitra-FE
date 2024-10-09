@@ -85,9 +85,9 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
     }
   }, [academicYearId, boards?.items, tabs]);
 
-  const handelAddBoard = async () => {
-    modal.onTrue();
-  };
+  // const handelAddBoard = async () => {
+  //   modal.onTrue();
+  // };
 
   const handleSetTeb = (value: Record<string, any>) => {
     tabs.setValue(value?.data?.id);

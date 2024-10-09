@@ -1,41 +1,42 @@
-import { Box, Typography, alpha, useTheme, } from '@mui/material'
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2'
-import { DatePicker } from '@mui/x-date-pickers'
-import { title } from 'process'
-import React from 'react'
-import CustomSelect from 'src/components/custom-select'
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report'
-import { AnalyticsWebsiteVisits } from 'src/screens/student/enrollment/dashboard'
+import React from 'react';
+
+import { DatePicker } from '@mui/x-date-pickers';
+import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
+import { Box, alpha, useTheme, Typography } from '@mui/material';
+
+import { AnalyticsWebsiteVisits } from 'src/screens/student/enrollment/dashboard';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
+
+import CustomSelect from 'src/components/custom-select';
 
 const AssessmentDashboardReportComponent = () => {
   const theme = useTheme();
   return (
     <Box>
-
       <Typography component="span" variant="h6" gutterBottom>
         Reports Section
       </Typography>
 
-      <Box display="flex" flexDirection="row" gap={3} sx={{ pt: "20px", pb: "20px" }} >
+      <Box display="flex" flexDirection="row" gap={3} sx={{ pt: '20px', pb: '20px' }}>
         <CustomSelect
           label="Class"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
         <CustomSelect
           label="Subject"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
         <CustomSelect
           label="Division"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 120 } }}
         />
         <DatePicker
@@ -48,8 +49,6 @@ const AssessmentDashboardReportComponent = () => {
           format="DD-MM-YYYY"
           slotProps={{ textField: { size: 'small' } }}
         />
-
-
       </Box>
       <Grid2 container spacing={3}>
         <Grid2 xs={12} md={6}>
@@ -57,12 +56,11 @@ const AssessmentDashboardReportComponent = () => {
             title="Distribution of grades"
             //   subheader="(+43%) than last year"
             chart={{
-              categories: ['Maths', 'Physics', 'Chemistry',],
+              categories: ['Maths', 'Physics', 'Chemistry'],
               series: [
-
-                { name: 'A', data: [43, 33, 22,] },
-                { name: 'B', data: [51, 70, 47,] },
-                { name: 'C', data: [0, 67, 47,] },
+                { name: 'A', data: [43, 33, 22] },
+                { name: 'B', data: [51, 70, 47] },
+                { name: 'C', data: [0, 67, 47] },
               ],
               colors: [
                 alpha(theme.palette.primary.dark, 0.8),
@@ -113,11 +111,8 @@ const AssessmentDashboardReportComponent = () => {
           />
         </Grid2>
       </Grid2>
-
-
-
     </Box>
-  )
-}
+  );
+};
 
-export default AssessmentDashboardReportComponent
+export default AssessmentDashboardReportComponent;

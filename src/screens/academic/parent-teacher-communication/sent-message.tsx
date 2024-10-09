@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Box, Card, Paper, Button, TextField, Typography, CardContent } from '@mui/material';
 
 function SentMessage() {
-  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  // const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
 
   const handleResend = (messageId: string) => {
     // Handle resend logic here

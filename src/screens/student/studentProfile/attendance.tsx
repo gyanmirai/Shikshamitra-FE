@@ -217,6 +217,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                 const isSunday = day.day() === 0;
                 const isHalfDay = day.format('DD-MM-YYYY') === '17-07-2024';
                 const isHoliday = day.format('DD-MM-YYYY') === '18-07-2024';
+
+                const disabled = isSunday || isHoliday || prop.disabled;
                 let toolTipTitle = '';
                 if (absent) {
                   toolTipTitle = 'Doctors Appointment';
@@ -228,6 +230,10 @@ const Attendance = (props: StudentTabsComponentType) => {
                   toolTipTitle = 'Today date';
                 }
 
+                let backgroundColor = '';
+                if (absent) {
+                  backgroundColor = 'error.main';
+                }
                 return (
                   <Tooltip title={toolTipTitle} arrow placement="top">
                     <Badge
@@ -242,17 +248,19 @@ const Attendance = (props: StudentTabsComponentType) => {
                           position: 'relative',
                           zIndex: 1,
                           overflow: 'hidden',
-                          background: (theme) =>
-                            absent
-                              ? `${theme.palette.error.main} !important`
-                              : today
-                                ? 'transparent !important'
-                                : '',
-                          ...(absent
-                            ? { color: 'white !important' }
-                            : { color: (theme) => `${theme.palette.text.primary} !important` }),
-                          border: (theme) =>
-                            today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
+                          fontWeight: disabled ? 400 : 600,
+                          bgcolor: backgroundColor,
+                          // background: (theme) =>
+                          //   absent
+                          //     ? `${theme.palette.error.main} !important`
+                          //     : today
+                          //       ? 'transparent !important'
+                          //       : '',
+                          // ...(absent
+                          //   ? { color: 'white !important' }
+                          //   : { color: (theme) => `${theme.palette.text.primary} !important` }),
+                          // border: (theme) =>
+                          //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                           ...(isHalfDay
                             ? {
                                 '&::before': {
@@ -271,7 +279,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                               }
                             : {}),
                         }}
-                        disabled={isSunday || isHoliday || prop.disabled}
+                        disabled={disabled}
                       />
                     </Badge>
                   </Tooltip>

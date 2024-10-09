@@ -1,6 +1,6 @@
 import React from 'react';
-import FinanceSettingsScreen from 'src/screens/finance/settings/finance-settings';
 
+import FinanceSettingsScreen from 'src/screens/finance/settings/finance-settings';
 
 const FinanceSettings = () => <FinanceSettingsScreen />;
 

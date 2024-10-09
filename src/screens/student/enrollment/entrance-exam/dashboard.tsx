@@ -33,30 +33,27 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-export const ResultForm = () => {
-  const a = null;
-  return (
-    <Box>
-      <Scrollbar
-        sx={{
-          p: 3,
-          bgcolor: 'background.neutral',
-          //   height: 'calc(100vh - 150px)',
-        }}
-      >
-        <Box display="flex" flexDirection="column" gap={2}>
-          <TextField label="Obtained Marks" size="small" fullWidth />
-          <TextField label="Total Marks" size="small" fullWidth />
-        </Box>
-      </Scrollbar>
-      <DialogActions sx={{ flexShrink: 0 }}>
-        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>
-          Submit
-        </Button>
-      </DialogActions>
-    </Box>
-  );
-};
+export const ResultForm = () => (
+  <Box>
+    <Scrollbar
+      sx={{
+        p: 3,
+        bgcolor: 'background.neutral',
+        //   height: 'calc(100vh - 150px)',
+      }}
+    >
+      <Box display="flex" flexDirection="column" gap={2}>
+        <TextField label="Obtained Marks" size="small" fullWidth />
+        <TextField label="Total Marks" size="small" fullWidth />
+      </Box>
+    </Scrollbar>
+    <DialogActions sx={{ flexShrink: 0 }}>
+      <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>
+        Submit
+      </Button>
+    </DialogActions>
+  </Box>
+);
 
 const EntranceExamDashboard = () => {
   const dialog = useBoolean();
