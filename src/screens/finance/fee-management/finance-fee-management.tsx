@@ -8,8 +8,8 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 
-import FinanceFeeStructureOverview from './Tabs/finance-fee-structure-overview-tsx/finance-fee-structure-overview';
-import FinanceStudentStructureOverview from './Tabs/finanace-student-structure-overview.tsx/finance-student-structure-overview';
+import FinanceFeeStructureOverview from './Tabs/finance-fee-structure-overview/finance-fee-structure-overview';
+import FinanceStudentStructureOverview from './Tabs/finanace-student-structure-overview/finance-student-structure-overview';
 
 const TABS = [
   {
@@ -18,8 +18,8 @@ const TABS = [
     component: () => <FinanceFeeStructureOverview />,
   },
   {
-    value: 'student-fee-managment ',
-    label: 'Student Fee Managment ',
+    value: 'student-fee-managment',
+    label: 'Student Fee Managment',
     component: () => <FinanceStudentStructureOverview />,
   },
 ];
