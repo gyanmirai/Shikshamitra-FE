@@ -25,8 +25,6 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-
 const StudentProgressTracking = () => {
   const dialog = useBoolean();
   const handleRowClick = () => {
