@@ -4,11 +4,11 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { BarChart, CheckCircle, Description } from '@mui/icons-material';
 import { Box, Grid, alpha, Paper, Button, useTheme, Typography } from '@mui/material';
 
-import { AnalyticsWebsiteVisits } from 'src/screens/student/enrollment/dashboard';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ReportsAnalytics = () => {
   const theme = useTheme();

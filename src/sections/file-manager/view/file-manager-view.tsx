@@ -22,7 +22,7 @@ import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { fileFormat } from 'src/components/file-thumbnail';
 import { EmptyContent } from 'src/components/empty-content';
-import { ConfirmDialog } from 'src/components/custom-dialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useTable, rowInPage, getComparator } from 'src/components/table';
 
 import { FileManagerTable } from '../file-manager-table';

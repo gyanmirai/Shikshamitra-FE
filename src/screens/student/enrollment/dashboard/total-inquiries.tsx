@@ -1,12 +1,9 @@
-import type { CardProps } from '@mui/material';
-import type { ChartOptions } from 'src/components/chart';
-
 import React from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, alpha, useTheme, CardHeader, Typography } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 
-import { Chart, useChart } from 'src/components/chart';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const TotalInquiries = () => (
   <Grid2 xs={6}>
@@ -51,61 +48,3 @@ const TotalInquiries = () => (
 );
 
 export default TotalInquiries;
-
-type Props1 = CardProps & {
-  title?: string;
-  subheader?: string;
-  chart: {
-    colors?: string[];
-    categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
-    options?: ChartOptions;
-  };
-};
-
-export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Props1) {
-  const theme = useTheme();
-
-  const chartColors = chart.colors ?? [
-    alpha(theme.palette.primary.dark, 0.8),
-    alpha(theme.palette.warning.main, 0.8),
-  ];
-
-  const chartOptions = useChart({
-    colors: chartColors,
-    stroke: {
-      width: 2,
-      colors: ['transparent'],
-    },
-    xaxis: {
-      categories: chart.categories,
-    },
-    legend: {
-      show: true,
-    },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
-    ...chart.options,
-  });
-
-  return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
-
-      <Chart
-        type="bar"
-        series={chart.series}
-        options={chartOptions}
-        height="100%"
-        loadingProps={{ sx: { p: 2.5 } }}
-        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
-      />
-    </Card>
-  );
-}

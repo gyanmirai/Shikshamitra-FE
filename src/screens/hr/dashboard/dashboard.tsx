@@ -9,7 +9,7 @@ import { Divider, useTheme, IconButton } from '@mui/material';
 import { CONFIG } from 'src/config-global';
 // import { AttendanceGraph } from 'src/app/(auth)/student/overview/page';
 
-import { AttendanceGraph } from 'src/app/(auth)/student/overview/page';
+import { AttendanceGraph } from 'src/app/(auth)/student/overview/enrollments-trends';
 
 import CustomSelect from 'src/components/custom-select';
 import { svgColorClasses } from 'src/components/svg-color';
