@@ -5,6 +5,7 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,6 +14,7 @@ import FinanceCreateFeeStructureComponent from './finance-create-fee-structure';
 
 import type CreateNewFeeStructure from '../data/createNewFeeStructure';
 import type FeeStructureOverView from '../data/FeeStructure-interface';
+
 
 interface FinanceFeeStructureOverviewComponentProps {
   data: FeeStructureOverView[];
@@ -76,14 +78,14 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => {}}
+            onChange={() => { }}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
           <CustomSelect
             label="Fee Status"
             options={[]}
             value=""
-            onChange={() => {}}
+            onChange={() => { }}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
           <DatePicker
@@ -121,7 +123,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                             //   popover.onClose();
                           }}
                         >
-                          {/* <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} /> */}
+                          <Iconify icon="solar:eye-bold" />
                           View
                         </MenuItem>
                         <MenuItem
@@ -132,7 +134,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                             //   popover.onClose();
                           }}
                         >
-                          {/* <Iconify icon="solar:upload-bold" sx={{ height: '16px', width: '16px' }} /> */}
+                          <Iconify icon="solar:pen-bold" />
                           Edit
                         </MenuItem>
                       </MenuList>

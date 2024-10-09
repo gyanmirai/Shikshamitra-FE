@@ -46,7 +46,7 @@ const CarriculumContentviewDashboardComponent = () => {
           ],
         },
         {
-          name: 'English',
+          name: 'English for class 2',
           chapters: [
             'Chapter 1: Reading Comprehension',
             'Chapter 2: Writing Sentences',
@@ -71,7 +71,7 @@ const CarriculumContentviewDashboardComponent = () => {
       className: 'Class 3',
       subjects: [
         {
-          name: 'Math',
+          name: 'Math for class 3',
           chapters: [
             'Chapter 1: Multiplication',
             'Chapter 2: Division',
@@ -146,12 +146,14 @@ const CarriculumContentviewDashboardComponent = () => {
   const selectedClassData = classData.find((cls) => cls.className === selectedClass);
 
   return (
-    <Box>
-      <Typography sx={{ pb: '20px', pt: '20px' }}>Content Overview</Typography>
-
+    <Box >
+      <Typography variant="h6" gutterBottom>
+        Content Overview
+      </Typography>
+      <Box pb="15px" />
       <CustomSelect
         label="Class"
-        options={classData.map((cls) => ({ key: cls.className, value: cls.className }))}
+        options={classData.map((cls) => ({ value: cls.className, label: cls.className }))}
         value={selectedClass}
         onChange={handleClassSelectChange}
         formControlProps={{ sx: { minWidth: 120 } }}
@@ -167,7 +169,7 @@ const CarriculumContentviewDashboardComponent = () => {
               <Box>
                 <ul>
                   {subject.chapters.map((chapter, chapterIndex) => (
-                    <li key={chapterIndex}>{chapter}</li>
+                    <li style={{ color: "black", fontSize: "14px" }} key={chapterIndex}>{chapter}</li>
                   ))}
                 </ul>
               </Box>
