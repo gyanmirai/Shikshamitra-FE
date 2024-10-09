@@ -2,18 +2,19 @@ import * as yup from 'yup';
 import React, { useState } from 'react';
 
 import { CheckBox } from '@mui/icons-material';
-import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
-import { Box, Button, MenuList, MenuItem, TextField, FormControlLabel } from '@mui/material';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { Box, Button, MenuList, MenuItem, TextField, FormControlLabel, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { Dayjs } from 'dayjs';
+import CustomDialog from 'src/components/customDialog';
 
 const ScheduleExam = () => {
   const dialog = useBoolean();
@@ -144,7 +145,7 @@ const SelectClassAndSubject = () => (
       label="Select Class"
       name="class"
       value=""
-      onChange={() => {}}
+      onChange={() => { }}
       formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
     <CustomSelect
@@ -152,27 +153,79 @@ const SelectClassAndSubject = () => (
       label="Select Subject"
       name="subject"
       value=""
-      onChange={() => {}}
+      onChange={() => { }}
       formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
   </Box>
 );
 
-const SelectDateAndTime = () => (
-  <Box display="flex" gap={2}>
-    <DatePicker
-      label="Select Date"
-      format="DD-MM-YYYY"
-      slotProps={{ textField: { size: 'small' } }}
-    />
-    <DateTimePicker
-      label="Select Date & Time"
-      format="HH:mm"
-      views={['hours', 'minutes']}
-      slotProps={{ textField: { size: 'small' } }}
-    />
-  </Box>
-);
+
+const SelectDateAndTime = ({ scheduledExams }: any) => {
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [selectedTime, setSelectedTime] = useState<Dayjs | null>(null);
+  const conflictExamDialog = useBoolean();
+
+  const handleDateChange = (date : Dayjs | null) => {
+    setSelectedDate(date)
+    date && checkConflict(date, selectedTime)
+  }
+
+  const handleDateTimeChange = (time : Dayjs | null) => {
+    setSelectedTime(time)
+    time && checkConflict(selectedDate, time)
+  }
+
+  const checkConflict = (date : Dayjs | null, time : Dayjs | null) => {
+    if (date && time) {
+      const dateStr = date.format('DD-MM-YYYY');
+      const timeStr = time.format("HH:mm");
+
+      const conflictingExam = scheduledExams.find((exam : any) => ( //need to change type according data from db
+        exam.date === dateStr && exam.time === timeStr
+      ))
+      if (conflictingExam) {
+        console.log("conflict in exam");
+        conflictExamDialog.onTrue();
+      }
+    }
+  }
+
+  const handleCloseDialog = () => {
+    setSelectedTime(null);
+    setSelectedDate(null);
+    conflictExamDialog.onFalse()
+  }
+
+  return (
+    <Box display="flex" gap={2}>
+      <DatePicker
+        label="Select Date"
+        format="DD-MM-YYYY"
+        slotProps={{ textField: { size: 'small' } }}
+        value={selectedDate}
+        onChange={handleDateChange}
+      />
+      <TimePicker
+        label="Select Time"
+        format="HH:mm"
+        value={selectedTime}
+        onChange={handleDateTimeChange}
+        views={['hours', 'minutes']}
+        slotProps={{ textField: { size: 'small' } }}
+      />
+      <CustomDialog title="Popup" open={conflictExamDialog.value} handleClose={handleCloseDialog} maxWidth={"md"}>
+        <DialogContent>
+          <DialogContentText>
+            There is another exam on this date and time
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} variant='contained' color='error'>Ok</Button>
+        </DialogActions>
+      </CustomDialog>
+    </Box>
+  )
+};
 
 const AssignInvigilators = () => (
   <Box display="flex" gap={2}>
@@ -180,14 +233,14 @@ const AssignInvigilators = () => (
       options={[]}
       label="teacher"
       value=""
-      onChange={() => {}}
+      onChange={() => { }}
       formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
     <CustomSelect
       options={[]}
       label="teacher availability status"
       value=""
-      onChange={() => {}}
+      onChange={() => { }}
       formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
   </Box>
@@ -202,7 +255,7 @@ const InputEvaluationCriteria = () => (
         label="grading schema"
         name="gradingSchema"
         value=""
-        onChange={() => {}}
+        onChange={() => { }}
         formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
       />
       <CustomSelect
@@ -210,7 +263,7 @@ const InputEvaluationCriteria = () => (
         label="Class"
         name="class"
         value=""
-        onChange={() => {}}
+        onChange={() => { }}
         formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
       />
     </Box>
@@ -225,15 +278,22 @@ const InputEvaluationCriteria = () => (
   </Box>
 );
 
-const allTimetableSteps = [
-  SelectClassAndSubject,
-  SelectDateAndTime,
-  AssignInvigilators,
-  InputEvaluationCriteria,
-];
+const Exams = [
+  { subject: 'Mathematics', date: '15-10-2024', time: '10:00' },
+  { subject: 'Physics', date: '15-10-2024', time: '14:00' },
+]
 
 const TimetableForm = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [scheduledExams, setScheduledExams] = useState(Exams)
+
+  const allTimetableSteps = [
+    SelectClassAndSubject,
+    () => <SelectDateAndTime scheduledExams={scheduledExams} />,
+    AssignInvigilators,
+    InputEvaluationCriteria,
+  ];
+
   return (
     <CustomStepperWithFormik
       initialValues={{}}
