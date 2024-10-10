@@ -146,7 +146,7 @@ const CarriculumContentviewDashboardComponent = () => {
   const selectedClassData = classData.find((cls) => cls.className === selectedClass);
 
   return (
-    <Box >
+    <Box>
       <Typography variant="h6" gutterBottom>
         Content Overview
       </Typography>
@@ -169,7 +169,9 @@ const CarriculumContentviewDashboardComponent = () => {
               <Box>
                 <ul>
                   {subject.chapters.map((chapter, chapterIndex) => (
-                    <li style={{ color: "black", fontSize: "14px" }} key={chapterIndex}>{chapter}</li>
+                    <li style={{ color: 'black', fontSize: '14px' }} key={chapterIndex}>
+                      {chapter}
+                    </li>
                   ))}
                 </ul>
               </Box>

@@ -1,9 +1,5 @@
-import React from 'react'
+import React from 'react';
 
-const FinanceIncomeSettingTab = () => {
-    return (
-        <div>FinanceIncomeSetting</div>
-    )
-}
+const FinanceIncomeSettingTab = () => <div>FinanceIncomeSetting</div>;
 
-export default FinanceIncomeSettingTab
+export default FinanceIncomeSettingTab;

@@ -34,15 +34,15 @@ const CarriculumDetailedviewDashboardComponent = () => {
       <Box pb="15px" />
       {classData.map((cls, index) => (
         <CustomAccordion
-
           key={index}
           title={cls.className}
           content={
             <Typography>
-
               <ul>
                 {cls.subjects.map((subject, subIndex) => (
-                  <li style={{ color: 'black' }} key={subIndex}>{subject}</li>
+                  <li style={{ color: 'black' }} key={subIndex}>
+                    {subject}
+                  </li>
                 ))}
               </ul>
             </Typography>

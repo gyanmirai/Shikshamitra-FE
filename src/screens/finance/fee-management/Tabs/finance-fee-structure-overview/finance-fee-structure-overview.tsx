@@ -47,7 +47,6 @@ const FinanceFeeStructureOverview = () => {
       <FinanceFeeTrackingComponent />
       <FinanceFeeStructureOverviewComponent data={data} />
 
-
       <FinanceFeeListOverviewComponent />
     </Box>
   );

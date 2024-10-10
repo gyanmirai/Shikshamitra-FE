@@ -13,7 +13,6 @@ const FinanceFeeListOverviewComponent = () => (
       Fee Overview
     </Typography>
     <Box pb="20px" pt="10px">
-
       <TextField
         fullWidth
         name="Tuition Fees"
@@ -27,21 +26,21 @@ const FinanceFeeListOverviewComponent = () => (
           label="Class/Grade"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 150 } }}
         />
         <CustomSelect
           label="Division"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 150 } }}
         />
         <CustomSelect
           label="Payment Status"
           options={[]}
           value=""
-          onChange={() => { }}
+          onChange={() => {}}
           formControlProps={{ sx: { minWidth: 150 } }}
         />
         <DatePicker
@@ -55,8 +54,6 @@ const FinanceFeeListOverviewComponent = () => (
           slotProps={{ textField: { size: 'small' } }}
         />
       </Box>
-
-
 
       <Box>
         <CustomizableTable
@@ -128,7 +125,6 @@ const FinanceFeeListOverviewComponent = () => (
       </Box>
     </Box>
   </>
-
 );
 
 export default FinanceFeeListOverviewComponent;

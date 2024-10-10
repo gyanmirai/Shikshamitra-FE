@@ -10,10 +10,11 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Report from './report';
+import Settings from './settings';
 import ExamOverview from './exam-overview';
 import ScheduleExam from './schedule-exam';
 import ResultReport from './result-report';
+import GradingAndAnalytics from './gradingAndAnalytics';
 import AssessmentManagement from './assessment-management';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
 
@@ -41,7 +42,12 @@ const TABS = [
   },
   { value: 'resultAndReport', label: 'Result And Report', component: () => <ResultReport /> },
 
-  { value: 'report', label: 'Report', component: () => <Report /> },
+  {
+    value: 'gradingAndAnalytics',
+    label: 'Grading And Analytics',
+    component: () => <GradingAndAnalytics />,
+  },
+  { value: 'settings', label: 'Settings', component: () => <Settings /> },
 ];
 
 const ExaminationPageScreen = () => {

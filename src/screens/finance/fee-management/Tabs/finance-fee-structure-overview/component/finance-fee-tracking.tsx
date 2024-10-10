@@ -7,7 +7,6 @@ import { CONFIG } from 'src/config-global';
 
 import { AnalyticsWidgetSummary } from 'src/sections/overview/analytics/analytics-widget-summary';
 
-
 const FinanceFeeTrackingComponent = () => (
   <>
     <Typography component="span" variant="h6" gutterBottom>

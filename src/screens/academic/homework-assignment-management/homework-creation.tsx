@@ -118,7 +118,7 @@ const HomeworkCreation = () => {
           { id: 'subject', label: 'Subject' },
           { id: 'assignmentDesc', label: 'Assignment Description' },
           { id: 'dueDate', label: 'Due Date' },
-          { id: 'time', label: 'time' },
+          { id: 'time', label: 'Time' },
           { id: 'submissionType', label: 'Submission Type' },
           {
             id: 'status',

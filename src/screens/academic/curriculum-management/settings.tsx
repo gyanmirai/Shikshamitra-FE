@@ -2,17 +2,21 @@ import React from 'react';
 
 import {
   Box,
+  Stack,
   Button,
   Switch,
   MenuItem,
   MenuList,
   TextField,
   Typography,
+  DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -20,6 +24,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 const Settings = () => {
   const modal = useBoolean();
   const uploadModal = useBoolean();
+  const templateDialog = useBoolean();
   const gradeScalingModal = useBoolean();
   return (
     <Box>
@@ -38,7 +43,7 @@ const Settings = () => {
       </Box>
 
       <Box sx={{ pl: '90px', pt: '10px', pb: '20px' }}>
-        <Button variant="contained" onClick={() => {}}>
+        <Button variant="contained" onClick={templateDialog.onTrue}>
           Add New Template
         </Button>
       </Box>
@@ -198,8 +203,53 @@ const Settings = () => {
           formControlProps={{ sx: { minWidth: 220 } }}
         />
       </Box>
+      <CustomDialog
+        title="Add New Template"
+        open={templateDialog.value}
+        handleClose={templateDialog.onFalse}
+      >
+        <AddTemplateForm />
+      </CustomDialog>
     </Box>
   );
 };
-
+const AddTemplateForm = () => (
+  <form>
+    <Scrollbar sx={{ background: 'background.neutral', p: 3 }}>
+      <Stack spacing={3}>
+        <TextField
+          fullWidth
+          name="templateName"
+          label="Template Name"
+          onChange={() => {}}
+          size="small"
+        />
+        <CustomSelect
+          label="Grade"
+          name="grade"
+          options={[]}
+          value=""
+          formControlProps={{ fullWidth: true }}
+          onChange={() => {}}
+        />
+        <CustomSelect
+          label="Subjects"
+          name="subjects"
+          value=""
+          options={[]}
+          formControlProps={{ fullWidth: true }}
+          onChange={() => {}}
+        />
+      </Stack>
+    </Scrollbar>
+    <DialogActions>
+      <Button variant="contained" type="submit">
+        Cancel
+      </Button>
+      <Button variant="contained" type="submit">
+        Ok
+      </Button>
+    </DialogActions>
+  </form>
+);
 export default Settings;

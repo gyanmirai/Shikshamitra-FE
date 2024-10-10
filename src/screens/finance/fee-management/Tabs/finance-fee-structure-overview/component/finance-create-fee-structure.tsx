@@ -154,10 +154,20 @@ const FinanceCreateFeeStructureComponent: React.FC<FinanceCreateFeeStructureProp
             </Box>
 
             <DialogActions>
-              <Button sx={{ backgroundColor: "lightblue", color: "blue" }} variant="contained" onClick={onClose} size="small">
+              <Button
+                sx={{ backgroundColor: 'lightblue', color: 'blue' }}
+                variant="contained"
+                onClick={onClose}
+                size="small"
+              >
                 Draft
               </Button>
-              <Button sx={{ backgroundColor: "lightgreen", color: "darkgreen" }} type="submit" variant="contained" size="small">
+              <Button
+                sx={{ backgroundColor: 'lightgreen', color: 'darkgreen' }}
+                type="submit"
+                variant="contained"
+                size="small"
+              >
                 Save
               </Button>
             </DialogActions>

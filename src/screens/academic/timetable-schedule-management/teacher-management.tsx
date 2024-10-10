@@ -4,6 +4,8 @@ import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { FiberManualRecord } from '@mui/icons-material';
 import { Box, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
 
+import CustomSelect from 'src/components/custom-select';
+
 import { CalendarView } from 'src/sections/calendar/view';
 
 const TeacherManagement = () => (
@@ -12,7 +14,7 @@ const TeacherManagement = () => (
       <Grid2 xs={8}>
         <CalendarView />
       </Grid2>
-      <Grid2 xs={4}>
+      <Grid2 xs={4} rowSpacing={2}>
         <Typography>List Of Teacher</Typography>
         <List>
           <ListItem>
@@ -34,6 +36,20 @@ const TeacherManagement = () => (
             <ListItemText primary="Item 3" />
           </ListItem>
         </List>
+        <CustomSelect
+          label="Reassign Teacher"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 220 } }}
+        />
+        <CustomSelect
+          label="Available Teachers"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 220 } }}
+        />
       </Grid2>
     </Grid2>
   </Box>
