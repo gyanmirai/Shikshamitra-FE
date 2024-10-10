@@ -15,7 +15,6 @@ import FinanceCreateFeeStructureComponent from './finance-create-fee-structure';
 import type CreateNewFeeStructure from '../data/createNewFeeStructure';
 import type FeeStructureOverView from '../data/FeeStructure-interface';
 
-
 interface FinanceFeeStructureOverviewComponentProps {
   data: FeeStructureOverView[];
 }
@@ -78,14 +77,14 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
           <CustomSelect
             label="Fee Status"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
           <DatePicker

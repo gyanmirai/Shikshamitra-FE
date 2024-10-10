@@ -42,7 +42,11 @@ const TABS = [
   },
   { value: 'resultAndReport', label: 'Result And Report', component: () => <ResultReport /> },
 
-  { value: 'gradingAndAnalytics', label: 'Grading And Analytics', component: () => <GradingAndAnalytics /> },
+  {
+    value: 'gradingAndAnalytics',
+    label: 'Grading And Analytics',
+    component: () => <GradingAndAnalytics />,
+  },
   { value: 'settings', label: 'Settings', component: () => <Settings /> },
 ];
 

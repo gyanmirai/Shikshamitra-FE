@@ -81,21 +81,21 @@ const FinanceStudentFeeManagementComponent = () => {
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
           <CustomSelect
             label="Select Action"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 150 } }}
           />
         </Box>

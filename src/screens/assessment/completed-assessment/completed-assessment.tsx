@@ -1,13 +1,15 @@
-import { Box, Button, DialogActions, MenuItem, MenuList, TextField } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
-import React, { useState } from 'react';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { Scrollbar } from 'src/components/scrollbar';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
+
+import { Box, Button, MenuItem, MenuList, TextField, DialogActions } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const CompletedAssessment = () => {
   // Modal control hook
@@ -48,7 +50,8 @@ const CompletedAssessment = () => {
                     color: value === 'Feedback Given' ? 'darkgreen' : '#FFD666',
                     border: 'none',
                     '&:hover': {
-                      backgroundColor: value === 'Feedback Given' ? 'lightgreen' : 'rgb(64, 58, 39,)',
+                      backgroundColor:
+                        value === 'Feedback Given' ? 'lightgreen' : 'rgb(64, 58, 39,)',
                     },
                   }}
                   variant="contained"
@@ -70,13 +73,25 @@ const CompletedAssessment = () => {
                 <ThreeDotsActions
                   actions={({ popover }: any) => (
                     <MenuList>
-                      <MenuItem onClick={() => { /* reschedule logic */ }}>
+                      <MenuItem
+                        onClick={() => {
+                          /* reschedule logic */
+                        }}
+                      >
                         Reschedule
                       </MenuItem>
-                      <MenuItem onClick={() => { /* approved logic */ }}>
+                      <MenuItem
+                        onClick={() => {
+                          /* approved logic */
+                        }}
+                      >
                         Approved
                       </MenuItem>
-                      <MenuItem onClick={() => { /* archive logic */ }}>
+                      <MenuItem
+                        onClick={() => {
+                          /* archive logic */
+                        }}
+                      >
                         Archive
                       </MenuItem>
                     </MenuList>
