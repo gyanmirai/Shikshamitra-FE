@@ -14,8 +14,8 @@ import Reports from './reports';
 import Setting from './setting';
 import GradeBook from './grade-book';
 import PendingAssessment from './pending-assessment';
-import CompletedAssessment from './completed-assessment';
 import AssessmentDashboardTab from './dashboard/assessment-dashboard-tab';
+import CompletedAssessment from './completed-assessment/completed-assessment';
 
 const TABS = [
   {

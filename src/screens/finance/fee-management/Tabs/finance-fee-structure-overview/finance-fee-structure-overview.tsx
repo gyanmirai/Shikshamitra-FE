@@ -44,9 +44,10 @@ const FinanceFeeStructureOverview = () => {
 
   return (
     <Box>
+      <FinanceFeeTrackingComponent />
       <FinanceFeeStructureOverviewComponent data={data} />
 
-      <FinanceFeeTrackingComponent />
+
       <FinanceFeeListOverviewComponent />
     </Box>
   );

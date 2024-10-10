@@ -24,19 +24,25 @@ const CarriculumDetailedviewDashboardComponent = () => {
     setExpandedPanel(expandedPanel === panel ? false : panel);
   };
   return (
-    <Box>
-      <Typography sx={{ pt: '20px' }}>Detailed Curriculum View</Typography>
-      <Typography sx={{ pb: '20px', pt: '20px' }}>Subject Breakdown</Typography>
+    <Box py="15px">
+      {/* <Typography variant="h6" gutterBottom>
+        Detailed Curriculum View
+      </Typography> */}
+      <Typography variant="h6" gutterBottom>
+        Subject Breakdown
+      </Typography>
+      <Box pb="15px" />
       {classData.map((cls, index) => (
         <CustomAccordion
+
           key={index}
           title={cls.className}
           content={
             <Typography>
-              <strong>Subjects:</strong>
+
               <ul>
                 {cls.subjects.map((subject, subIndex) => (
-                  <li key={subIndex}>{subject}</li>
+                  <li style={{ color: 'black' }} key={subIndex}>{subject}</li>
                 ))}
               </ul>
             </Typography>
