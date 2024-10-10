@@ -1,7 +1,6 @@
 import React from 'react';
 
-import { Add } from '@mui/icons-material';
-import { Box, Grid, Card, Button, Switch, Checkbox, TextField, Typography } from '@mui/material';
+import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 
@@ -22,11 +21,6 @@ const Settings = () => (
           </Grid>
         </Grid>
         <Grid container item spacing={3}>
-          <Grid item xs={4}>
-            <Button variant="contained" size="small">
-              Exams Settings
-            </Button>
-          </Grid>
           <Grid item xs={4}>
             <CustomSelect
               label="Templates"
@@ -57,7 +51,14 @@ const Settings = () => (
             />
           </Grid>
           <Grid item xs={4}>
-            <TextField fullWidth name="rubricDescription" multiline rows={3} size="small" />
+            <TextField
+              fullWidth
+              name="rubricDescription"
+              placeholder="Rubric Description"
+              multiline
+              rows={3}
+              size="small"
+            />
           </Grid>
           <Grid item xs={4}>
             <TextField
@@ -107,14 +108,6 @@ const Settings = () => (
               onChange={() => {}}
               formControlProps={{ sx: { minWidth: 340 } }}
             />
-          </Grid>
-          <Grid item xs={4} sx={{ marginLeft: '33%' }}>
-            <Button variant="contained" color="success">
-              Save
-            </Button>
-            <Button startIcon={<Add />} variant="contained" sx={{ marginLeft: '5px' }}>
-              Criteria
-            </Button>
           </Grid>
         </Grid>
       </Grid>

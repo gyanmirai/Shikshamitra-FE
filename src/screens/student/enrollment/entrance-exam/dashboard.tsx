@@ -395,7 +395,7 @@ type Props = CardProps & {
   }[];
 };
 
-function TopPerformer({ title, subheader, list, ...other }: Props) {
+export function TopPerformer({ title, subheader, list, ...other }: Props) {
   return (
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
