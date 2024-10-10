@@ -66,12 +66,14 @@ const Overview = () => {
           <CustomTooltip
             placement="bottom"
             arrow
+            sx={{ position: 'fixed' }}
             title={
               <Card
                 sx={{
                   display: 'flex',
                   p: 1,
                   boxShadow: 'none',
+                  position: 'fixed',
                 }}
               >
                 <Box sx={{ flexGrow: 1 }}>

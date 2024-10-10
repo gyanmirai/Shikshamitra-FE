@@ -8,14 +8,12 @@ import {
   Box,
   Card,
   Grid,
-  Radio,
   Button,
   Checkbox,
   MenuItem,
   MenuList,
   TextField,
   Typography,
-  RadioGroup,
   CardContent,
   DialogActions,
   InputAdornment,
@@ -97,16 +95,11 @@ const StudentAttendanceSettingScreen = () => {
         <Typography variant="h6" gutterBottom>
           Method
         </Typography>
-        <RadioGroup
-          aria-label="notification-method"
-          name="notification-method"
-          defaultValue="email"
-          row
-        >
-          <FormControlLabel value="email" control={<Radio />} label="Email" />
-          <FormControlLabel value="sms" control={<Radio />} label="SMS" />
-          <FormControlLabel value="push" control={<Radio />} label="Push Notification" />
-        </RadioGroup>
+        <Box>
+          <FormControlLabel control={<Checkbox />} label="Email" />
+          <FormControlLabel control={<Checkbox />} label="SMS" />
+          <FormControlLabel control={<Checkbox />} label="Push Notification" />
+        </Box>
       </Card>
 
       <Card sx={{ p: 1, my: 2 }}>
