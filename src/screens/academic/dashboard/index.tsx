@@ -22,7 +22,12 @@ import { CalendarView } from 'src/sections/calendar/view';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const AcademicDashboardScreen = () => {
-  const [classes, setClasses] = useState<string>('');
+  const [classes1, setClasses1] = useState<string>('');
+  const [classes2, setClasses2] = useState<string>('');
+  const [classes3, setClasses3] = useState<string>('');
+  const [classes4, setClasses4] = useState<string>('');
+  const [classes5, setClasses5] = useState<string>('');
+  const [classes6, setClasses6] = useState<string>('');
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -48,19 +53,19 @@ const AcademicDashboardScreen = () => {
               <CustomSelect
                 label="class"
                 options={classData?.items || []}
-                value={classes}
+                value={classes1}
                 isLoading={isLoading}
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
-                  setClasses(val as string);
+                  setClasses1(val as string);
                 }}
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
 
             <Box sx={{ mt: 2 }}>
-              <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+              <Scrollbar sx={{ mt: 1.5, height: '190px' }}>
                 <Box
                   component="ul"
                   sx={{
@@ -68,7 +73,18 @@ const AcademicDashboardScreen = () => {
                     padding: 0,
                   }}
                 >
-                  {['Class 10-30', 'Class 9-25'].map((exam, index) => (
+                  {[
+                    'Class 10-30',
+                    'Class 9-25',
+                    'ABC',
+                    'XYZ',
+                    'PQR',
+                    'MNO',
+                    'JPO',
+                    'ABC',
+                    'LMP',
+                    'UTT',
+                  ].map((exam, index) => (
                     <Box component="li" key={index} sx={{ mb: 1 }}>
                       <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                         {exam}
@@ -95,7 +111,7 @@ const AcademicDashboardScreen = () => {
             </Box>
 
             <Box sx={{ mt: 2 }}>
-              <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+              <Scrollbar sx={{ mt: 1.5, height: '190px' }}>
                 <Box
                   component="ul"
                   sx={{
@@ -103,7 +119,19 @@ const AcademicDashboardScreen = () => {
                     padding: 0,
                   }}
                 >
-                  {['Created-10', 'Submitted-8', 'Pending-2'].map((exam, index) => (
+                  {[
+                    'Created-10',
+                    'Submitted-8',
+                    'Pending-2',
+                    'ABC',
+                    'XYZ',
+                    'PQR',
+                    'MNO',
+                    'JPO',
+                    'ABC',
+                    'LMP',
+                    'UTT',
+                  ].map((exam, index) => (
                     <Box component="li" key={index} sx={{ mb: 1 }}>
                       <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                         {exam}
@@ -225,7 +253,7 @@ const AcademicDashboardScreen = () => {
                 </Typography>
                 <Button variant="contained">Create New Exam</Button>
               </Box>
-              <Scrollbar sx={{ height: '120px' }}>
+              <Scrollbar sx={{ height: '290px' }}>
                 <Box
                   component="ul"
                   sx={{
@@ -234,7 +262,23 @@ const AcademicDashboardScreen = () => {
                     mt: 2,
                   }}
                 >
-                  {['Subject - Math', 'Date - 01-01-2024', 'Teacher - XYZ'].map((exam, index) => (
+                  {[
+                    'Subject - Math',
+                    'Date - 01-01-2024',
+                    'Teacher - XYZ',
+                    'ABC',
+                    'XYZ',
+                    'PQR',
+                    'MNO',
+                    'JPO',
+                    'ABC',
+                    'LMP',
+                    'UTT',
+                    'SER',
+                    'JHG',
+                    'SWE',
+                    'GFR',
+                  ].map((exam, index) => (
                     <Box component="li" key={index} sx={{ mb: 1 }}>
                       <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                         {exam}
@@ -252,12 +296,12 @@ const AcademicDashboardScreen = () => {
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
-                value={classes}
+                value={classes2}
                 isLoading={isLoading}
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
-                  setClasses(val as string);
+                  setClasses2(val as string);
                 }}
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
@@ -377,9 +421,9 @@ const AcademicDashboardScreen = () => {
             <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
               <CustomSelect
                 options={classData?.items || []}
-                value={classes}
+                value={classes3}
                 onChange={(val) => {
-                  setClasses(val as string);
+                  setClasses3(val as string);
                 }}
                 label="Class"
                 isLoading={isLoading}
@@ -433,9 +477,9 @@ const AcademicDashboardScreen = () => {
                 labelKey="name"
                 valueKey="id"
                 options={classData?.items || []}
-                value={classes}
+                value={classes4}
                 onChange={(val) => {
-                  setClasses(val as string);
+                  setClasses4(val as string);
                 }}
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
@@ -450,7 +494,18 @@ const AcademicDashboardScreen = () => {
                     padding: 0,
                   }}
                 >
-                  {['Math is Excellent', 'English is weak'].map((exam, index) => (
+                  {[
+                    'Math is Excellent',
+                    'English is weak',
+                    'ABC',
+                    'XYZ',
+                    'PQR',
+                    'MNO',
+                    'JPO',
+                    'ABC',
+                    'LMP',
+                    'UTT',
+                  ].map((exam, index) => (
                     <Box component="li" key={index} sx={{ mb: 1 }}>
                       <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                         {exam}
@@ -491,12 +546,12 @@ const AcademicDashboardScreen = () => {
               <CustomSelect
                 label="class"
                 options={classData?.items || []}
-                value={classes}
+                value={classes5}
                 isLoading={isLoading}
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
-                  setClasses(val as string);
+                  setClasses5(val as string);
                 }}
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
@@ -511,13 +566,15 @@ const AcademicDashboardScreen = () => {
                     padding: 0,
                   }}
                 >
-                  {['Attendance 80 %'].map((exam, index) => (
-                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                        {exam}
-                      </Button>
-                    </Box>
-                  ))}
+                  {['Attendance 80 %', 'ABC', 'XYZ', 'PQR', 'MNO', 'JPO', 'ABC', 'LMP', 'UTT'].map(
+                    (exam, index) => (
+                      <Box component="li" key={index} sx={{ mb: 1 }}>
+                        <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                          {exam}
+                        </Button>
+                      </Box>
+                    )
+                  )}
                 </Box>
               </Scrollbar>
             </Box>
@@ -552,12 +609,12 @@ const AcademicDashboardScreen = () => {
               <CustomSelect
                 label="class"
                 options={classData?.items || []}
-                value={classes}
+                value={classes6}
                 isLoading={isLoading}
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
-                  setClasses(val as string);
+                  setClasses6(val as string);
                 }}
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
@@ -565,7 +622,7 @@ const AcademicDashboardScreen = () => {
 
             <Box sx={{ mt: 2 }}>
               <Box component="ul" sx={{ pl: 2, listStyleType: 'disc' }}>
-                <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+                <Scrollbar sx={{ mt: 1.5, height: '300px' }}>
                   <Box
                     component="ul"
                     sx={{
@@ -573,7 +630,18 @@ const AcademicDashboardScreen = () => {
                       padding: 0,
                     }}
                   >
-                    {['Pass - 20', 'Fail - 05'].map((exam, index) => (
+                    {[
+                      'Pass - 20',
+                      'Fail - 05',
+                      'ABC',
+                      'XYZ',
+                      'PQR',
+                      'MNO',
+                      'JPO',
+                      'ABC',
+                      'LMP',
+                      'UTT',
+                    ].map((exam, index) => (
                       <Box component="li" key={index} sx={{ mb: 1 }}>
                         <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                           {exam}
