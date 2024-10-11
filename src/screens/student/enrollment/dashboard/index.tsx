@@ -7,14 +7,13 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Card, alpha, Button, useTheme, CardHeader } from '@mui/material';
+import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableView from 'src/components/customizable-view';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 import Overview from './overview';
@@ -55,6 +54,7 @@ const EnrollmentDashboardScreen = () => {
       title: 'Admission over time',
     },
   ]);
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -62,60 +62,33 @@ const EnrollmentDashboardScreen = () => {
         links={[{ name: 'Student' }, { name: 'Student Enrollment Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={
-          <CustomTooltip
-            placement="bottom"
-            arrow
-            title={
-              <Card
-                sx={{
-                  p: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  alignItems: 'center',
-                  boxShadow: 'none',
-                }}
-              >
-                <Button
-                  startIcon={<Iconify icon="mdi:user-add" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="primary"
-                  onClick={() => router.push('/student/enrollment/inquiry')}
-                >
-                  Add New Inquiry
-                </Button>
-                <Button
-                  startIcon={<Iconify icon="mingcute:search-line" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="secondary"
-                  onClick={() => router.push('/student/enrollment/enrollment-status-tracking')}
-                >
-                  Track Enrollment
-                </Button>
-                <Button
-                  startIcon={<Iconify icon="simple-icons:googledocs" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="warning"
-                  onClick={() => router.push('/student/enrollment/reports')}
-                >
-                  General Reports
-                </Button>
-                <Button
-                  startIcon={<Iconify icon="uis:calender" />}
-                  variant="contained"
-                  sx={{ width: '100%' }}
-                  color="error"
-                >
-                  Schedule Exam
-                </Button>
-              </Card>
-            }
-          >
-            <Button startIcon={<Iconify icon="mdi:interaction-double-tap" />}>Quick Action</Button>
-          </CustomTooltip>
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:user-add',
+                label: 'Add New Inquiry',
+                href: '/student/enrollment/inquiry',
+                color: 'primary',
+              },
+              {
+                icon: 'mingcute:search-line',
+                label: 'Track Enrollment',
+                href: '/student/enrollment/enrollment-status-tracking',
+                color: 'warning',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'General Reports',
+                href: '/student/enrollment/reports',
+                color: 'secondary',
+              },
+              // {
+              //   icon: 'uis:calender',
+              //   label: 'Schedule Exam',
+              //   href: '/student/enrollment/schedule-exam',
+              // }
+            ]}
+          />
         }
       />
       <CustomizableView sections={sections} setSections={setSections} />

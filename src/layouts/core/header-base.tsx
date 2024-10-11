@@ -16,7 +16,11 @@ import { RouterLink } from 'src/routes/components';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setCurrentYear, setCurrentBoard } from 'src/redux/globalState/globalSlice';
+import {
+  setCurrentYear,
+  setCurrentBoard,
+  setCurrentMedium,
+} from 'src/redux/globalState/globalSlice';
 
 import { Logo } from 'src/components/logo';
 
@@ -26,6 +30,7 @@ import { MenuButton } from '../components/menu-button';
 import { BoardPopover } from '../components/board-popover';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
+import { MediumPopover } from '../components/midium-popover';
 import { SettingsButton } from '../components/settings-button';
 import { WorkspacesPopover, type WorkspacesPopoverProps } from '../components/workspaces-popover';
 
@@ -119,7 +124,9 @@ export function HeaderBase({
 }: HeaderBaseProps) {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const { currentYear, currentBoard } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentBoard, currentMedium } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   const { data: yearData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -131,6 +138,7 @@ export function HeaderBase({
     currentQueryAndMutation: useGetBoardsQuery,
   });
   const [boards, setBoards] = useState([]);
+
   useEffect(() => {
     if (!currentYear?.id) {
       if (yearData) {
@@ -150,6 +158,16 @@ export function HeaderBase({
       dispatch(setCurrentBoard(filterData[0]));
     }
   }, [boardsData, currentYear, dispatch]);
+
+  useEffect(() => {
+    if (currentBoard?.id) {
+      if (currentBoard?.educationMediums?.length) {
+        dispatch(setCurrentMedium(currentBoard?.educationMediums?.[0]));
+      }
+    } else {
+      dispatch(setCurrentMedium({}));
+    }
+  }, [currentBoard, currentMedium?.id, dispatch]);
 
   return (
     <HeaderSection
@@ -232,6 +250,13 @@ export function HeaderBase({
               ) : (
                 <CircularProgress size={16} />
               )}
+
+              <MediumPopover
+                data-slot="medium"
+                medium={currentMedium || {}}
+                setMedium={(value) => dispatch(setCurrentMedium(value))}
+                data={currentBoard?.educationMediums || []}
+              />
 
               {/* -- Searchbar -- */}
               {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />}

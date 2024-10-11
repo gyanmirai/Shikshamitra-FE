@@ -49,8 +49,10 @@ export function BoardPopover({ data = [], sx, board, setBoard, ...other }: Board
         disableRipple
         onClick={popover.onOpen}
         sx={{
-          py: 0.5,
+          p: 0.5,
           gap: { xs: 0.5, [mediaQuery]: 1 },
+          border: (theme) => `dashed 1px ${theme.vars.palette.warning.main}`,
+          borderRadius: 1,
           ...sx,
         }}
         {...other}
@@ -61,7 +63,7 @@ export function BoardPopover({ data = [], sx, board, setBoard, ...other }: Board
           src={`${CONFIG.site.basePath}/assets/icons/workspaces/year.svg`}
           sx={{ width: 24, height: 24, borderRadius: '50%' }}
         /> */}
-        <Iconify width={20} icon="octicon:mortar-board-16" sx={{ color: 'primary.main' }} />
+        <Iconify width={20} icon="octicon:mortar-board-16" sx={{ color: 'warning.main' }} />
         <Box
           component="span"
           sx={{
@@ -82,7 +84,7 @@ export function BoardPopover({ data = [], sx, board, setBoard, ...other }: Board
           {workspace?.plan}
         </Label> */}
 
-        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
+        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'warning.main' }} />
       </ButtonBase>
 
       <CustomPopover
@@ -98,7 +100,7 @@ export function BoardPopover({ data = [], sx, board, setBoard, ...other }: Board
                 key={option.id}
                 selected={option.id === board?.id}
                 onClick={() => handleChangeWorkspace(option)}
-                sx={{ height: 48 }}
+                sx={{ height: 32 }}
               >
                 {/* <Avatar alt={option.name} src={option.logo} sx={{ width: 24, height: 24 }} /> */}
 
