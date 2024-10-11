@@ -10,7 +10,6 @@ const RecentActivitiesNotification = () => (
     <Card
       sx={{
         display: 'flex',
-
         p: 3,
         width: '100%',
       }}

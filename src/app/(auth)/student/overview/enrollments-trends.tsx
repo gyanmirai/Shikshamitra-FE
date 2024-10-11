@@ -51,6 +51,7 @@ const EnrollmentsTrends = () => (
           },
         ],
       }}
+      sx={{ height: '100%' }}
     />
   </Grid2>
 );

@@ -15,6 +15,8 @@ import {
 } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import UserHoverProfile from 'src/components/student-popover';
 import {
   Carousel,
   useCarousel,
@@ -23,7 +25,9 @@ import {
 } from 'src/components/carousel';
 
 const StudentBirthDate = () => {
-  const carousel = useCarousel({ loop: true }, [Autoplay({ playOnInit: true, delay: 2000 })]);
+  const carousel = useCarousel({ loop: true }, [
+    Autoplay({ playOnInit: true, delay: 2000, stopOnMouseEnter: true }),
+  ]);
   return (
     <Grid2 xs={12} md={6}>
       <Card
@@ -78,7 +82,33 @@ const StudentBirthDate = () => {
                   borderRadius: '8px',
                 }}
               >
-                <Avatar sx={{ bgcolor: 'primary.main', mr: 2, width: 56, height: 56 }}>JD</Avatar>
+                <UserHoverProfile
+                  avatarComp={
+                    <Avatar
+                      sx={{
+                        bgcolor: 'primary.main',
+                        mr: 2,
+                        width: 56,
+                        height: 56,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      JD
+                    </Avatar>
+                  }
+                  user={{
+                    name: 'John Doe',
+                    avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                    role: 'Student',
+                    email: 'john.doe@example.com',
+                    class: '10th',
+                    division: 'A',
+                    board: 'CBSE',
+                    medium: 'English',
+                    organization: 'Higher Secondary',
+                  }}
+                />
+
                 <Box>
                   <Typography color="primary" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                     John Doe
@@ -97,7 +127,25 @@ const StudentBirthDate = () => {
                   borderRadius: '8px',
                 }}
               >
-                <Avatar sx={{ bgcolor: 'primary.main', mr: 2, width: 56, height: 56 }}>JD</Avatar>
+                <UserHoverProfile
+                  avatarComp={
+                    <Avatar sx={{ bgcolor: 'primary.main', mr: 2, width: 56, height: 56 }}>
+                      JD
+                    </Avatar>
+                  }
+                  user={{
+                    name: 'John Doe',
+                    avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                    role: 'Student',
+                    email: 'john.doe@example.com',
+                    class: '10th',
+                    division: 'A',
+                    board: 'CBSE',
+                    medium: 'English',
+                    organization: 'Higher Secondary',
+                  }}
+                />
+
                 <Box>
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                     John Doe
@@ -115,44 +163,68 @@ const StudentBirthDate = () => {
           <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
             Upcoming Birthdays
           </Typography>
-          <List>
-            {[
-              { name: 'Jane Smith', date: 'May 15', age: 19 },
-              { name: 'Mike Johnson', date: 'May 18', age: 21 },
-              { name: 'Sarah Brown', date: 'May 20', age: 20 },
-            ].map((student, index) => (
-              <ListItem
-                key={index}
-                disablePadding
-                sx={{
-                  backgroundColor: 'background.paper',
-                  borderRadius: '8px',
-                  p: 2,
-                  boxShadow: 2,
-                  my: 1,
-                }}
-              >
-                <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: 'secondary.main', width: 48, height: 48 }}>
-                    {student.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                      {student.name}
-                    </Typography>
-                  }
-                  secondary={
-                    <Typography variant="body2">{`${student.date} (Turning ${student.age})`}</Typography>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
+          <Scrollbar sx={{ height: 300 }}>
+            <List>
+              {[
+                { name: 'Jane Smith', date: 'May 15', age: 19 },
+                { name: 'Mike Johnson', date: 'May 18', age: 21 },
+                { name: 'Sarah Brown', date: 'May 20', age: 20 },
+              ].map((student, index) => (
+                <ListItem
+                  key={index}
+                  disablePadding
+                  sx={{
+                    backgroundColor: 'background.paper',
+                    borderRadius: '8px',
+                    p: 2,
+                    boxShadow: 2,
+                    my: 1,
+                  }}
+                >
+                  <ListItemAvatar>
+                    <UserHoverProfile
+                      avatarComp={
+                        <Avatar
+                          sx={{
+                            bgcolor: 'secondary.main',
+                            width: 48,
+                            height: 48,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {student.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')}
+                        </Avatar>
+                      }
+                      user={{
+                        name: student.name,
+                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                        role: 'Student',
+                        email: 'john.doe@example.com',
+                        class: '10th',
+                        division: 'A',
+                        board: 'CBSE',
+                        medium: 'English',
+                        organization: 'Higher Secondary',
+                      }}
+                    />
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        {student.name}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography variant="body2">{`${student.date} (Turning ${student.age})`}</Typography>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Scrollbar>
         </Box>
       </Card>
     </Grid2>

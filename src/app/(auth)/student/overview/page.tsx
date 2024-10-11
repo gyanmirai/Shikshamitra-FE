@@ -7,16 +7,14 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Add, Report, TrackChanges } from '@mui/icons-material';
-import { Box, Card, Button, Divider, useTheme, CardHeader } from '@mui/material';
+import { Box, Card, Divider, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableView from 'src/components/customizable-view';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import OverviewCard from './overview';
 import StudentBirthDate from './student-birthdate';
@@ -63,52 +61,28 @@ const Overview = () => {
         links={[{ name: 'Student Record' }, { name: 'Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={
-          <CustomTooltip
-            placement="bottom"
-            arrow
-            sx={{ position: 'fixed' }}
-            title={
-              <Card
-                sx={{
-                  display: 'flex',
-                  p: 1,
-                  boxShadow: 'none',
-                  position: 'fixed',
-                }}
-              >
-                <Box sx={{ flexGrow: 1 }}>
-                  <Box display="flex" flexDirection="column" gap={2} flexWrap="wrap" pt={2}>
-                    <Button
-                      startIcon={<Add />}
-                      variant="contained"
-                      color="primary"
-                      onClick={() => router.push('/student/enrollment/inquiry')}
-                    >
-                      Add New Inquiry
-                    </Button>
-                    <Button
-                      startIcon={<TrackChanges />}
-                      variant="contained"
-                      color="warning"
-                      onClick={() => router.push('/student/enrollment/enrollment-status-tracking')}
-                    >
-                      Track Enrollment Status
-                    </Button>
-                    <Button
-                      startIcon={<Report />}
-                      variant="contained"
-                      color="error"
-                      onClick={() => router.push('/student/reports')}
-                    >
-                      Generate Report
-                    </Button>
-                  </Box>
-                </Box>
-              </Card>
-            }
-          >
-            <Button startIcon={<Iconify icon="mdi:interaction-double-tap" />}>Quick Action</Button>
-          </CustomTooltip>
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:user-add',
+                label: 'Add New Inquiry',
+                href: '/student/enrollment/inquiry',
+                color: 'primary',
+              },
+              {
+                icon: 'mingcute:search-line',
+                label: 'Track Enrollment',
+                href: '/student/enrollment/enrollment-status-tracking',
+                color: 'warning',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'General Reports',
+                href: '/student/reports',
+                color: 'secondary',
+              },
+            ]}
+          />
         }
       />
       <CustomizableView sections={sections} setSections={setSections} />

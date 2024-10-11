@@ -55,8 +55,10 @@ export function WorkspacesPopover({
         disableRipple
         onClick={popover.onOpen}
         sx={{
-          py: 0.5,
+          p: 0.5,
           gap: { xs: 0.5, [mediaQuery]: 1 },
+          border: (theme) => `dashed 1px ${theme.vars.palette.success.main}`,
+          borderRadius: 1,
           ...sx,
         }}
         {...other}
@@ -67,7 +69,7 @@ export function WorkspacesPopover({
           src={`${CONFIG.site.basePath}/assets/icons/workspaces/year.svg`}
           sx={{ width: 24, height: 24, borderRadius: '50%' }}
         /> */}
-        <Iconify width={20} icon="uim:calender" sx={{ color: 'primary.main' }} />
+        <Iconify width={20} icon="uil:calender" sx={{ color: 'primary.main' }} />
         <Box
           component="span"
           sx={{
@@ -88,7 +90,7 @@ export function WorkspacesPopover({
           {workspace?.plan}
         </Label> */}
 
-        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
+        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'primary.main' }} />
       </ButtonBase>
 
       <CustomPopover
@@ -104,7 +106,7 @@ export function WorkspacesPopover({
                 key={option.id}
                 selected={option.id === workspace?.id}
                 onClick={() => handleChangeWorkspace(option)}
-                sx={{ height: 48 }}
+                sx={{ height: 32 }}
               >
                 {/* <Avatar alt={option.name} src={option.logo} sx={{ width: 24, height: 24 }} /> */}
 
