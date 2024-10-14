@@ -1,3 +1,4 @@
+
 import { useFormik } from 'formik';
 import React, { useState } from 'react'
 
@@ -21,6 +22,7 @@ interface FormikValue {
     paymentMethod: string,
     date: string,
     paymentStatus: string,
+    id: number,
 }
 
 const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({ dialogValue, data, onSave, onClose, isEdit, allData }) => {
@@ -33,6 +35,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({ d
             paymentMethod: isEdit ? data.paymentMethod ?? "" : '',
             date: isEdit ? data.date ?? "" : "",
             paymentStatus: isEdit ? data.paymentStatus ?? "" : "",
+            id: isEdit ? data.id ?? Math.floor(Math.random() * 1000000000) : Math.floor(Math.random() * 1000000000),
 
         },
         // validationSchema: validationSchema,  // Uncomment this if you have validation schema
@@ -60,14 +63,14 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({ d
 
     return (
         <CustomDialog
-            title={`${isEdit ? 'Edit' : 'Create New'} Income Category`}
+            title={`${isEdit ? 'Edit' : 'Create New'} Income`}
             open={dialogValue}
             handleClose={onClose}
         >
             <Box px="20px">
                 {showExistingEntryMessage ? (
                     <Typography component="span" fontSize="14" color="red">
-                        This Income Category Already Exists
+                        This Income Source is Already Exist
                     </Typography>
                 ) : (
                     <Box height="25px" />
@@ -93,19 +96,20 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({ d
                                 size="small"
                             />
                             <TextField
-                                name="paymentMethod"
-                                label="Payment Method"
-                                value={formik.values.paymentMethod}
-                                onChange={formik.handleChange}
-                                size="small"
-                            />
-                            <TextField
                                 name="date"
                                 label="Date"
                                 value={formik.values.date}
                                 onChange={formik.handleChange}
                                 size="small"
                             />
+                            <TextField
+                                name="paymentMethod"
+                                label="Payment Method"
+                                value={formik.values.paymentMethod}
+                                onChange={formik.handleChange}
+                                size="small"
+                            />
+
                             <TextField
                                 name="paymentStatus"
                                 label="Payment Status"

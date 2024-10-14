@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Switch, MenuItem, MenuList, Typography, } from '@mui/material';
+import { Box, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,114 +10,106 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceSettingPaymentMethodDialog from './component/finance-setting-payment-method-dialog';
 
-
-
 interface ServiceProviderDetail {
-    serviceProviderName: string,
-    serviceProviderMobile: string,
-
+    serviceProviderName: string;
+    serviceProviderMobile: string;
 }
+
 interface Data {
-    paymentMethodName: string,
-    serviceProviderDetail: ServiceProviderDetail,
-    processingFee: string,
-    id: number,
-    action?: string,
+    paymentMethodName: string;
+    serviceProviderDetail: ServiceProviderDetail;
+    id: number;
+    action?: string;
 }
 
-
-let data: Data[] = [
+let initialData: Data[] = [
     {
         id: 1,
-        paymentMethodName: 'stripe',
+        paymentMethodName: 'Stripe',
         serviceProviderDetail: {
-            serviceProviderName: "jack",
-            serviceProviderMobile: "98498989844",
+            serviceProviderName: 'Jack',
+            serviceProviderMobile: '98498989844',
         },
-        processingFee: "3000",
         action: 'View',
     },
     {
         id: 2,
-        paymentMethodName: 'stripe',
+        paymentMethodName: 'PayPal',
         serviceProviderDetail: {
-            serviceProviderName: "jack",
-            serviceProviderMobile: "98498989844",
+            serviceProviderName: 'John',
+            serviceProviderMobile: '98498989855',
         },
-        processingFee: "3000",
         action: 'View',
     },
-]
-const FinancePaymentMethodSettingTab = () => {
+];
+
+const FinancePaymentMethodSettingTab: React.FC = () => {
     const dialog = useBoolean();
-    const [selectedEntry, setSelectedEntry] = useState(data);
+    const [selectedEntry, setSelectedEntry] = useState(initialData);
     const [isEdit, setIsEdit] = useState(false);
-    const [tableData, setTableData] = useState(data)
+    const [tableData, setTableData] = useState(initialData);
+
     const closeDialog = () => {
-        setIsEdit(false)
+        setIsEdit(false);
+
         dialog.onFalse();
-
-    }
-
-    useEffect(() => {
-
-
-    }, [selectedEntry, isEdit, tableData])
+    };
 
     const handleDelete = (item: any) => {
-
-        data = data.filter(val =>
-            (val.id) !== (item.id) ||
+        console.log("hiren xyz", item.id)
+        initialData = initialData.filter(val =>
             (val.id) !== (item.id)
         );
-
-        setTableData([...data]);
-
+        setTableData([...initialData]);
     }
 
-    const handleSave = (dataFromDialog: any) => {
-        // const { id, taxName, taxPercentage, applicableRegion, applicableCategory } = dataFromDialog;
 
-        // if (dataFromDialog) {
-        //     const existingEntryIndex = data.findIndex(val => id === val.id);
 
-        //     if (existingEntryIndex !== -1 && !isEdit) {
-        //         // setShowDuplicateDialog(true)
-        //         ;
-        //         closeDialog();
-        //         return;
-        //     }
+    const handleSave = (dataFromDialog: Data) => {
+        const { serviceProviderDetail, paymentMethodName, id } = dataFromDialog;
 
-        //     // Prepare the new entry
-        //     const taxSetting = {
-        //         id,
-        //         taxName,
-        //         taxPercentage,
-        //         applicableRegion: applicableRegion || [], // Ensure it's an array
-        //         applicableCategory: applicableCategory || [], // Ensure it's an array
-        //         action: 'View',
-        //     };
+        if (dataFromDialog) {
+            const existingEntryIndex = initialData.findIndex(val => id === val.id);
 
-        //     // Check for duplicate regions and categories
-        //     if (existingEntryIndex !== -1 && isEdit) {
-        //         const existingEntry = data[existingEntryIndex];
-        //         existingEntry.applicableRegion = applicableRegion;
-        //         existingEntry.applicableCategory = applicableCategory;
-        //     } else if (existingEntryIndex === -1 && !isEdit) {
-        //         data.push(taxSetting);
+            const newPaymentMethodName = {
+                paymentMethodName,
+                serviceProviderDetail: {
+                    serviceProviderName: serviceProviderDetail.serviceProviderName,
+                    serviceProviderMobile: serviceProviderDetail.serviceProviderMobile,
+                },
 
-        //     }
+                id,
+                action: isEdit ? 'edit' : 'add',
+            };
 
-        // }
+            const updatedData = [...initialData];
 
-        // closeDialog();
-        // console.log(dataFromDialog);
+            if (isEdit && existingEntryIndex !== -1) {
+                updatedData[existingEntryIndex] = newPaymentMethodName;
+            } else {
+                updatedData.push(newPaymentMethodName);
+            }
+
+            setTableData(updatedData);
+        }
+
+        closeDialog();
+        console.log('Updated Data:', dataFromDialog);
     };
+
+    useEffect(() => { }, [selectedEntry, isEdit]);
+
     return (
         <>
             <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-
-                <Button onClick={dialog.onTrue} variant="contained" size="small">
+                <Button
+                    onClick={() => {
+                        setIsEdit(false);
+                        dialog.onTrue();
+                    }}
+                    variant="contained"
+                    size="small"
+                >
                     Add Payment Method
                 </Button>
             </Box>
@@ -141,66 +133,61 @@ const FinancePaymentMethodSettingTab = () => {
                             );
                         },
                     },
-                    { id: 'processingFee', label: 'Processing Fee' },
                     {
-                        id: "toggle", label: "Status Toggle", render(val) {
-
-                            return (<Switch value={val} />)
+                        id: 'toggle',
+                        label: 'Status Toggle',
+                        render() {
+                            return <Switch />;
                         },
                     },
-
-
                     {
                         id: 'action',
                         label: 'Action',
-                        render(value, row: any) {
-                            return (
-                                <ThreeDotsActions
-                                    actions={({ popover }: any) => (
-                                        <MenuList >
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSelectedEntry(row);
-                                                    setIsEdit(true);
-                                                    dialog.onTrue();
-                                                    //   popover.onClose();
-                                                }}
-                                            >
-                                                <Iconify color="blue" icon="solar:pen-bold" />
-                                                Edit
-                                            </MenuItem>
-                                            <MenuItem
-                                                onClick={() => {
-                                                    handleDelete(row)
+                        render: (value, row: any) => (
+                            <ThreeDotsActions
+                                actions={({ popover }: any) => (
+                                    <MenuList>
+                                        <MenuItem
+                                            onClick={() => {
+                                                setIsEdit(true);
 
-                                                }}
-                                            >
-                                                <Iconify color="red" icon="solar:trash-bin-trash-bold" />
-                                                Delete
-                                            </MenuItem>
-                                        </MenuList>
-                                    )}
-                                />
-                            );
-                        },
+                                                setSelectedEntry(row);
+                                                dialog.onTrue();
+                                                popover.onClose();
+                                            }}
+                                        >
+                                            <Iconify color="blue" icon="solar:pen-bold" />
+                                            Edit
+                                        </MenuItem>
+                                        <MenuItem
+                                            onClick={() => {
+                                                handleDelete(row); // Handle delete action
+                                                popover.onClose(); // Close the popover
+                                            }}
+                                        >
+                                            <Iconify color="red" icon="solar:trash-bin-trash-bold" />
+                                            Delete
+                                        </MenuItem>
+                                    </MenuList>
+                                )}
+                            />
+                        ),
                     },
                 ]}
                 data={tableData}
             />
-            <Box>
-                {dialog.value && selectedEntry && (
-                    <FinanceSettingPaymentMethodDialog
-                        onSave={handleSave}
-                        dialogValue={dialog.value}
-                        onClose={closeDialog}
-                        data={selectedEntry}
-                        isEdit={isEdit}
-                        allData={tableData}
-                    />
-                )}
-            </Box>
+            {dialog.value && selectedEntry && (
+                <FinanceSettingPaymentMethodDialog
+                    onSave={handleSave}
+                    dialogValue={dialog.value}
+                    onClose={closeDialog}
+                    data={selectedEntry}
+                    isEdit={isEdit}
+                    allData={tableData}
+                />
+            )}
         </>
-    )
-}
+    );
+};
 
 export default FinancePaymentMethodSettingTab;

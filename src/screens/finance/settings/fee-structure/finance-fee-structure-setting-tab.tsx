@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
 import { Box, Paper, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
 
@@ -10,134 +10,129 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
 
+interface FeeSubCategoryList {
+    id: number;
+    name: string;
+    amount: string;
+    isCounted: boolean;
+}
 
-let data = [
+interface Data {
+    id: number;
+    feeCategoryName: string;
+    amount: string;
+    applicableGrade: string;
+    statusToggle: boolean;
+    action: string;
+    feeSubCategoryList: FeeSubCategoryList[];
+}
 
+let initialData: Data[] = [
     {
-
+        id: 1,
         feeCategoryName: 'Fees',
         amount: '3,000',
         applicableGrade: '2',
         feeSubCategoryList: [
             {
-                name: "Tution fee",
-                amount: "500",
+                id: 1,
+                name: 'Tuition fee',
+                amount: '500',
                 isCounted: true,
             },
             {
-                name: "Sports fee",
-                amount: "1500",
+                id: 2,
+                name: 'Sports fee',
+                amount: '1500',
                 isCounted: false,
-
             },
             {
-                name: "Transport fee",
-                amount: "1000",
+                id: 3,
+                name: 'Transport fee',
+                amount: '1000',
                 isCounted: true,
-
             },
         ],
         statusToggle: true,
         action: 'View',
-
     },
+];
 
-
-]
 const FinanceFeeStructureSettingTab = () => {
     const dialog = useBoolean();
-    const [selectedEntry, setSelectedEntry] = useState(data);
+
+    const [selectedEntry, setSelectedEntry] = useState<Data[]>(initialData);
     const [isEdit, setIsEdit] = useState(false);
-    const [tableData, setTableData] = useState(data)
-
-    const handleSave = () => {
-
-    }
-
-    // const handleSave = (dataFromDialog: any) => {
-    //     const { feeName, amount, applicableGrade, multipleApplicableGrade } = dataFromDialog
-
-    //     if (isEdit) {
-    //         setIsEdit(false);
-    //     }
-    //     if (multipleApplicableGrade && multipleApplicableGrade.length > 0) {
-    //         multipleApplicableGrade.forEach((grade: string) => {
-
-    //             const existingEntryIndex = data.findIndex(val =>
-    //                 feeName === val.feeCategoryName && grade === val.applicableGrade
-    //             );
-
-
-    //             if (existingEntryIndex !== -1) {
-
-    //                 data[existingEntryIndex].amount = amount;
-    //             } else {
-    //                 const newEntry = {
-    //                     feeCategoryName: feeName,
-    //                     amount,
-    //                     applicableGrade: grade,
-    //                     statusToggle: true,
-    //                     action: 'View',
-    //                 };
-    //                 data.push(newEntry);
-    //             }
-    //         });
-    //     } else {
-
-    //         const existingEntryIndex = data.findIndex(val =>
-    //             feeName === val.feeCategoryName && applicableGrade === val.applicableGrade
-    //         );
-
-    //         if (existingEntryIndex !== -1) {
-
-    //             data[existingEntryIndex].amount = amount;
-
-    //         } else {
-
-    //             const newEntry = {
-    //                 feeCategoryName: feeName,
-    //                 amount,
-    //                 applicableGrade,
-    //                 statusToggle: true,
-    //                 action: 'View',
-    //             };
-    //             data.push(newEntry);
-    //         }
-    //     }
-
-
-
-    //     dialog.onFalse();
-    //     console.log(dataFromDialog)
-    // }
-
-    const closeDialog = () => {
-        setIsEdit(false)
-        dialog.onFalse();
-
-    }
+    const [tableData, setTableData] = useState<Data[]>(initialData);
+    const [switchStates, setSwitchStates] = useState<Record<number, boolean[]>>({});
 
     useEffect(() => {
+        // Initialize switch states for all rows
+        const initialSwitchStates: Record<number, boolean[]> = {};
+        initialData.forEach((row) => {
+            initialSwitchStates[row.id] = row.feeSubCategoryList.map(() => true);
+        });
+        setSwitchStates(initialSwitchStates);
+    }, []);
+
+    const handleSave = (dataFromDialog: any) => {
+        const { id, feeName, amount, applicableGrade } = dataFromDialog;
+
+        const newFeeStructure: Data = {
+            id: Math.floor(Math.random() * 10000),
+            feeCategoryName: 'Fees',
+            amount,
+            applicableGrade,
+            feeSubCategoryList: [
+                {
+                    id,
+                    name: feeName,
+                    amount,
+                    isCounted: true,
+                },
+            ],
+            statusToggle: true,
+            action: 'View',
+        };
+
+        // if(isEdit){
+        //   const isExistingIndex =   tableData.findIndex((val)=> val.id === id)
+
+        //   tableData[isExistingIndex];
+        // }
+        setTableData([...tableData, newFeeStructure]);
+
+        // Initialize switch state for the new row
+        setSwitchStates({
+            ...switchStates,
+            [newFeeStructure.id]: newFeeStructure.feeSubCategoryList.map(() => true),
+        });
+
+        dialog.onFalse();
+    };
+
+    const handleSwitchChange = (rowId: number, index: number) => {
+        const updatedSwitchState = { ...switchStates };
+        updatedSwitchState[rowId][index] = !updatedSwitchState[rowId][index];
+        setSwitchStates(updatedSwitchState);
+    };
+
+    const closeDialog = () => {
+        setIsEdit(false);
+        dialog.onFalse();
+    };
 
 
-    }, [selectedEntry, isEdit])
-
-    const handleDelete = (item: any) => {
-        const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
-
-        data = data.filter(val =>
-            normalize(val.feeCategoryName) !== normalize(item.feeCategoryName) ||
-            normalize(val.applicableGrade) !== normalize(item.applicableGrade)
-        );
-
-        setTableData([...data]);
-
+    const handleDelete = (rowData: any) => {
+        initialData = initialData.filter((val) => val.id !== rowData.id)
+        setTableData(initialData);
     }
+
     return (
         <>
             <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
                 <Button variant="contained" size="small">
-                    Bulk Update Fees
+                    Save
                 </Button>
                 <Button onClick={dialog.onTrue} variant="contained" size="small">
                     Add New Fee Category
@@ -154,20 +149,13 @@ const FinanceFeeStructureSettingTab = () => {
                         id: 'feeCategoryName',
                         label: 'Fee Category Name',
                         children(row) {
-                            // eslint-disable-next-line react-hooks/rules-of-hooks
-                            const [switchState, setSwitchState] = useState(
-                                row.feeSubCategoryList.map(() => true)
+                            // Get the switch state for this specific row
+                            const switchState = switchStates[row.id] || [];
+
+                            const totalAmount = row.feeSubCategoryList.reduce(
+                                (total: any, val: any, index: any) => (switchState[index] ? total + Number(val.amount) : total),
+                                0
                             );
-
-                            const totalAmount = row.feeSubCategoryList.reduce((total: any, val: any, index: any) => switchState[index] ? total + Number(val.amount) : total, 0);
-
-                            const handleSwitchChange = (index: number) => {
-                                const updatedSwitchState = [...switchState];
-                                updatedSwitchState[index] = !updatedSwitchState[index];
-                                setSwitchState(updatedSwitchState);
-                            };
-
-
 
                             return (
                                 <>
@@ -180,19 +168,12 @@ const FinanceFeeStructureSettingTab = () => {
                                                             {val.name}: {val.amount}
                                                             <Switch
                                                                 checked={switchState[index]}
-                                                                onChange={() => handleSwitchChange(index)}
+                                                                onChange={() => handleSwitchChange(row.id, index)}
                                                             />
                                                         </Paper>
-
-
                                                     </Box>
-                                                    {index < row.feeSubCategoryList.length - 1 && <Typography>+</Typography>}
                                                 </React.Fragment>
                                             ))}
-                                            <Typography>=</Typography>
-                                            <Paper elevation={4} sx={{ p: 2 }}>
-                                                Total: {totalAmount}
-                                            </Paper>
                                         </Box>
                                     ) : (
                                         <Box>
@@ -201,36 +182,30 @@ const FinanceFeeStructureSettingTab = () => {
                                     )}
                                 </>
                             );
-                        }
-                    }
-                    ,
-
-
+                        },
+                    },
                     { id: 'amount', label: 'Amount' },
                     { id: 'applicableGrade', label: 'Applicable Grade' },
-
                     {
-                        id: 'statustoggle', label: 'Status Toggle', render(statusToggle) {
-
-                            return (<Switch value={statusToggle} />
-                            );
-                        }
+                        id: 'statustoggle',
+                        label: 'Status Toggle',
+                        render(statusToggle) {
+                            return <Switch value={statusToggle} />;
+                        },
                     },
-
                     {
                         id: 'action',
                         label: 'Action',
                         render(value, row: any) {
                             return (
                                 <ThreeDotsActions
-                                    actions={({ popover }: any) => (
+                                    actions={({ popover }) => (
                                         <MenuList>
                                             <MenuItem
                                                 onClick={() => {
                                                     setSelectedEntry(row);
                                                     setIsEdit(true);
                                                     dialog.onTrue();
-                                                    //   popover.onClose();
                                                 }}
                                             >
                                                 <Iconify icon="solar:pen-bold" />
@@ -239,7 +214,6 @@ const FinanceFeeStructureSettingTab = () => {
                                             <MenuItem
                                                 onClick={() => {
                                                     handleDelete(row)
-
                                                 }}
                                             >
                                                 <Iconify icon="solar:trash-bin-trash-bold" />
@@ -254,115 +228,17 @@ const FinanceFeeStructureSettingTab = () => {
                 ]}
                 data={tableData}
             />
-            <Box>
-                {dialog.value && selectedEntry && (
-                    <FinanceAddFeeCategorySettingDialog
-                        onSave={handleSave}
-                        dialogValue={dialog.value}
-                        onClose={closeDialog}
-                        data={selectedEntry}
-                        isEdit={isEdit}
-                    />
-                )}
-            </Box>
+            {dialog.value && selectedEntry && (
+                <FinanceAddFeeCategorySettingDialog
+                    onSave={handleSave}
+                    dialogValue={dialog.value}
+                    onClose={closeDialog}
+                    data={selectedEntry}
+                    isEdit={isEdit}
+                />
+            )}
         </>
+    );
+};
 
-    )
-}
-
-export default FinanceFeeStructureSettingTab
-
-
-// Example function to handle save action
-//  const handleSave = async (dataFromDialog: any) => {
-//     const { feeName, amount, applicableGrade, multipleApplicableGrade } = dataFromDialog;
-
-//     // Function to check existing entry and show a confirmation dialog
-//     const checkExistingEntry = (grade: string) => data.find(val =>
-//         feeName === val.feeCategoryName && grade === val.applicableGrade
-//     );
-
-//     // Function to show confirmation dialog
-//     const showConfirmationDialog = (existingEntry: any) => new Promise((resolve) => {
-//         // This is where you implement your dialog logic
-//         // For example, using Material-UI's Dialog component
-//         const handleClose = (action: string) => {
-//             if (action === 'edit') {
-//                 resolve('edit'); // User wants to edit
-//             } else if (action === 'delete') {
-//                 resolve('delete'); // User wants to delete
-//             } else {
-//                 resolve('cancel'); // User cancels
-//             }
-//         };
-
-//         // Example dialog implementation
-//         return (
-//             <Dialog open onClose={() => handleClose('cancel')}>
-//                 <DialogTitle>Entry Already Exists</DialogTitle>
-//                 <DialogContent>
-//                     <p>The entry for {existingEntry.applicableGrade} already exists. Would you like to edit or delete it?</p>
-//                 </DialogContent>
-//                 <DialogActions>
-//                     <Button onClick={() => handleClose('edit')} color="primary">Edit</Button>
-//                     <Button onClick={() => handleClose('delete')} color="secondary">Delete</Button>
-//                     <Button onClick={() => handleClose('cancel')} >Cancel</Button>
-//                 </DialogActions>
-//             </Dialog>
-//         );
-//     });
-
-//     // Check if multiple grades are selected
-//     const promises = [];
-//     if (multipleApplicableGrade && multipleApplicableGrade.length > 0) {
-//         multipleApplicableGrade.forEach(async (grade: string) => {
-//             const existingEntry = checkExistingEntry(grade);
-//             if (existingEntry) {
-//                 // Show confirmation dialog and wait for user response
-//                 const userAction = await showConfirmationDialog(existingEntry);
-//                 if (userAction === 'edit') {
-//                     // Update the existing entry with the new amount
-//                     existingEntry.amount = amount; // Update amount
-//                 } else if (userAction === 'delete') {
-//                     // Delete the existing entry
-//                     data = data.filter(val => !(feeName === val.feeCategoryName && grade === val.applicableGrade));
-//                 }
-//             } else {
-//                 // Create a new entry
-//                 const newEntry = {
-//                     feeCategoryName: feeName,
-//                     amount,
-//                     applicableGrade: grade,
-//                     statusToggle: true,
-//                     action: 'View',
-//                 };
-//                 data.push(newEntry);
-//             }
-//         });
-//     } else {
-//         // Handle single grade similarly
-//         const existingEntry = checkExistingEntry(applicableGrade);
-//         if (existingEntry) {
-//             // Show confirmation dialog and wait for user response
-//             const userAction = await showConfirmationDialog(existingEntry);
-//             if (userAction === 'edit') {
-//                 existingEntry.amount = amount; // Update amount
-//             } else if (userAction === 'delete') {
-//                 data = data.filter(val => !(feeName === val.feeCategoryName && applicableGrade === val.applicableGrade));
-//             }
-//         } else {
-//             // Create a new entry
-//             const newEntry = {
-//                 feeCategoryName: feeName,
-//                 amount,
-//                 applicableGrade,
-//                 statusToggle: true,
-//                 action: 'View',
-//             };
-//             data.push(newEntry);
-//         }
-//     }
-
-//     dialog.onFalse(); // Close the dialog
-//     console.log(dataFromDialog); // Optional: Log the dialog data for debugging
-// };
+export default FinanceFeeStructureSettingTab;
