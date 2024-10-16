@@ -2,7 +2,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -15,12 +15,17 @@ import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable'
 
 const NewTimetable = () => {
   const [classes, setClasses] = useState<string>('');
-  const [division, setDivision] = useState<any>([]);
+  const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
+  const [division, setDivision] = useState<any>();
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  const handleCreateTimetable = () => {
+    setShowTimeTable(true);
+  };
 
   const dialog = useBoolean();
   return (
@@ -36,7 +41,7 @@ const NewTimetable = () => {
           onChange={(val) => {
             const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
             setClasses(val as string);
-            setDivisionOptions(selectedClass?.divisions || []);
+            setDivisionOptions(selectedClass?.divisions);
           }}
           formControlProps={{ sx: { minWidth: 140 } }}
         />
@@ -45,7 +50,6 @@ const NewTimetable = () => {
           disabled={!classes}
           labelKey="name"
           valueKey="id"
-          multiple
           options={divisionOptions}
           value={division}
           onChange={(val) => {
@@ -53,8 +57,17 @@ const NewTimetable = () => {
           }}
           formControlProps={{ sx: { minWidth: 140 } }}
         />
+        <Box justifyContent="flex-end">
+          <Button
+            variant="contained"
+            onClick={handleCreateTimetable}
+            disabled={!classes || !division} // Disable if class or division not selected
+          >
+            Create Timetable
+          </Button>
+        </Box>
       </Box>
-      <CalendarTimeTable />
+      {showTimeTable && <CalendarTimeTable />}
     </Box>
   );
 };

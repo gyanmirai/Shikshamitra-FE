@@ -170,20 +170,63 @@ export function CalendarTimeTable() {
       setSelectedTeacher(null);
     }
   };
+  const handleEventResize = (info: any) => {
+    const { event } = info;
 
-  const handleEventDrop = (info: { event: { id: any; start: any; end: any; resourceId: any } }) => {
     const updatedEvent = {
-      id: info.event.id,
-      start: info.event.start,
-      end: info.event.end,
-      resourceId: info.event.resourceId,
+      id: event.id,
+      start: event.startStr,
+      end: event.endStr,
+      resourceId: event.resourceId,
+    };
+
+    // Update the events state to reflect the resized event
+    setEvents((prevEvents) =>
+      prevEvents.map((ev) => (ev.id === updatedEvent.id ? { ...ev, ...updatedEvent } : ev))
+    );
+
+    // Optionally, you may want to update the backend or any storage here
+    updateEvent(updatedEvent);
+  };
+
+  const isEventOverlappingBreak = (start: Date, end: Date) =>
+    predefinedBreaks.some((breakEvent) => {
+      const breakStart = new Date(start);
+      const breakEnd = new Date(start);
+      const [breakStartHours, breakStartMinutes] = breakEvent.startTime!.split(':').map(Number);
+      const [breakEndHours, breakEndMinutes] = breakEvent.endTime!.split(':').map(Number);
+
+      breakStart.setHours(breakStartHours, breakStartMinutes, 0, 0);
+      breakEnd.setHours(breakEndHours, breakEndMinutes, 0, 0);
+
+      return start < breakEnd && end > breakStart;
+    });
+
+  const handleEventDrop = (info: any) => {
+    const { event } = info;
+
+    if (event.title.includes('Break')) {
+      info.revert();
+      return;
+    }
+
+    if (isEventOverlappingBreak(event.start!, event.end!)) {
+      info.revert();
+      return;
+    }
+
+    const updatedEvent = {
+      id: event.id,
+      start: event.startStr,
+      end: event.endStr,
+      resourceId: event.resourceId,
     };
 
     setEvents((prevEvents) =>
       prevEvents.map((ev) => (ev.id === updatedEvent.id ? { ...ev, ...updatedEvent } : ev))
     );
 
-    updateEvent(updatedEvent); // Update the event on the server and in local state
+    updateEvent(updatedEvent);
   };
 
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
@@ -213,18 +256,13 @@ export function CalendarTimeTable() {
               selectable
               select={handleDateSelect}
               eventAllow={(dropInfo, draggedEvent) => {
-                // Disallow dragging or resizing for break events
                 if (draggedEvent?.title.includes('Break')) {
-                  return false; // Prevent moving or resizing break events
+                  return false;
                 }
-                return true; // Allow other events
+                return !isEventOverlappingBreak(dropInfo.start, dropInfo.end);
               }}
-              eventDrop={(arg) => {
-                // Ensure the dropped event isn't a break event
-                if (!arg.event.title.includes('Break')) {
-                  onDropEvent(arg, updateEvent);
-                }
-              }}
+              eventDrop={handleEventDrop}
+              eventResize={handleEventResize}
             />
             {/* <FullCalendar
               weekends
