@@ -1,10 +1,13 @@
 import type { Division, Standards } from 'src/types/school';
+import type { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Card, Button, Switch, Typography, FormControlLabel } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { uuidv4 } from 'src/utils/uuidv4';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -13,11 +16,14 @@ import CustomSelect from 'src/components/custom-select';
 
 import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable';
 
+// eslint-disable-next-line react-hooks/rules-of-hooks
+
 const NewTimetable = () => {
   const [classes, setClasses] = useState<string>('');
   const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
   const [division, setDivision] = useState<any>();
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const [timetableEvents, setTimetableEvents] = useState<CalendarEvent[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -27,10 +33,37 @@ const NewTimetable = () => {
     setShowTimeTable(true);
   };
 
+  const predefinedBreaks = useMemo<CalendarEvent[]>(
+    () => [
+      {
+        id: uuidv4(),
+        startTime: '12:00',
+        endTime: '12:30',
+        title: 'Lunch Break',
+        textColor: '#FFD700',
+        daysOfWeek: [1, 2, 3, 4, 5, 6], // Days when the break occurs
+      },
+      {
+        id: uuidv4(),
+        startTime: '13:00:00',
+        endTime: '13:15:00',
+        title: 'Short Break',
+        textColor: '#FF4500',
+        daysOfWeek: [1, 2, 3, 4, 5, 6],
+      },
+    ],
+    []
+  );
+
+  const handleEventsChange = (events: CalendarEvent[]) => {
+    console.log('Updated events from CalendarTimeTable:', events);
+    setTimetableEvents(events);
+  };
+
   const dialog = useBoolean();
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <CustomSelect
           label="Class"
           options={classData?.items || []}
@@ -67,7 +100,61 @@ const NewTimetable = () => {
           </Button>
         </Box>
       </Box>
-      {showTimeTable && <CalendarTimeTable />}
+      {showTimeTable && (
+        <>
+          <CalendarTimeTable
+            grade={1}
+            division="A"
+            duration="00:15:00"
+            schoolStartTime="09:00"
+            schoolEndTime="15:45"
+            onEventsChange={handleEventsChange}
+            breakEvents={predefinedBreaks} // Pass break events to CalendarTimeTable
+          />
+          <Card sx={{ p: 2, mb: 5 }}>
+            <Box display="flex" gap={6}>
+              <Box>
+                <CustomSelect
+                  options={[]}
+                  label="list of available rooms"
+                  name="class"
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+                />
+                &nbsp;
+                <FormControlLabel control={<Switch />} label="Auto Assign" />
+              </Box>
+              <Box sx={{ display: 'flex' }}>
+                <Switch defaultChecked />
+                <Typography>Weekly</Typography>
+                <Switch />
+                <Typography>Monthly</Typography>
+              </Box>
+              <Box>
+                <CustomSelect
+                  options={[]}
+                  label="Frequency Selection"
+                  name="class"
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { maxWidth: 350, width: '100%' } }}
+                />
+                &nbsp;
+                <FormControlLabel control={<Switch />} label="Weekly" />
+              </Box>
+            </Box>
+          </Card>
+          <Box display="flex" gap={2}>
+            <Button variant="contained" onClick={() => {}} color="warning">
+              Save Draft
+            </Button>
+            <Button variant="contained" onClick={() => {}}>
+              Publish
+            </Button>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };

@@ -213,12 +213,21 @@ export function CalendarView() {
 }
 
 // ----------------------------------------------------------------------
+interface SchoolTimetableCalendarProps {
+  grade: number;
+  division: string;
+  teacherId?: string; // Optional teacherId, for filtering events in teacher view
+}
 
-export function SchoolTimetableCalendar() {
+export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = ({
+  grade,
+  division,
+  teacherId,
+}: SchoolTimetableCalendarProps) => {
   const calendarRef = useRef<FullCalendar>(null);
   const events = [
     {
-      id: '5d6cb6b7-0e4c-45e6-924d-422316ab972b',
+      id: 'a7b34d8b-2f88-4208-bcbe-b0580ec265a6',
       startTime: '12:00',
       endTime: '12:30',
       title: 'Lunch Break',
@@ -228,9 +237,9 @@ export function SchoolTimetableCalendar() {
       end: '',
     },
     {
-      id: 'fabaa7c7-ccfa-470e-93e1-0d7286cdcec1',
+      id: '9a3c2693-de73-4fd4-ba9b-d230ab14b428',
       startTime: '13:00:00',
-      endTime: '13:10:00',
+      endTime: '13:15:00',
       title: 'Short Break',
       textColor: '#FF4500',
       daysOfWeek: [1, 2, 3, 4, 5, 6],
@@ -238,27 +247,42 @@ export function SchoolTimetableCalendar() {
       end: '',
     },
     {
-      id: 'c69800d1-c99b-43e3-a683-62e980bfce0c',
+      id: '350ea826-713f-4110-8f2d-15338306ba01',
       start: '2024-10-14T09:00:00+05:30',
       end: '2024-10-14T10:00:00+05:30',
-      title: 'English / Ms. Johnson',
-      textColor: '#33FF57',
-    },
-    {
-      id: '73d0ff31-6657-4a18-b665-8603a4de5471',
-      start: '2024-10-15T10:00:00+05:30',
-      end: '2024-10-15T11:00:00+05:30',
-      title: 'Math / Mr. Brown',
+      title: 'Math / Mr. Smith',
       textColor: '#FF5733',
+      teacherId: '1',
     },
     {
-      id: 'afb32827-d179-4f6e-b5de-3199e6b4dabb',
-      start: '2024-10-17T14:30:00+05:30',
-      end: '2024-10-17T15:30:00+05:30',
+      id: 'afcd9ac8-bfbd-4538-ba9e-69a9de8653a0',
+      start: '2024-10-15T09:00:00+05:30',
+      end: '2024-10-15T10:00:00+05:30',
+      title: 'Science / Ms. Johnson',
+      textColor: '#3357FF',
+      teacherId: '2',
+    },
+    {
+      id: 'a300b038-b0ab-4c41-8cf3-b9429bb2726c',
+      start: '2024-10-17T10:00:00+05:30',
+      end: '2024-10-17T11:00:00+05:30',
       title: 'Science / Mr. Smith',
       textColor: '#3357FF',
+      teacherId: '1',
+    },
+    {
+      id: '36230109-60d9-4eeb-9c9b-db04c7d7a861',
+      start: '2024-10-17T11:00:00+05:30',
+      end: '2024-10-17T12:00:00+05:30',
+      title: 'English / Ms. Johnson',
+      textColor: '#33FF57',
+      teacherId: '2',
     },
   ];
+  const filteredEvents = teacherId
+    ? events.filter((event) => !event.teacherId || event.teacherId === teacherId) // Keep break events (no teacherId) and specific teacher events
+    : events; // For student view, show all events
+
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
   return (
     <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
@@ -269,22 +293,22 @@ export function SchoolTimetableCalendar() {
             plugins={[dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
             initialView="timeGridWeek"
             headerToolbar={false}
-            slotDuration="00:30:00"
-            slotLabelInterval="00:30:00"
+            slotDuration="00:15:00"
+            slotLabelInterval="00:15:00"
             slotMinTime="09:00:00"
             slotMaxTime="15:45:00"
             height="100%"
             expandRows
             dayMaxEvents
             allDaySlot={false}
-            events={events}
+            events={filteredEvents}
             hiddenDays={[0]}
           />
         </StyledCalendar>
       </Card>
     </DashboardContent>
   );
-}
+};
 
 type ApplyFilterProps = {
   dateError: boolean;

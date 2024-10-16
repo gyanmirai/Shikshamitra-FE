@@ -1,6 +1,6 @@
 import type { Division, Standards } from 'src/types/school';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Box, Button, Switch, Typography } from '@mui/material';
 
@@ -10,6 +10,11 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 
 import { SchoolTimetableCalendar } from 'src/sections/calendar/view';
+import { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
+import { uuidv4 } from 'src/utils/uuidv4';
+
+// eslint-disable-next-line react-hooks/rules-of-hooks
+
 
 const CurrentTimetableOverview = () => {
   const [classes, setClasses] = useState<string>('');
@@ -18,6 +23,8 @@ const CurrentTimetableOverview = () => {
   const [teacher, setTeacher] = useState<string>('');
   const [isTeacherView, setIsTeacherView] = useState<boolean>(false);
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const [timetableEvents, setTimetableEvents] = useState<CalendarEvent[]>([]);
+
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -76,6 +83,8 @@ const CurrentTimetableOverview = () => {
               { id: '3', name: 'Mr. Brown' },
             ]}
             value={teacher}
+            labelKey="name"
+            valueKey="id"
             disabled={!isTeacherView}
             onChange={(val) => {
               setTeacher(val as string);
@@ -83,16 +92,23 @@ const CurrentTimetableOverview = () => {
             formControlProps={{ sx: { minWidth: 140 } }}
           />
         )}
+        <Button
+          variant="contained"
+          onClick={handleCreateTimetable}
+          sx={{ alignSelf: 'flex-end' }}
+          disabled={!classes || !division.length || (isTeacherView && !teacher)}
+        >
+          Show Timetable
+        </Button>
       </Box>
-      <Button
-        variant="contained"
-        onClick={handleCreateTimetable}
-        disabled={!classes || !division.length || (isTeacherView && !teacher)}
-        sx={{ mt: 2 }}
-      >
-        Show Timetable
-      </Button>
-      {showTimeTable && <SchoolTimetableCalendar />}
+
+      {showTimeTable && (
+        <SchoolTimetableCalendar
+          teacherId={isTeacherView ? teacher : undefined}
+          grade={1}
+          division="A"
+        />
+      )}
     </Box>
   );
 };

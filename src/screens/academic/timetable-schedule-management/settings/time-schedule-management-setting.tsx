@@ -1,8 +1,21 @@
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Button, Switch, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Button,
+  Switch,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 
 type PeriodSetting = {
@@ -17,6 +30,7 @@ type AssignedTeacher = {
 };
 
 const TimeScheduleManagementSetting = () => {
+  const dialog = useBoolean();
   const periodSettings: PeriodSetting[] = [
     { label: 'Class Duration (e.g., 45 minutes)', unit: 'Select Unit' },
     { label: 'Break Duration (e.g., 10 minutes)', unit: 'Select Unit' },
@@ -34,6 +48,11 @@ const TimeScheduleManagementSetting = () => {
 
   return (
     <Box>
+      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
+        <Button variant="contained" onClick={dialog.onTrue}>
+          Create New Room
+        </Button>
+      </Box>
       <Card sx={{ p: 2, mb: 1 }}>
         <Typography variant="h6">General Settings</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -157,8 +176,40 @@ const TimeScheduleManagementSetting = () => {
           <Button variant="contained">Save Changes</Button>
         </Box>
       </Card>
+      <CustomDialog title="New Room" open={dialog.value} handleClose={dialog.onFalse} maxWidth="sm">
+        <RoomCreationForm />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default TimeScheduleManagementSetting;
+
+const RoomCreationForm = () => (
+  <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+    <Box display="flex" flexDirection="column" gap={2}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <TextField label="Room Name" size="small" name="assignmentTitle" fullWidth />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField label="Building Name" size="small" name="assignmentTitle" fullWidth />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField label="Floors" size="small" name="assignmentTitle" fullWidth />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField label="Room Capacity" size="small" name="assignmentTitle" fullWidth />
+        </Grid>
+      </Grid>
+      <DialogActions>
+        <Button variant="contained" onClick={() => {}} color="warning">
+          Cancel
+        </Button>
+        <Button variant="contained" onClick={() => {}}>
+          Save
+        </Button>
+      </DialogActions>
+    </Box>
+  </Scrollbar>
+);
