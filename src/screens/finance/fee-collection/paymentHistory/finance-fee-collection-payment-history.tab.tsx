@@ -98,7 +98,6 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
                                     <MenuList>
                                         <MenuItem
                                             onClick={() => {
-
                                                 // popover.onClose();
                                             }}
                                         >
@@ -107,8 +106,8 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
                                         </MenuItem>
                                         <MenuItem
                                             onClick={() => {
-
                                                 // popover.onClose();
+
                                             }}
                                         >
                                             <Iconify icon="mdi:check" />

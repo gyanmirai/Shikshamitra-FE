@@ -8,23 +8,23 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 
-import FinanceCollectFeeTab from './finance-collect-fee.tab';
 import FinanceStudentFeeTab from './finance-student-fee-tab';
+import FinanceFeeCollectionTab from './collectFees/finance-fee-collection-tab';
 import FinanceFeeCollectionPaymentHistoryTab from './paymentHistory/finance-fee-collection-payment-history.tab';
 
 const TABS = [
   {
     value: 'collect-fee',
     label: 'Collect Fees',
-    component: () => <FinanceCollectFeeTab />,
+    component: () => <FinanceFeeCollectionTab />,
   },
   {
-    value: 'studentfee',
+    value: 'student-fee',
     label: 'Student Fees',
     component: () => <FinanceStudentFeeTab />,
   },
   {
-    value: 'paymentHistory',
+    value: 'payment-history',
     label: 'Payment History',
     component: () => <FinanceFeeCollectionPaymentHistoryTab />,
   },
@@ -38,7 +38,7 @@ const TABS = [
 
 
 const FinanceFeeCollectionScreen = () => {
-  const tabs = useTabs('general-setting');
+  const tabs = useTabs('collect-fee');
 
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (

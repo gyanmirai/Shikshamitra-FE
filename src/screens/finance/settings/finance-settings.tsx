@@ -22,6 +22,7 @@ import FinanceNotificationSettingTab from './notification/finance-notification-s
 import FinanceFeeStructureSettingTab from './fee-structure/finance-fee-structure-setting-tab';
 // eslint-disable-next-line import/no-named-as-default
 import FinancePaymentMethodSettingTab from './payment-method/finance-payment-method-setting-tab';
+import FinanceSettingFeeCollectionTab from './fee-collection/finance-setting-fee-collection-tab';
 
 const TABS = [
   {
@@ -33,6 +34,11 @@ const TABS = [
     value: 'feestructure',
     label: 'Fee Structure',
     component: () => <FinanceFeeStructureSettingTab />,
+  },
+  {
+    value: 'feecollection',
+    label: 'Fee Collection',
+    component: () => <FinanceSettingFeeCollectionTab />,
   },
   {
     value: 'expensecategory',
