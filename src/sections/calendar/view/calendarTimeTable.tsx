@@ -20,11 +20,14 @@ import { useCalendar } from '../hooks/use-calendar';
 
 type CalendarEvent = {
   id: string;
+  startTime?: string;
+  endTime?: string;
   resourceId?: string;
-  start: string;
-  end: string;
+  start?: string;
+  end?: string;
   title: string;
-  color?: string;
+  textColor?: string;
+  daysOfWeek?: number[];
 };
 
 type Teacher = {
@@ -47,17 +50,23 @@ const teachers: Teacher[] = [
 const predefinedBreaks: CalendarEvent[] = [
   {
     id: uuidv4(),
-    start: '2024-10-16T12:00:00', // Example time for lunch break
-    end: '2024-10-16T13:00:00',
+    startTime: '12:00', // Time for lunch break (12 PM)
+    endTime: '12:30',
     title: 'Lunch Break',
-    color: '#FFD700', // A different color for breaks
+    textColor: '#FFD700',
+    daysOfWeek: [1, 2, 3, 4, 5, 6],
+    start: '',
+    end: '',
   },
   {
     id: uuidv4(),
-    start: '2024-10-16T10:30:00', // Example time for short break
-    end: '2024-10-16T10:45:00',
+    startTime: '13:00:00', // Example time for short break
+    endTime: '13:10:00',
     title: 'Short Break',
-    color: '#FF4500', // Another color for short breaks
+    textColor: '#FF4500', // Another color for short breaks
+    daysOfWeek: [1, 2, 3, 4, 5, 6],
+    start: '',
+    end: '',
   },
 ];
 
@@ -136,6 +145,7 @@ export function CalendarTimeTable() {
   }, [selectedSubject]);
 
   useEffect(() => {
+    console.log('predefinedBreaks:', predefinedBreaks); // Log the breaks
     setEvents((prevEvents) => [...prevEvents, ...predefinedBreaks]);
   }, []);
 
@@ -190,10 +200,10 @@ export function CalendarTimeTable() {
               plugins={[dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
               initialView="timeGridWeek"
               headerToolbar={false}
-              slotDuration="01:00:00"
-              slotLabelInterval="01:00:00"
+              slotDuration="00:30:00"
+              slotLabelInterval="00:30:00"
               slotMinTime="09:00:00"
-              slotMaxTime="15:00:00"
+              slotMaxTime="15:45:00"
               height="100%"
               expandRows
               dayMaxEvents
