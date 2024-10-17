@@ -85,15 +85,16 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             }));
 
 
-            console.log("hello", updatedFeeSubCategoryList)
+            
 
 
             setavailableFeeSubCategoryList(updatedFeeSubCategoryList)
 
             setAvailableFeeHeadList(updatedFeeHeadList);
+            
         }
 
-    }, [data.feeSubCategoryList, isEdit]);
+    }, [ data.feeSubCategoryList, isEdit]);
 
     const formik = useFormik<FormikValue>({
         initialValues: {
@@ -101,7 +102,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             feeName: isEdit ? data.feeCategoryName ?? '' : "",
             totalAmount: isEdit ? data.amount : totalAmount,
             applicableGrade: isEdit ? data.applicableGrade ?? "" : "",
-            paymentDueDate: null,
+            paymentDueDate: isEdit && data.paymentDueDate ? dayjs(data.paymentDueDate, 'DD-MM-YYYY') : null,
             paymentMethod: '',
             multipleApplicableGrade: [],
             feeType: [],

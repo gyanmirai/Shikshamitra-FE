@@ -23,6 +23,7 @@ import FinanceFeeStructureSettingTab from './fee-structure/finance-fee-structure
 // eslint-disable-next-line import/no-named-as-default
 import FinancePaymentMethodSettingTab from './payment-method/finance-payment-method-setting-tab';
 import FinanceSettingFeeCollectionTab from './fee-collection/finance-setting-fee-collection-tab';
+import FinanceReceiptBookSetting from './receipt-book/finance-receipt-book';
 
 const TABS = [
   {
@@ -34,6 +35,10 @@ const TABS = [
     value: 'feestructure',
     label: 'Fee Structure',
     component: () => <FinanceFeeStructureSettingTab />,
+  },{
+    value: 'receiptBook',
+    label: 'Receipt Book',
+    component: () => <FinanceReceiptBookSetting />,
   },
   {
     value: 'feecollection',

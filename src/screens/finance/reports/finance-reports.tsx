@@ -13,6 +13,7 @@ import FinanceExpenseReports from './expense-reports/finance-expense-reports';
 import FinanceFeeReportsScreen from './fee-reports/finance-fee-reports.screen';
 import FinancialReportsScreen from './financial-reports/financial-reports-screen';
 import FinanceNetbalanceAnalyticsTab from './net-balance-analytics/finance-net-balance-analytics-tab';
+import FinancialBudgetReports from './budget/financial-budget-reports';
 
 const TABS = [
     {
@@ -43,7 +44,7 @@ const TABS = [
     {
         value: 'budget-performance-reports',
         label: 'Budget Performance Reports',
-        component: () => <FinancialReportsScreen />,
+        component: () => <FinancialBudgetReports />,
     },
 
 

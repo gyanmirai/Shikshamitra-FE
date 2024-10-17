@@ -1,7 +1,7 @@
 import React from 'react'
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, alpha, Button, useTheme, Typography } from '@mui/material';
+import { Box, alpha, Button, useTheme, Typography, Card, Grid } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
@@ -85,17 +85,25 @@ const FinanceFeeReportsScreen = () => {
                     />
                 </Grid2>
             </Grid2>
-            <Typography variant="h6" sx={{ pt: "15px", pb: "15px" }}>
-                Generate Custom Reports
+            
+         
+            
+            <Grid container spacing={3}>
+    <Grid item lg={6} xs={12}>
+        <Card sx={{px:2}}>
+            <Typography sx={{ pt: "15px", pb: "15px", pl: "15px" }} variant="subtitle1">
+                Fee Collection Progress Over Time
             </Typography>
-            <Box display="flex" flexDirection="row" gap={3} justifyItems="center" alignItems="center">
+
+            <Box display="flex" flexDirection="row" gap={1}>
                 <CustomSelect
-                    label="Date Range"
+                    label="Organizer"
                     options={[]}
                     value=""
                     onChange={() => { }}
                     formControlProps={{ sx: { minWidth: 120 } }}
                 />
+                <Box pr="15px" />
                 <CustomSelect
                     label="Grade/Class"
                     options={[]}
@@ -103,13 +111,7 @@ const FinanceFeeReportsScreen = () => {
                     onChange={() => { }}
                     formControlProps={{ sx: { minWidth: 120 } }}
                 />
-                <CustomSelect
-                    label="Division"
-                    options={[]}
-                    value=""
-                    onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 120 } }}
-                />
+                <Box pr="15px" />
                 <CustomSelect
                     label="Fee Type"
                     options={[]}
@@ -117,37 +119,16 @@ const FinanceFeeReportsScreen = () => {
                     onChange={() => { }}
                     formControlProps={{ sx: { minWidth: 120 } }}
                 />
-                <CustomSelect
-                    label="Payment Status"
-                    options={[]}
-                    value=""
-                    onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 140 } }}
-                />
             </Box>
 
-            <CustomizableTable columns={columns} data={monthlyFeeCollectedData} />
-
-            <Grid2 container spacing={3} py="14px">
-                <Grid2 xs={12} md={6} >
+            <Grid container spacing={3} py="14px">
+                <Grid item xs={12}>
                     <PerformanceOverTime
                         id="demo__4"
-                        title="Fee collection progress over time"
-                        //   subheader="(+43%) than last year"
                         chart={{
                             categories: [
-                                'Jan',
-                                'Feb',
-                                'Mar',
-                                'Apr',
-                                'May',
-                                'Jun',
-                                'Jul',
-                                'Aug',
-                                'Sep',
-                                'Oct',
-                                'Nov',
-                                'Dec',
+                                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                             ],
                             series: [
                                 {
@@ -158,16 +139,52 @@ const FinanceFeeReportsScreen = () => {
                         }}
                         sx={{ height: '100%', boxShadow: 'none' }}
                     />
-                </Grid2>
-                <Grid2 xs={12} md={6} >
+                </Grid>
+            </Grid>
+        </Card>
+    </Grid>
+
+    <Grid item lg={6} xs={12}>
+        <Card sx={{px:2}} >
+            <Typography sx={{ pt: "15px", pb: "15px", pl: "15px" }} variant="subtitle1">
+                Fee Collection Progress Over Time
+            </Typography>
+
+            <Box display="flex" flexDirection="row" gap={1}>
+                <CustomSelect
+                    label="Organizer"
+                    options={[]}
+                    value=""
+                    onChange={() => { }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
+                />
+                <Box pr="15px" />
+                <CustomSelect
+                    label="Grade/Class"
+                    options={[]}
+                    value=""
+                    onChange={() => { }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
+                />
+                <Box pr="15px" />
+                <CustomSelect
+                    label="Grade/Class"
+                    options={[]}
+                    value=""
+                    onChange={() => { }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
+                />
+            </Box>
+
+            <Grid container spacing={3} py="14px">
+                <Grid item xs={12}>
                     <AnalyticsWebsiteVisits
-                        title="Fee collections across different classes or fee types"
-                        //   subheader="(+43%) than last year"
+                        // title="Fee Collections Across Different Classes Or Fee Types"
                         chart={{
                             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                             series: [
                                 { name: 'Class 2', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-                                { name: 'Class 2', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
+                                { name: 'Class 3', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
                             ],
                             colors: [
                                 alpha(theme.palette.primary.dark, 0.8),
@@ -176,8 +193,22 @@ const FinanceFeeReportsScreen = () => {
                         }}
                         sx={{ height: '100%' }}
                     />
-                </Grid2>
-            </Grid2>
+                </Grid>
+            </Grid>
+        </Card>
+    </Grid>
+</Grid>
+
+
+ 
+
+            <Typography variant="h6" sx={{ pt: "15px", pb: "15px" }}>
+                Generate Custom Reports
+            </Typography>
+
+            <CustomizableTable columns={columns} data={monthlyFeeCollectedData} />
+
+           
             <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
                 <Button variant="contained" size="small">
                     Export to PDF

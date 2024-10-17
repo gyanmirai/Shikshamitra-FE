@@ -1,7 +1,7 @@
 import React from 'react'
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, useTheme, Typography } from '@mui/material';
+import { Box, Button, useTheme, Typography, Grid, Card } from '@mui/material';
 
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
@@ -84,70 +84,97 @@ const FinanceExpenseReports = () => {
     ];
     return (
         <>
-            <Typography variant="h6" sx={{ pt: "15px", pb: "15px" }}>
-                Generate Reports
+           
+           <Grid container spacing={3}>
+    <Grid item lg={6} xs={12}>
+        <Card sx={{ px: 2 }}>
+            <Typography sx={{ pt: "15px", pb: "15px", pl: "15px" }} variant="subtitle1">
+                Category-Wise Distribution
             </Typography>
-            <Box display="flex" flexDirection="row" gap={3} justifyItems="center" alignItems="center">
+
+            <Box display="flex" flexDirection="row" gap={1}>
                 <CustomSelect
-                    label="Date Range"
+                    label="Organizer"
                     options={[]}
                     value=""
                     onChange={() => { }}
                     formControlProps={{ sx: { minWidth: 120 } }}
                 />
+               
                 <CustomSelect
-                    label="Category Filter"
+                    label="Grade/Class"
                     options={[]}
                     value=""
                     onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 140 } }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
                 />
-
-                <CustomSelect
-                    label="Payment Status"
+                 <CustomSelect
+                    label="Year"
                     options={[]}
                     value=""
                     onChange={() => { }}
-                    formControlProps={{ sx: { minWidth: 140 } }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
                 />
+                
             </Box>
 
-            <CustomizableTable columns={columns} data={expenseData} />
-
-            <Grid2 container spacing={3} py="14px">
-                <Grid2 xs={12} md={6} >
+            <Grid container spacing={3} py="14px">
+                <Grid item xs={12}>
                     <AnalyticsCurrentVisits
-                        title="Category-Wise Distribution"
                         chart={{
                             series: [
                                 { label: 'Salaries', value: 3500 },
                                 { label: 'Maintenance', value: 2500 },
                                 { label: 'Utilities', value: 1500 },
-
                             ],
                         }}
                         sx={{ height: '100%' }}
                     />
-                </Grid2>
-                <Grid2 xs={12} md={6} >
+                </Grid>
+            </Grid>
+        </Card>
+    </Grid>
+
+    <Grid item lg={6} xs={12}>
+        <Card sx={{ px: 2 }}>
+            <Typography sx={{ pt: "15px", pb: "15px", pl: "15px" }} variant="subtitle1">
+                Monthly/Yearly Trend
+            </Typography>
+
+            <Box display="flex" flexDirection="row" gap={1}>
+                <CustomSelect
+                    label="Organizer"
+                    options={[]}
+                    value=""
+                    onChange={() => { }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
+                />
+             
+                <CustomSelect
+                    label="Grade/Class"
+                    options={[]}
+                    value=""
+                    onChange={() => { }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
+                />
+                
+                <CustomSelect
+                    label="Year"
+                    options={[]}
+                    value=""
+                    onChange={() => { }}
+                    formControlProps={{ sx: { minWidth: 120 } }}
+                />
+            </Box>
+
+            <Grid container spacing={3} py="14px">
+                <Grid item xs={12}>
                     <PerformanceOverTime
                         id="demo__4"
-                        title="Monthly/Yearly Trend"
-                        subheader="(+43%) than last year"
                         chart={{
                             categories: [
-                                'Jan',
-                                'Feb',
-                                'Mar',
-                                'Apr',
-                                'May',
-                                'Jun',
-                                'Jul',
-                                'Aug',
-                                'Sep',
-                                'Oct',
-                                'Nov',
-                                'Dec',
+                                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                             ],
                             series: [
                                 {
@@ -158,9 +185,25 @@ const FinanceExpenseReports = () => {
                         }}
                         sx={{ height: '100%', boxShadow: 'none' }}
                     />
-                </Grid2>
+                </Grid>
+            </Grid>
+        </Card>
+    </Grid>
+</Grid>
 
-            </Grid2>
+
+
+
+
+
+
+
+            
+            <Typography variant="h6" sx={{ pt: "15px", pb: "15px" }}>
+                Generate Reports
+            </Typography>
+           
+            <CustomizableTable columns={columns} data={expenseData} />
             <Typography variant="h6" sx={{ pt: "15px", pb: "15px" }}>
                 Pending Payments
             </Typography>

@@ -18,7 +18,7 @@ interface FeeSubCategoryList {
     isCounted: boolean;
     value: string;
     paymentMethod?: string;
-    paymentDueDate?: any,
+   
 }
 
 
@@ -37,6 +37,7 @@ interface Data {
     action: string;
     bookRecipt: string;
     feeSubCategoryList: FeeSubCategoryList[];
+    paymentDueDate?: any,
 }
 
 const initialData: Data[] = [
@@ -45,6 +46,7 @@ const initialData: Data[] = [
         amount: '3,000',
         applicableGrade: '2',
         bookRecipt: "GSEB",
+        paymentDueDate: "20-12-2024",
         feeSubCategoryList: [
             {
                 id: 1,
@@ -53,7 +55,7 @@ const initialData: Data[] = [
                 isCounted: true,
                 value: "tuitionFee",
                 paymentMethod: "Cash",
-                paymentDueDate: "24-11-2024",
+               
             },
             {
                 id: 2,
@@ -62,7 +64,7 @@ const initialData: Data[] = [
                 isCounted: false,
                 value: "sportsFee",
                 paymentMethod: "Cash",
-                paymentDueDate: "23-12-2024",
+                
             },
             {
                 id: 3,
@@ -71,7 +73,7 @@ const initialData: Data[] = [
                 isCounted: true,
                 value: "transportFee",
                 paymentMethod: "Check",
-                paymentDueDate: "12-08-2024",
+                
             },
         ],
         statusToggle: true,
@@ -120,15 +122,18 @@ const FinanceFeeStructureSettingTab = () => {
                     (val: any) => normalize(val.value) === normalize(feeHead)
                 );
 
+                rowData.paymentDueDate = formattedPaymentDueDate;
 
 
                 if (existingIndexForSubCategory !== -1) {
+                  
                     rowData.feeSubCategoryList[existingIndexForSubCategory] = {
                         ...rowData.feeSubCategoryList[existingIndexForSubCategory],
                         name: feeHeadLabel,
                         value: feeHead,
                         amount: feeAmountForAvailbleHead || amount,
-                        paymentDueDate: formattedPaymentDueDate,
+                  
+                       
 
                     };
 
@@ -144,7 +149,7 @@ const FinanceFeeStructureSettingTab = () => {
                         amount: feeAmountForAvailbleHead || amount,
                         isCounted: true,
                         value: normalize(feeHead),
-                        paymentDueDate: formattedPaymentDueDate,
+                        
 
                     });
 
@@ -171,6 +176,7 @@ const FinanceFeeStructureSettingTab = () => {
                 amount,
                 applicableGrade: val,
                 bookRecipt: bookRecipt.toUpperCase(),
+                paymentDueDate: formattedPaymentDueDate,
                 feeSubCategoryList: [
                     {
                         id: Math.floor(Math.random() * 10000),
@@ -178,7 +184,7 @@ const FinanceFeeStructureSettingTab = () => {
                         amount,
                         isCounted: true,
                         value: normalize(feeHead),
-                        paymentDueDate: formattedPaymentDueDate,
+                        // paymentDueDate: formattedPaymentDueDate,
 
                     },
                 ],
@@ -201,6 +207,7 @@ const FinanceFeeStructureSettingTab = () => {
                 amount,
                 applicableGrade,
                 bookRecipt: bookRecipt.toUpperCase(),
+                paymentDueDate: formattedPaymentDueDate,
                 feeSubCategoryList: [
                     {
                         id: Math.floor(Math.random() * 10000),
@@ -208,7 +215,7 @@ const FinanceFeeStructureSettingTab = () => {
                         amount,
                         isCounted: true,
                         value: normalize(feeHead),
-                        paymentDueDate: formattedPaymentDueDate,
+                        
                     },
                 ],
                 statusToggle: true,
@@ -282,7 +289,9 @@ const FinanceFeeStructureSettingTab = () => {
                                                                 onChange={() => handleSwitchChange(row.id, index)}
                                                             />
                                                             <Typography>Monthly: {(val.amount / 12).toFixed(2)}</Typography>
-                                                            <Typography>Payment Due Date: {(val.paymentDueDate)}</Typography>
+                                                            <Typography>Quartly: {(val.amount / 4).toFixed(2)}</Typography>
+                                                            <Typography>Bi-annual: {(val.amount / 2).toFixed(2)}</Typography>
+                                                            <Typography>Yearly: {(val.amount)}</Typography>
                                                         </Paper>
                                                     </Box>
                                                 </React.Fragment>
