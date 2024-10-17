@@ -4,11 +4,11 @@
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 import type { ICalendarEvent, ICalendarFilters } from 'src/types/calendar';
 
-import { useRef, useEffect } from 'react';
 import listPlugin from '@fullcalendar/list';
 // eslint-disable-next-line import/no-duplicates
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import { useRef, useMemo, useEffect } from 'react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -216,15 +216,18 @@ export function CalendarView() {
 interface SchoolTimetableCalendarProps {
   grade: number;
   division: string;
-  teacherId?: string; // Optional teacherId, for filtering events in teacher view
+  teacherId?: string;
+  subjectId?: string; // Optional teacherId, for filtering events in teacher view
 }
 
 export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = ({
   grade,
   division,
   teacherId,
+  subjectId,
 }: SchoolTimetableCalendarProps) => {
   const calendarRef = useRef<FullCalendar>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const events = [
     {
       id: 'a7b34d8b-2f88-4208-bcbe-b0580ec265a6',
@@ -253,6 +256,7 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
       title: 'Math / Mr. Smith',
       textColor: '#FF5733',
       teacherId: '1',
+      subjectId: '1',
     },
     {
       id: 'afcd9ac8-bfbd-4538-ba9e-69a9de8653a0',
@@ -261,6 +265,7 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
       title: 'Science / Ms. Johnson',
       textColor: '#3357FF',
       teacherId: '2',
+      subjectId: '3',
     },
     {
       id: 'a300b038-b0ab-4c41-8cf3-b9429bb2726c',
@@ -269,6 +274,7 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
       title: 'Science / Mr. Smith',
       textColor: '#3357FF',
       teacherId: '1',
+      subjectId: '3',
     },
     {
       id: '36230109-60d9-4eeb-9c9b-db04c7d7a861',
@@ -277,12 +283,21 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
       title: 'English / Ms. Johnson',
       textColor: '#33FF57',
       teacherId: '2',
+      subjectId: '2',
     },
   ];
-  const filteredEvents = teacherId
-    ? events.filter((event) => !event.teacherId || event.teacherId === teacherId) // Keep break events (no teacherId) and specific teacher events
-    : events; // For student view, show all events
-
+  // const filteredEvents = teacherId
+  //   ? events.filter((event) => !event.teacherId || event.teacherId === teacherId) // Keep break events (no teacherId) and specific teacher events
+  //   : events; // For student view, show all events
+  const filteredEvents = useMemo(() => {
+    if (teacherId) {
+      return events.filter((event) => !event.teacherId || event.teacherId === teacherId);
+    }
+    if (subjectId) {
+      return events.filter((event) => !event.subjectId || event.subjectId === subjectId);
+    }
+    return events;
+  }, [teacherId, subjectId, events]);
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
   return (
     <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
@@ -291,8 +306,13 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
+            headerToolbar={{
+              left: '',
+              center: 'title',
+              right: '',
+            }}
+            titleFormat={{ year: 'numeric' }}
             initialView="timeGridWeek"
-            headerToolbar={false}
             slotDuration="00:15:00"
             slotLabelInterval="00:15:00"
             slotMinTime="09:00:00"
@@ -301,6 +321,7 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
             expandRows
             dayMaxEvents
             allDaySlot={false}
+            dayHeaderFormat={{ weekday: 'short' }}
             events={filteredEvents}
             hiddenDays={[0]}
           />
