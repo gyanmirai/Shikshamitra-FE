@@ -8,14 +8,22 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 
+import FinanceBudgetSettingTab from './budget/finance-budget-setting';
+// eslint-disable-next-line import/no-named-as-default
 import FinanceTaxSettingTab from './tax-setting/finance-tax-setting-tab';
-import FinanceBudgetSettingTab from './budget/finance-budget-setting-tab';
+// eslint-disable-next-line import/no-named-as-default
 import FinanceIncomeSettingTab from './income-category/finance-income-setting-tab';
 import FinanceGeneralSettingTab from './general-setting/finance-general-setting-tab';
+// eslint-disable-next-line import/no-named-as-default
 import FinanceExpenseSettingTab from './expense-category/finance-expense-setting-tab';
+// import FinanceNotificationSettingTab from './notification/finance-notification-setting-tab';
 import FinanceNotificationSettingTab from './notification/finance-notification-setting-tab';
+// eslint-disable-next-line import/no-named-as-default
 import FinanceFeeStructureSettingTab from './fee-structure/finance-fee-structure-setting-tab';
+// eslint-disable-next-line import/no-named-as-default
 import FinancePaymentMethodSettingTab from './payment-method/finance-payment-method-setting-tab';
+import FinanceSettingFeeCollectionTab from './fee-collection/finance-setting-fee-collection-tab';
+import FinanceReceiptBookSetting from './receipt-book/finance-receipt-book';
 
 const TABS = [
   {
@@ -27,6 +35,15 @@ const TABS = [
     value: 'feestructure',
     label: 'Fee Structure',
     component: () => <FinanceFeeStructureSettingTab />,
+  },{
+    value: 'receiptBook',
+    label: 'Receipt Book',
+    component: () => <FinanceReceiptBookSetting />,
+  },
+  {
+    value: 'feecollection',
+    label: 'Fee Collection',
+    component: () => <FinanceSettingFeeCollectionTab />,
   },
   {
     value: 'expensecategory',
@@ -58,6 +75,8 @@ const TABS = [
     label: 'Notification',
     component: () => <FinanceNotificationSettingTab />,
   },
+
+
 ];
 
 const FinanceSettingScreen = () => {

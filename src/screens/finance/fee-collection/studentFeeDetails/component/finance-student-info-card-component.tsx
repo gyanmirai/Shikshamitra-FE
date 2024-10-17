@@ -1,0 +1,122 @@
+import React from 'react';
+
+import { Box, Card, Avatar, Button, Divider, Typography, ListItemText } from '@mui/material';
+
+import { fShortenNumber } from 'src/utils/format-number';
+
+import { AvatarShape } from 'src/assets/illustrations';
+
+export type IUserCard = {
+    id: string;
+    name: string;
+    role: string;
+    coverUrl: string;
+    avatarUrl: string;
+    totalPosts: number;
+    totalFollowers: number;
+    totalFollowing: number;
+};
+
+type Props = {
+    user: IUserCard;
+};
+
+const FinanceStudentInfoCardComponent = ({ user }: Props) => {
+    const data = [];
+    return (
+        <Card sx={{ textAlign: 'center', position: 'relative' }}>
+            <Box pb="30px">
+                <AvatarShape
+                    sx={{
+                        position: 'absolute',
+                        top: 15,
+                        left: 0,
+                        right: 0,
+                        zIndex: 10,
+                        mx: 'auto',
+                    }}
+                />
+
+                <Avatar
+                    alt={user.name}
+                    src={user.avatarUrl}
+                    sx={{
+                        width: 64,
+                        height: 64,
+                        zIndex: 11,
+                        position: 'absolute',
+                        top: 15,
+                        mx: 'auto',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+
+                    }}
+                />
+            </Box>
+
+            {/* User Info */}
+            <ListItemText
+                sx={{ mt: 7, mb: 1 }}
+                primary={user.name}
+                secondary={user.role}
+                primaryTypographyProps={{ typography: 'subtitle1' }}
+                secondaryTypographyProps={{ component: 'span', mt: 0.5 }}
+            />
+
+            {/* Divider */}
+            <Divider sx={{ borderStyle: 'dashed' }} />
+
+            {/* Fee Information */}
+            <Box
+                display="grid"
+                gridTemplateColumns="repeat(3, 1fr)"
+                sx={{ py: 3, typography: 'subtitle1' }}
+            >
+                {['Paid Fees', 'Pending Fees', 'Overdue Fees'].map((label, index) => (
+                    <div key={label}>
+                        <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{ mb: 0.5, color: 'text.secondary' }}
+                        >
+                            {label}
+                        </Typography>
+                        {fShortenNumber(
+                            index === 0 ? user.totalFollowing :
+                                index === 1 ? user.totalFollowers :
+                                    user.totalPosts
+                        )}
+                    </div>
+                ))}
+            </Box>
+
+            {/* Due Date */}
+            <Box display="flex" justifyContent="center" mb={2}>
+                <Typography
+                    variant="caption"
+                    sx={{ color: 'text.secondary' }}
+                >
+                    Upcoming Due Date: 01-01-2025
+                </Typography>
+            </Box>
+
+            {/* Actions */}
+            <Box
+                display="flex"
+                justifyContent="flex-end"
+                gap={2}
+                pb={2}
+                px={3}
+            >
+                <Button variant="contained" color="primary">
+                    Send Reminder
+                </Button>
+                <Button variant="contained" color="error">
+                    Generate Report
+                </Button>
+            </Box>
+        </Card>
+    );
+};
+
+export default FinanceStudentInfoCardComponent;

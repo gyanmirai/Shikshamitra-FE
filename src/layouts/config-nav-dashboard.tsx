@@ -671,6 +671,11 @@ const financeModule = {
           _action: 'fee-management',
         },
         {
+          title: 'Fee Collection',
+          path: '/finance/fee-collection',
+          _action: 'fee-collection',
+        },
+        {
           title: 'Income Tracking',
           path: '/finance/income-tracking',
           _action: 'finance-income-tracking',
