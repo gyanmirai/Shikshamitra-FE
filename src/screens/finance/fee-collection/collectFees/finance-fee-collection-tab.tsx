@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Box, Button, TextField } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomSelect from 'src/components/custom-select';
 
@@ -10,6 +12,7 @@ import FinanceCollectFeeStudentCardComponent from './component/finance-collect-f
 import FinanceFeeCollectionPaymentHistoryComponent from './component/finance-fee-collection-payment-history-component';
 
 import type { IUserCard } from './component/finance-collect-fee-student-card-component';
+import FinanceCollectFeeDialog from './component/finance-collect-fee-dialog';
 
 const dummyUser: IUserCard = {
     id: '12345',
@@ -23,7 +26,20 @@ const dummyUser: IUserCard = {
 };
 
 const FinanceFeeCollectionTab = () => {
-    const data = [];
+    const dialog = useBoolean();
+
+    const [selectedEntry, setSelectedEntry] = useState(dummyUser);
+    const [isEdit, setIsEdit] = useState(false);
+    const [tableData, setTableData] = useState(dummyUser);
+
+   const closeDialog = ()=> {
+    dialog.onFalse();
+    }
+
+    const handleSave =  ()=> {
+
+    }
+
     return (
         <>
             <Box py="15px" display="flex" flexDirection="row" gap={3} >
@@ -56,14 +72,30 @@ const FinanceFeeCollectionTab = () => {
                         backgroundColor: 'inherit',
                         boxShadow: 'none',
                     }, backgroundColor: "skyblue", color: "darkblue"
+                }}  onClick={() => {
+                    setSelectedEntry(dummyUser);
+                    setIsEdit(true);
+                    dialog.onTrue();
                 }}>
                     Collect Fees
+                    
                 </Button>
             </Box>
 
 
             <FinanceCollectFeeStudentCardComponent user={dummyUser} />
             <FinanceFeeCollectionPaymentHistoryComponent />
+            {dialog.value && selectedEntry && (
+                <FinanceCollectFeeDialog
+                    onSave={handleSave}
+                    dialogValue={dialog.value}
+                    onClose={closeDialog}
+                    data={selectedEntry}
+                    isEdit={false}
+                    allData={tableData}
+                />
+            )}
+            
         </>
     )
 }

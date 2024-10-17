@@ -14,6 +14,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import FinanceBudgetAllocationDialog from './component/finance-budget-allocation-dialog';
 
 
 
@@ -74,9 +75,15 @@ let data: Data[] = [
 const FinanceBudgetingScreen = () => {
 
     const dialog = useBoolean();
+    const dialogSecond = useBoolean();
     const [selectedEntry, setSelectedEntry] = useState(data);
     const [isEdit, setIsEdit] = useState(false);
     const [tableData, setTableData] = useState(data);
+
+    const closeDialog = () => {
+        setIsEdit(false);
+        dialogSecond.onFalse();
+    }
 
     const handleDelete = (item: any) => {
 
@@ -87,6 +94,13 @@ const FinanceBudgetingScreen = () => {
 
         setTableData([...data]);
 
+    }
+
+    const handleSave = (item: any) => {
+        // expenseData = expenseData.filter(val =>
+        //     (val.id) !== (item.id)
+        // );
+        // setTableData([...expenseData]);
     }
 
 
@@ -126,7 +140,7 @@ const FinanceBudgetingScreen = () => {
                                                     setIsEdit(true);
                                                     setSelectedEntry(row);
 
-                                                    dialog.onTrue();
+                                                    dialogSecond.onTrue();
 
                                                 }}
                                             >
@@ -153,26 +167,26 @@ const FinanceBudgetingScreen = () => {
 
             />
             <CustomDialog
-                maxWidth="lg"
+                maxWidth="sm"
                 open={dialog.value}
                 handleClose={dialog.onFalse}
-                title="New Timetable"
+                title="New Budget"
             >
                 <TimetableForm />
             </CustomDialog>
 
-            {/* <Box>
-        {dialog.value && selectedEntry && (
-            <FinanceAddNewIncomeDialog
+            <Box>
+        {dialogSecond.value && selectedEntry && (
+            <FinanceBudgetAllocationDialog
                 onSave={handleSave}
-                dialogValue={dialog.value}
+                dialogValue={dialogSecond.value}
                 onClose={closeDialog}
                 data={selectedEntry}
                 isEdit={isEdit}
                 allData={tableData}
             />
         )}
-    </Box> */}
+    </Box>
 
         </>
     )
@@ -199,62 +213,89 @@ const BudgetTitleAndTimePeriod = () => (
     </Box>
 );
 
-const AddSubject = () => (
-    <CustomSelect
+const DepartmentAllocation = () => (
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+<CustomSelect
         options={[]}
-        label="Select Subject"
-        name="class"
+        label="Select departments"
+        name="selectDepartments"
         value=""
         onChange={() => { }}
         formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
+    <TextField
+
+    name="fundallocation"
+    label="Fund allocation"
+    value=""
+    onChange={() => { }}
+    size="small"
+
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+    </Box>
+    
+
 );
 
-const AssignTeacher = () => (
+const CategoryAllocation = () => (
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
     <CustomSelect
         options={[]}
-        label="assign teacher"
-        name="class"
+        label="Categories within departments"
+        name="categoriesWithinDepartments"
         value=""
         onChange={() => { }}
         formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
+    <TextField
+
+    name="fundallocation"
+    label="Fund allocation"
+    value=""
+    onChange={() => { }}
+    size="small"
+
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+</Box>
 );
 
-const RoomAllocation = () => (
-    <Box>
-        <CustomSelect
-            options={[]}
-            label="list of available rooms"
-            name="class"
-            value=""
-            onChange={() => { }}
-            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-        />
-        &nbsp;
-    </Box>
-);
+const TotalBudget = () => (
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+    <TextField
 
-const SetRecurrence = () => (
-    <Box>
-        <CustomSelect
-            options={[]}
-            label="Frequency Selection"
-            name="class"
-            value=""
-            onChange={() => { }}
-            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-        />
-        &nbsp;
-    </Box>
-);
+name="totalBudget"
+label="Total Budget"
+value=""
+onChange={() => { }}
+size="small"
 
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+    <TextField
+
+    name="fundallocation"
+    label="Fund allocation"
+    value=""
+    onChange={() => { }}
+    size="small"
+
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+</Box>
+);
 const allTimetableSteps = [
     BudgetTitleAndTimePeriod,
-    AddSubject,
-    AssignTeacher,
-    RoomAllocation,
-    SetRecurrence,
+    DepartmentAllocation,
+    CategoryAllocation,
+    TotalBudget,
+    
+    
 ];
 
 const TimetableForm = () => {
@@ -263,11 +304,11 @@ const TimetableForm = () => {
         <CustomStepperWithFormik
             initialValues={{}}
             steps={[
-                'Create New Timetable',
-                'Add Subject',
-                'Assign Teacher',
-                'Room Allocation',
-                'Set Recurrence',
+                
+                'Budget Title & Time Period',
+                'Department Allocation',
+                'Category Allocation',
+                'Total Budget',
             ]}
             activeStep={activeStep}
             handleBack={() => {
