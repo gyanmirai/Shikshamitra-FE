@@ -45,14 +45,6 @@ const Assignment = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Upcoming Assignments & Deadlines</Typography>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          sx={{ mb: 2 }}
-          onClick={dialog.onTrue}
-        >
-          Add Assignment
-        </Button>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>

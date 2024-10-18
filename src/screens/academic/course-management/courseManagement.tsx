@@ -5,9 +5,24 @@ import React, { useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 // eslint-disable-next-line import/no-duplicates
-import { Box, Card, Grid, Button, Switch, useTheme } from '@mui/material';
+import { AccordionSummary } from '@mui/material';
+// eslint-disable-next-line import/no-duplicates
+import { CircularProgress } from '@mui/material';
+import { GridExpandMoreIcon } from '@mui/x-data-grid';
 // eslint-disable-next-line import/no-duplicates
 import { Stack, TextField, Typography, DialogActions } from '@mui/material';
+// eslint-disable-next-line import/no-duplicates
+import {
+  Box,
+  Card,
+  Grid,
+  Button,
+  Switch,
+  useTheme,
+  Accordion,
+  AccordionDetails,
+  // eslint-disable-next-line import/no-duplicates
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -36,19 +51,28 @@ type FProps = CardProps & {
   };
 };
 
+const listData = [
+  { chapter: 'Chapter 1', content: 'Content for accordion 1', progress: 80 },
+  { chapter: 'Chapter 2', content: 'Content for accordion 2', progress: 50 },
+  { chapter: 'Chapter 3', content: 'Content for accordion 3 with actions', progress: 30 },
+];
+
 const CourseManagement = () => {
+  const [items, setItems] = useState(listData);
+  const [items2, setItems2] = useState(listData);
   const theme = useTheme();
-  const addContentDialog = useBoolean();
   const dialog = useBoolean();
+  const [expandedPanel, setExpandedPanel] = useState(null);
+
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={6}>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={3}>
         {' '}
         <Button variant="contained" onClick={dialog.onTrue}>
           Create New Course
         </Button>
       </Box>
-      <Grid2 container spacing={2}>
+      <Grid2 container spacing={2} marginBottom={6}>
         <Grid2 xs={12} sm={6}>
           <AppWidgetSummary
             title="Math Course"
@@ -82,7 +106,14 @@ const CourseManagement = () => {
       >
         <CourseCreationForm />
       </CustomDialog>
-
+      <Grid2 container spacing={2}>
+        <Grid2 xs={12} sm={6}>
+          <AccordianComponent items={items} />
+        </Grid2>
+        <Grid2 xs={12} sm={6}>
+          <AccordianComponent items={items2} />
+        </Grid2>
+      </Grid2>
       <Grid container spacing={2} marginTop={2}>
         <Grid item xs={12} md={6}>
           <Card
@@ -156,6 +187,111 @@ const CourseManagement = () => {
         </Grid>
       </Grid>
     </Box>
+  );
+};
+
+const AccordianComponent = ({ items }: any) => {
+  const [editingId, setEditingId] = useState(null);
+  const [data, setData] = useState(items);
+  const [isEdit, setIsEdit] = useState(false);
+  const addContentDialog = useBoolean();
+  const handleEdit = (index: any) => {
+    setEditingId(index);
+    setIsEdit(true);
+  };
+
+  const handleSave = (index: any) => {
+    setEditingId(null);
+    setIsEdit(false);
+  };
+
+  const handleDelete = (index: any) => {
+    const newItems = items.filter((_: any, i: any) => i !== index);
+    setData(newItems);
+  };
+
+  const handleContentChange = (index: any, newContent: any) => {
+    const newItems = [...items];
+    newItems[index].content = newContent;
+    setData(newItems);
+  };
+  return (
+    <>
+
+      
+      {data.map((item: any, index: any) => (
+        <Accordion key={index}>
+          <AccordionSummary
+            expandIcon={<GridExpandMoreIcon />}
+            aria-controls={`panel${index + 1}-content`}
+            id={`panel${index + 1}-header`}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              <Typography sx={{ flexGrow: 1 }}>{item.chapter}</Typography>
+              <Box sx={{ position: 'relative', display: 'inline-flex', mr: 5 }}>
+                <CircularProgress variant="determinate" value={item.progress} size={30} />
+                <Box
+                  sx={{
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    right: 0,
+                    position: 'absolute',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography variant="caption" component="div" color="text.secondary">
+                    {item.progress}%
+                  </Typography>
+                </Box>
+              </Box>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mr: 1 }}
+                onClick={addContentDialog.onTrue}
+              >
+                Add Content
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mr: 1 }}
+                onClick={() => (editingId === index ? handleSave(index) : handleEdit(index))}
+              >
+                {editingId === index ? 'Save' : 'Edit'}
+              </Button>
+              <Button variant="contained" size="small" onClick={handleDelete}>
+                Delete
+              </Button>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {editingId === index && isEdit ? (
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                value={item.content}
+                onChange={(e) => handleContentChange(index, e.target.value)}
+              />
+            ) : (
+              <Typography>{item.content}</Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      ))}
+      <CustomDialog
+        title="Add Content"
+        open={addContentDialog.value}
+        handleClose={addContentDialog.onFalse}
+        maxWidth="sm"
+      >
+        <AddContent />
+      </CustomDialog>
+    </>
   );
 };
 

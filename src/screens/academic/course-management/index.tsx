@@ -10,11 +10,12 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Settings from './settings';
+import Subjects from './subjects';
 import Dashboard from './dashboard';
-import Assignments from './assignments';
 import ContentLibrary from './contentLibrary';
 import CourseManagement from './courseManagement';
 import ReportsAnalytics from './reportsAndAnalyics';
+import LearningResources from './learningResources';
 
 const TABS = [
   {
@@ -28,9 +29,14 @@ const TABS = [
     component: () => <CourseManagement />,
   },
   {
-    value: 'assignment',
-    label: 'Assignments',
-    component: () => <Assignments />,
+    value: 'subjects',
+    label: 'Subjects',
+    component: () => <Subjects />,
+  },
+  {
+    value: 'learningResources',
+    label: 'Learning Resources',
+    component: () => <LearningResources />,
   },
   { value: 'contentLibrary', label: 'Content Library', component: () => <ContentLibrary /> },
   {
