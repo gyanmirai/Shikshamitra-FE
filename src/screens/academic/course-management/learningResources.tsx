@@ -22,35 +22,81 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const tableData = [
+interface TResourceData {
+  id: number;
+  resourceTitle: string;
+  typeOfResource: string;
+  attachedCourse: string;
+  accessPermision: string;
+  courseAndSubject: string;
+  dateUploaded: string;
+  description: string;
+}
+
+const resourceInitialData: TResourceData[] = [
   {
+    id: 1,
     resourceTitle: 'resource 1',
     typeOfResource: 'document',
+    attachedCourse: 'Math',
+    accessPermision: 'allTeachers',
     courseAndSubject: 'Math',
     dateUploaded: '01-12-20',
+    description: 'Math resource description',
   },
   {
-    resourceTitle: 'Projecter',
+    id: 2,
+    resourceTitle: 'Projector',
     typeOfResource: 'Audio',
+    attachedCourse: 'Science',
+    accessPermision: 'specificClasses',
     courseAndSubject: 'Science',
     dateUploaded: '01-12-20',
+    description: 'Science resource description',
   },
   {
-    resourceTitle: 'laptop',
+    id: 3,
+    resourceTitle: 'Laptop',
     typeOfResource: 'Video',
+    attachedCourse: 'Math',
+    accessPermision: 'allTeachers',
     courseAndSubject: 'Math',
     dateUploaded: '01-12-20',
+    description: 'Math video resource description',
   },
 ];
 
 const LearningResources = () => {
+  const [selectedEntry, setSelectedEntry] = useState<TResourceData | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
+  const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   const dialog = useBoolean();
+
+  const handleSave = (dataFromDialog: TResourceData) => {
+    if (isEdit && selectedEntry) {
+      setResourceData(
+        resourceData.map((resource) =>
+          resource.id === selectedEntry.id ? { ...resource, ...dataFromDialog } : resource
+        )
+      );
+    } else {
+      setResourceData([...resourceData, { ...dataFromDialog, id: Date.now() }]);
+    }
+    closeDialog();
+  };
+
+  const closeDialog = () => {
+    setIsEdit(false);
+    setSelectedEntry(null);
+    dialog.onFalse();
+  };
+
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
         {' '}
         <Button variant="contained" onClick={dialog.onTrue}>
-          Create New Course
+          Create New Resource
         </Button>
       </Box>
       <Box display="flex" flexDirection="row" gap={3}>
@@ -111,9 +157,15 @@ const LearningResources = () => {
                 <ThreeDotsActions
                   actions={({ popover }: any) => (
                     <MenuList>
-                      <MenuItem onClick={() => {}}>
+                      <MenuItem
+                        onClick={() => {
+                          setIsEdit(true);
+                          setSelectedEntry(row);
+                          dialog.onTrue();
+                        }}
+                      >
                         <Iconify icon="solar:pen-bold" />
-                        Edit Resource Information
+                        Edit
                       </MenuItem>
                       <MenuItem onClick={() => {}}>
                         <Iconify icon="solar:pen-bold" />
@@ -126,21 +178,19 @@ const LearningResources = () => {
             },
           },
         ]}
-        data={tableData}
+        data={resourceData}
       />
       <CustomDialog
-        title="New Resource"
+        title={isEdit ? 'Edit Resource' : 'New Resource'}
         open={dialog.value}
-        handleClose={dialog.onFalse}
+        handleClose={closeDialog}
         maxWidth="sm"
-      >calca
+      >
         <CreateNewResource
-          onSave={() => {}}
-          dialogValue={dialog.value}
-          onClose={() => {}}
-          data={() => {}}
-          isEdit={false}
-          allData={[]}
+          onSave={handleSave}
+          onClose={closeDialog}
+          data={selectedEntry}
+          isEdit={isEdit}
         />
       </CustomDialog>
     </Box>
@@ -150,55 +200,48 @@ const LearningResources = () => {
 export default LearningResources;
 
 interface CreateLearningResourcesProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
+  onSave: (values: TResourceData) => void;
   onClose: () => void;
+  data: TResourceData | null;
   isEdit: boolean;
-  allData: any;
 }
+
 interface FormikValue {
   resourceTitle: string;
+  typeOfResource: string;
   attachedCourse: string;
   accessPermision: string;
   description: string;
+  courseAndSubject: string;
+  dateUploaded: string;
 }
 
 const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
-  dialogValue,
   data,
   onClose,
   onSave,
   isEdit,
-  allData,
 }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
-  const formik = useFormik<FormikValue>({
+  const formik = useFormik<TResourceData>({
     initialValues: {
-      resourceTitle: isEdit ? data.resourceTitle ?? '' : '',
-      attachedCourse: isEdit ? data.attachedCourse ?? '' : '',
-      accessPermision: isEdit ? data.accessPermision ?? '' : '',
-      description: isEdit ? data.description ?? '' : '',
+      id: isEdit && data ? data.id : Date.now(),
+      resourceTitle: isEdit && data ? data.resourceTitle : '',
+      typeOfResource: isEdit && data ? data.typeOfResource : '',
+      attachedCourse: isEdit && data ? data.attachedCourse : '',
+      accessPermision: isEdit && data ? data.accessPermision : '',
+      description: isEdit && data ? data.description : '',
+      courseAndSubject: isEdit && data ? data.courseAndSubject : '',
+      dateUploaded: isEdit && data ? data.dateUploaded : '',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {
-      const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
-
-      const existingEntryIndex = allData.findIndex(
-        (val: any) => normalize(val.resourceTitle) === normalize(values.resourceTitle)
-      );
-      if (!isEdit) {
-        if (existingEntryIndex === -1) {
-          setShowExistingEntryMessage(false);
-          onSave(values);
-        } else {
-          setShowExistingEntryMessage(true);
-        }
-      } else {
-        onSave(values);
-      }
-      console.log('Form Submitted type', values);
+      const updatedValues = {
+        ...values,
+        dateUploaded: isEdit ? values.dateUploaded : new Date().toLocaleDateString(), // Only update if it's not edit mode
+      };
+      onSave(updatedValues);
     },
   });
   return (
@@ -248,9 +291,9 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                   { value: 'english', label: 'English' },
                   { value: 'science', label: 'Science' },
                 ]}
-                value={formik.values.attachedCourse}
+                value={formik.values.courseAndSubject}
                 onChange={(val) => {
-                  formik.setFieldValue('attachedCourse', val as string);
+                  formik.setFieldValue('courseAndSubject', val as string);
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
@@ -270,12 +313,27 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
               />
             </Grid>
             <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Select Resource Type"
+                options={[
+                  { value: 'video', label: 'Video' },
+                  { value: 'audio', label: 'Audio' },
+                  { value: 'document', label: 'Document' },
+                ]}
+                value={formik.values.typeOfResource}
+                onChange={(val) => {
+                  formik.setFieldValue('typeOfResource', val as string);
+                }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Description"
                 size="small"
                 multiline
                 rows={4}
-                name="resourceTitle"
+                name="description"
                 value={formik.values.description}
                 onChange={formik.handleChange}
                 fullWidth
