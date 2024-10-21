@@ -16,6 +16,7 @@ import TeacherManagement from './teacher-management';
 import CurrentTimetableOverview from './current-timetable-overvirew';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
+import Reports from './reports';
 
 const TABS = [
   {
@@ -40,6 +41,7 @@ const TABS = [
     component: () => <TeacherManagement />,
   },
   { value: 'roomAllocation', label: 'Room Allocation', component: () => <RoomAllocation /> },
+  { value: 'reports', label: 'Reports', component: () => <Reports /> },
 
   { value: 'settings', label: 'Settings', component: () => <TimeScheduleManagementsetting /> },
 ];

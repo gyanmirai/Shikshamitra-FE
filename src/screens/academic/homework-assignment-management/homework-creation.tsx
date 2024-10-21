@@ -354,12 +354,6 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
           >
             <FormControlLabel value="online_text" control={<Radio />} label="Online text" />
             <FormControlLabel value="file_upload" control={<Radio />} label="File upload" />
-            <FormControlLabel
-              value="online_text"
-              control={<Radio defaultChecked />}
-              label="Online text"
-            />
-            <FormControlLabel value="file_upload" control={<Radio />} label="File upload" />
             <FormControlLabel value="in_person" control={<Radio />} label="In-person submission" />
           </RadioGroup>
         </Box>

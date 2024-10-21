@@ -54,10 +54,26 @@ const Assignment = () => {
           <Typography sx={{ ml: 1 }}>Calendar View</Typography>
         </Box>
         <Box>
-          <Button variant="outlined" sx={{ mr: 1 }}>
-            Adjust Deadline
-          </Button>
-          <Button variant="contained">Export List</Button>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              mb: 1,
+            }}
+          >
+            <Button color="secondary" variant="contained">
+              Adjust Deadline
+            </Button>
+            <Button color="primary" variant="contained">
+              Upcoming Assignement
+            </Button>
+
+            <Button color="error" variant="contained">
+              Export List
+            </Button>
+          </Box>
         </Box>
       </Box>
 
@@ -111,6 +127,13 @@ const Assignment = () => {
           ]}
         />
       )}
+      <Typography variant="h6" marginBottom={1}>
+        Create Assignment
+      </Typography>
+      <Button variant="contained" onClick={dialog.onTrue}>
+        Create Assignment
+      </Button>
+
       <CustomDialog
         maxWidth="lg"
         open={dialog.value}
