@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
+
+import { SchoolTimetableCalendar } from 'src/sections/calendar/view';
 
 const CurrentTimetableOverview = () => {
   const [classes, setClasses] = useState<string>('');
@@ -33,7 +33,7 @@ const CurrentTimetableOverview = () => {
           formControlProps={{ sx: { maxWidth: '300px', width: '100%' } }}
         />
       </Box>
-      <CustomizableTable
+      {/* <CustomizableTable
         columns={[
           {
             label: 'days of the week',
@@ -197,7 +197,8 @@ const CurrentTimetableOverview = () => {
             period4: 'Science',
           },
         ]}
-      />
+      /> */}
+      <SchoolTimetableCalendar />
     </Box>
   );
 };

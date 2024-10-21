@@ -1,14 +1,19 @@
 'use client';
 
+// eslint-disable-next-line import/no-duplicates
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 import type { ICalendarEvent, ICalendarFilters } from 'src/types/calendar';
 
 import { useEffect } from 'react';
 import listPlugin from '@fullcalendar/list';
+// eslint-disable-next-line import/no-duplicates
+import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import resourceTimelinePlugin from '@fullcalendar/resource-timeline';
 
 import Card from '@mui/material/Card';
 import Dialog from '@mui/material/Dialog';
@@ -209,6 +214,60 @@ export function CalendarView() {
 }
 
 // ----------------------------------------------------------------------
+
+export function SchoolTimetableCalendar() {
+  const timePeriods = [
+    { id: '1', title: '09:00 - 10:00' },
+    { id: '2', title: '10:00 - 11:00' },
+    { id: '3', title: '11:00 - 12:00' },
+    { id: '4', title: '12:00 - 13:00' },
+    { id: '5', title: '13:00 - 14:00' },
+    { id: '6', title: '14:00 - 15:00' },
+  ];
+
+  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const resources = weekDays.map(day => ({ id: day, title: day }));
+
+  const events = [
+    { resourceId: 'Monday', start: '2024-10-14T09:00:00', end: '2024-10-14T10:00:00', title: 'Math / Mr. Smith' },
+    { resourceId: 'Monday', start: '2024-10-14T10:00:00', end: '2024-10-14T11:00:00', title: 'English / Ms. Johnson' },
+    { resourceId: 'Tuesday', start: '2024-10-14T09:00:00', end: '2024-10-14T10:00:00', title: 'Science / Mr. Brown' },
+    // Add more events for other days and time slots
+  ];
+
+  return (
+    <Card className="w-full p-4">
+      <FullCalendar
+        plugins={[resourceTimelinePlugin, interactionPlugin]}
+        initialView="resourceTimelineWeek"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'resourceTimelineDay,resourceTimelineWeek'
+        }}
+        slotDuration="01:00:00"
+        slotLabelInterval="01:00:00"
+        slotMinTime="09:00:00"
+        slotMaxTime="15:00:00"
+        height="auto"
+        resourceAreaWidth="15%"
+        resources={resources}
+        events={events}
+        resourceLabelContent={(arg) => ({
+            html: `<div class="fc-cell-text">${arg.resource.title}</div>`
+          })}
+        slotLabelContent={(arg) => ({
+            html: `<div class="fc-cell-text">${timePeriods[arg.date.getHours() - 9].title}</div>`
+          })}
+        eventContent={(arg) => ({
+            html: `<div class="fc-event-title">${arg.event.title}</div>`
+          })}
+      />
+    </Card>
+  );
+}
+
 
 type ApplyFilterProps = {
   dateError: boolean;

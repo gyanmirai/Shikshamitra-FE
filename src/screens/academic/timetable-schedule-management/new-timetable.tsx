@@ -1,4 +1,4 @@
-import type { DropResult } from 'react-beautiful-dnd';
+import type { Standards } from 'src/types/school';
 
 import * as yup from 'yup';
 import React, { useState } from 'react';
@@ -8,6 +8,9 @@ import { Box, Paper, Button, Switch, Typography, FormControlLabel } from '@mui/m
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -15,6 +18,7 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 const NewTimetable = () => {
   const dialog = useBoolean();
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -50,177 +54,298 @@ const NewTimetable = () => {
 
 export default NewTimetable;
 
-const CreateNewTimetable = () => {
-  const [selectedGrade, setSelectedGrade] = useState<string>('');
+const CreateNewTimetable = ({ formik }: any) => {
+  // const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
   return (
-    <CustomSelect
-      options={[
-        { value: 'A', label: 'A' },
-        { value: 'B', label: 'B' },
-        { value: 'C', label: 'C' },
-      ]}
-      label="Grade"
-      name="grade"
-      value={selectedGrade}
-      onChange={(val) => {
-        setSelectedGrade(val as string);
-      }}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
+    <Box sx={{ display: 'flex', gap: 2 }}>
+      <CustomSelect
+        label="Class"
+        options={classData?.items || []}
+        value={formik.values.class}
+        isLoading={isLoading}
+        labelKey="name"
+        valueKey="id"
+        onChange={(val) => {
+          const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+          formik.setFieldValue('class', val as string);
+          formik.setFieldValue('divisionOptions', selectedClass?.divisions || []);
+        }}
+        formControlProps={{ sx: { minWidth: 140 } }}
+      />
+      <CustomSelect
+        label="Division"
+        disabled={!formik.values.class}
+        labelKey="name"
+        valueKey="id"
+        options={formik.values.divisionOptions}
+        value={formik.values.division}
+        onChange={(val) => {
+          formik.setFieldValue('division', val as string);
+        }}
+        formControlProps={{ sx: { minWidth: 140 } }}
+      />
+    </Box>
   );
 };
 
-const AddSubject = () => {
-  const [items, setItems] = useState([
-    { id: '1', subject: 'Math' },
-    { id: '2', subject: 'English' },
-    { id: '3', subject: 'Science' },
-    { id: '4', subject: 'History' },
-    { id: '5', subject: 'Geography' },
-    { id: '6', subject: 'Physical Education' },
-  ]); // Items to drag from
+interface Subject {
+  id: string;
+  name: string;
+}
 
-  const [droppedItems, setDroppedItems] = useState<any[]>([]); // Items dropped into Paper
+interface Teacher {
+  value: string;
+  label: string;
+}
 
-  const reorder = (list: any[], startIndex: number, endIndex: number) => {
-    const result = Array.from(list);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
+interface TimePeriod {
+  id: string;
+  time: string;
+  subject?: Subject | null;
+  teachers?: Teacher[];
+}
+
+interface FormValues {
+  class: string;
+  division: string;
+  divisionOptions: string[];
+  timePeriods: TimePeriod[];
+}
+
+interface AddFormProps {
+  formik: {
+    values: FormValues;
+    setFieldValue: (field: string, value: any) => void;
   };
+}
 
-  // Handle the drag end event
-  const onDragEnd = ({ destination, source }: DropResult) => {
-    if (!destination) return;
+const AddSubject = ({ formik }: AddFormProps) => {
+  const [subjects, setSubjects] = useState<Subject[]>([
+    { id: '1', name: 'Math' },
+    { id: '2', name: 'English' },
+    { id: '3', name: 'Science' },
+    { id: '4', name: 'History' },
+    { id: '5', name: 'Geography' },
+    { id: '6', name: 'Physical Education' },
+  ]);
 
-    // Handling drag between the two lists (source -> drop)
-    if (source.droppableId === 'sourceList' && destination.droppableId === 'dropArea') {
-      const draggedItem = items[source.index];
-      setDroppedItems([...droppedItems, draggedItem]);
+  const onDragEnd = (result: any) => {
+    const { source, destination } = result;
 
-      // Remove the item from the source list
-      const newItems = Array.from(items);
-      newItems.splice(source.index, 1);
-      setItems(newItems);
+    // Dropped outside the list
+    if (!destination) {
+      return;
     }
 
-    // Reorder items within the source list
-    if (source.droppableId === 'sourceList' && destination.droppableId === 'sourceList') {
-      const newItems = reorder(items, source.index, destination.index);
-      setItems(newItems);
+    // Moving within the subjects list
+    if (source.droppableId === 'subjectsList' && destination.droppableId === 'subjectsList') {
+      const newSubjects = Array.from(subjects);
+      const [reorderedItem] = newSubjects.splice(source.index, 1);
+      newSubjects.splice(destination.index, 0, reorderedItem);
+      setSubjects(newSubjects);
     }
+    // Dropping from subjects list to a time period
+    else if (
+      source.droppableId === 'subjectsList' &&
+      destination.droppableId.startsWith('period-')
+    ) {
+      const subjectIndex = source.index;
+      const newSubjects = Array.from(subjects);
+      const [subjectToMove] = newSubjects.splice(subjectIndex, 1);
 
-    // Reorder items within the dropped list
-    if (source.droppableId === 'dropArea' && destination.droppableId === 'dropArea') {
-      const newDroppedItems = reorder(droppedItems, source.index, destination.index);
-      setDroppedItems(newDroppedItems);
+      const newTimePeriods = formik.values?.timePeriods?.map((period: TimePeriod) => {
+        if (period.id === destination.droppableId) {
+          // If there's already a subject in this time period, move it back to the subjects list
+          if (period.subject) {
+            newSubjects.push(period.subject);
+          }
+          return { ...period, subject: subjectToMove };
+        }
+        return period;
+      });
+
+      setSubjects(newSubjects);
+      formik.setFieldValue('timePeriods', newTimePeriods);
+    }
+    // Moving a subject from one time period to another
+    else if (
+      source.droppableId.startsWith('period-') &&
+      destination.droppableId.startsWith('period-')
+    ) {
+      const newTimePeriods = Array.from(formik.values?.timePeriods);
+      const sourcePeriod = newTimePeriods.find((period: any) => period.id === source.droppableId);
+      const destPeriod = newTimePeriods.find(
+        (period: any) => period.id === destination.droppableId
+      );
+
+      // Exchange subjects between time periods
+      const tempSubject = sourcePeriod?.subject;
+      if (sourcePeriod) sourcePeriod.subject = destPeriod?.subject || null;
+      if (destPeriod) destPeriod.subject = tempSubject || null;
+
+      formik.setFieldValue('timePeriods', newTimePeriods);
     }
   };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Box display="flex" flexWrap="wrap">
-        {/* Draggable list area */}
-        <Droppable droppableId="sourceList">
+      <Box display="flex" flexDirection="column">
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {formik.values.class}/{formik.values.division}
+        </Typography>
+
+        {/* Subjects List */}
+        <Droppable droppableId="subjectsList">
           {(provided) => (
             <Paper
               ref={provided.innerRef}
               {...provided.droppableProps}
-              sx={{
-                flex: 1,
-                margin: 2,
-                minWidth: 350,
-                padding: 2,
-              }}
+              elevation={3}
+              sx={{ p: 2, backgroundColor: 'background.default', mb: 2 }}
             >
-              <h3>Add Subject</h3>
-              {items.map((item, index) => (
-                <Draggable key={item.id} draggableId={item.id} index={index}>
-                  {(provided2) => (
-                    <Box
-                      ref={provided2.innerRef}
-                      {...provided2.draggableProps}
-                      {...provided2.dragHandleProps}
-                      sx={{
-                        padding: 1,
-                        marginBottom: 1,
-                        borderRadius: 1,
-                      }}
-                    >
-                      {item.subject}
-                    </Box>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Available Subjects
+              </Typography>
+              <Box display="flex" flexWrap="wrap">
+                {subjects ? (
+                  subjects.map((subject, index) => (
+                    <Draggable key={subject.id} draggableId={subject.id} index={index}>
+                      {(provided2, snapshot) => (
+                        <Box
+                          ref={provided2.innerRef}
+                          {...provided2.draggableProps}
+                          {...provided2.dragHandleProps}
+                          sx={{
+                            p: 1,
+                            m: 0.5,
+                            borderRadius: 1,
+                            backgroundColor: snapshot.isDragging
+                              ? 'secondary.light'
+                              : 'secondary.main',
+                            color: 'secondary.contrastText',
+                          }}
+                        >
+                          {subject.name}
+                        </Box>
+                      )}
+                    </Draggable>
+                  ))
+                ) : (
+                  <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                    No Subjects Yet
+                  </Typography>
+                )}
+                {provided.placeholder}
+              </Box>
             </Paper>
           )}
         </Droppable>
 
-        {/* Droppable area (Paper) with rearrangeable dropped items */}
-        <Droppable droppableId="dropArea">
-          {(provided) => (
-            <Paper
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              sx={{
-                flex: 1,
-                margin: 2,
-                minWidth: 350,
-                padding: 2,
-              }}
-            >
-              <h3>List of Subjects</h3>
-              {droppedItems.length > 0 ? (
-                droppedItems.map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
-                    {(provided2) => (
-                      <Box
-                        ref={provided2.innerRef}
-                        {...provided2.draggableProps}
-                        {...provided2.dragHandleProps}
-                        sx={{
-                          padding: 1,
-                          marginBottom: 1,
-                          borderRadius: 1,
-                        }}
-                      >
-                        {item.subject}
-                      </Box>
-                    )}
-                  </Draggable>
-                ))
-              ) : (
-                <p>No subject add yet.</p>
+        {/* Time Periods */}
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          List Of Subjects
+        </Typography>
+        <Box display="flex" flexWrap="wrap" sx={{ mb: 4 }}>
+          {formik.values?.timePeriods?.map((period: any) => (
+            <Droppable key={period.id} droppableId={period.id}>
+              {(provided, snapshot) => (
+                <Paper
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  elevation={3}
+                  sx={{
+                    width: 160,
+                    m: 1,
+                    p: 2,
+                    minHeight: 100,
+                    backgroundColor: snapshot.isDraggingOver ? 'action.hover' : 'background.paper',
+                  }}
+                >
+                  <Typography variant="subtitle1">{period.time}</Typography>
+                  {period.subject ? (
+                    <Draggable draggableId={`${period.id}-${period.subject.id}`} index={0}>
+                      {(provided2, snapshot2) => (
+                        <Box
+                          ref={provided2.innerRef}
+                          {...provided2.draggableProps}
+                          {...provided2.dragHandleProps}
+                          sx={{
+                            p: 1,
+                            mt: 1,
+                            borderRadius: 1,
+                            backgroundColor: snapshot2.isDragging ? 'primary.dark' : 'primary.main',
+                            color: 'primary.contrastText',
+                          }}
+                        >
+                          {period?.subject?.name}
+                        </Box>
+                      )}
+                    </Draggable>
+                  ) : (
+                    <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                      Drop subject here
+                    </Typography>
+                  )}
+                  {provided.placeholder}
+                </Paper>
               )}
-              {provided.placeholder}
-            </Paper>
-          )}
-        </Droppable>
+            </Droppable>
+          ))}
+        </Box>
       </Box>
     </DragDropContext>
   );
 };
 
-const AssignTeacher = () => {
-  const [selectedTeacher, setSelectedTeacher] = useState<any>([]);
+const AssignTeacher = ({ formik }: AddFormProps) => {
+  const teacherOptions: Teacher[] = [
+    { value: 'riya', label: 'Riya' },
+    { value: 'siya', label: 'Siya' },
+    { value: 'priya', label: 'Priya' },
+    { value: 'jiya', label: 'Jiya' },
+  ];
+  console.log('formik ----values===', formik.values);
+
+  const handleTeacherChange = (periodId: string, selectedTeachers: Teacher[]) => {
+    console.log('selected teachers----', selectedTeachers);
+
+    const updatedTimePeriod = formik.values.timePeriods.map((period) => {
+      if (period.id === periodId) {
+        console.log('if called====');
+
+        return {
+          ...period,
+          teachers: selectedTeachers,
+        };
+      }
+      return period;
+    });
+    formik.setFieldValue('timePeriods', updatedTimePeriod);
+  };
+
   return (
-    <CustomSelect
-      options={[
-        { value: 'riya', label: 'riya' },
-        { value: 'siya', label: 'siya' },
-        { value: 'priya', label: 'priya' },
-        { value: 'jiya', label: 'jiya' },
-      ]}
-      label="Assign teacher"
-      name="teacher"
-      multiple
-      value={selectedTeacher}
-      onChange={(val) => {
-        setSelectedTeacher(val as string);
-      }}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
+    <Box>
+      {formik.values.timePeriods?.map((period) => (
+        <Paper key={period.id} sx={{ mb: 2, p: 2 }}>
+          <Typography variant="h6">{period.subject?.name || 'Subject'}</Typography>
+
+          <CustomSelect
+            options={teacherOptions}
+            label={`Assign teachers for ${period.subject?.name}`}
+            name={`teachers-${period.id}`} // Unique name for each select
+            multiple
+            value={period.teachers || []} // Bind to selected teachers
+            onChange={(val) => handleTeacherChange(period.id, val as Teacher[])} // Update teachers for the subject
+            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+          />
+        </Paper>
+      ))}
+    </Box>
   );
 };
 
@@ -272,11 +397,26 @@ const allTimetableSteps = [
   SetRecurrence,
 ];
 
+const timePeriods: TimePeriod[] = [
+  { id: 'period-1', time: '09:00 - 10:00', subject: null },
+  { id: 'period-2', time: '10:00 - 11:00', subject: null },
+  { id: 'period-3', time: '11:00 - 12:00', subject: null },
+  { id: 'period-4', time: '12:00 - 13:00', subject: null },
+  { id: 'period-5', time: '13:00 - 14:00', subject: null },
+  { id: 'period-6', time: '14:00 - 15:00', subject: null },
+];
+
 const TimetableForm = () => {
   const [activeStep, setActiveStep] = useState(0);
+
   return (
     <CustomStepperWithFormik
-      initialValues={{}}
+      initialValues={{
+        class: '',
+        division: '',
+        divisionOptions: [],
+        timePeriods,
+      }}
       steps={[
         'Create New Timetable',
         'Add Subject',
@@ -298,7 +438,7 @@ const TimetableForm = () => {
         const StepComponent = allTimetableSteps[step];
         return (
           <Box p={2}>
-            <StepComponent />
+            <StepComponent formik={formik} />
           </Box>
         );
       }}

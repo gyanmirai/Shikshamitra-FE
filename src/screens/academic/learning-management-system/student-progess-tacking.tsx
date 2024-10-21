@@ -6,10 +6,14 @@ import {
   Tab,
   Card,
   Avatar,
+  MenuList,
+  MenuItem,
   TextField,
   Typography,
+  ListItemText,
   InputAdornment,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
@@ -18,10 +22,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -51,8 +57,24 @@ const StudentProgressTracking = () => {
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           size="small"
         />
-        <DatePicker label="Start Date" format="DD-MM-YYYY" />
-        <DatePicker label="End Date" format="DD-MM-YYYY" />
+        <DatePicker
+          label="Start Date"
+          format="DD-MM-YYYY"
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
+        <DatePicker
+          label="End Date"
+          format="DD-MM-YYYY"
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
       </Box>
       <Box sx={{ mt: 2 }}>
         <TextField
@@ -225,43 +247,133 @@ const StudentProgressTracking = () => {
           <CustomizableTable
             columns={[
               { id: 'studentName', label: 'Student Name' },
-              { id: 'overallProgress', label: 'Overall Progress' },
+              {
+                id: 'overallProgress',
+                label: 'Overall Progress',
+                render(value, row) {
+                  return (
+                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                      <CircularProgress variant="determinate" value={value} />
+                      <Box
+                        sx={{
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          right: 0,
+                          position: 'absolute',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          component="div"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          {value}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                },
+              },
               { id: 'quizScores', label: 'Quiz Scores' },
-              { id: 'averageGrade', label: 'Average Grade' },
-              { id: 'assignmentStatus', label: 'Assignment Status' },
+              {
+                id: 'averageGrade',
+                label: 'Average Grade',
+                render(value, row) {
+                  return (
+                    <Label
+                      color={
+                        value === 'A+'
+                          ? 'success'
+                          : value === 'B'
+                            ? 'success'
+                            : value === 'C'
+                              ? 'warning'
+                              : 'error'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'assignmentStatus',
+                label: 'Assignment Status',
+                render(value, row) {
+                  return (
+                    <Label
+                      color={
+                        value === 'Submitted'
+                          ? 'success'
+                          : value === 'Pending'
+                            ? 'warning'
+                            : 'error'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={() => (
+                        <MenuList>
+                          <MenuItem>
+                            <ListItemText>Send Reminder</ListItemText>
+                          </MenuItem>
+                          <MenuItem>
+                            <Iconify icon="mdi:eye" />
+                            <ListItemText>View Details</ListItemText>
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
             ]}
             data={[
               {
                 studentName: 'John Doe',
-                overallProgress: '75%',
+                overallProgress: '75',
                 quizScores: '82%',
                 averageGrade: 'B+',
                 assignmentStatus: 'Pending',
               },
               {
                 studentName: 'Jane Smith',
-                overallProgress: '88%',
+                overallProgress: '88',
                 quizScores: '90%',
                 averageGrade: 'A-',
                 assignmentStatus: 'Completed',
               },
               {
                 studentName: 'Mike Johnson',
-                overallProgress: '62%',
+                overallProgress: '62',
                 quizScores: '71%',
                 averageGrade: 'C',
                 assignmentStatus: 'Pending',
               },
               {
                 studentName: 'Emily Brown',
-                overallProgress: '95%',
+                overallProgress: '95',
                 quizScores: '98%',
                 averageGrade: 'A+',
                 assignmentStatus: 'Completed',
               },
               {
                 studentName: 'Alex Wilson',
-                overallProgress: '80%',
+                overallProgress: '80',
                 quizScores: '85%',
                 averageGrade: 'B',
                 assignmentStatus: 'Pending',
@@ -444,11 +556,88 @@ const Assignments = () => (
     columns={[
       { id: 'assignmentName', label: 'Assignment Name' },
       { id: 'completionDate', label: 'Completion Date' },
-      { id: 'gradeFeedback', label: 'Grade & Feedback' },
-      { id: 'submissionStatus', label: 'Submission Status' },
-      { id: 'actions', label: 'Actions' },
+      {
+        id: 'gradeFeedback',
+        label: 'Grade & Feedback',
+        render(value, row) {
+          return (
+            <>
+              <Label
+                color={
+                  value?.grade === 'A'
+                    ? 'success'
+                    : value?.grade === 'B'
+                      ? 'success'
+                      : value?.grade === 'C'
+                        ? 'warning'
+                        : 'error'
+                }
+              >
+                {value?.grade}
+              </Label>
+              <Typography variant="subtitle2" sx={{ opacity: 0.84 }}>
+                {value?.feedback}
+              </Typography>
+            </>
+          );
+        },
+      },
+      {
+        id: 'submissionStatus',
+        label: 'Submission Status',
+        render(value, row) {
+          return (
+            <Label
+              color={value === 'Submitted' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
+            >
+              {value}
+            </Label>
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Action',
+      },
     ]}
-    data={[]}
+    data={[
+      {
+        assignmentName: 'XYZ',
+        completionDate: '01-01-2024',
+        gradeFeedback: {
+          grade: 'A',
+          feedback: 'Excellent',
+        },
+        submissionStatus: 'Submitted',
+      },
+      {
+        assignmentName: 'XYZ',
+        completionDate: '01-01-2024',
+        gradeFeedback: {
+          grade: 'B',
+          feedback: 'Excellent',
+        },
+        submissionStatus: 'Pending',
+      },
+      {
+        assignmentName: 'XYZ',
+        completionDate: '01-01-2024',
+        gradeFeedback: {
+          grade: 'D',
+          feedback: 'Excellent',
+        },
+        submissionStatus: 'Overdue',
+      },
+      {
+        assignmentName: 'XYZ',
+        completionDate: '01-01-2024',
+        gradeFeedback: {
+          grade: 'A',
+          feedback: 'Excellent',
+        },
+        submissionStatus: 'Submitted',
+      },
+    ]}
   />
 );
 
