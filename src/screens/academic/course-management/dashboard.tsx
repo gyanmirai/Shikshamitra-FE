@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { color } from '@mui/system';
 import { Box, Card } from '@mui/material';
@@ -7,15 +7,26 @@ import Grid2 from '@mui/material/Unstable_Grid2';
 
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CourseHoursSpent } from 'src/screens/hr/dashboard/course-hours-spent';
 
 import { SvgColor } from 'src/components/svg-color';
+import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const Dashboard = () => {
   const theme = useTheme();
+  const [classes1, setClasses1] = useState<string>('');
+  const [classes2, setClasses2] = useState<string>('');
+
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
   return (
     <Box>
       <Grid2 container spacing={3}>
@@ -190,28 +201,71 @@ const Dashboard = () => {
       </Grid2>
       <Grid2 container spacing={3}>
         <Grid2 xs={12} sm={6}>
-          <AnalyticsWebsiteVisits
-            title="Student engagement across different courses"
-            chart={{
-              categories: ['A course', 'B course', 'C course', 'D course'],
-              series: [{ name: '', data: [65, 70, 40, 55] }],
+          <Card
+            sx={{
+              alignItems: 'center',
+              p: 3,
             }}
-            sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
-          />
+          >
+            <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
+              <CustomSelect
+                options={classData?.items || []}
+                value={classes1}
+                onChange={(val) => {
+                  setClasses1(val as string);
+                }}
+                label="Class"
+                isLoading={isLoading}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: 120 } }}
+              />
+            </Box>
+            <AnalyticsWebsiteVisits
+              title="Student engagement across different courses"
+              chart={{
+                categories: ['A course', 'B course', 'C course', 'D course'],
+                series: [{ name: '', data: [65, 70, 40, 55] }],
+              }}
+              sx={{ height: '100%', marginTop: 5 }}
+            />
+          </Card>
         </Grid2>
-        <Grid2 xs={12} sm={6}>
-          <AnalyticsCurrentVisits
-            title="Class Wise Performance"
-            chart={{
-              series: [
-                { label: 'Course 1', value: 35 },
-                { label: 'Course 2', value: 25 },
-                { label: 'Course 3', value: 15 },
-                { label: 'Course 4', value: 50 },
-              ],
+        <Grid2 xs={12} md={6}>
+          <Card
+            sx={{
+              alignItems: 'center',
+              p: 3,
             }}
-            sx={{ boxShadow: 'none' }}
-          />
+          >
+            <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
+              <CustomSelect
+                options={classData?.items || []}
+                value={classes2}
+                onChange={(val) => {
+                  setClasses2(val as string);
+                }}
+                label="Class"
+                isLoading={isLoading}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: 120 } }}
+              />
+            </Box>
+
+            <AnalyticsCurrentVisits
+              title="Class Wise Performance"
+              chart={{
+                series: [
+                  { label: 'Course 1', value: 35 },
+                  { label: 'Course 2', value: 25 },
+                  { label: 'Course 3', value: 15 },
+                  { label: 'Course 4', value: 50 },
+                ],
+              }}
+              sx={{ boxShadow: 'none' }}
+            />
+          </Card>
         </Grid2>
         <Grid2 xs={12}>
           <Card

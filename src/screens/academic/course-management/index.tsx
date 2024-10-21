@@ -14,7 +14,7 @@ import Subjects from './subjects';
 import Dashboard from './dashboard';
 import ContentLibrary from './contentLibrary';
 import CourseManagement from './courseManagement';
-import ReportsAnalytics from './reportsAndAnalyics';
+import Reports from './reportsAndAnalyics';
 import LearningResources from './learningResources';
 
 const TABS = [
@@ -40,9 +40,9 @@ const TABS = [
   },
   { value: 'contentLibrary', label: 'Content Library', component: () => <ContentLibrary /> },
   {
-    value: 'reportsAndAnalytics',
-    label: 'Reports And Analytics',
-    component: () => <ReportsAnalytics />,
+    value: 'reports',
+    label: 'Reports',
+    component: () => <Reports />,
   },
 
   { value: 'settings', label: 'Settings', component: () => <Settings /> },
