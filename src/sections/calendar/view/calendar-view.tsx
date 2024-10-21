@@ -226,64 +226,76 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
   teacherId,
   subjectId,
 }: SchoolTimetableCalendarProps) => {
+  console.log('SchoolTimetableCalendar---');
+
   const calendarRef = useRef<FullCalendar>(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const events = [
     {
-      id: 'a7b34d8b-2f88-4208-bcbe-b0580ec265a6',
+      id: 'f3284f7d-4d9f-436f-b53c-2d771afdbb99',
       startTime: '12:00',
       endTime: '12:30',
       title: 'Lunch Break',
       textColor: '#FFD700',
       daysOfWeek: [1, 2, 3, 4, 5, 6],
-      start: '',
-      end: '',
     },
     {
-      id: '9a3c2693-de73-4fd4-ba9b-d230ab14b428',
+      id: '290e1b2f-332f-4c47-947b-907100919623',
       startTime: '13:00:00',
       endTime: '13:15:00',
       title: 'Short Break',
       textColor: '#FF4500',
       daysOfWeek: [1, 2, 3, 4, 5, 6],
-      start: '',
-      end: '',
     },
     {
-      id: '350ea826-713f-4110-8f2d-15338306ba01',
-      start: '2024-10-14T09:00:00+05:30',
-      end: '2024-10-14T10:00:00+05:30',
-      title: 'Math / Mr. Smith',
+      id: '874d0843-937b-409b-8cb3-9a3ceee1d164',
+      start: '2024-10-21T09:00:00+05:30',
+      end: '2024-10-21T10:00:00+05:30',
+      title: 'Math / Mr. Smith    103',
       textColor: '#FF5733',
       teacherId: '1',
       subjectId: '1',
+      classRoomNumber: '103',
     },
     {
-      id: 'afcd9ac8-bfbd-4538-ba9e-69a9de8653a0',
-      start: '2024-10-15T09:00:00+05:30',
-      end: '2024-10-15T10:00:00+05:30',
-      title: 'Science / Ms. Johnson',
-      textColor: '#3357FF',
-      teacherId: '2',
-      subjectId: '3',
-    },
-    {
-      id: 'a300b038-b0ab-4c41-8cf3-b9429bb2726c',
-      start: '2024-10-17T10:00:00+05:30',
-      end: '2024-10-17T11:00:00+05:30',
-      title: 'Science / Mr. Smith',
-      textColor: '#3357FF',
-      teacherId: '1',
-      subjectId: '3',
-    },
-    {
-      id: '36230109-60d9-4eeb-9c9b-db04c7d7a861',
-      start: '2024-10-17T11:00:00+05:30',
-      end: '2024-10-17T12:00:00+05:30',
-      title: 'English / Ms. Johnson',
+      id: '35b1ebd4-b5c2-490c-ad7a-0afbed1242ff',
+      start: '2024-10-23T10:00:00+05:30',
+      end: '2024-10-23T11:00:00+05:30',
+      title: 'English / Ms. Johnson    102',
       textColor: '#33FF57',
       teacherId: '2',
       subjectId: '2',
+      classRoomNumber: '102',
+    },
+    {
+      id: '748afd81-d376-4798-8718-bd5413ccc14b',
+      start: '2024-10-24T11:00:00+05:30',
+      end: '2024-10-24T11:45:00+05:30',
+      title: 'Science / Ms. Johnson    102',
+      textColor: '#3357FF',
+      teacherId: '2',
+      subjectId: '3',
+      classRoomNumber: '102',
+    },
+    {
+      id: 'fd4e87ae-281b-4903-95c9-5d836c7d9d71',
+      start: '2024-10-21T13:30:00+05:30',
+      end: '2024-10-21T14:30:00+05:30',
+      title: 'Math / Mr. Brown    103',
+      textColor: '#FF5733',
+      teacherId: '3',
+      subjectId: '1',
+      classRoomNumber: '103',
+    },
+    {
+      id: '189f512e-f2f8-4c74-84b1-61615ea208b8',
+      start: '2024-10-25T10:15:00+05:30',
+      end: '2024-10-25T11:15:00+05:30',
+      title: 'English / Ms. Johnson    101',
+      textColor: '#33FF57',
+      teacherId: '2',
+      subjectId: '2',
+      classRoomNumber: '101',
     },
   ];
   // const filteredEvents = teacherId
@@ -298,6 +310,7 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
     }
     return events;
   }, [teacherId, subjectId, events]);
+
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
   return (
     <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
