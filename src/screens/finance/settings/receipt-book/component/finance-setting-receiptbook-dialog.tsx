@@ -19,6 +19,7 @@ interface FinanceSettingReceiptbookDialogProps {
 interface FormikValue {
   id: number;
   receiptBookName: string;
+  receiptBookCode: string;
 }
 
 const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogProps> = ({isEdit, data, onSave, onClose,allData, dialogValue}) => {
@@ -29,6 +30,7 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
             id: isEdit ? data.id : Math.floor(Math.random() * 10000),
            
             receiptBookName: isEdit ? data.receiptBookName ?? '' : '',
+            receiptBookCode: isEdit ? data.receiptBookCode ?? '' : '',
         },
         // validationSchema,
         onSubmit: (values) => {
@@ -53,7 +55,8 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
         <Box px="15px">
             <form onSubmit={formik.handleSubmit}>
                 <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-                    <TextField
+                   <Box display="flex" flexDirection="row" gap={2} >
+                   <TextField
                         fullWidth
                         name="receiptBookName"
                         label="Receipt Book Name"
@@ -62,6 +65,17 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
                         error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
                         helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
                     />
+                
+                     <TextField
+                        fullWidth
+                        name="receiptBookCode"
+                        label="Receipt Book Code"
+                        value={formik.values.receiptBookCode}
+                        onChange={formik.handleChange}
+                        error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
+                        helperText={formik.touched.receiptBookCode && formik.errors.receiptBookCode}
+                    />
+                   </Box>
                     </Box>
                     
                  

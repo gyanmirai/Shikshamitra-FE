@@ -15,6 +15,9 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
+import FinanceBudgetAllocationDialog from './component/finance-budget-allocation-dialog';
+import FinanceBudgetEditBudgetDialog from './component/finance-budget-edit-budget-dialog';
+
 
 
 interface Data {
@@ -33,50 +36,37 @@ interface Data {
 let data: Data[] = [
     {
         id: 1,
-        budgetTitle: 'Tuition Fees',
-        totalAmountAllocated: '500',
-        spent: 'online',
-        remainingBudget: "12",
-        startDate: "paid",
-        endDate: 'View',
-        departmentBreaked: "it",
+        budgetTitle: 'Salaries',
+        totalAmountAllocated: '500000',
+        spent: 'Online',
+        remainingBudget: "12000",
+        startDate: "12-03-2024",
+        endDate: '12-06-2025',
+        departmentBreaked: "Teacher",
         action: "edit",
 
     },
-    {
-        id: 3,
-        budgetTitle: 'Tuition Fees',
-        totalAmountAllocated: '500',
-        spent: 'online',
-        remainingBudget: "12",
-        startDate: "paid",
-        endDate: 'View',
-        departmentBreaked: "it",
-        action: "edit",
-
-
-    },
-    {
-        id: 2,
-        budgetTitle: 'Tuition Fees',
-        totalAmountAllocated: '500',
-        spent: 'online',
-        remainingBudget: "12",
-        startDate: "paid",
-        endDate: 'View',
-        departmentBreaked: "it",
-        action: "edit",
-
-
-    },
+    
 
 ];
 const FinanceBudgetingScreen = () => {
 
     const dialog = useBoolean();
+    const dialogAllocated = useBoolean();
+    const dialogEdit = useBoolean();
     const [selectedEntry, setSelectedEntry] = useState(data);
     const [isEdit, setIsEdit] = useState(false);
     const [tableData, setTableData] = useState(data);
+
+    const closeDialogAllocated = () => {
+        // setIsEdit(false);
+       dialogAllocated.onFalse();
+    }
+
+    const closeDialogEdit = () => {
+        setIsEdit(false);
+       dialogEdit.onFalse();
+    }
 
     const handleDelete = (item: any) => {
 
@@ -87,6 +77,13 @@ const FinanceBudgetingScreen = () => {
 
         setTableData([...data]);
 
+    }
+
+    const handleSave = (item: any) => {
+        // expenseData = expenseData.filter(val =>
+        //     (val.id) !== (item.id)
+        // );
+        // setTableData([...expenseData]);
     }
 
 
@@ -126,7 +123,7 @@ const FinanceBudgetingScreen = () => {
                                                     setIsEdit(true);
                                                     setSelectedEntry(row);
 
-                                                    dialog.onTrue();
+                                                    dialogEdit.onTrue();
 
                                                 }}
                                             >
@@ -135,12 +132,11 @@ const FinanceBudgetingScreen = () => {
                                             </MenuItem>
                                             <MenuItem
                                                 onClick={() => {
-                                                    handleDelete(row)
-
+                                                   dialogAllocated.onTrue()
                                                 }}
                                             >
-                                                <Iconify icon="solar:trash-bin-trash-bold" />
-                                                Delete
+                                                <Iconify icon="solar:pen-bold" />
+                                                AllocatedToBudget
                                             </MenuItem>
                                         </MenuList>
                                     )}
@@ -153,26 +149,37 @@ const FinanceBudgetingScreen = () => {
 
             />
             <CustomDialog
-                maxWidth="lg"
+                maxWidth="sm"
                 open={dialog.value}
                 handleClose={dialog.onFalse}
-                title="New Timetable"
+                title="New Budget"
             >
                 <TimetableForm />
             </CustomDialog>
 
-            {/* <Box>
-        {dialog.value && selectedEntry && (
-            <FinanceAddNewIncomeDialog
+            <Box>
+        {dialogAllocated.value && selectedEntry && (
+            <FinanceBudgetAllocationDialog
                 onSave={handleSave}
-                dialogValue={dialog.value}
-                onClose={closeDialog}
+                dialogValue={dialogAllocated.value}
+                onClose={closeDialogAllocated}
                 data={selectedEntry}
                 isEdit={isEdit}
                 allData={tableData}
             />
         )}
-    </Box> */}
+{dialogEdit.value && selectedEntry && (
+    <FinanceBudgetEditBudgetDialog
+    onSave={handleSave}
+    dialogValue={dialogEdit.value}
+    onClose={closeDialogEdit}
+    data={selectedEntry}
+    isEdit={isEdit}
+    allData={tableData}
+    />
+)}
+        
+    </Box>
 
         </>
     )
@@ -199,62 +206,89 @@ const BudgetTitleAndTimePeriod = () => (
     </Box>
 );
 
-const AddSubject = () => (
-    <CustomSelect
+const DepartmentAllocation = () => (
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+<CustomSelect
         options={[]}
-        label="Select Subject"
-        name="class"
+        label="Select departments"
+        name="selectDepartments"
         value=""
         onChange={() => { }}
         formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
+    <TextField
+
+    name="fundallocation"
+    label="Fund allocation"
+    value=""
+    onChange={() => { }}
+    size="small"
+
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+    </Box>
+    
+
 );
 
-const AssignTeacher = () => (
+const CategoryAllocation = () => (
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
     <CustomSelect
         options={[]}
-        label="assign teacher"
-        name="class"
+        label="Categories within departments"
+        name="categoriesWithinDepartments"
         value=""
         onChange={() => { }}
         formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
+    <TextField
+
+    name="fundallocation"
+    label="Fund allocation"
+    value=""
+    onChange={() => { }}
+    size="small"
+
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+</Box>
 );
 
-const RoomAllocation = () => (
-    <Box>
-        <CustomSelect
-            options={[]}
-            label="list of available rooms"
-            name="class"
-            value=""
-            onChange={() => { }}
-            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-        />
-        &nbsp;
-    </Box>
-);
+const TotalBudget = () => (
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+    <TextField
 
-const SetRecurrence = () => (
-    <Box>
-        <CustomSelect
-            options={[]}
-            label="Frequency Selection"
-            name="class"
-            value=""
-            onChange={() => { }}
-            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-        />
-        &nbsp;
-    </Box>
-);
+name="totalBudget"
+label="Total Budget"
+value=""
+onChange={() => { }}
+size="small"
 
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+    <TextField
+
+    name="fundallocation"
+    label="Fund allocation"
+    value=""
+    onChange={() => { }}
+    size="small"
+
+// error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+// helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+/>
+</Box>
+);
 const allTimetableSteps = [
     BudgetTitleAndTimePeriod,
-    AddSubject,
-    AssignTeacher,
-    RoomAllocation,
-    SetRecurrence,
+    DepartmentAllocation,
+    CategoryAllocation,
+    TotalBudget,
+    
+    
 ];
 
 const TimetableForm = () => {
@@ -263,11 +297,11 @@ const TimetableForm = () => {
         <CustomStepperWithFormik
             initialValues={{}}
             steps={[
-                'Create New Timetable',
-                'Add Subject',
-                'Assign Teacher',
-                'Room Allocation',
-                'Set Recurrence',
+                
+                'Budget Title & Time Period',
+                'Department Allocation',
+                'Category Allocation',
+                'Total Budget',
             ]}
             activeStep={activeStep}
             handleBack={() => {

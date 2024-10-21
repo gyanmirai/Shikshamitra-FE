@@ -16,22 +16,26 @@ interface Data {
     receiptBookName: string;
     toggle?: boolean;
     action?:string;
+    receiptBookCode: string;
   }
 let initialData: Data[] = [
     {
   id:1,
-    receiptBookName:"one",
+    receiptBookName:"GSEB",
+    receiptBookCode:"GSE55B",
     toggle:true,
     action:"view",
 },
 {
     id:2,
-    receiptBookName:"one",
+    receiptBookName:"CBSE",
+    receiptBookCode:"CBS12E",
     toggle:true,
     action:"view",
 },
 { id:3,
-    receiptBookName:"one",
+    receiptBookName:"OTHER",
+    receiptBookCode:"OTH12a",
     toggle:true,
     action:"view",
 },
@@ -60,7 +64,7 @@ const FinanceReceiptBookSetting = () => {
     useEffect(() => { }, [selectedEntry, isEdit]);
 
     const handleSave = (dataFromDialog: any)=>{
-             const  {id, receiptBookName} = dataFromDialog;
+             const  {id, receiptBookName, receiptBookCode} = dataFromDialog;
 
              const existingEntryIndex =  tableData.findIndex((e)=> e.id === id);
 
@@ -68,6 +72,7 @@ const FinanceReceiptBookSetting = () => {
              if(isEdit && existingEntryIndex !== -1){
                 const updatedEntry = { ...tableData[existingEntryIndex] }; 
                 updatedEntry.receiptBookName = receiptBookName; 
+                updatedEntry.receiptBookCode = receiptBookCode; 
         
                 const updatedData = [...tableData];
                 updatedData[existingEntryIndex] = updatedEntry; 
@@ -82,6 +87,7 @@ const FinanceReceiptBookSetting = () => {
                  const newReceiptBookName ={
                     id,
                     receiptBookName,
+                    receiptBookCode,
                  }
 
                  const updatedData = [...tableData, newReceiptBookName];
@@ -115,6 +121,7 @@ const FinanceReceiptBookSetting = () => {
             <CustomizableTable
                 columns={[
                     { id: 'receiptBookName', label: 'Receipt Book' },
+                    { id: 'receiptBookCode', label: 'R-Book Code' },
                     
                     {
                         id: 'toggle',

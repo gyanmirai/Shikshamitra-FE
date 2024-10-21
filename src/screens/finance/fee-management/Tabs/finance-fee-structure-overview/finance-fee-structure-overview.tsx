@@ -12,34 +12,21 @@ const FinanceFeeStructureOverview = () => {
   const data: FeeStructureOverView[] = [
     {
       classGrade: '12',
-
       feeType: 'Tuition',
-      amount: '$600',
-
+      amount: '60000',
       dueDate: '01-01-2024',
       status: 'Completed',
       action: 'View',
     },
     {
       classGrade: '10',
-
       feeType: 'Tuition',
-      amount: '$600',
-
+      amount: '40000',
       dueDate: '01-01-2024',
       status: 'Completed',
       action: 'View',
     },
-    {
-      classGrade: '10',
-
-      feeType: 'Tuition',
-      amount: '$600',
-
-      dueDate: '01-01-2024',
-      status: 'Completed',
-      action: 'View',
-    },
+    
   ];
 
   return (

@@ -94,8 +94,8 @@ const FinanceFeeListOverviewComponent = () => (
               class: '10th',
               studentName: 'Jayvion Simon',
               feeType: 'Library Fees',
-              amountDue: '$500',
-              amountPaid: '$1000',
+              amountDue: '0',
+              amountPaid: '10000',
               dueDate: '01-01-2024',
               status: 'Completed',
               action: 'View',
@@ -104,22 +104,13 @@ const FinanceFeeListOverviewComponent = () => (
               class: '10th',
               studentName: 'Jayvion Simon',
               feeType: 'Tuition Fees',
-              amountDue: '$500',
-              amountPaid: '$1000',
+              amountDue: '0',
+              amountPaid: '50000',
               dueDate: '01-01-2024',
               status: 'Completed',
               action: 'View',
             },
-            {
-              class: '10th',
-              studentName: 'Jayvion Simon',
-              feeType: 'Tuition Fees',
-              amountDue: '$500',
-              amountPaid: '$1000',
-              dueDate: '01-01-2024',
-              status: 'Completed',
-              action: 'View',
-            },
+            
           ]}
         />
       </Box>

@@ -68,9 +68,9 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           <Typography component="span" variant="h6" gutterBottom>
             Fee Structure Overview
           </Typography>
-          <Button onClick={dialog.onTrue} variant="contained" size="medium">
+          {/* <Button onClick={dialog.onTrue} variant="contained" size="medium">
             Create New Fee Structure
-          </Button>
+          </Button> */}
         </Box>
         <Box display="flex" gap={3} py="10px">
           <CustomSelect

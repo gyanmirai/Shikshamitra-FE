@@ -13,3 +13,5 @@ export const hrPath = '/hr';
 export const academicPath = '/academic';
 export const examinationPath = '/examination';
 export const settingPath = '/setting';
+export const transportPath = '/transport';
+
