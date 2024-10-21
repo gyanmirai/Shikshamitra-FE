@@ -4,7 +4,7 @@
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 import type { ICalendarEvent, ICalendarFilters } from 'src/types/calendar';
 
-import { useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import listPlugin from '@fullcalendar/list';
 // eslint-disable-next-line import/no-duplicates
 import FullCalendar from '@fullcalendar/react';
@@ -13,7 +13,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import resourceTimelinePlugin from '@fullcalendar/resource-timeline';
 
 import Card from '@mui/material/Card';
 import Dialog from '@mui/material/Dialog';
@@ -214,60 +213,102 @@ export function CalendarView() {
 }
 
 // ----------------------------------------------------------------------
-
-export function SchoolTimetableCalendar() {
-  const timePeriods = [
-    { id: '1', title: '09:00 - 10:00' },
-    { id: '2', title: '10:00 - 11:00' },
-    { id: '3', title: '11:00 - 12:00' },
-    { id: '4', title: '12:00 - 13:00' },
-    { id: '5', title: '13:00 - 14:00' },
-    { id: '6', title: '14:00 - 15:00' },
-  ];
-
-  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  const resources = weekDays.map(day => ({ id: day, title: day }));
-
-  const events = [
-    { resourceId: 'Monday', start: '2024-10-14T09:00:00', end: '2024-10-14T10:00:00', title: 'Math / Mr. Smith' },
-    { resourceId: 'Monday', start: '2024-10-14T10:00:00', end: '2024-10-14T11:00:00', title: 'English / Ms. Johnson' },
-    { resourceId: 'Tuesday', start: '2024-10-14T09:00:00', end: '2024-10-14T10:00:00', title: 'Science / Mr. Brown' },
-    // Add more events for other days and time slots
-  ];
-
-  return (
-    <Card className="w-full p-4">
-      <FullCalendar
-        plugins={[resourceTimelinePlugin, interactionPlugin]}
-        initialView="resourceTimelineWeek"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'resourceTimelineDay,resourceTimelineWeek'
-        }}
-        slotDuration="01:00:00"
-        slotLabelInterval="01:00:00"
-        slotMinTime="09:00:00"
-        slotMaxTime="15:00:00"
-        height="auto"
-        resourceAreaWidth="15%"
-        resources={resources}
-        events={events}
-        resourceLabelContent={(arg) => ({
-            html: `<div class="fc-cell-text">${arg.resource.title}</div>`
-          })}
-        slotLabelContent={(arg) => ({
-            html: `<div class="fc-cell-text">${timePeriods[arg.date.getHours() - 9].title}</div>`
-          })}
-        eventContent={(arg) => ({
-            html: `<div class="fc-event-title">${arg.event.title}</div>`
-          })}
-      />
-    </Card>
-  );
+interface SchoolTimetableCalendarProps {
+  grade: number;
+  division: string;
+  teacherId?: string; // Optional teacherId, for filtering events in teacher view
 }
 
+export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = ({
+  grade,
+  division,
+  teacherId,
+}: SchoolTimetableCalendarProps) => {
+  const calendarRef = useRef<FullCalendar>(null);
+  const events = [
+    {
+      id: 'a7b34d8b-2f88-4208-bcbe-b0580ec265a6',
+      startTime: '12:00',
+      endTime: '12:30',
+      title: 'Lunch Break',
+      textColor: '#FFD700',
+      daysOfWeek: [1, 2, 3, 4, 5, 6],
+      start: '',
+      end: '',
+    },
+    {
+      id: '9a3c2693-de73-4fd4-ba9b-d230ab14b428',
+      startTime: '13:00:00',
+      endTime: '13:15:00',
+      title: 'Short Break',
+      textColor: '#FF4500',
+      daysOfWeek: [1, 2, 3, 4, 5, 6],
+      start: '',
+      end: '',
+    },
+    {
+      id: '350ea826-713f-4110-8f2d-15338306ba01',
+      start: '2024-10-14T09:00:00+05:30',
+      end: '2024-10-14T10:00:00+05:30',
+      title: 'Math / Mr. Smith',
+      textColor: '#FF5733',
+      teacherId: '1',
+    },
+    {
+      id: 'afcd9ac8-bfbd-4538-ba9e-69a9de8653a0',
+      start: '2024-10-15T09:00:00+05:30',
+      end: '2024-10-15T10:00:00+05:30',
+      title: 'Science / Ms. Johnson',
+      textColor: '#3357FF',
+      teacherId: '2',
+    },
+    {
+      id: 'a300b038-b0ab-4c41-8cf3-b9429bb2726c',
+      start: '2024-10-17T10:00:00+05:30',
+      end: '2024-10-17T11:00:00+05:30',
+      title: 'Science / Mr. Smith',
+      textColor: '#3357FF',
+      teacherId: '1',
+    },
+    {
+      id: '36230109-60d9-4eeb-9c9b-db04c7d7a861',
+      start: '2024-10-17T11:00:00+05:30',
+      end: '2024-10-17T12:00:00+05:30',
+      title: 'English / Ms. Johnson',
+      textColor: '#33FF57',
+      teacherId: '2',
+    },
+  ];
+  const filteredEvents = teacherId
+    ? events.filter((event) => !event.teacherId || event.teacherId === teacherId) // Keep break events (no teacherId) and specific teacher events
+    : events; // For student view, show all events
+
+  const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
+  return (
+    <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
+      <Card sx={{ ...flexProps, minHeight: '70vh' }}>
+        <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={false}
+            slotDuration="00:15:00"
+            slotLabelInterval="00:15:00"
+            slotMinTime="09:00:00"
+            slotMaxTime="15:45:00"
+            height="100%"
+            expandRows
+            dayMaxEvents
+            allDaySlot={false}
+            events={filteredEvents}
+            hiddenDays={[0]}
+          />
+        </StyledCalendar>
+      </Card>
+    </DashboardContent>
+  );
+};
 
 type ApplyFilterProps = {
   dateError: boolean;

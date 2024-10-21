@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import type { Division, Standards } from 'src/types/school';
 
-import { Box } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+
+import { Box, Button, Switch, Typography } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -8,197 +10,105 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 
 import { SchoolTimetableCalendar } from 'src/sections/calendar/view';
+import { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
+import { uuidv4 } from 'src/utils/uuidv4';
+
+// eslint-disable-next-line react-hooks/rules-of-hooks
+
 
 const CurrentTimetableOverview = () => {
   const [classes, setClasses] = useState<string>('');
+  const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
+  const [division, setDivision] = useState<any>();
+  const [teacher, setTeacher] = useState<string>('');
+  const [isTeacherView, setIsTeacherView] = useState<boolean>(false);
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const [timetableEvents, setTimetableEvents] = useState<CalendarEvent[]>([]);
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  const handleCreateTimetable = () => {
+    setShowTimeTable(true);
+  };
+
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end">
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography sx={{ mr: 2 }}>Student Timetable</Typography>
+          <Switch
+            inputProps={{ 'aria-label': 'Toggle view' }}
+            checked={isTeacherView}
+            onChange={() => setIsTeacherView((prev) => !prev)}
+          />
+          <Typography sx={{ ml: 1 }}>Teacher Timetable</Typography>
+        </Box>
         <CustomSelect
-          label="class"
+          label="Class"
           options={classData?.items || []}
           value={classes}
           isLoading={isLoading}
           labelKey="name"
           valueKey="id"
           onChange={(val) => {
+            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
             setClasses(val as string);
+            setDivisionOptions(selectedClass?.divisions || []);
+            setDivision([]); // Reset division on class change
+            setTeacher(''); // Reset teacher on class change
           }}
-          formControlProps={{ sx: { maxWidth: '300px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 140 } }}
         />
+        <CustomSelect
+          label="Division"
+          disabled={!classes}
+          labelKey="name"
+          valueKey="id"
+          options={divisionOptions}
+          value={division}
+          onChange={(val) => {
+            setDivision(val as string[]);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        {isTeacherView && (
+          <CustomSelect
+            label="Teacher"
+            options={[
+              { id: '1', name: 'Mr. Smith' },
+              { id: '2', name: 'Ms. Johnson' },
+              { id: '3', name: 'Mr. Brown' },
+            ]}
+            value={teacher}
+            labelKey="name"
+            valueKey="id"
+            disabled={!isTeacherView}
+            onChange={(val) => {
+              setTeacher(val as string);
+            }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+        )}
+        <Button
+          variant="contained"
+          onClick={handleCreateTimetable}
+          sx={{ alignSelf: 'flex-end' }}
+          disabled={!classes || !division.length || (isTeacherView && !teacher)}
+        >
+          Show Timetable
+        </Button>
       </Box>
-      {/* <CustomizableTable
-        columns={[
-          {
-            label: 'days of the week',
-            id: 'daysOfTheWeek',
-          },
-          {
-            label: 'Period 1',
-            id: 'period1',
-            render(value, row) {
-              return (
-                <>
-                  <Label
-                    color={
-                      value === 'Math'
-                        ? 'success'
-                        : value === 'Science'
-                          ? 'primary'
-                          : value === 'English'
-                            ? 'error'
-                            : value === 'History'
-                              ? 'secondary'
-                              : value === 'Geography'
-                                ? 'info'
-                                : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.84 }}>
-                    Mr.Smith
-                  </Typography>
-                </>
-              );
-            },
-          },
-          {
-            label: 'Period 2',
-            id: 'period2',
-            render(value, row) {
-              return (
-                <>
-                  <Label
-                    color={
-                      value === 'Math'
-                        ? 'success'
-                        : value === 'Science'
-                          ? 'primary'
-                          : value === 'English'
-                            ? 'error'
-                            : value === 'History'
-                              ? 'secondary'
-                              : value === 'Geography'
-                                ? 'info'
-                                : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.84 }}>
-                    Mr.Smith
-                  </Typography>
-                </>
-              );
-            },
-          },
-          {
-            label: 'Period 3',
-            id: 'period3',
-            render(value, row) {
-              return (
-                <>
-                  <Label
-                    color={
-                      value === 'Math'
-                        ? 'success'
-                        : value === 'Science'
-                          ? 'primary'
-                          : value === 'English'
-                            ? 'error'
-                            : value === 'History'
-                              ? 'secondary'
-                              : value === 'Geography'
-                                ? 'info'
-                                : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.84 }}>
-                    Mr.Smith
-                  </Typography>
-                </>
-              );
-            },
-          },
-          {
-            label: 'Period 4',
-            id: 'period4',
-            render(value, row) {
-              return (
-                <>
-                  <Label
-                    color={
-                      value === 'Math'
-                        ? 'success'
-                        : value === 'Science'
-                          ? 'primary'
-                          : value === 'English'
-                            ? 'error'
-                            : value === 'History'
-                              ? 'secondary'
-                              : value === 'Geography'
-                                ? 'info'
-                                : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.84 }}>
-                    Mr.Smith
-                  </Typography>
-                </>
-              );
-            },
-          },
-        ]}
-        data={[
-          {
-            daysOfTheWeek: 'Monday',
-            period1: 'Math',
-            period2: 'English',
-            period3: 'Science',
-            period4: 'History',
-          },
-          {
-            daysOfTheWeek: 'Tuesday',
-            period1: 'Geography',
-            period2: 'Math',
-            period3: 'English',
-            period4: 'Physical Education',
-          },
-          {
-            daysOfTheWeek: 'Wednesday',
-            period1: 'Science',
-            period2: 'History',
-            period3: 'Math',
-            period4: 'English',
-          },
-          {
-            daysOfTheWeek: 'Thursday',
-            period1: 'Physical Education',
-            period2: 'Geography',
-            period3: 'Science',
-            period4: 'Math',
-          },
-          {
-            daysOfTheWeek: 'Friday',
-            period1: 'History',
-            period2: 'Math',
-            period3: 'English',
-            period4: 'Science',
-          },
-        ]}
-      /> */}
-      <SchoolTimetableCalendar />
+
+      {showTimeTable && (
+        <SchoolTimetableCalendar
+          teacherId={isTeacherView ? teacher : undefined}
+          grade={1}
+          division="A"
+        />
+      )}
     </Box>
   );
 };

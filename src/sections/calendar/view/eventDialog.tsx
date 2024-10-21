@@ -1,5 +1,6 @@
 import React from 'react';
-import { Dialog, DialogTitle, Select, MenuItem, Button } from '@mui/material';
+
+import { Dialog, Select, Button, MenuItem, DialogTitle } from '@mui/material';
 
 interface EventDialogProps {
   open: boolean;
@@ -24,52 +25,52 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   onSelectTeacher,
   onSave,
 }) => (
-    <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>Select Subject and Teacher</DialogTitle>
-      <div style={{ padding: '16px' }}>
-        <Select
-          fullWidth
-          value={selectedSubject || ''}
-          onChange={(e) => onSelectSubject(e.target.value)}
-          displayEmpty
-        >
-          <MenuItem value="" disabled>
-            Select Subject
+  <Dialog open={open} onClose={onClose} fullWidth>
+    <DialogTitle>Select Subject and Teacher</DialogTitle>
+    <div style={{ padding: '16px' }}>
+      <Select
+        fullWidth
+        value={selectedSubject || ''}
+        onChange={(e) => onSelectSubject(e.target.value)}
+        displayEmpty
+      >
+        <MenuItem value="" disabled>
+          Select Subject
+        </MenuItem>
+        {subjects.map((subject) => (
+          <MenuItem key={subject.id} value={subject.id}>
+            {subject.name}
           </MenuItem>
-          {subjects.map((subject) => (
-            <MenuItem key={subject.id} value={subject.id}>
-              {subject.name}
-            </MenuItem>
-          ))}
-        </Select>
+        ))}
+      </Select>
 
-        <Select
-          fullWidth
-          value={selectedTeacher || ''}
-          onChange={(e) => onSelectTeacher(e.target.value)}
-          displayEmpty
-          style={{ marginTop: '16px' }}
-          disabled={!selectedSubject}
-        >
-          <MenuItem value="" disabled>
-            Select Teacher
+      <Select
+        fullWidth
+        value={selectedTeacher || ''}
+        onChange={(e) => onSelectTeacher(e.target.value)}
+        displayEmpty
+        style={{ marginTop: '16px' }}
+        disabled={!selectedSubject}
+      >
+        <MenuItem value="" disabled>
+          Select Teacher
+        </MenuItem>
+        {teachers.map((teacher) => (
+          <MenuItem key={teacher.id} value={teacher.id}>
+            {teacher.name}
           </MenuItem>
-          {teachers.map((teacher) => (
-            <MenuItem key={teacher.id} value={teacher.name}>
-              {teacher.name}
-            </MenuItem>
-          ))}
-        </Select>
+        ))}
+      </Select>
 
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={onSave}
-          style={{ marginTop: '16px' }}
-        >
-          Save Event
-        </Button>
-      </div>
-    </Dialog>
-  );
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        onClick={onSave}
+        style={{ marginTop: '16px' }}
+      >
+        Schedule Task
+      </Button>
+    </div>
+  </Dialog>
+);

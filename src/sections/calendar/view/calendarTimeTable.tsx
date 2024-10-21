@@ -2,10 +2,9 @@ import type { DateSelectArg } from '@fullcalendar/core';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { useRef, useState, useEffect } from 'react';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { Card } from '@mui/material';
 
@@ -16,15 +15,17 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { StyledCalendar } from '../styles';
 import { EventDialog } from './eventDialog';
-import { useCalendar } from '../hooks/use-calendar';
 
-type CalendarEvent = {
+export type CalendarEvent = {
   id: string;
-  resourceId?: string;
-  start: string;
-  end: string;
+  startTime?: string;
+  endTime?: string;
+  start?: string;
+  end?: string;
   title: string;
-  color?: string;
+  textColor?: string;
+  teacherId?: string;
+  daysOfWeek?: number[];
 };
 
 type Teacher = {
@@ -44,24 +45,25 @@ const teachers: Teacher[] = [
   { id: '3', name: 'Mr. Brown' },
 ];
 
-const predefinedBreaks: CalendarEvent[] = [
-  {
-    id: uuidv4(),
-    start: '2024-10-16T12:00:00', // Example time for lunch break
-    end: '2024-10-16T13:00:00',
-    title: 'Lunch Break',
-    color: '#FFD700', // A different color for breaks
-  },
-  {
-    id: uuidv4(),
-    start: '2024-10-16T10:30:00', // Example time for short break
-    end: '2024-10-16T10:45:00',
-    title: 'Short Break',
-    color: '#FF4500', // Another color for short breaks
-  },
-];
+interface CalendarTimeTableProps {
+  grade: number;
+  division: string;
+  duration: string;
+  schoolStartTime: string;
+  schoolEndTime: string;
+  onEventsChange?: (events: CalendarEvent[]) => void;
+  breakEvents?: CalendarEvent[];
+}
 
-export function CalendarTimeTable() {
+export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
+  grade,
+  division,
+  duration,
+  schoolStartTime,
+  schoolEndTime,
+  onEventsChange,
+  breakEvents = [],
+}: CalendarTimeTableProps) => {
   //   const calendarRef = useRef<FullCalendar>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -71,44 +73,15 @@ export function CalendarTimeTable() {
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
   console.log('events0000', events);
 
-  const {
-    view,
-    date,
-    onDatePrev,
-    onDateNext,
-    onDateToday,
-    onDropEvent,
-    onChangeView,
-    onSelectRange,
-    onClickEvent,
-    onResizeEvent,
-    onInitialView,
-    //
-    // openForm,
-    // onOpenForm,
-    onCloseForm,
-    //
-    selectEventId,
-    selectedRange,
-    //
-    // onClickEventInFilters,
-  } = useCalendar();
-
-  const timePeriods = [
-    { id: '1', title: '09:00 - 10:00' },
-    { id: '2', title: '10:00 - 11:00' },
-    { id: '3', title: '11:00 - 12:00' },
-    { id: '4', title: '12:00 - 13:00' },
-    { id: '5', title: '13:00 - 14:00' },
-    { id: '6', title: '14:00 - 15:00' },
-  ];
-
   const calendarRef = useRef<FullCalendar>(null);
   // const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   // const resources = weekDays.map((day) => ({ id: day, title: day }));
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
+    // to open the dialog after click on box
+    console.log('select info===', selectInfo);
+
     setNewEventInfo(selectInfo);
     setOpenDialog(true);
   };
@@ -123,7 +96,6 @@ export function CalendarTimeTable() {
     const subject = subjects.find((sub) => sub.id === selectedSubject);
     const subjectTeachers = subject?.teachers
       .map((tid) => teachers.find((teacher) => tid === teacher.id))
-
       .filter((teacher): teacher is Teacher => teacher !== undefined);
     setFilteredTeachers(subjectTeachers || []);
   };
@@ -135,45 +107,94 @@ export function CalendarTimeTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject]);
 
-  useEffect(() => {
-    setEvents((prevEvents) => [...prevEvents, ...predefinedBreaks]);
-  }, []);
+  useMemo(() => {
+    setEvents((prevEvents) => [...prevEvents, ...breakEvents]);
+  }, [breakEvents]);
+
+  const updateEvents = (newEvents: CalendarEvent[]) => {
+    setEvents(newEvents);
+    if (onEventsChange) {
+      onEventsChange(newEvents); // Notify parent of the event change
+    }
+  };
 
   const handleSaveEvent = () => {
+    // save function after submit the the subject and teacher
     if (selectedSubject && selectedTeacher && newEventInfo) {
       const subject = subjects.find((sub) => sub.id === selectedSubject);
+      const teacher = filteredTeachers.find((teach) => teach.id === selectedTeacher);
       console.log('subject---', subject);
 
       const newEvent = {
         id: uuidv4(),
-        resourceId: newEventInfo.resource?.id,
         start: newEventInfo.startStr,
         end: newEventInfo.endStr,
-        title: `${subject?.name} / ${selectedTeacher}`,
+        title: `${subject?.name} / ${teacher?.name}`,
         textColor: subject?.color,
+        teacherId: teacher?.id,
       };
 
-      setEvents((prevEvents) => [...prevEvents, newEvent]);
+      const updatedEvents = [...events, newEvent];
+      updateEvents(updatedEvents);
       setOpenDialog(false);
       updateEvent(newEvent);
       setSelectedSubject(null);
       setSelectedTeacher(null);
     }
   };
+  const handleEventResize = (info: any) => {
+    const { event } = info;
 
-  const handleEventDrop = (info: { event: { id: any; start: any; end: any; resourceId: any } }) => {
     const updatedEvent = {
-      id: info.event.id,
-      start: info.event.start,
-      end: info.event.end,
-      resourceId: info.event.resourceId,
+      id: event.id,
+      start: event.startStr,
+      end: event.endStr,
+      resourceId: event.resourceId,
+    };
+    setEvents((prevEvents) =>
+      prevEvents.map((ev) => (ev.id === updatedEvent.id ? { ...ev, ...updatedEvent } : ev))
+    );
+    updateEvent(updatedEvent);
+  };
+
+  const isEventOverlappingBreak = (start: Date, end: Date) =>
+    breakEvents.some((breakEvent) => {
+      const breakStart = new Date(start);
+      const breakEnd = new Date(start);
+      const [breakStartHours, breakStartMinutes] = breakEvent.startTime!.split(':').map(Number);
+      const [breakEndHours, breakEndMinutes] = breakEvent.endTime!.split(':').map(Number);
+
+      breakStart.setHours(breakStartHours, breakStartMinutes, 0, 0);
+      breakEnd.setHours(breakEndHours, breakEndMinutes, 0, 0);
+
+      return start < breakEnd && end > breakStart;
+    });
+
+  const handleEventDrop = (info: any) => {
+    const { event } = info;
+
+    if (event.title.includes('Break')) {
+      info.revert();
+      return;
+    }
+
+    if (isEventOverlappingBreak(event.start!, event.end!)) {
+      info.revert();
+      return;
+    }
+
+    const updatedEvent = {
+      id: event.id,
+      start: event.startStr,
+      end: event.endStr,
+      resourceId: event.resourceId,
     };
 
     setEvents((prevEvents) =>
       prevEvents.map((ev) => (ev.id === updatedEvent.id ? { ...ev, ...updatedEvent } : ev))
     );
 
-    updateEvent(updatedEvent); // Update the event on the server and in local state
+    updateEvent(updatedEvent);
   };
 
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
@@ -187,13 +208,13 @@ export function CalendarTimeTable() {
               droppable
               editable
               ref={calendarRef}
-              plugins={[dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="timeGridWeek"
               headerToolbar={false}
-              slotDuration="01:00:00"
-              slotLabelInterval="01:00:00"
-              slotMinTime="09:00:00"
-              slotMaxTime="15:00:00"
+              slotDuration={duration}
+              slotLabelInterval={duration}
+              slotMinTime={schoolStartTime}
+              slotMaxTime={schoolEndTime}
               height="100%"
               expandRows
               dayMaxEvents
@@ -203,18 +224,13 @@ export function CalendarTimeTable() {
               selectable
               select={handleDateSelect}
               eventAllow={(dropInfo, draggedEvent) => {
-                // Disallow dragging or resizing for break events
                 if (draggedEvent?.title.includes('Break')) {
-                  return false; // Prevent moving or resizing break events
+                  return false;
                 }
-                return true; // Allow other events
+                return !isEventOverlappingBreak(dropInfo.start, dropInfo.end);
               }}
-              eventDrop={(arg) => {
-                // Ensure the dropped event isn't a break event
-                if (!arg.event.title.includes('Break')) {
-                  onDropEvent(arg, updateEvent);
-                }
-              }}
+              eventDrop={handleEventDrop}
+              eventResize={handleEventResize}
             />
             {/* <FullCalendar
               weekends
@@ -277,4 +293,4 @@ export function CalendarTimeTable() {
       />
     </>
   );
-}
+};
