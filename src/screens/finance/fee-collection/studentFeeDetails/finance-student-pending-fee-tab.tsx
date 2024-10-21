@@ -10,59 +10,25 @@ const FinanceStudentPendingFeeTab = () => {
     const overDuePaymentList = [
         {
             id: 1,
-            feeName: "25-12-2024",
+            feeName: "Tuition Fee",
             statusId: "1234",
             amountDue: "500",
             dueDate: "23-12-2024",
             action: "mark as paid",
         },
-        {
-            id: 2,
-            feeName: "25-12-2024",
-            statusId: "1234",
-            amountDue: "500",
-            dueDate: "23-12-2024",
-            action: "mark as paid",
-
-        },
-        {
-            id: 3,
-            feeName: "25-12-2024",
-            statusId: "1234",
-            amountDue: "500",
-            dueDate: "23-12-2024",
-            action: "mark as paid",
-
-        },
+       
     ];
 
     const upcomingPaymentList = [
         {
             id: 1,
-            feeName: "25-12-2024",
+            feeName: "Sports Fee",
             statusId: "1234",
-            amountDue: "500",
-            dueDate: "23-12-2024",
+            amountDue: "2500",
+            dueDate: "23-01-2025",
             action: "mark as paid",
         },
-        {
-            id: 2,
-            feeName: "25-12-2024",
-            statusId: "1234",
-            amountDue: "500",
-            dueDate: "23-12-2024",
-            action: "mark as paid",
-
-        },
-        {
-            id: 3,
-            feeName: "25-12-2024",
-            statusId: "1234",
-            amountDue: "500",
-            dueDate: "23-12-2024",
-            action: "mark as paid",
-
-        },
+       
     ];
     return (
         <>

@@ -7,6 +7,7 @@ import {
   academicPath,
   dashboardPath,
   examinationPath,
+  transportPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -89,13 +90,13 @@ export const navData = [
       { title: 'Finance', path: '/finance/dashboard', icon: ICONS.finance, _action: 'finance' },
       {
         title: 'Communication',
-        path: financePath,
+        path: "communication/dashboard",
         icon: ICONS.communication,
         _action: 'communication',
       },
       { title: 'Library', path: financePath, icon: ICONS.library, _action: 'library' },
-      { title: 'Transport', path: financePath, icon: ICONS.transport, _action: 'transport' },
-      { title: 'Hostel', path: financePath, icon: ICONS.hostel, _action: 'transport' },
+      { title: 'Transport', path: "/transport/dashboard", icon: ICONS.transport, _action: 'transport' },
+      { title: 'Hostel', path: "/hostel/dashboard", icon: ICONS.hostel, _action: 'transport' },
       { title: 'Security', path: '/security/role', icon: ICONS.security, _action: 'security' },
       // {
       //   title: 'Setting',
@@ -701,16 +702,59 @@ const financeModule = {
           path: '/finance/settings',
           _action: 'finance-settings',
         },
-        {
-          title: 'User Roles/Permission',
-          path: '/finance/user-roles',
-          _action: 'finance-user-roles',
-        },
+        
       ],
     },
   ],
 };
 
+const transportModule = {
+  [transportPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/transport/dashboard',
+          _action: 'dashboard',
+        },
+        {
+          title: 'Routes & Schedules',
+          path: '/transport/routes-schedules',
+          _action: 'routes-schedules',
+        },
+        {
+          title: 'Vehicle Management',
+          path: '/transport/vehicle-management',
+          _action: 'vehicle-management',
+        },
+        {
+          title: 'Staff Transport',
+          path: '/transport/staff-transport',
+          _action: 'staff-transport',
+        },
+        {
+          title: 'Real-Time Tracking',
+          path: '/transport/real-time-tracking',
+          _action: 'real-time-tracking',
+        },
+
+        {
+          title: 'Reports & Analytics',
+          path: '/transport/reports-analytics',
+          _action: 'reports-analytics',
+        },
+        {
+          title: 'Settings',
+          path: '/transport/settings',
+          _action: 'settings',
+        },
+        
+        
+      ],
+    },
+  ],
+};
 export const navSubData = {
   ...studentModule,
   ...securityModule,
@@ -719,4 +763,5 @@ export const navSubData = {
   ...academicModule,
   ...examinationModule,
   ...financeModule,
+  ...transportModule,
 };

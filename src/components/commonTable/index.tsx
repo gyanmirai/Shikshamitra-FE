@@ -37,6 +37,7 @@ interface TableProps<T> {
   handleSearch?: (value: Record<string, string | number | keyof T | null>) => void;
   isSearchable?: boolean;
   isLoading?: boolean;
+  isPagination?:boolean;
 }
 
 interface TableState<T> {
@@ -61,6 +62,8 @@ function DataTable<T>({
   handleSearch,
   isSearchable = false,
   isLoading = false,
+  isPagination = true,
+  
 }: TableProps<T>) {
   const [state, setState] = useState<TableState<T>>({
     totalItems,
@@ -186,7 +189,7 @@ function DataTable<T>({
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
+      {isPagination && <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
         count={state.totalItems}
@@ -202,7 +205,7 @@ function DataTable<T>({
             height: 'auto',
           },
         }}
-      />
+      />}
     </Paper>
   );
 }

@@ -127,16 +127,7 @@ const FinanceCollectFeeDialog: React.FC<FinanceCollectFeeDialogProps> = ({ dialo
                     <form onSubmit={formik.handleSubmit}>
                         <Box pt="15px" display="flex" flexDirection="column" gap={3}>
                             <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        disabled={isEdit}
-                                        name="selectStudent"
-                                        label="Select Student"
-                                        value={formik.values.selectStudent}
-                                        onChange={formik.handleChange}
-                                        size="small"
-                                    />
-                                </Grid>
+                                
                                 <Grid item xs={12} sm={6}>
                                     <CustomSelect
                                         label="Fee Type"
@@ -147,23 +138,42 @@ const FinanceCollectFeeDialog: React.FC<FinanceCollectFeeDialogProps> = ({ dialo
                                         disabled={isEdit}
                                     />
                                 </Grid>
+                                <Grid item xs={12} sm={6}>
+                                <TextField
+                                        name="amount"
+                                        label="Amount"
+                                        value={formik.values.amount}
+                                        onChange={formik.handleChange}
+                                        size="small"
+                                        disabled // Amount is calculated based on fee type and should be read-only
+                                    />
+                                </Grid>
                             </Grid>
 
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6}>
-                                    <CustomSelect
+                                    {/* <CustomSelect
                                         label="Select Term"
                                         options={termOptions}
                                         value={formik.values.term}
                                         onChange={(selectedValues) => formik.setFieldValue('term', selectedValues)}
                                         formControlProps={{ sx: { minWidth: 195 } }}
                                         disabled={isEdit}
+                                    /> */}
+                                    <DatePicker
+                                        label="Current Date"
+                                        slotProps={{
+                                            textField: {
+                                                sx: { width: '100%', maxWidth: '200px' },
+                                                size: 'small',
+                                            },
+                                        }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        name="amount"
-                                        label="Amount"
+                                        name="reciptNumber"
+                                        label="Receipt Number"
                                         value={formik.values.amount}
                                         onChange={formik.handleChange}
                                         size="small"
@@ -201,7 +211,7 @@ const FinanceCollectFeeDialog: React.FC<FinanceCollectFeeDialogProps> = ({ dialo
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6}>
                                     <DatePicker
-                                        label="Current Date"
+                                        label="Cheque Date"
                                         slotProps={{
                                             textField: {
                                                 sx: { width: '100%', maxWidth: '200px' },
@@ -212,6 +222,17 @@ const FinanceCollectFeeDialog: React.FC<FinanceCollectFeeDialogProps> = ({ dialo
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
+                                        name="bankName"
+                                        label="Bank Name"
+                                        value={formik.values.transactionId}
+                                        onChange={formik.handleChange}
+                                        size="small"
+                                    />
+                                </Grid>
+                               
+                            </Grid>
+                            
+                            <TextField
                                         multiline
                                         rows={4}
                                         name="note"
@@ -219,9 +240,8 @@ const FinanceCollectFeeDialog: React.FC<FinanceCollectFeeDialogProps> = ({ dialo
                                         value={formik.values.note}
                                         onChange={formik.handleChange}
                                         size="small"
-                                    />
-                                </Grid>
-                            </Grid>
+                            />
+                                
                         </Box>
                         <DialogActions>
                             <Button onClick={onClose} variant="contained" size="small">

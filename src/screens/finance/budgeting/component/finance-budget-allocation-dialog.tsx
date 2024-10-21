@@ -43,12 +43,14 @@ const FinanceBudgetAllocationDialog: React.FC<FinanceBudgetAllocationDialogProps
  
 
   return (
+
     <CustomDialog
     title="Budget Allocation Panel"
     open={dialogValue}
     handleClose={onClose}
     maxWidth="lg"
 >
+    
     <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
             <AnalyticsCurrentVisits
@@ -68,7 +70,9 @@ const FinanceBudgetAllocationDialog: React.FC<FinanceBudgetAllocationDialogProps
           </Grid>
         </Grid>
     </Grid>
+   
 </CustomDialog>
+
   );
 };
 

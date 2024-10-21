@@ -8,27 +8,30 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const paymentHistoryData = [
     {
-        paymentId: "hdjsh233",
-        date: "12-10-2023",
-        dueDate: "10",
+        paymentId: "john233",
+        date: "12-06-2023",
+        feeHead:"Tuition",
+        dueDate: "15-06-2023",
         amount: "500",
         status: "Paid"
     },
     {
-        paymentId: "hdjsh233",
-        date: "12-10-2023",
-        dueDate: "10",
+        paymentId: "john233",
+        date: "12-08-2023",
+        feeHead:"Library",
+        dueDate: "12-10-2023",
         amount: "500",
         status: "Paid"
 
 
     },
     {
-        paymentId: "hdjsh233",
+        paymentId: "john233",
         date: "12-10-2023",
+        feeHead:"Sports",
         amount: "500",
-        dueDate: "10",
-        status: "Paid"
+        dueDate: "12-09-2023",
+        status: "Unpaid"
     }
 ];
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
@@ -36,8 +39,9 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
     return (
         <CustomizableTable
             columns={[
-                { id: 'paymentId', label: 'Student Name' },
+                { id: 'paymentId', label: 'Payment Id' },
                 { id: 'date', label: 'Date' },
+                { id: 'feeHead', label: 'Fee Head' },
                 { id: 'amount', label: 'Amount' },
                 { id: 'dueDate', label: 'Due Date' },
 

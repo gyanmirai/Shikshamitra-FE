@@ -14,7 +14,9 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+
 import FinanceBudgetAllocationDialog from './component/finance-budget-allocation-dialog';
+import FinanceBudgetEditBudgetDialog from './component/finance-budget-edit-budget-dialog';
 
 
 
@@ -34,55 +36,36 @@ interface Data {
 let data: Data[] = [
     {
         id: 1,
-        budgetTitle: 'Tuition Fees',
-        totalAmountAllocated: '500',
-        spent: 'online',
-        remainingBudget: "12",
-        startDate: "paid",
-        endDate: 'View',
-        departmentBreaked: "it",
+        budgetTitle: 'Salaries',
+        totalAmountAllocated: '500000',
+        spent: 'Online',
+        remainingBudget: "12000",
+        startDate: "12-03-2024",
+        endDate: '12-06-2025',
+        departmentBreaked: "Teacher",
         action: "edit",
 
     },
-    {
-        id: 3,
-        budgetTitle: 'Tuition Fees',
-        totalAmountAllocated: '500',
-        spent: 'online',
-        remainingBudget: "12",
-        startDate: "paid",
-        endDate: 'View',
-        departmentBreaked: "it",
-        action: "edit",
-
-
-    },
-    {
-        id: 2,
-        budgetTitle: 'Tuition Fees',
-        totalAmountAllocated: '500',
-        spent: 'online',
-        remainingBudget: "12",
-        startDate: "paid",
-        endDate: 'View',
-        departmentBreaked: "it",
-        action: "edit",
-
-
-    },
+    
 
 ];
 const FinanceBudgetingScreen = () => {
 
     const dialog = useBoolean();
-    const dialogSecond = useBoolean();
+    const dialogAllocated = useBoolean();
+    const dialogEdit = useBoolean();
     const [selectedEntry, setSelectedEntry] = useState(data);
     const [isEdit, setIsEdit] = useState(false);
     const [tableData, setTableData] = useState(data);
 
-    const closeDialog = () => {
+    const closeDialogAllocated = () => {
+        // setIsEdit(false);
+       dialogAllocated.onFalse();
+    }
+
+    const closeDialogEdit = () => {
         setIsEdit(false);
-        dialogSecond.onFalse();
+       dialogEdit.onFalse();
     }
 
     const handleDelete = (item: any) => {
@@ -140,7 +123,7 @@ const FinanceBudgetingScreen = () => {
                                                     setIsEdit(true);
                                                     setSelectedEntry(row);
 
-                                                    dialogSecond.onTrue();
+                                                    dialogEdit.onTrue();
 
                                                 }}
                                             >
@@ -149,12 +132,11 @@ const FinanceBudgetingScreen = () => {
                                             </MenuItem>
                                             <MenuItem
                                                 onClick={() => {
-                                                    handleDelete(row)
-
+                                                   dialogAllocated.onTrue()
                                                 }}
                                             >
-                                                <Iconify icon="solar:trash-bin-trash-bold" />
-                                                Delete
+                                                <Iconify icon="solar:pen-bold" />
+                                                AllocatedToBudget
                                             </MenuItem>
                                         </MenuList>
                                     )}
@@ -176,16 +158,27 @@ const FinanceBudgetingScreen = () => {
             </CustomDialog>
 
             <Box>
-        {dialogSecond.value && selectedEntry && (
+        {dialogAllocated.value && selectedEntry && (
             <FinanceBudgetAllocationDialog
                 onSave={handleSave}
-                dialogValue={dialogSecond.value}
-                onClose={closeDialog}
+                dialogValue={dialogAllocated.value}
+                onClose={closeDialogAllocated}
                 data={selectedEntry}
                 isEdit={isEdit}
                 allData={tableData}
             />
         )}
+{dialogEdit.value && selectedEntry && (
+    <FinanceBudgetEditBudgetDialog
+    onSave={handleSave}
+    dialogValue={dialogEdit.value}
+    onClose={closeDialogEdit}
+    data={selectedEntry}
+    isEdit={isEdit}
+    allData={tableData}
+    />
+)}
+        
     </Box>
 
         </>

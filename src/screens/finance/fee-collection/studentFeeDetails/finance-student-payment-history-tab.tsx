@@ -7,20 +7,20 @@ export const FinanceStudentPaymentHistoryTab = () => {
     {
       id: 1,
       date: "25-12-2024",
-      amount: '500',
-      paymentMethod: "cash",
+      amount: '10000',
+      paymentMethod: "Cash",
     },
     {
       id: 2,
-      date: "25-12-2024",
-      amount: '500',
-      paymentMethod: "cash",
+      date: "25-03-2025",
+      amount: '5000',
+      paymentMethod: "Cash",
     },
     {
       id: 3,
-      date: "25-12-2024",
-      amount: '500',
-      paymentMethod: "cash",
+      date: "25-05-2025",
+      amount: '15000',
+      paymentMethod: "Cash",
     },
 
   ]; return (

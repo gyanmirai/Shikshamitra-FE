@@ -33,15 +33,7 @@ let expenseData: ExpenseData[] = [
         paymentStatus: "Paid",
         action: 'View',
     },
-    {
-        id: 2,
-        expenseCategory: 'Stationery',
-        expenseAmount: '300',
-        paymentMethod: 'Cash',
-        date: "2024-09-12",
-        paymentStatus: "Pending",
-        action: 'View',
-    },
+    
     {
         id: 3,
         expenseCategory: 'Internet Bills',
