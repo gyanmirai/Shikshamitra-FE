@@ -14,6 +14,7 @@ import { updateEvent } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { StyledCalendar } from '../styles';
+// eslint-disable-next-line import/no-cycle
 import { EventDialog } from './eventDialog';
 
 export type CalendarEvent = {
@@ -25,6 +26,8 @@ export type CalendarEvent = {
   title: string;
   textColor?: string;
   teacherId?: string;
+  subjectId?: string;
+  classRoomNumber?: string;
   daysOfWeek?: number[];
 };
 
@@ -50,6 +53,7 @@ interface CalendarTimeTableProps {
   division: string;
   duration: string;
   schoolStartTime: string;
+  classRoomNumber: string;
   schoolEndTime: string;
   onEventsChange?: (events: CalendarEvent[]) => void;
   breakEvents?: CalendarEvent[];
@@ -61,6 +65,7 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
   duration,
   schoolStartTime,
   schoolEndTime,
+  classRoomNumber,
   onEventsChange,
   breakEvents = [],
 }: CalendarTimeTableProps) => {
@@ -70,6 +75,7 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
   const [newEventInfo, setNewEventInfo] = useState<DateSelectArg | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState(classRoomNumber);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
   console.log('events0000', events);
 
@@ -129,9 +135,11 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
         id: uuidv4(),
         start: newEventInfo.startStr,
         end: newEventInfo.endStr,
-        title: `${subject?.name} / ${teacher?.name}`,
+        title: `${subject?.name} / ${teacher?.name}    ${selectedRoom}`,
         textColor: subject?.color,
         teacherId: teacher?.id,
+        subjectId: subject?.id,
+        classRoomNumber: selectedRoom,
       };
 
       const updatedEvents = [...events, newEvent];
@@ -142,6 +150,7 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
       setSelectedTeacher(null);
     }
   };
+
   const handleEventResize = (info: any) => {
     const { event } = info;
 
@@ -210,7 +219,12 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="timeGridWeek"
-              headerToolbar={false}
+              headerToolbar={{
+                left: '',
+                center: 'title',
+                right: '',
+              }}
+              titleFormat={{ year: 'numeric' }}
               slotDuration={duration}
               slotLabelInterval={duration}
               slotMinTime={schoolStartTime}
@@ -231,6 +245,13 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
               }}
               eventDrop={handleEventDrop}
               eventResize={handleEventResize}
+              dayHeaderFormat={{ weekday: 'short' }}
+              slotLabelFormat={{
+                hour: 'numeric',
+                minute: '2-digit',
+                omitZeroMinute: true,
+                meridiem: false,
+              }}
             />
             {/* <FullCalendar
               weekends
@@ -287,8 +308,10 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
         teachers={filteredTeachers}
         selectedSubject={selectedSubject}
         selectedTeacher={selectedTeacher}
+        selectedClassRoom={selectedRoom}
         onSelectSubject={setSelectedSubject}
         onSelectTeacher={setSelectedTeacher}
+        onClassRoomSelect={setSelectedRoom}
         onSave={handleSaveEvent}
       />
     </>

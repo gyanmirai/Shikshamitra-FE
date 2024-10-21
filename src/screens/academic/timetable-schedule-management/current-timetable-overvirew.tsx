@@ -1,8 +1,8 @@
 import type { Division, Standards } from 'src/types/school';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
-import { Box, Button, Switch, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -10,20 +10,17 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 
 import { SchoolTimetableCalendar } from 'src/sections/calendar/view';
-import { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
-import { uuidv4 } from 'src/utils/uuidv4';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-
 
 const CurrentTimetableOverview = () => {
   const [classes, setClasses] = useState<string>('');
   const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
   const [division, setDivision] = useState<any>();
+  const [viewType, setViewType] = useState<string>('1');
+  const [subject, setSubject] = useState<string>('');
   const [teacher, setTeacher] = useState<string>('');
-  const [isTeacherView, setIsTeacherView] = useState<boolean>(false);
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const [timetableEvents, setTimetableEvents] = useState<CalendarEvent[]>([]);
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -36,16 +33,23 @@ const CurrentTimetableOverview = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography sx={{ mr: 2 }}>Student Timetable</Typography>
-          <Switch
-            inputProps={{ 'aria-label': 'Toggle view' }}
-            checked={isTeacherView}
-            onChange={() => setIsTeacherView((prev) => !prev)}
-          />
-          <Typography sx={{ ml: 1 }}>Teacher Timetable</Typography>
-        </Box>
+      <Box sx={{ display: 'flex', gap: 2, marginBottom: 2 }}>
+        <CustomSelect
+          label="view Type"
+          options={[
+            { id: '1', name: 'Student' },
+            { id: '2', name: 'Teacher' },
+            { id: '3', name: 'Subject' },
+          ]}
+          value={viewType}
+          isLoading={isLoading}
+          labelKey="name"
+          valueKey="id"
+          onChange={(val) => {
+            setViewType(val as string);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
         <CustomSelect
           label="Class"
           options={classData?.items || []}
@@ -74,7 +78,27 @@ const CurrentTimetableOverview = () => {
           }}
           formControlProps={{ sx: { minWidth: 140 } }}
         />
-        {isTeacherView && (
+        {viewType === '3' && (
+          <CustomSelect
+            label="Subject"
+            options={[
+              { id: '1', name: 'Math' },
+              { id: '2', name: 'English' },
+              { id: '3', name: 'Science' },
+            ]}
+            value={subject}
+            isSearch
+            isLoading={isLoading}
+            labelKey="name"
+            disabled={!classes || !division}
+            valueKey="id"
+            onChange={(val) => {
+              setSubject(val as string);
+            }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+        )}
+        {viewType === '2' && (
           <CustomSelect
             label="Teacher"
             options={[
@@ -83,9 +107,10 @@ const CurrentTimetableOverview = () => {
               { id: '3', name: 'Mr. Brown' },
             ]}
             value={teacher}
+            isSearch
             labelKey="name"
             valueKey="id"
-            disabled={!isTeacherView}
+            disabled={!classes || !division}
             onChange={(val) => {
               setTeacher(val as string);
             }}
@@ -96,18 +121,29 @@ const CurrentTimetableOverview = () => {
           variant="contained"
           onClick={handleCreateTimetable}
           sx={{ alignSelf: 'flex-end' }}
-          disabled={!classes || !division.length || (isTeacherView && !teacher)}
+          disabled={
+            !classes ||
+            !division ||
+            (viewType === '2' && !teacher) ||
+            (viewType === '3' && !subject)
+          }
         >
           Show Timetable
         </Button>
       </Box>
 
       {showTimeTable && (
-        <SchoolTimetableCalendar
-          teacherId={isTeacherView ? teacher : undefined}
-          grade={1}
-          division="A"
-        />
+        <>
+          <SchoolTimetableCalendar
+            teacherId={viewType === '2' ? teacher : undefined}
+            subjectId={viewType === '3' ? subject : undefined}
+            grade={1}
+            division="A"
+          />
+          <Box display="flex" justifyContent="flex-end" alignItems="center">
+            <Button variant="contained">Publish</Button>
+          </Box>
+        </>
       )}
     </Box>
   );

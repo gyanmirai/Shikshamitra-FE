@@ -14,15 +14,21 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 
+// eslint-disable-next-line import/no-cycle
 import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-
+export const classRoomData = [
+  { id: '1', name: '101' },
+  { id: '2', name: '102' },
+  { id: '3', name: '103' },
+];
 const NewTimetable = () => {
   const [classes, setClasses] = useState<string>('');
   const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
   const [division, setDivision] = useState<any>();
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const [classRoomNumber, setClassRoomNumber] = useState<string>('');
   const [timetableEvents, setTimetableEvents] = useState<CalendarEvent[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -90,11 +96,24 @@ const NewTimetable = () => {
           }}
           formControlProps={{ sx: { minWidth: 140 } }}
         />
-        <Box justifyContent="flex-end">
+        <CustomSelect
+          label="Classroom"
+          options={classRoomData}
+          value={classRoomNumber}
+          isSearch
+          labelKey="name"
+          valueKey="name"
+          disabled={!classes || !division}
+          onChange={(val) => {
+            setClassRoomNumber(val as string);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        <Box display="flex" justifyContent="flex-end" alignItems="center">
           <Button
             variant="contained"
             onClick={handleCreateTimetable}
-            disabled={!classes || !division} // Disable if class or division not selected
+            disabled={!classes || !division || !classRoomNumber} // Disable if class or division not selected
           >
             Create Timetable
           </Button>
@@ -106,6 +125,7 @@ const NewTimetable = () => {
             grade={1}
             division="A"
             duration="00:15:00"
+            classRoomNumber={classRoomNumber}
             schoolStartTime="09:00"
             schoolEndTime="15:45"
             onEventsChange={handleEventsChange}
