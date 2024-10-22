@@ -12,9 +12,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Settings from './settings';
 import Subjects from './subjects';
 import Dashboard from './dashboard';
-import ContentLibrary from './contentLibrary';
-import CourseManagement from './courseManagement';
 import Reports from './reportsAndAnalyics';
+import CourseProgress from './courseProgress';
+import CourseManagement from './courseManagement';
 import LearningResources from './learningResources';
 
 const TABS = [
@@ -38,7 +38,7 @@ const TABS = [
     label: 'Learning Resources',
     component: () => <LearningResources />,
   },
-  { value: 'contentLibrary', label: 'Content Library', component: () => <ContentLibrary /> },
+  { value: 'Course Progress', label: 'Course Progress', component: () => <CourseProgress /> },
   {
     value: 'reports',
     label: 'Reports',

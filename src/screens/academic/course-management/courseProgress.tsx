@@ -129,7 +129,7 @@ const courses: Course[] = [
   },
 ];
 
-const ContentLibrary = () => {
+const CourseProgress = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   const handleCardDetails = (course: Course) => {
@@ -139,13 +139,14 @@ const ContentLibrary = () => {
   return (
     <Grid container spacing={2} marginTop={2}>
       {courses.map((course) => (
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={3}>
           <Card
             sx={{
               p: 2,
               height: '100%',
               display: 'flex',
               justifyContent: 'center',
+              cursor: 'pointer',
             }}
             onClick={() => {
               handleCardDetails(course);
@@ -195,4 +196,4 @@ const ContentLibrary = () => {
   );
 };
 
-export default ContentLibrary;
+export default CourseProgress;

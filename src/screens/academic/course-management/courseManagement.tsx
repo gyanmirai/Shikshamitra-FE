@@ -1,11 +1,12 @@
 import type { ChartOptions } from 'src/components/chart';
 
 import { useFormik } from 'formik';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-import { GridExpandMoreIcon } from '@mui/x-data-grid';
+import { Add } from '@mui/icons-material';
 import {
   Box,
+  Tab,
   Card,
   Grid,
   Button,
@@ -14,14 +15,15 @@ import {
   useTheme,
   MenuItem,
   TextField,
-  Accordion,
   Typography,
+  IconButton,
   DialogActions,
-  AccordionSummary,
-  AccordionDetails,
-  CircularProgress,
+  DialogContent,
+  LinearProgress,
+  DialogContentText,
 } from '@mui/material';
 
+import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fNumber } from 'src/utils/format-number';
@@ -37,6 +39,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { CustomTabs } from 'src/components/custom-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -44,35 +47,47 @@ const initialCourseData: CourseData[] = [
   {
     id: 1,
     courseName: 'Mathematics 101',
-    className: 'Class A',
+    className: '1',
     description: 'An introduction to basic algebra and geometry.',
     subject: 'Math',
     resource: 'Textbook',
     learningGoal: 'Understand basic algebraic equations.',
     assignedTeacher: 'Jiya',
     status: 'Active',
+    material: {
+      videos: 20,
+      pdfs: 50,
+    },
   },
   {
     id: 2,
     courseName: 'English Literature',
-    className: 'Class B',
+    className: '2',
     description: 'Study of classical English literature.',
     subject: 'English',
     resource: 'Projector',
     learningGoal: 'Familiarize with classical literature themes.',
     assignedTeacher: 'Riya',
     status: 'Inactive',
+    material: {
+      videos: 90,
+      pdfs: 10,
+    },
   },
   {
     id: 3,
     courseName: 'Physics 101',
-    className: 'Class C',
+    className: '3',
     description: 'Introduction to mechanics and thermodynamics.',
     subject: 'Science',
     resource: 'Laptop',
     learningGoal: 'Understand the basics of mechanics and energy transfer.',
     assignedTeacher: 'Priya',
     status: 'Active',
+    material: {
+      videos: 60,
+      pdfs: 10,
+    },
   },
 ];
 
@@ -86,6 +101,20 @@ interface CourseData {
   learningGoal: string;
   assignedTeacher: string;
   status: string;
+  material: {
+    videos: number;
+    pdfs: number;
+  };
+}
+
+interface ChapterData {
+  id: number;
+  courseId: number;
+  chapter: string;
+  content: string;
+  progress: number;
+  classId: string;
+  division: string;
 }
 
 interface AccordionItem {
@@ -94,19 +123,61 @@ interface AccordionItem {
   progress: number;
 }
 
-const initialAccordionData: AccordionItem[] = [
-  { chapter: 'Chapter 1', content: 'Content for accordion 1', progress: 80 },
-  { chapter: 'Chapter 2', content: 'Content for accordion 2', progress: 50 },
-  { chapter: 'Chapter 3', content: 'Content for accordion 3 with actions', progress: 30 },
+const sampleChapterData: ChapterData[] = [
+  {
+    id: 1,
+    courseId: 1,
+    chapter: 'Chapter 1: Introduction to Algebra',
+    content: 'Chapter 1 for div A',
+    progress: 80,
+    classId: '1',
+    division: 'A',
+  },
+  {
+    id: 2,
+    courseId: 1,
+    chapter: 'Chapter 2: Linear Equations',
+    content: 'Chapter 2 for div A',
+    progress: 60,
+    classId: '1',
+    division: 'A',
+  },
+  {
+    id: 3,
+    courseId: 1,
+    chapter: 'Chapter 1: Introduction to Algebra',
+    content: 'Chapter 2 for div B',
+    progress: 30,
+    classId: '1',
+    division: 'B',
+  },
+  {
+    id: 4,
+    courseId: 1,
+    chapter: 'Chapter 2: Linear Equations',
+    content: 'Chapter 2 for div B',
+    progress: 90,
+    classId: '1',
+    division: 'B',
+  },
 ];
 
 const CourseManagement: React.FC = () => {
   const [courseData, setCourseData] = useState<CourseData[]>(initialCourseData);
+  const [selectedCourse, setSelectedCourse] = useState<CourseData | null>(null);
+  const [chapterData, setChapterData] = useState<ChapterData[]>(sampleChapterData);
   const dialog = useBoolean();
+  const confirm_dialog = useBoolean();
+  const chapterDialog = useBoolean();
+
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    id: number;
+    newValue: string;
+  } | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<CourseData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-  const [accordionData1, setAccordionData1] = useState<AccordionItem[]>(initialAccordionData);
-  const [accordionData2, setAccordionData2] = useState<AccordionItem[]>(initialAccordionData);
+  // const [accordionData1, setAccordionData1] = useState<AccordionItem[]>(initialAccordionData);
+  // const [accordionData2, setAccordionData2] = useState<AccordionItem[]>(initialAccordionData);
 
   const theme = useTheme();
 
@@ -128,11 +199,31 @@ const CourseManagement: React.FC = () => {
     setSelectedEntry(null);
     dialog.onFalse();
   };
+
+  const handleViewChapters = (course: CourseData) => {
+    setSelectedCourse(course);
+    chapterDialog.onTrue();
+  };
+
   const handleStatusChange = (id: number, value: string) => {
-    console.log('handleStatusChange : ', id, value);
-    setCourseData((prevCourse) =>
-      prevCourse.map((course) => (course.id === id ? { ...course, status: value } : course))
-    );
+    setPendingStatusChange({ id, newValue: value === 'Active' ? 'Inactive' : 'Active' });
+    confirm_dialog.onTrue(); // Open confirmation dialog
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatusChange) {
+      const { id, newValue } = pendingStatusChange;
+      setCourseData((prevCourse) =>
+        prevCourse.map((course) => (course.id === id ? { ...course, status: newValue } : course))
+      );
+    }
+    confirm_dialog.onFalse();
+    setPendingStatusChange(null);
+  };
+
+  const cancelStatusChange = () => {
+    confirm_dialog.onFalse();
+    setPendingStatusChange(null);
   };
 
   return (
@@ -140,6 +231,7 @@ const CourseManagement: React.FC = () => {
       <Box display="flex" justifyContent="flex-end" alignItems="center" mb={3}>
         <Button
           variant="contained"
+          startIcon={<Add />}
           onClick={() => {
             setIsEdit(false);
             setSelectedEntry(null);
@@ -159,16 +251,49 @@ const CourseManagement: React.FC = () => {
             render: (value) => (Array.isArray(value) ? value.join(', ') : value),
           },
           {
+            id: 'material',
+            label: 'Material',
+            render(value, row) {
+              const { videos, pdfs } = value;
+              return (
+                <Typography sx={{ mr: 2 }} fontSize={11}>
+                  {videos} Videos and {pdfs} PDF/Notes
+                </Typography>
+              );
+            },
+          },
+          {
             id: 'status',
             label: 'Status',
             render: (value, row) => (
-              <Switch
-                checked={value === 'Active'}
-                onChange={(e) => {
-                  handleStatusChange(row.id, value === 'Active' ? 'Inactive' : 'Active');
-                }}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography sx={{ mr: 2 }} fontSize={11}>
+                  In Active
+                </Typography>
+                <Switch
+                  size="small"
+                  checked={value === 'Active'}
+                  onChange={() => {
+                    handleStatusChange(row.id, value);
+                  }}
+                />
+                <Typography sx={{ mr: 2 }} fontSize={11}>
+                  Active
+                </Typography>
+              </Box>
             ),
+          },
+          {
+            id: 'viewChapters',
+            label: 'View Details',
+            render: (_, row) => {
+              const course = courseData.find((s) => s.id === row.id);
+              return (
+                <IconButton onClick={() => course && handleViewChapters(course)} sx={{}}>
+                  <Iconify icon="mdi:eye" />
+                </IconButton>
+              );
+            },
           },
           {
             id: 'action',
@@ -211,14 +336,40 @@ const CourseManagement: React.FC = () => {
         />
       </CustomDialog>
 
-      <Grid container spacing={2} mt={4}>
-        <Grid item xs={12} sm={6}>
-          <AccordionComponent items={accordionData1} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <AccordionComponent items={accordionData2} />
-        </Grid>
-      </Grid>
+      <CustomDialog
+        title="Confirm Publication"
+        open={confirm_dialog.value}
+        handleClose={confirm_dialog.onFalse}
+        maxWidth="sm"
+      >
+        <DialogContent>
+          <DialogContentText>
+            Are you sure to {pendingStatusChange?.newValue === 'Active' ? 'publish' : 'deactivate'}{' '}
+            this course?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelStatusChange} variant="contained" color="error">
+            Cancel
+          </Button>
+          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
+            Confirm
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        title={`${selectedCourse?.courseName} course`}
+        open={chapterDialog.value}
+        handleClose={chapterDialog.onFalse}
+        maxWidth="md"
+      >
+        <ViewChaptersComponent
+          onClose={chapterDialog.onFalse}
+          chapterData={chapterData}
+          selectedCourse={selectedCourse}
+        />
+      </CustomDialog>
 
       <Grid container spacing={2} mt={4}>
         <Grid item xs={12} md={6}>
@@ -282,159 +433,179 @@ const CourseManagement: React.FC = () => {
   );
 };
 
-interface AccordionItem {
-  chapter: string;
-  content: string;
-  progress: number;
+interface ViewChaptersComponentProps {
+  onClose: () => void;
+  selectedCourse: CourseData | null;
+  chapterData: ChapterData[];
 }
 
-interface AccordionComponentProps {
-  items: AccordionItem[];
-}
+const ViewChaptersComponent: React.FC<ViewChaptersComponentProps> = ({
+  onClose,
+  selectedCourse,
+  chapterData,
+}) => {
+  const [division, setDivision] = useState<string>('');
 
-const AccordionComponent: React.FC<AccordionComponentProps> = ({ items }) => {
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [accordionData, setAccordionData] = useState<AccordionItem[]>(items || []);
-  const [editedContent, setEditedContent] = useState<string>('');
-  const [expandedPanel, setExpandedPanel] = useState<number | false>(false);
-
-  const handleChange = (panel: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-    setExpandedPanel(isExpanded ? panel : false);
-  };
-
-  const handleEdit = (index: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent accordion from toggling
-    if (index >= 0 && index < accordionData.length) {
-      setEditingId(index);
-      setEditedContent(accordionData[index].content);
-      setExpandedPanel(index); // Ensure panel is expanded when editing
+  const filteredChapters = React.useMemo(() => {
+    if (!selectedCourse || !selectedCourse.className || !division) {
+      return;
     }
-  };
 
-  const handleSave = (index: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent accordion from toggling
-    if (index >= 0 && index < accordionData.length) {
-      const newAccordionData = [...accordionData];
-      newAccordionData[index] = {
-        ...newAccordionData[index],
-        content: editedContent,
-      };
-      setAccordionData(newAccordionData);
-      setEditingId(null);
-    }
-  };
-
-  const handleDelete = (index: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent accordion from toggling
-    const newAccordionData = accordionData.filter((_, i) => i !== index);
-    setAccordionData(newAccordionData);
-  };
-
-  const handleMenuClick = (event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent accordion from toggling when clicking menu
-  };
-
-  useEffect(() => {
-    setAccordionData(items || []);
-  }, [items]);
-
-  if (!items || items.length === 0) {
-    return <Typography>No accordion items available</Typography>;
-  }
+    // eslint-disable-next-line consistent-return
+    return chapterData.filter(
+      (chapter) =>
+        chapter.courseId === selectedCourse.id &&
+        chapter.classId === selectedCourse?.className &&
+        chapter.division === division
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterData, selectedCourse, selectedCourse?.className, division]);
 
   return (
-    <>
-      {accordionData.map((item, index) => (
-        <Accordion key={index} onChange={handleChange(index)}>
-          <AccordionSummary
-            expandIcon={<GridExpandMoreIcon />}
-            aria-controls={`panel${index + 1}-content`}
-            id={`panel${index + 1}-header`}
-            sx={{
-              '& .MuiAccordionSummary-content': {
-                margin: '0 !important',
-              },
+    <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+        <Box display="flex" gap={2}>
+          <CustomSelect
+            label="Division"
+            disabled={!selectedCourse?.className}
+            options={[
+              { value: 'A', label: 'A' },
+              { value: 'B', label: 'B' },
+              { value: 'C', label: 'C' },
+            ]}
+            value={division}
+            onChange={(val) => {
+              setDivision(val as string);
             }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                justifyContent: 'space-between',
-                pr: 2, // Add padding to prevent overlap with expand icon
-              }}
-            >
-              <Typography>{item.chapter}</Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                }}
-              >
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress variant="determinate" value={item.progress} size={30} />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: 'absolute',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography variant="caption" component="div" color="text.secondary">
-                      {item.progress}%
-                    </Typography>
-                  </Box>
-                </Box>
-                <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem onClick={(e) => handleEdit(index, e)}>
-                        <Iconify icon="solar:pen-bold" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                      <MenuItem onClick={(e) => handleDelete(index, e)}>
-                        <Iconify icon="solar:trash-bin-trash-bold" sx={{ mr: 1 }} />
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              </Box>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            {editingId === index ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button variant="contained" color="primary" onClick={(e) => handleSave(index, e)}>
-                    Save
-                  </Button>
-                </Box>
-              </Box>
-            ) : (
-              <Typography>{item.content}</Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      ))}
-    </>
+            formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
+          />
+        </Box>
+        {selectedCourse?.className &&
+          division &&
+          filteredChapters &&
+          filteredChapters?.length > 0 && <ChapterTabsView chapters={filteredChapters} />}
+      </Scrollbar>
+      <DialogActions>
+        <Button>Cancel</Button>
+        <Button type="submit" variant="contained">
+          Save
+        </Button>
+      </DialogActions>
+    </Box>
   );
 };
+
+interface ChapterTabsViewProps {
+  chapters: ChapterData[];
+}
+
+const ChapterTabsView: React.FC<ChapterTabsViewProps> = ({ chapters }) => {
+  const tabs = useTabs(chapters[0]?.id.toString());
+
+  const currentChapter = chapters.find((chapter) => chapter.id.toString() === tabs.value);
+
+  const CHAPTER_TABS = chapters.map((chapter) => ({
+    value: chapter.id.toString(),
+    label: chapter?.chapter,
+    component: () => (
+      <Box sx={{ marginTop: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              {chapter.chapter} Progress
+            </Typography>
+            <Box
+              sx={{
+                width: '200px',
+                height: '24px',
+                position: 'relative',
+                borderRadius: '12px',
+                bgcolor: '#e0e0e0',
+                overflow: 'hidden',
+              }}
+            >
+              <LinearProgress
+                variant="determinate"
+                value={chapter.progress}
+                sx={{
+                  height: '100%',
+                  '& .MuiLinearProgress-bar': {
+                    backgroundColor: 'primary',
+                    transition: 'transform 0.4s linear',
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  color: '#000',
+                  fontWeight: 'bold',
+                  zIndex: 1,
+                }}
+              >
+                {`${Math.round(chapter.progress)}%`}
+              </Typography>
+            </Box>
+          </Box>
+          {/* Buttons container */}
+          <Box display="flex" alignItems="center" gap={2}>
+            <Button variant="contained" startIcon={<Add />} onClick={() => {}}>
+              Add New Content
+            </Button>
+            <Button variant="contained" onClick={() => {}}>
+              Edit
+            </Button>
+            <Button variant="contained" onClick={() => {}}>
+              Delete
+            </Button>
+          </Box>
+        </Box>
+        <Card sx={{ mt: 2, height: '100%' }}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+            <ChapterContent content={chapter.content} />
+          </Scrollbar>
+        </Card>
+      </Box>
+    ),
+  }));
+
+  const CurrentComponent = CHAPTER_TABS.find((tab) => tab.value === tabs.value)?.component;
+
+  return (
+    <Box>
+      <Card
+        sx={{
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+          marginTop: 2,
+        }}
+      >
+        <CustomTabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          variant="fullWidth"
+          slotProps={{ tab: { px: 0 } }}
+        >
+          {CHAPTER_TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
+          ))}
+        </CustomTabs>
+      </Card>
+      <Box px={1} pt={2}>
+        {CurrentComponent?.()}
+      </Box>
+    </Box>
+  );
+};
+
+const ChapterContent: React.FC<{ content: string }> = ({ content }) => (
+  <Box sx={{ p: 2 }}>
+    <Typography>{content}</Typography>
+  </Box>
+);
 
 interface AppWidgetProps {
   title: string;
@@ -552,6 +723,10 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
       learningGoal: isEdit && data ? data.learningGoal : '',
       assignedTeacher: isEdit && data ? data.assignedTeacher : '',
       status: isEdit && data ? data.status : 'Inactive',
+      material: {
+        videos: 0,
+        pdfs: 0,
+      },
     },
     onSubmit: (values) => {
       onSave(values);
@@ -559,9 +734,9 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
   });
 
   return (
-    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-      <Box display="flex" flexDirection="column" gap={2}>
-        <form onSubmit={formik.handleSubmit}>
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -596,7 +771,7 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 name="subject"
                 value={formik.values.subject}
                 onChange={(val) => formik.setFieldValue('subject', val as string)}
-                formControlProps={{ sx: { minWidth: 270 } }}
+                formControlProps={{ sx: { minWidth: 275 } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -624,29 +799,31 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 onChange={formik.handleChange}
               />
             </Grid>
-            <UploadBox
-              onDrop={() => {}}
-              placeholder={
-                <Box
-                  sx={{
-                    gap: 0.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'text.disabled',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <Iconify icon="eva:cloud-upload-fill" width={40} />
-                  <Typography variant="body2">Drag Your Document</Typography>
-                </Box>
-              }
-              sx={{
-                py: 2.5,
-                width: '100%',
-                height: 'auto',
-                borderRadius: 1.5,
-              }}
-            />
+            <Grid item xs={12}>
+              <UploadBox
+                onDrop={() => {}}
+                placeholder={
+                  <Box
+                    sx={{
+                      gap: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.disabled',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">Drag Your Document</Typography>
+                  </Box>
+                }
+                sx={{
+                  py: 2.5,
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+              />
+            </Grid>
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Resources"
@@ -658,7 +835,7 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 name="resource"
                 value={formik.values.resource}
                 onChange={(val) => formik.setFieldValue('resource', val as string)}
-                formControlProps={{ sx: { minWidth: 270 } }}
+                formControlProps={{ sx: { minWidth: 275 } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -681,19 +858,20 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 name="status"
                 value={formik.values.status}
                 onChange={(val) => formik.setFieldValue('status', val as string)}
-                formControlProps={{ sx: { minWidth: 270 } }}
+                formControlProps={{ sx: { minWidth: 275 } }}
               />
             </Grid>
           </Grid>
-          <DialogActions>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary">
-              {isEdit ? 'Update' : 'Create'} Course
-            </Button>
-          </DialogActions>
-        </form>
-      </Box>
-    </Scrollbar>
+        </Scrollbar>
+
+        <DialogActions>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="contained">
+            {isEdit ? 'Update' : 'Create'} Course
+          </Button>
+        </DialogActions>
+      </form>
+    </Box>
   );
 };
 

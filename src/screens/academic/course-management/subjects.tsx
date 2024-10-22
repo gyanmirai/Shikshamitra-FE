@@ -29,6 +29,7 @@ interface SubjectData {
 }
 
 interface TableRow {
+  classId: string;
   subjectName: string;
   courseAssociation: string;
   gradeLevel: string;
@@ -225,36 +226,42 @@ const Subjects = () => {
 
   const subjectTableData: TableRow[] = [
     {
+      classId: '1',
       subjectName: 'Math',
       courseAssociation: 'math for class 1',
       gradeLevel: '10',
       assignedTeacher: 'John Doe',
     },
     {
+      classId: '2',
       subjectName: 'English',
       courseAssociation: 'English for class 2',
       gradeLevel: '10',
       assignedTeacher: 'Anuj Kapadia',
     },
     {
+      classId: '1',
       subjectName: 'Science',
       courseAssociation: 'Science for class 3',
       gradeLevel: '10',
       assignedTeacher: 'Avinash Dave',
     },
     {
+      classId: '1',
       subjectName: 'Physics',
       courseAssociation: 'Physics for class 3',
       gradeLevel: '10',
       assignedTeacher: 'Avinash Dave',
     },
     {
+      classId: '1',
       subjectName: 'SS',
       courseAssociation: 'SS for class 3',
       gradeLevel: '10',
       assignedTeacher: 'Avinash Dave',
     },
     {
+      classId: '1',
       subjectName: 'Chemistry',
       courseAssociation: 'Chemistry for class 3',
       gradeLevel: '10',
