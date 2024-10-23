@@ -1,10 +1,8 @@
-import React from 'react'
+import React from 'react';
 
 const TransportRealTimeTrackingScreen = () => {
-    const data = [];
-  return (
-    <div>TransportRealTimeTracking</div>
-  )
-}
+  const data = [];
+  return <div>TransportRealTimeTracking</div>;
+};
 
-export default TransportRealTimeTrackingScreen
+export default TransportRealTimeTrackingScreen;

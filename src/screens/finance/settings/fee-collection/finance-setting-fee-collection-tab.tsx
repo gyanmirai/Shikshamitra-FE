@@ -1,47 +1,46 @@
-import React from 'react'
+import React from 'react';
 
 import { Box, Switch, Typography, FormControlLabel } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 
 const FinanceSettingFeeCollectionTab = () => {
-    const data = [];
-    return (
-        <>
-            <Typography variant="h6" >
-                Payment Mode Section
-            </Typography>
+  const data = [];
+  return (
+    <>
+      <Typography variant="h6">Payment Mode Section</Typography>
 
-            <Typography variant="h6" sx={{ ml: 2, py: "15px" }}>
-                Accepted Payment Method
-            </Typography>
+      <Typography variant="h6" sx={{ ml: 2, py: '15px' }}>
+        Accepted Payment Method
+      </Typography>
 
-            <Box display="flex" flexDirection="row" gap={2} ml={2}>
-                <FormControlLabel
-                    label="Credit Card"
-                    control={<Switch name="creditcard" checked onChange={() => { }} />}
-                /> <FormControlLabel
-                    label="Bank Transfer"
-                    control={<Switch name="banktransfer" checked onChange={() => { }} />}
-                /> <FormControlLabel
-                    label="PayPal"
-                    control={<Switch name="paypal" checked onChange={() => { }} />}
-                />
-            </Box>
+      <Box display="flex" flexDirection="row" gap={2} ml={2}>
+        <FormControlLabel
+          label="Credit Card"
+          control={<Switch name="creditcard" checked onChange={() => {}} />}
+        />{' '}
+        <FormControlLabel
+          label="Bank Transfer"
+          control={<Switch name="banktransfer" checked onChange={() => {}} />}
+        />{' '}
+        <FormControlLabel
+          label="PayPal"
+          control={<Switch name="paypal" checked onChange={() => {}} />}
+        />
+      </Box>
 
-            <Typography variant="h6" sx={{ ml: 2, py: "15px" }}>
-                Online Payment Gateways
-            </Typography>
-            <CustomSelect
+      <Typography variant="h6" sx={{ ml: 2, py: '15px' }}>
+        Online Payment Gateways
+      </Typography>
+      <CustomSelect
+        label="select payment gateway"
+        options={[]}
+        value=""
+        onChange={() => {}}
+        formControlProps={{ sx: { minWidth: 150, ml: 2 } }}
+      />
+    </>
+  );
+};
 
-                label="select payment gateway"
-                options={[]}
-                value=""
-                onChange={() => { }}
-                formControlProps={{ sx: { minWidth: 150, ml: 2 } }}
-            />
-        </>
-    )
-}
-
-export default FinanceSettingFeeCollectionTab
+export default FinanceSettingFeeCollectionTab;

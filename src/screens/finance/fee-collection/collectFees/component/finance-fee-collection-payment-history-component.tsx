@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 import { MenuItem, MenuList } from '@mui/material';
 
@@ -7,90 +7,83 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const paymentHistoryData = [
-    {
-        paymentId: "john233",
-        date: "12-06-2023",
-        feeHead:"Tuition",
-        dueDate: "15-06-2023",
-        amount: "500",
-        status: "Paid"
-    },
-    {
-        paymentId: "john233",
-        date: "12-08-2023",
-        feeHead:"Library",
-        dueDate: "12-10-2023",
-        amount: "500",
-        status: "Paid"
-
-
-    },
-    {
-        paymentId: "john233",
-        date: "12-10-2023",
-        feeHead:"Sports",
-        amount: "500",
-        dueDate: "12-09-2023",
-        status: "Unpaid"
-    }
+  {
+    paymentId: 'john233',
+    date: '12-06-2023',
+    feeHead: 'Tuition',
+    dueDate: '15-06-2023',
+    amount: '500',
+    status: 'Paid',
+  },
+  {
+    paymentId: 'john233',
+    date: '12-08-2023',
+    feeHead: 'Library',
+    dueDate: '12-10-2023',
+    amount: '500',
+    status: 'Paid',
+  },
+  {
+    paymentId: 'john233',
+    date: '12-10-2023',
+    feeHead: 'Sports',
+    amount: '500',
+    dueDate: '12-09-2023',
+    status: 'Unpaid',
+  },
 ];
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
-    const data = [];
-    return (
-        <CustomizableTable
-            columns={[
-                { id: 'paymentId', label: 'Payment Id' },
-                { id: 'date', label: 'Date' },
-                { id: 'feeHead', label: 'Fee Head' },
-                { id: 'amount', label: 'Amount' },
-                { id: 'dueDate', label: 'Due Date' },
+  const data = [];
+  return (
+    <CustomizableTable
+      columns={[
+        { id: 'paymentId', label: 'Payment Id' },
+        { id: 'date', label: 'Date' },
+        { id: 'feeHead', label: 'Fee Head' },
+        { id: 'amount', label: 'Amount' },
+        { id: 'dueDate', label: 'Due Date' },
 
-                { id: 'status', label: 'Status' },
-                {
-                    id: 'action',
-                    label: 'Action',
-                    render: (row) => (
-                        <ThreeDotsActions
-                            actions={() => (
-                                <MenuList>
-                                    <MenuItem
-                                        onClick={() => {
+        { id: 'status', label: 'Status' },
+        {
+          id: 'action',
+          label: 'Action',
+          render: (row) => (
+            <ThreeDotsActions
+              actions={() => (
+                <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      // popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:eye" />
+                    View Receipt
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      // popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:check" />
+                    Mark as Check
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      // popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:pen" />
+                    Edit
+                  </MenuItem>
+                </MenuList>
+              )}
+            />
+          ),
+        },
+      ]}
+      data={paymentHistoryData}
+    />
+  );
+};
 
-                                            // popover.onClose();
-                                        }}
-                                    >
-                                        <Iconify icon="mdi:eye" />
-                                        View Receipt
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-
-                                            // popover.onClose();
-                                        }}
-                                    >
-                                        <Iconify icon="mdi:check" />
-                                        Mark as Check
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-
-                                            // popover.onClose();
-                                        }}
-                                    >
-                                        <Iconify icon="mdi:pen" />
-                                        Edit
-                                    </MenuItem>
-
-                                </MenuList>
-                            )}
-                        />
-                    ),
-                },
-
-            ]}
-            data={paymentHistoryData}
-        />
-    )
-}
-
-export default FinanceFeeCollectionPaymentHistoryComponent
+export default FinanceFeeCollectionPaymentHistoryComponent;

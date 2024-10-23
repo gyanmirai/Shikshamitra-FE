@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
@@ -9,9 +9,6 @@ import React, { useState, useEffect } from 'react';
 import { Box, Tab, Card } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
@@ -42,8 +39,8 @@ const TABS = [
 ];
 
 const StudentManagementScreen = () => {
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
-  const [medium, setMedium] = useState<string>('');
+  // const [allMediums, setAllMediums] = useState<Medium[]>([]);
+  // const [medium, setMedium] = useState<string>('');
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -51,38 +48,16 @@ const StudentManagementScreen = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
 
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
-  useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setMedium(boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setMedium('');
-    }
-  }, [boardData, currentBoard?.id, getBoard]);
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setMedium(boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData]);
-
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums]);
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
 
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
@@ -107,17 +82,6 @@ const StudentManagementScreen = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <CustomSelect
-          options={allMediums}
-          label="Medium"
-          value={medium}
-          onChange={(val: string | string[]) => {
-            setMedium(val as string);
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
         <CustomSelect
           options={allOrganization}
           label="Organization"

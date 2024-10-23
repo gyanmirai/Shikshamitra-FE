@@ -21,7 +21,6 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import CircularProgressLabel from 'src/components/circular-progress-with-label/circularProgressLabel';
 
 import { CalendarView } from 'src/sections/calendar/view/calendar-view';
 

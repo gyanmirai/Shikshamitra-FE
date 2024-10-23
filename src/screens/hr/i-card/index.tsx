@@ -1,0 +1,214 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
+import React, { useRef, useState, useEffect } from 'react';
+
+import { Add, ArrowBack } from '@mui/icons-material';
+import { Box, Paper, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import IcardTemplate from 'src/templates/icard';
+
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { LoadingScreen } from 'src/components/loading-screen';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+const EmployeeIcardScreen = () => {
+  const dialog = useBoolean();
+  return (
+    <Box>
+      <CustomBreadcrumbs
+        heading="Employee I-Card"
+        links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
+            Create I-card
+          </Button>
+        }
+      />
+      <CustomizableTable
+        columns={[
+          { label: 'Class', id: 'class' },
+          {
+            label: 'Status',
+            id: 'status',
+            render(value, row) {
+              return <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>;
+            },
+          },
+          {
+            label: 'Action',
+            id: 'action',
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={() => (
+                    <MenuList>
+                      <MenuItem>
+                        <Iconify icon="mdi:eye" />
+                        Preview
+                      </MenuItem>
+                      <MenuItem onClick={dialog.onTrue}>
+                        <Iconify icon="mdi:pencil" />
+                        Edit
+                      </MenuItem>
+                      <MenuItem>
+                        <Iconify icon="mdi:content-copy" />
+                        Copy Template
+                      </MenuItem>
+                      <MenuItem>
+                        <Iconify icon="mdi:content-paste" />
+                        Paste Template
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              );
+            },
+          },
+        ]}
+        data={[
+          { class: 'Class 1', status: 'Pending' },
+          { class: 'Class 2', status: 'Completed' },
+          { class: 'Class 3', status: 'Pending' },
+          { class: 'Class 4', status: 'Completed' },
+          { class: 'Class 5', status: 'Pending' },
+        ]}
+      />
+      <CustomDialog maxWidth="lg" title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
+        <Box p={2}>
+          <EmployeeICardForm handleClose={dialog.onFalse} />
+        </Box>
+      </CustomDialog>
+    </Box>
+  );
+};
+
+export default EmployeeIcardScreen;
+
+const EmployeeICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Element => {
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [organization, setOrganization] = useState<string>('');
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClass] = useState<string>('');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const [selectedTemplate, setSelectedTemplate] = useState<null | number>(null);
+  const isLoading = useBoolean();
+  const Template = useRef<any>(null);
+
+  const handelClick = async (template: number) => {
+    setSelectedTemplate(template);
+    isLoading.onTrue();
+    const temp = await import(`src/templates/icard/template${template}.tsx`);
+    const currentTemplate = temp.default;
+    Template.current = currentTemplate;
+    isLoading.onFalse();
+  };
+
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization('all');
+  }, [medium]);
+
+  useEffect(() => {
+    setAllClass(allOrganization.find((i) => i.id === organization)?.standards || []);
+  }, [allOrganization, organization]);
+
+  const handleSave = (data: Record<string, any>) => {
+    console.log(data);
+    Template.current = null;
+    setSelectedTemplate(null);
+    handleClose();
+  };
+
+  return (
+    <Box>
+      {selectedTemplate === null && (
+        <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+          <CustomSelect
+            options={[{ name: 'All', id: 'all' }, ...allOrganization]}
+            label="Organization"
+            value={organization}
+            onChange={(val: string | string[]) => setOrganization(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            disabled={!medium}
+          />
+          {organization !== 'all' && (
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val: string | string[]) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!organization}
+            />
+          )}
+        </Box>
+      )}
+
+      {(classes || organization === 'all') &&
+        (selectedTemplate === null ? (
+          <>
+            <Typography variant="h6" mb={2}>
+              Choose Template
+            </Typography>
+            <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
+              {Object.values(IcardTemplate).map((CurrentTemplate, index) => {
+                const Comp = CurrentTemplate.default;
+                return (
+                  <Paper
+                    sx={{
+                      height: 'max-content',
+                      borderRadius: 2,
+                      '&:hover': {
+                        boxShadow: 'var(--shadows-4)',
+                      },
+                    }}
+                    onClick={() => handelClick(index + 1)}
+                  >
+                    <Comp isShowSettings={false} />
+                  </Paper>
+                );
+              })}
+            </Box>
+          </>
+        ) : (
+          <>
+            {isLoading.value ? (
+              <LoadingScreen />
+            ) : (
+              <>
+                <IconButton
+                  sx={{ mb: 1 }}
+                  onClick={() => {
+                    Template.current = null;
+                    setSelectedTemplate(null);
+                  }}
+                >
+                  <ArrowBack />
+                </IconButton>
+                {/* eslint-disable-next-line react/jsx-pascal-case */}
+                <Template.current isShowSettings onSave={handleSave} />
+              </>
+            )}
+          </>
+        ))}
+    </Box>
+  );
+};

@@ -4,11 +4,11 @@ import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 
 interface FinanceNotificationCardProps {
-  cardTitle: string;                  // Prop for card title
-  switchLabel: string;                // Prop for the main switch label
-  optionalSwitchLabel?: string;       // Prop for the optional switch label (optional)
-  textFieldLabel: string;             // Prop for the text field label
-  showOptionalSwitch: boolean;        // Prop to control the visibility of the optional field
+  cardTitle: string; // Prop for card title
+  switchLabel: string; // Prop for the main switch label
+  optionalSwitchLabel?: string; // Prop for the optional switch label (optional)
+  textFieldLabel: string; // Prop for the text field label
+  showOptionalSwitch: boolean; // Prop to control the visibility of the optional field
   onSwitchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onOptionalSwitchChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -26,7 +26,7 @@ const FinanceNotificationCardComponent: React.FC<FinanceNotificationCardProps> =
   onInputChange,
   onSave,
 }) => (
-  <Grid2 >
+  <Grid2>
     <Card
       sx={{
         pl: 3,
@@ -54,12 +54,7 @@ const FinanceNotificationCardComponent: React.FC<FinanceNotificationCardProps> =
       )}
 
       <Box py="10px" width="320px">
-        <TextField
-          name="discount"
-          label={textFieldLabel}
-          size="small"
-          onChange={onInputChange}
-        />
+        <TextField name="discount" label={textFieldLabel} size="small" onChange={onInputChange} />
       </Box>
 
       <Box pr="20px" display="flex" flexDirection="row" justifyContent="flex-end">

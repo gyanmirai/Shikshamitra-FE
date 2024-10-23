@@ -10,8 +10,8 @@ import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceStudentFeeTab from './finance-student-fee-tab';
 import FinanceFeeCollectionTab from './collectFees/finance-fee-collection-tab';
-import FinanceFeeCollectionPaymentHistoryTab from './paymentHistory/finance-fee-collection-payment-history.tab';
 import FinanceFeeCollectionRefundTab from './feeRefund/finance-fee-collection-refund';
+import FinanceFeeCollectionPaymentHistoryTab from './paymentHistory/finance-fee-collection-payment-history.tab';
 
 const TABS = [
   {
@@ -34,15 +34,7 @@ const TABS = [
     label: 'Fee Refund',
     component: () => <FinanceFeeCollectionRefundTab />,
   },
-  
-
-
-
 ];
-
-
-
-
 
 const FinanceFeeCollectionScreen = () => {
   const tabs = useTabs('collect-fee');
@@ -69,7 +61,4 @@ const FinanceFeeCollectionScreen = () => {
   );
 };
 
-
-
-
-export default FinanceFeeCollectionScreen
+export default FinanceFeeCollectionScreen;

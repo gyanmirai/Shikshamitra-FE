@@ -9,8 +9,8 @@ import CustomTooltip from '../custom-tooltip';
 
 interface UserProfile {
   name: string;
-  email: string;
-  role: string;
+  email?: string;
+  role?: string;
   class?: string;
   division?: string;
   avatarUrl?: string;

@@ -11,6 +11,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import FinanceBudgetSettingTab from './budget/finance-budget-setting';
 // eslint-disable-next-line import/no-named-as-default
 import FinanceTaxSettingTab from './tax-setting/finance-tax-setting-tab';
+import FinanceReceiptBookSetting from './receipt-book/finance-receipt-book';
 // eslint-disable-next-line import/no-named-as-default
 import FinanceIncomeSettingTab from './income-category/finance-income-setting-tab';
 import FinanceGeneralSettingTab from './general-setting/finance-general-setting-tab';
@@ -23,7 +24,6 @@ import FinanceFeeStructureSettingTab from './fee-structure/finance-fee-structure
 // eslint-disable-next-line import/no-named-as-default
 import FinancePaymentMethodSettingTab from './payment-method/finance-payment-method-setting-tab';
 import FinanceSettingFeeCollectionTab from './fee-collection/finance-setting-fee-collection-tab';
-import FinanceReceiptBookSetting from './receipt-book/finance-receipt-book';
 
 const TABS = [
   {
@@ -35,7 +35,8 @@ const TABS = [
     value: 'feestructure',
     label: 'Fee Structure',
     component: () => <FinanceFeeStructureSettingTab />,
-  },{
+  },
+  {
     value: 'receiptBook',
     label: 'Receipt Book',
     component: () => <FinanceReceiptBookSetting />,
@@ -75,8 +76,6 @@ const TABS = [
     label: 'Notification',
     component: () => <FinanceNotificationSettingTab />,
   },
-
-
 ];
 
 const FinanceSettingScreen = () => {
