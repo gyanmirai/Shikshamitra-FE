@@ -39,6 +39,7 @@ import {
   FormControl,
   TablePagination,
   FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -75,6 +76,7 @@ interface CustomizableTableProps {
   onServerSearch?: (searchTerm: string) => void;
   totalCount?: number;
   handleRowClick?: (row: Data, index: number) => void;
+  isLoading?: boolean;
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -86,6 +88,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerSearch,
   totalCount,
   handleRowClick = () => {},
+  isLoading = false,
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -571,7 +574,13 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedData.length > 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell rowSpan={3} colSpan={columns.length + 1}>
+                      <CircularProgress color="primary" size={24} />
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedData.length > 0 ? (
                   paginatedData.map((row, index) => (
                     <React.Fragment key={index}>
                       <TableRow hover tabIndex={-1} onClick={() => handleRowClick(row, index)}>

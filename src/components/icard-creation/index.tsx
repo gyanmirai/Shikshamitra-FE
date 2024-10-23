@@ -9,7 +9,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
+  Grid,
   Input,
+  Paper,
   Button,
   Select,
   Dialog,
@@ -22,7 +24,14 @@ import {
   DialogActions,
 } from '@mui/material';
 
-const DraggableField = ({ field, onDrag, onEdit, onDelete, children }: any) => (
+export const DraggableField = ({
+  field,
+  onDrag,
+  onEdit,
+  onDelete,
+  children,
+  isDrag = true,
+}: any) => (
   <Draggable bounds="parent" onDrag={(e, data) => onDrag(field.name, { x: data.x, y: data.y })}>
     <Box
       position="absolute"
@@ -32,17 +41,37 @@ const DraggableField = ({ field, onDrag, onEdit, onDelete, children }: any) => (
         cursor: 'move',
         ...field.style,
         '&:hover .field-actions': {
-          display: 'flex',
+          display: isDrag ? 'flex' : 'none',
         },
       }}
     >
       {field.type === 'text' ? (
         <>
-          <Typography component="span" fontWeight="bold">
+          <Typography
+            component="span"
+            fontWeight={field?.style?.fontWeight}
+            fontSize={field?.style?.fontSize}
+          >
             {field.name}
           </Typography>
-          <Typography component="span">: {children}</Typography>
+          <Typography
+            component="span"
+            fontWeight={field?.style?.fontWeight}
+            fontSize={field?.style?.fontSize}
+          >
+            {' '}
+            {children}
+          </Typography>
         </>
+      ) : field.type === 'box' ? (
+        <Box
+          sx={{
+            width: field.dimensions.width,
+            height: field.dimensions.height,
+            backgroundColor: field.style.backgroundColor || '#ffffff',
+            // border: '1px solid #000',
+          }}
+        />
       ) : (
         <img
           src={field.dummyValue}
@@ -81,6 +110,8 @@ const StudentIDCardCreator = () => {
     width: 300,
     height: 200,
   });
+  const [cardBackground, setCardBackground] = useState('');
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#ffffff');
   const [fields, setFields] = useState([]);
   const [openFieldDialog, setOpenFieldDialog] = useState(false);
   const [editingField, setEditingField] = useState(null);
@@ -149,10 +180,23 @@ const StudentIDCardCreator = () => {
     }
   };
 
+  const handleBackgroundImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCardBackground(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveConfiguration = () => {
     const configuration = {
       cardDimensions,
       fields,
+      cardBackground,
+      cardBackgroundColor,
     };
     console.log(configuration, 'configuration');
     localStorage.setItem('idCardConfiguration', JSON.stringify(configuration));
@@ -162,10 +206,16 @@ const StudentIDCardCreator = () => {
   const handleLoadConfiguration = () => {
     const savedConfiguration = localStorage.getItem('idCardConfiguration');
     if (savedConfiguration) {
-      const { cardDimensions: savedDimensions, fields: savedFields } =
-        JSON.parse(savedConfiguration);
+      const {
+        cardDimensions: savedDimensions,
+        fields: savedFields,
+        cardBackground: savedBackground,
+        cardBackgroundColor: savedColor,
+      } = JSON.parse(savedConfiguration);
       setCardDimensions(savedDimensions);
       setFields(savedFields);
+      setCardBackground(savedBackground);
+      setCardBackgroundColor(savedColor);
       alert('Configuration loaded successfully!');
     } else {
       alert('No saved configuration found.');
@@ -193,83 +243,97 @@ const StudentIDCardCreator = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-        <TextField
-          label="Card Width"
-          type="number"
-          size="small"
-          value={cardDimensions.width}
-          onChange={(e) =>
-            setCardDimensions({
-              ...cardDimensions,
-              width: Number(e.target.value),
-            })
-          }
-          sx={{ mr: 2 }}
-        />
-        <TextField
-          label="Card Height"
-          type="number"
-          value={cardDimensions.height}
-          size="small"
-          onChange={(e) =>
-            setCardDimensions({
-              ...cardDimensions,
-              height: Number(e.target.value),
-            })
-          }
-        />
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => setOpenFieldDialog(true)}
-          sx={{ mb: 2 }}
-        >
-          Add Field
-        </Button>
-      </Box>
-
-      <Box sx={{ mt: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSaveConfiguration}
-          sx={{ mr: 2 }}
-        >
-          Save
-        </Button>
-        {/* <Button variant="contained" onClick={handleLoadConfiguration} sx={{ mr: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <TextField
+              label="Card Width"
+              type="number"
+              size="small"
+              value={cardDimensions.width}
+              onChange={(e) =>
+                setCardDimensions({
+                  ...cardDimensions,
+                  width: Number(e.target.value),
+                })
+              }
+              sx={{ mr: 2 }}
+            />
+            <TextField
+              label="Card Height"
+              type="number"
+              value={cardDimensions.height}
+              size="small"
+              onChange={(e) =>
+                setCardDimensions({
+                  ...cardDimensions,
+                  height: Number(e.target.value),
+                })
+              }
+            />
+            <Input
+              type="file"
+              onChange={handleBackgroundImageUpload}
+              sx={{ mr: 2 }}
+              inputProps={{ accept: 'image/*' }}
+            />
+            <Button variant="contained" onClick={() => setCardBackground(null)}>
+              Remove BackRound
+            </Button>
+            <MuiColorInput
+              format="hex"
+              value={cardBackgroundColor}
+              onChange={(color) => setCardBackgroundColor(color)}
+            />
+            <Button
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => setOpenFieldDialog(true)}
+            >
+              Add Field
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleSaveConfiguration}>
+              Save
+            </Button>
+            {/* <Button variant="contained" onClick={handleLoadConfiguration} sx={{ mr: 2 }}>
           Load Configuration
         </Button>
         <Button variant="contained" onClick={handleAddStudentData} sx={{ mr: 2 }}>
           Add Student Data
         </Button> */}
-        <Button color="warning" variant="contained" onClick={handlePrint}>
-          Print ID Card
-        </Button>
-      </Box>
-
-      <Box
-        ref={printRef}
-        sx={{
-          border: '1px solid black',
-          position: 'relative',
-          ...cardDimensions,
-          mt: 2,
-        }}
-      >
-        {fields.map((field) => (
-          <DraggableField
-            key={field.name}
-            field={field}
-            onDrag={handleFieldDrag}
-            onEdit={handleEditField}
-            onDelete={handleDeleteField}
+            <Button color="warning" variant="contained" onClick={handlePrint}>
+              Print ID Card
+            </Button>
+          </Box>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper
+            ref={printRef}
+            elevation={4}
+            sx={{
+              position: 'relative',
+              ...cardDimensions,
+              mt: 2,
+              backgroundColor: cardBackgroundColor,
+              backgroundImage: cardBackground ? `url(${cardBackground})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
-            {studentData[field.name] || field.dummyValue}
-          </DraggableField>
-        ))}
-      </Box>
+            {fields.map((field) => (
+              <DraggableField
+                key={field.name}
+                field={field}
+                onDrag={handleFieldDrag}
+                onEdit={handleEditField}
+                onDelete={handleDeleteField}
+              >
+                {studentData[field.name] || field.dummyValue}
+              </DraggableField>
+            ))}
+          </Paper>
+        </Grid>
+      </Grid>
 
       <Dialog
         open={openFieldDialog}
@@ -306,6 +370,7 @@ const StudentIDCardCreator = () => {
           >
             <MenuItem value="text">Text</MenuItem>
             <MenuItem value="image">Image</MenuItem>
+            <MenuItem value="box">Box</MenuItem>
           </Select>
           {newField.type === 'text' ? (
             <TextField
@@ -354,6 +419,53 @@ const StudentIDCardCreator = () => {
               />
             </Box>
           )}
+          {newField.type === 'box' && (
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                label="Box Width"
+                type="number"
+                value={newField.dimensions.width}
+                onChange={(e) =>
+                  setNewField({
+                    ...newField,
+                    dimensions: {
+                      ...newField.dimensions,
+                      width: Number(e.target.value),
+                    },
+                  })
+                }
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Box Height"
+                type="number"
+                value={newField.dimensions.height}
+                onChange={(e) =>
+                  setNewField({
+                    ...newField,
+                    dimensions: {
+                      ...newField.dimensions,
+                      height: Number(e.target.value),
+                    },
+                  })
+                }
+                fullWidth
+                margin="normal"
+              />
+              <MuiColorInput
+                label="Box Background Color"
+                format="hex"
+                value={newField.style.backgroundColor || '#ffffff'}
+                onChange={(color) => {
+                  setNewField({
+                    ...newField,
+                    style: { ...newField.style, backgroundColor: color },
+                  });
+                }}
+              />
+            </Box>
+          )}
           <Typography variant="h6" gutterBottom>
             Field Style
           </Typography>
@@ -394,15 +506,6 @@ const StudentIDCardCreator = () => {
               });
             }}
           />
-          {/* <ColorPicker
-            value={newField.style.color}
-            onChange={(color) =>
-              setNewField({
-                ...newField,
-                style: { ...newField.style, color: color.css.backgroundColor },
-              })
-            }
-          /> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleAddField}>{editingField ? 'Update' : 'Add'}</Button>
@@ -451,5 +554,4 @@ const StudentIDCardCreator = () => {
     </Box>
   );
 };
-
 export default StudentIDCardCreator;

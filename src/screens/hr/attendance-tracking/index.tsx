@@ -2,9 +2,10 @@
 
 import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
+import type { EmployeeAttendance } from 'src/types/employee';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -16,13 +17,19 @@ import {
   Divider,
   MenuItem,
   MenuList,
-  CardHeader,
+  Typography,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
+import {
+  useGetEmployeeQuery,
+  useLazyGetAttendanceByEmployeeIdQuery,
+  useLazyGetEmployeeAttendanceByDateQuery,
+} from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -31,44 +38,6 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-const data = [
-  {
-    name: 'John Doe',
-    inTime: '09:00',
-    outTime: '18:00',
-    hoursWorked: 8,
-    status: 'Present',
-  },
-  {
-    name: 'Jane Smith',
-    inTime: '09:15',
-    outTime: '17:45',
-    hoursWorked: 7.5,
-    status: 'Present',
-  },
-  {
-    name: 'Mike Johnson',
-    inTime: '09:00',
-    outTime: '17:00',
-    hoursWorked: 8,
-    status: 'Present',
-  },
-  {
-    name: 'Emily Brown',
-    inTime: '09:00',
-    outTime: '15:00',
-    hoursWorked: 6,
-    status: 'Half-Day',
-  },
-  {
-    name: 'David Wilson',
-    inTime: '-',
-    outTime: '-',
-    hoursWorked: 0,
-    status: 'Absent',
-  },
-];
 
 const AttendanceTrackingScreen = () => {
   const tabs = useTabs('dateWise');
@@ -104,28 +73,61 @@ export default AttendanceTrackingScreen;
 
 const DateWise = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
-  const tabs = useTabs('all');
+  const tabs = useTabs(EmployeeAttendanceStatus.All);
+
+  const [getAttendance, { data: attendanceData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEmployeeAttendanceByDateQuery,
+  });
 
   const tableData = useMemo(
-    () => (tabs.value === 'all' ? data : data.filter((i) => i.status === tabs.value)),
-    [tabs.value]
+    () =>
+      tabs.value === EmployeeAttendanceStatus.All
+        ? attendanceData?.items || []
+        : attendanceData?.items?.filter((i: EmployeeAttendance) => i.status === tabs.value),
+    [attendanceData?.items, tabs.value]
   );
+
+  useEffect(() => {
+    getAttendance(date?.format('YYYY-MM-DD'));
+  }, [date, getAttendance]);
 
   const counts = useMemo(
     () => ({
-      all: data.length,
-      Present: data.filter((i) => i.status === 'Present').length,
-      Absent: data.filter((i) => i.status === 'Absent').length,
-      'Half-Day': data.filter((i) => i.status === 'Half-Day').length,
+      all: attendanceData?.items.length,
+      Present: attendanceData?.items.filter(
+        (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
+      ).length,
+      Absent: attendanceData?.items.filter(
+        (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
+      ).length,
+      'Half-Day': attendanceData?.items.filter(
+        (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
+      ).length,
     }),
-    []
+    [attendanceData?.items]
   );
   const TABS = useMemo(
     () => [
-      { value: 'all', label: 'All', count: counts.all, color: 'default' },
-      { value: 'Present', label: 'Present', count: counts.Present, color: 'success' },
-      { value: 'Absent', label: 'Absent', count: counts.Absent, color: 'error' },
-      { value: 'Half-Day', label: 'Half-Day', count: counts['Half-Day'], color: 'warning' },
+      { value: EmployeeAttendanceStatus.All, label: 'All', count: counts.all, color: 'default' },
+      {
+        value: EmployeeAttendanceStatus.Present,
+        label: 'Present',
+        count: counts.Present,
+        color: 'success',
+      },
+      {
+        value: EmployeeAttendanceStatus.FullDayLeave,
+        label: 'Absent',
+        count: counts.Absent,
+        color: 'error',
+      },
+      {
+        value: EmployeeAttendanceStatus.HalfDayLeave,
+        label: 'Half-Day',
+        count: counts['Half-Day'],
+        color: 'warning',
+      },
     ],
     [counts]
   );
@@ -134,7 +136,7 @@ const DateWise = () => {
       {' '}
       <DatePicker
         format="DD-MM-YYYY"
-        // label="Select Date"
+        label="Select Date"
         value={date}
         onChange={(value) => setDate(value)}
         sx={{ mb: 2 }}
@@ -161,7 +163,7 @@ const DateWise = () => {
               <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                 {tab.label}{' '}
                 <Label
-                  variant={tab.value === 'all' ? 'filled' : 'soft'}
+                  variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
                   color={(tab?.color as LabelColor) || 'default'}
                 >
                   {tab.count}
@@ -175,19 +177,26 @@ const DateWise = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        isLoading={isLoading}
         columns={[
-          { id: 'name', label: 'Name' },
+          { id: 'employeeName', label: 'Name' },
 
           { id: 'hoursWorked', label: 'Hours Worked' },
-          { id: 'inTime', label: 'In-time' },
-          { id: 'outTime', label: 'Out-time' },
+          { id: 'timeIn', label: 'In-time' },
+          { id: 'timeOut', label: 'Out-time' },
           {
             id: 'status',
             label: 'Status',
             render(value, row) {
               return (
                 <Label
-                  color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
+                  color={
+                    value === EmployeeAttendanceStatus.Present
+                      ? 'success'
+                      : value === EmployeeAttendanceStatus.FullDayLeave
+                        ? 'error'
+                        : 'warning'
+                  }
                 >
                   {value}
                 </Label>
@@ -208,6 +217,19 @@ const EmployeeWise = () => {
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });
+
+  const [getAttendance, { data }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
+  });
+
+  console.log(data, 'data');
+
+  useEffect(() => {
+    if (employeeId) {
+      getAttendance({ employeeId: `employeeIds=${employeeId}`, month: date?.format('YYYY-MM-DD') });
+    }
+  }, [date, employeeId, getAttendance]);
 
   return (
     <>
@@ -244,17 +266,43 @@ const EmployeeWise = () => {
       />
       <Box display="flex" gap={2} justifyContent="space-between">
         <Card
-          sx={{ maxWidth: 280, width: '100%', backgroundColor: 'primary.main', color: 'white' }}
+          sx={{
+            maxWidth: 280,
+            width: '100%',
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+            color: (theme) => theme.palette.primary.main,
+            p: 2,
+          }}
         >
-          <CardHeader sx={{ p: 2 }} title="Total Present Days : 15" />
-        </Card>
-        <Card sx={{ maxWidth: 280, width: '100%', backgroundColor: 'error.main', color: 'white' }}>
-          <CardHeader sx={{ p: 2 }} title="Full Day Leave : 12" />
+          <Typography variant="h6">Total Present Days</Typography>
+
+          <Typography variant="h4">{data?.[0]?.presentDays}</Typography>
         </Card>
         <Card
-          sx={{ maxWidth: 280, width: '100%', backgroundColor: 'warning.main', color: 'white' }}
+          sx={{
+            maxWidth: 280,
+            p: 2,
+            width: '100%',
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.3),
+            color: (theme) => theme.palette.error.main,
+          }}
         >
-          <CardHeader sx={{ p: 2 }} title="Half Day Leave : 1" />
+          <Typography variant="h6">Full Day Leave</Typography>
+
+          <Typography variant="h4">{data?.[0]?.leaveDays}</Typography>
+        </Card>
+        <Card
+          sx={{
+            maxWidth: 280,
+            p: 2,
+            width: '100%',
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.3),
+            color: (theme) => theme.palette.warning.main,
+          }}
+        >
+          <Typography variant="h6">Half Day Leave</Typography>
+
+          <Typography variant="h4">{data?.[0]?.halfDayLeaves}</Typography>
         </Card>
       </Box>
       {employeeId && (
@@ -272,7 +320,11 @@ const EmployeeWise = () => {
                 return (
                   <Label
                     color={
-                      value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'
+                      value === EmployeeAttendanceStatus.Present
+                        ? 'success'
+                        : value === EmployeeAttendanceStatus.FullDayLeave
+                          ? 'error'
+                          : 'warning'
                     }
                   >
                     {value}

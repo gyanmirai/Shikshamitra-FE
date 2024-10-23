@@ -24,8 +24,16 @@ import StudentIDCardCreator from 'src/components/icard-creation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import IcardPreview from './icard-preview';
+
 const StudentIcardScreen = () => {
   const dialog = useBoolean();
+  const previewDialog = useBoolean();
+
+  const [cardDimensions, setCardDimensions] = useState();
+
+  const [cardBackgroundColor, setCardBackgroundColor] = useState();
+  const [cardBackground, setCardBackground] = useState();
   return (
     <Box>
       <CustomBreadcrumbs
@@ -56,7 +64,7 @@ const StudentIcardScreen = () => {
                 <ThreeDotsActions
                   actions={() => (
                     <MenuList>
-                      <MenuItem>
+                      <MenuItem onClick={previewDialog.onTrue}>
                         <Iconify icon="mdi:eye" />
                         Preview
                       </MenuItem>
@@ -91,6 +99,19 @@ const StudentIcardScreen = () => {
         <Scrollbar sx={{ p: 2 }}>
           <StudentICardForm handleClose={dialog.onFalse} />
         </Scrollbar>
+      </CustomDialog>
+      <CustomDialog
+        maxWidth="lg"
+        title="Preview"
+        open={previewDialog.value}
+        handleClose={previewDialog.onFalse}
+      >
+        <IcardPreview
+          cardDimensions={cardDimensions}
+          cardBackgroundColor={cardBackgroundColor}
+          cardBackground={cardBackground}
+          fields={[]}
+        />
       </CustomDialog>
     </Box>
   );
@@ -165,9 +186,11 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
               disabled={!organization}
             />
           )}
-          <Button variant="contained" onClick={isCustom.onTrue}>
-            Create Custom I-card
-          </Button>
+          {!isCustom.value && (
+            <Button variant="contained" onClick={isCustom.onTrue}>
+              Create Custom I-card
+            </Button>
+          )}
         </Box>
       )}
 
