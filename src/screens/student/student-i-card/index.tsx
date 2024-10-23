@@ -1,72 +1,112 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Standards, Organization } from 'src/types/school';
+import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useRef, useState, useEffect } from 'react';
 
-import { ArrowBack } from '@mui/icons-material';
-import { Box, Paper, IconButton } from '@mui/material';
+import { Add, ArrowBack } from '@mui/icons-material';
+import { Box, Paper, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import Template2 from 'src/templates/icard/template2';
-import Template1 from 'src/templates/icard/template1';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
+import IcardTemplate from 'src/templates/icard';
 
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingScreen } from 'src/components/loading-screen';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import StudentIDCardCreator from 'src/components/icard-creation';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const StudentICardScreen = (): JSX.Element => {
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
-  const [medium, setMedium] = useState<string>('');
+const StudentIcardScreen = () => {
+  const dialog = useBoolean();
+  return (
+    <Box>
+      <CustomBreadcrumbs
+        heading="Student I-Card"
+        links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student I-Card' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
+            Create I-card
+          </Button>
+        }
+      />
+      <CustomizableTable
+        columns={[
+          { label: 'Class', id: 'class' },
+          {
+            label: 'Status',
+            id: 'status',
+            render(value, row) {
+              return <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>;
+            },
+          },
+          {
+            label: 'Action',
+            id: 'action',
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={() => (
+                    <MenuList>
+                      <MenuItem>
+                        <Iconify icon="mdi:eye" />
+                        Preview
+                      </MenuItem>
+                      <MenuItem onClick={dialog.onTrue}>
+                        <Iconify icon="mdi:pencil" />
+                        Edit
+                      </MenuItem>
+                      <MenuItem>
+                        <Iconify icon="mdi:content-copy" />
+                        Copy Template
+                      </MenuItem>
+                      <MenuItem>
+                        <Iconify icon="mdi:content-paste" />
+                        Paste Template
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              );
+            },
+          },
+        ]}
+        data={[
+          { class: 'Class 1', status: 'Pending' },
+          { class: 'Class 2', status: 'Completed' },
+          { class: 'Class 3', status: 'Pending' },
+          { class: 'Class 4', status: 'Completed' },
+          { class: 'Class 5', status: 'Pending' },
+        ]}
+      />
+      <CustomDialog maxWidth="lg" title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
+        <Scrollbar sx={{ p: 2 }}>
+          <StudentICardForm handleClose={dialog.onFalse} />
+        </Scrollbar>
+      </CustomDialog>
+    </Box>
+  );
+};
+
+export default StudentIcardScreen;
+
+const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Element => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
+  const [classes, setClass] = useState<string[] | string>([]);
 
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
-  useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setMedium(boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setMedium('');
-    }
-  }, [boardData, currentBoard?.id, getBoard]);
+  const isCustom = useBoolean();
 
-  useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setMedium(boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData]);
-
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums]);
-
-  useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setClass(
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    );
-  }, [organization, allOrganization]);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [selectedTemplate, setSelectedTemplate] = useState<null | number>(null);
   const isLoading = useBoolean();
@@ -81,29 +121,28 @@ const StudentICardScreen = (): JSX.Element => {
     isLoading.onFalse();
   };
 
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization('all');
+  }, [medium]);
+
+  useEffect(() => {
+    setAllClass(allOrganization.find((i) => i.id === organization)?.standards || []);
+  }, [allOrganization, organization]);
+
+  const handleSave = (data: Record<string, any>) => {
+    console.log(data);
+    Template.current = null;
+    setSelectedTemplate(null);
+    handleClose();
+  };
+
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Student ICard"
-        links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student ICard' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-
       {selectedTemplate === null && (
         <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
           <CustomSelect
-            options={allMediums}
-            label="Medium"
-            value={medium}
-            onChange={(val: string | string[]) => {
-              setMedium(val as string);
-            }}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          />
-          <CustomSelect
-            options={allOrganization}
+            options={[{ name: 'All', id: 'all' }, ...allOrganization]}
             label="Organization"
             value={organization}
             onChange={(val: string | string[]) => setOrganization(val as string)}
@@ -112,47 +151,55 @@ const StudentICardScreen = (): JSX.Element => {
             formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             disabled={!medium}
           />
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val: string | string[]) => setClass(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            disabled={!organization}
-          />
+          {organization !== 'all' && (
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              // @ts-ignore
+              value={classes}
+              multiple
+              onChange={(val: string | string[]) => setClass(val)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!organization}
+            />
+          )}
+          <Button variant="contained" onClick={isCustom.onTrue}>
+            Create Custom I-card
+          </Button>
         </Box>
       )}
 
-      {classes &&
+      {isCustom.value ? (
+        <StudentIDCardCreator />
+      ) : (
+        (classes.length || organization === 'all') &&
         (selectedTemplate === null ? (
-          <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
-            <Paper
-              sx={{
-                height: 'max-content',
-                borderRadius: 2,
-                '&:hover': {
-                  boxShadow: 'var(--shadows-4)',
-                },
-              }}
-              onClick={() => handelClick(1)}
-            >
-              <Template1 isShowSettings={false} />
-            </Paper>
-            <Paper
-              sx={{
-                height: 'max-content',
-                borderRadius: 2,
-                '&:hover': {
-                  boxShadow: 'var(--shadows-6)',
-                },
-              }}
-              onClick={() => handelClick(2)}
-            >
-              <Template2 isShowSettings={false} />
-            </Paper>
-          </Box>
+          <>
+            <Typography variant="h6" mb={2}>
+              Choose Template
+            </Typography>
+            <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
+              {Object.values(IcardTemplate).map((CurrentTemplate, index) => {
+                const Comp = CurrentTemplate.default;
+                return (
+                  <Paper
+                    sx={{
+                      height: 'max-content',
+                      borderRadius: 2,
+                      '&:hover': {
+                        boxShadow: 'var(--shadows-4)',
+                      },
+                    }}
+                    onClick={() => handelClick(index + 1)}
+                  >
+                    <Comp isShowSettings={false} />
+                  </Paper>
+                );
+              })}
+            </Box>
+          </>
         ) : (
           <>
             {isLoading.value ? (
@@ -169,12 +216,12 @@ const StudentICardScreen = (): JSX.Element => {
                   <ArrowBack />
                 </IconButton>
                 {/* eslint-disable-next-line react/jsx-pascal-case */}
-                <Template.current isShowSettings />
+                <Template.current isShowSettings onSave={handleSave} />
               </>
             )}
           </>
-        ))}
+        ))
+      )}
     </Box>
   );
 };
-export default StudentICardScreen;

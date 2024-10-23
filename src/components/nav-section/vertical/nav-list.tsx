@@ -1,3 +1,6 @@
+import type { RootState } from 'src/redux/store';
+
+import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
 
 import { usePathname } from 'src/routes/hooks';
@@ -26,6 +29,9 @@ export function NavList({
   // const active = useActiveLink(data.path, !!data.children);
   const active = isSubLayout ? removeTrailingSlash === data.path : currentModule === data._action;
 
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
   const [openMenu, setOpenMenu] = useState(false);
 
   useEffect(() => {
@@ -38,11 +44,14 @@ export function NavList({
     }
   }, [data, removeTrailingSlash]);
 
-  const handleToggleMenu = useCallback(() => {
-    if (data.children) {
-      setOpenMenu((prev) => !prev);
-    }
-  }, [data.children]);
+  const handleToggleMenu = useCallback(
+    (e: any) => {
+      if (data.children) {
+        setOpenMenu((prev) => !prev);
+      }
+    },
+    [data.children]
+  );
 
   // const handleCloseMenu = useCallback(() => {
   //   setOpenMenu(false);
