@@ -19,8 +19,8 @@ const FinanceFeeCollectionRefundTab = () => {
             feeHead: "Tuition",
             paidAmount: "1000",
             refundAmount: 0,
-            amount: "1000",
-            dueDate: "20-04-2024",
+
+            paidDate: "20-04-2024",
             status: "Paid",
         },
         {
@@ -28,8 +28,8 @@ const FinanceFeeCollectionRefundTab = () => {
             feeHead: "Transportation",
             paidAmount: "80000",
             refundAmount: 0,
-            amount: "80000",
-            dueDate: "15-05-2024",
+
+            paidDate: "15-05-2024",
             status: "Paid",
         },
         {
@@ -37,18 +37,44 @@ const FinanceFeeCollectionRefundTab = () => {
             feeHead: "Sports",
             paidAmount: "60000",
             refundAmount: 0,
-            amount: "60000",
-            dueDate: "30-04-2024",
+            paidDate: "30-04-2024",
             status: "Paid",
+
+
         },
         {
             paymentId: "jack7785",
             feeHead: "Activity",
             paidAmount: "30000",
             refundAmount: 0,
-            amount: "30000",
-            dueDate: "10-06-2024",
+            paidDate: "10-06-2024",
             status: "Paid",
+
+
+
+        },
+    ]
+
+    const historyData = [
+        {
+            className: "1A",
+            grNo: "101",
+            receiptNo: "RCPT001",
+            refundDate: "01-05-2024",
+            amount: 1500,
+            modeOfPayment: "Cheque",
+            transactionId: "TXN12345",
+            receiptBook: "RB001"
+        },
+        {
+            className: "2B",
+            grNo: "102",
+            receiptNo: "RCPT002",
+            refundDate: "15-05-2024",
+            amount: 2000,
+            modeOfPayment: "Transaction",
+            transactionId: "TXN12346",
+            receiptBook: "RB002"
         },
     ]
     const dialog = useBoolean();
@@ -57,38 +83,38 @@ const FinanceFeeCollectionRefundTab = () => {
     // const [tableData, setTableData] = useState(data);
     const [paymentHistoryData, setPaymentHistoryData] = useState(data);
 
-    const handleRefundChange = (index:any, value:any) => {
+    const handleRefundChange = (index: any, value: any) => {
         const newData = [...paymentHistoryData];
-        const existingIndex = newData.findIndex((val)=> val.paymentId === index)
+        const existingIndex = newData.findIndex((val) => val.paymentId === index)
         newData[existingIndex].refundAmount = value;
         setPaymentHistoryData(newData);
     };
 
-    const totalRefundAmount: number = paymentHistoryData.reduce((total:any, item:any) => total + Number(item.refundAmount), 0);
+    const totalRefundAmount: number = paymentHistoryData.reduce((total: any, item: any) => total + Number(item.refundAmount), 0);
 
     const totalRow = {
         paymentId: '',
         feeHead: '',
         paidAmount: 'Total',
         refundAmount: totalRefundAmount,
-        amount: '',
-        dueDate: '',
+
+        paidDate: '',
         status: '',
     };
 
-    const handleSave =()=> {
+    const handleSave = () => {
 
     }
 
-    const closeDialog= ()=>{
+    const closeDialog = () => {
         dialog.onFalse()
     }
 
-    const handleDilog = ()=>{
+    const handleDilog = () => {
         setIsEdit(true);
-                                                setSelectedEntry(paymentHistoryData);
+        setSelectedEntry(paymentHistoryData);
 
-                                                dialog.onTrue();
+        dialog.onTrue();
     }
     return (
         <>
@@ -126,9 +152,10 @@ const FinanceFeeCollectionRefundTab = () => {
                     {
                         id: 'refundAmount',
                         label: 'Refund Amount',
-                        render: (value:any, row:any) => (
-                          <TextField
-                                type="number" // Ensures only numbers can be entered
+                        render: (value: any, row: any) => (
+                            <TextField
+                                disabled={row.paidAmount === "Total"}
+                                type="number"
                                 variant="outlined"
                                 size="small"
                                 value={row.refundAmount || ''}
@@ -136,8 +163,8 @@ const FinanceFeeCollectionRefundTab = () => {
                             />
                         ),
                     },
-                    { id: 'amount', label: 'Amount' },
-                    { id: 'dueDate', label: 'Due Date' },
+
+                    { id: 'paidDate', label: 'Paid Date' },
                     { id: 'status', label: 'Status' },
                     // {
                     //     id: 'action',
@@ -163,24 +190,40 @@ const FinanceFeeCollectionRefundTab = () => {
                 data={[...paymentHistoryData, totalRow]}
             />
             <Box display="flex" justifyContent="flex-end" py={2}>
-            <Button onClick = {()=>{handleDilog()}}variant="contained" size="small">
-                   Next
-            </Button>
+                <Button onClick={() => { handleDilog() }} variant="contained" size="small">
+                    Next
+                </Button>
             </Box>
+            <Typography variant="h6" sx={{ ml: 2,  }}>
+            Refund History
+          </Typography>
+            <CustomizableTable
+                columns={[
+                    { id: 'className', label: 'Class Name' },
+                    { id: 'grNo', label: 'GrNo' },
+                    { id: 'receiptNo', label: 'ReceiptNo' },
+                    { id: 'refundDate', label: 'RefundDate' },
+                    { id: 'amount', label: 'Amount' },
+                    { id: 'modeOfPayment', label: 'ModeOfPayment' },
+                    { id: 'transactionId', label: 'TransactionId' },
+                    { id: 'receiptBook', label: 'Receipt Book' },
+                ]}
+                data={historyData}
+            />
 
             <Box>
-            {dialog.value && selectedEntry && (
-                <FeeRefundDialog
-                    onSave={handleSave}
-                    dialogValue={dialog.value}
-                    onClose={closeDialog}
-                    data={selectedEntry}
-                    isEdit={isEdit}
-                    allData={paymentHistoryData}
-                    total={totalRefundAmount}
-                />
-            )}
-        </Box>
+                {dialog.value && selectedEntry && (
+                    <FeeRefundDialog
+                        onSave={handleSave}
+                        dialogValue={dialog.value}
+                        onClose={closeDialog}
+                        data={selectedEntry}
+                        isEdit={isEdit}
+                        allData={paymentHistoryData}
+                        total={totalRefundAmount}
+                    />
+                )}
+            </Box>
         </>
     );
 }

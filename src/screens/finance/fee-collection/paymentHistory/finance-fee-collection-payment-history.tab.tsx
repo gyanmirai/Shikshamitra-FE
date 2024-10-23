@@ -78,9 +78,7 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
                     { id: 'class', label: 'Class' },
                     { id: 'feeType', label: 'Fee Type' },
                     { id: 'amount', label: 'Amount' },
-                    { id: 'progress', label: 'progress', render(value: any, row: any){
-                        return  <CircularProgress size={20} />
-                    } },
+                    { id: 'status', label: 'Status',},
                     {
                         id: 'action',
                         label: 'Action',

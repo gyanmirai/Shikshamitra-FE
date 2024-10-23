@@ -1,6 +1,8 @@
-import { Typography } from '@mui/material';
 import React from 'react'
-import CustomizableTable from 'src/components/customizabaleTable';
+
+import { Card, Grid, Typography } from '@mui/material';
+
+// import CustomizableTable from 'src/components/customizabaleTable';
 
 
 interface VehicleInformationProps{
@@ -8,20 +10,20 @@ interface VehicleInformationProps{
 }
 
 interface MaintenanceRecord {
-    vehicleNumber: string; // Vehicle information
-    serviceDetails: string; // Details of the service
-    nextScheduledMaintenance: string; // Next scheduled maintenance date
+    vehicleNumber: string;
+    serviceDetails: string; 
+    nextScheduledMaintenance: string; 
   }
   
-  // Example maintenance records for vehicles
+
   interface MaintenanceRecord {
-    vehicleNumber: string; // Vehicle information
-    serviceDetails: string; // Details of the service
-    maintenanceDate: string; // Date of maintenance performed
-    nextScheduledMaintenance: string; // Next scheduled maintenance date
+    vehicleNumber: string; 
+    serviceDetails: string; 
+    maintenanceDate: string; 
+    nextScheduledMaintenance: string;
   }
   
-  // Example maintenance records for vehicles
+  
   const maintenanceRecords: MaintenanceRecord[] = [
     {
       vehicleNumber: "V001",
@@ -69,9 +71,26 @@ const VehicleInformation: React.FC<VehicleInformationProps> = ({vehicleData}) =>
     const data = [];
     // console.log("vehicleData",vehicleData)
   return (
-    <>
-    <CustomizableTable data={maintenanceRecords} columns={columnData}/>
-    </>
+    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 2 }}>
+    <Grid container spacing={2}>
+      <Grid item xs={6}>
+        <Typography variant="subtitle2">Vehicle Registration Number:</Typography>
+        <Typography variant="body2">{vehicleData.vehicleNumber}</Typography>
+      </Grid>
+      <Grid item xs={6}>
+        <Typography variant="subtitle2">Model:</Typography>
+        <Typography variant="body2">{vehicleData.model}</Typography>
+      </Grid>
+      <Grid item xs={6}>
+        <Typography variant="subtitle2">Capacity:</Typography>
+        <Typography variant="body2">{vehicleData.capacity}</Typography>
+      </Grid>
+      <Grid item xs={6}>
+        <Typography variant="subtitle2">Assigned Driver:</Typography>
+        <Typography variant="body2">{vehicleData.driver}</Typography>
+      </Grid>
+    </Grid>
+  </Card>
     
   )
 }
