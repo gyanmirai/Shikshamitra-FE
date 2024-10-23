@@ -1,13 +1,11 @@
-import React from 'react'
+import React from 'react';
 
-interface VehicleMaintenanceRecordsProps{
-  vehicleData: any,
+interface VehicleMaintenanceRecordsProps {
+  vehicleData: any;
 }
-const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({vehicleData}) => {
-    const data = [];
-  return (
-    <div>VehilcleMaintenanceRecords</div>
-  )
-}
+const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ vehicleData }) => {
+  const data = [];
+  return <div>VehilcleMaintenanceRecords</div>;
+};
 
-export default VehicleMaintenanceRecords
+export default VehicleMaintenanceRecords;

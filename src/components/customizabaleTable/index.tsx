@@ -51,7 +51,7 @@ interface Column {
   label: string;
   minWidth?: number | string;
   align?: 'right' | 'left' | 'center';
-  render?: (value: any, row: Data,) => React.ReactNode;
+  render?: (value: any, row: Data) => React.ReactNode;
   renderColumn?: (value: Column) => React.ReactNode;
   children?: (row: Data) => React.ReactNode;
   onSort?: (a: any, b: any) => any[];
@@ -85,7 +85,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
-  handleRowClick = () => { },
+  handleRowClick = () => {},
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -203,17 +203,17 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       serverSide
         ? data
         : data.filter(
-          (row) =>
-            Object.entries(row).some(
-              ([key, value]) =>
-                columnVisibility[key] &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '')
-                  .toString()
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
-            ) && applyFilter(row)
-        ),
+            (row) =>
+              Object.entries(row).some(
+                ([key, value]) =>
+                  columnVisibility[key] &&
+                  _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+                  _.get(row, columns.find((col) => col.id === key)?.id || '')
+                    .toString()
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+              ) && applyFilter(row)
+          ),
     [serverSide, data, columnVisibility, columns, searchTerm, applyFilter]
   );
 
@@ -254,29 +254,32 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
-  const handleExport = useCallback((format: string) => {
-    if (format === 'excel') {
-      // Export to Excel
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      XLSX.writeFile(workbook, `${data[0].fileName ?? "table_data"}.xlsx`);
-    } else if (format === 'print') {
-      // Print the table
-      window.print();
-    } else if (format === 'pdf') {
-      // Export to PDF
-      // eslint-disable-next-line new-cap
-      const doc = new jsPDF();
-      const columnData = columns.map(column => ({
-        header: column.label,
-        dataKey: column.id,
-      }));
-      // @ts-ignore
-      autoTable(doc, { columns: columnData, body: data });
-      doc.save(`${data[0].fileName ?? "table_data"}.pdf`);
-    }
-  }, [data, columns]);
+  const handleExport = useCallback(
+    (format: string) => {
+      if (format === 'excel') {
+        // Export to Excel
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        XLSX.writeFile(workbook, `${data[0].fileName ?? 'table_data'}.xlsx`);
+      } else if (format === 'print') {
+        // Print the table
+        window.print();
+      } else if (format === 'pdf') {
+        // Export to PDF
+        // eslint-disable-next-line new-cap
+        const doc = new jsPDF();
+        const columnData = columns.map((column) => ({
+          header: column.label,
+          dataKey: column.id,
+        }));
+        // @ts-ignore
+        autoTable(doc, { columns: columnData, body: data });
+        doc.save(`${data[0].fileName ?? 'table_data'}.pdf`);
+      }
+    },
+    [data, columns]
+  );
   const handleApplyFilter = () => {
     if (filterColumn && filterType && filterValue) {
       setFilters([...filters, { column: filterColumn, type: filterType, value: filterValue }]);
@@ -512,7 +515,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           key={column.id}
                           align={column.align || 'center'}
                           sx={{
-                          
                             fontSize: '14px',
                             width: column.minWidth,
                             position: column.sticky ? 'sticky' : 'static',
@@ -525,7 +527,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                         >
                           <Box
                             sx={{
-                             
                               display: 'flex',
                               alignItems: 'center',
                               cursor: column.isSort !== false ? 'pointer' : 'default',
@@ -555,7 +556,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                   }}
                                 >
                                   {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                    'asc' ? (
+                                  'asc' ? (
                                     <ArrowUpwardIcon fontSize="inherit" />
                                   ) : (
                                     <ArrowDownwardIcon fontSize="inherit" />
@@ -588,7 +589,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 key={column.id}
                                 align={column.align}
                                 sx={{
-                                
                                   alignItems: 'center',
                                   fontSize: '12px',
                                   position: column.sticky ? 'sticky' : 'static',

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
@@ -7,7 +7,6 @@ import { Box, Button, TextField, DialogActions } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-
 
 interface FinanceSettingCreateBudgetDialogProps {
   dialogValue: boolean;
@@ -18,10 +17,10 @@ interface FinanceSettingCreateBudgetDialogProps {
 }
 
 interface FormikValue {
-  departmentName: string,
-  allocatedAmount: string,
-  startDate: string,
-  endDate: string,
+  departmentName: string;
+  allocatedAmount: string;
+  startDate: string;
+  endDate: string;
 }
 
 const validationSchema = Yup.object({
@@ -29,34 +28,38 @@ const validationSchema = Yup.object({
   allocatedAmount: Yup.string().required("Allocated Amount Percentage can't be empty"),
   // startDate: Yup.array().min(1, "Please select at least one region").required(),
   // endDate: Yup.array().min(1, "Please select at least one category").required(),
-})
+});
 
-
-const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialogProps> = ({ dialogValue, data, onClose, onSave, isEdit }) => {
+const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialogProps> = ({
+  dialogValue,
+  data,
+  onClose,
+  onSave,
+  isEdit,
+}) => {
   const formik = useFormik<FormikValue>({
     initialValues: {
       departmentName: isEdit ? data.departmentName ?? '' : '',
-      allocatedAmount: isEdit ? data.allocatedAmount ?? "" : "",
-      startDate: isEdit ? data.incomeType ?? "" : '',
-      endDate: isEdit ? data.effectiveDate ?? "" : "",
-
-
+      allocatedAmount: isEdit ? data.allocatedAmount ?? '' : '',
+      startDate: isEdit ? data.incomeType ?? '' : '',
+      endDate: isEdit ? data.effectiveDate ?? '' : '',
     },
     validationSchema,
     onSubmit: (values) => {
-      onSave(values)
+      onSave(values);
       console.log('Form Submitted type', values);
-
     },
   });
   return (
-    <CustomDialog title={`${isEdit ? "Allocate Budget to Categories" : " Create New Budget"}`} open={dialogValue} handleClose={onClose}>
-
+    <CustomDialog
+      title={`${isEdit ? 'Allocate Budget to Categories' : ' Create New Budget'}`}
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Scrollbar>
-        <Box px="15px" >
+        <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-
               <CustomSelect
                 label="Department/Project Name"
                 options={[
@@ -73,13 +76,11 @@ const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialo
                 helperText={formik.touched.departmentName && formik.errors.departmentName}
               />
               <TextField
-
                 name="allocatedAmount"
                 label="Allocated Amount"
                 value={formik.values.allocatedAmount}
                 onChange={formik.handleChange}
                 size="small"
-
                 error={formik.touched.allocatedAmount && Boolean(formik.errors.allocatedAmount)}
                 helperText={formik.touched.allocatedAmount && formik.errors.allocatedAmount}
               />
@@ -101,7 +102,6 @@ const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialo
                 format="DD-MM-YYYY"
                 slotProps={{ textField: { fullWidth: true } }}
               /> */}
-
             </Box>
             <DialogActions>
               <Button onClick={onClose} variant="contained" size="small">
@@ -115,7 +115,7 @@ const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialo
         </Box>
       </Scrollbar>
     </CustomDialog>
-  )
-}
+  );
+};
 
-export default FinanceSettingCreateBudgetDialog
+export default FinanceSettingCreateBudgetDialog;

@@ -1,10 +1,8 @@
-import React from 'react'
+import React from 'react';
 
 const TransportDashboardScreen = () => {
-    const data = [];
-  return (
-    <div>TransportDashboardScreen</div>
-  )
-}
+  const data = [];
+  return <div>TransportDashboardScreen</div>;
+};
 
-export default TransportDashboardScreen
+export default TransportDashboardScreen;

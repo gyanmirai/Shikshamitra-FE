@@ -12,9 +12,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Settings from './settings';
 import Subjects from './subjects';
 import Dashboard from './dashboard';
+import Reports from './reportsAndAnalyics';
 import ContentLibrary from './contentLibrary';
 import CourseManagement from './courseManagement';
-import Reports from './reportsAndAnalyics';
 import LearningResources from './learningResources';
 
 const TABS = [

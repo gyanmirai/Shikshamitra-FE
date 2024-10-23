@@ -13,7 +13,6 @@ import VehicleInformation from './vehicle-information';
 import VehicleRouteHistory from './vehilce-route-history';
 import VehicleMaintenanceRecords from './vehilcle-maintenance-records';
 
-
 const TABS = [
   {
     value: 'vehicle-information',
@@ -41,7 +40,9 @@ interface TransportVehicleDetailViewProps {
   vehicleNumber: any;
 }
 
-const TransportVehicleDetailView: React.FC<TransportVehicleDetailViewProps> = ({ vehicleNumber }) => {
+const TransportVehicleDetailView: React.FC<TransportVehicleDetailViewProps> = ({
+  vehicleNumber,
+}) => {
   const tabs = useTabs('vehicle-information');
 
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;

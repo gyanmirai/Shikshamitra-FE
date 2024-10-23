@@ -110,7 +110,6 @@ const FinanceFeeListOverviewComponent = () => (
               status: 'Completed',
               action: 'View',
             },
-            
           ]}
         />
       </Box>
