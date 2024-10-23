@@ -1,0 +1,123 @@
+import dayjs from 'dayjs';
+import { useFormik } from 'formik';
+import React, { useState } from 'react';
+
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Button, DialogActions, Grid, TextField, Typography } from '@mui/material';
+
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+
+interface TransportAddNewMaintenanceDialogProps {
+    dialogValue: boolean;
+    data: any;
+    onSave: (values: any) => void;
+    onClose: () => void;
+    isEdit: boolean;
+    allData: any;
+}
+
+interface FormikValue {
+    dateOfMaintenance: any;
+    serviceDetails: string;
+    nextScheduleMaintenance: any;
+    id: number;
+}
+
+const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps> = ({
+    data,
+    allData,
+    dialogValue,
+    isEdit,
+    onSave,
+    onClose,
+}) => {
+    const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+
+    const formik = useFormik<FormikValue>({
+        initialValues: {
+            dateOfMaintenance: isEdit ? dayjs(data.maintenanceDate, 'DD-MM-YYYY') ?? null : null,
+            nextScheduleMaintenance: isEdit ? dayjs(data.nextScheduledMaintenance, 'DD-MM-YYYY') ?? null : null,
+            serviceDetails: isEdit ? data.serviceDetails ?? '' : '',
+            id: isEdit ? data.id ?? Math.floor(Math.random() * 1000000000) : Math.floor(Math.random() * 1000000000),
+        },
+        onSubmit: (values) => {
+            const existingEntryIndex = allData.findIndex((val: any) => val.id === values.id);
+            if (!isEdit) {
+                if (existingEntryIndex === -1) {
+                    setShowExistingEntryMessage(false);
+                    onSave(values);
+                } else {
+                    setShowExistingEntryMessage(true);
+                }
+            } else {
+                onSave(values);
+            }
+            console.log('Form Submitted type', values);
+        },
+    });
+
+    return (
+        <CustomDialog
+            title={`${isEdit ? 'Edit' : 'Add New'} Maintenance Record`}
+            open={dialogValue}
+            handleClose={onClose}
+        >
+            <Scrollbar>
+                <Box px="15px">
+                    <form onSubmit={formik.handleSubmit}>
+                        <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <DatePicker
+                                        name="dateOfMaintenance"
+                                        label="Date Of Maintenance"
+                                        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                                        format="DD-MM-YYYY"
+                                        value={formik.values.dateOfMaintenance}
+                                        onChange={(date) => {
+                                            formik.setFieldValue('dateOfMaintenance', date);
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <DatePicker
+                                        name="nextScheduleMaintenance"
+                                        label="Next Schedule Maintenance"
+                                        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                                        format="DD-MM-YYYY"
+                                        value={formik.values.nextScheduleMaintenance}
+                                        onChange={(date) => {
+
+                                            formik.setFieldValue('nextScheduleMaintenance', date);
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                            <TextField
+                                rows={4}
+                                multiline
+                                name="serviceDetails"
+                                label="Service Details"
+                                value={formik.values.serviceDetails}
+                                onChange={formik.handleChange}
+                                size="small"
+                                fullWidth
+                            />
+                        </Box>
+                        <DialogActions>
+                            <Button onClick={onClose} variant="contained" size="small">
+                                Cancel
+                            </Button>
+                            <Button type="submit" variant="contained" size="small">
+                                Save
+                            </Button>
+                        </DialogActions>
+                    </form>
+                </Box>
+            </Scrollbar>
+        </CustomDialog>
+    );
+}
+
+export default TransportMaintenanceDialog;
