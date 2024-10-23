@@ -3,8 +3,10 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, DialogActions, Grid, TextField, Typography } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 
@@ -103,6 +105,29 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
                                 onChange={formik.handleChange}
                                 size="small"
                                 fullWidth
+                            />
+                            <UploadBox
+                                onDrop={() => { }}
+                                placeholder={
+                                    <Box
+                                        sx={{
+                                            gap: 0.5,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            color: 'text.disabled',
+                                            flexDirection: 'column',
+                                        }}
+                                    >
+                                        <Iconify icon="eva:cloud-upload-fill" width={40} />
+                                        <Typography variant="body2">upload file</Typography>
+                                    </Box>
+                                }
+                                sx={{
+                                    py: 2.5,
+                                    width: '100%',
+                                    height: 'auto',
+                                    borderRadius: 1.5,
+                                }}
                             />
                         </Box>
                         <DialogActions>
