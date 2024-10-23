@@ -1,14 +1,18 @@
 'use client';
 
+// eslint-disable-next-line import/no-duplicates
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 import type { ICalendarEvent, ICalendarFilters } from 'src/types/calendar';
 
-import { useEffect } from 'react';
 import listPlugin from '@fullcalendar/list';
+// eslint-disable-next-line import/no-duplicates
+import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import { useRef, useMemo, useEffect } from 'react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
+// eslint-disable-next-line import/no-extraneous-dependencies
 
 import Card from '@mui/material/Card';
 import Dialog from '@mui/material/Dialog';
@@ -209,6 +213,136 @@ export function CalendarView() {
 }
 
 // ----------------------------------------------------------------------
+interface SchoolTimetableCalendarProps {
+  grade: number;
+  division: string;
+  teacherId?: string;
+  subjectId?: string; // Optional teacherId, for filtering events in teacher view
+}
+
+export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = ({
+  grade,
+  division,
+  teacherId,
+  subjectId,
+}: SchoolTimetableCalendarProps) => {
+  console.log('SchoolTimetableCalendar---');
+
+  const calendarRef = useRef<FullCalendar>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const events = [
+    {
+      id: 'f3284f7d-4d9f-436f-b53c-2d771afdbb99',
+      startTime: '12:00',
+      endTime: '12:30',
+      title: 'Lunch Break',
+      textColor: '#FFD700',
+      daysOfWeek: [1, 2, 3, 4, 5, 6],
+    },
+    {
+      id: '290e1b2f-332f-4c47-947b-907100919623',
+      startTime: '13:00:00',
+      endTime: '13:15:00',
+      title: 'Short Break',
+      textColor: '#FF4500',
+      daysOfWeek: [1, 2, 3, 4, 5, 6],
+    },
+    {
+      id: '874d0843-937b-409b-8cb3-9a3ceee1d164',
+      start: '2024-10-21T09:00:00+05:30',
+      end: '2024-10-21T10:00:00+05:30',
+      title: 'Math / Mr. Smith    103',
+      textColor: '#FF5733',
+      teacherId: '1',
+      subjectId: '1',
+      classRoomNumber: '103',
+    },
+    {
+      id: '35b1ebd4-b5c2-490c-ad7a-0afbed1242ff',
+      start: '2024-10-23T10:00:00+05:30',
+      end: '2024-10-23T11:00:00+05:30',
+      title: 'English / Ms. Johnson    102',
+      textColor: '#33FF57',
+      teacherId: '2',
+      subjectId: '2',
+      classRoomNumber: '102',
+    },
+    {
+      id: '748afd81-d376-4798-8718-bd5413ccc14b',
+      start: '2024-10-24T11:00:00+05:30',
+      end: '2024-10-24T11:45:00+05:30',
+      title: 'Science / Ms. Johnson    102',
+      textColor: '#3357FF',
+      teacherId: '2',
+      subjectId: '3',
+      classRoomNumber: '102',
+    },
+    {
+      id: 'fd4e87ae-281b-4903-95c9-5d836c7d9d71',
+      start: '2024-10-21T13:30:00+05:30',
+      end: '2024-10-21T14:30:00+05:30',
+      title: 'Math / Mr. Brown    103',
+      textColor: '#FF5733',
+      teacherId: '3',
+      subjectId: '1',
+      classRoomNumber: '103',
+    },
+    {
+      id: '189f512e-f2f8-4c74-84b1-61615ea208b8',
+      start: '2024-10-25T10:15:00+05:30',
+      end: '2024-10-25T11:15:00+05:30',
+      title: 'English / Ms. Johnson    101',
+      textColor: '#33FF57',
+      teacherId: '2',
+      subjectId: '2',
+      classRoomNumber: '101',
+    },
+  ];
+  // const filteredEvents = teacherId
+  //   ? events.filter((event) => !event.teacherId || event.teacherId === teacherId) // Keep break events (no teacherId) and specific teacher events
+  //   : events; // For student view, show all events
+  const filteredEvents = useMemo(() => {
+    if (teacherId) {
+      return events.filter((event) => !event.teacherId || event.teacherId === teacherId);
+    }
+    if (subjectId) {
+      return events.filter((event) => !event.subjectId || event.subjectId === subjectId);
+    }
+    return events;
+  }, [teacherId, subjectId, events]);
+
+  const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
+  return (
+    <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
+      <Card sx={{ ...flexProps, minHeight: '70vh' }}>
+        <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
+            headerToolbar={{
+              left: '',
+              center: 'title',
+              right: '',
+            }}
+            titleFormat={{ year: 'numeric' }}
+            initialView="timeGridWeek"
+            slotDuration="00:15:00"
+            slotLabelInterval="00:15:00"
+            slotMinTime="09:00:00"
+            slotMaxTime="15:45:00"
+            height="100%"
+            expandRows
+            dayMaxEvents
+            allDaySlot={false}
+            dayHeaderFormat={{ weekday: 'short' }}
+            events={filteredEvents}
+            hiddenDays={[0]}
+          />
+        </StyledCalendar>
+      </Card>
+    </DashboardContent>
+  );
+};
 
 type ApplyFilterProps = {
   dateError: boolean;

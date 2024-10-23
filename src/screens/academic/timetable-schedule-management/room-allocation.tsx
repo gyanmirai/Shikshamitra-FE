@@ -39,4 +39,5 @@ const RoomAllocation = () => (
   </Box>
 );
 
+
 export default RoomAllocation;
