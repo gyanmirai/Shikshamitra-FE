@@ -16,8 +16,9 @@ import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
-const Dashboard = () => {
+const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   const [classes1, setClasses1] = useState<string>('');
   const [classes2, setClasses2] = useState<string>('');

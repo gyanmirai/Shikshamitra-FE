@@ -1,10 +1,12 @@
-import React from 'react';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { MuiColorInput } from 'mui-color-input';
 
 import { Add } from '@mui/icons-material';
 import {
   Box,
-  Stack,
+  Grid,
   Button,
   MenuItem,
   MenuList,
@@ -15,7 +17,11 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -94,7 +100,12 @@ const Subject = () => {
           },
         ]}
       />
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Subject">
+      <CustomDialog
+        maxWidth="sm"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        title="Add Subject"
+      >
         <SubjectForm />
       </CustomDialog>
     </Box>
@@ -104,6 +115,7 @@ const Subject = () => {
 export default Subject;
 
 const SubjectForm = () => {
+  const [subjectColor, setSubjectColor] = useState('');
   const formik = useFormik({
     initialValues: {
       subjectName: '',
@@ -115,51 +127,127 @@ const SubjectForm = () => {
       console.log(values);
     },
   });
+
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ background: 'background.neutral', p: 3 }}>
-        <Stack spacing={3}>
-          <TextField
-            fullWidth
-            name="subjectName"
-            label="Subject Name"
-            value={formik.values.subjectName}
-            onChange={formik.handleChange}
-            size="small"
-          />
-          <CustomSelect
-            label="Grade"
-            name="grade"
-            options={[]}
-            formControlProps={{ fullWidth: true }}
-            value={formik.values.grade}
-            onChange={(value) => formik.setFieldValue('grade', value)}
-          />
-          <CustomSelect
-            label="Class"
-            name="class"
-            options={[]}
-            formControlProps={{ fullWidth: true }}
-            value={formik.values.class}
-            onChange={(value) => formik.setFieldValue('class', value)}
-          />
-          <TextField
-            multiline
-            rows={4}
-            fullWidth
-            name="description"
-            label="brief description of the subject"
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            size="small"
-          />
-        </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button variant="contained" type="submit">
-          Submit
-        </Button>
-      </DialogActions>
-    </form>
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                options={classData?.items || []}
+                label="Class"
+                isLoading={isLoading}
+                value=""
+                labelKey="name"
+                valueKey="id"
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 180 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField fullWidth label="Subject Name" name="subjectName" size="small" />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Assigned Teacher(s)"
+                options={[
+                  { value: 'Jiya', label: 'Jiya' },
+                  { value: 'Riya', label: 'Riya' },
+                  { value: 'Priya', label: 'Priya' },
+                ]}
+                name="assignedTeacher"
+                value=""
+                formControlProps={{ sx: { minWidth: 180 } }}
+                onChange={() => {}}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Description"
+                name="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <UploadBox
+                onDrop={() => {}}
+                placeholder={
+                  <Box
+                    sx={{
+                      gap: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.disabled',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">Drag Your Document</Typography>
+                  </Box>
+                }
+                sx={{
+                  py: 2.5,
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Resources"
+                options={[
+                  { value: 'laptop', label: 'Laptop' },
+                  { value: 'projector', label: 'Projector' },
+                  { value: 'textbook', label: 'Textbook' },
+                ]}
+                name="resource"
+                onChange={() => {}}
+                value=""
+                formControlProps={{ sx: { minWidth: 180 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Learning Goals"
+                name="learningGoal"
+                value=""
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <MuiColorInput
+                placeholder="Subject Color"
+                size="small"
+                format="hex"
+                value={subjectColor}
+                onChange={(e) => {
+                  setSubjectColor(e);
+                }}
+              />
+            </Grid>
+          </Grid>
+        </Scrollbar>
+        <DialogActions>
+          <Button type="submit" onClick={() => {}}>
+            Save Draft
+          </Button>
+          <Button type="submit" variant="contained">
+            Publish
+          </Button>
+        </DialogActions>
+      </form>
+    </Box>
   );
 };

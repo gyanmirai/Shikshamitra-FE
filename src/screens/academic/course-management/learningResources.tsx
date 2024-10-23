@@ -14,6 +14,9 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -21,6 +24,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
 interface TResourceData {
   id: number;
@@ -66,11 +70,16 @@ const resourceInitialData: TResourceData[] = [
   },
 ];
 
-const LearningResources = () => {
+const LearningResources = (props: TabComponentType) => {
   const [selectedEntry, setSelectedEntry] = useState<TResourceData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   const dialog = useBoolean();
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+  const [classes, setClasses] = useState<string>('');
 
   const handleSave = (dataFromDialog: TResourceData) => {
     if (isEdit && selectedEntry) {
@@ -101,30 +110,27 @@ const LearningResources = () => {
       </Box>
       <Box display="flex" flexDirection="row" gap={3}>
         <CustomSelect
-          label="Type of Resources"
-          options={[
-            { value: 'video', label: 'Video' },
-            { value: 'document', label: 'Document' },
-            { value: 'presentation', label: 'Presentation' },
-          ]}
-          value=""
-          onChange={() => {}}
+          options={classData?.items || []}
+          value={classes}
+          onChange={(val) => {
+            setClasses(val as string);
+          }}
+          label="Class"
+          isLoading={isLoading}
+          labelKey="name"
+          valueKey="name"
           formControlProps={{ sx: { minWidth: 200 } }}
         />
         <CustomSelect
-          label="Course and Subject"
+          label="Course/Subject"
           options={[
             {
-              value: 'course1ForMath',
-              label: 'course 1 and Math',
+              value: 'Math',
+              label: 'Math',
             },
             {
-              value: 'course1ForEnglish',
-              label: 'course 1 and English',
-            },
-            {
-              value: 'course1ForMath',
-              label: 'course 1 and Math',
+              value: 'English',
+              label: 'English',
             },
           ]}
           value=""

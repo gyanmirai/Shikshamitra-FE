@@ -6,8 +6,8 @@ import {
   securityPath,
   academicPath,
   dashboardPath,
-  examinationPath,
   transportPath,
+  examinationPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -75,7 +75,7 @@ export const navData = [
         _action: 'student',
       },
       {
-        title: 'Academic & Assesment',
+        title: 'Academic & Assignment',
         path: '/academic/dashboard',
         icon: ICONS.dashboard,
         _action: 'academic',
@@ -90,13 +90,18 @@ export const navData = [
       { title: 'Finance', path: '/finance/dashboard', icon: ICONS.finance, _action: 'finance' },
       {
         title: 'Communication',
-        path: "communication/dashboard",
+        path: 'communication/dashboard',
         icon: ICONS.communication,
         _action: 'communication',
       },
       { title: 'Library', path: financePath, icon: ICONS.library, _action: 'library' },
-      { title: 'Transport', path: "/transport/dashboard", icon: ICONS.transport, _action: 'transport' },
-      { title: 'Hostel', path: "/hostel/dashboard", icon: ICONS.hostel, _action: 'transport' },
+      {
+        title: 'Transport',
+        path: '/transport/dashboard',
+        icon: ICONS.transport,
+        _action: 'transport',
+      },
+      { title: 'Hostel', path: '/hostel/dashboard', icon: ICONS.hostel, _action: 'transport' },
       { title: 'Security', path: '/security/role', icon: ICONS.security, _action: 'security' },
       // {
       //   title: 'Setting',
@@ -702,7 +707,6 @@ const financeModule = {
           path: '/finance/settings',
           _action: 'finance-settings',
         },
-        
       ],
     },
   ],
@@ -749,8 +753,6 @@ const transportModule = {
           path: '/transport/settings',
           _action: 'settings',
         },
-        
-        
       ],
     },
   ],

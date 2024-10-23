@@ -1,4 +1,5 @@
 import type { ChartOptions } from 'src/components/chart';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -162,7 +163,7 @@ const sampleChapterData: ChapterData[] = [
   },
 ];
 
-const CourseManagement: React.FC = () => {
+const CourseManagement = (props: TabComponentType) => {
   const [courseData, setCourseData] = useState<CourseData[]>(initialCourseData);
   const [selectedCourse, setSelectedCourse] = useState<CourseData | null>(null);
   const [chapterData, setChapterData] = useState<ChapterData[]>(sampleChapterData);

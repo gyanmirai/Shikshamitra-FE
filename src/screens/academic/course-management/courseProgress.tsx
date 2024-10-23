@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useState } from 'react';
 
 // eslint-disable-next-line import/no-duplicates
@@ -129,7 +131,7 @@ const courses: Course[] = [
   },
 ];
 
-const CourseProgress = () => {
+const CourseProgress = (props: TabComponentType) => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   const handleCardDetails = (course: Course) => {
