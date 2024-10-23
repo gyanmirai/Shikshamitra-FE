@@ -1,10 +1,12 @@
 import React, { Fragment } from 'react';
 
+import { Save } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import {
   Box,
   Select,
   Slider,
+  Button,
   Divider,
   MenuItem,
   TextField,
@@ -21,6 +23,7 @@ interface TemplateViewProps {
   setSettings: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   views: { field: string; subField: string }[];
   isShowSettings: boolean;
+  onSave: () => void;
 }
 
 const TemplateView = ({
@@ -29,6 +32,7 @@ const TemplateView = ({
   setSettings,
   views,
   isShowSettings = false,
+  onSave = () => {},
 }: TemplateViewProps) => {
   const handleSettingChange = (field: string, subField: string, value: any) => {
     setSettings((prevSettings) => ({
@@ -183,7 +187,15 @@ const TemplateView = ({
         </Scrollbar>
       </Grid>
 
-      <Grid xs={8} display="flex" justifyContent="center" alignItems="center">
+      <Grid xs={8} display="flex" justifyContent="center" alignItems="center" position="relative">
+        <Button
+          startIcon={<Save />}
+          sx={{ position: 'absolute', right: 0, top: 0 }}
+          variant="contained"
+          onClick={onSave}
+        >
+          Save
+        </Button>
         {template}
       </Grid>
     </Grid>

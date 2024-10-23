@@ -75,7 +75,7 @@ export const navData = [
         _action: 'student',
       },
       {
-        title: 'Academic & Assesment',
+        title: 'Academic & Assignment',
         path: '/academic/dashboard',
         icon: ICONS.dashboard,
         _action: 'academic',
@@ -456,6 +456,11 @@ const hrModule = {
               title: 'Employee Enroll',
               path: '/hr/employee',
               _action: 'employee',
+            },
+            {
+              title: 'I-card',
+              path: '/hr/i-card',
+              _action: 'i-card',
             },
             // {
             //   title: 'Personal Information',

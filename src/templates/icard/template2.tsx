@@ -4,7 +4,13 @@ import { Box, Card, Avatar, Typography } from '@mui/material';
 
 import TemplateView from './templateView';
 
-const Template2 = ({ isShowSettings }: { isShowSettings: boolean }) => {
+const Template2 = ({
+  isShowSettings,
+  onSave,
+}: {
+  isShowSettings: boolean;
+  onSave?: (data: Record<string, any>) => void;
+}) => {
   const [settings, setSettings] = useState<Record<string, any>>({
     name: { fontSize: 12, fontWeight: 'bold', textTransform: 'none', color: '#000000' },
     grNo: { fontSize: 12, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
@@ -34,6 +40,7 @@ const Template2 = ({ isShowSettings }: { isShowSettings: boolean }) => {
       setSettings={setSettings}
       settings={settings}
       isShowSettings={isShowSettings}
+      onSave={() => onSave?.(settings)}
       template={
         <Card
           sx={{

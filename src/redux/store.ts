@@ -17,6 +17,7 @@ import { employeeApi } from './employee/employeeApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { organizationApi } from './oraganization/oraganization';
+import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 
 const persistConfig = {
   key: 'root',
@@ -27,6 +28,7 @@ const persistConfig = {
 const reducers = combineReducers({
   user: userReducer,
   globalState: globalStateReducer,
+  confirmPopup: confirmPopupReducer,
   [userApi.reducerPath]: userApi.reducer,
   [roleApi.reducerPath]: roleApi.reducer,
   [permissionApi.reducerPath]: permissionApi.reducer,
