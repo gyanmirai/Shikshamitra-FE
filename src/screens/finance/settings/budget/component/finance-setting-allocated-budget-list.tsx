@@ -1,10 +1,8 @@
-import React from 'react'
+import React from 'react';
 
 const FinanceSettingAllocatedBudgetList = () => {
-    const data = [];
-    return (
-        <div>FinanceSettingAllocatedBudgetList</div>
-    )
-}
+  const data = [];
+  return <div>FinanceSettingAllocatedBudgetList</div>;
+};
 
-export default FinanceSettingAllocatedBudgetList
+export default FinanceSettingAllocatedBudgetList;

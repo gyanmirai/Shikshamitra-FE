@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
 import React from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Typography,Grid, Box, Card, useTheme } from '@mui/material';
+import { Box, Grid, Card, useTheme, Typography } from '@mui/material';
 
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
@@ -15,7 +15,7 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 
 const TransportDashboardScreen = () => {
   const theme = useTheme();
-  
+
   return (
     <>
       <Grid2 container spacing={3} py="14px">
@@ -35,7 +35,7 @@ const TransportDashboardScreen = () => {
           <AnalyticsWidgetSummary
             title="Students Assigned"
             percent={77}
-              color="warning"
+            color="warning"
             total={250}
             icon={<Iconify icon="solar:money" sx={{ height: '16px', width: '16px' }} />}
             chart={{
@@ -49,7 +49,7 @@ const TransportDashboardScreen = () => {
             title="Active Routes"
             percent={98}
             total={10}
-              color="error"
+            color="error"
             icon={<Iconify icon="solar:money" sx={{ height: '16px', width: '16px' }} />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
@@ -72,7 +72,7 @@ const TransportDashboardScreen = () => {
       </Grid2>
 
       <Grid2 container spacing={3} py="14px">
-        <Grid2  xs={12} md={6}>
+        <Grid2 xs={12} md={6}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
@@ -83,14 +83,14 @@ const TransportDashboardScreen = () => {
                   label="Organization"
                   options={[]}
                   value=""
-                  onChange={() => { }}
+                  onChange={() => {}}
                   formControlProps={{ sx: { minWidth: 125 } }}
                 />
                 <CustomSelect
                   label="Class"
                   options={[]}
                   value=""
-                  onChange={() => { }}
+                  onChange={() => {}}
                   formControlProps={{ sx: { minWidth: 125 } }}
                 />
               </Box>
@@ -98,8 +98,18 @@ const TransportDashboardScreen = () => {
                 id="demo__4"
                 chart={{
                   categories: [
-                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'May',
+                    'Jun',
+                    'Jul',
+                    'Aug',
+                    'Sep',
+                    'Oct',
+                    'Nov',
+                    'Dec',
                   ],
                   series: [
                     {
@@ -113,25 +123,25 @@ const TransportDashboardScreen = () => {
             </Box>
           </Card>
         </Grid2>
-        <Grid2  xs={12} md={6}>
+        <Grid2 xs={12} md={6}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
-              Average Trip Durations
+                Average Trip Durations
               </Typography>
               <Box display="flex" flexDirection="row" gap={1}>
                 <CustomSelect
                   label="Organization"
                   options={[]}
                   value=""
-                  onChange={() => { }}
+                  onChange={() => {}}
                   formControlProps={{ sx: { minWidth: 125 } }}
                 />
                 <CustomSelect
                   label="2023"
                   options={[]}
                   value=""
-                  onChange={() => { }}
+                  onChange={() => {}}
                   formControlProps={{ sx: { minWidth: 125 } }}
                 />
               </Box>
@@ -139,8 +149,18 @@ const TransportDashboardScreen = () => {
                 id="demo__4"
                 chart={{
                   categories: [
-                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'May',
+                    'Jun',
+                    'Jul',
+                    'Aug',
+                    'Sep',
+                    'Oct',
+                    'Nov',
+                    'Dec',
                   ],
                   series: [
                     {
@@ -156,39 +176,32 @@ const TransportDashboardScreen = () => {
         </Grid2>
       </Grid2>
 
-     
-        <Grid item xl={12} sx={{pt:"15px"}}>
-          <Card sx={{ p: 3, height: '100%' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
-              <Typography variant="subtitle1" sx={{ pt: 2 }}>
+      <Grid item xl={12} sx={{ pt: '15px' }}>
+        <Card sx={{ p: 3, height: '100%' }}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            <Typography variant="subtitle1" sx={{ pt: 2 }}>
               Vehicle Usage
-              </Typography>
-              <CustomSelect
-                label="Organization"
-                options={[]}
-                value=""
-                onChange={() => { }}
-                formControlProps={{ sx: { maxWidth: 125 } }}
-              />
-              <AnalyticsWebsiteVisits
-                chart={{
-                  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-                  series: [
-                    { name: 'Total trips', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-                  ],
-                  colors: [
-                    theme.palette.primary.dark,
-                    theme.palette.warning.main,
-                  ],
-                }}
-                sx={{ height: '100%' }}
-              />
-            </Box>
-          </Card>
-        </Grid>
-      
+            </Typography>
+            <CustomSelect
+              label="Organization"
+              options={[]}
+              value=""
+              onChange={() => {}}
+              formControlProps={{ sx: { maxWidth: 125 } }}
+            />
+            <AnalyticsWebsiteVisits
+              chart={{
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                series: [{ name: 'Total trips', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
+                colors: [theme.palette.primary.dark, theme.palette.warning.main],
+              }}
+              sx={{ height: '100%' }}
+            />
+          </Box>
+        </Card>
+      </Grid>
     </>
   );
-}
+};
 
 export default TransportDashboardScreen;
