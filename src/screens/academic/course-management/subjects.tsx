@@ -9,14 +9,18 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
   Grid,
+  List,
   Button,
   MenuItem,
   useTheme,
   MenuList,
+  ListItem,
   TextField,
   Accordion,
   Typography,
   IconButton,
+  ListItemIcon,
+  ListItemText,
   DialogActions,
   CircularProgress,
   AccordionSummary,
@@ -29,6 +33,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Label } from 'src/components/label';
+import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -85,16 +90,18 @@ const assignmentData: AssignmentRow[] = [
 ];
 
 const Subjects = (props: TabComponentType) => {
+  const { setSearchParams } = props;
   const router = useRouter();
   const [classes, setClasses] = useState<string>('');
   const chapterDialog = useBoolean();
   const addChapterDialog = useBoolean();
-  const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
   const theme = useTheme();
-  const [subjectData, setSubjectData] = useState(subjectTempData);
+  const [subjectData, setSubjectData] = useState<any>(subjectTempData);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [subjectTableData, setSubjectTableData] = useState<TableRow[]>([]);
   const [dialogData, setDialogData] = useState<any>([]);
+  const [selectedChapter, setSelectedChapter] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -104,12 +111,12 @@ const Subjects = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classes) {
-      const selectedClassData = subjectData.classes.find((cls) => cls.name === classes);
+      const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
       if (selectedClassData) {
         const divisionData = selectedClassData.divisions;
         const firstDivisionSubjects = divisionData[0]?.subjects || [];
 
-        const subjects = firstDivisionSubjects.map((subject) => ({
+        const subjects = firstDivisionSubjects.map((subject: any) => ({
           subjectName: subject.name,
           assignedTeacher: subject.assignedTeacher,
           progress: subject.progress,
@@ -125,40 +132,87 @@ const Subjects = (props: TabComponentType) => {
     }
   }, [classes, subjectData]);
 
-  const handleNewChapterSubmit = (values: any) => {
+  const handleDocumentUpload = async (files: File[]): Promise<Document[]> =>
+    files.map((file) => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file,
+    }));
+
+  const handleChapterSubmit = async (values: ChapterFormValues) => {
     const updatedSubjectData = { ...subjectData };
-    const selectedClass = updatedSubjectData.classes.find((cls) => cls.name === classes);
+    const selectedClass = updatedSubjectData.classes.find(
+      (cls: { name: string }) => cls.name === classes
+    );
 
     if (selectedClass) {
-      // Create the new chapter object
-      const newChapter = {
-        id:
-          Math.max(
-            ...selectedClass.divisions.flatMap((div) =>
-              div.subjects.flatMap((sub) => sub.chapters.map((ch) => ch.id))
-            ),
-            0
-          ) + 1,
-        chapterName: values.chapterName,
-        content: values.chapterDescription,
-        progress: 0,
-        assignments: [],
-      };
-
-      // Add the chapter to all divisions for the selected subject
-      selectedClass.divisions.forEach((division) => {
-        const subject = division.subjects.find((sub) => sub.name === selectedSubject);
-        if (subject) {
-          subject.chapters.push({ ...newChapter });
+      // Handle document uploads first
+      let newDocuments: Document[] = [];
+      if (values.documents) {
+        const filesToUpload = values.documents.filter((doc) => doc.file) as Document[];
+        if (filesToUpload.length > 0) {
+          const uploadedDocs = await handleDocumentUpload(filesToUpload.map((doc) => doc.file!));
+          newDocuments = [
+            ...values.documents.filter((doc) => !doc.file), // Keep existing documents
+            ...uploadedDocs, // Add newly uploaded documents
+          ];
+        } else {
+          newDocuments = values.documents;
         }
-      });
+      }
+
+      if (isEditMode && selectedChapter) {
+        // Update existing chapter
+        selectedClass.divisions.forEach((division: any) => {
+          const subject = division.subjects.find((sub: any) => sub.name === selectedSubject);
+          if (subject) {
+            const chapterIndex = subject.chapters.findIndex(
+              (ch: any) => ch.id === selectedChapter.id
+            );
+            if (chapterIndex !== -1) {
+              subject.chapters[chapterIndex] = {
+                ...subject.chapters[chapterIndex],
+                chapterName: values.chapterName,
+                content: values.content,
+                documents: newDocuments,
+                progress: subject.chapters[chapterIndex].progress,
+                assignments: subject.chapters[chapterIndex].assignments,
+              };
+            }
+          }
+        });
+      } else {
+        // Create new chapter
+        const newChapter = {
+          id:
+            Math.max(
+              ...selectedClass.divisions.flatMap((div: any) =>
+                div.subjects.flatMap((sub: any) => sub.chapters.map((ch: any) => ch.id))
+              ),
+              0
+            ) + 1,
+          chapterName: values.chapterName,
+          content: values.content,
+          documents: newDocuments,
+          progress: 0,
+          assignments: [],
+        };
+
+        selectedClass.divisions.forEach((division: any) => {
+          const subject = division.subjects.find((sub: any) => sub.name === selectedSubject);
+          if (subject) {
+            subject.chapters.push({ ...newChapter });
+          }
+        });
+      }
 
       setSubjectData(updatedSubjectData);
-      const updatedDialogData = selectedClass.divisions.map((division) => ({
+      const updatedDialogData = selectedClass.divisions.map((division: any) => ({
         divisionName: division.name,
         chapters: division.subjects
-          .filter((subject) => subject.name === selectedSubject)
-          .flatMap((subject) => subject.chapters),
+          .filter((subject: any) => subject.name === selectedSubject)
+          .flatMap((subject: any) => subject.chapters),
       }));
 
       setDialogData(updatedDialogData);
@@ -166,16 +220,28 @@ const Subjects = (props: TabComponentType) => {
     addChapterDialog.onFalse();
   };
 
+  const handleEditChapter = (chapter: any) => {
+    setSelectedChapter(chapter);
+    setIsEditMode(true);
+    addChapterDialog.onTrue();
+  };
+
   const handleEyeClick = (subjectName: string) => {
-    const selectedClassData = subjectData.classes.find((cls) => cls.name === classes);
+    const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
+
     setSelectedSubject(subjectName);
     const allDivisionChapters =
-      selectedClassData?.divisions.map((division) => ({
-        divisionName: division.name,
-        chapters: division.subjects
-          .filter((subject) => subject.name === subjectName)
-          .flatMap((subject) => subject.chapters),
-      })) || [];
+      selectedClassData?.divisions.map((division: any) => {
+        const subjectDataOfClass = division.subjects.find(
+          (subject: any) => subject.name === subjectName
+        );
+
+        return {
+          divisionName: division.name,
+          chapters: subjectDataOfClass?.chapters || [],
+          progress: subjectDataOfClass?.progress || 0, // Store subject progress
+        };
+      }) || [];
 
     setDialogData(allDivisionChapters);
     chapterDialog.onTrue();
@@ -275,11 +341,25 @@ const Subjects = (props: TabComponentType) => {
                         onClick={() => {
                           setSelectedSubject(row.subjectName);
                           addChapterDialog.onTrue();
+                          setIsEditMode(false);
+                          setSelectedChapter(null);
                         }}
                       >
-                        Add Chapter
+                        <Iconify icon="mdi:plus" />
+                        Add New Chapter
                       </MenuItem>
-                      <MenuItem onClick={() => {}}>Add Learning Resources</MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setSearchParams?.({
+                            tab: 'learningResources',
+                            class: classes,
+                            subject: row.subjectName,
+                          });
+                        }}
+                      >
+                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+                        Add Learning Resources
+                      </MenuItem>
                     </MenuList>
                   )}
                 />
@@ -301,20 +381,24 @@ const Subjects = (props: TabComponentType) => {
           chapterData={dialogData}
           onAddNewChapter={() => {
             setSelectedSubject(selectedSubject);
+            setIsEditMode(false);
+            setSelectedChapter(null);
             addChapterDialog.onTrue();
           }}
+          onEditChapter={handleEditChapter}
         />
       </CustomDialog>
 
       <CustomDialog
-        title="Add New Chapter"
+        title={isEditMode ? `Edit ${selectedChapter.chapterName} Chapter` : 'Add New Chapter'}
         open={addChapterDialog.value}
         handleClose={addChapterDialog.onFalse}
+        maxWidth="sm"
       >
         <AddNewChapter
-          onSubmit={handleNewChapterSubmit}
+          onSubmit={handleChapterSubmit}
           selectedSubject={selectedSubject}
-          onClose={addChapterDialog.onFalse}
+          initialValues={selectedChapter}
         />
       </CustomDialog>
 
@@ -407,35 +491,84 @@ const Subjects = (props: TabComponentType) => {
 
 export default Subjects;
 
+interface Document {
+  id: string;
+  name: string;
+  url: string;
+  file?: File;
+}
+
+interface ChapterFormValues {
+  chapterName: string;
+  content: string;
+  documents: Document[];
+}
+
 interface AddNewChapterProps {
-  onSubmit: (values: any) => void;
-  selectedSubject?: string;
-  onClose: () => void;
+  onSubmit: (values: ChapterFormValues) => void;
+  selectedSubject: string;
   isEdit?: boolean;
+  initialValues?: {
+    chapterName: string;
+    content: string;
+    documents?: Array<{
+      id: string;
+      name: string;
+      url: string;
+    }>;
+  } | null;
 }
 
 const AddNewChapter: React.FC<AddNewChapterProps> = ({
   onSubmit,
   selectedSubject,
-  onClose,
   isEdit = false,
+  initialValues = null,
 }: AddNewChapterProps) => {
+  const [documents, setDocuments] = useState<Document[]>(initialValues?.documents || []);
+  const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
+  const [editorContent, setEditorContent] = useState('');
+
   const validationSchema = Yup.object({
     chapterName: Yup.string().required('Chapter name is required'),
-    chapterDescription: Yup.string().required('Chapter description is required'),
+    content: Yup.string().required('Chapter description is required'),
   });
 
   const formik = useFormik({
     initialValues: {
-      chapterName: '',
-      chapterDescription: '',
+      chapterName: initialValues?.chapterName || '',
+      content: initialValues?.content || '',
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log('handle submit calls');
-      onSubmit(values);
+      onSubmit({
+        ...values,
+        documents,
+      });
     },
   });
+
+  useEffect(() => {
+    if (initialValues) {
+      setEditorContent(initialValues.content);
+      setDocuments(initialValues.documents || []);
+    }
+  }, [initialValues]);
+
+  const handleFileUpload = (files: File[]) => {
+    const newDocs: Document[] = files.map((file) => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      url: '',
+      file,
+    }));
+    setDocuments((prev) => [...prev, ...newDocs]);
+  };
+
+  const handleRemoveDocument = (docId: string) => {
+    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
@@ -452,18 +585,21 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Chapter Description"
-                name="chapterDescription"
-                value={formik.values.chapterDescription}
-                onChange={formik.handleChange}
-                size="small"
+              <Editor
+                value={editorContent}
+                onChange={(value) => {
+                  formik.setFieldValue('content', value);
+                }}
+                placeholder="Chapter Description"
+                sx={{ width: '100%', marginTop: '10px' }}
               />
             </Grid>
             <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Upload the chapter Material
+              </Typography>
               <UploadBox
-                onDrop={() => {}}
+                onDrop={handleFileUpload}
                 placeholder={
                   <Box
                     sx={{
@@ -486,10 +622,33 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 }}
               />
             </Grid>
+            {documents.length > 0 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Uploaded Documents
+                </Typography>
+                <List>
+                  {documents.map((doc, index) => (
+                    <ListItem
+                      key={doc.id}
+                      secondaryAction={
+                        <IconButton
+                          edge="end"
+                          onClick={() => handleRemoveDocument(doc.id as unknown as string)}
+                        >
+                          <Iconify icon="mdi:delete" />
+                        </IconButton>
+                      }
+                    >
+                      <ListItemText primary={doc.name} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            )}
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'} Save
           </Button>
@@ -503,18 +662,32 @@ interface ViewSubjectChapterProps {
   onClose: () => void;
   chapterData: any;
   onAddNewChapter: () => void;
+  onEditChapter: (chapter: any) => void;
 }
 
 const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
   onClose,
   chapterData,
   onAddNewChapter,
+  onEditChapter,
 }: ViewSubjectChapterProps) => {
-  const [division, setDivision] = useState<string>('');
+  console.log('chhapter data---', chapterData);
+  const [subjectProgress, setSubjectProgress] = useState<number>(0);
+  const [division, setDivision] = useState<string>('All');
   const [chapters, setChapters] = useState<any[]>([]); // State to hold chapter details
 
   useEffect(() => {
-    if (division) {
+    if (division === 'All') {
+      setSubjectProgress(chapterData[0]?.subjectProgress || 0);
+      const allChapters = chapterData
+        .flatMap((chapter: any) => chapter.chapters || [])
+        .filter(
+          (chapter: any, index: number, self: any[]) =>
+            index === self.findIndex((c: any) => c.chapterName === chapter.chapterName)
+        );
+
+      setChapters(allChapters);
+    } else {
       const selectedDivisionData = chapterData.find(
         (chapter: any) => chapter.divisionName === division
       );
@@ -525,10 +698,11 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-        <Box sx={{ display: 'flex', gap: 6 }}>
+        <Box sx={{ display: 'flex', gap: 6, flexGrow: 1 }}>
           <CustomSelect
             label="Division"
             options={[
+              { value: 'All', label: 'All' },
               { value: 'A', label: 'A' },
               { value: 'B', label: 'B' },
             ]}
@@ -545,6 +719,11 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
           >
             Add New Chapter
           </Button>
+          {division === 'All' && (
+            <Label variant="soft" color="success" marginTop={1}>
+              Subject Progress : {subjectProgress}% Completed
+            </Label>
+          )}
         </Box>
         <Box sx={{ mt: 3 }}>
           {chapters.length > 0 &&
@@ -556,16 +735,65 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
                   id={`panel${chapter.id}-header`}
                 >
                   <Box sx={{ flexGrow: 1 }}>
-                    <Typography>{chapter.chapterName}</Typography>
+                    <Typography variant="h6">{chapter.chapterName}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <Label variant="soft" color="success">
-                      {chapter.progress}% Completed
-                    </Label>
+                    {division !== 'All' && (
+                      <Label variant="soft" color="success">
+                        {chapter.progress}% Completed
+                      </Label>
+                    )}
+                    <ThreeDotsActions
+                      placement="right-top"
+                      onClickThreeDots={(e) => {
+                        e.stopPropagation();
+                      }}
+                      actions={({ popover }) => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditChapter(chapter);
+                            }}
+                          >
+                            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                            Edit Chapter
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Typography>{chapter.content}</Typography>
+                  {/* <Editor
+                    value={chapter.content}
+                    placeholder="Chapter Description"
+                    editable={false}
+                    sx={{ width: '100%', marginTop: '10px' }}
+                  />{' '} */}
+                  <Scrollbar sx={{ height: '150px' }}>
+                    <Box dangerouslySetInnerHTML={{ __html: chapter.content }} />
+                    {chapter.documents && chapter.documents.length > 0 && (
+                      <Box mt={2}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Attached Documents
+                        </Typography>
+                        <List>
+                          {chapter.documents.map((doc: any, index: any) => (
+                            <ListItem key={index}>
+                              <ListItemIcon>
+                                <Iconify icon="mdi:file-document-outline" />
+                              </ListItemIcon>
+                              <ListItemText primary={doc.name} />
+                              <IconButton href={doc.url} target="_blank">
+                                <Iconify icon="mdi:download" />
+                              </IconButton>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Scrollbar>
                 </AccordionDetails>
               </Accordion>
             ))}
