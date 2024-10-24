@@ -210,7 +210,7 @@ const RoutesAndSchedulesScreen = () => {
     </Box>
     <CustomizableTable data={tableData} columns={columns} />
     <CustomDialog
-      maxWidth="sm"
+      maxWidth="lg"
       open={dialog.value}
       handleClose={dialog.onFalse}
       title="Create New Route"
@@ -334,20 +334,32 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
               formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
           />
           {busStops.map(stop => (
-              <Box key={stop.stopId} sx={{ width: "100%", display: 'flex', gap: 2 }}>
+              <Box key={stop.stopId} sx={{ width: "100%", display: 'flex', gap: 2 , justifyContent:"center" , alignItems:"center", justifyItems:"center" }}>
                   <TextField
                       fullWidth
                       label={`Pickup Time For ${stop.stopName}`}
                       type="time"
-                      value={stop.pickupTime}
+                      value={stop.pickupTime || ''}
                       onChange={(e) => handleTimeChange(stop.stopId, 'pickupTime', e.target.value)}
+                      inputProps={{
+                        style: { 
+                            
+                            color: stop.pickupTime ? 'inherit' : 'transparent', // Hide when empty
+                        }
+                    }}
                   />
                   <TextField
+                  
                       fullWidth
                       label={`Dropoff Time For ${stop.stopName}`}
                       type="time"
-                      value={stop.dropoffTime}
+                      value={stop.dropoffTime || ''}
                       onChange={(e) => handleTimeChange(stop.stopId, 'dropoffTime', e.target.value)}
+                      inputProps={{
+                        style: { 
+                            color: stop.pickupTime ? 'inherit' : 'transparent', // Hide when empty
+                        }
+                    }}
                   />
                   <CustomSelect
                       multiple
@@ -360,7 +372,12 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
                       // @ts-ignore
                       value={stop.assignedStudents}  
                       // @ts-ignore
-                      onChange={(e) => handleStudentChange(stop.stopId, e)}  
+                      onChange={(e) => handleStudentChange(stop.stopId, e)} 
+                      inputProps={{
+                        style: { 
+                            height: "150px"
+                        }
+                    }} 
                   />
               </Box>
           ))}
@@ -556,10 +573,10 @@ const CreateRoutesForm: React.FC = () => {
           vehicle={vehicle} 
           driver={driver} 
       />,
-      <Box>
-          <Button variant="contained" onClick={handleSubmit}>Add Schedule</Button>
+     
+        
           <SetSchedule scheduleData={scheduleData} />
-      </Box>,
+     
   ];
 
   return (

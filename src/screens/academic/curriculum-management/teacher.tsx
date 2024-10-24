@@ -53,19 +53,12 @@ const Teacher = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
         <Typography variant="h4">Subject-wise Teacher Assignment Table</Typography>
 
-        <CustomSelect
-          label="Class"
-          name="class"
-          options={[]}
-          formControlProps={{ sx: { width: '200px' } }}
-          value=""
-          onChange={(value) => {}}
-        />
+      
       </Box>
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
-        <CustomSelect
-          label="Grade"
-          name="grade"
+      <CustomSelect
+          label="Class"
+          name="class"
           options={[]}
           formControlProps={{ sx: { width: '200px' } }}
           value=""

@@ -5,6 +5,8 @@ import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -52,7 +54,28 @@ const CarriculumListDashboardComponent = () => {
           { id: 'gradelevel', label: 'Grade Level' },
           { id: 'subject', label: 'Subjects' },
           { id: 'lastupdated', label: 'Last Updated' },
-          { id: 'status', label: 'Status' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Archived'
+                      ? 'warning'
+                      : value === 'Pending'
+                        ? 'error'
+                        : value === 'Active'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',
@@ -67,6 +90,7 @@ const CarriculumListDashboardComponent = () => {
                           popover.onClose();
                         }}
                       >
+                         <Iconify icon="solar:pen-bold" />
                         Edit
                       </MenuItem>
                       <MenuItem
@@ -75,6 +99,7 @@ const CarriculumListDashboardComponent = () => {
                           popover.onClose();
                         }}
                       >
+                           <Iconify icon="solar:pen-bold" />
                         Duplicate
                       </MenuItem>
                       <MenuItem
@@ -83,6 +108,7 @@ const CarriculumListDashboardComponent = () => {
                           popover.onClose();
                         }}
                       >
+                          <Iconify icon="solar:pen-bold" />
                         Archived
                       </MenuItem>
                     </MenuList>

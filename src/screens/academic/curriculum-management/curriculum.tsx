@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, MenuItem, MenuList, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, MenuItem, MenuList, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -21,11 +21,11 @@ const Curriculum = () => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-        <Typography variant="h4">Curriculum Management</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mt: 1 }}>
+        {/* <Typography variant="h4">Curriculum Management</Typography> */}
 
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Add Subject
+        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+        New Curriculum
         </Button>
       </Box>
       <CustomizableTable
@@ -81,7 +81,7 @@ const Curriculum = () => {
           },
         ]}
       />
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Subject">
+      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Create New Curriculum">
         <CurriculumForm />
       </CustomDialog>
     </Box>
@@ -115,6 +115,7 @@ const CurriculumForm = () => {
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ background: 'background.neutral', p: 3 }}>
         <Stack spacing={3}>
+          <Box display="flex" flexDirection="row" gap={2}>
           <CustomSelect
             label="Grade"
             name="grade"
@@ -139,6 +140,35 @@ const CurriculumForm = () => {
             value={formik.values.teacher}
             onChange={(value) => formik.setFieldValue('teacher', value)}
           />
+          </Box>
+          {/* <UploadBox
+                onDrop={() => {}}
+                placeholder={
+                  <Box
+                    sx={{
+                      gap: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.disabled',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">Drag Your Document</Typography>
+                  </Box>
+                }
+                sx={{
+                  py: 2.5,
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+              /> */}
+           
+          
+          
+          <Upload />
+          <Box display="flex" flexDirection="row" gap={2}>
           <DatePicker
             label="Start Date"
             name="startDate"
@@ -155,7 +185,7 @@ const CurriculumForm = () => {
             format="DD-MM-YYYY"
             slotProps={{ textField: { fullWidth: true } }}
           />
-          <Upload />
+          </Box>
         </Stack>
       </Scrollbar>
       <DialogActions>

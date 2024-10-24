@@ -2,6 +2,7 @@ import React from 'react';
 
 import {
   Box,
+  Grid,
   Stack,
   Button,
   Switch,
@@ -15,6 +16,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -28,11 +30,10 @@ const Settings = () => {
   const gradeScalingModal = useBoolean();
   return (
     <Box>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>General Settings</Typography>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pl: '20px', pb: '20px' }}>
+      <Typography variant='h6' component="span">
         Curriculum Templates
       </Typography>
-      <Box sx={{ pl: '20px' }}>
+      <Box  sx={{ pl: '20px' , pt: "15px" }}>
         <CustomSelect
           label="Predefined templates"
           options={[]}
@@ -40,20 +41,22 @@ const Settings = () => {
           onChange={() => {}}
           formControlProps={{ sx: { minWidth: 220 } }}
         />
-      </Box>
-
-      <Box sx={{ pl: '90px', pt: '10px', pb: '20px' }}>
-        <Button variant="contained" onClick={templateDialog.onTrue}>
+        <Box sx={{ pl: '90px', pt: '15px', pb: '20px' }}>
+        <Button size='small' variant="contained" onClick={templateDialog.onTrue}>
           Add New Template
         </Button>
       </Box>
+      </Box>
 
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
+      
+
+     
+
+      <Box sx={{ pr: '40px', pt: '10px', display: 'flex', justifyContent: 'space-between' }}>
+      <Typography variant='h6' component="span" >
         Subject Management
       </Typography>
-
-      <Box sx={{ pr: '40px', pt: '10px', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="contained" onClick={() => {}}>
+        <Button size="small" variant="contained" onClick={() => {}}>
           Add New Subject
         </Button>
       </Box>
@@ -64,7 +67,28 @@ const Settings = () => {
           { id: 'gradelevel', label: 'Grade Level' },
           { id: 'subject', label: 'Subjects' },
           { id: 'lastupdated', label: 'Last Updated' },
-          { id: 'status', label: 'Status' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Archived'
+                      ? 'warning'
+                      : value === 'Pending'
+                        ? 'error'
+                        : value === 'Active'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',
@@ -141,7 +165,7 @@ const Settings = () => {
           },
         ]}
       />
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px', pt: '20px' }}>
+      {/* <Typography variant='h6' component="span" >
         Learning Goals
       </Typography>
       <Box sx={{ pl: '20px', pb: '20px' }}>
@@ -162,8 +186,8 @@ const Settings = () => {
           formControlProps={{ sx: { minWidth: 220 } }}
         />
       </Box>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>Notification Section</Typography>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pl: '20px', pb: '20px' }}>
+      <Typography variant='h6' component="span">Notification Section</Typography>
+      <Typography variant='h6' component="span">
         Set Reminders
       </Typography>
 
@@ -173,16 +197,16 @@ const Settings = () => {
           multiline
           rows={4}
           fullWidth
-          placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+          placeholder="explaining when notifications will be triggered"
           name="description"
-          label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+          label="explaining when notifications will be triggered"
           // value={formik.values.description}
           // onChange={formik.handleChange}
           size="small"
         />
       </Box>
       <FormControlLabel control={<Switch />} label="Notify teachers when curriculum is updated" />
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
+      <Typography variant='h6' component="span">
         Permission Connection
       </Typography>
       <Box sx={{ pl: '20px', pb: '20px' }}>
@@ -202,7 +226,82 @@ const Settings = () => {
           onChange={() => {}}
           formControlProps={{ sx: { minWidth: 220 } }}
         />
+      </Box> */}
+        <Box sx={{ paddingTop: '15px', paddingBottom: '15px'  }}>
+      <Typography variant='h6' component="span">
+        Learning Goals
+      </Typography>
+      
+      <Grid container spacing={2} sx={{ paddingBottom: '20px' , paddingTop: '15px'  }}>
+        <Grid item xs={12} sm={6}>
+          <CustomSelect
+            label="Subject Name"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { minWidth: '100%' } }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomSelect
+            label="Learning Goal"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { minWidth: '100%' } }}
+          />
+        </Grid>
+      </Grid>
+
+      
+      <Typography sx={{pt:"15px"}} variant='h6' component="span">
+        Set Reminders
+      </Typography>
+
+      
+      <Box sx={{ paddingBottom: '20px', paddingTop: '10px', width: '100%' }}>
+        <TextField
+          multiline
+          rows={4}
+          fullWidth
+          placeholder="Explaining when notifications will be triggered"
+          name="description"
+          label="Explaining when notifications will be triggered"
+          size="small"
+        />
       </Box>
+<Box display="flex" flexDirection="row" gap={3} pb="10px">
+<FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
+<FormControlLabel control={<Switch />} label="Notify teachers when curriculum is updated" />
+
+</Box>
+      
+    
+<Typography  variant='h6' component="span">
+        Permission Connection
+      </Typography>
+      <Grid container spacing={2} sx={{ paddingBottom: '20px' , paddingTop: '15px' }}>
+      
+        <Grid item xs={12} sm={6}>
+          <CustomSelect
+            label="Edit Curriculum"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { minWidth: '100%' } }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomSelect
+            label="Approved Curriculum Update"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { minWidth: '100%' } }}
+          />
+        </Grid>
+      </Grid>
+    </Box>
       <CustomDialog
         title="Add New Template"
         open={templateDialog.value}
