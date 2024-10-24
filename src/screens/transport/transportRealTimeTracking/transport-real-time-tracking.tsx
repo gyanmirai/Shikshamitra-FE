@@ -1,5 +1,7 @@
 'use client'
 
+import "leaflet/dist/leaflet.css";
+
 import type { LatLngExpression } from 'leaflet';
 
 import React from 'react';
