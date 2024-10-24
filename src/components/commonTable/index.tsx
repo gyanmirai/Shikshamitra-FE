@@ -37,7 +37,7 @@ interface TableProps<T> {
   handleSearch?: (value: Record<string, string | number | keyof T | null>) => void;
   isSearchable?: boolean;
   isLoading?: boolean;
-  isPagination?:boolean;
+  isPagination?: boolean;
 }
 
 interface TableState<T> {
@@ -63,7 +63,6 @@ function DataTable<T>({
   isSearchable = false,
   isLoading = false,
   isPagination = true,
-  
 }: TableProps<T>) {
   const [state, setState] = useState<TableState<T>>({
     totalItems,
@@ -189,23 +188,25 @@ function DataTable<T>({
           </TableBody>
         </Table>
       </TableContainer>
-      {isPagination && <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={state.totalItems}
-        rowsPerPage={state.rowsPerPage}
-        page={state.page}
-        onPageChange={onChangePage}
-        onRowsPerPageChange={onChangeRowsPerPage}
-        sx={{
-          '& *': { fontSize: '12px !important' },
-          '& svg': { fontSize: '18px !important' },
-          '& .MuiToolbar-root': {
-            minHeight: 'unset',
-            height: 'auto',
-          },
-        }}
-      />}
+      {isPagination && (
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={state.totalItems}
+          rowsPerPage={state.rowsPerPage}
+          page={state.page}
+          onPageChange={onChangePage}
+          onRowsPerPageChange={onChangeRowsPerPage}
+          sx={{
+            '& *': { fontSize: '12px !important' },
+            '& svg': { fontSize: '18px !important' },
+            '& .MuiToolbar-root': {
+              minHeight: 'unset',
+              height: 'auto',
+            },
+          }}
+        />
+      )}
     </Paper>
   );
 }

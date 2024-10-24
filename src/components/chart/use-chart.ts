@@ -207,7 +207,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
       fontWeight: 500,
       fontSize: '13px',
       horizontalAlign: 'right',
-      markers: { radius: 12 },
+      markers: {},
       labels: {
         colors: theme.vars.palette.text.primary,
       },

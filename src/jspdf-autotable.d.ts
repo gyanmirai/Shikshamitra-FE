@@ -1,5 +1,5 @@
 declare module 'jspdf-autotable' {
-  import { jsPDF } from 'jspdf';
+  import type { jsPDF } from 'jspdf';
 
   interface Column {
     header: string;

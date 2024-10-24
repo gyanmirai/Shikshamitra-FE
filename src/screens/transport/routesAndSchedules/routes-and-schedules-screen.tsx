@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
 import * as yup from 'yup';
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
 import { Box, Paper, Table, Button, MenuItem, MenuList, TableRow, TableBody, TableCell, TableHead, TextField, Typography, TableContainer } from '@mui/material';
 
@@ -36,9 +36,9 @@ interface Route {
 
 const routesData: Route[] = [
   {
-    routeNumber: "R101",
-    startPoint: "Main Campus",
-    endPoint: "Downtown Station",
+    routeNumber: 'R101',
+    startPoint: 'Main Campus',
+    endPoint: 'Downtown Station',
     totalStops: 3,
     assignedDrivers: "Jane Smith",
     assignedVehicles: "Bus A",
@@ -64,9 +64,9 @@ const routesData: Route[] = [
     ]
   },
   {
-    routeNumber: "R102",
-    startPoint: "North Park",
-    endPoint: "South City",
+    routeNumber: 'R102',
+    startPoint: 'North Park',
+    endPoint: 'South City',
     totalStops: 2,
     assignedDrivers: "Emily Davis",
     assignedVehicles: "Bus C",
@@ -117,7 +117,7 @@ const columns = [
                   // handleDelete(row)
                 }}
               >
-                 <Iconify icon="solar:pen-bold" />
+                <Iconify icon="solar:pen-bold" />
                 Assign Students/Staff
               </MenuItem>
               <MenuItem
@@ -133,7 +133,7 @@ const columns = [
                   // handleDelete(row)
                 }}
               >
-               <Iconify icon="mingcute:notification-fill" />
+                <Iconify icon="mingcute:notification-fill" />
                 Notify
               </MenuItem>
             </MenuList>
@@ -142,11 +142,9 @@ const columns = [
       );
     },
   },
-]
-
+];
 
 const RoutesAndSchedulesScreen = () => {
-
   const dialog = useBoolean();
   const [selectedExpense, setSelectedExpense] = useState(routesData);
   const [isEdit, setIsEdit] = useState(false);
@@ -155,16 +153,14 @@ const RoutesAndSchedulesScreen = () => {
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
-  }
+  };
 
-  useEffect(() => { }, [selectedExpense, isEdit]);
+  useEffect(() => {}, [selectedExpense, isEdit]);
 
   const handleSave = (dataFromDialog: any) => {
     // const { expenseCategory, expenseAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
-
     // if (dataFromDialog) {
     //     const existingEntryIndex = expenseData.findIndex(val => id === val.id);
-
     //     const newExpenseEntry = {
     //         expenseCategory,
     //         expenseAmount,
@@ -174,18 +170,14 @@ const RoutesAndSchedulesScreen = () => {
     //         id,
     //         action: isEdit ? 'edit' : 'add',
     //     };
-
     //     const updatedData = [...expenseData];
-
     //     if (isEdit && existingEntryIndex !== -1) {
     //         updatedData[existingEntryIndex] = newExpenseEntry;
     //     } else {
     //         updatedData.push(newExpenseEntry);
     //     }
-
     //     setTableData(updatedData);
     // }
-
     // closeDialog();
     // console.log('Updated Data:', dataFromDialog);
   };
@@ -195,7 +187,7 @@ const RoutesAndSchedulesScreen = () => {
     //     (val.id) !== (item.id)
     // );
     // setTableData([...expenseData]);
-  }
+  };
 
   return (<>
     <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
@@ -223,8 +215,6 @@ const RoutesAndSchedulesScreen = () => {
 
 export default RoutesAndSchedulesScreen;
 
-
-
 interface RouteDetails {
   routeName: string;
   startPoint: string;
@@ -247,8 +237,7 @@ interface EnterRouteDetailsProps {
 }
 
 const EnterRouteDetails: React.FC<EnterRouteDetailsProps> = ({ onChange, routeDetails }) => (
- 
- <Box sx={{ display: 'flex', flexDirection: "column", gap: 2, mb: 4 }}>
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
     <TextField
       name="routeName"
       label="Route Name"
@@ -387,39 +376,43 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
 
 
 interface AssignVehicleAndDriverProps {
-  onChange: (e: any, name:string) => void; 
+  onChange: (e: any, name: string) => void;
   vehicle: string;
   driver: string;
 }
 
-const AssignVehicleAndDriver: React.FC<AssignVehicleAndDriverProps> = ({ onChange, vehicle, driver }) => (
+const AssignVehicleAndDriver: React.FC<AssignVehicleAndDriverProps> = ({
+  onChange,
+  vehicle,
+  driver,
+}) => (
   <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
     <CustomSelect
       options={[
-        { value: "bus1", label: "Bus 1 - 30 Seater" },
-        { value: "bus2", label: "Bus 2 - 40 Seater" },
-        { value: "van1", label: "Van 1 - 10 Seater" },
-        { value: "bus3", label: "Bus 3 - 50 Seater" },
+        { value: 'bus1', label: 'Bus 1 - 30 Seater' },
+        { value: 'bus2', label: 'Bus 2 - 40 Seater' },
+        { value: 'van1', label: 'Van 1 - 10 Seater' },
+        { value: 'bus3', label: 'Bus 3 - 50 Seater' },
       ]} // Replace with actual vehicle options
       label="Assign Vehicle"
       name="vehicle"
       value={vehicle}
       // @ts-ignore
-      onChange={(value: string) => onChange(value, "vehicle")}
+      onChange={(value: string) => onChange(value, 'vehicle')}
       formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
     <CustomSelect
       options={[
-        { value: "driver1", label: "John Doe - License No: ABC123" },
-        { value: "driver2", label: "Jane Smith - License No: XYZ456" },
-        { value: "driver3", label: "Mike Johnson - License No: DEF789" },
-        { value: "driver4", label: "Emily Davis - License No: GHI012" },
+        { value: 'driver1', label: 'John Doe - License No: ABC123' },
+        { value: 'driver2', label: 'Jane Smith - License No: XYZ456' },
+        { value: 'driver3', label: 'Mike Johnson - License No: DEF789' },
+        { value: 'driver4', label: 'Emily Davis - License No: GHI012' },
       ]} // Replace with actual driver options
       label="Assign Driver"
       name="driver"
       value={driver}
       // @ts-ignore
-      onChange={(value: string) => onChange(value, "driver")}
+      onChange={(value: string) => onChange(value, 'driver')}
       formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
     />
   </Box>
@@ -431,7 +424,7 @@ interface SetScheduleProps {
 
 const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData }) => {
   const columnsTable = [
-    { key: "busStop", label: 'Bus Stop' },
+    { key: 'busStop', label: 'Bus Stop' },
     { key: 'pickupTime', label: 'Pickup Time' },
     { key: 'dropoffTime', label: 'Dropoff Time' },
     // { key: 'charges', label: 'Charges' }

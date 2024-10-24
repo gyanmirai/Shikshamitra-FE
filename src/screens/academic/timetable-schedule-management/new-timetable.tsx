@@ -1,153 +1,182 @@
-import * as yup from 'yup';
-import React, { useState } from 'react';
+import type { Division, Standards } from 'src/types/school';
+import type { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
 
-import { Box, Button, Switch, FormControlLabel } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+
+import { Box, Card, Button, Switch, Typography, FormControlLabel } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { uuidv4 } from 'src/utils/uuidv4';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
+import CustomSelect from 'src/components/custom-select';
+
+// eslint-disable-next-line import/no-cycle
+import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable';
+
+// eslint-disable-next-line react-hooks/rules-of-hooks
+export const classRoomData = [
+  { id: '1', name: '101' },
+  { id: '2', name: '102' },
+  { id: '3', name: '103' },
+];
 const NewTimetable = () => {
+  const [classes, setClasses] = useState<string>('');
+  const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
+  const [division, setDivision] = useState<any>();
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const [classRoomNumber, setClassRoomNumber] = useState<string>('');
+  const [timetableEvents, setTimetableEvents] = useState<CalendarEvent[]>([]);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
+  const handleCreateTimetable = () => {
+    setShowTimeTable(true);
+  };
+
+  const predefinedBreaks = useMemo<CalendarEvent[]>(
+    () => [
+      {
+        id: uuidv4(),
+        startTime: '12:00',
+        endTime: '12:30',
+        title: 'Lunch Break',
+        textColor: '#FFD700',
+        daysOfWeek: [1, 2, 3, 4, 5, 6], // Days when the break occurs
+      },
+      {
+        id: uuidv4(),
+        startTime: '13:00:00',
+        endTime: '13:15:00',
+        title: 'Short Break',
+        textColor: '#FF4500',
+        daysOfWeek: [1, 2, 3, 4, 5, 6],
+      },
+    ],
+    []
+  );
+
+  const handleEventsChange = (events: CalendarEvent[]) => {
+    console.log('Updated events from CalendarTimeTable:', events);
+    setTimetableEvents(events);
+  };
+
   const dialog = useBoolean();
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="contained" onClick={dialog.onTrue}>
-          New Timetable
-        </Button>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <CustomSelect
+          label="Class"
+          options={classData?.items || []}
+          value={classes}
+          isLoading={isLoading}
+          labelKey="name"
+          valueKey="id"
+          onChange={(val) => {
+            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+            setClasses(val as string);
+            setDivisionOptions(selectedClass?.divisions);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        <CustomSelect
+          label="Division"
+          disabled={!classes}
+          labelKey="name"
+          valueKey="id"
+          options={divisionOptions}
+          value={division}
+          onChange={(val) => {
+            setDivision(val as string);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        <CustomSelect
+          label="Classroom"
+          options={classRoomData}
+          value={classRoomNumber}
+          isSearch
+          labelKey="name"
+          valueKey="name"
+          disabled={!classes || !division}
+          onChange={(val) => {
+            setClassRoomNumber(val as string);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        <Box display="flex" justifyContent="flex-end" alignItems="center">
+          <Button
+            variant="contained"
+            onClick={handleCreateTimetable}
+            disabled={!classes || !division || !classRoomNumber} // Disable if class or division not selected
+          >
+            Create Timetable
+          </Button>
+        </Box>
       </Box>
-      <CustomizableTable
-        columns={[
-          { id: 'subjectName', label: 'Subject Name' },
-          { id: 'assignTeacher', label: 'Assign Teacher' },
-          { id: 'roomAssign', label: 'Room Assign' },
-        ]}
-        data={[
-          { subjectName: 'Math', assignTeacher: 'Mr. Smith', roomAssign: 'Room 101' },
-          { subjectName: 'English', assignTeacher: 'Ms. Johnson', roomAssign: 'Room 102' },
-          { subjectName: 'Science', assignTeacher: 'Dr. Brown', roomAssign: 'Room 103' },
-          { subjectName: 'History', assignTeacher: 'Mr. Davis', roomAssign: 'Room 104' },
-          { subjectName: 'Geography', assignTeacher: 'Ms. Wilson', roomAssign: 'Room 105' },
-        ]}
-      />
-      <CustomDialog
-        maxWidth="lg"
-        open={dialog.value}
-        handleClose={dialog.onFalse}
-        title="New Timetable"
-      >
-        <TimetableForm />
-      </CustomDialog>
+      {showTimeTable && (
+        <>
+          <CalendarTimeTable
+            grade={1}
+            division="A"
+            duration="00:15:00"
+            classRoomNumber={classRoomNumber}
+            schoolStartTime="09:00"
+            schoolEndTime="15:45"
+            onEventsChange={handleEventsChange}
+            breakEvents={predefinedBreaks} // Pass break events to CalendarTimeTable
+          />
+          <Card sx={{ p: 2, mb: 5 }}>
+            <Box display="flex" gap={6}>
+              <Box>
+                <CustomSelect
+                  options={[]}
+                  label="list of available rooms"
+                  name="class"
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+                />
+                &nbsp;
+                <FormControlLabel control={<Switch />} label="Auto Assign" />
+              </Box>
+              <Box sx={{ display: 'flex' }}>
+                <Switch defaultChecked />
+                <Typography>Weekly</Typography>
+                <Switch />
+                <Typography>Monthly</Typography>
+              </Box>
+              <Box>
+                <CustomSelect
+                  options={[]}
+                  label="Frequency Selection"
+                  name="class"
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { maxWidth: 350, width: '100%' } }}
+                />
+                &nbsp;
+                <FormControlLabel control={<Switch />} label="Weekly" />
+              </Box>
+            </Box>
+          </Card>
+          <Box display="flex" gap={2}>
+            <Button variant="contained" onClick={() => {}} color="warning">
+              Save Draft
+            </Button>
+            <Button variant="contained" onClick={() => {}}>
+              Publish
+            </Button>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
 
 export default NewTimetable;
-
-const CreateNewTimetable = () => (
-  <CustomSelect
-    options={[]}
-    label="Select Class"
-    name="class"
-    value=""
-    onChange={() => {}}
-    formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-  />
-);
-
-const AddSubject = () => (
-  <CustomSelect
-    options={[]}
-    label="Select Subject"
-    name="class"
-    value=""
-    onChange={() => {}}
-    formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-  />
-);
-
-const AssignTeacher = () => (
-  <CustomSelect
-    options={[]}
-    label="assign teacher"
-    name="class"
-    value=""
-    onChange={() => {}}
-    formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-  />
-);
-
-const RoomAllocation = () => (
-  <Box>
-    <CustomSelect
-      options={[]}
-      label="list of available rooms"
-      name="class"
-      value=""
-      onChange={() => {}}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
-    &nbsp;
-    <FormControlLabel control={<Switch />} label="Auto Assign" />
-  </Box>
-);
-
-const SetRecurrence = () => (
-  <Box>
-    <CustomSelect
-      options={[]}
-      label="Frequency Selection"
-      name="class"
-      value=""
-      onChange={() => {}}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
-    &nbsp;
-    <FormControlLabel control={<Switch />} label="Weekly" />
-  </Box>
-);
-
-const allTimetableSteps = [
-  CreateNewTimetable,
-  AddSubject,
-  AssignTeacher,
-  RoomAllocation,
-  SetRecurrence,
-];
-
-const TimetableForm = () => {
-  const [activeStep, setActiveStep] = useState(0);
-  return (
-    <CustomStepperWithFormik
-      initialValues={{}}
-      steps={[
-        'Create New Timetable',
-        'Add Subject',
-        'Assign Teacher',
-        'Room Allocation',
-        'Set Recurrence',
-      ]}
-      activeStep={activeStep}
-      handleBack={() => {
-        setActiveStep(activeStep - 1);
-      }}
-      // validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
-      validationSchema={yup.object().shape({})}
-      handleNext={(isLastStep, _values) => {
-        if (isLastStep) return;
-        setActiveStep(activeStep + 1);
-      }}
-      renderItem={({ formik, activeStep: step }: any) => {
-        const StepComponent = allTimetableSteps[step];
-        return (
-          <Box p={2}>
-            <StepComponent />
-          </Box>
-        );
-      }}
-    />
-  );
-};

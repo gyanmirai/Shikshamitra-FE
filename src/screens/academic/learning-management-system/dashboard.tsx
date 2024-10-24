@@ -2,14 +2,25 @@
 
 import React from 'react';
 
-import { Box, Card, Grid, MenuItem, MenuList, Typography, ListItemText } from '@mui/material';
+import {
+  Box,
+  Card,
+  Grid,
+  Button,
+  MenuItem,
+  MenuList,
+  Typography,
+  ListItemText,
+  CircularProgress,
+} from '@mui/material';
 
+import { varAlpha } from 'src/theme/styles';
 import { AnalyticsConversionRates } from 'src/screens/student/enrollment/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import CircularProgressLabel from 'src/components/circular-progress-with-label/circularProgressLabel';
 
 import { CalendarView } from 'src/sections/calendar/view/calendar-view';
 
@@ -24,6 +35,7 @@ const Dashboard = () => (
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
           }}
         >
           <Typography variant="h6" gutterBottom>
@@ -32,12 +44,23 @@ const Dashboard = () => (
           <Typography variant="h3" gutterBottom>
             • 06
           </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Math Course
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Science Course
-          </Typography>
+          <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: 'none',
+                padding: 0,
+              }}
+            >
+              {['Math Course', 'Science Course'].map((exam, index) => (
+                <Box component="li" key={index} sx={{ mb: 1 }}>
+                  <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                    {exam}
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
         </Card>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -48,17 +71,29 @@ const Dashboard = () => (
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
           }}
         >
           <Typography variant="h6" gutterBottom>
             Ongoing Assignments
           </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Math Assignment
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Math Homework 1
-          </Typography>
+          <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: 'none',
+                padding: 0,
+              }}
+            >
+              {['Math Assignement', 'Science Assignement'].map((exam, index) => (
+                <Box component="li" key={index} sx={{ mb: 1 }}>
+                  <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                    {exam}
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
         </Card>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -69,17 +104,29 @@ const Dashboard = () => (
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
           }}
         >
           <Typography variant="h6" gutterBottom>
             Upcoming Quizzes
           </Typography>
-          <Typography variant="body1" gutterBottom>
-            • General Quiz-10-10-2024
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            • General Quiz-12-10-2024
-          </Typography>
+          <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: 'none',
+                padding: 0,
+              }}
+            >
+              {['General Quiz-10-10-2024', 'General Quiz-12-10-2024'].map((exam, index) => (
+                <Box component="li" key={index} sx={{ mb: 1 }}>
+                  <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                    {exam}
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
         </Card>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -90,20 +137,33 @@ const Dashboard = () => (
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
           }}
         >
           <Typography variant="h6" gutterBottom>
             Recent Activity Feed Section
           </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Science newly created courses - yesterday
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Math Assignments submitted - 2 hours ago
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            • Math Assignments submitted - 2 hours ago
-          </Typography>
+          <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: 'none',
+                padding: 0,
+              }}
+            >
+              {[
+                'Science newly created courses - yesterday',
+                'Math Assignments submitted - 2 hours ago',
+                'Math Assignments submitted - 2 hours ago',
+              ].map((exam, index) => (
+                <Box component="li" key={index} sx={{ mb: 1 }}>
+                  <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                    {exam}
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </Scrollbar>
         </Card>
       </Grid>
     </Grid>
@@ -118,7 +178,27 @@ const Dashboard = () => (
             id: 'progress',
             label: 'Progress',
             render(value, row) {
-              return <CircularProgressLabel value={value} />;
+              return (
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress variant="determinate" value={value} />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+                      {value}%
+                    </Typography>
+                  </Box>
+                </Box>
+              );
             },
           },
           {

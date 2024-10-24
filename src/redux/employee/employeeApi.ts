@@ -7,7 +7,7 @@ export const employeeApi = createApi({
   baseQuery: axiosBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   }),
-  tagTypes: ['Employee'],
+  tagTypes: ['Employee', 'Attendance'],
   endpoints: (builder) => ({
     getEmployee: builder.query({
       query: () => ({ url: '/app/employee', redirect: 'follow' }),
@@ -48,6 +48,20 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    getEmployeeAttendanceByDate: builder.query({
+      query: (date) => ({
+        url: `/app/employee-employee-attendance/employees-by-date?date=${date}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Attendance'],
+    }),
+    getAttendanceByEmployeeId: builder.query({
+      query: ({ employeeId, month }: { employeeId: string; month: string }) => ({
+        url: `/app/employee-employee-attendance/employee-attendance-summary?month=${month}&${employeeId}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Attendance'],
+    }),
   }),
 });
 
@@ -60,4 +74,8 @@ export const {
   useGetEmployeeQuery,
   useUpdateEmployeeMutation,
   useAddAccessControlMutation,
+  useGetAttendanceByEmployeeIdQuery,
+  useGetEmployeeAttendanceByDateQuery,
+  useLazyGetEmployeeAttendanceByDateQuery,
+  useLazyGetAttendanceByEmployeeIdQuery,
 } = employeeApi;

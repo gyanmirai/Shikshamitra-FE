@@ -63,7 +63,7 @@
 //                             onChange={handleSliderChange(index)}
 //                             aria-labelledby={`continuous-slider-${index}`}
 //                         />
-                       
+
 //                     </ComponentBlock>
 //                      <Box display="flex" justifyContent="flex-end" alignItems="flex-end" pr="15px">
 //                      <Typography

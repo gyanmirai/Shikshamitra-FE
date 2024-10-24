@@ -94,3 +94,61 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
     </Card>
   );
 }
+
+export function AppCurrentDownload2({ title, subheader, chart, ...other }: Props) {
+  const theme = useTheme();
+
+  const chartColors = chart.colors ?? [
+    theme.palette.primary.darker,
+    theme.palette.primary.light,
+    theme.palette.primary.dark,
+    theme.palette.primary.lighter,
+  ];
+
+  const chartSeries = chart.series.map((item) => item.value);
+
+  const chartOptions = useChart({
+    chart: { sparkline: { enabled: true } },
+    colors: chartColors,
+    labels: chart.series.map((item) => item.label),
+    stroke: { width: 0 },
+    tooltip: {
+      y: {
+        formatter: (value: number) => fNumber(value),
+        title: { formatter: (seriesName: string) => `${seriesName}` },
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '72%',
+          labels: {
+            value: { formatter: (value: number | string) => fNumber(value) },
+            total: {
+              formatter: (w: {
+                globals: {
+                  seriesTotals: number[];
+                };
+              }) => {
+                const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                return fNumber(sum);
+              },
+            },
+          },
+        },
+      },
+    },
+    ...chart.options,
+  });
+
+  return (
+    <Chart
+      type="donut"
+      series={chartSeries}
+      options={chartOptions}
+      width={{ xs: 100, xl: 120 }}
+      height={{ xs: 100, xl: 120 }}
+      sx={{ my: 6, mx: 'auto' }}
+    />
+  );
+}

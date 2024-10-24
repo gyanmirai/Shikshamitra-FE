@@ -11,53 +11,57 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 
 interface TransportAddNewMaintenanceDialogProps {
-    dialogValue: boolean;
-    data: any;
-    onSave: (values: any) => void;
-    onClose: () => void;
-    isEdit: boolean;
-    allData: any;
+  dialogValue: boolean;
+  data: any;
+  onSave: (values: any) => void;
+  onClose: () => void;
+  isEdit: boolean;
+  allData: any;
 }
 
 interface FormikValue {
-    dateOfMaintenance: any;
-    serviceDetails: string;
-    nextScheduleMaintenance: any;
-    id: number;
+  dateOfMaintenance: any;
+  serviceDetails: string;
+  nextScheduleMaintenance: any;
+  id: number;
 }
 
 const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps> = ({
-    data,
-    allData,
-    dialogValue,
-    isEdit,
-    onSave,
-    onClose,
+  data,
+  allData,
+  dialogValue,
+  isEdit,
+  onSave,
+  onClose,
 }) => {
-    const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
-    const formik = useFormik<FormikValue>({
-        initialValues: {
-            dateOfMaintenance: isEdit ? dayjs(data.maintenanceDate, 'DD-MM-YYYY') ?? null : null,
-            nextScheduleMaintenance: isEdit ? dayjs(data.nextScheduledMaintenance, 'DD-MM-YYYY') ?? null : null,
-            serviceDetails: isEdit ? data.serviceDetails ?? '' : '',
-            id: isEdit ? data.id ?? Math.floor(Math.random() * 1000000000) : Math.floor(Math.random() * 1000000000),
-        },
-        onSubmit: (values) => {
-            const existingEntryIndex = allData.findIndex((val: any) => val.id === values.id);
-            if (!isEdit) {
-                if (existingEntryIndex === -1) {
-                    setShowExistingEntryMessage(false);
-                    onSave(values);
-                } else {
-                    setShowExistingEntryMessage(true);
-                }
-            } else {
-                onSave(values);
-            }
-            console.log('Form Submitted type', values);
-        },
-    });
+  const formik = useFormik<FormikValue>({
+    initialValues: {
+      dateOfMaintenance: isEdit ? dayjs(data.maintenanceDate, 'DD-MM-YYYY') ?? null : null,
+      nextScheduleMaintenance: isEdit
+        ? dayjs(data.nextScheduledMaintenance, 'DD-MM-YYYY') ?? null
+        : null,
+      serviceDetails: isEdit ? data.serviceDetails ?? '' : '',
+      id: isEdit
+        ? data.id ?? Math.floor(Math.random() * 1000000000)
+        : Math.floor(Math.random() * 1000000000),
+    },
+    onSubmit: (values) => {
+      const existingEntryIndex = allData.findIndex((val: any) => val.id === values.id);
+      if (!isEdit) {
+        if (existingEntryIndex === -1) {
+          setShowExistingEntryMessage(false);
+          onSave(values);
+        } else {
+          setShowExistingEntryMessage(true);
+        }
+      } else {
+        onSave(values);
+      }
+      console.log('Form Submitted type', values);
+    },
+  });
 
     return (
         <CustomDialog

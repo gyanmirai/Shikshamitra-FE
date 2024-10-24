@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import Reports from './reports';
 import NewTimetable from './new-timetable';
 import RoomAllocation from './room-allocation';
 import TeacherManagement from './teacher-management';
@@ -40,6 +41,7 @@ const TABS = [
     component: () => <TeacherManagement />,
   },
   { value: 'roomAllocation', label: 'Room Allocation', component: () => <RoomAllocation /> },
+  { value: 'reports', label: 'Reports', component: () => <Reports /> },
 
   { value: 'settings', label: 'Settings', component: () => <TimeScheduleManagementsetting /> },
 ];
