@@ -4,6 +4,7 @@ import { Box, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Label } from 'src/components/label/label';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -12,12 +13,13 @@ import FinanceStudentUpdatePaymentDialog from './finance-student-update-payment-
 
 import type studentFeePaymentStatusUpdated from '../data/student-fee-payment-status-updated';
 
+
 const data = [
   {
     class: '10th',
     studentName: 'Raj',
     gradeLevel: '10TH A',
-    feeStatus: 'Paid',
+    feeStatus: 'Pending',
     action: 'View',
   },
   {
@@ -31,7 +33,7 @@ const data = [
     class: '10th',
     studentName: 'Jay',
     gradeLevel: '10TH A',
-    feeStatus: 'Fullypaid',
+    feeStatus: 'Overdue',
     action: 'View',
   },
 ];
@@ -112,7 +114,28 @@ const FinanceStudentFeeManagementComponent = () => {
             columns={[
               { id: 'studentName', label: 'Student Name' },
               { id: 'gradeLevel', label: 'Grade Level' },
-              { id: 'feeStatus', label: 'Fee Status' },
+              {
+               id: 'feeStatus', label: 'Fee Status',
+                render(value, row) {
+                  return (
+                    <Label
+                      variant="soft"
+                      color={
+                        value === 'Pending'
+                          ? 'warning'
+                          : value === 'Overdue'
+                            ? 'error'
+                            : value === 'Paid'
+                              ? 'success'
+                              : 'default'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              
               {
                 id: 'action',
                 label: 'Action',
