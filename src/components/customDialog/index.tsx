@@ -2,10 +2,11 @@ import type { PaperProps, DialogProps } from '@mui/material';
 
 import React from 'react';
 
-import { Dialog, useTheme, DialogTitle } from '@mui/material';
+import { Close } from '@mui/icons-material';
+import { Dialog, useTheme, IconButton, DialogTitle } from '@mui/material';
 
 type CustomDialogProps = DialogProps & {
-  handleClose: (event: {}, reason: 'backdropClick' | 'escapeKeyDown') => void;
+  handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
   title: string;
   children: React.ReactNode;
   paperProps?: PaperProps;
@@ -24,7 +25,10 @@ const CustomDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={(e, reason) => {
+        if (reason === 'backdropClick') return;
+        handleClose(e, reason);
+      }}
       fullWidth
       maxWidth="xs"
       transitionDuration={{
@@ -44,6 +48,18 @@ const CustomDialog = ({
       {...props}
     >
       <DialogTitle sx={{ minHeight: 76 }}>{title}</DialogTitle>
+      <IconButton
+        aria-label="close"
+        onClick={() => handleClose()}
+        sx={{
+          position: 'absolute',
+          right: 8,
+          top: 8,
+          color: theme.palette.grey[500],
+        }}
+      >
+        <Close />
+      </IconButton>
       {children}
     </Dialog>
   );

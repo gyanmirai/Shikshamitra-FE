@@ -4,7 +4,13 @@ import { Box, Card, Avatar, Divider, Typography, CardHeader, CardContent } from 
 
 import TemplateView from './templateView';
 
-const Template1 = ({ isShowSettings }: { isShowSettings: boolean }) => {
+const Template1 = ({
+  isShowSettings,
+  onSave,
+}: {
+  isShowSettings: boolean;
+  onSave?: (data: Record<string, any>) => void;
+}) => {
   const [settings, setSettings] = useState<Record<string, any>>({
     name: { fontSize: 24, fontWeight: 'bold', textTransform: 'none', color: '#000000' },
     grNo: { fontSize: 16, fontWeight: 'normal', textTransform: 'none', color: '#000000' },
@@ -26,6 +32,7 @@ const Template1 = ({ isShowSettings }: { isShowSettings: boolean }) => {
       setSettings={setSettings}
       settings={settings}
       isShowSettings={isShowSettings}
+      onSave={() => onSave?.(settings)}
       template={
         <Card
           sx={{
@@ -48,12 +55,18 @@ const Template1 = ({ isShowSettings }: { isShowSettings: boolean }) => {
               padding: 2,
             }}
             title={
-              <Typography variant="h6" sx={{ margin: 0, fontSize: 20 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ margin: 0, fontSize: settings.cardHeader.fontSize }}
+              >
                 Deep Darshan Vidhya Sankul
               </Typography>
             }
             subheader={
-              <Typography variant="subtitle2" sx={{ margin: 0, fontSize: 14 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ margin: 0, fontSize: settings.cardHeader.fontSize - 3 }}
+              >
                 Deladva Road Dindoli Surat
               </Typography>
             }

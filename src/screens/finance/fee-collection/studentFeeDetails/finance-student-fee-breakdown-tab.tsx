@@ -1,82 +1,85 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Box, Card, Typography, CardContent, Chip, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material'; 
+import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface PaymentStatus {
-    title: string;
-    status: string;
+  title: string;
+  status: string;
 }
 
 interface FeeCardProps {
-    feeHead: string;
-    paymentTerm: string;
-    paymentStatus: PaymentStatus[];
+  feeHead: string;
+  paymentTerm: string;
+  paymentStatus: PaymentStatus[];
 }
 const FeeCard: React.FC<FeeCardProps> = ({ feeHead, paymentTerm, paymentStatus }) => {
-    const unpaidStatuses = paymentStatus.filter(status => status.status === 'Unpaid');
-    
-    return (
-        <Card style={{ margin: '10px', padding: '10px' }}>
-            <CardContent>
-                <Typography variant="h6" style={{ fontWeight: 'bold' }}>{feeHead}</Typography>
-                <Typography variant="body2" color="textSecondary">Payment Term: {paymentTerm}</Typography>
-                
-                <Typography variant="subtitle1">Payment Status:</Typography>
-                <Chip label={`Unpaid: ${unpaidStatuses.length}`} color="error" />
-                
-                <Box mt={1}>
-                    {paymentStatus.map((status, index) => (
-                        <Typography key={index} style={{ color: status.status === 'Paid' ? 'green' : 'red' }}>
-                            {status.title}: <strong>{status.status}</strong>
-                        </Typography>
-                    ))}
-                </Box>
-            </CardContent>
-        </Card>
-    );
+  const unpaidStatuses = paymentStatus.filter((status) => status.status === 'Unpaid');
+
+  return (
+    <Card style={{ margin: '10px', padding: '10px' }}>
+      <CardContent>
+        <Typography variant="h6" style={{ fontWeight: 'bold' }}>
+          {feeHead}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          Payment Term: {paymentTerm}
+        </Typography>
+
+        <Typography variant="subtitle1">Payment Status:</Typography>
+        <Chip label={`Unpaid: ${unpaidStatuses.length}`} color="error" />
+
+        <Box mt={1}>
+          {paymentStatus.map((status, index) => (
+            <Typography key={index} style={{ color: status.status === 'Paid' ? 'green' : 'red' }}>
+              {status.title}: <strong>{status.status}</strong>
+            </Typography>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+  );
 };
 
-
-
 const FinanceStudentFeeBreakdownTab = () => {
-    const data = [
-        {
-          id: 1,
-          date: "25-01-2024",
-          type:"Tuition Fee",
-          discount: "2500",
-          amount:"50000"
-         },
-         {
-            id: 2,
-            date: "25-05-2024",
-            discount: "500",
-            type:"Sports Fee",
-            amount:"5000"
-           },{
-            id: 3,
-            date: "25-09-2024",
-            type:"Library Fee",
-            discount: "0",
-            amount:"2500"
-           },
-      ]; return (
-        <CustomizableTable
-          columns={[
-            { id: 'date', label: 'Date' },
-            { id: 'type', label: 'Type' },
-            { id: 'discount', label: 'Discount' },
-            { id: 'amount', label: 'Amount' },
-            
-          ]}
-          data={data}
-        />
-      )
-}
+  const data = [
+    {
+      id: 1,
+      date: '25-01-2024',
+      type: 'Tuition Fee',
+      discount: '2500',
+      amount: '50000',
+    },
+    {
+      id: 2,
+      date: '25-05-2024',
+      discount: '500',
+      type: 'Sports Fee',
+      amount: '5000',
+    },
+    {
+      id: 3,
+      date: '25-09-2024',
+      type: 'Library Fee',
+      discount: '0',
+      amount: '2500',
+    },
+  ];
+  return (
+    <CustomizableTable
+      columns={[
+        { id: 'date', label: 'Date' },
+        { id: 'type', label: 'Type' },
+        { id: 'discount', label: 'Discount' },
+        { id: 'amount', label: 'Amount' },
+      ]}
+      data={data}
+    />
+  );
+};
 
-export default FinanceStudentFeeBreakdownTab
-
+export default FinanceStudentFeeBreakdownTab;
 
 // const FinanceStudentFeeBreakdownTab = () => {
 //     const [expandedRow, setExpandedRow] = useState<number | null>(null);
