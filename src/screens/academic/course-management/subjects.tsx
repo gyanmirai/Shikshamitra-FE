@@ -1,10 +1,13 @@
+import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
+import { DatePicker } from '@mui/x-date-pickers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
@@ -175,6 +178,7 @@ const Subjects = (props: TabComponentType) => {
                 ...subject.chapters[chapterIndex],
                 chapterName: values.chapterName,
                 content: values.content,
+                timeLine: values.timeLine,
                 documents: newDocuments,
                 progress: subject.chapters[chapterIndex].progress,
                 assignments: subject.chapters[chapterIndex].assignments,
@@ -194,6 +198,7 @@ const Subjects = (props: TabComponentType) => {
             ) + 1,
           chapterName: values.chapterName,
           content: values.content,
+          timeLine: values.timeLine,
           documents: newDocuments,
           progress: 0,
           assignments: [],
@@ -221,6 +226,8 @@ const Subjects = (props: TabComponentType) => {
   };
 
   const handleEditChapter = (chapter: any) => {
+    console.log('chapter---', chapter);
+
     setSelectedChapter(chapter);
     setIsEditMode(true);
     addChapterDialog.onTrue();
@@ -501,6 +508,7 @@ interface Document {
 interface ChapterFormValues {
   chapterName: string;
   content: string;
+  timeLine: string | undefined;
   documents: Document[];
 }
 
@@ -511,6 +519,7 @@ interface AddNewChapterProps {
   initialValues?: {
     chapterName: string;
     content: string;
+    timeLine: Dayjs | null;
     documents?: Array<{
       id: string;
       name: string;
@@ -528,21 +537,25 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
   const [documents, setDocuments] = useState<Document[]>(initialValues?.documents || []);
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
   const [editorContent, setEditorContent] = useState('');
+  console.log('initial values---', initialValues);
 
   const validationSchema = Yup.object({
     chapterName: Yup.string().required('Chapter name is required'),
     content: Yup.string().required('Chapter description is required'),
+    timeLine: Yup.string().required('Select the timeline for chapter'),
   });
 
   const formik = useFormik({
     initialValues: {
       chapterName: initialValues?.chapterName || '',
       content: initialValues?.content || '',
+      timeLine: initialValues?.timeLine ? dayjs(initialValues.timeLine) : null,
     },
     validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
+        timeLine: values.timeLine?.toISOString(),
         documents,
       });
     },
@@ -552,7 +565,12 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
     if (initialValues) {
       setEditorContent(initialValues.content);
       setDocuments(initialValues.documents || []);
+      formik.setFieldValue(
+        'timeLine',
+        initialValues.timeLine ? dayjs(initialValues.timeLine) : null
+      );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues]);
 
   const handleFileUpload = (files: File[]) => {
@@ -574,7 +592,7 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Chapter Name"
@@ -582,6 +600,21 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 value={formik.values.chapterName}
                 onChange={formik.handleChange}
                 size="small"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Chapter timeLine"
+                value={formik.values.timeLine}
+                onChange={(newValue) => {
+                  formik.setFieldValue('timeLine', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    sx: { width: '100%', maxWidth: '200px' },
+                    size: 'small',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -695,6 +728,19 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
     }
   }, [division, chapterData]);
 
+  const getDeadlineColor = (deadline: string) => {
+    const deadlineDate = dayjs(deadline);
+    const today = dayjs();
+    const diffInDays = deadlineDate.diff(today, 'day');
+    if (diffInDays < 0) {
+      return 'red';
+    }
+    if (diffInDays <= 7) {
+      return 'orange';
+    }
+    return 'green';
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
@@ -739,10 +785,24 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                     {division !== 'All' && (
-                      <Label variant="soft" color="success">
+                      <Label variant="soft" color="success" marginRight={2}>
                         {chapter.progress}% Completed
                       </Label>
                     )}
+                    <Typography
+                      variant="subtitle2"
+                      style={{
+                        color: getDeadlineColor(chapter.timeLine),
+                        marginRight: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {/* Icon for deadline can be added here */}
+                      <span style={{ marginRight: '4px' }}>📅</span>{' '}
+                      {/* Placeholder for deadline icon */}
+                      Deadline : {dayjs(chapter.timeLine).format('DD MMM YYYY')}
+                    </Typography>
                     <ThreeDotsActions
                       placement="right-top"
                       onClickThreeDots={(e) => {

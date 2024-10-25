@@ -21,6 +21,7 @@ interface Chapter {
   id: number;
   chapterName: string;
   content: string;
+  timeLine: string;
   documents: Document[];
   progress: number;
   assignments: Assignment[];
@@ -82,6 +83,7 @@ export const subjectTempData = {
                   chapterName: 'Algebra Basics',
                   progress: 80,
                   content: 'Introduction to algebraic expressions and equations.',
+                  timeLine: '12/01/2025',
                   documents: [],
                   assignments: [
                     { title: 'Algebra Assignment', dueDate: '01-01-2024', status: 'Pending' },
@@ -92,6 +94,7 @@ export const subjectTempData = {
                   id: 2,
                   chapterName: 'Geometry',
                   content: 'Basic geometric concepts and theorems.',
+                  timeLine: '10/05/2025',
                   documents: [],
                   progress: 60,
                   assignments: [
@@ -115,6 +118,7 @@ export const subjectTempData = {
                   chapterName: 'Physics Basics',
                   progress: 60,
                   content: 'Introduction to physics and its principles.',
+                  timeLine: '05/01/2025',
                   documents: [],
                   assignments: [
                     { title: 'Algebra Assignment', dueDate: '01-01-2024', status: 'Pending' },
@@ -141,8 +145,9 @@ export const subjectTempData = {
                 {
                   id: 1,
                   chapterName: 'Algebra Basics',
-                  progress : 60,
+                  progress: 60,
                   content: 'Introduction to algebraic expressions and equations.',
+                  timeLine: '05/01/2025',
                   documents: [],
                   assignments: [
                     { title: 'Algebra Assignment', dueDate: '01-04-2024', status: 'Received' },
@@ -152,6 +157,7 @@ export const subjectTempData = {
                   id: 2,
                   chapterName: 'Geometry',
                   content: 'Basic geometric concepts and theorems.',
+                  timeLine: '06/01/2025',
                   documents: [],
                   progress: 30,
                   assignments: [
@@ -187,6 +193,7 @@ export const subjectTempData = {
                   chapterName: 'Cell Biology',
                   progress: 80,
                   content: 'Study of cell structure and function.',
+                  timeLine: '20/01/2025',
                   documents: [],
                   assignments: [
                     { title: 'Cell Biology Assignment', dueDate: '01-05-2024', status: 'Pending' },

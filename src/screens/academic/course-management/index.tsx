@@ -16,7 +16,6 @@ import Subjects from './subjects';
 import Dashboard from './dashboard';
 import Reports from './reportsAndAnalyics';
 import CourseProgress from './courseProgress';
-import CourseManagement from './courseManagement';
 import LearningResources from './learningResources';
 
 const TABS = [
@@ -25,11 +24,11 @@ const TABS = [
     label: 'Dashboard',
     component: (props: TabComponentType) => <Dashboard {...props} />,
   },
-  {
-    value: 'courseManagement',
-    label: 'Course Management',
-    component: (props: TabComponentType) => <CourseManagement {...props} />,
-  },
+  // {
+  //   value: 'courseManagement',
+  //   label: 'Course Management',
+  //   component: (props: TabComponentType) => <CourseManagement {...props} />,
+  // },
   {
     value: 'subjects',
     label: 'Subjects',
