@@ -156,7 +156,6 @@ const CourseProgress = (props: TabComponentType) => {
           >
             <AppWidget
               title={course.name}
-              total={course.progress}
               icon="solar:user-rounded-bold"
               chart={{ series: course.progress }}
             />

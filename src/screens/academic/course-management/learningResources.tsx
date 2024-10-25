@@ -1,15 +1,20 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import {
   Box,
   Grid,
+  Switch,
   Button,
   MenuItem,
   MenuList,
   TextField,
   Typography,
   DialogActions,
+  DialogContent,
+  DialogContentText,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -24,64 +29,78 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 interface TResourceData {
   id: number;
   resourceTitle: string;
   typeOfResource: string;
-  attachedCourse: string;
-  accessPermision: string;
-  courseAndSubject: string;
+  className: string;
+  subject: string;
   dateUploaded: string;
   description: string;
+  status: string;
 }
 
 const resourceInitialData: TResourceData[] = [
   {
     id: 1,
-    resourceTitle: 'resource 1',
+    resourceTitle: 'Math Resource 1',
     typeOfResource: 'document',
-    attachedCourse: 'Math',
-    accessPermision: 'allTeachers',
-    courseAndSubject: 'Math',
+    className: '1',
+    subject: 'Math',
     dateUploaded: '01-12-20',
     description: 'Math resource description',
+    status: 'Publish',
   },
   {
     id: 2,
-    resourceTitle: 'Projector',
+    resourceTitle: 'Science Presentation',
     typeOfResource: 'Audio',
-    attachedCourse: 'Science',
-    accessPermision: 'specificClasses',
-    courseAndSubject: 'Science',
+    className: '1',
+    subject: 'Science',
     dateUploaded: '01-12-20',
     description: 'Science resource description',
+    status: 'Unpublish',
   },
   {
     id: 3,
-    resourceTitle: 'Laptop',
+    resourceTitle: 'Physics Video',
     typeOfResource: 'Video',
-    attachedCourse: 'Math',
-    accessPermision: 'allTeachers',
-    courseAndSubject: 'Math',
+    className: '1',
+    subject: 'Physics',
     dateUploaded: '01-12-20',
-    description: 'Math video resource description',
+    description: 'Physics video description',
+    status: 'Publish',
   },
 ];
 
 const LearningResources = (props: TabComponentType) => {
+  const { searchParams } = props;
+
+  const classFromUrl = searchParams?.class || ''; // Use optional chaining
+  const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
+
   const [selectedEntry, setSelectedEntry] = useState<TResourceData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   const dialog = useBoolean();
+  const confirm_dialog = useBoolean();
+
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const [classes, setClasses] = useState<string>('');
+
+  const [classes, setClasses] = useState<string>(classFromUrl);
+  const [subject, setSubject] = useState(subjectFromUrl);
+
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    id: number;
+    newStatus: string;
+  } | null>(null);
 
   const handleSave = (dataFromDialog: TResourceData) => {
+    console.log('data from dialog---', dataFromDialog);
     if (isEdit && selectedEntry) {
       setResourceData(
         resourceData.map((resource) =>
@@ -89,7 +108,15 @@ const LearningResources = (props: TabComponentType) => {
         )
       );
     } else {
-      setResourceData([...resourceData, { ...dataFromDialog, id: Date.now() }]);
+      setResourceData([
+        ...resourceData,
+        {
+          ...dataFromDialog,
+          id: Date.now(),
+          className: classes,
+          dateUploaded: new Date().toLocaleDateString(),
+        },
+      ]);
     }
     closeDialog();
   };
@@ -100,14 +127,39 @@ const LearningResources = (props: TabComponentType) => {
     dialog.onFalse();
   };
 
+  const handleStatusChange = (id: number, value: string) => {
+    setPendingStatusChange({ id, newStatus: value === 'Publish' ? 'Unpublish' : 'Publish' });
+    confirm_dialog.onTrue(); // Open confirmation dialog
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatusChange) {
+      const { id, newStatus } = pendingStatusChange;
+      setResourceData((prevCourse) =>
+        prevCourse.map((resource) =>
+          resource.id === id ? { ...resource, status: newStatus } : resource
+        )
+      );
+    }
+    confirm_dialog.onFalse();
+    setPendingStatusChange(null);
+  };
+
+  const filteredData = resourceData.filter(
+    (item) => (!classes || item.className === classes) && (!subject || item.subject === subject)
+  );
+
+  const cancelStatusChange = () => {
+    confirm_dialog.onFalse();
+    setPendingStatusChange(null);
+  };
+
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
-        {' '}
-        <Button variant="contained" onClick={dialog.onTrue}>
-          Create New Resource
-        </Button>
-      </Box>
+    <Box>
+      <Typography variant="h6" marginBottom={3}>
+        Learning Resources For Subject
+      </Typography>
+
       <Box display="flex" flexDirection="row" gap={3}>
         <CustomSelect
           options={classData?.items || []}
@@ -123,6 +175,7 @@ const LearningResources = (props: TabComponentType) => {
         />
         <CustomSelect
           label="Course/Subject"
+          disabled={!classes}
           options={[
             {
               value: 'Math',
@@ -133,59 +186,80 @@ const LearningResources = (props: TabComponentType) => {
               label: 'English',
             },
           ]}
-          value=""
-          onChange={() => {}}
+          value={subject}
+          onChange={(val) => {
+            setSubject(val as string);
+          }}
           formControlProps={{ sx: { minWidth: 200 } }}
         />
-        <CustomSelect
-          label="Date Uploaded"
-          options={[
-            { value: 'last7Days', label: 'Last 7 Days' },
-            { value: 'lastMonth', label: 'Last Month' },
-          ]}
-          value=""
-          onChange={(val) => {}}
-          formControlProps={{ sx: { minWidth: 200 } }}
-        />
+        <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
+          {' '}
+          <Button variant="contained" onClick={dialog.onTrue} disabled={!classes || !subject}>
+            Create New Resource
+          </Button>
+        </Box>
       </Box>
 
-      <CustomizableTable
-        columns={[
-          { id: 'resourceTitle', label: 'Resource Title' },
-          { id: 'typeOfResource', label: 'Type of Resource' },
-          { id: 'courseAndSubject', label: 'Cource And Subject' },
-          { id: 'dateUploaded', label: 'Date Uploaded' },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value: any, row: any) {
-              return (
-                <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setIsEdit(true);
-                          setSelectedEntry(row);
-                          dialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" />
-                        Edit
-                      </MenuItem>
-                      <MenuItem onClick={() => {}}>
-                        <Iconify icon="solar:pen-bold" />
-                        Share with classes/teachers
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
+      {classes && subject && (
+        <CustomizableTable
+          columns={[
+            { id: 'resourceTitle', label: 'Resource Title' },
+            { id: 'typeOfResource', label: 'Type of Resource' },
+            { id: 'className', label: 'Class' },
+            { id: 'subject', label: 'Subject' },
+            { id: 'dateUploaded', label: 'Date Uploaded' },
+            {
+              id: 'status',
+              label: 'Status',
+              render: (value: string, row: any) => (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography sx={{ mr: 2 }} fontSize={11}>
+                    Unpublish
+                  </Typography>
+                  <Switch
+                    size="small"
+                    checked={value === 'Publish'}
+                    onChange={() => handleStatusChange(row.id, value as string)}
+                  />
+                  <Typography sx={{ ml: 2 }} fontSize={11}>
+                    Publish
+                  </Typography>
+                </Box>
+              ),
             },
-          },
-        ]}
-        data={resourceData}
-      />
+            {
+              id: 'action',
+              label: 'Action',
+              render(value: any, row: any) {
+                return (
+                  <ThreeDotsActions
+                    actions={({ popover }: any) => (
+                      <MenuList>
+                        <MenuItem
+                          onClick={() => {
+                            setIsEdit(true);
+                            setSelectedEntry(row);
+                            dialog.onTrue();
+                          }}
+                        >
+                          <Iconify icon="solar:pen-bold" />
+                          Edit
+                        </MenuItem>
+                        <MenuItem onClick={() => {}}>
+                          <Iconify icon="solar:share-bold" />
+                          Share with classes/teachers
+                        </MenuItem>
+                      </MenuList>
+                    )}
+                  />
+                );
+              },
+            },
+          ]}
+          data={filteredData}
+        />
+      )}
+
       <CustomDialog
         title={isEdit ? 'Edit Resource' : 'New Resource'}
         open={dialog.value}
@@ -197,7 +271,31 @@ const LearningResources = (props: TabComponentType) => {
           onClose={closeDialog}
           data={selectedEntry}
           isEdit={isEdit}
+          currentClass={classes}
+          currentSubject={subject}
         />
+      </CustomDialog>
+
+      <CustomDialog
+        title="Confirm Publication"
+        open={confirm_dialog.value}
+        handleClose={confirm_dialog.onFalse}
+        maxWidth="sm"
+      >
+        <DialogContent>
+          <DialogContentText>
+            Are you sure to {pendingStatusChange?.newStatus === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
+            this resource?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelStatusChange} variant="contained" color="error">
+            Cancel
+          </Button>
+          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
+            Confirm
+          </Button>
+        </DialogActions>
       </CustomDialog>
     </Box>
   );
@@ -210,6 +308,8 @@ interface CreateLearningResourcesProps {
   onClose: () => void;
   data: TResourceData | null;
   isEdit: boolean;
+  currentClass: string;
+  currentSubject: string;
 }
 
 interface FormikValue {
@@ -227,25 +327,32 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   onClose,
   onSave,
   isEdit,
+  currentClass,
+  currentSubject,
 }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
-
+  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
   const formik = useFormik<TResourceData>({
     initialValues: {
       id: isEdit && data ? data.id : Date.now(),
       resourceTitle: isEdit && data ? data.resourceTitle : '',
       typeOfResource: isEdit && data ? data.typeOfResource : '',
-      attachedCourse: isEdit && data ? data.attachedCourse : '',
-      accessPermision: isEdit && data ? data.accessPermision : '',
+      className: currentClass,
+      subject: isEdit && data ? data.subject : currentSubject,
       description: isEdit && data ? data.description : '',
-      courseAndSubject: isEdit && data ? data.courseAndSubject : '',
-      dateUploaded: isEdit && data ? data.dateUploaded : '',
+      dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
+      status: isEdit && data ? data.status : 'draft',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {
       const updatedValues = {
         ...values,
-        dateUploaded: isEdit ? values.dateUploaded : new Date().toLocaleDateString(), // Only update if it's not edit mode
+        status: isDraft ? 'Unpublish' : 'Publish',
+        dateUploaded: isEdit ? values.dateUploaded : new Date().toLocaleDateString(), // Only update if not in edit mode
       };
       onSave(updatedValues);
     },
@@ -254,30 +361,33 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <UploadBox
-            onDrop={() => {}}
-            placeholder={
-              <Box
-                sx={{
-                  gap: 0.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: 'text.disabled',
-                  flexDirection: 'column',
-                }}
-              >
-                <Iconify icon="eva:cloud-upload-fill" width={40} />
-                <Typography variant="body2">Drag Your Document</Typography>
-              </Box>
-            }
-            sx={{
-              py: 2.5,
-              width: '100%',
-              height: 'auto',
-              borderRadius: 1.5,
-            }}
-          />
           <Grid container spacing={2} marginTop={1}>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                options={classData?.items || []}
+                value={formik.values.className}
+                onChange={(val) => formik.setFieldValue('className', val as string)}
+                label="Class"
+                isLoading={isLoading}
+                labelKey="name"
+                valueKey="name"
+                formControlProps={{ sx: { minWidth: 270 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Subject"
+                options={[
+                  { value: 'Math', label: 'Math' },
+                  { value: 'English', label: 'English' },
+                  { value: 'Science', label: 'Science' },
+                ]}
+                name="subject"
+                value={formik.values.subject}
+                onChange={(val) => formik.setFieldValue('subject', val as string)}
+                formControlProps={{ sx: { minWidth: 275 } }}
+              />
+            </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 disabled={isEdit}
@@ -287,35 +397,6 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 value={formik.values.resourceTitle}
                 onChange={formik.handleChange}
                 fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Attach to course/subject"
-                options={[
-                  { value: 'math', label: 'Math' },
-                  { value: 'english', label: 'English' },
-                  { value: 'science', label: 'Science' },
-                ]}
-                value={formik.values.courseAndSubject}
-                onChange={(val) => {
-                  formik.setFieldValue('courseAndSubject', val as string);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Access Permission"
-                options={[
-                  { value: 'allTeachers', label: 'All Teachers' },
-                  { value: 'specificClasses', label: 'Specific Classes' },
-                ]}
-                value={formik.values.accessPermision}
-                onChange={(val) => {
-                  formik.setFieldValue('accessPermision', val as string);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -333,7 +414,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <TextField
                 label="Description"
                 size="small"
@@ -345,12 +426,51 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 fullWidth
               />
             </Grid>
+            <Grid item xs={12}>
+              <UploadBox
+                onDrop={() => {}}
+                placeholder={
+                  <Box
+                    sx={{
+                      gap: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.disabled',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">Drag Your Document</Typography>
+                  </Box>
+                }
+                sx={{
+                  py: 2.5,
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+              />
+            </Grid>
           </Grid>
           <DialogActions>
-            <Button variant="contained" onClick={() => {}} color="warning">
+            <Button
+              variant="contained"
+              onClick={() => {
+                setIsDraft(true);
+                formik.handleSubmit();
+              }}
+              color="warning"
+            >
               Save as Draft
             </Button>
-            <Button type="submit" variant="contained" onClick={() => {}}>
+            <Button
+              type="submit"
+              variant="contained"
+              onClick={() => {
+                setIsDraft(false);
+                formik.handleSubmit();
+              }}
+            >
               Save ad Publish
             </Button>
           </DialogActions>
