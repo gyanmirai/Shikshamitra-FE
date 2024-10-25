@@ -8,6 +8,7 @@ import {
   dashboardPath,
   transportPath,
   examinationPath,
+  communicationPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -90,7 +91,7 @@ export const navData = [
       { title: 'Finance', path: '/finance/dashboard', icon: ICONS.finance, _action: 'finance' },
       {
         title: 'Communication',
-        path: 'communication/dashboard',
+        path: '/communication/dashboard',
         icon: ICONS.communication,
         _action: 'communication',
       },
@@ -600,7 +601,6 @@ const academicModule = {
           path: '/academic/course-management',
           _action: 'course-management',
         },
-
         {
           title: 'Timetable & Schedule Management',
           path: '/academic/timetable-schedule-management',
@@ -640,6 +640,46 @@ const academicModule = {
           title: 'Homework & Assignment Management',
           path: '/academic/homework-assignment-management',
           _action: 'homework-assignment-management',
+        },
+      ],
+    },
+  ],
+};
+
+const communicationModule = {
+  [communicationPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/communication/dashboard',
+          _action: 'dashboard',
+        },
+        {
+          title: 'Messages',
+          path: '/communication/messages',
+          _action: 'messages',
+        },
+        {
+          title: 'Announcements',
+          path: '/communication/announcement',
+          _action: 'announcement',
+        },
+        {
+          title: 'Events & Calendar',
+          path: '/communication/eventsAndCalendar',
+          _action: 'eventsAndCalendar',
+        },
+        {
+          title: 'Feedback & Survey',
+          path: '/communication/feedbackAndSurvey',
+          _action: 'feedbackAndSurvey',
+        },
+        {
+          title: 'Settings',
+          path: '/communication/settings',
+          _action: 'settings',
         },
       ],
     },
@@ -771,4 +811,5 @@ export const navSubData = {
   ...examinationModule,
   ...financeModule,
   ...transportModule,
+  ...communicationModule,
 };
