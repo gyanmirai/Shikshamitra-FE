@@ -283,7 +283,7 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
     const data = await response.json();
     console.log(data);
-    return data.address?.suburb || data.address?.neighbourhood || data.display_name || "Unknown Location";
+    return data.display_name || data.address?.suburb || data.address?.neighbourhood ||  "Unknown Location";
   };
 
   const isPointOnRoute = (lat: number, lng: number) => {

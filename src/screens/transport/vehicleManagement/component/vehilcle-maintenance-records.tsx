@@ -7,6 +7,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import TransportMaintenanceDialog from './transport-maintenance-dialog';
 
@@ -168,6 +169,7 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
           Add New Record
         </Button>
       </Box>
+      <CustomizableTable data={tableData} columns={columnData}/>
       {dialog.value && (
         <TransportMaintenanceDialog
           onSave={handleSave}
