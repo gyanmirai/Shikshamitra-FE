@@ -31,7 +31,7 @@ export function getMimeTypeFromBase64(base64: string) {
 export const convertBase64Format = (base64: string) => {
   const mimeType = getMimeTypeFromBase64(base64);
   if (!mimeType) {
-    throw new Error('Invalid base64 format');
+    return '';
   }
   return `data:${mimeType};base64,${base64}`;
 };

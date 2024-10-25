@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
 import { Box, Button, MenuItem, MenuList, useTheme, Typography } from '@mui/material';
 
@@ -13,125 +13,108 @@ import { AppWidgetSummary } from 'src/sections/overview/app/app-widget-summary';
 import FinanceSettingCreateBudgetDialog from './component/finance-setting-create-budget-dialog';
 
 interface Data {
-
-    departmentName: string,
-    allocatedAmount: string,
-    utilizeAmount?: string,
-    id: number,
-    action?: string;
-
-
+  departmentName: string;
+  allocatedAmount: string;
+  utilizeAmount?: string;
+  id: number;
+  action?: string;
 }
 
-
 let data: Data[] = [
-    {
-        id: 1,
-        departmentName: 'IT',
-        allocatedAmount: '10000000',
-        utilizeAmount: "50% utilized",
-        action: 'View',
-    },
-    {
-        id: 2,
-        departmentName: 'HR',
-        allocatedAmount: '1000000',
-        utilizeAmount: "50% utilized",
-        action: 'View',
-    },
-]
+  {
+    id: 1,
+    departmentName: 'IT',
+    allocatedAmount: '10000000',
+    utilizeAmount: '50% utilized',
+    action: 'View',
+  },
+  {
+    id: 2,
+    departmentName: 'HR',
+    allocatedAmount: '1000000',
+    utilizeAmount: '50% utilized',
+    action: 'View',
+  },
+];
 
 const FinanceBudgetSettingTab = () => {
-    const theme = useTheme();
+  const theme = useTheme();
 
-    const dialog = useBoolean();
-    const [selectedEntry, setSelectedEntry] = useState(data);
-    const [isEdit, setIsEdit] = useState(false);
-    const [tableData, setTableData] = useState(data)
-    // const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const dialog = useBoolean();
+  const [selectedEntry, setSelectedEntry] = useState(data);
+  const [isEdit, setIsEdit] = useState(false);
+  const [tableData, setTableData] = useState(data);
+  // const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
+  const closeDialog = () => {
+    setIsEdit(false);
+    dialog.onFalse();
+  };
 
+  useEffect(() => {}, [selectedEntry, isEdit, tableData]);
 
-    const closeDialog = () => {
-        setIsEdit(false)
-        dialog.onFalse();
+  const handleDelete = (item: any) => {
+    data = data.filter((val) => val.id !== item.id || val.id !== item.id);
 
-    }
+    setTableData([...data]);
+  };
 
-    useEffect(() => {
+  const handleSave = (dataFromDialog: any) => {
+    const { id, departmentName, allocatedAmount, startDate, endDate } = dataFromDialog;
 
+    if (dataFromDialog) {
+      const existingEntryIndex = data.findIndex((val) => departmentName === val.departmentName);
 
-    }, [selectedEntry, isEdit, tableData])
+      if (existingEntryIndex !== -1 && !isEdit) {
+        // setShowDuplicateDialog(true);
+        closeDialog();
 
-    const handleDelete = (item: any) => {
+        return;
+      }
 
-        data = data.filter(val =>
-            (val.id) !== (item.id) ||
-            (val.id) !== (item.id)
-        );
+      const budget = {
+        id,
+        departmentName,
+        allocatedAmount,
 
-        setTableData([...data]);
+        action: 'View',
+      };
 
-    }
-
-    const handleSave = (dataFromDialog: any) => {
-        const { id, departmentName, allocatedAmount, startDate, endDate } = dataFromDialog;
-
-        if (dataFromDialog) {
-            const existingEntryIndex = data.findIndex(val => departmentName === val.departmentName);
-
-            if (existingEntryIndex !== -1 && !isEdit) {
-                // setShowDuplicateDialog(true);
-                closeDialog();
-
-                return;
-            }
-
-            const budget = {
-                id,
-                departmentName,
-                allocatedAmount,
-
-                action: 'View',
-            };
-
-            if (existingEntryIndex === -1) {
-                setTableData([...tableData, budget])
-            } else if (isEdit && existingEntryIndex !== -1) {
-                const updatedTableData = [...tableData];
-                updatedTableData[existingEntryIndex] = {
-                    ...updatedTableData[existingEntryIndex],
-                    allocatedAmount,
-                };
-
-                setTableData(updatedTableData);
-
-            }
-
-            closeDialog();
-            console.log(dataFromDialog);
+      if (existingEntryIndex === -1) {
+        setTableData([...tableData, budget]);
+      } else if (isEdit && existingEntryIndex !== -1) {
+        const updatedTableData = [...tableData];
+        updatedTableData[existingEntryIndex] = {
+          ...updatedTableData[existingEntryIndex],
+          allocatedAmount,
         };
-    }
-    return (
-        <>
-            <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
 
-                <Button onClick={dialog.onTrue} variant="contained" size="small">
-                    Create New Budget
-                </Button>
-            </Box>
-            <Box display="flex" flexDirection="row" gap={3}>
-                <AppWidgetSummary
-                    title="Total Expenses"
-                    percent={73.9}
-                    total={73900}
-                    chart={{
-                        colors: [theme.vars.palette.warning.main],
-                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-                        series: [15, 18, 12, 51, 68, 11, 39, 37],
-                    }}
-                />
-                {/* <BookingAvailable
+        setTableData(updatedTableData);
+      }
+
+      closeDialog();
+      console.log(dataFromDialog);
+    }
+  };
+  return (
+    <>
+      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+        <Button onClick={dialog.onTrue} variant="contained" size="small">
+          Create New Budget
+        </Button>
+      </Box>
+      <Box display="flex" flexDirection="row" gap={3}>
+        <AppWidgetSummary
+          title="Total Expenses"
+          percent={73.9}
+          total={73900}
+          chart={{
+            colors: [theme.vars.palette.warning.main],
+            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+            series: [15, 18, 12, 51, 68, 11, 39, 37],
+          }}
+        />
+        {/* <BookingAvailable
                     title="Budget OverView"
                     chart={{
                         series: [
@@ -140,64 +123,61 @@ const FinanceBudgetSettingTab = () => {
                         ],
                     }}
                 /> */}
+      </Box>
+      <Box>
+        <Typography component="span" variant="h6" gutterBottom>
+          Budget Allocation Overview
+        </Typography>
+      </Box>
+      <CustomizableTable
+        columns={[
+          { id: 'departmentName', label: 'Department/Project Name' },
+          { id: 'allocatedAmount', label: 'Allocated Budget Amount' },
+          {
+            id: 'utilizeAmount',
+            label: 'Budget Utilization Status',
+          },
 
-            </Box>
-            <Box>
-                <Typography component="span" variant="h6" gutterBottom>
-                    Budget Allocation Overview
-                </Typography>
-            </Box>
-            <CustomizableTable
-                columns={[
-                    { id: 'departmentName', label: 'Department/Project Name' },
-                    { id: 'allocatedAmount', label: 'Allocated Budget Amount' },
-                    {
-                        id: 'utilizeAmount', label: 'Budget Utilization Status',
-                    },
-
-
-
-                    {
-                        id: 'action',
-                        label: 'Action',
-                        render(value, row: any) {
-                            return (
-                                <ThreeDotsActions
-                                    actions={({ popover }: any) => (
-                                        <MenuList >
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSelectedEntry(row);
-                                                    setIsEdit(true);
-                                                    dialog.onTrue();
-                                                    //   popover.onClose();
-                                                }}
-                                            >
-                                                <Iconify color="blue" icon="solar:pen-bold" />
-                                                Allocate Budget
-                                            </MenuItem>
-
-                                        </MenuList>
-                                    )}
-                                />
-                            );
-                        },
-                    },
-                ]}
-                data={tableData}
-            />
-            <Box>
-                {dialog.value && selectedEntry && (
-                    <FinanceSettingCreateBudgetDialog
-                        onSave={handleSave}
-                        dialogValue={dialog.value}
-                        onClose={closeDialog}
-                        data={selectedEntry}
-                        isEdit={isEdit}
-                    />
-                )}
-            </Box>
-        </>
-    )
-}
-export default FinanceBudgetSettingTab
+          {
+            id: 'action',
+            label: 'Action',
+            render(value, row: any) {
+              return (
+                <ThreeDotsActions
+                  actions={({ popover }: any) => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={() => {
+                          setSelectedEntry(row);
+                          setIsEdit(true);
+                          dialog.onTrue();
+                          //   popover.onClose();
+                        }}
+                      >
+                        <Iconify color="blue" icon="solar:pen-bold" />
+                        Allocate Budget
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />
+      <Box>
+        {dialog.value && selectedEntry && (
+          <FinanceSettingCreateBudgetDialog
+            onSave={handleSave}
+            dialogValue={dialog.value}
+            onClose={closeDialog}
+            data={selectedEntry}
+            isEdit={isEdit}
+          />
+        )}
+      </Box>
+    </>
+  );
+};
+export default FinanceBudgetSettingTab;

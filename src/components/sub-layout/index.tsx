@@ -33,6 +33,7 @@ const SubLayout = ({ children }: any) => {
             height: '100%',
             width: '18%',
             boxShadow: 'var(--shadows-3)',
+            bgcolor: (theme) => theme.palette.background.paper,
           }}
         >
           <NavSectionVertical
@@ -44,10 +45,9 @@ const SubLayout = ({ children }: any) => {
       )}
       <Box
         sx={{
-          // flexGrow: 1,
-
           boxShadow: 'var(--shadows-3)',
           width: currentData?.length ? '82%' : '100%',
+          bgcolor: (theme) => theme.palette.background.paper,
         }}
       >
         <Scrollbar

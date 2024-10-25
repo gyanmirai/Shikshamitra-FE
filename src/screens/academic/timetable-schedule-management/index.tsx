@@ -10,13 +10,13 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import Reports from './reports';
 import NewTimetable from './new-timetable';
 import RoomAllocation from './room-allocation';
 import TeacherManagement from './teacher-management';
 import CurrentTimetableOverview from './current-timetable-overvirew';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
-import Reports from './reports';
 
 const TABS = [
   {

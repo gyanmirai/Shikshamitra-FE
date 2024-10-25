@@ -1,16 +1,17 @@
-import React from 'react'
+import React from 'react';
 
 import FinanceStudentFeeCardComponent from './studentFeeDetails/finance-student-fee-card-component';
 import FinanceStudentDetailedFeeComponent from './studentFeeDetails/finance-student-detailed-fee-component';
 
 const FinanceStudentFeeTab = () => {
-    const data = [];
-    return (
-        <>
-            <FinanceStudentFeeCardComponent />
+  const data = [];
+  return (
+    <>
+      <FinanceStudentFeeCardComponent />
 
-            <FinanceStudentDetailedFeeComponent />
-        </>)
-}
+      <FinanceStudentDetailedFeeComponent />
+    </>
+  );
+};
 
-export default FinanceStudentFeeTab
+export default FinanceStudentFeeTab;

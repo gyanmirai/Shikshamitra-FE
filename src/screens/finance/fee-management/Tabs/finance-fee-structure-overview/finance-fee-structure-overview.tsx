@@ -26,7 +26,6 @@ const FinanceFeeStructureOverview = () => {
       status: 'Completed',
       action: 'View',
     },
-    
   ];
 
   return (

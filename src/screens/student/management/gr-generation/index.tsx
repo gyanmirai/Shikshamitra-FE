@@ -1,25 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const GrNoGenerationScreen = () => {
   const [isManual, setIsManual] = useState<boolean>(false);
 
+  const dispatch = useDispatch();
+
   const data = [
     { id: 1, srNo: 1, currentGrNo: 'GR001', name: 'John Doe', newGrNo: '' },
     { id: 2, srNo: 2, currentGrNo: 'GR002', name: 'Jane Smith', newGrNo: '' },
     { id: 3, srNo: 3, currentGrNo: 'GR003', name: 'Alice Johnson', newGrNo: '' },
   ];
+  useEffect(() => {
+    dispatch(setIsChanges(true));
+  }, [dispatch]);
+
+  const router = useRouter();
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
-        <Button startIcon={<Save />} variant="outlined">
+        <Button
+          onClick={() => {
+            router.push('/student/student-i-card');
+            dispatch(setIsChanges(false));
+          }}
+          startIcon={<Save />}
+          variant="outlined"
+        >
           Save
         </Button>
         <Button startIcon={<Grading />} variant="outlined" onClick={() => setIsManual(!isManual)}>

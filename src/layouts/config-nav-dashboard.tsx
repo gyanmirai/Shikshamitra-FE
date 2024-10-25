@@ -457,6 +457,11 @@ const hrModule = {
               path: '/hr/employee',
               _action: 'employee',
             },
+            {
+              title: 'I-card',
+              path: '/hr/i-card',
+              _action: 'i-card',
+            },
             // {
             //   title: 'Personal Information',
             //   path: '/hr/personal-information',

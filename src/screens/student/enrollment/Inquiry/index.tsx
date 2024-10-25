@@ -267,7 +267,7 @@ const InquiryForm = ({ handleClose }: any) => {
             }}
           >
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={4}>
                 <Field
                   as={TextField}
                   fullWidth
@@ -277,7 +277,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   disabled
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={4}>
                 <CustomSelect
                   name="medium"
                   label="Medium"
@@ -289,7 +289,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={4}>
                 <CustomSelect
                   name="academicYear"
                   label="Academic Year"
@@ -301,7 +301,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <CustomSelect
                   name="class"
                   label="Class"
@@ -311,6 +311,17 @@ const InquiryForm = ({ handleClose }: any) => {
                   error={!!(touched.class && errors.class) || false}
                   helperText={(touched.class && errors.class) || ''}
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="previousSchool"
+                  label="Previous School"
+                  error={touched.previousSchool && errors.previousSchool}
+                  helperText={touched.previousSchool && errors.previousSchool}
                 />
               </Grid>
               <Grid item xs={4}>
@@ -468,17 +479,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   helperText={touched.alternateContactDetails && errors.alternateContactDetails}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="previousSchool"
-                  label="Previous School"
-                  error={touched.previousSchool && errors.previousSchool}
-                  helperText={touched.previousSchool && errors.previousSchool}
-                />
-              </Grid>
+
               <Grid item xs={12}>
                 <Field
                   as={TextField}

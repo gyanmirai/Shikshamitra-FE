@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 

@@ -41,7 +41,9 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
       paymentMethod: isEdit ? data.paymentMethod ?? '' : '',
       date: isEdit ? data.date ?? '' : '',
       paymentStatus: isEdit ? data.paymentStatus ?? '' : '',
-      id: isEdit ? data.id ?? Math.floor(Math.random() * 1000000000) : Math.floor(Math.random() * 1000000000),
+      id: isEdit
+        ? data.id ?? Math.floor(Math.random() * 1000000000)
+        : Math.floor(Math.random() * 1000000000),
     },
     // validationSchema: validationSchema,  // Uncomment if using validation schema
     onSubmit: (values) => {
