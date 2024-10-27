@@ -763,7 +763,7 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
             variant="contained"
             onClick={onAddNewChapter}
           >
-            Add New Chapter
+            New Chapter
           </Button>
           {division === 'All' && (
             <Label variant="soft" color="success" marginTop={1}>
