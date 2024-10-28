@@ -5,8 +5,8 @@ import "leaflet/dist/leaflet.css";
 import type { LatLngExpression } from "leaflet";
 
 import * as yup from 'yup';
+import { useMapEvents } from 'react-leaflet';
 import React, { useState, useEffect } from 'react';
-import { Popup, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
 
 import { Box, Paper, Table, Button, MenuItem, MenuList, TableRow, TableBody, TableCell, TableHead, TextField, Typography, TableContainer } from '@mui/material';
 
@@ -93,6 +93,10 @@ const routesData: Route[] = [
   // Add more routes as needed
 ];
 
+const handleViewOnMap = (data:any)=>{
+     console.log(data)
+}
+
 const columns = [
   { id: 'routeNumber', label: 'Route Number' },
   { id: 'startPoint', label: 'Start Point' },
@@ -117,20 +121,20 @@ const columns = [
                 <Iconify icon="solar:pen-bold" />
                 Edit Route
               </MenuItem>
-              <MenuItem
+              {/* <MenuItem
                 onClick={() => {
                   // handleDelete(row)
                 }}
               >
                 <Iconify icon="solar:pen-bold" />
                 Assign Students/Staff
-              </MenuItem>
+              </MenuItem> */}
               <MenuItem
                 onClick={() => {
-                  // handleDelete(row)
+                  handleViewOnMap(row)
                 }}
               >
-                <Iconify icon="solar:map" />
+                <Iconify icon="solar:eye-bold" />
                 View on Map
               </MenuItem>
               <MenuItem
@@ -343,7 +347,84 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
 
   return (
     <Box display="flex" flexDirection="row" gap={2}>
-      <Box height="250px" width="250px">
+
+             <Box flex={3}>
+        <CustomSelect
+            multiple
+            options={[
+                { value: "dindoli", label: "Dindoli" },
+                { value: "varachha", label: "Varachha" },
+            ]}
+            label="Select Bus Stop"
+            name="selectedBusStop"
+             // @ts-ignore
+            value={busStops.map(stop => stop.stopName)} 
+            onChange={(e) => {
+               // @ts-ignore
+                const selectedBusStops = e.map((value: string) => 
+                    ({
+                        stopId: Math.random(),
+                        stopName: value,
+                        pickupTime: '',
+                        dropoffTime: '',
+                        assignedStudents: [],  // Initialize with an empty array
+                    })
+                );
+                setBusStops(selectedBusStops);
+                onChange(selectedBusStops);
+            }}
+            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+        />
+        {/* {busStops.map(stop => (
+            <Box key={stop.stopId} sx={{ width: "100%", display: 'flex', gap: 2 , justifyContent:"center" , alignItems:"center", justifyItems:"center" }}>
+                <TextField
+                    fullWidth
+                    label={`Pickup Time For ${stop.stopName}`}
+                    type="time"
+                    value={stop.pickupTime || ''}
+                    onChange={(e) => handleTimeChange(stop.stopId, 'pickupTime', e.target.value)}
+                    inputProps={{
+                      style: { 
+
+                          color: stop.pickupTime ? 'inherit' : 'transparent', // Hide when empty
+                      }
+                  }}
+                />
+                <TextField
+
+                    fullWidth
+                    label={`Dropoff Time For ${stop.stopName}`}
+                    type="time"
+                    value={stop.dropoffTime || ''}
+                    onChange={(e) => handleTimeChange(stop.stopId, 'dropoffTime', e.target.value)}
+                    inputProps={{
+                      style: { 
+                          color: stop.pickupTime ? 'inherit' : 'transparent', // Hide when empty
+                      }
+                  }}
+                />
+                <CustomSelect
+                    multiple
+                    options={[
+                        { value: "naveen", label: "Naveen" },
+                        { value: "ramesh", label: "Ramesh" },
+                    ]}
+                    label="Select Student"
+                    name="selectedStudent"
+                    // @ts-ignore
+                    value={stop.assignedStudents}  
+                    // @ts-ignore
+                    onChange={(e) => handleStudentChange(stop.stopId, e)} 
+                    inputProps={{
+                      style: { 
+                          height: "150px"
+                      }
+                  }} 
+                />
+            </Box>
+        ))} */}
+    </Box>
+      {/* <Box height="250px" width="250px">
         <MapContainer style={{ height: '100%', width: '100%' }} center={position} zoom={13} scrollWheelZoom={false} >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -357,8 +438,8 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
 
           <DetectClick />
         </MapContainer>
-      </Box>
-      <Box width="200px">
+      </Box> */}
+      <Box flex={2} width="200px">
         {busStops.length > 0 ? (
           busStops.map((stop) => (
             <Box
@@ -386,82 +467,7 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
       </Box>
     </Box>
 
-    // <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
-    //     <CustomSelect
-    //         multiple
-    //         options={[
-    //             { value: "dindoli", label: "Dindoli" },
-    //             { value: "varachha", label: "Varachha" },
-    //         ]}
-    //         label="Select Bus Stop"
-    //         name="selectedBusStop"
-    //          // @ts-ignore
-    //         value={busStops.map(stop => stop.stopName)} 
-    //         onChange={(e) => {
-    //            // @ts-ignore
-    //             const selectedBusStops = e.map((value: string) => 
-    //                 ({
-    //                     stopId: Math.random(),
-    //                     stopName: value,
-    //                     pickupTime: '',
-    //                     dropoffTime: '',
-    //                     assignedStudents: [],  // Initialize with an empty array
-    //                 })
-    //             );
-    //             setBusStops(selectedBusStops);
-    //             onChange(selectedBusStops);
-    //         }}
-    //         formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    //     />
-    //     {busStops.map(stop => (
-    //         <Box key={stop.stopId} sx={{ width: "100%", display: 'flex', gap: 2 , justifyContent:"center" , alignItems:"center", justifyItems:"center" }}>
-    //             <TextField
-    //                 fullWidth
-    //                 label={`Pickup Time For ${stop.stopName}`}
-    //                 type="time"
-    //                 value={stop.pickupTime || ''}
-    //                 onChange={(e) => handleTimeChange(stop.stopId, 'pickupTime', e.target.value)}
-    //                 inputProps={{
-    //                   style: { 
-
-    //                       color: stop.pickupTime ? 'inherit' : 'transparent', // Hide when empty
-    //                   }
-    //               }}
-    //             />
-    //             <TextField
-
-    //                 fullWidth
-    //                 label={`Dropoff Time For ${stop.stopName}`}
-    //                 type="time"
-    //                 value={stop.dropoffTime || ''}
-    //                 onChange={(e) => handleTimeChange(stop.stopId, 'dropoffTime', e.target.value)}
-    //                 inputProps={{
-    //                   style: { 
-    //                       color: stop.pickupTime ? 'inherit' : 'transparent', // Hide when empty
-    //                   }
-    //               }}
-    //             />
-    //             <CustomSelect
-    //                 multiple
-    //                 options={[
-    //                     { value: "naveen", label: "Naveen" },
-    //                     { value: "ramesh", label: "Ramesh" },
-    //                 ]}
-    //                 label="Select Student"
-    //                 name="selectedStudent"
-    //                 // @ts-ignore
-    //                 value={stop.assignedStudents}  
-    //                 // @ts-ignore
-    //                 onChange={(e) => handleStudentChange(stop.stopId, e)} 
-    //                 inputProps={{
-    //                   style: { 
-    //                       height: "150px"
-    //                   }
-    //               }} 
-    //             />
-    //         </Box>
-    //     ))}
-    // </Box>
+    
   );
 };
 
