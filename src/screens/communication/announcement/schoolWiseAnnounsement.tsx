@@ -44,7 +44,6 @@ interface Announcement {
   description: string;
   audience: string[];
   organization: string[];
-  sender: string;
   publishDate: Dayjs;
   expiryDate: Dayjs;
   status: string;
@@ -63,7 +62,6 @@ const SchoolWiseAnnouncementInitialData: Announcement[] = [
       'The schedule for the midterm exams is now available. Please review the dates and times for each subject.',
     audience: ['All Students', 'Parents', 'Teachers'],
     organization: ['Primary', 'Pre Primary'],
-    sender: 'Academic Department',
     publishDate: dayjs('2024-10-25'),
     expiryDate: dayjs('2024-11-10'),
     status: 'Published',
@@ -80,7 +78,6 @@ const SchoolWiseAnnouncementInitialData: Announcement[] = [
       'Join us for the annual school picnic at Riverside Park. Enjoy games, activities, and a fun day out with friends!',
     audience: ['All Students', 'Teachers', 'Staff'],
     organization: ['Primary', 'Pre Primary'],
-    sender: 'Event Committee',
     publishDate: dayjs('2024-11-05'),
     expiryDate: dayjs('2024-11-07'),
     status: 'Scheduled',
@@ -97,7 +94,6 @@ const SchoolWiseAnnouncementInitialData: Announcement[] = [
       'All staff are required to attend the upcoming staff meeting to discuss the new curriculum and school policies.',
     audience: ['Staff'],
     organization: ['Primary', 'Pre Primary'],
-    sender: 'Principal',
     publishDate: dayjs('2024-10-28'),
     expiryDate: dayjs('2024-10-28'),
     status: 'Published',
@@ -114,7 +110,6 @@ const SchoolWiseAnnouncementInitialData: Announcement[] = [
       'Students interested in participating in the annual Science Fair should submit their entries by the end of this month.',
     audience: ['Students', 'Teachers'],
     organization: ['Primary', 'Pre Primary'],
-    sender: 'Science Department',
     publishDate: dayjs('2024-10-30'),
     expiryDate: dayjs('2024-11-30'),
     status: 'Scheduled',
@@ -129,6 +124,8 @@ const SchoolWiseAnnouncementInitialData: Announcement[] = [
 const SchoolWiseAnnounsement = (props: TabComponentType) => {
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
   const addAnounsmentDialog = useBoolean();
+  const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
+  const view_dialog = useBoolean();
   const [deleteAnnouncement, setDeleteAnnouncement] = useState('');
   const confirm_dialog = useBoolean();
   const publish_modal = useBoolean();
@@ -180,7 +177,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           ? {
               ...item,
               status: 'Published',
-              date: dayjs(),
+              publishDate: dayjs(),
               isScheduled: false,
             }
           : item
@@ -188,6 +185,53 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     );
     publish_modal.onFalse();
     setPublishingAnnouncement(null);
+  };
+
+  const getImportanceLevelColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'urgent':
+        return {
+          bg: '#FEE2E2',
+          text: '#DC2626',
+          border: '#FECACA',
+        };
+      case 'critical':
+        return {
+          bg: '#FFEDD5',
+          text: '#EA580C',
+          border: '#FED7AA',
+        };
+      case 'high':
+        return {
+          bg: '#FEF3C7',
+          text: '#D97706',
+          border: '#FDE68A',
+        };
+      case 'medium':
+        return {
+          bg: '#E0F2FE',
+          text: '#0284C7',
+          border: '#BAE6FD',
+        };
+      case 'low':
+        return {
+          bg: '#DCFCE7',
+          text: '#16A34A',
+          border: '#BBF7D0',
+        };
+      case 'informational':
+        return {
+          bg: '#F3F4F6',
+          text: '#4B5563',
+          border: '#E5E7EB',
+        };
+      default:
+        return {
+          bg: '#F3F4F6',
+          text: '#4B5563',
+          border: '#E5E7EB',
+        };
+    }
   };
 
   return (
@@ -238,8 +282,29 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             ),
           },
           {
-            id: 'sender',
-            label: 'Sender',
+            id: 'importance_level',
+            label: 'Importance',
+            render: (value) => {
+              const colors = getImportanceLevelColor(value);
+              return (
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '16px',
+                    backgroundColor: colors.bg,
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  {value}
+                </Typography>
+              );
+            },
           },
           {
             id: 'audience',
@@ -288,6 +353,15 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
                 placement="right-top"
                 actions={({ popover }) => (
                   <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        view_dialog.onTrue();
+                        setViewAnnouncement(row);
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
+                      Details
+                    </MenuItem>
                     {row.status === 'Scheduled' && (
                       <MenuItem
                         onClick={() => {
@@ -323,7 +397,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         title={editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}
         open={addAnounsmentDialog.value}
         handleClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth="md"
       >
         <AnnouncementForm
           initialValues={editingAnnouncement}
@@ -415,6 +489,25 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           </Button>
         </DialogActions>
       </CustomDialog>
+
+      <CustomDialog
+        title="Announcement Details"
+        open={view_dialog.value}
+        handleClose={() => {
+          setViewAnnouncement(null);
+          view_dialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <DialogContent>
+          <AnnouncementDetails announcement={viewAnnouncement} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={view_dialog.onFalse} variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };
@@ -427,7 +520,6 @@ interface AnnouncementFormValues {
   status: string;
   audience: string[];
   organization: string[];
-  sender: string;
   publishDate: Dayjs | null;
   expiryDate: Dayjs | null;
   category: string;
@@ -464,8 +556,6 @@ const validationSchema = Yup.object({
     .min(1, 'At least one organization must be selected')
     .required('Organization is required'),
 
-  sender: Yup.string().required('Sender is required'),
-
   publishDate: Yup.date()
     .nullable()
     .required('Publish date is required')
@@ -495,6 +585,17 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
 }) => {
+  const allOrganizations = [
+    { value: 'Pre Primary', label: 'Pre Primary' },
+    { value: 'Primary', label: 'Primary' },
+    { value: 'Secondary', label: 'Secondary' },
+    { value: 'Higher Secondary', label: 'Higher Secondary' },
+  ];
+
+  const [isAllSelected, setIsAllSelected] = useState(
+    initialValues?.organization?.length === allOrganizations.length
+  );
+
   const determineStatus = (isScheduled: boolean, selectedDate: Dayjs | null) => {
     if (!isScheduled) return 'Published';
     if (!selectedDate) return 'Scheduled';
@@ -510,7 +611,6 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
       status: initialValues?.status || '',
       audience: initialValues?.audience || [],
       organization: initialValues?.organization || [],
-      sender: initialValues?.sender || '',
       publishDate: initialValues?.publishDate ? dayjs(initialValues?.publishDate) : dayjs(),
       expiryDate: initialValues?.expiryDate ? dayjs(initialValues?.expiryDate) : null,
       category: initialValues?.category || '',
@@ -539,6 +639,21 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
         publishDate: newDate,
         status: newStatus,
       });
+    }
+  };
+
+  const handleOrganizationChange = (selectedValues: string[]) => {
+    if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
+      const allOrganizationValues = allOrganizations.map((org) => org.value);
+      if (isAllSelected) {
+        formik.setFieldValue('organization', []);
+      } else {
+        formik.setFieldValue('organization', allOrganizationValues);
+      }
+      setIsAllSelected(!isAllSelected);
+    } else {
+      formik.setFieldValue('organization', selectedValues);
+      setIsAllSelected(selectedValues.length === allOrganizations.length);
     }
   };
 
@@ -574,38 +689,21 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
               <CustomSelect
                 label="Select Organizations"
                 options={[
-                  { value: 'Pre Primary', label: 'Pre Primary' },
-                  { value: 'Primary', label: 'Primary' },
-                  { value: 'Secondary', label: 'Secondary' },
-                  { value: 'Higher Secondary', label: 'Higher Secondary' },
+                  {
+                    value: isAllSelected ? 'deselectAll' : 'all',
+                    label: isAllSelected ? 'Deselect All' : 'All',
+                  },
+                  ...allOrganizations,
                 ]}
                 value={formik.values.organization}
                 onChange={(val) => {
-                  formik.setFieldValue('organization', val);
+                  handleOrganizationChange(val as string[]);
                 }}
                 multiple
                 formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               />
               {formik.touched.organization && formik.errors.organization && (
                 <FormHelperText error>{String(formik.errors.organization)}</FormHelperText>
-              )}
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Sender"
-                options={[
-                  { value: 'admin', label: 'Admin' },
-                  { value: 'teacher', label: 'Teacher' },
-                ]}
-                value={formik.values.sender}
-                onChange={(val) => {
-                  formik.setFieldValue('sender', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.sender && formik.errors.sender && (
-                <FormHelperText>{formik.errors.sender}</FormHelperText>
               )}
             </Grid>
 
@@ -846,3 +944,171 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     </Box>
   );
 };
+
+export const DetailRow = ({ label, value, icon }: any) => (
+  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    {icon && (
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Iconify icon={icon} className="text-gray-500 w-full h-full" />
+        <Typography variant="subtitle2" className="text-gray-600 mb-1">
+          {label}
+        </Typography>
+      </Box>
+    )}
+    <Box sx={{ pb: 2, pl: 4.5 }}>
+      <Box>{value}</Box>
+    </Box>
+  </Box>
+);
+
+const AnnouncementDetails = ({ announcement }: any) => (
+  <Box>
+    <Scrollbar sx={{ height: '400px' }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Iconify icon="mdi:bullhorn-outline" className="text-gray-500 w-6 h-6" />
+        <Typography variant="h6" className="font-semibold">
+          {announcement?.title}
+        </Typography>
+      </Box>
+
+      <hr className="my-6 border-gray-200" />
+
+      <DetailRow
+        label="Description"
+        icon="mdi:text-box-outline"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {announcement?.description}
+          </Typography>
+        }
+      />
+
+      <DetailRow
+        label="Organizations"
+        icon="mdi:office-building-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.organization?.map((org: any) => (
+              <Chip key={org} label={org} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <DetailRow
+        label="Target Audience"
+        icon="mdi:account-group-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.audience?.map((aud: any) => (
+              <Chip key={aud} label={aud} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <DetailRow
+        label="Notification Preferences"
+        icon="mdi:bell-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.notification_preferences?.map((pref: any) => (
+              <Chip key={pref} label={pref} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <DetailRow
+          label="Publish Date"
+          icon="mdi:calendar-outline"
+          value={
+            <Typography variant="body2" className="text-gray-700">
+              {new Date(announcement?.publishDate).toLocaleString()}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Expiry Date"
+          icon="mdi:calendar-clock-outline"
+          value={
+            <Typography variant="body2" className="text-gray-700">
+              {new Date(announcement?.expiryDate).toLocaleString()}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Category"
+          icon="mdi:folder-outline"
+          value={
+            <Typography
+              component="span"
+              variant="body2"
+              className="px-3 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-200"
+            >
+              {announcement?.category}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Importance Level"
+          icon="mdi:flag-outline"
+          value={
+            <Typography
+              component="span"
+              variant="body2"
+              className={`px-3 py-1 rounded-full ${
+                announcement?.importance_level === 'High'
+                  ? 'bg-red-50 text-red-600 border border-red-200'
+                  : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+              }`}
+            >
+              {announcement?.importance_level}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Status"
+          icon="mdi:information-outline"
+          value={
+            <Typography
+              component="span"
+              variant="body2"
+              className={`px-3 py-1 rounded-full ${
+                announcement?.status === 'Published'
+                  ? 'bg-green-50 text-green-600 border border-green-200'
+                  : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+              }`}
+            >
+              {announcement?.status}
+            </Typography>
+          }
+        />
+      </Box>
+
+      {announcement?.link && (
+        <DetailRow
+          label="External Link"
+          icon="mdi:link-variant"
+          value={
+            <Typography
+              component="a"
+              variant="body2"
+              href={announcement.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {announcement.link}
+            </Typography>
+          }
+        />
+      )}
+    </Scrollbar>
+  </Box>
+);

@@ -40,15 +40,16 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { DetailRow } from './schoolWiseAnnounsement';
+
 interface Announcement {
   id: string;
   title: string;
   description: string;
   audience: string[];
-  sender: string;
   publishDate: Dayjs;
   expiryDate: Dayjs;
-  className: string;
+  className: string[];
   division: string[];
   status: string;
   category: string;
@@ -64,10 +65,9 @@ const ClassWiseAnnouncementInitialData: Announcement[] = [
     title: 'School Assembly',
     description: 'The school assembly will be held on Monday at 8 AM in the main hall.',
     audience: ['All Students'],
-    sender: 'School Administration',
     publishDate: dayjs('2024-10-28'),
     expiryDate: dayjs('2024-10-30'),
-    className: '1',
+    className: ['1'],
     division: ['A', 'B'],
     status: 'Published',
     category: 'General',
@@ -82,10 +82,9 @@ const ClassWiseAnnouncementInitialData: Announcement[] = [
     description:
       'PTM scheduled for all classes on the coming Saturday to discuss academic progress.',
     audience: ['Parents'],
-    sender: 'Class Teacher',
     publishDate: dayjs('2024-10-25'),
     expiryDate: dayjs('2024-11-02'),
-    className: '3',
+    className: ['3'],
     division: ['A', 'B', 'C'],
     status: 'Scheduled',
     category: 'Academic',
@@ -100,10 +99,9 @@ const ClassWiseAnnouncementInitialData: Announcement[] = [
     description:
       'Join us for the Annual Sports Day event on November 15. All students are encouraged to participate.',
     audience: ['Students'],
-    sender: 'Physical Education Department',
     publishDate: dayjs('2024-10-20'),
     expiryDate: dayjs('2024-11-16'),
-    className: '5',
+    className: ['5'],
     division: ['A', 'B', 'C', 'D'],
     status: 'Published',
     category: 'Extracurricular',
@@ -118,10 +116,9 @@ const ClassWiseAnnouncementInitialData: Announcement[] = [
     description:
       'The annual science exhibition will be held on December 5. Projects from all students are welcome.',
     audience: ['Students', 'Parents'],
-    sender: 'Science Department',
     publishDate: dayjs('2024-11-01'),
     expiryDate: dayjs('2024-12-06'),
-    className: '7',
+    className: ['7'],
     division: ['A', 'B'],
     status: 'Scheduled',
     category: 'Extracurricular',
@@ -136,10 +133,9 @@ const ClassWiseAnnouncementInitialData: Announcement[] = [
     description:
       'Orientation session for the new library system. Attendance is mandatory for all new students.',
     audience: ['Students'],
-    sender: 'Library Staff',
     publishDate: dayjs('2024-10-15'),
     expiryDate: dayjs('2024-10-17'),
-    className: '1',
+    className: ['1'],
     division: ['A', 'B'],
     status: 'Published',
     category: 'Administrative',
@@ -164,14 +160,12 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   const addAnounsmentDialog = useBoolean();
   const confirm_dialog = useBoolean();
 
+  const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
+  const view_dialog = useBoolean();
+
   const [announcementTableData, setAnnouncementTableData] = useState<Announcement[]>(
     ClassWiseAnnouncementInitialData
   );
-
-  const filteredAnnouncements =
-    selectedClass === 'All Classes'
-      ? announcementTableData
-      : announcementTableData.filter((announcement) => announcement.className === selectedClass);
 
   const handleDelete = (id: string) => {
     setAnnouncementTableData((prevData) =>
@@ -213,7 +207,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           ? {
               ...item,
               status: 'Published',
-              date: dayjs(),
+              publishDate: dayjs(),
               isScheduled: false,
             }
           : item
@@ -223,23 +217,58 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     setPublishingAnnouncement(null);
   };
 
+  const getImportanceLevelColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'urgent':
+        return {
+          bg: '#FEE2E2',
+          text: '#DC2626',
+          border: '#FECACA',
+        };
+      case 'critical':
+        return {
+          bg: '#FFEDD5',
+          text: '#EA580C',
+          border: '#FED7AA',
+        };
+      case 'high':
+        return {
+          bg: '#FEF3C7',
+          text: '#D97706',
+          border: '#FDE68A',
+        };
+      case 'medium':
+        return {
+          bg: '#E0F2FE',
+          text: '#0284C7',
+          border: '#BAE6FD',
+        };
+      case 'low':
+        return {
+          bg: '#DCFCE7',
+          text: '#16A34A',
+          border: '#BBF7D0',
+        };
+      case 'informational':
+        return {
+          bg: '#F3F4F6',
+          text: '#4B5563',
+          border: '#E5E7EB',
+        };
+      default:
+        return {
+          bg: '#F3F4F6',
+          text: '#4B5563',
+          border: '#E5E7EB',
+        };
+    }
+  };
+
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">Class Wise Announcement</Typography>
         <Box display="flex" gap={2}>
-          <CustomSelect
-            options={classData?.items || []}
-            value={selectedClass}
-            onChange={(val) => {
-              setSelectedClass(val as string);
-            }}
-            label="Class"
-            isLoading={isLoading}
-            labelKey="name"
-            valueKey="name"
-            formControlProps={{ sx: { minWidth: 200 } }}
-          />
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
@@ -273,7 +302,23 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
               </Typography>
             ),
           },
-          { id: 'className', label: 'Class' },
+          {
+            id: 'className',
+            label: 'Class',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((className: string) => (
+                  <Chip
+                    key={className}
+                    label={className}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            ),
+          },
           {
             id: 'division',
             label: 'Division',
@@ -292,8 +337,29 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             ),
           },
           {
-            id: 'sender',
-            label: 'Sender',
+            id: 'importance_level',
+            label: 'Importance',
+            render: (value) => {
+              const colors = getImportanceLevelColor(value);
+              return (
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '16px',
+                    backgroundColor: colors.bg,
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  {value}
+                </Typography>
+              );
+            },
           },
           {
             id: 'audience',
@@ -342,6 +408,15 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
                 placement="right-top"
                 actions={({ popover }) => (
                   <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        view_dialog.onTrue();
+                        setViewAnnouncement(row);
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
+                      Details
+                    </MenuItem>
                     {row.status === 'Scheduled' && (
                       <MenuItem
                         onClick={() => {
@@ -370,14 +445,14 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             ),
           },
         ]}
-        data={filteredAnnouncements}
+        data={announcementTableData}
       />
 
       <CustomDialog
         title={editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}
         open={addAnounsmentDialog.value}
         handleClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth="md"
       >
         <AnnouncementForm
           initialValues={editingAnnouncement}
@@ -462,6 +537,25 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           </Button>
         </DialogActions>
       </CustomDialog>
+
+      <CustomDialog
+        title="Announcement Details"
+        open={view_dialog.value}
+        handleClose={() => {
+          setViewAnnouncement(null);
+          view_dialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <DialogContent>
+          <AnnouncementDetails announcement={viewAnnouncement} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={view_dialog.onFalse} variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };
@@ -472,10 +566,9 @@ interface AnnouncementFormValues {
   title: string;
   description: string;
   audience: string[];
-  sender: string;
   publishDate: Dayjs | null;
   expiryDate: Dayjs | null;
-  className: string;
+  className: string[];
   division: string[];
   status: string;
   category: string;
@@ -504,6 +597,17 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     return selectedDate.isAfter(now) ? 'Scheduled' : 'Published';
   };
 
+  const divisionOption = [
+    { value: 'A', label: 'A' },
+    { value: 'B', label: 'B' },
+    { value: 'C', label: 'C' },
+    { value: 'D', label: 'D' },
+  ];
+
+  const [isAllSelected, setIsAllSelected] = useState(
+    initialValues?.division?.length === divisionOption.length
+  );
+
   const validationSchema = Yup.object({
     title: Yup.string().required('Title is required').min(3, 'Title must be at least 3 characters'),
     description: Yup.string()
@@ -519,9 +623,8 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
       title: initialValues?.title || '',
       description: initialValues?.description || '',
       audience: initialValues?.audience || [],
-      className: initialValues?.className || '',
+      className: initialValues?.className || [],
       division: initialValues?.division || [],
-      sender: initialValues?.sender || '',
       publishDate: initialValues?.publishDate ? dayjs(initialValues?.publishDate) : dayjs(),
       expiryDate: initialValues?.expiryDate ? dayjs(initialValues?.expiryDate) : null,
       category: initialValues?.category || '',
@@ -565,6 +668,21 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     formik.setFieldValue('notification_preferences', updatedPreferences);
   };
 
+  const handleDivisionChange = (selectedValues: string[]) => {
+    if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
+      const allDivision = divisionOption.map((org) => org.value);
+      if (isAllSelected) {
+        formik.setFieldValue('division', []);
+      } else {
+        formik.setFieldValue('division', allDivision);
+      }
+      setIsAllSelected(!isAllSelected);
+    } else {
+      formik.setFieldValue('division', selectedValues);
+      setIsAllSelected(selectedValues.length === divisionOption.length);
+    }
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
@@ -587,10 +705,11 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
                 options={classData?.items || []}
                 value={formik.values.className}
                 onChange={(val) => {
-                  formik.setFieldValue('className', val as string);
+                  formik.setFieldValue('className', val);
                 }}
                 label="Class"
                 isLoading={isLoading}
+                multiple
                 labelKey="name"
                 valueKey="name"
                 formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -604,14 +723,15 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
               <CustomSelect
                 label="Select Divisions"
                 options={[
-                  { value: 'A', label: 'A' },
-                  { value: 'B', label: 'B' },
-                  { value: 'C', label: 'C' },
-                  { value: 'D', label: 'D' },
+                  {
+                    value: isAllSelected ? 'deselectAll' : 'all',
+                    label: isAllSelected ? 'Deselect All' : 'All',
+                  },
+                  ...divisionOption,
                 ]}
                 value={formik.values.division}
                 onChange={(val) => {
-                  formik.setFieldValue('division', val);
+                  handleDivisionChange(val as string[]);
                 }}
                 multiple
                 formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -637,24 +757,6 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
               />
               {formik.touched.audience && formik.errors.audience && (
                 <FormHelperText error>{formik.errors.audience}</FormHelperText>
-              )}
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Sender"
-                options={[
-                  { value: 'admin', label: 'Admin' },
-                  { value: 'teacher', label: 'Teacher' },
-                ]}
-                value={formik.values.sender}
-                onChange={(val) => {
-                  formik.setFieldValue('sender', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.sender && formik.errors.sender && (
-                <FormHelperText>{formik.errors.sender}</FormHelperText>
               )}
             </Grid>
 
@@ -702,6 +804,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
                 options={[
                   { value: 'urgent', label: 'Urgent' },
                   { value: 'critical', label: 'Critical' },
+                  { value: 'high', label: 'High' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'low', label: 'Low' },
+                  { value: 'informational', label: 'Informational' },
                 ]}
                 placeholder="Announcement Importance level"
                 value={formik.values.importance_level}
@@ -875,3 +981,167 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     </Box>
   );
 };
+
+const AnnouncementDetails = ({ announcement }: any) => (
+  <Box>
+    <Scrollbar sx={{ height: '400px' }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Iconify icon="mdi:bullhorn-outline" className="text-gray-500 w-6 h-6" />
+        <Typography variant="h6" className="font-semibold">
+          {announcement?.title}
+        </Typography>
+      </Box>
+
+      <hr className="my-6 border-gray-200" />
+
+      <DetailRow
+        label="Description"
+        icon="mdi:text-box-outline"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {announcement?.description}
+          </Typography>
+        }
+      />
+
+      <DetailRow
+        label="Class"
+        icon="mdi:school-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.className?.map((data: any) => (
+              <Chip key={data} label={`Class ${data}`} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <DetailRow
+        label="Division"
+        icon="mdi:account-group-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.division?.map((div: any) => (
+              <Chip key={div} label={`Division ${div}`} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <DetailRow
+        label="Target Audience"
+        icon="mdi:account-group-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.audience?.map((aud: any) => (
+              <Chip key={aud} label={aud} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <DetailRow
+        label="Notification Preferences"
+        icon="mdi:bell-outline"
+        value={
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {announcement?.notification_preferences?.map((pref: any) => (
+              <Chip key={pref} label={pref} size="small" variant="outlined" />
+            ))}
+          </Box>
+        }
+      />
+
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <DetailRow
+          label="Publish Date"
+          icon="mdi:calendar-outline"
+          value={
+            <Typography variant="body2" className="text-gray-700">
+              {new Date(announcement?.publishDate).toLocaleString()}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Expiry Date"
+          icon="mdi:calendar-clock-outline"
+          value={
+            <Typography variant="body2" className="text-gray-700">
+              {new Date(announcement?.expiryDate).toLocaleString()}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Category"
+          icon="mdi:folder-outline"
+          value={
+            <Typography
+              component="span"
+              variant="body2"
+              className="px-3 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-200"
+            >
+              {announcement?.category}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Importance Level"
+          icon="mdi:flag-outline"
+          value={
+            <Typography
+              component="span"
+              variant="body2"
+              className={`px-3 py-1 rounded-full ${
+                announcement?.importance_level === 'High'
+                  ? 'bg-red-50 text-red-600 border border-red-200'
+                  : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+              }`}
+            >
+              {announcement?.importance_level}
+            </Typography>
+          }
+        />
+
+        <DetailRow
+          label="Status"
+          icon="mdi:information-outline"
+          value={
+            <Typography
+              component="span"
+              variant="body2"
+              className={`px-3 py-1 rounded-full ${
+                announcement?.status === 'Published'
+                  ? 'bg-green-50 text-green-600 border border-green-200'
+                  : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+              }`}
+            >
+              {announcement?.status}
+            </Typography>
+          }
+        />
+      </Box>
+
+      {announcement?.link && (
+        <DetailRow
+          label="External Link"
+          icon="mdi:link-variant"
+          value={
+            <Typography
+              component="a"
+              variant="body2"
+              href={announcement.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {announcement.link}
+            </Typography>
+          }
+        />
+      )}
+    </Scrollbar>
+  </Box>
+);
