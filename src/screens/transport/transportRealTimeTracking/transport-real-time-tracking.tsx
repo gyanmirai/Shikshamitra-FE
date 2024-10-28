@@ -41,6 +41,7 @@ const TransportRealTimeTrackingScreen = () => {
     useEffect(() => {
         const fetchRoute = async () => {
             const coordinates = await getRouteCoordinates(start, end, waypoint);
+            console.log("Fetched coordinates :", coordinates);
             setRouteCoordinates(coordinates);
         };
 

@@ -19,6 +19,8 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
+import TransportMap from "./component/view-on-map-dialog";
+
 
 
 
@@ -37,41 +39,54 @@ interface Route {
   assignedDrivers: string;
   assignedVehicles: string;
   dropLocations: DropLocation[];
+  startPointLatAndLong: [number, number],
+  endPointLatAndLong: [number, number],
+  wayPointLatAndLong:[number, number][],
+   
+    
+ 
 }
 
 const routesData: Route[] = [
-  {
-    routeNumber: 'R101',
-    startPoint: 'Main Campus',
-    endPoint: 'Downtown Station',
-    totalStops: 3,
-    assignedDrivers: "Jane Smith",
-    assignedVehicles: "Bus A",
-    dropLocations: [
-      {
-        busStop: "Central Park",
+  // {
+  //   routeNumber: 'R101',
+  //   startPoint: 'Main Campus',
+  //   endPoint: 'Downtown Station',
+  //   totalStops: 3,
+  //   assignedDrivers: "Jane Smith",
+  //   assignedVehicles: "Bus A",
+  //   dropLocations: [
+  //     {
+  //       busStop: "Central Park",
 
-        pickupTime: "08:00 AM",
-        dropoffTime: "08:30 AM"
-      },
-      {
-        busStop: "River Valley",
+  //       pickupTime: "08:00 AM",
+  //       dropoffTime: "08:30 AM"
+  //     },
+  //     {
+  //       busStop: "River Valley",
 
-        pickupTime: "08:35 AM",
-        dropoffTime: "09:00 AM"
-      },
-      {
-        busStop: "City Mall",
+  //       pickupTime: "08:35 AM",
+  //       dropoffTime: "09:00 AM"
+  //     },
+  //     {
+  //       busStop: "City Mall",
 
-        pickupTime: "09:05 AM",
-        dropoffTime: "09:30 AM"
-      }
-    ]
-  },
+  //       pickupTime: "09:05 AM",
+  //       dropoffTime: "09:30 AM"
+  //     }
+  //   ]
+  // },
   {
     routeNumber: 'R102',
     startPoint: 'North Park',
     endPoint: 'South City',
+    startPointLatAndLong: [21.233659274910956, 72.862602819098],
+    endPointLatAndLong: [21.14843573826047, 72.88572990744605],
+    wayPointLatAndLong:[
+      [21.200659, 72.870602],
+      [21.180435, 72.880729],
+      
+  ],
     totalStops: 2,
     assignedDrivers: "Emily Davis",
     assignedVehicles: "Bus C",
@@ -93,78 +108,95 @@ const routesData: Route[] = [
   // Add more routes as needed
 ];
 
-const handleViewOnMap = (data:any)=>{
-     console.log(data)
-}
 
-const columns = [
-  { id: 'routeNumber', label: 'Route Number' },
-  { id: 'startPoint', label: 'Start Point' },
-  { id: 'endPoint', label: 'End Point' },
-  { id: 'totalStops', label: 'Total Stop' },
-  { id: 'assignedDrivers', label: 'Assigned Driver' },
-  {
-    id: 'action',
-    label: 'Action',
-    render(value: any, row: any) {
-      return (
-        <ThreeDotsActions
-          actions={({ popover }: any) => (
-            <MenuList>
-              <MenuItem
-                onClick={() => {
-                  // setIsEdit(true);
-                  // setSelectedExpense(row);
-                  // dialog.onTrue();
-                }}
-              >
-                <Iconify icon="solar:pen-bold" />
-                Edit Route
-              </MenuItem>
-              {/* <MenuItem
-                onClick={() => {
-                  // handleDelete(row)
-                }}
-              >
-                <Iconify icon="solar:pen-bold" />
-                Assign Students/Staff
-              </MenuItem> */}
-              <MenuItem
-                onClick={() => {
-                  handleViewOnMap(row)
-                }}
-              >
-                <Iconify icon="solar:eye-bold" />
-                View on Map
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  // handleDelete(row)
-                }}
-              >
-                <Iconify icon="mingcute:notification-fill" />
-                Notify
-              </MenuItem>
-            </MenuList>
-          )}
-        />
-      );
-    },
-  },
-];
+
+
 
 const RoutesAndSchedulesScreen = () => {
+  const columns = [
+    { id: 'routeNumber', label: 'Route Number' },
+    { id: 'startPoint', label: 'Start Point' },
+    { id: 'endPoint', label: 'End Point' },
+    { id: 'totalStops', label: 'Total Stop' },
+    { id: 'assignedDrivers', label: 'Assigned Driver' },
+    {
+      id: 'action',
+      label: 'Action',
+      render(value: any, row: any) {
+        return (
+          <ThreeDotsActions
+            actions={({ popover }: any) => (
+              <MenuList>
+                <MenuItem
+                  onClick={() => {
+                    // setIsEdit(true);
+                    // setSelectedExpense(row);
+                    // dialog.onTrue();
+                  }}
+                >
+                  <Iconify icon="solar:pen-bold" />
+                  Edit Route
+                </MenuItem>
+                {/* <MenuItem
+                  onClick={() => {
+                    // handleDelete(row)
+                  }}
+                >
+                  <Iconify icon="solar:pen-bold" />
+                  Assign Students/Staff
+                </MenuItem> */}
+                <MenuItem
+                  onClick={() => {
+                   
+                    handleViewOnMap(row)
+                  }}
+                >
+                  <Iconify icon="solar:eye-bold" />
+                  View on Map
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    // handleDelete(row)
+                  }}
+                >
+                  <Iconify icon="mingcute:notification-fill" />
+                  Notify
+                </MenuItem>
+              </MenuList>
+            )}
+          />
+        );
+      },
+    },
+  ];
   const dialog = useBoolean();
+  const mapDialog = useBoolean();
   const [selectedExpense, setSelectedExpense] = useState(routesData);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(routesData);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [mapData, setMapData] = useState<any>(null);
 
+  const handleViewOnMap = (data: any) => {
+    const { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong } = data;
+
+        setMapData({ startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
+        console.log("Map data being set:", { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
+        setMapDialogOpen(true);
+   
+  }
+  
+ 
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
   };
+  const mapDialogClose = () => {
+    setMapDialogOpen(false); 
+    setMapData(null); 
+};
 
-  useEffect(() => { }, [selectedExpense, isEdit]);
+  useEffect(() => { }, [selectedExpense, isEdit, mapDialogOpen]);
 
   
 
@@ -195,7 +227,15 @@ const RoutesAndSchedulesScreen = () => {
     >
       <CreateRoutesForm onClose={dialog.onFalse} addNewRouteHandle={handleSave} />
     </CustomDialog>
-
+    {mapDialogOpen && (
+                <CustomDialog maxWidth="md" title="R102" open={mapDialogOpen} handleClose={mapDialogClose}>
+                    <TransportMap
+                        start={mapData?.startPointLatAndLong}
+                        end={mapData?.endPointLatAndLong}
+                        waypoints={mapData?.wayPointLatAndLong}
+                    />
+                </CustomDialog>
+            )}
   </>);
 };
 
