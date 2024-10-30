@@ -19,6 +19,9 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
+import FinalRoute from "./step/final-route";
+import BusStopPicker from "./step/stop-picker";
+import LocationPicker from "./step/location-selector";
 import TransportMap from "./component/view-on-map-dialog";
 
 
@@ -757,12 +760,84 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
 
 
     onClose();
+
+   
+    
+  
    
   };
 
+  interface RoutePoint {
+    id: number;
+    name: string;
+    coordinates: [number, number];
+  }
+  
+  interface RouteDetailsNew {
+    startPoint: RoutePoint | null;
+    endPoint: RoutePoint | null;
+    stops: RoutePoint[];
+  }
+  
+  const [allRouteDetails, setAllRouteDetails] = useState<any>({
+    startPoint: null,
+    endPoint: null,
+    stops: [],
+  });
+  
+  const [stepOneInfo, setStepOneInfo] = useState<any>(null);
+  const handleLocationData = (data: any, locationType: string) => {
+    // Update route details based on locationType
+    setAllRouteDetails((prevDetails:any) => {
+      const newDetails = {
+        ...prevDetails,
+        startPoint: locationType === "start" ? data.start : prevDetails.startPoint,
+        endPoint: locationType === "end" ? data.end : prevDetails.endPoint,
+      };
+  
+      
+      setStepOneInfo(newDetails); 
+      return newDetails; 
+    });
+  };
+
+  useEffect(() => {
+    console.log("Updated route data:", allRouteDetails);
+  }, [allRouteDetails]);
+  
+//   const handleStop = (newStop: RoutePoint | RoutePoint[]) => {
+//     setAllRouteDetails((prevDetails:any) => ({
+//       ...prevDetails,
+//       stops: [...(prevDetails.stops ?? []), ...(Array.isArray(newStop) ? newStop : [newStop])],
+//     }));
+// };
+
+const handleStop = (newStop: RoutePoint) => {
+  setAllRouteDetails((prevDetails:any) => {
+     
+      const isStopPresent = prevDetails.stops.some((stop: RoutePoint) => stop.id === newStop.id);
+
+  
+      if (!isStopPresent) {
+          return {
+              ...prevDetails,
+              stops: [...prevDetails.stops, newStop],
+          };
+      }
+
+   
+      return prevDetails;
+  });
+};
+
+
+
   const allRouteSteps = [
-    <EnterRouteDetails onChange={handleInputChange} routeDetails={routeDetails} />,
-    <AddBusStops onChange={handleSelectChange} selectedStop={selectedStop} />,
+    <LocationPicker onLocationSelect={handleLocationData}/>,
+    // <EnterRouteDetails onChange={handleInputChange} routeDetails={routeDetails} />,
+    <BusStopPicker stepOneInfo={stepOneInfo} onStopsChange={handleStop} />,
+    // <AddBusStops onChange={handleSelectChange} selectedStop={selectedStop} />,
+    <FinalRoute routeDetails={allRouteDetails} />,
     <AssignVehicleAndDriver
       onChange={handleVehicleChange}
       vehicle={vehicle}

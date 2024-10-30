@@ -32,8 +32,10 @@ const TransportRealTimeTrackingScreen = () => {
         const coordinates = [start, ...waypoints, end]
             .map(coord => `${coord[1]},${coord[0]}`)
             .join(';');
+
+            console.log("coordinates", coordinates);
         
-        const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordinates}?geometries=geojson`);
+        const response = await fetch(`ttps://router.project-osrm.org/route/v1/driving/${coordinates}?geometries=geojso`);
         const data = await response.json();
         return data.routes[0].geometry.coordinates.map((coord:any) => [coord[1], coord[0]]);
     };
