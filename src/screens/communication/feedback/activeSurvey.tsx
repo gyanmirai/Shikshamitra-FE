@@ -9,6 +9,7 @@ import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Card,
   Chip,
   Grid,
   Table,
@@ -44,6 +45,10 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+
+import { DetailRow } from '../announcement/schoolWiseAnnounsement';
 
 interface Survey {
   id: number;
@@ -114,10 +119,18 @@ const ActiveSurvey = (props: TabComponentType) => {
   const [publishingSurvey, setPublishingSurvey] = useState<any | null>(null);
   const [surveyTableData, setSurveyTableData] = useState(surveyData);
   const addNewSurveyDialog = useBoolean();
+  const viewDetailsDialog = useBoolean();
+  const [viewSurvey, setViewSurvey] = useState<any | null>(null);
+  const viewResponseDialog = useBoolean();
+  const [responseSurvey, setResponseSurvey] = useState<any | null>(null);
 
   const handleClose = () => {
     setPublishingSurvey(null);
     publish_modal.onFalse();
+    setViewSurvey(null);
+    viewDetailsDialog.onFalse();
+    viewResponseDialog.onFalse();
+    setResponseSurvey(null);
   };
 
   const handlePublish = (survey: any) => {
@@ -215,6 +228,20 @@ const ActiveSurvey = (props: TabComponentType) => {
             },
           },
           {
+            id: 'viewDetails',
+            label: 'View Details',
+            render: (value, row) => (
+              <IconButton
+                onClick={() => {
+                  viewDetailsDialog.onTrue();
+                  setViewSurvey(row);
+                }}
+              >
+                <Iconify icon="mdi:eye" />
+              </IconButton>
+            ),
+          },
+          {
             id: 'status',
             label: 'Status',
             render: (value, row) =>
@@ -250,8 +277,8 @@ const ActiveSurvey = (props: TabComponentType) => {
                   <MenuList>
                     <MenuItem
                       onClick={() => {
-                        //   addAnounsmentDialog.onTrue();
-                        //   setEditingAnnouncement(row);
+                        viewResponseDialog.onTrue();
+                        setResponseSurvey(row);
                       }}
                     >
                       <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
@@ -345,11 +372,268 @@ const ActiveSurvey = (props: TabComponentType) => {
           </Button>
         </DialogActions>
       </CustomDialog>
+
+      <CustomDialog
+        title="Survey Detail View"
+        open={viewDetailsDialog.value}
+        handleClose={handleClose}
+        maxWidth="md"
+      >
+        <ViewSurveyDetail survey={viewSurvey} />
+      </CustomDialog>
+
+      <CustomDialog
+        title="Survey Detail View"
+        open={viewResponseDialog.value}
+        handleClose={handleClose}
+        maxWidth="md"
+      >
+        <Box sx={{ p: 2 }}>
+          <Scrollbar sx={{ height: '400px' }}>
+            <ResponseComponent />
+          </Scrollbar>
+        </Box>
+      </CustomDialog>
     </Box>
   );
 };
 
 export default ActiveSurvey;
+
+interface questionData {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+interface responseData {
+  id: string;
+  responsendedName: string;
+  role: string;
+  responsendedEmail: string;
+  response: questionData[];
+}
+
+const responseTableData: responseData[] = [
+  {
+    id: '1',
+    responsendedName: 'John Doe',
+    role: 'Student',
+    responsendedEmail: 'john.doe@student.edu',
+    response: [
+      { id: 'q1', question: 'How do you rate the quality of the teaching?', answer: 'Excellent' },
+      {
+        id: 'q2',
+        question: 'Are you satisfied with the course materials provided?',
+        answer: 'Yes, very satisfied',
+      },
+      { id: 'q3', question: 'How much time do you spend on homework daily?', answer: '2 hours' },
+    ],
+  },
+  {
+    id: '2',
+    responsendedName: 'Mary Smith',
+    role: 'Parent',
+    responsendedEmail: 'mary.smith@parent.edu',
+    response: [
+      {
+        id: 'q1',
+        question: 'How do you feel about the school’s communication with parents?',
+        answer: 'Good, but can improve',
+      },
+      {
+        id: 'q2',
+        question: 'Are you satisfied with the academic progress of your child?',
+        answer: 'Yes',
+      },
+      {
+        id: 'q3',
+        question: 'How involved are you in your child’s studies?',
+        answer: 'I help with homework regularly',
+      },
+    ],
+  },
+  {
+    id: '3',
+    responsendedName: 'Alice Brown',
+    role: 'Student',
+    responsendedEmail: 'alice.brown@student.edu',
+    response: [
+      { id: 'q1', question: 'How do you rate the quality of the teaching?', answer: 'Good' },
+      {
+        id: 'q2',
+        question: 'Are you satisfied with the course materials provided?',
+        answer: 'Mostly, but some materials need updating',
+      },
+      { id: 'q3', question: 'How much time do you spend on homework daily?', answer: '1 hour' },
+    ],
+  },
+  {
+    id: '4',
+    responsendedName: 'Robert Johnson',
+    role: 'Parent',
+    responsendedEmail: 'robert.johnson@parent.edu',
+    response: [
+      {
+        id: 'q1',
+        question: 'How do you feel about the school’s communication with parents?',
+        answer: 'Excellent',
+      },
+      {
+        id: 'q2',
+        question: 'Are you satisfied with the academic progress of your child?',
+        answer: 'Very satisfied',
+      },
+      {
+        id: 'q3',
+        question: 'How involved are you in your child’s studies?',
+        answer: 'I monitor assignments and grades',
+      },
+    ],
+  },
+  {
+    id: '5',
+    responsendedName: 'Linda White',
+    role: 'Student',
+    responsendedEmail: 'linda.white@student.edu',
+    response: [
+      { id: 'q1', question: 'How do you rate the quality of the teaching?', answer: 'Fair' },
+      {
+        id: 'q2',
+        question: 'Are you satisfied with the course materials provided?',
+        answer: 'No, some materials are outdated',
+      },
+      { id: 'q3', question: 'How much time do you spend on homework daily?', answer: '3 hours' },
+    ],
+  },
+];
+
+const ResponseComponent = () => {
+  const [tableData, setTableData] = useState<any>(responseTableData);
+  return (
+    <CustomizableTable
+      columns={[
+        {
+          id: 'responsendedName',
+          label: 'Respodent Name',
+          children(row) {
+            return (
+              <>
+                {row.response.length > 0 && (
+                  <Box display="flex" flexDirection="column" gap={2}>
+                    <Scrollbar sx={{ height: '200px' }}>
+                      {row.response.map((val: any, index: any) => (
+                        <React.Fragment key={index}>
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Paper elevation={4} sx={{ p: 2, width: '100%', mt: 1 }}>
+                              <Typography variant="body1">Question: {val.question}</Typography>
+                              <Typography variant="body2">Answer: {val.answer}</Typography>
+                            </Paper>
+                          </Box>
+                        </React.Fragment>
+                      ))}
+                    </Scrollbar>
+                  </Box>
+                )}
+              </>
+            );
+          },
+        },
+        {
+          id: 'role',
+          label: 'Role',
+        },
+        {
+          id: 'responsendedEmail',
+          label: 'Email',
+        },
+      ]}
+      data={tableData}
+    />
+  );
+};
+
+export const ViewSurveyDetail = ({ survey }: any) => (
+  <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
+    <Scrollbar sx={{ height: '500px' }}>
+      <Typography variant="h6" mb={1}>
+        Audience Details
+      </Typography>
+      <Box sx={{ display: 'flex' }}>
+        <Card sx={{ p: 1, width: '100%' }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Iconify icon="mdi:bullhorn-outline" className="text-gray-500 w-6 h-6" />
+            <Typography variant="h6" className="font-semibold">
+              {survey?.surveyTitle}
+            </Typography>
+          </Box>
+          <hr className="my-6 border-gray-200" />
+          <DetailRow
+            label="Description"
+            icon="mdi:text-box-outline"
+            value={
+              <Typography variant="body2" className="text-gray-700">
+                {survey?.description}
+              </Typography>
+            }
+          />
+          <DetailRow
+            label="Audience"
+            icon="mdi:account-group-outline"
+            value={
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                {survey?.audience?.map((aud: any) => (
+                  <Chip key={aud} label={aud} size="small" variant="outlined" />
+                ))}
+              </Box>
+            }
+          />
+
+          <DetailRow
+            label="Response Rate"
+            icon="mdi:information-outline"
+            value={
+              <Label
+                variant="soft"
+                color={
+                  survey?.status === 'Active'
+                    ? 'primary'
+                    : survey?.status === 'Pending'
+                      ? 'warning'
+                      : survey?.status === 'Closed'
+                        ? 'error'
+                        : 'default'
+                }
+              >
+                {survey?.responseRate}
+              </Label>
+            }
+          />
+        </Card>
+      </Box>
+      <Typography variant="h6" mb={1} mt={1}>
+        Responses Details
+      </Typography>
+      <ResponseComponent />
+      <AnalyticsCurrentVisits
+        title="Analysis Chart"
+        chart={{
+          series: [
+            { label: 'Question 1', value: 35 },
+            { label: 'Question 2', value: 25 },
+            { label: 'Question 3', value: 15 },
+            { label: 'Question 4', value: 50 },
+          ],
+        }}
+        sx={{ boxShadow: 'none' }}
+      />
+    </Scrollbar>
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+      <Button variant="contained">Close Survey</Button>
+      <Button variant="contained">Download Responses</Button>
+    </Box>
+  </Box>
+);
 
 const SurveyDetails = ({ formik }: any) => {
   const { data: classData, isLoading } = useQueryAndMutation({

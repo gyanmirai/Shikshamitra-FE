@@ -11,7 +11,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ActiveSurvey from './activeSurvey';
-import PastFeedback from './pastFeedback';
+import PastSurvey from './pastFeedback';
 
 
 const TABS = [
@@ -21,9 +21,9 @@ const TABS = [
     component: (props: TabComponentType) => <ActiveSurvey {...props} />,
   },
   {
-    value: 'passFeedback',
-    label: 'Past Feedback',
-    component: (props: TabComponentType) => <PastFeedback {...props} />,
+    value: 'pastSurvey',
+    label: 'Past Survey',
+    component: (props: TabComponentType) => <PastSurvey {...props} />,
   },
 ];
 
