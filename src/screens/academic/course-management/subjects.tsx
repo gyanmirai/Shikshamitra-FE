@@ -406,6 +406,7 @@ const Subjects = (props: TabComponentType) => {
           onSubmit={handleChapterSubmit}
           selectedSubject={selectedSubject}
           initialValues={selectedChapter}
+          isEdit={isEditMode}
         />
       </CustomDialog>
 

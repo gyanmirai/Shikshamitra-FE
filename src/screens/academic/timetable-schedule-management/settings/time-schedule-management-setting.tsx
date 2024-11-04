@@ -234,7 +234,7 @@ const TimeScheduleManagementSetting = () => {
             options={[]}
             value=""
             onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 320 } }}
+            formControlProps={{ sx: { minWidth: 330 } }}
           />
           <CustomSelect
             label="Notify Admin"
@@ -279,7 +279,7 @@ const TimeScheduleManagementSetting = () => {
       </Card>
       <Card sx={{ p: 2, mb: 1 }}>
         <Typography variant="h6">Teacher Availability</Typography>
-        <Box display="flex" sx={{ gap: 2 }}>
+        <Box display="flex" sx={{ gap: 2, py: '20px' }}>
           <CustomSelect
             label="Available Teacher"
             options={[]}
@@ -406,6 +406,7 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
             <Grid item xs={12} md={6}>
               <TextField
                 name="floor"
+                disabled={isEdit}
                 value={formik.values.floor}
                 onChange={formik.handleChange}
                 label="Floors"
@@ -425,9 +426,6 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
             </Grid>
           </Grid>
           <DialogActions>
-            <Button variant="contained" onClick={() => {}} color="warning">
-              Cancel
-            </Button>
             <Button type="submit" variant="contained" onClick={() => {}}>
               Save
             </Button>

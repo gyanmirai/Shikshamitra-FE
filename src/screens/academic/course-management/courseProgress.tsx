@@ -2,13 +2,9 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 
-// eslint-disable-next-line import/no-duplicates
-import { MenuList } from '@mui/material';
-// eslint-disable-next-line import/no-duplicates
-import { MenuItem } from '@mui/material';
-// eslint-disable-next-line import/no-duplicates
-import { Card, Grid, Typography } from '@mui/material';
+import { Card, Grid, MenuList, MenuItem, Typography } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -181,6 +177,7 @@ const CourseProgress = (props: TabComponentType) => {
                     <ThreeDotsActions
                       actions={({ popover }: any) => (
                         <MenuList>
+                          <Iconify icon="mdi:bell" sx={{ mr: 2 }} />
                           <MenuItem onClick={() => {}}>Send Reminder</MenuItem>
                         </MenuList>
                       )}
