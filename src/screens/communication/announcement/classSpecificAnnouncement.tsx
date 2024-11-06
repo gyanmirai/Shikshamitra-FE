@@ -10,15 +10,20 @@ import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Chip,
   Switch,
   Button,
   MenuList,
   MenuItem,
+  Checkbox,
   TextField,
   Typography,
+  DialogContent,
   DialogActions,
   FormHelperText,
+  InputAdornment,
   FormControlLabel,
+  DialogContentText,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -39,42 +44,108 @@ interface Announcement {
   id: string;
   title: string;
   description: string;
-  audience: string;
+  audience: string[];
+  sender: string;
+  publishDate: Dayjs;
+  expiryDate: Dayjs;
   className: string;
-  date: Dayjs;
+  division: string[];
   status: string;
+  category: string;
+  importance_level: string;
+  link: string;
+  notification_preferences: string[];
   isScheduled: boolean;
 }
 
-const SchoolWiseAnnounsementInitialData: Announcement[] = [
+const ClassWiseAnnouncementInitialData: Announcement[] = [
   {
     id: '1',
     title: 'School Assembly',
-    description: 'School assembly will be held on Monday at 8 AM.',
-    audience: 'All Students',
+    description: 'The school assembly will be held on Monday at 8 AM in the main hall.',
+    audience: ['All Students'],
+    sender: 'School Administration',
+    publishDate: dayjs('2024-10-28'),
+    expiryDate: dayjs('2024-10-30'),
     className: '1',
-    date: dayjs('2025-10-30'),
+    division: ['A', 'B'],
     status: 'Published',
+    category: 'General',
+    importance_level: 'High',
+    link: 'https://schoolwebsite.com/assembly',
+    notification_preferences: ['Email', 'App Notification'],
     isScheduled: false,
   },
   {
     id: '2',
     title: 'Parent-Teacher Meeting',
-    description: 'PTM scheduled for all classes on the coming Saturday.',
-    audience: 'Parents',
-    className: '1',
-    date: dayjs('2024-11-02'),
+    description:
+      'PTM scheduled for all classes on the coming Saturday to discuss academic progress.',
+    audience: ['Parents'],
+    sender: 'Class Teacher',
+    publishDate: dayjs('2024-10-25'),
+    expiryDate: dayjs('2024-11-02'),
+    className: '3',
+    division: ['A', 'B', 'C'],
     status: 'Scheduled',
+    category: 'Academic',
+    importance_level: 'Urgent',
+    link: 'https://schoolwebsite.com/ptm',
+    notification_preferences: ['SMS', 'App Notification'],
     isScheduled: true,
   },
   {
     id: '3',
     title: 'Annual Sports Day',
-    description: 'Annual Sports Day event scheduled for 15th November.',
-    audience: 'All Students',
-    className: '1',
-    date: dayjs('2024-11-15'),
+    description:
+      'Join us for the Annual Sports Day event on November 15. All students are encouraged to participate.',
+    audience: ['Students'],
+    sender: 'Physical Education Department',
+    publishDate: dayjs('2024-10-20'),
+    expiryDate: dayjs('2024-11-16'),
+    className: '5',
+    division: ['A', 'B', 'C', 'D'],
     status: 'Published',
+    category: 'Extracurricular',
+    importance_level: 'Normal',
+    link: 'https://schoolwebsite.com/sportsday',
+    notification_preferences: ['Email'],
+    isScheduled: false,
+  },
+  {
+    id: '4',
+    title: 'Science Exhibition',
+    description:
+      'The annual science exhibition will be held on December 5. Projects from all students are welcome.',
+    audience: ['Students', 'Parents'],
+    sender: 'Science Department',
+    publishDate: dayjs('2024-11-01'),
+    expiryDate: dayjs('2024-12-06'),
+    className: '7',
+    division: ['A', 'B'],
+    status: 'Scheduled',
+    category: 'Extracurricular',
+    importance_level: 'High',
+    link: 'https://schoolwebsite.com/scienceexhibition',
+    notification_preferences: ['App Notification'],
+    isScheduled: true,
+  },
+  {
+    id: '5',
+    title: 'Library Orientation',
+    description:
+      'Orientation session for the new library system. Attendance is mandatory for all new students.',
+    audience: ['Students'],
+    sender: 'Library Staff',
+    publishDate: dayjs('2024-10-15'),
+    expiryDate: dayjs('2024-10-17'),
+    className: '1',
+    division: ['A', 'B'],
+    status: 'Published',
+    category: 'Administrative',
+    importance_level: 'Normal',
+    link: 'https://schoolwebsite.com/libraryorientation',
+    notification_preferences: ['Email', 'SMS'],
     isScheduled: false,
   },
 ];
@@ -85,13 +156,16 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  const publish_modal = useBoolean();
+  const [publishingAnnouncement, setPublishingAnnouncement] = useState<any | null>(null);
+  const [deleteAnnouncement, setDeleteAnnouncement] = useState('');
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>('All Classes');
   const addAnounsmentDialog = useBoolean();
   const confirm_dialog = useBoolean();
 
   const [announcementTableData, setAnnouncementTableData] = useState<Announcement[]>(
-    SchoolWiseAnnounsementInitialData
+    ClassWiseAnnouncementInitialData
   );
 
   const filteredAnnouncements =
@@ -103,6 +177,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     setAnnouncementTableData((prevData) =>
       prevData.filter((announcement) => announcement.id !== id)
     );
+    confirm_dialog.onFalse();
   };
 
   const handleSubmit = (values: any) => {
@@ -127,12 +202,31 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   const handleCloseDialog = () => {
     setEditingAnnouncement(null);
     addAnounsmentDialog.onFalse();
+    setPublishingAnnouncement(null);
+    publish_modal.onFalse();
+  };
+
+  const handlePublish = (announcement: any) => {
+    setAnnouncementTableData((prevData) =>
+      prevData.map((item) =>
+        item.id === announcement.id
+          ? {
+              ...item,
+              status: 'Published',
+              date: dayjs(),
+              isScheduled: false,
+            }
+          : item
+      )
+    );
+    publish_modal.onFalse();
+    setPublishingAnnouncement(null);
   };
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">School Wise Announcement</Typography>
+        <Typography variant="h6">Class Wise Announcement</Typography>
         <Box display="flex" gap={2}>
           <CustomSelect
             options={classData?.items || []}
@@ -162,8 +256,17 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         columns={[
           { id: 'title', label: 'Title' },
           {
-            id: 'date',
-            label: 'Date',
+            id: 'publishDate',
+            label: 'Publish Date',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('DD MMM YYYY')}
+              </Typography>
+            ),
+          },
+          {
+            id: 'expiryDate',
+            label: 'Expiry Date',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -171,15 +274,65 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             ),
           },
           { id: 'className', label: 'Class' },
-          { id: 'audience', label: 'Audience' },
+          {
+            id: 'division',
+            label: 'Division',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip
+                    key={audience}
+                    label={audience}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            ),
+          },
+          {
+            id: 'sender',
+            label: 'Sender',
+          },
+          {
+            id: 'audience',
+            label: 'Audience',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip
+                    key={audience}
+                    label={audience}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            ),
+          },
           {
             id: 'status',
             label: 'Status',
-            render: (value, row) => (
-              <Label variant="soft" color={value === 'Published' ? 'primary' : 'warning'}>
-                {value}
-              </Label>
-            ),
+            render: (value, row) =>
+              value === 'Published' ? (
+                <Label variant="soft" color="primary">
+                  {value}
+                </Label>
+              ) : (
+                <Label
+                  variant="soft"
+                  color="warning"
+                  onClick={() => {
+                    publish_modal.onTrue();
+                    setPublishingAnnouncement(row);
+                  }}
+                  sx={{ cursor: 'pointer' }}
+                >
+                  {value}
+                </Label>
+              ),
           },
           {
             id: 'action',
@@ -189,23 +342,28 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
                 placement="right-top"
                 actions={({ popover }) => (
                   <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        addAnounsmentDialog.onTrue();
-                        setEditingAnnouncement(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleDelete(row.id);
-                      }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
+                    {row.status === 'Scheduled' && (
+                      <MenuItem
+                        onClick={() => {
+                          addAnounsmentDialog.onTrue();
+                          setEditingAnnouncement(row);
+                        }}
+                      >
+                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
+                        Edit
+                      </MenuItem>
+                    )}
+                    {row.status === 'Scheduled' && (
+                      <MenuItem
+                        onClick={() => {
+                          confirm_dialog.onTrue();
+                          setDeleteAnnouncement(row.id);
+                        }}
+                      >
+                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
+                        Delete
+                      </MenuItem>
+                    )}
                   </MenuList>
                 )}
               />
@@ -219,12 +377,90 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         title={editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}
         open={addAnounsmentDialog.value}
         handleClose={handleCloseDialog}
+        maxWidth="sm"
       >
         <AnnouncementForm
           initialValues={editingAnnouncement}
           onSubmit={handleSubmit}
           isEdit={!!editingAnnouncement}
         />
+      </CustomDialog>
+
+      <CustomDialog
+        title="Confirm Delete"
+        open={confirm_dialog.value}
+        handleClose={() => {
+          setDeleteAnnouncement('');
+          confirm_dialog.onFalse();
+        }}
+        maxWidth="sm"
+      >
+        <DialogContent>
+          <DialogContentText>Are you sure to delete this Announcement?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={confirm_dialog.onFalse} variant="contained" color="error">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleDelete(deleteAnnouncement);
+            }}
+            variant="contained"
+            color="success"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        title="Do you want to publish this announcement ?"
+        open={publish_modal.value}
+        handleClose={handleCloseDialog}
+        maxWidth="sm"
+      >
+        <DialogContent>
+          {publishingAnnouncement && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="h5">Announcement Details</Typography>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle2">Title</Typography>
+                <Typography>{publishingAnnouncement.title}</Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle2">Description</Typography>
+                <Typography>{publishingAnnouncement.description}</Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle2">Audience</Typography>
+                <Typography>{publishingAnnouncement.audience}</Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle2">Scheduled Date</Typography>
+                <Typography>
+                  {dayjs(publishingAnnouncement.date).format('DD MMM YYYY, hh:mm A')}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} variant="outlined" color="error">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handlePublish(publishingAnnouncement)}
+            variant="contained"
+            color="primary"
+          >
+            Publish Now
+          </Button>
+        </DialogActions>
       </CustomDialog>
     </Box>
   );
@@ -235,10 +471,17 @@ export default SchoolWiseAnnounsement;
 interface AnnouncementFormValues {
   title: string;
   description: string;
-  audience: string;
+  audience: string[];
+  sender: string;
+  publishDate: Dayjs | null;
+  expiryDate: Dayjs | null;
   className: string;
-  date: Dayjs | null;
+  division: string[];
   status: string;
+  category: string;
+  importance_level: string;
+  link: string;
+  notification_preferences: string[];
   isScheduled: boolean;
 }
 
@@ -275,18 +518,24 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     initialValues: {
       title: initialValues?.title || '',
       description: initialValues?.description || '',
-      audience: initialValues?.audience || '',
+      audience: initialValues?.audience || [],
       className: initialValues?.className || '',
-      date: initialValues?.date || dayjs(),
-      status: initialValues?.status || 'Published',
+      division: initialValues?.division || [],
+      sender: initialValues?.sender || '',
+      publishDate: initialValues?.publishDate ? dayjs(initialValues?.publishDate) : dayjs(),
+      expiryDate: initialValues?.expiryDate ? dayjs(initialValues?.expiryDate) : null,
+      category: initialValues?.category || '',
+      importance_level: initialValues?.importance_level || '',
+      link: initialValues?.link || '',
+      notification_preferences: initialValues?.notification_preferences || [],
       isScheduled: initialValues?.isScheduled || false,
+      status: initialValues?.status || 'Published',
     },
-    validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
-        date: values.isScheduled ? values.date : dayjs(),
-        status: determineStatus(values.isScheduled, values.date),
+        publishDate: values.isScheduled ? values.publishDate : dayjs(),
+        status: determineStatus(values.isScheduled, values.publishDate),
       });
     },
   });
@@ -301,18 +550,27 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
       const newStatus = determineStatus(formik.values.isScheduled, newDate);
       formik.setValues({
         ...formik.values,
-        date: newDate,
+        publishDate: newDate,
         status: newStatus,
       });
     }
   };
 
+  const handleNotificationPreferenceChange = (preference: string) => {
+    const currentPreferences = formik.values.notification_preferences;
+    const updatedPreferences = currentPreferences.includes(preference)
+      ? currentPreferences.filter((p) => p !== preference)
+      : [...currentPreferences, preference];
+
+    formik.setFieldValue('notification_preferences', updatedPreferences);
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '250px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Title"
@@ -335,31 +593,128 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
                 isLoading={isLoading}
                 labelKey="name"
                 valueKey="name"
-                formControlProps={{ sx: { minWidth: 200 } }}
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               />
               {formik.touched.className && formik.errors.className && (
                 <FormHelperText error>{formik.errors.className}</FormHelperText>
               )}
             </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Select Divisions"
+                options={[
+                  { value: 'A', label: 'A' },
+                  { value: 'B', label: 'B' },
+                  { value: 'C', label: 'C' },
+                  { value: 'D', label: 'D' },
+                ]}
+                value={formik.values.division}
+                onChange={(val) => {
+                  formik.setFieldValue('division', val);
+                }}
+                multiple
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              />
+              {formik.touched.division && formik.errors.division && (
+                <FormHelperText error>{String(formik.errors.division)}</FormHelperText>
+              )}
+            </Grid>
+
             <Grid item xs={12} sm={6}>
               <CustomSelect
                 label="Select Audience"
                 options={[
-                  { value: 'Staff', label: 'Staff' },
                   { value: 'Students', label: 'Students' },
                   { value: 'Parents', label: 'Parents' },
-                  { value: 'All', label: 'All' },
                 ]}
+                multiple
                 value={formik.values.audience}
                 onChange={(val) => {
                   formik.setFieldValue('audience', val as string);
                 }}
-                formControlProps={{ fullWidth: true }}
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               />
               {formik.touched.audience && formik.errors.audience && (
                 <FormHelperText error>{formik.errors.audience}</FormHelperText>
               )}
             </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Select Sender"
+                options={[
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'teacher', label: 'Teacher' },
+                ]}
+                value={formik.values.sender}
+                onChange={(val) => {
+                  formik.setFieldValue('sender', val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              />
+              {formik.touched.sender && formik.errors.sender && (
+                <FormHelperText>{formik.errors.sender}</FormHelperText>
+              )}
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <DateTimePicker
+                label="Expiry Date & Time"
+                value={formik.values.expiryDate}
+                onChange={handleDateChange}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: formik.touched.expiryDate && Boolean(formik.errors.expiryDate),
+                  },
+                }}
+                disablePast
+              />
+              {formik.touched.expiryDate && formik.errors.expiryDate && (
+                <FormHelperText error>{String(formik.errors.expiryDate)}</FormHelperText>
+              )}
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Select Category"
+                options={[
+                  { value: 'academic', label: 'Academic' },
+                  { value: 'administrative', label: 'Administrative' },
+                  { value: 'extracurriculam', label: 'Extracurriculam' },
+                ]}
+                value={formik.values.category}
+                onChange={(val) => {
+                  formik.setFieldValue('category', val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              />
+              {formik.touched.category && formik.errors.category && (
+                <FormHelperText>{formik.errors.category}</FormHelperText>
+              )}
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Importance Level"
+                options={[
+                  { value: 'urgent', label: 'Urgent' },
+                  { value: 'critical', label: 'Critical' },
+                ]}
+                placeholder="Announcement Importance level"
+                value={formik.values.importance_level}
+                onChange={(val) => {
+                  formik.setFieldValue('importance_level', val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              />
+              {formik.touched.importance_level && formik.errors.importance_level && (
+                <FormHelperText>{formik.errors.importance_level}</FormHelperText>
+              )}
+            </Grid>
+
             <Grid item xs={12}>
               <FormControlLabel
                 control={
@@ -374,22 +729,22 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
               />
             </Grid>
             {formik.values.isScheduled && (
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <DateTimePicker
                   label="Schedule Date & Time"
-                  value={formik.values.date}
+                  value={formik.values.publishDate}
                   onChange={handleDateChange}
                   slotProps={{
                     textField: {
                       size: 'small',
                       fullWidth: true,
-                      error: formik.touched.date && Boolean(formik.errors.date),
+                      error: formik.touched.publishDate && Boolean(formik.errors.publishDate),
                     },
                   }}
                   disablePast
                 />
-                {formik.touched.date && formik.errors.date && (
-                  <FormHelperText error>{String(formik.errors.date)}</FormHelperText>
+                {formik.touched.publishDate && formik.errors.publishDate && (
+                  <FormHelperText error>{String(formik.errors.publishDate)}</FormHelperText>
                 )}
               </Grid>
             )}
@@ -422,7 +777,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
                     }}
                   >
                     <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Drag Your Document</Typography>
+                    <Typography variant="body2">Upload Document</Typography>
                   </Box>
                 }
                 sx={{
@@ -432,6 +787,82 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
                   borderRadius: 1.5,
                 }}
               />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Link"
+                name="link"
+                value={formik.values.link}
+                onChange={formik.handleChange}
+                error={formik.touched.link && Boolean(formik.errors.link)}
+                helperText={formik.touched.link && formik.errors.link}
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Iconify icon="typcn:attachment" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Notification Preferences
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formik.values.notification_preferences.includes('email')}
+                      onChange={() => handleNotificationPreferenceChange('email')}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Iconify icon="mdi:email-outline" />
+                      <Typography variant="body2">Email</Typography>
+                    </Box>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formik.values.notification_preferences.includes('sms')}
+                      onChange={() => handleNotificationPreferenceChange('sms')}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Iconify icon="mdi:message-outline" />
+                      <Typography variant="body2">SMS</Typography>
+                    </Box>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formik.values.notification_preferences.includes('app')}
+                      onChange={() => handleNotificationPreferenceChange('app')}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Iconify icon="mdi:bell-outline" />
+                      <Typography variant="body2">App Notification</Typography>
+                    </Box>
+                  }
+                />
+              </Box>
+              {formik.touched.notification_preferences &&
+                formik.errors.notification_preferences && (
+                  <FormHelperText error>
+                    {String(formik.errors.notification_preferences)}
+                  </FormHelperText>
+                )}
             </Grid>
           </Grid>
         </Scrollbar>
