@@ -16,6 +16,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 
+import { CalendarView } from 'src/sections/calendar/view';
+
 const AllEvents = (props: TabComponentType) => {
   const [selectedEvent, setSelectedEvent] = useState('');
   const addEventDialog = useBoolean();
@@ -33,33 +35,36 @@ const AllEvents = (props: TabComponentType) => {
           Add New Event
         </Button>
       </Box>{' '}
-      <TextField
-        label="Search Event"
-        variant="outlined"
-        size="small"
-        value=""
-        onChange={() => {}}
-        InputProps={{
-          endAdornment: (
-            <IconButton size="small">
-              <SearchIcon />
-            </IconButton>
-          ),
-        }}
-      />
-      <CustomSelect
-        options={[
-          { value: 'schoolWise', label: 'School Wise' },
-          { value: 'classWise', label: 'Class Wise' },
-          { value: 'extraCurricular', label: 'Extra Curricular' },
-        ]}
-        value={selectedEvent}
-        onChange={(val) => {
-          setSelectedEvent(val as string);
-        }}
-        label="Filter Event"
-        formControlProps={{ sx: { minWidth: 200 } }}
-      />
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <TextField
+          label="Search Event"
+          variant="outlined"
+          size="small"
+          value=""
+          onChange={() => {}}
+          InputProps={{
+            endAdornment: (
+              <IconButton size="small">
+                <SearchIcon />
+              </IconButton>
+            ),
+          }}
+        />
+        <CustomSelect
+          options={[
+            { value: 'schoolWise', label: 'School Wise' },
+            { value: 'classWise', label: 'Class Wise' },
+            { value: 'extraCurricular', label: 'Extra Curricular' },
+          ]}
+          value={selectedEvent}
+          onChange={(val) => {
+            setSelectedEvent(val as string);
+          }}
+          label="Filter Event"
+          formControlProps={{ sx: { minWidth: 200 } }}
+        />
+      </Box>
+      <CalendarView />
       <CustomDialog
         title="Create New Event"
         open={addEventDialog.value}
