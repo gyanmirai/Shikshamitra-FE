@@ -70,7 +70,7 @@ const CourseManagementSystemScreen = () => {
       <CustomBreadcrumbs
         heading={currentActiveComponent?.label}
         links={[
-          { name: 'Academic And Assessment' },
+          { name: 'Academic And Assignments' },
           { name: 'Course Management System' },
           { name: currentActiveComponent?.label },
         ]}
