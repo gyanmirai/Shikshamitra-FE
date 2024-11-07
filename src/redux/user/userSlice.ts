@@ -34,9 +34,21 @@ export const getUser = createAsyncThunk(
           },
         });
         const sessionData = await sessionRes.json();
+        const employeeRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || ''}/api/app/employee/employee-by-user-id/${sessionData.userInfo.sub}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data.access_token}`,
+            },
+          }
+        );
+        const employeeData = await employeeRes.json();
         return {
           ...data,
           ...sessionData.userInfo,
+          employee: employeeData,
         };
       }
       return state.user.userInfo;

@@ -127,13 +127,13 @@ const RenderRole = (props: any) => {
 };
 
 const InformationFields: FieldsType[] = [
-  {
-    type: 'text',
-    label: 'Organization Name',
-    name: 'organizationName',
-    placeholder: 'Enter Organization Name',
-    renderComp: (props) => <RenderOrganization {...props} />,
-  },
+  // {
+  //   type: 'text',
+  //   label: 'Organization Name',
+  //   name: 'organizationName',
+  //   placeholder: 'Enter Organization Name',
+  //   renderComp: (props) => <RenderOrganization {...props} />,
+  // },
   {
     type: 'text',
     label: 'Code',
@@ -281,9 +281,8 @@ const InformationFields: FieldsType[] = [
           onChange={props.onChange}
           size="small"
         >
-          <MenuItem value="option1">Option 1</MenuItem>
-          <MenuItem value="option2">Option 2</MenuItem>
-          <MenuItem value="option3">Option 3</MenuItem>
+          <MenuItem value="teaching">Teaching</MenuItem>
+          <MenuItem value="nonTeaching">Non Teaching</MenuItem>
         </Select>
       </FormControl>
     ),
@@ -618,7 +617,12 @@ const EmployeeFrom = ({ editData }: any) => {
   return (
     <CustomStepperWithFormik
       initialValues={{
-        organizationName: editData ? editData.organizationName : '',
+        // organizationName: editData ? editData.organizationName : '',
+        photo: editData
+          ? editData.profilePicture
+            ? convertBase64Format(editData.profilePicture)
+            : ''
+          : '',
         code: editData ? editData.code : '',
         lastName: editData ? editData.lastName : '',
         firstName: editData ? editData.firstName : '',
@@ -634,30 +638,21 @@ const EmployeeFrom = ({ editData }: any) => {
         bloodGroup: editData ? editData.bloodGroup : '',
         mobileNo: editData ? editData.mobileNo : '',
         email: editData ? editData.email : '',
-        address: editData ? editData.address : '',
         department: editData ? editData.department : '',
         designation: editData ? editData.designation : '',
         dateOfJoining: editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : null,
-        photo: editData
-          ? editData.profilePicture
-            ? convertBase64Format(editData.profilePicture)
-            : ''
-          : '',
         employeeGroup: editData ? editData.employeeGroup : '',
         qualification: editData ? editData.qualification : '',
-        userId: editData ? editData.userId : '',
-
         role: editData ? editData.role : '',
         identificationMark1: editData ? editData.identificationMark1 : '',
         identificationMark2: editData ? editData.identificationMark2 : '',
         identificationMark3: editData ? editData.identificationMark3 : '',
-        documents: [
-          {
-            name: 'root',
-            type: 'folder',
-            children: [],
-          },
-        ],
+        address: editData ? editData.address : '',
+        // ===============================================================================
+
+        userId: editData ? editData.userId : '',
+
+        // ================================================================================
         fatherName: editData ? editData.fatherDetails.name : '',
         fatherOccupation: editData ? editData.fatherDetails.occupation : '',
         fatherContactNo: editData ? editData.fatherDetails.contactNo : '',
@@ -670,11 +665,17 @@ const EmployeeFrom = ({ editData }: any) => {
         spouseOccupation: editData ? editData.spouseDetails.occupation : '',
         spouseContactNo: editData ? editData.spouseDetails.contactNo : '',
         spouseAddress: editData ? editData.spouseDetails.address : '',
+        // ===================================================================================
+
+        documents: [],
+        // ===================================================================================
+
         // aadharCard:editData ? editData.aadharCard : '',
         // panCard: '',
         // degreeCertificates: '',
         // marksheet: '',
         // cheque: '',
+        // ======================================================================================
         experiences: editData
           ? editData.workExperiences.map((i: any) => ({
               ...i,
@@ -682,17 +683,18 @@ const EmployeeFrom = ({ editData }: any) => {
               toDate: dayjs(i.toDate, 'YYYY-MM-DD'),
             }))
           : [],
+        // ========================================================================================
         bankName: editData ? editData.bankDetails.bankName : '',
         branchName: editData ? editData.bankDetails.branchName : '',
         accountHolderName: editData ? editData.bankDetails.accountHolderName : '',
         accountNumber: editData ? editData.bankDetails.accountNumber : '',
         ifscCode: editData ? editData.bankDetails.ifscCode : '',
-        // pfType: '',
-        // epfNumber: '',
-        // uanNumber: '',
-        // basicSalary: '',
-        // punchId: '',
-        // shiftName: '',
+        pfType: '',
+        epfNumber: '',
+        uanNumber: '',
+        basicSalary: '',
+        punchId: '',
+        shiftName: '',
       }}
       steps={steps}
       activeStep={activeStep}

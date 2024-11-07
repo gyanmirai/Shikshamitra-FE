@@ -93,7 +93,7 @@ const InquiryScreen = () => {
         handleClose={dialog.onFalse}
         title="Inquiry"
         paperProps={{
-          sx: { maxWidth: '800px', width: '100%' },
+          sx: { maxWidth: '600px', width: '100%' },
         }}
       >
         <InquiryForm handleClose={dialog.onFalse} />
@@ -262,7 +262,7 @@ const InquiryForm = ({ handleClose }: any) => {
           <Scrollbar
             sx={{
               p: 3,
-              // bgcolor: 'background.neutral',
+              bgcolor: 'background.neutral',
               height: 'calc(100vh - 150px)',
             }}
           >

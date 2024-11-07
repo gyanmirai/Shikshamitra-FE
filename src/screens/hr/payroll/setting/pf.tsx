@@ -32,7 +32,7 @@ const PF = () => {
       <Typography variant="h5" mt={2}>
         Assign PF Rule to Employee
       </Typography>
-      <Box display="flex" gap={2} alignItems="center" mt={2}>
+      <Box display="flex" gap={2} alignItems="center" py={2}>
         <TextField
           size="small"
           label="Search Employee"
@@ -56,7 +56,7 @@ const PF = () => {
       </Box>
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Create New PF">
         <form>
-          <Scrollbar sx={{ p: 2, background: 'background.neutral' }}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <TextField size="small" label="Code" fullWidth />
               <TextField size="small" label="Name" fullWidth />

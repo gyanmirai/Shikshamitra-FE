@@ -22,8 +22,10 @@ const GrNoGenerationScreen = () => {
     { id: 3, srNo: 3, currentGrNo: 'GR003', name: 'Alice Johnson', newGrNo: '' },
   ];
   useEffect(() => {
-    dispatch(setIsChanges(true));
-  }, [dispatch]);
+    if (isManual) {
+      dispatch(setIsChanges(true));
+    }
+  }, [dispatch, isManual]);
 
   const router = useRouter();
 

@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
 
-import { Box, Step, Button, Stepper, StepLabel } from '@mui/material';
+import { Box, Step, Slide, Button, Stepper, StepLabel } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
 
@@ -35,7 +35,15 @@ interface CustomStepperWithFormikProps {
   handleNext: (isLastStep: boolean, value: any) => void;
   handleBack: () => void;
   validationSchema: any;
-  renderItem: ({ formik, activeStep }: { formik: any; activeStep: number }) => React.ReactNode;
+  renderItem: ({
+    formik,
+    activeStep,
+    isBackClick,
+  }: {
+    formik: any;
+    activeStep: number;
+    isBackClick: boolean;
+  }) => any;
   onStepClick?: (index: number, label: string, formik: any) => void;
 }
 
@@ -49,12 +57,14 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   renderItem,
   onStepClick = () => {},
 }) => {
+  const [isBackClick, setIsBackClick] = useState(false);
   const formik = useFormik({
     initialValues,
     validationSchema,
     enableReinitialize: true,
     validateOnMount: true,
     onSubmit: (values) => {
+      setIsBackClick(false);
       handleNext(activeStep === steps.length - 1, values);
     },
   });
@@ -86,10 +96,20 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       >
         <Scrollbar sx={{ height: '40vh' }}>
           {' '}
-          {formik && renderItem({ formik, activeStep })}
+          {/* <FormSlider step={activeStep} steps={steps}> */}
+          {formik && renderItem({ formik, activeStep, isBackClick })}
+          {/* </FormSlider> */}
         </Scrollbar>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-          <Button size="small" variant="outlined" disabled={activeStep === 0} onClick={handleBack}>
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={activeStep === 0}
+            onClick={() => {
+              setIsBackClick(true);
+              handleBack();
+            }}
+          >
             Back
           </Button>
           <Button
@@ -103,6 +123,35 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           </Button>
         </Box>
       </Box>
+    </Box>
+  );
+};
+
+const FormSlider = ({
+  step,
+  steps,
+  children,
+}: {
+  children: any;
+  step: number;
+  steps: string[];
+}) => {
+  const containerRef = React.useRef<HTMLElement>(null);
+  return (
+    <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
+      {steps.map(
+        (_, index) =>
+          index === step && (
+            <Slide
+              in={index === step}
+              container={containerRef.current}
+              direction="left"
+              key={index}
+            >
+              {children}
+            </Slide>
+          )
+      )}
     </Box>
   );
 };
