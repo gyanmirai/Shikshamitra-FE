@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
@@ -12,7 +14,6 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 const Reports = (props: TabComponentType) => {
   const theme = useTheme();

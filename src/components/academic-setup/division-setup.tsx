@@ -45,7 +45,7 @@ interface IDivision {
   standardId: string;
 }
 interface DivisionSetupProps {
-  classId: string;
+  classId: string | number;
 }
 
 const DivisionSetup = ({ classId }: DivisionSetupProps) => {
@@ -211,7 +211,7 @@ interface IDivisionForm {
   handleClose: () => void;
 
   editData: null | Record<string, any>;
-  classId: string;
+  classId: string | number;
 }
 export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) => {
   const [addDivision, { isLoading }] = useQueryAndMutation({

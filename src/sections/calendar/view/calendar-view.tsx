@@ -88,6 +88,8 @@ export function CalendarView() {
 
   const dataFiltered = applyFilter({ inputData: events, filters: filters.state, dateError });
 
+  console.log('dataFiltered', dataFiltered);
+
   // const renderResults = (
   //   <CalendarFiltersResult
   //     filters={filters}

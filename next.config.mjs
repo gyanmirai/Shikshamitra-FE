@@ -6,7 +6,6 @@ const isStaticExport = 'false';
 
 const nextConfig = {
   swcMinify: true,
-  concurrentFeatures: true,
   trailingSlash: true,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
   reactStrictMode: true,
@@ -38,6 +37,7 @@ const nextConfig = {
   reactStrictMode: false,
   distDir: 'build',
   output: 'standalone',
+  transpilePackages: ['mui-tel-input'],
 };
 
 export default nextConfig;

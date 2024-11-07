@@ -1,239 +1,148 @@
-'use client';
-
-import type { CardProps } from '@mui/material';
-import type { ColorType } from 'src/theme/core';
-import type { ChartOptions } from 'src/components/chart';
-
+// src/Dashboard.js
 import React from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Card, Button, useTheme, CardHeader, CardContent } from '@mui/material';
+import { Box, Grid, Paper, Divider, Typography } from '@mui/material';
+import { red, blue, green, orange, purple } from '@mui/material/colors';
+import {
+  Error,
+  People,
+  Insights,
+  Equalizer,
+  TrendingUp,
+  AccessTime,
+  AttachMoney,
+  VerifiedUser,
+  EventAvailable,
+  AccountBalanceWallet,
+} from '@mui/icons-material';
 
-import { fPercent, fShortenNumber } from 'src/utils/format-number';
+interface DashboardCardProps {
+  title: string;
+  icon: React.ReactNode;
+  color: Record<number, string>;
+  data: string[];
+}
 
-import { CONFIG } from 'src/config-global';
-import { varAlpha, bgGradient } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
-import { SvgColor } from 'src/components/svg-color';
-import { Chart, useChart } from 'src/components/chart';
-
-const PayrollDashboardScreen = () => (
-  <Grid2 container spacing={2}>
-    <Grid2 xs={12} md={6} lg={3}>
-      <AnalyticsWidgetSummary
-        title="Total Employee"
-        percent={2.6}
-        total={714000}
-        icon={
-          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-        }
-        chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-          series: [22, 8, 35, 50, 82, 84, 77, 12],
-        }}
-      />
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={3}>
-      <AnalyticsWidgetSummary
-        title="Total Male Employee"
-        percent={2.6}
-        total={714000}
-        color="warning"
-        icon={
-          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-        }
-        chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-          series: [22, 8, 35, 50, 82, 84, 77, 12],
-        }}
-      />
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={3}>
-      <AnalyticsWidgetSummary
-        title="Total Female Employee"
-        percent={2.6}
-        total={714000}
-        color="error"
-        icon={
-          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-        }
-        chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-          series: [22, 8, 35, 50, 82, 84, 77, 12],
-        }}
-      />
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={3}>
-      <Card
-        sx={{
-          display: 'flex',
-          p: 3,
-        }}
-      >
-        <Box sx={{ flexGrow: 1 }}>
-          <Box sx={{ typography: 'subtitle2' }}>Quick Actions</Box>
-          <Box display="flex" gap={2} flexWrap="wrap" pt={2}>
-            <Button variant="contained" color="primary" sx={{ flexGrow: 1 }}>
-              Run Payroll
-            </Button>
-            <Button variant="contained" color="warning" sx={{ flexGrow: 1 }}>
-              Generate Payslip
-            </Button>
-            <Button variant="contained" color="error" sx={{ flexGrow: 1 }}>
-              View Report
-            </Button>
-          </Box>
-        </Box>
-      </Card>
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={4}>
-      <Card>
-        <CardHeader title="Monthly Payroll" />
-        <CardContent>Content</CardContent>
-      </Card>
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={4}>
-      <Card>
-        <CardHeader title="Payroll Overview" />
-        <CardContent>Content</CardContent>
-      </Card>
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={4}>
-      <Card>
-        <CardHeader title="Deductions & Adjustments" />
-        <CardContent>Content</CardContent>
-      </Card>
-    </Grid2>
-  </Grid2>
+const DashboardCard = ({ title, icon, color, data }: DashboardCardProps) => (
+  <Paper
+    elevation={4}
+    style={{
+      padding: 20,
+      borderRadius: 12,
+      display: 'flex',
+      flexDirection: 'column',
+      // alignItems: 'center',
+      // justifyContent: 'center',
+      backgroundColor: color[50],
+      color: color[700],
+      height: '100%',
+    }}
+  >
+    <Box display="flex" alignItems="center" marginBottom={1}>
+      {icon}
+      <Typography variant="h6" style={{ marginLeft: 8, fontWeight: 600 }}>
+        {title}
+      </Typography>
+    </Box>
+    <Divider style={{ width: '100%', marginBottom: 12 }} />
+    {data.map((item, index) => (
+      <Typography key={index} style={{ fontWeight: 500, textAlign: 'left' }}>
+        {item}
+      </Typography>
+    ))}
+  </Paper>
 );
 
-export default PayrollDashboardScreen;
-
-type Props = CardProps & {
-  title: string;
-  total: number;
-  percent?: number;
-  color?: ColorType;
-  icon: React.ReactNode;
-  chart: {
-    series: number[];
-    categories: string[];
-    options?: ChartOptions;
-  };
-};
-function AnalyticsWidgetSummary({
-  icon,
-  title,
-  total,
-  chart,
-  percent,
-  color = 'success',
-  sx,
-  ...other
-}: Props) {
-  const theme: any = useTheme();
-
-  const chartColors = [theme.palette[color].dark];
-
-  const chartOptions: any = useChart({
-    chart: { sparkline: { enabled: true } },
-    colors: chartColors,
-    xaxis: { categories: chart.categories },
-    grid: {
-      padding: {
-        top: 6,
-        left: 6,
-        right: 6,
-        bottom: 6,
-      },
-    },
-    tooltip: {
-      // y: { formatter: (value) => value, title: { formatter: () => '' } },
-    },
-    ...chart.options,
-  });
-
-  const renderTrending = (
-    <Box
-      sx={{
-        top: 16,
-        gap: 0.5,
-        right: 16,
-        display: 'flex',
-        position: 'absolute',
-        alignItems: 'center',
-      }}
-    >
-      {percent && (
-        <Iconify
-          width={20}
-          icon={percent < 0 ? 'eva:trending-down-fill' : 'eva:trending-up-fill'}
+const Dashboard = () => (
+  <Grid container spacing={3} padding={3} style={{ minHeight: '100vh' }}>
+    <Grid container spacing={3}>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Payroll Summary"
+          icon={<AccountBalanceWallet fontSize="large" style={{ color: green[700] }} />}
+          color={green}
+          data={[
+            'Total Payroll Cost: $200,000',
+            'Total Employees Paid: 50',
+            'Overtime Costs: $5,000',
+            'Bonuses/Allowances: $3,000',
+          ]}
         />
-      )}
-      {percent && (
-        <Box component="span" sx={{ typography: 'subtitle2' }}>
-          {percent > 0 && '+'}
-          {fPercent(percent)}
-        </Box>
-      )}
-    </Box>
-  );
-
-  return (
-    <Card
-      sx={{
-        ...bgGradient({
-          color: `135deg, ${varAlpha(theme.vars.palette[color].lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette[color].lightChannel, 0.48)}`,
-        }),
-        p: 3,
-        boxShadow: 'none',
-        position: 'relative',
-        color: `${color}.darker`,
-        backgroundColor: 'common.white',
-        ...sx,
-      }}
-      {...other}
-    >
-      <Box sx={{ width: 48, height: 48, mb: 3 }}>{icon}</Box>
-
-      {renderTrending}
-
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <Box sx={{ flexGrow: 1, minWidth: 112 }}>
-          <Box sx={{ mb: 1, typography: 'subtitle2' }}>{title}</Box>
-          <Box sx={{ typography: 'h4' }}>{fShortenNumber(total)}</Box>
-        </Box>
-
-        <Chart
-          type="line"
-          series={[{ data: chart.series }]}
-          options={chartOptions}
-          width={84}
-          height={56}
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Payroll Breakdown by Department"
+          icon={<People fontSize="large" style={{ color: blue[700] }} />}
+          color={blue}
+          data={['Engineering: $80,000', 'Marketing: $50,000', 'Sales: $70,000']}
         />
-      </Box>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Salary Distribution"
+          icon={<TrendingUp fontSize="large" style={{ color: orange[700] }} />}
+          color={orange}
+          data={['Average Salary: $60,000', 'Top 10% Earners: $100,000+', 'Median Salary: $55,000']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Deductions and Benefits"
+          icon={<AttachMoney fontSize="large" style={{ color: red[700] }} />}
+          color={red}
+          data={['Taxes Deducted: $20,000', 'Other Deductions: $5,000', 'Benefits Costs: $10,000']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Overtime and Additional Hours"
+          icon={<AccessTime fontSize="large" style={{ color: purple[700] }} />}
+          color={purple}
+          data={['Total Overtime Hours: 200 hrs', 'Overtime Cost: $5,000']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Attendance Insights"
+          icon={<Insights fontSize="large" style={{ color: blue[800] }} />}
+          color={blue}
+          data={['Average Working Hours: 160 hrs', 'Absenteeism Rate: 5%']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Payroll Trends"
+          icon={<Equalizer fontSize="large" style={{ color: green[700] }} />}
+          color={green}
+          data={['Past 3 Months Comparison']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Retention Insights"
+          icon={<EventAvailable fontSize="large" style={{ color: orange[700] }} />}
+          color={orange}
+          data={['New Hires: 5', 'Attrition Rate: 3%']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="Compliance and Error Tracking"
+          icon={<Error fontSize="large" style={{ color: red[700] }} />}
+          color={red}
+          data={['Payroll Errors: 2', 'Adjustments Made: 1']}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4}>
+        <DashboardCard
+          title="KPIs and Metrics"
+          icon={<VerifiedUser fontSize="large" style={{ color: purple[700] }} />}
+          color={purple}
+          data={['Payroll as % of Revenue: 30%', 'Cost per Employee: $4,000']}
+        />
+      </Grid>
+    </Grid>
+  </Grid>
+);
 
-      <SvgColor
-        src={`${CONFIG.site.basePath}/assets/background/shape-square.svg`}
-        sx={{
-          top: 0,
-          left: -20,
-          width: 240,
-          zIndex: -1,
-          height: 240,
-          opacity: 0.24,
-          position: 'absolute',
-          color: `${color}.main`,
-        }}
-      />
-    </Card>
-  );
-}
+export default Dashboard;

@@ -37,7 +37,7 @@ const ProfessionalTax = () => {
       />
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Create New Tax Range">
         <form>
-          <Scrollbar sx={{ p: 2, background: 'background.nautral' }}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <CustomSelect
                 options={[
@@ -47,7 +47,7 @@ const ProfessionalTax = () => {
                 label="Gender"
                 value=""
                 onChange={() => {}}
-                formControlProps={{ fullWidth: true }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
               <TextField size="small" label="From Salary" />
               <TextField size="small" label="To Salary" />
@@ -56,9 +56,6 @@ const ProfessionalTax = () => {
           </Scrollbar>
           <DialogActions sx={{ p: 2 }}>
             <Button variant="contained">Save</Button>
-            <Button variant="outlined" onClick={dialog.onFalse}>
-              Cancel
-            </Button>
           </DialogActions>
         </form>
       </CustomDialog>

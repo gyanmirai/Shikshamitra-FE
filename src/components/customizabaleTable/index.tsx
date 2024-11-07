@@ -518,7 +518,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           key={column.id}
                           align={column.align || 'center'}
                           sx={{
-                            fontSize: '14px',
+                            fontSize: '12px',
                             width: column.minWidth,
                             position: column.sticky ? 'sticky' : 'static',
                             left: column.sticky ? 0 : 'auto',
@@ -538,7 +538,13 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             }}
                             onClick={() => column.isSort !== false && handleSort(column.id)}
                           >
-                            <Box display="flex" alignItems="center" flexDirection="column" gap={1}>
+                            <Box
+                              fontSize="12px"
+                              display="flex"
+                              alignItems="center"
+                              flexDirection="column"
+                              gap={1}
+                            >
                               {column.label}
 
                               {column?.renderColumn?.(column)}

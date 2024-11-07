@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 
 type CustomSelectProps<T extends string> = Omit<SelectProps<string>, 'onChange'> & {
-  options: { [K in T]: string }[];
+  options: { [K in T]: any }[];
   label: string;
   multiple?: boolean;
   value: string | string[];

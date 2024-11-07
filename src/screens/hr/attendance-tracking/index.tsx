@@ -218,7 +218,7 @@ const EmployeeWise = () => {
     currentQueryAndMutation: useGetEmployeeQuery,
   });
 
-  const [getAttendance, { data }] = useQueryAndMutation({
+  const [getAttendance, { data, isLoading: attendanceLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
@@ -264,49 +264,52 @@ const EmployeeWise = () => {
           },
         }}
       />
-      <Box display="flex" gap={2} justifyContent="space-between">
-        <Card
-          sx={{
-            maxWidth: 280,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
-            color: (theme) => theme.palette.primary.main,
-            p: 2,
-          }}
-        >
-          <Typography variant="h6">Total Present Days</Typography>
+      {employeeId && (
+        <Box display="flex" gap={2} justifyContent="space-between">
+          <Card
+            sx={{
+              maxWidth: 280,
+              width: '100%',
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+              color: (theme) => theme.palette.primary.main,
+              p: 2,
+            }}
+          >
+            <Typography variant="h6">Total Present Days</Typography>
 
-          <Typography variant="h4">{data?.[0]?.presentDays}</Typography>
-        </Card>
-        <Card
-          sx={{
-            maxWidth: 280,
-            p: 2,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.3),
-            color: (theme) => theme.palette.error.main,
-          }}
-        >
-          <Typography variant="h6">Full Day Leave</Typography>
+            <Typography variant="h4">{data?.[0]?.presentDays}</Typography>
+          </Card>
+          <Card
+            sx={{
+              maxWidth: 280,
+              p: 2,
+              width: '100%',
+              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.3),
+              color: (theme) => theme.palette.error.main,
+            }}
+          >
+            <Typography variant="h6">Full Day Leave</Typography>
 
-          <Typography variant="h4">{data?.[0]?.leaveDays}</Typography>
-        </Card>
-        <Card
-          sx={{
-            maxWidth: 280,
-            p: 2,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.3),
-            color: (theme) => theme.palette.warning.main,
-          }}
-        >
-          <Typography variant="h6">Half Day Leave</Typography>
+            <Typography variant="h4">{data?.[0]?.leaveDays}</Typography>
+          </Card>
+          <Card
+            sx={{
+              maxWidth: 280,
+              p: 2,
+              width: '100%',
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.3),
+              color: (theme) => theme.palette.warning.main,
+            }}
+          >
+            <Typography variant="h6">Half Day Leave</Typography>
 
-          <Typography variant="h4">{data?.[0]?.halfDayLeaves}</Typography>
-        </Card>
-      </Box>
+            <Typography variant="h4">{data?.[0]?.halfDayLeaves}</Typography>
+          </Card>
+        </Box>
+      )}
       {employeeId && (
         <CustomizableTable
+          isLoading={attendanceLoading}
           columns={[
             { id: 'date', label: 'Date' },
 
@@ -357,7 +360,7 @@ const EmployeeWise = () => {
               },
             },
           ]}
-          data={[]}
+          data={data?.employeeAttendances?.items || []}
         />
       )}
     </>

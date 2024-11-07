@@ -1,10 +1,21 @@
 import type { UsePopoverReturn } from 'src/components/custom-popover';
 
-import React, { useState, useCallback } from 'react';
+import dayjs from 'dayjs';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
+import {
+  useGetEmployeeLeaveQuery,
+  useEmployeeLeaveRequestStatusMutation,
+} from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -15,16 +26,36 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import AddLeaveRequest from './leave-requst';
 
 import type { TabComponentType } from '.';
+import type { LeaveRequestType } from './type';
 
 const LeaveHistory = (props: TabComponentType) => {
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeLeaveQuery,
+  });
+  const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
+  });
+
   const modal = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const actions = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
-    ({ popover }: { popover: UsePopoverReturn }) => (
+    ({ popover }: { popover: UsePopoverReturn }, row: any) => (
       <MenuList>
         <MenuItem
-          onClick={() => {
+          onClick={async () => {
+            setEditData(row);
+            if (editData.status === EmployeeLeaveStatusType.Pending) {
+              await changeStatus({
+                id: editData.id,
+                body: {
+                  status: EmployeeLeaveStatusType.Reviewed,
+                  rejectionReason: '',
+                },
+              });
+            }
             modal.onTrue();
             popover.onClose();
           }}
@@ -34,11 +65,28 @@ const LeaveHistory = (props: TabComponentType) => {
         </MenuItem>
       </MenuList>
     ),
-    [modal]
+    [changeStatus, editData, modal]
   );
+  const tableData = useMemo(
+    () =>
+      data?.items?.map((item: LeaveRequestType) => ({
+        ...item,
+        start: dayjs(item.startDate).format('DD/MM/YYYY'),
+        end: dayjs(item.endDate).format('DD/MM/YYYY'),
+        statusValue: EmployeeLeaveStatusType[item.status],
+        description: item.description.replace(/<[^>]+>/g, ''),
+      })) || [],
+    [data]
+  );
+
+  const handleClose = () => {
+    setEditData(null);
+    modal.onFalse();
+  };
   return (
     <>
       <CustomizableTable
+        isLoading={isLoading}
         columns={[
           {
             label: 'Name',
@@ -46,15 +94,18 @@ const LeaveHistory = (props: TabComponentType) => {
           },
           {
             label: 'Start Date',
-            id: 'startDate',
+            id: 'start',
           },
           {
             label: 'End Date',
-            id: 'endDate',
+            id: 'end',
           },
           {
             label: 'Half Day',
             id: 'isHalfDay',
+            render(value, row) {
+              return value ? 'Yes' : 'No';
+            },
           },
           {
             label: 'Description',
@@ -62,19 +113,16 @@ const LeaveHistory = (props: TabComponentType) => {
           },
           {
             label: 'Status',
-            id: 'status',
-            render(value, row) {
+            id: 'statusValue',
+            render(value: number, row) {
+              const status = EmployeeLeaveStatusType[row.status];
               return (
                 <Label
                   variant="soft"
                   color={
-                    value === 'pending'
-                      ? 'warning'
-                      : value === 'reject'
-                        ? 'error'
-                        : value === 'approved'
-                          ? 'success'
-                          : 'default'
+                    EmployeeLeaveStatusTypeColor[
+                      status as keyof typeof EmployeeLeaveStatusTypeColor
+                    ]
                   }
                 >
                   {value}
@@ -87,66 +135,21 @@ const LeaveHistory = (props: TabComponentType) => {
             id: 'action',
             render(value, row) {
               return (
-                <ThreeDotsActions
-                  onClickThreeDots={() => setEditData(row)}
-                  placement="right-top"
-                  actions={actions}
-                />
+                <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
               );
             },
           },
         ]}
-        data={[
-          {
-            name: 'John Doe',
-            startDate: '2023-06-01',
-            endDate: '2023-06-05',
-            isHalfDay: 'No',
-            description: 'Annual leave',
-            status: 'approved',
-          },
-          {
-            name: 'Jane Smith',
-            startDate: '2023-06-10',
-            endDate: '2023-06-10',
-            isHalfDay: 'Yes',
-            description: 'Doctor appointment',
-            status: 'pending',
-          },
-          {
-            name: 'Mike Johnson',
-            startDate: '2023-06-15',
-            endDate: '2023-06-16',
-            isHalfDay: 'No',
-            description: 'Family emergency',
-            status: 'approved',
-          },
-          {
-            name: 'Emily Brown',
-            startDate: '2023-06-20',
-            endDate: '2023-06-24',
-            isHalfDay: 'No',
-            description: 'Vacation',
-            status: 'reject',
-          },
-          {
-            name: 'Chris Wilson',
-            startDate: '2023-06-30',
-            endDate: '2023-06-30',
-            isHalfDay: 'Yes',
-            description: 'Personal errand',
-            status: 'pending',
-          },
-        ]}
+        data={tableData}
       />
       <CustomDialog
         maxWidth="md"
         open={modal.value}
-        handleClose={modal.onFalse}
+        handleClose={handleClose}
         title="View Leave Request"
       >
         <Box p={2}>
-          <AddLeaveRequest {...props} editData={editData} />
+          <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
         </Box>
       </CustomDialog>
     </>

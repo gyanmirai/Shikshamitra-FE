@@ -76,12 +76,7 @@ const AdmissionScreen = () => {
         ]}
         data={dummyData}
       />
-      <CustomDialog
-        maxWidth="lg"
-        open={open}
-        handleClose={() => setOpen(false)}
-        title="Registration"
-      >
+      <CustomDialog maxWidth="lg" open={open} handleClose={() => setOpen(false)} title="Admission">
         <RegisterForm />
       </CustomDialog>
     </Box>
