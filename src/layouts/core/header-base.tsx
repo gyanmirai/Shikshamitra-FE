@@ -144,18 +144,18 @@ export function HeaderBase({
       if (yearData) {
         dispatch(setCurrentYear(yearData?.items?.[0]));
       }
-    } else if (currentYear?.id && !yearData?.items.length && !isLoading) {
+    } else if (currentYear?.id && !yearData?.items?.length && !isLoading) {
       dispatch(setCurrentYear({}));
     }
   }, [currentYear?.id, dispatch, isLoading, yearData]);
 
   useEffect(() => {
     if (!isEmpty(currentYear) && boardsData) {
-      const filterData = boardsData.items.filter(
+      const filterData = boardsData?.items?.filter(
         (bo: any) => bo.academicYearId === currentYear?.id
       );
-      setBoards(filterData);
-      dispatch(setCurrentBoard(filterData[0]));
+      setBoards(filterData || []);
+      dispatch(setCurrentBoard(filterData?.[0]));
     }
   }, [boardsData, currentYear, dispatch]);
 

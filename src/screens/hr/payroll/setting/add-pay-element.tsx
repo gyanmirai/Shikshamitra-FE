@@ -1,52 +1,161 @@
 import React from 'react';
+import { useFormik } from 'formik';
 
-import { Save } from '@mui/icons-material';
-import { Box, Button, Checkbox, TextField, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
 
-const AddPayElement = () => (
-  <Box>
-    <Box display="flex" justifyContent="flex-end" alignItems="center">
-      <Button startIcon={<Save />} variant="contained">
-        Save
-      </Button>
-    </Box>
-    <Box display="flex" gap={2} flexWrap="wrap">
-      <TextField size="small" label="Code" />
-      <TextField size="small" label="Name" />
-      <CustomSelect
-        options={[]}
-        label="Pay Element Type"
-        value=""
-        onChange={() => {}}
-        formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-      />
-    </Box>
-
-    <Box display="flex" alignItems="center" mt={2}>
-      <Checkbox size="small" />
-      <Typography variant="body2">Employee Specific</Typography>
-    </Box>
-    <Box display="flex" alignItems="center" mt={2} gap={2}>
-      <Box display="flex" alignItems="center">
-        <Checkbox size="small" />
-        <Typography variant="body2">Depend</Typography>
+const AddPayElement = () => {
+  const dialog = useBoolean(false);
+  return (
+    <Box>
+      <Box display="flex" justifyContent="flex-end" alignItems="center">
+        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          New Pay Element
+        </Button>
       </Box>
-      <CustomSelect
-        options={[]}
-        label="Amount"
-        value=""
-        onChange={() => {}}
-        formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+      <CustomizableTable
+        columns={[
+          { id: 'code', label: 'Code' },
+          { id: 'name', label: 'Name' },
+          { id: 'payElementType', label: 'Pay element type' },
+          { id: 'dependAmount', label: 'Depend Amount' },
+          { id: 'dependent', label: 'Dependent' },
+        ]}
+        data={[
+          {
+            code: 'PE001',
+            name: 'Basic Salary',
+            payElementType: 'Credit',
+            dependAmount: '5000',
+            dependent: 'No',
+          },
+          {
+            code: 'PE002',
+            name: 'Housing Allowance',
+            payElementType: 'Credit',
+            dependAmount: '2000',
+            dependent: 'No',
+          },
+          {
+            code: 'PE003',
+            name: 'Transportation',
+            payElementType: 'Credit',
+            dependAmount: '1000',
+            dependent: 'No',
+          },
+          {
+            code: 'PE004',
+            name: 'Tax Deduction',
+            payElementType: 'Debit',
+            dependAmount: '500',
+            dependent: 'Yes',
+          },
+        ]}
       />
-      <TextField size="small" label="Amount Of Percentage" />
+      <CustomDialog title="New Pay Element" handleClose={dialog.onFalse} open={dialog.value}>
+        <AddPayElementForm />
+      </CustomDialog>
     </Box>
-    <Box display="flex" alignItems="center" mt={2}>
-      <Checkbox size="small" />
-      <Typography variant="body2">Pay Slip</Typography>
-    </Box>
-  </Box>
-);
+  );
+};
 
 export default AddPayElement;
+
+const AddPayElementForm = () => {
+  const { values } = useFormik({
+    initialValues: {
+      code: '',
+      name: '',
+      payElementType: '',
+      employeeSpecific: false,
+      depend: false,
+      amount: '',
+      amountOfPercentage: '',
+      paySlip: false,
+    },
+    onSubmit: () => {},
+  });
+
+  return (
+    <Box>
+      <form>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                name="code"
+                label="Code"
+                value={values.code}
+                onChange={() => {}}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="name"
+                label="Name"
+                value={values.name}
+                onChange={() => {}}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <CustomSelect
+                options={[
+                  { label: 'Credit', value: 'credit' },
+                  { label: 'Debit', value: 'debit' },
+                ]}
+                label="Pay Element Type"
+                value={values.payElementType}
+                onChange={() => {}}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box display="flex" alignItems="center">
+                <Checkbox size="small" />
+                <Typography variant="body2">Employee Specific</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box display="flex" alignItems="center" mt={2} gap={2}>
+                <Box display="flex" alignItems="center">
+                  <Checkbox size="small" />
+                  <Typography variant="body2">Depend</Typography>
+                </Box>
+                <CustomSelect
+                  options={[]}
+                  label="Amount"
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { maxWidth: '120px', width: '100%' } }}
+                />
+                <TextField size="small" label="Amount Of Percentage" />
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box display="flex" alignItems="center" mt={2}>
+                <Checkbox size="small" />
+                <Typography variant="body2">Pay Slip</Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Scrollbar>
+        <DialogActions>
+          <Button variant="contained" onClick={() => {}}>
+            Save
+          </Button>
+        </DialogActions>
+      </form>
+    </Box>
+  );
+};

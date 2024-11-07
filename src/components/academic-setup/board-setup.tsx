@@ -49,7 +49,7 @@ export interface EducationBoard {
 }
 
 interface BoardSetupProps {
-  academicYearId: string;
+  academicYearId: string | number;
 }
 const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
   const { data: boards, isLoading: isBoardLoading } = useQueryAndMutation({
@@ -71,7 +71,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
   const modal = useBoolean(false);
   const confirm = useBoolean(false);
 
-  const isInitial = useRef<null | string>(null);
+  const isInitial = useRef<null | string | number>(null);
   useEffect(() => {
     if (boards?.items) {
       const filterItems = boards?.items.filter(
@@ -233,7 +233,7 @@ interface IBoardForm {
   handleClose: () => void;
   handleSetTeb: (value: Record<string, any>) => void;
   editData: null | Record<string, any>;
-  academicYearId: string;
+  academicYearId: string | number;
 }
 const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoardForm) => {
   const [addBoard, { isLoading }] = useQueryAndMutation({

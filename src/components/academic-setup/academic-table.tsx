@@ -44,7 +44,7 @@ import ThreeDotsActions from '../three-dots-actions';
 // }
 
 interface CustomAcademicTableProps {
-  id: string;
+  id: string | number;
   name: string;
   getLazyQuery: () => void;
   deleteMutation: () => void;
@@ -242,8 +242,8 @@ type CollapsibleTableRowProps = {
   modal: UseBooleanReturn;
   setEditData: (data: Record<string, any> | null) => void;
   editData: Record<string, any> | null;
-  getData: (id: string) => void;
-  id: string;
+  getData: (id: string | number) => void;
+  id: string | number;
   deleteMutation: any;
   name: string;
   children?: CustomAcademicTableProps | undefined;

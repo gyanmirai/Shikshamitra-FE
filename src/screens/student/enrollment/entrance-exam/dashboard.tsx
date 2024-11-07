@@ -233,7 +233,7 @@ const EntranceExamDashboard = () => {
             <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'primary.main' }}>
               {fNumber(2)} Ongoing
             </Box>
-            <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'warning.main' }}>
+            <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'info.main' }}>
               {fNumber(5)} Upcoming
             </Box>
           </Box>
@@ -332,7 +332,7 @@ const EntranceExamDashboard = () => {
                 id: 'percentage',
                 label: 'Percentage',
                 render(value, row) {
-                  return `${((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
+                  return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
                 },
               },
               {

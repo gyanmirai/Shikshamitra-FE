@@ -500,11 +500,11 @@ const hrModule = {
               path: '/hr/payroll/pay-process',
               _action: 'pay-process',
             },
-            {
-              title: 'Pay Process Preview',
-              path: '/hr/payroll/pay-process-preview',
-              _action: 'pay-process-preview',
-            },
+            // {
+            //   title: 'Pay Process Preview',
+            //   path: '/hr/payroll/pay-process-preview',
+            //   _action: 'pay-process-preview',
+            // },
             {
               title: 'Payslip Generation',
               path: '/hr/payroll/payslip-generation',
@@ -550,31 +550,19 @@ const hrModule = {
           ],
         },
         {
-          title: 'Professional Development',
-          path: '',
-          _action: 'professional-development',
-          children: [
-            {
-              title: 'Training and Workshops',
-              path: '/hr/training-and-workshops',
-              _action: 'training-and-workshops',
-            },
-            {
-              title: 'Performance Appraisals',
-              path: '/hr/performance-appraisals',
-              _action: 'performance-appraisals',
-            },
-            {
-              title: 'Certification Tracking',
-              path: '/hr/certification-tracking',
-              _action: 'certification-tracking',
-            },
-          ],
+          title: 'Professional Management',
+          path: '/hr/professional-management',
+          _action: 'professional-management',
         },
         {
           title: 'Reports',
           path: '/hr/reports',
           _action: 'reports',
+        },
+        {
+          title: 'Staff Directory',
+          path: '/hr/staff-directory',
+          _action: 'staff-directory',
         },
       ],
     },
