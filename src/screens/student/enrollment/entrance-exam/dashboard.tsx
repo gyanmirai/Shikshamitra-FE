@@ -3,12 +3,11 @@ import type { BoxProps, CardProps } from '@mui/material';
 import React, { useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Upload , } from '@mui/icons-material';
-// import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import { Upload, ViewAgenda } from '@mui/icons-material';
 import {
   Box,
   Card,
-  Grid,
   Button,
   Avatar,
   MenuList,
@@ -139,7 +138,6 @@ const EntranceExamDashboard = () => {
     [dialog, resultDialog]
   );
   return (
-    <>
     <Grid container spacing={2}>
       <ConfirmDialog
         open={confirm.value}
@@ -152,133 +150,136 @@ const EntranceExamDashboard = () => {
           </LoadingButton>
         }
       />
-  <Grid sx={{pt:"20px"}} container spacing={2}>
-  <Grid item xs={12} md={4}>
-    <Card sx={{ p: 3, height: '100%' }}>
-      <Box sx={{ typography: 'h6', mb: 2 }}>Upcoming Exams</Box>
-      <Scrollbar sx={{ height: '120px' }}>
-        <Box component="ul" sx={{ listStyle: 'none', padding: 0 }}>
-          {[
-            'GSEB - English - 10th May',
-            'CBSE - Hindi - 15th May',
-            'GSEB - Gujarati - 10th May',
-          ].map((exam, index) => (
-            <Box component="li" key={index} sx={{ mb: 1 }}>
-              <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                {exam}
-              </Button>
-            </Box>
-          ))}
-        </Box>
-      </Scrollbar>
-    </Card>
-  </Grid>
-  <Grid item xs={12} md={4}>
-  <Card sx={{ p: 2, height: '100%' }}>
-    <Box display="flex" flexDirection="column" gap={2}>
-      {/* Total Candidates and Exam Status */}
-      <Box display="flex" flexDirection="row" justifyContent="space-between">
-        <Box>
-          <Box sx={{ typography: 'subtitle2' }}>Total Candidates</Box>
-          <Box sx={{ mt: 1.5, typography: 'h6', color: 'primary.main' }}>
-            {fNumber(10000)}
-          </Box>
-        </Box>
+      <Grid xs={12} md={4}>
+        <Card
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            p: 3,
+            height: '100%',
+          }}
+        >
+          <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ typography: 'subtitle2' }}>Upcoming Exams</Box>
 
-        <Box>
-          <Box sx={{ typography: 'subtitle2' }}>Exam Status</Box>
-          <Box sx={{ mt: 1.5, typography: 'h6', color: 'primary.main' }}>
-            {fNumber(2)} Ongoing
-          </Box>
-          <Box sx={{ mt: 1.5, typography: 'h6', color: 'warning.main' }}>
-            {fNumber(5)} Upcoming
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Top Performers Section */}
-      <Box>
-        <Box sx={{ typography: 'subtitle2', mb: 1 }}>Top Performers</Box>
-        <Scrollbar sx={{ height: '150px' }}>
-          <Box component="ul" sx={{ listStyle: 'none', padding: 0 }}>
-            {[
-              { id: '1', name: 'John Doe', totalMarks: 65 },
-              { id: '2', name: 'Herbert Clark', totalMarks: 89 },
-              // Add more performers here
-            ].map((performer) => (
-              <Box component="li" key={performer.id} sx={{ mb: 1 }}>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                  {performer.name} - {performer.totalMarks} Marks
-                </Button>
+            <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+              <Box
+                component="ul"
+                sx={{
+                  listStyle: 'none',
+                  padding: 0,
+                  animation: 'scrollAnimation 10s linear infinite',
+                  animationDelay: '1s',
+                  '@keyframes scrollAnimation': {
+                    '0%': { transform: 'translateY(0)' },
+                    '100%': { transform: 'translateY(-100%)' },
+                  },
+                }}
+              >
+                {[
+                  'GSEB - English - 10th May',
+                  'CBSE - Hindi - 15th May',
+                  'GSEB - Gujarati - 10th May',
+                ].map((exam, index) => (
+                  <Box component="li" key={index} sx={{ mb: 1 }}>
+                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                      {exam}
+                    </Button>
+                  </Box>
+                ))}
+                {[
+                  'GSEB - English - 10th May',
+                  'CBSE - Hindi - 15th May',
+                  'GSEB - Gujarati - 10th May',
+                ].map((exam, index) => (
+                  <Box component="li" key={`duplicate-${index}`} sx={{ mb: 1 }}>
+                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                      {exam}
+                    </Button>
+                  </Box>
+                ))}
               </Box>
-            ))}
+            </Scrollbar>
           </Box>
-        </Scrollbar>
-      </Box>
-    </Box>
-  </Card>
-</Grid>
+        </Card>
+      </Grid>
+      <Grid xs={12} md={4}>
+        <Card
+          sx={{
+            display: 'flex',
 
-  
-  {/* <Grid item xs={12} md={4}>
-    <Card sx={{ p: 3, height: '100%' }}>
-      <Box sx={{ typography: 'subtitle2' }}>Total Candidates</Box>
-      <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'primary.main' }}>
-        {fNumber(10000)}
-      </Box>
-      <Box sx={{ typography: 'subtitle2' }}>Exam Status</Box>
-      <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'primary.main' }}>
-        {fNumber(2)} Ongoing
-      </Box>
-      <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'warning.main' }}>
-        {fNumber(5)} Upcoming
-      </Box>
-    </Card>
-  </Grid> */}
+            p: 3,
+            height: '100%',
+          }}
+        >
+          <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ typography: 'subtitle2' }}>Total Candidates</Box>
+            <Box sx={{ mt: 1.5, mb: 1, typography: 'h3', color: 'primary.main' }}>
+              {fNumber(10000)}
+            </Box>
+          </Box>
+        </Card>
+      </Grid>
+      <Grid xs={12} md={4}>
+        <Card
+          sx={{
+            display: 'flex',
+            height: '100%',
+            p: 3,
+          }}
+        >
+          <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ typography: 'subtitle2' }}>Exam Status</Box>
+            <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'primary.main' }}>
+              {fNumber(2)} Ongoing
+            </Box>
+            <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'info.main' }}>
+              {fNumber(5)} Upcoming
+            </Box>
+          </Box>
+        </Card>
+      </Grid>
 
-  {/* <Grid item xs={12} md={4}>
-    <TopPerformer
-      title="Top Performer"
-      sx={{ height: '100%' }}
-      list={[
-        {
-          id: '1',
-          name: 'John Doe',
-          avatarUrl: '/static/images/avatars/avatar_1.png',
-          totalMarks: 65,
-        },
-        {
-          id: '2',
-          name: 'Herbert Clark',
-          avatarUrl: '/static/images/avatars/avatar_2.png',
-          totalMarks: 89,
-        },
-      ]}
-    />
-  </Grid> */}
-
-  <Grid item xs={12} md={4}>
-    <AppCurrentDownload
-      title="Pass-Fail Ratio"
-      subheader="Number of students passed vs failed"
-      chart={{
-        series: [
-          { label: 'Passed', value: 15 },
-          { label: 'Failed', value: 2 },
-        ],
-      }}
-    />
-  </Grid>
-</Grid>
-
-      {/* <Grid xs={12} md={4}>
+      <Grid xs={12} md={4}>
+        <TopPerformer
+          title="Top Performer"
+          sx={{ height: '100%' }}
+          list={[
+            {
+              id: '1',
+              name: 'John Doe',
+              avatarUrl: '/static/images/avatars/avatar_1.png',
+              totalMarks: 65,
+            },
+            {
+              id: '2',
+              name: 'Herbert Clark',
+              avatarUrl: '/static/images/avatars/avatar_2.png',
+              totalMarks: 89,
+            },
+          ]}
+        />
+      </Grid>
+      <Grid xs={12} md={4}>
+        <AppCurrentDownload
+          title="Pass-Fail Ratio"
+          subheader="Number of students passed vs failed"
+          chart={{
+            series: [
+              { label: 'Passed', value: 15 },
+              { label: 'Failed', value: 2 },
+            ],
+          }}
+        />
+      </Grid>
+      <Grid xs={12} md={4}>
         <Card
           sx={{
             display: 'flex',
             p: 3,
           }}
         >
-          {/* <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ typography: 'subtitle2' }}>Quick Actions</Box>
             <Box display="flex" gap={2} flexWrap="wrap" pt={2}>
               <Button
@@ -289,33 +290,22 @@ const EntranceExamDashboard = () => {
               >
                 View Scheduled Exam
               </Button>
-             
+              <Button startIcon={<Upload />} variant="contained" color="warning">
+                Upload Results
+              </Button>
             </Box>
-          </Box> */}
-        {/* </Card>
-      </Grid> */} 
+          </Box>
+        </Card>
+      </Grid>
 
-      {/* <CustomDialog
+      <CustomDialog
         maxWidth="lg"
         title="Scheduled Exams"
         open={dialog.value}
         handleClose={dialog.onFalse}
-      > */}
-{/*        
-      </CustomDialog> */}
-      
-
-      <CustomDialog title="Result" handleClose={resultDialog.onFalse} open={resultDialog.value}>
-        <ResultForm />
-      </CustomDialog>
-    </Grid>
-    <Box pt="15px">
-    <Box  display="flex" justifyContent="flex-end">
-       <Button startIcon={<Upload />} variant="contained" color="warning">
-                Upload Results
-              </Button>
-       </Box>
-        <CustomizableTable
+      >
+        <Box p={1}>
+          <CustomizableTable
             columns={[
               { id: 'date', label: 'Date' },
               {
@@ -342,7 +332,7 @@ const EntranceExamDashboard = () => {
                 id: 'percentage',
                 label: 'Percentage',
                 render(value, row) {
-                  return `${((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
+                  return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
                 },
               },
               {
@@ -383,7 +373,12 @@ const EntranceExamDashboard = () => {
             data={dummyData}
           />
         </Box>
-        </>
+      </CustomDialog>
+
+      <CustomDialog title="Result" handleClose={resultDialog.onFalse} open={resultDialog.value}>
+        <ResultForm />
+      </CustomDialog>
+    </Grid>
   );
 };
 

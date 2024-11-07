@@ -1,49 +1,36 @@
 import type { TextFieldProps } from '@mui/material';
+import type { MuiTelInputInfo } from 'mui-tel-input';
 
 import React from 'react';
-import Input from 'react-phone-number-input';
+import { MuiTelInput } from 'mui-tel-input';
 
-import { Box, TextField } from '@mui/material';
+import { Box } from '@mui/material';
 
 type PhoneInputProps = TextFieldProps & {
   value: string;
-  onChange: (value: any) => void;
+  onChange: (value: string, info?: MuiTelInputInfo) => void;
+  placeholder?: string;
 };
 
-const PhoneInput = ({ value, onChange, error, label, ...props }: PhoneInputProps) => (
+const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: PhoneInputProps) => (
   <Box>
-    <Input
+    <MuiTelInput
+      forceCallingCode
+      size="small"
       defaultCountry="IN"
-      international
-      withCountryCallingCode
-      value={value}
       onChange={onChange}
-      inputComponent={CustomInput}
-      countryCallingCodeEditable={false}
+      value={value}
       error={error}
-      placeholder={label}
-      textFieldProps={props}
+      helperText={helperText}
+      fullWidth
+      inputProps={{
+        sx: {
+          fontSize: '12px !important',
+        },
+      }}
+      {...props}
     />
   </Box>
 );
 
 export default PhoneInput;
-
-const CustomInput = React.forwardRef<any, { textFieldProps?: any; [key: string]: any }>(
-  (props, ref) => {
-    const { textFieldProps, ...other } = props;
-
-    return (
-      <TextField
-        inputRef={ref}
-        size="small"
-        label={other.placeholder}
-        {...other}
-        error={!!other.error}
-        helperText={other.error}
-        {...textFieldProps}
-        sx={{ ...(textFieldProps?.sx || {}) }}
-      />
-    );
-  }
-);

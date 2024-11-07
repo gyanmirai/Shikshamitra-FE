@@ -1,12 +1,10 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useState } from 'react';
 
-// eslint-disable-next-line import/no-duplicates
-import { MenuList } from '@mui/material';
-// eslint-disable-next-line import/no-duplicates
-import { MenuItem } from '@mui/material';
-// eslint-disable-next-line import/no-duplicates
-import { Card, Grid, Typography } from '@mui/material';
+import { Card, Grid, MenuList, MenuItem, Typography } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -129,7 +127,7 @@ const courses: Course[] = [
   },
 ];
 
-const ContentLibrary = () => {
+const CourseProgress = (props: TabComponentType) => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   const handleCardDetails = (course: Course) => {
@@ -139,13 +137,14 @@ const ContentLibrary = () => {
   return (
     <Grid container spacing={2} marginTop={2}>
       {courses.map((course) => (
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={3}>
           <Card
             sx={{
               p: 2,
               height: '100%',
               display: 'flex',
               justifyContent: 'center',
+              cursor: 'pointer',
             }}
             onClick={() => {
               handleCardDetails(course);
@@ -153,7 +152,6 @@ const ContentLibrary = () => {
           >
             <AppWidget
               title={course.name}
-              total={course.progress}
               icon="solar:user-rounded-bold"
               chart={{ series: course.progress }}
             />
@@ -179,6 +177,7 @@ const ContentLibrary = () => {
                     <ThreeDotsActions
                       actions={({ popover }: any) => (
                         <MenuList>
+                          <Iconify icon="mdi:bell" sx={{ mr: 2 }} />
                           <MenuItem onClick={() => {}}>Send Reminder</MenuItem>
                         </MenuList>
                       )}
@@ -195,4 +194,4 @@ const ContentLibrary = () => {
   );
 };
 
-export default ContentLibrary;
+export default CourseProgress;

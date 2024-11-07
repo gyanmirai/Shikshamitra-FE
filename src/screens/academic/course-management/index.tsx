@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -13,51 +15,65 @@ import Settings from './settings';
 import Subjects from './subjects';
 import Dashboard from './dashboard';
 import Reports from './reportsAndAnalyics';
-import ContentLibrary from './contentLibrary';
-import CourseManagement from './courseManagement';
+import CourseProgress from './courseProgress';
 import LearningResources from './learningResources';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: (props: TabComponentType) => <Dashboard {...props} />,
   },
-  {
-    value: 'courseManagement',
-    label: 'Course Management',
-    component: () => <CourseManagement />,
-  },
+  // {
+  //   value: 'courseManagement',
+  //   label: 'Course Management',
+  //   component: (props: TabComponentType) => <CourseManagement {...props} />,
+  // },
   {
     value: 'subjects',
-    label: 'Subjects',
-    component: () => <Subjects />,
+    label: 'Subjects/Course',
+    component: (props: TabComponentType) => <Subjects {...props} />,
   },
   {
     value: 'learningResources',
     label: 'Learning Resources',
-    component: () => <LearningResources />,
+    component: (props: TabComponentType) => <LearningResources {...props} />,
   },
-  { value: 'contentLibrary', label: 'Content Library', component: () => <ContentLibrary /> },
+  {
+    value: 'Course Progress',
+    label: 'Course Progress',
+    component: (props: TabComponentType) => <CourseProgress {...props} />,
+  },
   {
     value: 'reports',
     label: 'Reports',
-    component: () => <Reports />,
+    component: (props: TabComponentType) => <Reports {...props} />,
   },
 
-  { value: 'settings', label: 'Settings', component: () => <Settings /> },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <Settings {...props} />,
+  },
 ];
 
 const CourseManagementSystemScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Course Management System"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Course Management System' }]}
+        heading={currentActiveComponent?.label}
+        links={[
+          { name: 'Academic And Assignments' },
+          { name: 'Course Management System' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Card
@@ -66,8 +82,8 @@ const CourseManagementSystemScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -77,7 +93,12 @@ const CourseManagementSystemScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

@@ -86,7 +86,7 @@ const HrDashboard = () => {
             formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
           />
         </Grid>
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidgetSummary
             title="Total Employees"
             percent={null}
@@ -97,7 +97,7 @@ const HrDashboard = () => {
             }}
           />
         </Grid>
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidgetSummary
             title="Total Male Employees"
             percent={null}
@@ -108,7 +108,7 @@ const HrDashboard = () => {
             }}
           />
         </Grid>
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidgetSummary
             title="Total Female Employees"
             percent={null}
@@ -122,7 +122,7 @@ const HrDashboard = () => {
         <Grid xs={12}>
           <Divider sx={{ borderStyle: 'doted' }} />
         </Grid>
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidgetSummary
             title="Leave requests"
             percent={null}
@@ -134,7 +134,7 @@ const HrDashboard = () => {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidgetSummary
             title="Open Positions"
             percent={null}
@@ -147,7 +147,7 @@ const HrDashboard = () => {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidgetSummary
             title="Upcoming Review"
             percent={null}
@@ -161,7 +161,7 @@ const HrDashboard = () => {
         </Grid>
       </Grid>
       <Grid container spacing={3} width="100%">
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidget
             title="Attendance Percentage"
             total={89}
@@ -174,7 +174,7 @@ const HrDashboard = () => {
             }
           />
         </Grid>
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidget
             title="Payroll Status"
             total={10}
@@ -191,7 +191,7 @@ const HrDashboard = () => {
             sx={{ bgcolor: 'info.dark', [`& .${svgColorClasses.root}`]: { color: 'info.light' } }}
           />
         </Grid>
-        <Grid xs={12} md={6} lg={4} xl={3}>
+        <Grid xs={12} md={6} lg={4}>
           <AppWidget
             title="Pending Leave Requests"
             total={10}

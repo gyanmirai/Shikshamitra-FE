@@ -37,8 +37,8 @@ const PayrollSettingScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Seeing"
-        links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Seeing' }]}
+        heading="Setting"
+        links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <Card

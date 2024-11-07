@@ -84,7 +84,7 @@ const HrEmployee = () => {
           <Paper sx={{ px: 1, py: 2 }}>
             <CustomizableTable
               columns={[
-                { id: 'organizationName', label: 'Organization' },
+                // { id: 'organizationName', label: 'Organization' },
                 { id: 'Code', label: 'Code' },
                 // { id: 'Name', label: 'Name' },
                 { id: 'firstName', label: 'First Name' },

@@ -24,7 +24,7 @@ const TABS = [
   },
   {
     value: 'homeworkCreation',
-    label: 'Homework Creation',
+    label: 'Homework Assignment Creation',
     component: () => <HomeworkCreation />,
   },
   {

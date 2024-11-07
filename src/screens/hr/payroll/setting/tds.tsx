@@ -5,7 +5,7 @@ import { Box, Button, TextField, Typography, InputAdornment } from '@mui/materia
 
 const TDS = () => (
   <>
-    <Typography variant="h5">Assign PF Rule to Employee</Typography>
+    <Typography variant="h5">TDS Setup</Typography>
     <Box display="flex" gap={2} alignItems="center" mt={2}>
       <TextField
         size="small"

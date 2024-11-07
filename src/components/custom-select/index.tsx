@@ -1,4 +1,4 @@
-import type { SxProps, SelectProps, FormControlProps, SelectChangeEvent } from '@mui/material';
+import type { SxProps, SelectProps, FormControlProps } from '@mui/material';
 
 import React from 'react';
 
@@ -14,12 +14,15 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-type CustomSelectProps<T extends string> = Omit<SelectProps<string>, 'onChange'> & {
+type CustomSelectProps<T extends string, J extends boolean> = Omit<
+  SelectProps<string | string[]>,
+  'onChange' | 'value'
+> & {
   options: { [K in T]: string }[];
   label: string;
-  multiple?: boolean;
-  value: string | string[];
-  onChange: (value: string | string[]) => void;
+  multiple?: J;
+  value: J extends true ? string[] : string;
+  onChange: (value: J extends true ? string[] : string) => void;
   error?: boolean;
   helperText?: string;
   isLoading?: boolean;
@@ -31,10 +34,10 @@ type CustomSelectProps<T extends string> = Omit<SelectProps<string>, 'onChange'>
   isSearch?: boolean;
 };
 
-const CustomSelect = <T extends string>({
+const CustomSelect = <T extends string, J extends boolean>({
   options,
   label,
-  multiple = false,
+  multiple = false as J,
   value,
   onChange,
   error = false,
@@ -47,15 +50,15 @@ const CustomSelect = <T extends string>({
   formControlProps,
   isSearch = false,
   ...props
-}: CustomSelectProps<T>): React.ReactElement => {
-  const handleChange = (event: SelectChangeEvent<typeof value>) => {
-    const selectedValue = event.target.value;
+}: CustomSelectProps<T, J>): React.ReactElement => {
+  const handleChange = (event: any) => {
+    const selectedValue: J extends true ? string[] : string = event.target.value;
     onChange(selectedValue);
   };
 
   const handleDelete = (itemToDelete: string) => {
     const newValue = (value as string[]).filter((item) => item !== itemToDelete);
-    onChange(newValue);
+    onChange(newValue as J extends true ? string[] : string);
   };
 
   return (
@@ -69,9 +72,9 @@ const CustomSelect = <T extends string>({
         label={label}
         renderValue={
           multiple
-            ? (selected) => (
+            ? (selected: string | string[]) => (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {(selected as string[]).map((val) => (
+                  {(Array.isArray(selected) ? selected : [selected]).map((val) => (
                     <Chip
                       key={val}
                       size="small"

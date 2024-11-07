@@ -88,7 +88,6 @@ const Reports = () => {
           sx={{ minWidth: 140 }}
           slotProps={{ textField: { size: 'small' } }}
         />
-        &nbsp;
         <DatePicker
           label="To Date"
           sx={{ minWidth: 140 }}

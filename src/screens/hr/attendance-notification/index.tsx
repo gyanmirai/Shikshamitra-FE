@@ -1,54 +1,22 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Box, MenuList, MenuItem } from '@mui/material';
+import { Box } from '@mui/material';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const HrAttendanceNotificationScreen = () => {
-  const actions = useCallback(
-    ({ popover }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            // confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            // modal.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-        {/* {children && (
-              <MenuItem
-                onClick={() => {
-                  childModal.onTrue();
-                  popover.onClose();
-                }}
-              >
-                <Iconify icon="ic:baseline-add" sx={{ height: '16px', width: '16px' }} />
-                Create {childEditData?.name}
-              </MenuItem>
-            )} */}
-      </MenuList>
-    ),
-    []
-  );
+  const { data } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeNotificationHistoryQuery,
+  });
+  console.log(data, 'data');
 
   const dummyData = [
     {
@@ -99,13 +67,6 @@ const HrAttendanceNotificationScreen = () => {
             label: 'Status',
             render(value, row) {
               return <Label color={value === 'Delivered' ? 'success' : 'warning'}>{value}</Label>;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row) {
-              return <ThreeDotsActions actions={actions} />;
             },
           },
         ]}

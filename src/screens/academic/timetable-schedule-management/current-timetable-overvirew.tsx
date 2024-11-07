@@ -140,7 +140,7 @@ const CurrentTimetableOverview = () => {
             grade={1}
             division="A"
           />
-          <Box display="flex" justifyContent="flex-end" alignItems="center">
+          <Box display="flex" justifyContent="flex-end" alignItems="center" mb="6px">
             <Button variant="contained">Publish</Button>
           </Box>
         </>

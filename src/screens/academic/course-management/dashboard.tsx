@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useState } from 'react';
 
 import { color } from '@mui/system';
@@ -17,7 +19,7 @@ import CustomSelect from 'src/components/custom-select';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const Dashboard = () => {
+const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   const [classes1, setClasses1] = useState<string>('');
   const [classes2, setClasses2] = useState<string>('');

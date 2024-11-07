@@ -287,7 +287,7 @@ const CourseCreationForm = () => {
                 multiple
                 value={teacher}
                 onChange={(val) => {
-                  setTeacher(val as string);
+                  setTeacher(val);
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />

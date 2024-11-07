@@ -24,6 +24,7 @@ const TABS = [
     label: 'Dashboard',
     component: () => <CarriculumDashboardTab />,
   },
+  { value: 'subjects', label: 'Subjects', component: () => <Subject /> },
   {
     value: 'curriculumOverview',
     label: 'Curriculum Overview',
@@ -34,10 +35,7 @@ const TABS = [
     label: 'Create/Edit Curriculum',
     component: () => <Curriculum />,
   },
-
-  { value: 'subjects', label: 'Subjects', component: () => <Subject /> },
   { value: 'teacher', label: 'Teacher', component: () => <Teacher /> },
-
   { value: 'reports', label: 'Reports', component: () => <Reports /> },
   { value: 'settings', label: 'Settings', component: () => <Settings /> },
 ];

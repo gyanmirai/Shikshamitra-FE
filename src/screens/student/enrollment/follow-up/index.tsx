@@ -18,7 +18,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const FollowUpScreen: React.FC = () => {
-  const [setSelectedInquiry] = useState<any>(null);
+  const [, setSelectedInquiry] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
 
   // Dummy data

@@ -253,9 +253,11 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
                 options={divisionOptions}
                 value={division}
                 onChange={(val) => {
-                  const selectedDivision = divisionOptions.find((i: Division) => i.id === val);
+                  const selectedDivision = divisionOptions.find((i: Division) =>
+                    val.includes(i.id)
+                  );
                   formik.setFieldValue('division', selectedDivision?.name || '');
-                  setDivision(val as string);
+                  setDivision(val);
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />

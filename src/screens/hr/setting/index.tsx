@@ -1,21 +1,20 @@
 'use client';
 
 import { useFormik } from 'formik';
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import {
   Box,
   Card,
   Grid,
-  Radio,
   Button,
   Checkbox,
   MenuItem,
   MenuList,
   TextField,
   Typography,
-  RadioGroup,
   CardContent,
   DialogActions,
   InputAdornment,
@@ -23,6 +22,15 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { TimeUnitType } from 'src/enums/time-units';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
+import {
+  useGetEmployeeCustomAttendanceRuleQuery,
+  useAddEmployeeCustomAttendanceRuleMutation,
+  useUpdateEmployeeCustomAttendanceRuleMutation,
+} from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -35,8 +43,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const HrAttendanceSettingScreen = () => {
   const dialog = useBoolean(false);
 
+  const [editData, setEditData] = useState<any>(null);
+
   const actions = useCallback(
-    ({ popover }: any) => (
+    ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
@@ -51,28 +61,27 @@ const HrAttendanceSettingScreen = () => {
 
         <MenuItem
           onClick={() => {
-            // modal.onTrue();
+            setEditData(row);
+            dialog.onTrue();
             popover.onClose();
           }}
         >
           <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
           Edit
         </MenuItem>
-        {/* {children && (
-          <MenuItem
-            onClick={() => {
-              childModal.onTrue();
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="ic:baseline-add" sx={{ height: '16px', width: '16px' }} />
-            Create {childEditData?.name}
-          </MenuItem>
-        )} */}
       </MenuList>
     ),
-    []
+    [dialog]
   );
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
+  });
+  console.log(data, 'data');
+  const handleClose = () => {
+    setEditData(null);
+    dialog.onFalse();
+  };
   return (
     <Box>
       <CustomBreadcrumbs
@@ -81,7 +90,7 @@ const HrAttendanceSettingScreen = () => {
         sx={{ px: 1, mb: 2 }}
       />
 
-      <Card sx={{ p: 1, my: 2 }}>
+      <Card sx={{ p: 2, my: 2, boxShadow: 'var(--shadows-3)' }}>
         <Typography variant="h6" gutterBottom>
           Automated Notifications
         </Typography>
@@ -93,23 +102,18 @@ const HrAttendanceSettingScreen = () => {
         </Box>
       </Card>
 
-      <Card sx={{ p: 1, my: 2 }}>
+      <Card sx={{ p: 2, my: 2, boxShadow: 'var(--shadows-3)' }}>
         <Typography variant="h6" gutterBottom>
           Method
         </Typography>
-        <RadioGroup
-          aria-label="notification-method"
-          name="notification-method"
-          defaultValue="email"
-          row
-        >
-          <FormControlLabel value="email" control={<Radio />} label="Email" />
-          <FormControlLabel value="sms" control={<Radio />} label="SMS" />
-          <FormControlLabel value="push" control={<Radio />} label="Push Notification" />
-        </RadioGroup>
+        <Box>
+          <FormControlLabel value="email" control={<Checkbox />} label="Email" />
+          <FormControlLabel value="sms" control={<Checkbox />} label="SMS" />
+          <FormControlLabel value="push" control={<Checkbox />} label="Push Notification" />
+        </Box>
       </Card>
 
-      <Card sx={{ p: 1, my: 2 }}>
+      <Card elevation={3} sx={{ p: 2, my: 2, boxShadow: 'var(--shadows-3)' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography variant="h6" gutterBottom>
             Custom Attendance Rules
@@ -121,6 +125,7 @@ const HrAttendanceSettingScreen = () => {
 
         <CardContent>
           <CustomizableTable
+            isLoading={isLoading}
             columns={[
               { label: 'Name', id: 'name' },
               { label: 'Type', id: 'type' },
@@ -140,7 +145,7 @@ const HrAttendanceSettingScreen = () => {
                 id: 'action',
                 isSort: false,
                 render(value, row) {
-                  return <ThreeDotsActions actions={actions} />;
+                  return <ThreeDotsActions actions={(props) => actions(props, row)} />;
                 },
               },
             ]}
@@ -149,27 +154,27 @@ const HrAttendanceSettingScreen = () => {
                 name: 'Regular School Day',
                 type: 'Default',
                 lateThreshold: '15',
-                lateThresholdUnit: 'minutes',
+                lateThresholdUnit: 0,
                 halfDayThreshold: '180',
-                halfDayThresholdUnit: 'minutes',
+                halfDayThresholdUnit: 0,
                 enableNotification: true,
               },
               {
                 name: 'Early Dismissal',
                 type: 'Special',
                 lateThreshold: '10',
-                lateThresholdUnit: 'minutes',
+                lateThresholdUnit: 0,
                 halfDayThreshold: '120',
-                halfDayThresholdUnit: 'minutes',
+                halfDayThresholdUnit: 0,
                 enableNotification: false,
               },
               {
                 name: 'Assembly Day',
                 type: 'Special',
                 lateThreshold: '5',
-                lateThresholdUnit: 'minutes',
+                lateThresholdUnit: 0,
                 halfDayThreshold: '150',
-                halfDayThresholdUnit: 'minutes',
+                halfDayThresholdUnit: 0,
                 enableNotification: true,
               },
             ]}
@@ -177,8 +182,8 @@ const HrAttendanceSettingScreen = () => {
         </CardContent>
       </Card>
 
-      <CustomDialog title="Add Rule" open={dialog.value} handleClose={dialog.onFalse}>
-        <AttendanceRuleForm />
+      <CustomDialog title="Add Rule" open={dialog.value} handleClose={handleClose}>
+        <AttendanceRuleForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>
   );
@@ -186,18 +191,59 @@ const HrAttendanceSettingScreen = () => {
 
 export default HrAttendanceSettingScreen;
 
-const AttendanceRuleForm = () => {
+interface AttendanceRuleFormProps {
+  handleClose: () => void;
+  editData: any;
+}
+
+const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) => {
+  const [addRule, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEmployeeCustomAttendanceRuleMutation,
+  });
+
+  const [updateRule] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEmployeeCustomAttendanceRuleMutation,
+  });
   const formik = useFormik({
     initialValues: {
-      name: '',
-      type: '',
-      lateThreshold: '',
-      lateThresholdUnit: 'minutes',
-      halfDayThreshold: '',
-      halfDayThresholdUnit: 'minutes',
-      enableNotification: false,
+      name: editData?.name || '',
+      type: editData?.type || '',
+      lateThreshold: editData?.lateThreshold || '',
+      lateThresholdUnit: editData?.lateThresholdUnit || TimeUnitType.Minutes,
+      halfDayThreshold: editData?.halfDayThreshold || '',
+      halfDayThresholdUnit: editData?.halfDayThresholdUnit || TimeUnitType.Minutes,
+      enableNotification: editData?.enableNotificationForUpperAuthority || false,
     },
-    onSubmit: () => {},
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          await updateRule({
+            id: editData.id,
+            name: values.name,
+            type: values.type,
+            lateThreshold: values.lateThreshold,
+            lateThresholdUnit: values.lateThresholdUnit,
+            halfDayThreshold: values.halfDayThreshold,
+            halfDayThresholdUnit: values.halfDayThresholdUnit,
+            enableNotificationForUpperAuthority: values.enableNotification,
+          });
+        }
+        await addRule({
+          name: values.name,
+          type: values.type,
+          lateThreshold: values.lateThreshold,
+          lateThresholdUnit: values.lateThresholdUnit,
+          halfDayThreshold: values.halfDayThreshold,
+          halfDayThresholdUnit: values.halfDayThresholdUnit,
+          enableNotificationForUpperAuthority: values.enableNotification,
+        });
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
   return (
     <Box>
@@ -222,15 +268,15 @@ const AttendanceRuleForm = () => {
             <Grid item xs={12}>
               <CustomSelect
                 options={[
-                  { id: 'half-day', name: 'Half-day' },
-                  { id: 'late', name: 'Late' },
+                  { id: EmployeeAttendanceStatus.HalfDayLeave, name: 'Half-day' },
+                  { id: 4, name: 'Late' },
                 ]}
                 label="Attendance Type"
                 labelKey="name"
                 valueKey="id"
                 value={formik.values.type}
                 fullWidth
-                formControlProps={{ fullWidth: true }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 onChange={(val: string | string[]) => formik.setFieldValue('type', val as string)}
               />
             </Grid>
@@ -248,8 +294,8 @@ const AttendanceRuleForm = () => {
                     <InputAdornment position="end">
                       <CustomSelect
                         options={[
-                          { id: 'minutes', name: 'Min' },
-                          { id: 'hours', name: 'Hrs' },
+                          { id: TimeUnitType.Minutes, name: 'Min' },
+                          { id: TimeUnitType.Hours, name: 'Hrs' },
                         ]}
                         label=""
                         labelKey="name"
@@ -280,8 +326,8 @@ const AttendanceRuleForm = () => {
                     <InputAdornment position="end">
                       <CustomSelect
                         options={[
-                          { id: 'minutes', name: 'Min' },
-                          { id: 'hours', name: 'Hrs' },
+                          { id: TimeUnitType.Minutes, name: 'Min' },
+                          { id: TimeUnitType.Hours, name: 'Hrs' },
                         ]}
                         label=""
                         labelKey="name"
@@ -307,15 +353,15 @@ const AttendanceRuleForm = () => {
                     name="enableNotification"
                   />
                 }
-                label="Enable notification for parents or students if the rule is violated."
+                label="Enable notification for Upper Authority if the rule is violated."
               />
             </Grid>
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" variant="contained">
+          <LoadingButton loading={isLoading} type="submit" variant="contained">
             Submit
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </form>
     </Box>
