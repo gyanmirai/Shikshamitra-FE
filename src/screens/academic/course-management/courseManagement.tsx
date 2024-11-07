@@ -175,7 +175,7 @@ const CourseManagement = (props: TabComponentType) => {
     id: number;
     newValue: string;
   } | null>(null);
-  
+
   const [selectedEntry, setSelectedEntry] = useState<CourseData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   // const [accordionData1, setAccordionData1] = useState<AccordionItem[]>(initialAccordionData);
@@ -611,7 +611,7 @@ const ChapterContent: React.FC<{ content: string }> = ({ content }) => (
 
 interface AppWidgetProps {
   title: string;
-  total? : number;
+  total?: number;
   icon: string;
   chart: {
     colors?: string[];
