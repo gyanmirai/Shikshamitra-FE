@@ -57,7 +57,7 @@ export interface EducationMedium {
 }
 
 interface MediumSetupProps {
-  boardId: string;
+  boardId: string | number;
 }
 
 const MediumSetup = ({ boardId }: MediumSetupProps) => {
@@ -268,7 +268,7 @@ interface IMediumForm {
   handleClose: () => void;
   handleSetTeb: (value: Record<string, any>) => void;
   editData: null | Record<string, any>;
-  boardId: string;
+  boardId: string | number;
 }
 const MediumForm = ({ handleClose, handleSetTeb, editData, boardId }: IMediumForm) => {
   const [addMedium, { isLoading }] = useQueryAndMutation({

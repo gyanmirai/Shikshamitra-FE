@@ -126,7 +126,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit }) => {
                   { value: 'Secondary', label: 'Secondary' },
                   { value: 'Higher Secondary', label: 'Higher Secondary' },
                 ]}
-                value=""
+                value={[]}
                 onChange={(val) => {
                   // formik.setFieldValue('organization', val);
                 }}
@@ -203,7 +203,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit }) => {
                   { value: 'Parents', label: 'Parents' },
                 ]}
                 multiple
-                value=""
+                value={[]}
                 onChange={(val) => {
                   //   formik.setFieldValue('audience', val as string);
                 }}

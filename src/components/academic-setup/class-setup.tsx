@@ -48,7 +48,7 @@ interface IClassSetup {
   educationMediumStageId: string;
 }
 interface ClassSetupProps {
-  organizationId: string;
+  organizationId: string | number;
 }
 
 const ClassSetup = ({ organizationId }: ClassSetupProps) => {
@@ -220,7 +220,7 @@ export default ClassSetup;
 interface IClassForm {
   handleClose: () => void;
   editData: null | Record<string, any>;
-  organizationId: string;
+  organizationId: string | number;
 }
 export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm) => {
   const [addOrganization, { isLoading }] = useQueryAndMutation({

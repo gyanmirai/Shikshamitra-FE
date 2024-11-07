@@ -584,6 +584,22 @@ interface AnnouncementFormProps {
   isEdit?: boolean;
 }
 
+interface FormikInitialValues {
+  title: string;
+  description: string;
+  audience: string[];
+  publishDate: Dayjs | null;
+  expiryDate: Dayjs | null;
+  className: string[];
+  division: string[];
+  status: string;
+  category: string;
+  importance_level: string;
+  link: string;
+  notification_preferences: string[];
+  isScheduled: boolean;
+}
+
 const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   onSubmit,
   initialValues = null,
@@ -618,7 +634,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     date: Yup.mixed().required('Date is required'),
   });
 
-  const formik = useFormik({
+  const formik = useFormik<FormikInitialValues>({
     initialValues: {
       title: initialValues?.title || '',
       description: initialValues?.description || '',
@@ -751,7 +767,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
                 multiple
                 value={formik.values.audience}
                 onChange={(val) => {
-                  formik.setFieldValue('audience', val as string);
+                  formik.setFieldValue('audience', val);
                 }}
                 formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               />
