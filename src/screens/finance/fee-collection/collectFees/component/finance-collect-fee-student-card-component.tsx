@@ -2,8 +2,6 @@ import React from 'react';
 
 import { Box, Card, Avatar, Divider, Typography, ListItemText } from '@mui/material';
 
-import { fShortenNumber } from 'src/utils/format-number';
-
 import { AvatarShape } from 'src/assets/illustrations';
 
 export type IUserCard = {
@@ -75,13 +73,13 @@ const FinanceCollectFeeStudentCardComponent = ({ user }: Props) => {
             <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
               {label}
             </Typography>
-            {fShortenNumber(
+            {
               index === 0
-                ? user.totalFollowing
+                ? 10
                 : index === 1
-                  ? user.totalFollowers
-                  : user.totalPosts
-            )}
+                  ? 9876542347
+                  : 20000
+            }
           </div>
         ))}
       </Box>

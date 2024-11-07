@@ -33,7 +33,7 @@ const BusStopPicker: React.FC<BusStopPickerProps> = ({ onStopsChange, stepOneInf
       click: async (e) => {
         const { lat, lng } = e.latlng;
         const locationName = await fetchCityName(lat, lng);
-        const newStop: BusStop = { id: Date.now(), name: locationName, coordinates: [lat, lng] };
+        const newStop: BusStop = { id: Math.random(), name: locationName, coordinates: [lat, lng] };
         setBusStops((prev) => [...prev, newStop]);
         onStopsChange([...busStops, newStop]);
       },

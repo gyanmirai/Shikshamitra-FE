@@ -3,6 +3,7 @@ import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -64,7 +65,28 @@ const FinanceFeeListOverviewComponent = () => (
             { id: 'amountDue', label: 'Amount Due' },
             { id: 'amountPaid', label: 'Amount Paid' },
             { id: 'dueDate', label: 'Due Date' },
-            { id: 'status', label: 'Status' },
+            {
+              id: 'status',
+              label: 'Status',
+              render(value, row) {
+                return (
+                  <Label
+                    variant="soft"
+                    color={
+                      value === 'Overdue'
+                        ? 'error'
+                        : value === 'Unpaid'
+                          ? 'warning'
+                          : value === 'Paid'
+                            ? 'success'
+                            : 'default'
+                    }
+                  >
+                    {value}
+                  </Label>
+                );
+              },
+            },
             {
               id: 'action',
               label: 'Action',
@@ -97,7 +119,7 @@ const FinanceFeeListOverviewComponent = () => (
               amountDue: '0',
               amountPaid: '10000',
               dueDate: '01-01-2024',
-              status: 'Completed',
+              status: 'Paid',
               action: 'View',
             },
             {
@@ -107,7 +129,7 @@ const FinanceFeeListOverviewComponent = () => (
               amountDue: '0',
               amountPaid: '50000',
               dueDate: '01-01-2024',
-              status: 'Completed',
+              status: 'Paid',
               action: 'View',
             },
           ]}

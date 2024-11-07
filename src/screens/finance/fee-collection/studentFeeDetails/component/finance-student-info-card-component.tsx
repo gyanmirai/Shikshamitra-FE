@@ -76,13 +76,13 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
             <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
               {label}
             </Typography>
-            {fShortenNumber(
+            {
               index === 0
-                ? user.totalFollowing
+                ? 10
                 : index === 1
-                  ? user.totalFollowers
-                  : user.totalPosts
-            )}
+                  ? 9876542347
+                  : 20000
+            }
           </div>
         ))}
       </Box>
@@ -96,10 +96,10 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
 
       {/* Actions */}
       <Box display="flex" justifyContent="flex-end" gap={2} pb={2} px={3}>
-        <Button variant="contained" color="primary">
+        <Button variant="contained" >
           Send Reminder
         </Button>
-        <Button variant="contained" color="error">
+        <Button variant="contained" >
           Generate Report
         </Button>
       </Box>

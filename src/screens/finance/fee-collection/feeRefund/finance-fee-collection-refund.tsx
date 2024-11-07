@@ -4,10 +4,12 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundDialog from './component/fee-refund-dialog';
+
 
 const FinanceFeeCollectionRefundTab = () => {
   const data = [
@@ -158,7 +160,28 @@ const FinanceFeeCollectionRefundTab = () => {
           },
 
           { id: 'paidDate', label: 'Paid Date' },
-          { id: 'status', label: 'Status' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+            return (
+              value !== "" ?   <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Unpaid'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label> : <Box/>
+              );
+            },
+          },
           // {
           //     id: 'action',
           //     label: 'Action',

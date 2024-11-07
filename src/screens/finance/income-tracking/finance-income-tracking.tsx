@@ -6,6 +6,7 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -111,7 +112,25 @@ const FinanceIncomeTrackingScreen = () => {
           { id: 'incomeAmount', label: 'Income Amount' },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
-          { id: 'paymentStatus', label: 'Payment Status' },
+         
+          { id: 'paymentStatus', label: 'Payment Status',  render(value, row) {
+            return (
+              <Label
+                variant="soft"
+                color={
+                  value === 'Overdue'
+                    ? 'error'
+                    : value === 'Unpaid'
+                      ? 'warning'
+                      : value === 'Paid'
+                        ? 'success'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            );
+          }, },
           {
             id: 'action',
             label: 'Action',

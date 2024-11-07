@@ -2,6 +2,7 @@ import React from 'react';
 
 import { MenuItem, MenuList } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -43,7 +44,28 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
         { id: 'amount', label: 'Amount' },
         { id: 'dueDate', label: 'Due Date' },
 
-        { id: 'status', label: 'Status' },
+        {
+          id: 'status',
+          label: 'Status',
+          render(value, row) {
+            return (
+              <Label
+                variant="soft"
+                color={
+                  value === 'Overdue'
+                    ? 'error'
+                    : value === 'Unpaid'
+                      ? 'warning'
+                      : value === 'Paid'
+                        ? 'success'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            );
+          },
+        },
         {
           id: 'action',
           label: 'Action',

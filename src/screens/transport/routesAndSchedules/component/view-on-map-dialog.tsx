@@ -22,17 +22,20 @@ interface TransportMapProps {
 
 const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) => {
     const [routeCoordinates, setRouteCoordinates] = useState<LatLngExpression[]>([]);
-
+    console.log("final screen waypoinyts",waypoints)
+    // const flattenedStops = waypoints.flat();
+    // console.log("final screen flatwaypoinyts",flattenedStops)
     const getRouteCoordinates = async (
         startPoint: [number, number],
         endPoint: [number, number],
-        routeWaypoints: [number, number][] 
+        routeWaypoints: any
     ) => {
        
         const coordinates = [startPoint, ...routeWaypoints, endPoint]
             .map((coord) => `${coord[1]},${coord[0]}`)
             .join(';');
     
+            console.log("final screen", coordinates)
         const response = await fetch(
             `https://router.project-osrm.org/route/v1/driving/${coordinates}?geometries=geojson`
         );
