@@ -23,6 +23,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -350,11 +351,96 @@ const Subject = () => {
           </Button>
         </DialogActions>
       </CustomDialog>
+
+      <CustomDialog
+        title="Subject Details"
+        open={showSubjectDialog.value}
+        handleClose={() => {
+          showSubjectDialog.onFalse();
+          setSelectedSubject(null);
+        }}
+        maxWidth="sm"
+      >
+        <ViewSubject subject={selectedSubject} />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default Subject;
+
+interface ViewSubjectProps {
+  subject: TSubjectTable | null;
+}
+const ViewSubject: React.FC<ViewSubjectProps> = ({ subject }) => (
+  <Box sx={{ p: 2 }}>
+    <Scrollbar sx={{ height: '400px' }}>
+      <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Iconify icon="mdi:text-subject" className="text-gray-500 w-6 h-6" />
+        <Typography variant="h6" className="font-semibold">
+          {subject?.subjectName}
+        </Typography>
+      </Box>
+
+      <hr className="my-6 border-gray-200" />
+
+      <DetailRow
+        label="Description"
+        icon="mdi:text-box-outline"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.description}
+          </Typography>
+        }
+      />
+      <DetailRow
+        label="Class"
+        icon="mdi:school-outline"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.className}
+          </Typography>
+        }
+      />
+      <DetailRow
+        label="Subject Color"
+        icon="mdi:color"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.subjectColor}
+          </Typography>
+        }
+      />
+      <DetailRow
+        label="Assigned Teacher"
+        icon="mdi:teacher"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.assignTeacher}
+          </Typography>
+        }
+      />
+      <DetailRow
+        label="Prerequisites"
+        icon="mdi:palette-advanced"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.prerequisites}
+          </Typography>
+        }
+      />
+      <DetailRow
+        label="Learning Goal"
+        icon="mdi:goal"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.learningGoal}
+          </Typography>
+        }
+      />
+    </Scrollbar>
+  </Box>
+);
 
 interface SubjectFormProps {
   onSubmit: (values: TSubjectTable) => void;
