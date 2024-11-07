@@ -15,7 +15,7 @@ import { CalendarView } from 'src/sections/calendar/view';
 
 const TimeScheduleManagementDashboardTab = () => {
   const [classes, setClasses] = useState<string>('');
-  const [division, setDivision] = useState<any>([]);
+  const [division, setDivision] = useState<any>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -57,7 +57,6 @@ const TimeScheduleManagementDashboardTab = () => {
             disabled={!classes}
             labelKey="name"
             valueKey="id"
-            multiple
             options={divisionOptions}
             value={division}
             onChange={(val) => {
@@ -67,9 +66,6 @@ const TimeScheduleManagementDashboardTab = () => {
           />
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button color="error" variant="contained">
-            Assign Teacher
-          </Button>
           <Button color="secondary" variant="contained">
             Manage Room
           </Button>

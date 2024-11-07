@@ -311,6 +311,8 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
     return events;
   }, [teacherId, subjectId, events]);
 
+  console.log('feltured eventen====', filteredEvents);
+
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
   return (
     <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>

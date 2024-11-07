@@ -31,7 +31,7 @@ const TABS = [
   // },
   {
     value: 'subjects',
-    label: 'Subjects',
+    label: 'Subjects/Course',
     component: (props: TabComponentType) => <Subjects {...props} />,
   },
   {

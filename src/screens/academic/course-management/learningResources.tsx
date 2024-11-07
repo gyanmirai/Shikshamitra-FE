@@ -194,7 +194,12 @@ const LearningResources = (props: TabComponentType) => {
         />
         <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
           {' '}
-          <Button variant="contained" onClick={dialog.onTrue} disabled={!classes || !subject}>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={dialog.onTrue}
+            disabled={!classes || !subject}
+          >
             Create New Resource
           </Button>
         </Box>
@@ -279,7 +284,7 @@ const LearningResources = (props: TabComponentType) => {
       <CustomDialog
         title="Confirm Publication"
         open={confirm_dialog.value}
-        handleClose={confirm_dialog.onFalse}
+        handleClose={cancelStatusChange}
         maxWidth="sm"
       >
         <DialogContent>
@@ -289,9 +294,6 @@ const LearningResources = (props: TabComponentType) => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancelStatusChange} variant="contained" color="error">
-            Cancel
-          </Button>
           <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
             Confirm
           </Button>
@@ -471,7 +473,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 formik.handleSubmit();
               }}
             >
-              Save ad Publish
+              Save and Publish
             </Button>
           </DialogActions>
         </form>
