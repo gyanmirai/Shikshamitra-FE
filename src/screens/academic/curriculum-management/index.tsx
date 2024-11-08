@@ -30,11 +30,11 @@ const TABS = [
     label: 'Curriculum Overview',
     component: () => <CurriculumOverview />,
   },
-  {
-    value: 'create-edit-curriculum',
-    label: 'Create/Edit Curriculum',
-    component: () => <Curriculum />,
-  },
+  // {
+  //   value: 'create-edit-curriculum',
+  //   label: 'Create/Edit Curriculum',
+  //   component: () => <Curriculum />,
+  // },
   { value: 'teacher', label: 'Teacher', component: () => <Teacher /> },
   { value: 'reports', label: 'Reports', component: () => <Reports /> },
   { value: 'settings', label: 'Settings', component: () => <Settings /> },

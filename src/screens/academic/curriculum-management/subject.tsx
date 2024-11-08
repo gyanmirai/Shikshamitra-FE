@@ -1,21 +1,31 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { MuiColorInput } from 'mui-color-input';
 
 import { Add } from '@mui/icons-material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  List,
   Grid,
+  Chip,
   Button,
   Switch,
   MenuItem,
   MenuList,
+  ListItem,
   TextField,
   Typography,
   IconButton,
+  ListItemText,
   DialogActions,
   DialogContent,
+  FormHelperText,
   DialogContentText,
 } from '@mui/material';
 
@@ -33,11 +43,21 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+interface Document {
+  id: string;
+  name: string;
+  url: string;
+  file?: File;
+}
+
 interface TSubjectTable {
   id: number;
   subjectName: string;
+  subjectCode: string;
+  scheduleDate: Dayjs | null;
   className: string;
-  assignTeacher: string;
+  assignTeacher: string[];
+  documents?: Document[];
   prerequisites: string;
   learningGoal: string;
   subjectColor: string;
@@ -49,10 +69,12 @@ const subjectData: TSubjectTable[] = [
   {
     id: 1,
     subjectName: 'Mathematics',
+    subjectCode: 'Math01',
+    scheduleDate: dayjs('2024-10-28'),
     description: '',
     subjectColor: '',
     className: '1',
-    assignTeacher: 'Mr. Smith',
+    assignTeacher: ['Mr. Smith'],
     prerequisites: 'Basic counting skills',
     learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
     status: 'Publish',
@@ -60,10 +82,12 @@ const subjectData: TSubjectTable[] = [
   {
     id: 2,
     subjectName: 'Science',
+    subjectCode: 'Sci02',
+    scheduleDate: dayjs('2024-10-28'),
     description: '',
     subjectColor: '',
     className: '2',
-    assignTeacher: 'Ms. Johnson',
+    assignTeacher: ['Ms. Johnson'],
     prerequisites: 'Interest in nature and environment',
     learningGoal: 'Understand basic concepts of earth science and the environment.',
     status: 'Unpublish',
@@ -71,10 +95,12 @@ const subjectData: TSubjectTable[] = [
   {
     id: 3,
     subjectName: 'English',
+    subjectCode: 'Eng03',
+    scheduleDate: dayjs('2024-10-28'),
     description: '',
     subjectColor: '',
     className: '1',
-    assignTeacher: 'Mrs. Green',
+    assignTeacher: ['Mrs. Green'],
     prerequisites: 'Basic reading skills',
     learningGoal: 'Enhance reading comprehension and vocabulary.',
     status: 'Publish',
@@ -82,10 +108,12 @@ const subjectData: TSubjectTable[] = [
   {
     id: 4,
     subjectName: 'History',
+    subjectCode: 'Hist01',
+    scheduleDate: dayjs('2024-10-28'),
     description: '',
     subjectColor: '',
     className: '1',
-    assignTeacher: 'Mr. Brown',
+    assignTeacher: ['Mr. Brown'],
     prerequisites: 'Interest in past events',
     learningGoal: 'Learn about important historical events and figures.',
     status: 'Unpublish',
@@ -93,10 +121,12 @@ const subjectData: TSubjectTable[] = [
   {
     id: 5,
     subjectName: 'Geography',
+    scheduleDate: dayjs('2024-10-28'),
+    subjectCode: 'Geo01',
     description: '',
     subjectColor: '',
     className: '3',
-    assignTeacher: 'Ms. Davis',
+    assignTeacher: ['Ms. Davis'],
     prerequisites: 'Basic map reading skills',
     learningGoal: 'Develop an understanding of world geography and countries.',
     status: 'Publish',
@@ -215,27 +245,32 @@ const Subject = () => {
       {selectedClass && (
         <CustomizableTable
           columns={[
-            { id: 'subjectName', label: 'Subject Name' },
             { id: 'className', label: 'Class' },
-            { id: 'assignTeacher', label: 'Assign Teacher' },
+            { id: 'subjectCode', label: 'Subject Code' },
+            { id: 'subjectName', label: 'Subject Name' },
+            {
+              id: 'assignTeacher',
+              label: 'Assign Teacher',
+              render: (value) => (
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  {value.map((audience: string) => (
+                    <Chip key={audience} label={audience} size="small" variant="outlined" />
+                  ))}
+                </Box>
+              ),
+            },
             { id: 'prerequisites', label: 'Prerequisites' },
             { id: 'learningGoal', label: 'Learning Goal' },
             {
               id: 'status',
-              label: 'Status',
+              label: 'Publish',
               render: (value: string, row: any) => (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography sx={{ mr: 2 }} fontSize={11}>
-                    Unpublish
-                  </Typography>
                   <Switch
                     size="small"
                     checked={value === 'Publish'}
                     onChange={() => handleStatusChange(row.id, value as string)}
                   />
-                  <Typography sx={{ ml: 2 }} fontSize={11}>
-                    Publish
-                  </Typography>
                 </Box>
               ),
             },
@@ -301,7 +336,7 @@ const Subject = () => {
         maxWidth="sm"
         open={dialog.value}
         handleClose={handleCloseDialog}
-        title={isEdit ? 'Add Subject' : 'Update Subject'}
+        title={isEdit ? 'Update Subject' : 'Add Subject'}
       >
         <SubjectForm
           onSubmit={handleSubmit}
@@ -338,8 +373,8 @@ const Subject = () => {
       >
         <DialogContent>
           <DialogContentText>
-            Are you sure to {pendingStatusChange?.newValue === 'Publish' ? 'Publish' : 'UnPublish'}{' '}
-            this course?
+            Are you sure to {pendingStatusChange?.newValue === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
+            this Subject?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -452,18 +487,33 @@ interface SubjectFormProps {
 const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
   const [subjectColor, setSubjectColor] = useState('');
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
+  const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
+
+  const validationSchema = Yup.object().shape({
+    subjectCode: Yup.string().required('Subject Code is Required'),
+    subjectName: Yup.string().required('Subject Name is required'),
+    className: Yup.string().required('Class is required'),
+    assignTeacher: Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
+    learningGoal: Yup.string().required('Learning Goal is required'),
+    prerequisites: Yup.string().required('Prerequisites are required'),
+    description: Yup.string().required('Description is required'),
+    subjectColor: Yup.string().required('Subject Color is required'),
+  });
 
   const formik = useFormik({
     initialValues: {
+      subjectCode: data?.subjectCode || '',
       subjectName: data?.subjectName || '',
+      scheduleDate: data?.scheduleDate || dayjs(),
       className: data?.className || '',
-      assignTeacher: data?.assignTeacher || '',
+      assignTeacher: data?.assignTeacher || [],
       learningGoal: data?.learningGoal || '',
       prerequisites: data?.prerequisites || '',
       description: data?.description || '',
       subjectColor: data?.subjectColor || '#000000',
       status: data?.status || 'Unpublish',
     },
+    validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
@@ -472,11 +522,26 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
       });
     },
   });
+  console.log('error--', formik.errors);
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  const handleFileUpload = (files: File[]) => {
+    const newDocs: Document[] = files.map((file) => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      url: '',
+      file,
+    }));
+    setDocuments((prev) => [...prev, ...newDocs]);
+  };
+
+  const handleRemoveDocument = (docId: string) => {
+    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+  };
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
@@ -495,6 +560,18 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                   formik.setFieldValue('className', val);
                 }}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                error={formik.touched.className && Boolean(formik.errors.className)}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Subject Code"
+                name="subjectCode"
+                size="small"
+                value={formik.values.subjectCode}
+                onChange={formik.handleChange}
+                error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -505,6 +582,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 size="small"
                 value={formik.values.subjectName}
                 onChange={formik.handleChange}
+                error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -516,12 +594,34 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                   { value: 'Priya', label: 'Priya' },
                 ]}
                 name="assignTeacher"
+                multiple
                 value={formik.values.assignTeacher}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                 onChange={(val) => {
                   formik.setFieldValue('assignTeacher', val);
                 }}
+                error={formik.touched.assignTeacher}
               />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <DateTimePicker
+                label=""
+                value={formik.values.scheduleDate}
+                onChange={(value) => {
+                  formik.setFieldValue('scheduleDate', value);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
+                  },
+                }}
+                disablePast
+              />
+              {formik.touched.scheduleDate && formik.errors.scheduleDate && (
+                <FormHelperText error>{String(formik.errors.scheduleDate)}</FormHelperText>
+              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <MuiColorInput
@@ -542,6 +642,8 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                     fontSize: '0.875rem', // Smaller font size for placeholder
                   },
                 }}
+                error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
+                helperText={formik.touched.subjectColor && formik.errors.subjectColor}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -554,6 +656,8 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 onChange={formik.handleChange}
                 value={formik.values.learningGoal}
                 size="small"
+                error={formik.touched.learningGoal && Boolean(formik.errors.learningGoal)}
+                helperText={formik.touched.learningGoal && formik.errors.learningGoal}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -566,6 +670,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 size="small"
                 value={formik.values.prerequisites}
                 onChange={formik.handleChange}
+                error={formik.touched.prerequisites && Boolean(formik.errors.prerequisites)}
               />
             </Grid>
             <Grid item xs={12}>
@@ -577,12 +682,14 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 name="description"
                 value={formik.values.description}
                 onChange={formik.handleChange}
+                error={formik.touched.description && Boolean(formik.errors.description)}
+                helperText={formik.touched.description && formik.errors.description}
               />
             </Grid>
 
             <Grid item xs={12}>
               <UploadBox
-                onDrop={() => {}}
+                onDrop={handleFileUpload}
                 placeholder={
                   <Box
                     sx={{
@@ -605,6 +712,30 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 }}
               />
             </Grid>
+            {documents.length > 0 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Uploaded Documents
+                </Typography>
+                <List>
+                  {documents.map((doc, index) => (
+                    <ListItem
+                      key={doc.id}
+                      secondaryAction={
+                        <IconButton
+                          edge="end"
+                          onClick={() => handleRemoveDocument(doc.id as unknown as string)}
+                        >
+                          <Iconify icon="mdi:delete" />
+                        </IconButton>
+                      }
+                    >
+                      <ListItemText primary={doc.name} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            )}
           </Grid>
         </Scrollbar>
         <DialogActions>
