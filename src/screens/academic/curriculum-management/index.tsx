@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card, Button } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -14,7 +16,6 @@ import Teacher from './teacher';
 import Subject from './subject';
 import Reports from './reports';
 import Settings from './settings';
-import Curriculum from './curriculum';
 import CurriculumOverview from './curriculum-overview';
 import CarriculumDashboardTab from './dashboard/carriculum-dashboard-tab';
 
@@ -22,28 +23,48 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <CarriculumDashboardTab />,
+    component: (props: TabComponentType) => <CarriculumDashboardTab {...props} />,
   },
-  { value: 'subjects', label: 'Subjects', component: () => <Subject /> },
+  {
+    value: 'subjects',
+    label: 'Subjects',
+    component: (props: TabComponentType) => <Subject {...props} />,
+  },
   {
     value: 'curriculumOverview',
     label: 'Curriculum Overview',
-    component: () => <CurriculumOverview />,
+    component: (props: TabComponentType) => <CurriculumOverview {...props} />,
   },
   // {
   //   value: 'create-edit-curriculum',
   //   label: 'Create/Edit Curriculum',
   //   component: () => <Curriculum />,
   // },
-  { value: 'teacher', label: 'Teacher', component: () => <Teacher /> },
-  { value: 'reports', label: 'Reports', component: () => <Reports /> },
-  { value: 'settings', label: 'Settings', component: () => <Settings /> },
+  {
+    value: 'teacher',
+    label: 'Teacher',
+    component: (props: TabComponentType) => <Teacher {...props} />,
+  },
+  {
+    value: 'reports',
+    label: 'Reports',
+    component: (props: TabComponentType) => <Reports {...props} />,
+  },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <Settings {...props} />,
+  },
 ];
 
 const CurriculumManagementScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -84,8 +105,8 @@ const CurriculumManagementScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -95,7 +116,12 @@ const CurriculumManagementScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

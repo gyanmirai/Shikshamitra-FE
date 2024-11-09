@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -11,16 +11,12 @@ import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import {
   Box,
   Grid,
-  List,
   Button,
-  ListItem,
-  Typography,
-  ListItemText,
-  DialogActions,
+  Switch,
   MenuItem,
   MenuList,
-  IconButton,
-  Switch,
+  Typography,
+  DialogActions,
   DialogContent,
   DialogContentText,
 } from '@mui/material';
@@ -31,12 +27,13 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+
+import { ViewSubject } from './subject';
 
 interface TSubject {
   name: string;
@@ -102,11 +99,26 @@ const CurriculumData: TCurriculum[] = [
   },
 ];
 
-const CurriculumOverview = () => {
+const subjectData = {
+  id: 1,
+  subjectName: 'Mathematics',
+  subjectCode: 'Math01',
+  scheduleDate: dayjs('2024-10-28'),
+  description: '',
+  subjectColor: '',
+  className: '1',
+  assignTeacher: ['Mr. Smith'],
+  prerequisites: 'Basic counting skills',
+  learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
+  status: 'Publish',
+};
+
+const CurriculumOverview = (props: TabComponentType) => {
   const [curriculumTableData, setCurriculumTableData] = useState<TCurriculum[]>(CurriculumData);
   const [selectedCurriculum, setSelectedCurriculum] = useState<TCurriculum | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const dialog = useBoolean();
+  const showDialog = useBoolean();
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
@@ -377,8 +389,11 @@ const CurriculumOverview = () => {
                       border: `1px solid ${curriculumRow.subjects[index]?.color}`,
                       fontSize: '0.75rem',
                       fontWeight: 500,
+                      cursor: 'pointer',
                     }}
-                    onClick={handleSubjectClick}
+                    onClick={() => {
+                      showDialog.onTrue();
+                    }}
                   >
                     {curriculumRow.subjects[index]?.name
                       ? curriculumRow.subjects[index]?.name
@@ -441,6 +456,17 @@ const CurriculumOverview = () => {
           isEdit={isEdit}
           data={selectedCurriculum}
         />
+      </CustomDialog>
+
+      <CustomDialog
+        title="Subject Details"
+        open={showDialog.value}
+        handleClose={() => {
+          showDialog.onFalse();
+        }}
+        maxWidth="sm"
+      >
+        <ViewSubject subject={subjectData} />
       </CustomDialog>
 
       <CustomDialog
