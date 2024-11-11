@@ -58,7 +58,8 @@ interface TSubjectTable {
   subjectCode: string;
   scheduleDate: Dayjs | null;
   className: string;
-  assignTeacher: string[];
+  primaryTeacher: string;
+  secondaryTeacher: string[] | null;
   documents?: Document[];
   prerequisites: string;
   learningGoal: string;
@@ -76,7 +77,8 @@ export const subjectData: TSubjectTable[] = [
     description: '',
     subjectColor: '',
     className: '1',
-    assignTeacher: ['Mr. Smith'],
+    primaryTeacher: 'Ms. Johnson',
+    secondaryTeacher: ['Mr. Smith'],
     prerequisites: 'Basic counting skills',
     learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
     status: 'Publish',
@@ -89,7 +91,8 @@ export const subjectData: TSubjectTable[] = [
     description: '',
     subjectColor: '',
     className: '2',
-    assignTeacher: ['Ms. Johnson'],
+    primaryTeacher: 'Mr. Smith',
+    secondaryTeacher: ['Ms. Johnson'],
     prerequisites: 'Interest in nature and environment',
     learningGoal: 'Understand basic concepts of earth science and the environment.',
     status: 'Unpublish',
@@ -102,7 +105,8 @@ export const subjectData: TSubjectTable[] = [
     description: '',
     subjectColor: '',
     className: '1',
-    assignTeacher: ['Mrs. Green'],
+    primaryTeacher: 'Ms. Johnson',
+    secondaryTeacher: ['Mrs. Green'],
     prerequisites: 'Basic reading skills',
     learningGoal: 'Enhance reading comprehension and vocabulary.',
     status: 'Publish',
@@ -115,7 +119,8 @@ export const subjectData: TSubjectTable[] = [
     description: '',
     subjectColor: '',
     className: '1',
-    assignTeacher: ['Mr. Brown'],
+    primaryTeacher: 'Ms. Johnson',
+    secondaryTeacher: ['Mrs. Green'],
     prerequisites: 'Interest in past events',
     learningGoal: 'Learn about important historical events and figures.',
     status: 'Unpublish',
@@ -128,7 +133,8 @@ export const subjectData: TSubjectTable[] = [
     description: '',
     subjectColor: '',
     className: '3',
-    assignTeacher: ['Ms. Davis'],
+    primaryTeacher: 'Ms. Davis',
+    secondaryTeacher: ['Mrs. Green'],
     prerequisites: 'Basic map reading skills',
     learningGoal: 'Develop an understanding of world geography and countries.',
     status: 'Publish',
@@ -147,6 +153,7 @@ const Subject = (props: TabComponentType) => {
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
+  const addBulkDialog = useBoolean();
 
   const [selectedSubject, setSelectedSubject] = useState<TSubjectTable | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -250,9 +257,10 @@ const Subject = (props: TabComponentType) => {
             { id: 'className', label: 'Class' },
             { id: 'subjectCode', label: 'Subject Code' },
             { id: 'subjectName', label: 'Subject Name' },
+            { id: 'primaryTeacher', label: 'Primary Teacher' },
             {
-              id: 'assignTeacher',
-              label: 'Assign Teacher',
+              id: 'secondaryTeacher',
+              label: 'Secondary Teacher',
               render: (value) => (
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                   {value.map((audience: string) => (
@@ -334,6 +342,17 @@ const Subject = (props: TabComponentType) => {
           data={filteredData}
         />
       )}
+      {selectedClass && (
+        <Button
+          startIcon={<Add />}
+          variant="contained"
+          onClick={() => {
+            addBulkDialog.onTrue();
+          }}
+        >
+          Add Bulk
+        </Button>
+      )}
       <CustomDialog
         maxWidth="sm"
         open={dialog.value}
@@ -400,11 +419,153 @@ const Subject = (props: TabComponentType) => {
       >
         <ViewSubject subject={selectedSubject} />
       </CustomDialog>
+
+      <CustomDialog
+        title="Add Bulk"
+        open={addBulkDialog.value}
+        handleClose={() => {
+          addBulkDialog.onFalse();
+        }}
+      >
+        <AddBulk selectedClass={selectedClass} />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default Subject;
+
+interface AddBulkProps {
+  selectedClass: string;
+}
+
+const AddBulk: React.FC<AddBulkProps> = ({ selectedClass }) => {
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
+  const [documents, setDocuments] = useState<Document[]>([]);
+  console.log('selected class----', selectedClass);
+
+  const formik = useFormik({
+    initialValues: {
+      className: selectedClass,
+      subjects: [],
+    },
+    onSubmit: (values) => {
+      alert('submit calls');
+    },
+  });
+
+  const handleFileUpload = (files: File[]) => {
+    const newDocs: Document[] = files.map((file) => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file,
+    }));
+    setDocuments((prev) => [...prev, ...newDocs]);
+  };
+
+  const handleRemoveDocument = (docId: string) => {
+    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+  };
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <CustomSelect
+                options={classData?.items || []}
+                label="Class"
+                name="className"
+                value={formik.values.className}
+                disabled
+                labelKey="name"
+                valueKey="name"
+                onChange={(val) => {}}
+                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <CustomSelect
+                label="Subject"
+                name="subjects"
+                options={[
+                  { value: 'Math', label: 'Math' },
+                  { value: 'Science', label: 'Science' },
+                  { value: 'English', label: 'English' },
+                  { value: 'Gujarati', label: 'Gujarati' },
+                ]}
+                multiple
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                value={formik.values.subjects}
+                onChange={(value) => formik.setFieldValue('subjects', value)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <UploadBox
+                onDrop={handleFileUpload}
+                placeholder={
+                  <Box
+                    sx={{
+                      gap: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.disabled',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">Upload Document</Typography>
+                  </Box>
+                }
+                sx={{
+                  py: 2.5,
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+              />
+            </Grid>
+            {documents.length > 0 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Uploaded Documents
+                </Typography>
+                <List>
+                  {documents.map((doc, index) => (
+                    <ListItem
+                      key={doc.id}
+                      secondaryAction={
+                        <IconButton
+                          edge="end"
+                          onClick={() => handleRemoveDocument(doc.id as unknown as string)}
+                        >
+                          <Iconify icon="mdi:delete" />
+                        </IconButton>
+                      }
+                    >
+                      <ListItemText primary={doc.name} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            )}
+          </Grid>
+        </Scrollbar>
+        <DialogActions>
+          <Button variant="contained" type="submit">
+            Submit
+          </Button>
+        </DialogActions>
+      </form>
+    </Box>
+  );
+};
 
 interface ViewSubjectProps {
   subject: TSubjectTable | null;
@@ -449,11 +610,20 @@ export const ViewSubject: React.FC<ViewSubjectProps> = ({ subject }) => (
         }
       />
       <DetailRow
-        label="Assigned Teacher"
+        label="Primary Teacher"
         icon="mdi:teacher"
         value={
           <Typography variant="body2" className="text-gray-700">
-            {subject?.assignTeacher}
+            {subject?.primaryTeacher}
+          </Typography>
+        }
+      />
+      <DetailRow
+        label="Secondary Teacher"
+        icon="mdi:teacher"
+        value={
+          <Typography variant="body2" className="text-gray-700">
+            {subject?.secondaryTeacher}
           </Typography>
         }
       />
@@ -516,7 +686,8 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
     subjectCode: Yup.string().required('Subject Code is Required'),
     subjectName: Yup.string().required('Subject Name is required'),
     className: Yup.string().required('Class is required'),
-    assignTeacher: Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
+    primaryTeacher : Yup.string().required('Primary teacher is required'),
+    secondaryTeacher : Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
     learningGoal: Yup.string().required('Learning Goal is required'),
     prerequisites: Yup.string().required('Prerequisites are required'),
     description: Yup.string().required('Description is required'),
@@ -529,7 +700,8 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
       subjectName: data?.subjectName || '',
       scheduleDate: data?.scheduleDate || dayjs(),
       className: data?.className || '',
-      assignTeacher: data?.assignTeacher || [],
+      primaryTeacher: data?.primaryTeacher || '',
+      secondaryTeacher: data?.secondaryTeacher || [],
       learningGoal: data?.learningGoal || '',
       prerequisites: data?.prerequisites || '',
       description: data?.description || '',
@@ -572,7 +744,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <CustomSelect
                 options={classData?.items || []}
                 label="Class"
@@ -587,7 +759,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 error={formik.touched.className && Boolean(formik.errors.className)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Subject Code"
@@ -598,7 +770,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Subject Name"
@@ -609,22 +781,41 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
               />
             </Grid>
+
             <Grid item xs={12} md={6}>
               <CustomSelect
-                label="Assigned Teacher"
+                label="Primary Teacher"
                 options={[
                   { value: 'Jiya', label: 'Jiya' },
                   { value: 'Riya', label: 'Riya' },
                   { value: 'Priya', label: 'Priya' },
                 ]}
-                name="assignTeacher"
-                multiple
-                value={formik.values.assignTeacher}
+                name="primaryTeacher"
+                value={formik.values.primaryTeacher}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                 onChange={(val) => {
-                  formik.setFieldValue('assignTeacher', val);
+                  formik.setFieldValue('primaryTeacher', val);
                 }}
-                error={formik.touched.assignTeacher}
+                error={formik.touched.primaryTeacher}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Secondary Teacher"
+                options={[
+                  { value: 'Jiya', label: 'Jiya' },
+                  { value: 'Riya', label: 'Riya' },
+                  { value: 'Priya', label: 'Priya' },
+                ]}
+                name="secondaryTeacher"
+                multiple
+                value={formik.values.secondaryTeacher}
+                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                onChange={(val) => {
+                  formik.setFieldValue('secondaryTeacher', val);
+                }}
+                error={formik.touched.secondaryTeacher}
               />
             </Grid>
             <Grid item xs={12} md={6}>

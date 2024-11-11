@@ -13,6 +13,7 @@ import {
   Box,
   Grid,
   List,
+  Chip,
   Button,
   MenuItem,
   useTheme,
@@ -49,7 +50,8 @@ import { subjectTempData } from './subjectsData';
 
 interface TableRow {
   subjectName: string;
-  assignedTeacher: string;
+  primaryTeacher: string;
+  secondaryTeacher: string[] | null;
   progress: number;
   material: {
     videos: number;
@@ -66,6 +68,7 @@ interface AssignmentRow {
 interface Chapter {
   id: number;
   chapterName: string;
+  teacher: string;
   content: string;
 }
 
@@ -121,7 +124,8 @@ const Subjects = (props: TabComponentType) => {
 
         const subjects = firstDivisionSubjects.map((subject: any) => ({
           subjectName: subject.name,
-          assignedTeacher: subject.assignedTeacher,
+          primaryTeacher: subject.primaryTeacher,
+          secondaryTeacher: subject.secondaryTeacher,
           progress: subject.progress,
           material: subject.material,
         }));
@@ -177,6 +181,7 @@ const Subjects = (props: TabComponentType) => {
               subject.chapters[chapterIndex] = {
                 ...subject.chapters[chapterIndex],
                 chapterName: values.chapterName,
+                assignedTeacher: values.assignedTeacher,
                 content: values.content,
                 timeLine: values.timeLine,
                 documents: newDocuments,
@@ -197,6 +202,7 @@ const Subjects = (props: TabComponentType) => {
               0
             ) + 1,
           chapterName: values.chapterName,
+          assignedTeacher: values.assignedTeacher,
           content: values.content,
           timeLine: values.timeLine,
           documents: newDocuments,
@@ -278,7 +284,18 @@ const Subjects = (props: TabComponentType) => {
               id: 'subjectName',
               label: 'Subject Name',
             },
-            { id: 'assignedTeacher', label: 'Assigned Teacher' },
+            { id: 'primaryTeacher', label: 'Primary Teacher' },
+            {
+              id: 'secondaryTeacher',
+              label: 'Secondary Teacher',
+              render: (value) => (
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  {value.map((audience: string) => (
+                    <Chip key={audience} label={audience} size="small" variant="outlined" />
+                  ))}
+                </Box>
+              ),
+            },
             {
               id: 'material',
               label: 'Material',
@@ -508,6 +525,7 @@ interface Document {
 
 interface ChapterFormValues {
   chapterName: string;
+  assignedTeacher: string;
   content: string;
   timeLine: string | undefined;
   documents: Document[];
@@ -519,6 +537,7 @@ interface AddNewChapterProps {
   isEdit?: boolean;
   initialValues?: {
     chapterName: string;
+    assignedTeacher: string;
     content: string;
     timeLine: Dayjs | null;
     documents?: Array<{
@@ -542,6 +561,7 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
 
   const validationSchema = Yup.object({
     chapterName: Yup.string().required('Chapter name is required'),
+    assignedTeacher: Yup.string().required('Assigned Teacher is Required'),
     content: Yup.string().required('Chapter description is required'),
     timeLine: Yup.string().required('Select the timeline for chapter'),
   });
@@ -549,6 +569,7 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
   const formik = useFormik({
     initialValues: {
       chapterName: initialValues?.chapterName || '',
+      assignedTeacher: initialValues?.assignedTeacher || '',
       content: initialValues?.content || '',
       timeLine: initialValues?.timeLine ? dayjs(initialValues.timeLine) : null,
     },
@@ -618,6 +639,25 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 }}
               />
             </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Assigned Teacher"
+                options={[
+                  { value: 'Jiya', label: 'Jiya' },
+                  { value: 'Riya', label: 'Riya' },
+                  { value: 'Priya', label: 'Priya' },
+                ]}
+                name="assignedTeacher"
+                value={formik.values.assignedTeacher}
+                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                onChange={(val) => {
+                  formik.setFieldValue('assignedTeacher', val);
+                }}
+                error={formik.touched.assignedTeacher}
+              />
+            </Grid>
+
             <Grid item xs={12}>
               <Editor
                 value={editorContent}
@@ -684,7 +724,7 @@ const AddNewChapter: React.FC<AddNewChapterProps> = ({
         </Scrollbar>
         <DialogActions>
           <Button type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'} Save
+            {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>

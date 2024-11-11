@@ -75,27 +75,42 @@ const CurriculumManagementScreen = () => {
       <Box
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
-        <Button startIcon={<Iconify icon="mdi:plus" />} color="primary" variant="contained">
-          Add New Subject
-        </Button>
-
         <Button
-          startIcon={<Iconify icon="mdi:account-plus" />}
-          color="secondary"
+          startIcon={<Iconify icon="mdi:plus" />}
+          color="primary"
           variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'subjects',
+            });
+          }}
         >
-          Assign Teacher
+          Add New Subject
         </Button>
 
         <Button
           startIcon={<Iconify icon="mdi:file-document-outline" />}
           color="error"
           variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'reports',
+            });
+          }}
         >
           Generate Report
         </Button>
 
-        <Button startIcon={<Iconify icon="mdi:pencil" />} color="warning" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:pencil" />}
+          color="warning"
+          variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'curriculumOverview',
+            });
+          }}
+        >
           Edit Curriculum
         </Button>
       </Box>

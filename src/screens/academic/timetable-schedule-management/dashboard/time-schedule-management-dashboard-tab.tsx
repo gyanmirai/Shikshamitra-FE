@@ -1,7 +1,9 @@
 import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
@@ -13,7 +15,9 @@ import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
-const TimeScheduleManagementDashboardTab = () => {
+const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
+  const { setSearchParams } = props;
+
   const [classes, setClasses] = useState<string>('');
   const [division, setDivision] = useState<any>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
@@ -66,10 +70,15 @@ const TimeScheduleManagementDashboardTab = () => {
           />
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button color="secondary" variant="contained">
-            Manage Room
-          </Button>
-          <Button variant="contained" onClick={() => {}}>
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              setSearchParams?.({
+                tab: 'createNewTimetable',
+              });
+            }}
+          >
             Create New Timetable
           </Button>
         </Box>

@@ -7,8 +7,9 @@ import { Box, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mu
 import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
-const TeacherManagement = () => {
+const TeacherManagement = (props: TabComponentType) => {
   const [reassigedTeacher, setReassigedTeacher] = useState<string>('');
   return (
     <Box>

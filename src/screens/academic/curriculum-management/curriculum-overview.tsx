@@ -99,7 +99,7 @@ const CurriculumData: TCurriculum[] = [
   },
 ];
 
-const subjectData = {
+const subjectData =   {
   id: 1,
   subjectName: 'Mathematics',
   subjectCode: 'Math01',
@@ -107,13 +107,15 @@ const subjectData = {
   description: '',
   subjectColor: '',
   className: '1',
-  assignTeacher: ['Mr. Smith'],
+  primaryTeacher : 'Ms. Johnson',
+  secondaryTeacher : ['Mr. Smith'],
   prerequisites: 'Basic counting skills',
   learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
   status: 'Publish',
-};
+}
 
 const CurriculumOverview = (props: TabComponentType) => {
+  const { setSearchParams } = props;
   const [curriculumTableData, setCurriculumTableData] = useState<TCurriculum[]>(CurriculumData);
   const [selectedCurriculum, setSelectedCurriculum] = useState<TCurriculum | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -552,8 +554,23 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({ onSubmit, onClose, data
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '180px' }}>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Predefined Template"
+                name="predefinedTemplate"
+                options={[
+                  { value: 'MathTemplate', label: 'Math Template' },
+                  { value: 'ScienceTemplate', label: 'Science Template' },
+                  { value: 'EnglishTemplate', label: 'English Template' },
+                  { value: 'GujaratiTemplate', label: 'Gujarati Template' },
+                ]}
+                value=""
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                onChange={(value) => {}}
+              />
+            </Grid>
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Class"

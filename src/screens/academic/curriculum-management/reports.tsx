@@ -166,32 +166,6 @@ const Reports = (props: TabComponentType) => {
           </Card>
         )}
       </Formik>
-
-      <Card sx={{ p: 3, height: '100%', mt: 2 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography component="span" variant="h6" gutterBottom>
-            Curriculum Reports
-          </Typography>
-        </Box>
-
-        <Box sx={{ mt: 2 }}>
-          <Grid container>
-            <Grid item xs={12} md={6}>
-              <Card sx={{ p: 2, height: '100%' }}>
-                <Typography variant="subtitle2">
-                  curriculum progress - 75% curriculum completed
-                </Typography>
-                <Typography variant="subtitle2">
-                  topic completion - 20 out of 25 topics completed
-                </Typography>
-                <Typography variant="subtitle2">
-                  teacher assignments - All subjects assigned to teachers
-                </Typography>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-      </Card>
     </Box>
   );
 };
