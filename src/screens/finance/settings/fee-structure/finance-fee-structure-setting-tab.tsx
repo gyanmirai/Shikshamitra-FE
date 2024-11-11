@@ -43,7 +43,7 @@ const initialData: Data[] = [
     id: 1,
     amount: '3,000',
     applicableGrade: '2',
-    bookRecipt: 'GSEB',
+    bookRecipt: 'CBSE',
     paymentDueDate: '20-12-2024',
     feeSubCategoryList: [
       {

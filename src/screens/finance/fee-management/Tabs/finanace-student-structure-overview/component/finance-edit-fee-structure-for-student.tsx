@@ -39,9 +39,10 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
     return (
 
         <CustomDialog title="Edit Fee Structure" open={dialogValue} handleClose={onClose}>
-            <Scrollbar>
-                <Box px="15px">
+          
+                <Box>
                     <form onSubmit={formik.handleSubmit}>
+                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
                         <Box pt="10px" display="flex" flexDirection="column" gap={3}>
                             <Grid2 xl={6}>
                                 <Box py="8px" display="flex" flexDirection="row" gap={3}>
@@ -127,17 +128,19 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                                 disabled
                             />
                         </Box>
-                        <DialogActions>
-                            <Button onClick={onClose} variant="contained" size="small">
+                       
+                    </Scrollbar>
+                    <DialogActions>
+                            {/* <Button onClick={onClose} variant="contained" size="small">
                                 Cancel
-                            </Button>
+                            </Button> */}
                             <Button type="submit" variant="contained" size="small">
                                 Save
                             </Button>
                         </DialogActions>
                     </form>
                 </Box>
-            </Scrollbar>
+            
         </CustomDialog>
     )
 }

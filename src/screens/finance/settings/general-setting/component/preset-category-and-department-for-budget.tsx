@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Grid, Button, MenuItem, MenuList, TextField } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import DataTable from 'src/components/commonTable';
@@ -8,24 +8,22 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 
 const PresetCategoryAndDepartmentForBudget = () => (
   <>
-    <Box py="15px">
+    {/* <Box py="15px">
       <Typography component="span" variant="h6">
         Preset Categories and Departments for Budgeting
       </Typography>
-    </Box>
+    </Box> */}
 
-    <Box pb="20px" display="flex" flexDirection="column" gap={3}>
-      <TextField
-        name="Department name"
-        label="Department name"
-        // value={formik.values.description}
-        // onChange={formik.handleChange}
-        size="small"
-      />
+    <Box pb="20px">
+  <Grid container spacing={3}>
+   
+   
+    {/* Existing Categories and Departments Table */}
+    <Grid item xs={12} md={6}>
       <DataTable
         columns={[
-          { key: 'existingcategories', label: 'Existing categories' },
-          { key: 'existingdepartments', label: 'Existing departments' },
+          { key: 'categories', label: 'Categories' },
+         
           {
             key: 'action',
             label: 'Action',
@@ -63,19 +61,29 @@ const PresetCategoryAndDepartmentForBudget = () => (
           },
         ]}
         data={[
-          { existingcategories: 'Income', existingdepartments: 'IT', action: 'edit' },
-          { existingcategories: 'Expense', existingdepartments: 'IT', action: 'edit' },
+          { categories: 'Income',  action: 'edit' },
+          { categories: 'Expense',  action: 'edit' },
         ]}
-        // sx={{
-        //     '& .MuiTableCell-root': {
-        //         padding: '8px', // Adjust padding as needed
-        //     },
-        //     '& .MuiTableRow-root': {
-        //         height: '40px', // Set a specific height to control row height
-        //     },
-        // }}
+       
       />
-    </Box>
+    </Grid>
+    <Grid item xs={12} md={6}>
+    <Box display="flex" flexDirection="row" gap={3} alignItems="center">
+        <TextField
+          name="category"
+          label="Add New Category"
+          size="small"
+          fullWidth
+        />
+        <Button variant="contained" size="small">
+          Add
+        </Button>
+      </Box>
+    </Grid>
+
+  </Grid>
+</Box>
+
   </>
 );
 

@@ -61,33 +61,13 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 
     return (
         <CustomDialog title="Create New Budget" open={dialogValue} handleClose={onClose}>
-            <Scrollbar>
-                <Box px="15px">
+            
+                <Box >
                     <form onSubmit={formik.handleSubmit}>
+                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
                         <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-                            <Grid2 xl={6}>
-                                <Box py="8px" display="flex" flexDirection="row" gap={3}>
-                                    <DatePicker
-                                        label="Start Date"
-                                        value={formik.values.startDate}
-                                        onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
-                                        format="DD-MM-YYYY"
-                                        slotProps={{ textField: { size: 'small' } }}
-                                        disabled
-                                    />
-                                    <DatePicker
-                                        label="End Date"
-                                        value={formik.values.endDate}
-                                        onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
-                                        format="DD-MM-YYYY"
-                                        slotProps={{ textField: { size: 'small' } }}
-                                        disabled
-                                    />
-
-                                </Box>
-                            </Grid2>
-
-                            <Grid2 container spacing={2}>
+                           
+                        <Grid2 container spacing={2}>
                                 <Grid2 xs={6}>
                                     <CustomSelect
                                         label="Category Type"
@@ -116,6 +96,30 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                                     />
                                 </Grid2>
                             </Grid2>
+                           
+                            <Grid2 xl={6}>
+                                <Box py="8px" display="flex" flexDirection="row" gap={3}>
+                                    <DatePicker
+                                        label="Start Date"
+                                        value={formik.values.startDate}
+                                        onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
+                                        format="DD-MM-YYYY"
+                                        slotProps={{ textField: { size: 'small' } }}
+                                        disabled
+                                    />
+                                    <DatePicker
+                                        label="End Date"
+                                        value={formik.values.endDate}
+                                        onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
+                                        format="DD-MM-YYYY"
+                                        slotProps={{ textField: { size: 'small' } }}
+                                        disabled
+                                    />
+
+                                </Box>
+                            </Grid2>
+
+                            
 
                             <Grid2 container>
                                 <Grid2 sm={6}>
@@ -135,7 +139,10 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 
 
                         </Box>
-                        <DialogActions>
+                       
+                        </Scrollbar>
+                    </form>
+                    <DialogActions>
                             <Button onClick={onClose} variant="contained" size="small">
                                 Cancel
                             </Button>
@@ -143,9 +150,8 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                                 Save
                             </Button>
                         </DialogActions>
-                    </form>
                 </Box>
-            </Scrollbar>
+           
         </CustomDialog>
     );
 };

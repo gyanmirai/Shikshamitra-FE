@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Grid, Button, MenuItem, MenuList, TextField } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import DataTable from 'src/components/commonTable';
@@ -8,13 +8,16 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 
 const ConfigurePaymentStatusComponent = () => (
   <>
-    <Typography component="span" variant="h6">
+    {/* <Typography component="span" variant="h6">
       Configure Payment Status Options
-    </Typography>
-    <Box py="15px" display="flex" flexDirection="column" gap={3}>
+    </Typography> */}
+ 
+<Box py="15px" display="flex" flexDirection="column" gap={3}>
+  <Grid container spacing={2}>
+    <Grid item xs={12} md={6}>
       <DataTable
         columns={[
-          { key: 'paymentMethod', label: 'Payment Method' },
+          { key: 'paymentStatus', label: 'Payment Status' },
           {
             key: 'action',
             label: 'Action',
@@ -23,7 +26,7 @@ const ConfigurePaymentStatusComponent = () => (
                 <ThreeDotsActions
                   actions={({ popover }: any) => (
                     <MenuList>
-                      <MenuItem
+                      {/* <MenuItem
                         onClick={() => {
                           // modal.onTrue();
                           // popover.onClose();
@@ -31,7 +34,7 @@ const ConfigurePaymentStatusComponent = () => (
                       >
                         <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
                         Edit
-                      </MenuItem>
+                      </MenuItem> */}
                       <MenuItem
                         onClick={() => {
                           // uploadModal.onTrue();
@@ -52,30 +55,29 @@ const ConfigurePaymentStatusComponent = () => (
           },
         ]}
         data={[
-          { paymentMethod: 'Paid', action: 'edit' },
-          { paymentMethod: 'Due', action: 'edit' },
-          { paymentMethod: 'UnPaid', action: 'edit' },
+          { paymentStatus: 'Paid', action: 'edit' },
+          { paymentStatus: 'Due', action: 'edit' },
+          { paymentStatus: 'UnPaid', action: 'edit' },
         ]}
       />
-      <Box
-        display="flex"
-        flexDirection="row"
-        gap={3}
-        alignItems="center"
-        justifyContent="flex-start"
-      >
+    </Grid>
+
+    <Grid item xs={12} md={6}>
+      <Box display="flex" flexDirection="row" gap={3} alignItems="center">
         <TextField
           name="Add new status"
-          label="Add new status"
-          // value={formik.values.description}
-          // onChange={formik.handleChange}
+          label="Add New Status"
           size="small"
+          fullWidth
         />
         <Button variant="contained" size="small">
           Add
         </Button>
       </Box>
-    </Box>
+    </Grid>
+  </Grid>
+</Box>
+
   </>
 );
 

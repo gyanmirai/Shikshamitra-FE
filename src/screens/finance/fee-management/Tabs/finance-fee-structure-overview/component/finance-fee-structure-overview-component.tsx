@@ -62,7 +62,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
       id: 1,
       amount: '3,000',
       applicableGrade: '2',
-      bookRecipt: 'GSEB',
+      bookRecipt: 'CBSE',
       paymentDueDate: '20-12-2024',
       feeSubCategoryList: [
         {
@@ -261,13 +261,13 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
             id: 'paymentDueDate',
             label: 'Payment Due Date',
           },
-          {
-            id: 'statustoggle',
-            label: 'Status Toggle',
-            render(statusToggle) {
-              return <Switch checked value={statusToggle} />;
-            },
-          },
+          // {
+          //   id: 'statustoggle',
+          //   label: 'Status Toggle',
+          //   render(statusToggle) {
+          //     return <Switch checked value={statusToggle} />;
+          //   },
+          // },
           // {
           //   id: 'action',
           //   label: 'Action',

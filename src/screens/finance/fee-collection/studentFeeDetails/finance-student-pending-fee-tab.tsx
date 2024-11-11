@@ -11,7 +11,7 @@ const FinanceStudentPendingFeeTab = () => {
     {
       id: 1,
       feeName: 'Tuition Fee',
-      statusId: '1234',
+      // statusId: '1234',
       amountDue: '500',
       dueDate: '23-12-2024',
       action: 'mark as paid',
@@ -22,7 +22,7 @@ const FinanceStudentPendingFeeTab = () => {
     {
       id: 1,
       feeName: 'Sports Fee',
-      statusId: '1234',
+      // statusId: '1234',
       amountDue: '2500',
       dueDate: '23-01-2025',
       action: 'mark as paid',
@@ -36,7 +36,7 @@ const FinanceStudentPendingFeeTab = () => {
       <CustomizableTable
         columns={[
           { id: 'feeName', label: 'Fee Name' },
-          { id: 'statusId', label: 'Status Id' },
+          // { id: 'statusId', label: 'Status Id' },
           { id: 'amountDue', label: 'Amount Due' },
           { id: 'dueDate', label: 'Due Date' },
           {
@@ -69,7 +69,7 @@ const FinanceStudentPendingFeeTab = () => {
       <CustomizableTable
         columns={[
           { id: 'feeName', label: 'Fee Name' },
-          { id: 'statusId', label: 'Status Id' },
+          // { id: 'statusId', label: 'Status Id' },
           { id: 'amountDue', label: 'Amount Due' },
           { id: 'dueDate', label: 'Due Date' },
           {

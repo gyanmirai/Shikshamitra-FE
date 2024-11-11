@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceBudgetSettingTab from './budget/finance-budget-setting';
@@ -29,75 +30,95 @@ const TABS = [
   {
     value: 'general-setting',
     label: 'General Settings',
+    icon: <Iconify icon="uil:setting" width={20} />,
+   
     component: () => <FinanceGeneralSettingTab />,
   },
   {
     value: 'feestructure',
     label: 'Fee Structure',
+    icon:  <Iconify icon="fluent:document-fs-16-regular" width={20} /> ,
     component: () => <FinanceFeeStructureSettingTab />,
   },
   {
     value: 'receiptBook',
     label: 'Receipt Book',
+    icon:  <Iconify icon="bi:filetype-rb" width={20} /> ,
     component: () => <FinanceReceiptBookSetting />,
   },
   {
     value: 'feecollection',
     label: 'Fee Collection',
+    icon:  <Iconify icon="arcticons:expense-register" width={20} /> ,
     component: () => <FinanceSettingFeeCollectionTab />,
   },
   {
     value: 'expensecategory',
     label: 'Expense Category',
+    icon:  <Iconify icon="arcticons:expense-manager" width={20} /> ,
     component: () => <FinanceExpenseSettingTab />,
   },
   {
     value: 'incomecategory',
     label: 'Income Category',
+    icon:  <Iconify icon="arcticons:expense-manager" width={20} /> ,
     component: () => <FinanceIncomeSettingTab />,
   },
   {
     value: 'taxsetting',
     label: 'Tax-Setting',
+    icon:  <Iconify icon="hugeicons:taxes" width={20} /> ,
     component: () => <FinanceTaxSettingTab />,
   },
   {
     value: 'budget',
     label: 'Budget',
+    icon:  <Iconify icon="arcticons:budgetwatch" width={20} /> ,
     component: () => <FinanceBudgetSettingTab />,
   },
   {
     value: 'paymentmethod',
     label: 'Payment Method',
+    icon:  <Iconify icon="arcticons:mi-pay" width={20} /> ,
     component: () => <FinancePaymentMethodSettingTab />,
   },
   {
     value: 'notification',
     label: 'Notification',
+    icon:  <Iconify icon="basil:notification-on-outline" width={20} /> ,
     component: () => <FinanceNotificationSettingTab />,
   },
 ];
 
 const FinanceSettingScreen = () => {
-  const tabs = useTabs('general-setting');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'general-setting' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+ 
   return (
     <Box>
       <Card>
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
+        
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+      {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+          // searchParams={searchParams}
+          // setSearchParams={setSearchParams}
+          />
+        )}
       </Box>
     </Box>
   );

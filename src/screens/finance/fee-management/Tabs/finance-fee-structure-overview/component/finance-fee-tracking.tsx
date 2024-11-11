@@ -49,7 +49,7 @@ const FinanceFeeTrackingComponent = () => (
         <AnalyticsWidgetSummary
           title="Total Fees Due"
           percent={3.6}
-          total={234}
+          total={234677}
           color="error"
           icon={
             <Iconify icon="pen" sx={{ height: '16px', width: '16px' }} />

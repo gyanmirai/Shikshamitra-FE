@@ -715,6 +715,11 @@ const financeModule = {
           _action: 'fee-collection',
         },
         {
+          title: 'Reconciliation',
+          path: '/finance/reconciliation',
+          _action: 'reconciliation',
+        },
+        {
           title: 'Income Tracking',
           path: '/finance/income-tracking',
           _action: 'finance-income-tracking',

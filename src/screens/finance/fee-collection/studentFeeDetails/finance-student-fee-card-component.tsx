@@ -12,7 +12,7 @@ import type { IUserCard } from './component/finance-student-info-card-component'
 const dummyUser: IUserCard = {
   id: '12345',
   name: 'John Doe',
-  role: 'Content Creator',
+  role: '10-B',
   coverUrl: 'https://example.com/cover.jpg',
   avatarUrl: 'https://example.com/avatar.jpg',
   totalPosts: 120,

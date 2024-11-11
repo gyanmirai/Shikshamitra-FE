@@ -30,7 +30,7 @@ const paymentHistoryData = [
     feeHead: 'Sports',
     amount: '500',
     dueDate: '12-09-2023',
-    status: 'Unpaid',
+    status: 'Paid',
   },
 ];
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
@@ -81,7 +81,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
                     <Iconify icon="mdi:eye" />
                     View Receipt
                   </MenuItem>
-                  <MenuItem
+                  {/* <MenuItem
                     onClick={() => {
                       // popover.onClose();
                     }}
@@ -96,7 +96,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
                   >
                     <Iconify icon="mdi:pen" />
                     Edit
-                  </MenuItem>
+                  </MenuItem> */}
                 </MenuList>
               )}
             />

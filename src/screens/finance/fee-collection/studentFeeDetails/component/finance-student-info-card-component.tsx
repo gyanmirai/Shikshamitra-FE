@@ -1,10 +1,7 @@
 import React from 'react';
 
-import { Box, Card, Avatar, Button, Divider, Typography, ListItemText } from '@mui/material';
+import { Box, Card, Avatar, Button, Typography } from '@mui/material';
 
-import { fShortenNumber } from 'src/utils/format-number';
-
-import { AvatarShape } from 'src/assets/illustrations';
 
 export type IUserCard = {
   id: string;
@@ -24,87 +21,66 @@ type Props = {
 const FinanceStudentInfoCardComponent = ({ user }: Props) => {
   const data = [];
   return (
-    <Card sx={{ textAlign: 'center', position: 'relative' }}>
-      <Box pb="30px">
-        <AvatarShape
-          sx={{
-            position: 'absolute',
-            top: 15,
-            left: 0,
-            right: 0,
-            zIndex: 10,
-            mx: 'auto',
-          }}
-        />
-
+    <Card sx={{ display: 'flex', width: '100%', p: 2 }}>
+      {/* Left Section: Avatar and Name */}
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ width: '30%', textAlign: 'center' }}
+      >
+        <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
+          {user.name}
+        </Typography>
         <Avatar
           alt={user.name}
           src={user.avatarUrl}
           sx={{
-            width: 64,
-            height: 64,
-            zIndex: 11,
-            position: 'absolute',
-            top: 15,
-            mx: 'auto',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            width: 80,
+            height: 80,
           }}
         />
       </Box>
 
-      {/* User Info */}
-      <ListItemText
-        sx={{ mt: 7, mb: 1 }}
-        primary={user.name}
-        secondary={user.role}
-        primaryTypographyProps={{ typography: 'subtitle1' }}
-        secondaryTypographyProps={{ component: 'span', mt: 0.5 }}
-      />
-
-      {/* Divider */}
-      <Divider sx={{ borderStyle: 'dashed' }} />
-
-      {/* Fee Information */}
+      {/* Right Section: Fee Information and Buttons */}
       <Box
-        display="grid"
-        gridTemplateColumns="repeat(3, 1fr)"
-        sx={{ py: 3, typography: 'subtitle1' }}
+        sx={{
+          width: '70%',
+          pl: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
       >
-        {['Paid Fees', 'Pending Fees', 'Overdue Fees'].map((label, index) => (
-          <div key={label}>
-            <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
-              {label}
-            </Typography>
-            {
-              index === 0
-                ? 10
-                : index === 1
-                  ? 9876542347
-                  : 20000
-            }
-          </div>
-        ))}
-      </Box>
+        {/* Fee Information */}
+        <Box
+          display="grid"
+          gridTemplateColumns="repeat(3, 1fr)"
+          sx={{ typography: 'subtitle1', width: '100%', mb: 2 }}
+        >
+          {['Paid Fees', 'Pending Fees', 'Overdue Fees'].map((label, index) => (
+            <Box key={label} sx={{ textAlign: 'center' }}>
+              <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
+                {label}
+              </Typography>
+              {index === 0 ? '10,000' : index === 1 ? '20,000' : '30,000'}
+            </Box>
+          ))}
+        </Box>
 
-      {/* Due Date */}
-      <Box display="flex" justifyContent="center" mb={2}>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          Upcoming Due Date: 01-01-2025
-        </Typography>
-      </Box>
-
-      {/* Actions */}
-      <Box display="flex" justifyContent="flex-end" gap={2} pb={2} px={3}>
-        <Button variant="contained" >
-          Send Reminder
-        </Button>
-        <Button variant="contained" >
-          Generate Report
-        </Button>
+        {/* Bottom-Left Buttons */}
+        <Box display="flex" justifyContent="flex-end" gap={2}>
+          <Button size='small' variant="contained">Send Reminder</Button>
+          <Button size='small' variant="contained">Generate Report</Button>
+        </Box>
       </Box>
     </Card>
+
   );
 };
 
 export default FinanceStudentInfoCardComponent;
+
+
+

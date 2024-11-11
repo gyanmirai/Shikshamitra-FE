@@ -58,6 +58,7 @@ interface Column {
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
   sticky?: boolean;
+  
 }
 
 interface Data {
@@ -77,6 +78,7 @@ interface CustomizableTableProps {
   totalCount?: number;
   handleRowClick?: (row: Data, index: number) => void;
   isLoading?: boolean;
+ 
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
