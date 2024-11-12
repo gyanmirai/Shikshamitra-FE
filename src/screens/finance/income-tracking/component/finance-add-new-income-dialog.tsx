@@ -42,7 +42,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
       incomeSource: isEdit ? data.incomeSource ?? '' : '',
       incomeAmount: isEdit ? data.incomeAmount ?? '' : '',
       paymentMethod: isEdit ? data.paymentMethod ?? '' : '',
-      date: isEdit ? data.date ?? dayjs("24-12-2025", 'DD-MM-YYYY') : dayjs("24-12-2025", 'DD-MM-YYYY'),
+      date: isEdit ? dayjs(data.date) ?? dayjs() : dayjs(),
       paymentStatus: isEdit ? data.paymentStatus ?? '' : '',
       id: isEdit
         ? data.id ?? Math.floor(Math.random() * 1000000000)

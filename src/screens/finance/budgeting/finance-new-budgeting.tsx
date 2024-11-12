@@ -338,8 +338,9 @@ const FinanceNewBudgetingScreen = () => {
           }, },
         ]}
         data={[
-          { id: "income_02", name: "Donations", totalAmountExpected: 50000, collectedAmount: 0, outstandingAmount: 50000 },
-      { id: "income_03", name: "Government Grants", totalAmountExpected: 30000, collectedAmount: 0, outstandingAmount: 30000 }
+          { id: "income_02", name: "Donations", totalAmountExpected: 50000, collectedAmount: 0, outstandingAmount: 50000, receivedPercantage:"0 %" },
+      { id: "income_03", name: "Government Grants", totalAmountExpected: 30000, collectedAmount: 0, outstandingAmount: 30000, receivedPercantage:"0 %" },
+      { id: "income_03", name: "Total", totalAmountExpected: 80000, collectedAmount: 0, outstandingAmount: 80000 , receivedPercantage:"0 %"}
         ]}
       />}   
        {tabs.value === "expenses" && <CustomizableTable
@@ -349,6 +350,7 @@ const FinanceNewBudgetingScreen = () => {
           { id: 'allocatedAmount', label: 'Allocated Amount' },
           { id: 'spentAmount', label: 'Spent Amount' },
           { id: 'remainingAmount', label: 'Remaining Amount' },
+          { id: 'expensePercantage', label: 'expense Percantage %' },
           { id: 'action', label: 'Action', render(value, row) {
             return <ThreeDotsActions
             actions={({ popover, }: any) => (
@@ -373,7 +375,8 @@ const FinanceNewBudgetingScreen = () => {
         ]}
         data={[
           { id: "expense_02", name: "Maintenance", allocatedAmount: 40000, spentAmount: 0, remainingAmount: 40000 },
-      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000 }
+      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000 },
+      { id: "expense_03", name: "Total", allocatedAmount: 60000, spentAmount: 0, remainingAmount: 60000 }
         ]}
       />}
         

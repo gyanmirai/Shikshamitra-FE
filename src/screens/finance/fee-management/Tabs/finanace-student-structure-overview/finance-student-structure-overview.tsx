@@ -138,13 +138,17 @@
 import React, { useState } from "react";
 
 import {
-  Button, MenuList, MenuItem,
+  Tooltip,
+  MenuList,
+  MenuItem,
   Typography
 } from "@mui/material";
 
 import { useBoolean } from "src/hooks/use-boolean";
 
-import { Scrollbar } from "src/components/scrollbar";
+import { formatNumber } from "src/utils/formate_number";
+
+import { Iconify } from "src/components/iconify";
 import CustomDialog from "src/components/customDialog";
 import ThreeDotsActions from "src/components/three-dots-actions";
 import CustomizableTable from "src/components/customizabaleTable";
@@ -170,18 +174,24 @@ const students = [
         feeHead: "Tuition",
         totalFees: 60000,
         amount: 5000,
+        totalPaidAmount: 40000,
         paymentDates: [
-          { month: "June-2024", date: "15-01-2024", status: "Paid" },
-          { month: "July-2024", date: "15-02-2024", status: "Paid" },
-          { month: "Aug-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Sep-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Oct-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Nov-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Dec-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Jan-2025", date: "15-03-2024", status: "Paid" },
-          { month: "Feb-2025", date: "15-03-2024", status: "Unpaid" },
-          { month: "April-2025", date: "15-03-2024", status: "Unpaid" },
+
           { month: "May-2025", date: "15-03-2024", status: "Unpaid" },
+          { month: "April-2025", date: "15-03-2024", status: "Unpaid" },
+          { month: "March-2025", date: "15-03-2024", status: "Unpaid" },
+
+          { month: "Feb-2025", date: "15-03-2024", status: "Unpaid" },
+          { month: "Jan-2025", date: "15-03-2024", status: "Paid" },
+          { month: "Dec-2024", date: "15-03-2024", status: "Paid" },
+
+          { month: "Nov-2024", date: "15-03-2024", status: "Paid" },
+
+          { month: "Oct-2024", date: "15-03-2024", status: "Paid" },
+          { month: "Sep-2024", date: "15-03-2024", status: "Paid" },
+          { month: "Aug-2024", date: "15-03-2024", status: "Paid" },
+          { month: "July-2024", date: "15-02-2024", status: "Paid" },
+          { month: "June-2024", date: "15-01-2024", status: "Paid" },
         ],
       },
       {
@@ -189,58 +199,109 @@ const students = [
         feeHead: "Library",
         totalFees: 18000,
         amount: 1500,
+        totalPaidAmount: 12000,
         paymentDates: [
-          { month: "June-2024", date: "15-01-2024", status: "Paid" },
-          { month: "July-2024", date: "15-02-2024", status: "Paid" },
-          { month: "Aug-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Sep-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Oct-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Nov-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Dec-2024", date: "15-03-2024", status: "Paid" },
-          { month: "Jan-2025", date: "15-03-2024", status: "Paid" },
-          { month: "Feb-2025", date: "15-03-2024", status: "Unpaid" },
-          { month: "April-2025", date: "15-03-2024", status: "Unpaid" },
           { month: "May-2025", date: "15-03-2024", status: "Unpaid" },
+          { month: "April-2025", date: "15-03-2024", status: "Unpaid" },
+          { month: "March-2025", date: "15-03-2024", status: "Unpaid" },
+
+          { month: "Feb-2025", date: "15-03-2024", status: "Unpaid" },
+          { month: "Jan-2025", date: "15-03-2024", status: "Paid" },
+          { month: "Dec-2024", date: "15-03-2024", status: "Paid" },
+
+          { month: "Nov-2024", date: "15-03-2024", status: "Paid" },
+
+          { month: "Oct-2024", date: "15-03-2024", status: "Paid" },
+          { month: "Sep-2024", date: "15-03-2024", status: "Paid" },
+          { month: "Aug-2024", date: "15-03-2024", status: "Paid" },
+          { month: "July-2024", date: "15-02-2024", status: "Paid" },
+          { month: "June-2024", date: "15-01-2024", status: "Paid" },
         ],
       },
 
     ],
   },
-  // {
-  //   "studentId": 1234,
-  //   "name": "Jack",
-  //   "grade": 10,
-  //   "paymentTerm": "Yearly",
-  //   "totalPending": 78000,
-  //   "totalPaid": 0,
-  //   "discountAmount": 0,
-  //   "fixedReduction": 0,
-  //   "overAllDueDate": "20-04-2025",
-  //   "totalFees": 78000,
-  //   "totalDueAfterDiscount": 78000,
-  //   "fees": [
-  //     {
-  //       "feeHeadId": 198,
-  //       "feeHead": "Tuition",
-  //       "totalFees": 60000,
-  //       "amount": 60000,
-  //       "paymentDates": [
-  //         { "year": "2024-2025", "date": "20-04-2025", "status": "Paid" },
+  {
+    studentId: 1235,
+    name: "John Wick",
+    grade: 10,
+    paymentTerm: "Yearly",
+    totalPending: 38000,
+    totalPaid: 40000,
+    discountAmount: 0,
+    fixedReduction: 0,
+    overAllDueDate: "20-04-2025",
+    totalFees: 78000,
+    totalDueAfterDiscount: 0,
+    fees: [
+      {
+        feeHeadId: 198,
+        feeHead: "Tuition",
+        totalFees: 60000,
+        amount: 60000,
+        paymentDates: [
+          { month: "June-2024", date: "15-01-2024", status: "Paid" },
 
-  //       ]
-  //     },
-  //     {
-  //       "feeHeadId": 230,
-  //       "feeHead": "Library",
-  //       "totalFees": 18000,
-  //       "amount": 18000,
-  //       "paymentDates": [
+        ],
+      },
+      {
+        feeHeadId: 230,
+        feeHead: "Library",
+        totalFees: 18000,
+        amount: 18000,
+        paymentDates: [
+          { month: "June-2024", date: "15-01-2024", status: "Paid" },
 
-  //         { "year": "2024-2025", "date": "20-04-2025", "status": "Unpaid" }
-  //       ]
-  //     }
-  //   ]
-  // }
+        ],
+      },
+
+    ],
+  },
+  {
+    studentId: 12357,
+    name: "Jack Sparrow",
+    grade: 10,
+    paymentTerm: "Quartly",
+    totalPending: 38000,
+    totalPaid: 40000,
+    discountAmount: 0,
+    fixedReduction: 0,
+    overAllDueDate: "20-04-2025",
+    totalFees: 78000,
+    totalDueAfterDiscount: 0,
+    fees: [
+      {
+        feeHeadId: 198,
+        feeHead: "Tuition",
+        totalFees: 60000,
+        amount: 15000,
+        paymentDates: [
+          { month: "March-2025", date: "15-01-2024", status: "Unpaid" },
+          { month: "Feb-2024", date: "15-01-2024", status: "Paid" },
+          { month: "Oct-2024", date: "15-01-2024", status: "Paid" },
+          { month: "June-2024", date: "15-01-2024", status: "Paid" },
+
+
+        ],
+      },
+      {
+        feeHeadId: 230,
+        feeHead: "Library",
+        totalFees: 18000,
+        amount: 4500,
+        paymentDates: [
+          { month: "March-2025", date: "15-01-2024", status: "Unpaid" },
+          { month: "Feb-2024", date: "15-01-2024", status: "Paid" },
+          { month: "Oct-2024", date: "15-01-2024", status: "Paid" },
+          { month: "June-2024", date: "15-01-2024", status: "Paid" },
+
+
+        ],
+      },
+
+    ],
+  }
+
 
 ];
 
@@ -276,8 +337,16 @@ const FinanceStudentFeeManagement = () => {
         columns={[
           { id: 'name', label: 'Student Name' },
           { id: 'grade', label: 'Grade' },
-          { id: 'totalPaid', label: 'Total Paid' },
-          { id: 'totalPending', label: 'Total Pending' },
+          {
+            id: 'totalPaid', label: 'Total Paid', render(value, row) {
+              return <Typography fontSize="12px" color="green">{formatNumber(row.totalPaid, "INR")}</Typography>
+            },
+          },
+          {
+            id: 'totalPending', label: 'Total Pending', render(value, row) {
+              return <Typography fontSize="12px" color="red">{formatNumber(row.totalPending, "INR")}</Typography>
+            },
+          },
 
           {
             id: 'action',
@@ -311,137 +380,147 @@ const FinanceStudentFeeManagement = () => {
       {/* Details Modal */}
       {selectedStudent && (
 
-        //        <CustomDialog
-        //   title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th`}
-        //   open={open}
-        //   handleClose={handleClose}
-        //   maxWidth="md"
-        // >
-        //   <Box>
-        //     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', maxHeight: '400px' }}>
-        //       <Box display="flex" flexDirection="column" gap={3}>
-        //         {/* Fee Table */}
-        //         <TableContainer component={Paper} sx={{ mt: 2 }}>
-        //           <Table>
-        //             <TableHead>
-        //               <TableRow>
-        //                 <TableCell>Payment Term</TableCell>
-        //                 {/* Render fee categories as columns */}
-        //                 {selectedStudent.fees.map((fee: any, idx: any) => (
-        //                   <TableCell key={idx}>{fee.feeHead}</TableCell>
-        //                 ))}
-        //                 <TableCell>Action</TableCell>
-        //               </TableRow>
-        //             </TableHead>
-        //             <TableBody>
-        //               {/* Payment details for each month */}
-        //               {selectedStudent.fees[0].paymentDates.map((payment: any, rowIndex: any) => (
-        //                 <TableRow key={rowIndex}>
-        //                   <TableCell>{payment.month}</TableCell>
-        //                   {/* Render each fee category's amount and status */}
-        //                   {selectedStudent.fees.map((fee: any, colIndex: any) => (
-        //                     <TableCell
-        //                       key={colIndex}
-        //                       sx={{
-        //                         color: fee.paymentDates[rowIndex].status === "Paid" ? "green" : "red",
-        //                       }}
-        //                     >
-        //                       {fee.amount}
-        //                       {/* Display status if needed */}
-        //                     </TableCell>
-        //                   ))}
-        //                   {/* Action button based on status */}
-        //                   <TableCell>
-        //                     {selectedStudent.fees.every(
-        //                       (fee: any) => fee.paymentDates[rowIndex].status === "Paid"
-        //                     ) ? (
-        //                       <Button
-        //                         variant="outlined"
-        //                         size="small"
-        //                         onClick={() => alert("Receipt Print")}
-        //                       >
-        //                         Print Receipt
-        //                       </Button>
-        //                     ) : (
-        //                       <Button
-        //                         variant="outlined"
-        //                         size="small"
-        //                         onClick={() => alert("Reminder sent")}
-        //                       >
-        //                         Send Reminder
-        //                       </Button>
-        //                     )}
-        //                   </TableCell>
-        //                 </TableRow>
-        //               ))}
-        //             </TableBody>
-        //           </Table>
-        //         </TableContainer>
-        //       </Box>
-        //     </Scrollbar>
-
-        //     {/* Dialog Actions */}
-        //     {/* <DialogActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-        //       <Button onClick={handleClose} variant="contained" size="small">
-        //         Close
-        //       </Button>
-        //     </DialogActions> */}
-        //   </Box>
-        // </CustomDialog>
         <CustomDialog
           title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th`}
           open={open}
           handleClose={handleClose}
           maxWidth="md"
+
         >
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-            <CustomizableTable
-              columns={[
-                { id: 'paymentTerm', label: 'Payment Term' },
-                ...selectedStudent.fees.map((fee: any) => ({
-                  id: fee.feeHead.toLowerCase(),
-                  label: fee.feeHead,
-                  render: (value: any) => (
-                    <Typography
-                      style={{
-                        color: value.status === 'Paid' ? 'green' : 'red',
-                      }}
-                    >
-                      {value.amount}
-                    </Typography>
-                  ),
-                })),
-                {
-                  id: 'action',
-                  label: 'Action',
-                  render: (value: any, row: any) => (
-                    <Button
-                    size="small"
-                      variant="outlined"
-                      onClick={() =>
-                        Object.values(row).every((fee: any) => fee.status === 'Paid')
-                          ? alert("Receipt Print")
-                          : alert("Reminder sent")
-                      }
-                    >
-                      {Object.values(row).every((fee: any) => fee.status === 'Paid') ? 'Print Receipt' : 'Send Reminder'}
-                    </Button>
-                  ),
-                },
-              ]}
-              data={selectedStudent.fees[0].paymentDates.map((date: any, idx: any) => ({
-                paymentTerm: date.month,
-                ...selectedStudent.fees.reduce((acc: any, fee: any) => {
-                  acc[fee.feeHead.toLowerCase()] = {
-                    amount: fee.amount,
-                    status: fee.paymentDates[idx].status,
+
+
+          <CustomizableTable
+            isPagination={false}
+            isFilter={false}
+            isSearch={false}
+
+            columns={[
+              { id: 'paymentTerm', label: 'Payment Term' },
+              ...selectedStudent.fees.map((fee: any) => ({
+                id: fee.feeHead.toLowerCase(),
+                label: fee.feeHead,
+                render: (value: any) => (
+                  <Typography
+
+                    style={{
+                      color: value.status === 'Paid' ? 'green' : 'red',
+                      fontSize: "12px"
+
+                    }}
+                  >
+                    {formatNumber(value.amount, "INR")}
+                  </Typography>
+                ),
+              })),
+              {
+                id: 'action',
+                label: 'Action',
+                render: (value, row) => {
+
+
+
+
+                  const unpaidFees = selectedStudent.fees
+                    .filter((fee: any) =>
+                      fee.paymentDates.some(
+                        (payment: any) => payment.month === row.paymentTerm && payment.status === "Unpaid"
+                      )
+                    );
+
+                  const actionLabel = unpaidFees.length > 0 ? "Send Reminder" : "Print Receipt";
+
+                  const handleAction = () => {
+                    if (unpaidFees.length > 0) {
+                      const message = unpaidFees
+                        .map((fee: any) => `${actionLabel} for ${fee.feeHead} - ${row.paymentTerm}`)
+                        .join("\n");
+                      alert(message);
+                    } else {
+                      alert(`${actionLabel} for ${selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`);
+                    }
                   };
-                  return acc;
-                }, {}),
-              }))}
-            />
-          </Scrollbar>
+
+                  return (
+
+                    <Tooltip title={actionLabel === "Send Reminder" ? "Send Reminder" : "Print"}>
+                      <Iconify
+                        icon={actionLabel === "Send Reminder" ? "carbon:reminder" : "flat-color-icons:print"}
+                        sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                        onClick={() => {
+                          if (actionLabel === "Send Reminder") {
+                            // Handle send reminder action
+                            console.log("Reminder sent!");
+                          } else {
+                            // Handle Print action
+                            console.log("Item Print!");
+                          }
+                        }}
+                      />
+                    </Tooltip>
+
+
+                  );
+                },
+              }
+
+
+              // {
+              //   id: 'action',
+              //   label: 'Action',
+              //   render: (value, row) => {
+
+              //     const unpaidFee = selectedStudent.fees.find((fee: any) =>
+              //       fee.paymentDates.some(
+              //         (payment: any) => payment.month === row.paymentTerm && payment.status === 'Unpaid'
+              //       )
+              //     );
+
+              //     // If there is any unpaid fee, show "Send Reminder" else "Print Receipt"
+
+              //     // const actionLabel  = unpaidFee ? "Send Reminder" : "Print Receipt";
+              //     // const handleAction = () => {
+              //     //   alert(
+              //     //     actionLabel === "Send Reminder" 
+              //     //     ? 'Reminder Sent' 
+              //     //     : 'Print Receipt'
+              //     //   );
+              //     //   // alert(
+              //     //   //   // `${actionLabel} for ${unpaidFee ? unpaidFee.feeHead : selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`
+              //     //   // );
+              //     // };
+
+
+
+
+
+              //     return (
+              //       <Button
+              //         size="small"
+              //         variant="outlined"
+              //         onClick={handleAction}
+              //       >
+              //         {actionLabel}
+              //       </Button>
+              //     );
+              //   },
+              // },
+
+            ]}
+            data={selectedStudent.fees[0].paymentDates.map((date: any, idx: any) => ({
+              paymentTerm: date.month,
+              ...selectedStudent.fees.reduce((acc: any, fee: any) => {
+                acc[fee.feeHead.toLowerCase()] = {
+                  amount: fee.amount,
+                  status: fee.paymentDates[idx].status,
+                };
+                return acc;
+              }, {}),
+
+            }))}
+          />
+
         </CustomDialog>
+
 
 
 

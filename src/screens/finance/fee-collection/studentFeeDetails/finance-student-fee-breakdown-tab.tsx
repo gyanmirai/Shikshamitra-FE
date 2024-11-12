@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface PaymentStatus {
@@ -67,15 +69,30 @@ const FinanceStudentFeeBreakdownTab = () => {
     },
   ];
   return (
+    <>
     <CustomizableTable
+      isFilter={false}
+      isPagination={false}
+      isSearch={false}
       columns={[
         { id: 'date', label: 'Date' },
         { id: 'type', label: 'Type' },
-        { id: 'discount', label: 'Discount' },
-        { id: 'amount', label: 'Amount' },
+        {
+          id: 'discount', label: 'Discount', render(value, row) {
+            return <Typography fontSize="12px" >{formatNumber(row.discount, "INR")}</Typography>
+          },
+        },
+        {
+          id: 'amount', label: 'Amount', render(value, row) {
+            return <Typography fontSize="12px" >{formatNumber(row.amount, "INR")}</Typography>
+          },
+
+        },
       ]}
       data={data}
     />
+    <Box pb="20px"/>
+    </>
   );
 };
 

@@ -38,6 +38,9 @@ const students = [
    overAllDueDate:"20-04-2025",
    totalFees:78000,
    totalDueAfterDiscount:0,
+   previousCharges:500,
+   chargesDetails:"The payment of 500 made by cheque in June 2024 was bounced. Cheque No: H8749.",
+   
    fees: [
      {
        feeHeadId:198,
@@ -45,7 +48,41 @@ const students = [
        totalFees:60000,
        amount: 5000,
        paymentDates: [
-         { month:"June-2024",  date: "15-01-2024", status: "Paid" },
+         { month:"June-2024",  date: "15-01-2024", status: "Unpaid", amount:5000,
+          
+          paymentHistory:[
+            {
+              paymentMode: "Card",
+              amount: "2000",
+              paymentId: "54j8",
+              paymentStatus: "Success"
+            },
+            {
+              paymentMode: "Cash",
+              amount: "2000",
+            },
+            {
+              paymentMode: "Online",
+              amount: "1000",
+              paymentId: "h8749",
+              paymentStatus: "Failed"
+            },
+            {
+              paymentMode: "Online",
+              amount: "500",
+              paymentId: "h8749",
+              paymentStatus: "Success"
+            },
+            {
+              paymentMode: "Check",
+              amount: "500",
+              paymentId: "h8749",
+              paymentStatus: "Not Clear",
+              charges:500,
+            },
+          ]
+
+          },
          {month:"July-2024" ,  date: "15-02-2024", status: "Paid" },
          { month:"Aug-2024",   date: "15-03-2024", status: "Paid" },
          { month:"Sep-2024",   date: "15-03-2024", status: "Paid" },
@@ -78,7 +115,8 @@ const students = [
        ],
      },
     
-   ],}
+   ],},
+  
  ];
  
 const FinanceFeeCollectionTab = () => {
@@ -125,14 +163,7 @@ const FinanceFeeCollectionTab = () => {
       <Box pl="20px" pb="15px" display="flex" justifyContent="flex-end" alignItems="flex-end">
         <Button
           variant="contained"
-          // sx={{
-          //   '&:hover': {
-          //     backgroundColor: 'inherit',
-          //     boxShadow: 'none',
-          //   },
-          //   backgroundColor: 'skyblue',
-          //   color: 'darkblue',
-          // }}
+          size="small"
           onClick={() => {
             setSelectedStudent(students[0])
             setIsEdit(true);
@@ -145,6 +176,7 @@ const FinanceFeeCollectionTab = () => {
 
       <FinanceCollectFeeStudentCardComponent user={dummyUser} />
       <FinanceFeeCollectionPaymentHistoryComponent />
+      <Box pb="20px" />
       {/* {dialog.value && selectedEntry && (
         <FinanceCollectFeeDialog
           onSave={handleSave}

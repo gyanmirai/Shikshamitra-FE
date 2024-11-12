@@ -1,6 +1,7 @@
 import React from 'react';
 
-import FinanceReconciliationScreen from 'src/screens/finance/reconciliation/finance-reconciliation';
+import FinanceReconciliationScreen from 'src/screens/finance/reconciliation/finance-reconciliation-screen';
+
 
 
 const FinanceReconciliation= () => <FinanceReconciliationScreen />;

@@ -7,6 +7,8 @@ import { DatePicker } from '@mui/x-date-pickers';
 import InputAdornment from '@mui/material/InputAdornment';
 import { Box, Button, TextField, DialogActions } from '@mui/material';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 
@@ -39,13 +41,13 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
     return (
 
         <CustomDialog title="Edit Fee Structure" open={dialogValue} handleClose={onClose}>
-          
-                <Box>
-                    <form onSubmit={formik.handleSubmit}>
+
+            <Box>
+                <form onSubmit={formik.handleSubmit}>
                     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
                         <Box pt="10px" display="flex" flexDirection="column" gap={3}>
                             <Grid2 xl={6}>
-                                <Box py="8px" display="flex" flexDirection="row" gap={3}>
+                                <Box  display="flex" flexDirection="row" gap={2}>
                                     <TextField
                                         name="class"
                                         label="Class/Grade"
@@ -53,7 +55,7 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                                         onChange={formik.handleChange}
                                         size="small"
                                         disabled
-                                       
+
 
                                     />
                                     <TextField
@@ -70,10 +72,10 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
 
 
                             <Grid2 xl={6}>
-                                <Box display="flex" flexDirection="row" gap={3}>
+                                <Box display="flex" flexDirection="row" gap={2}>
                                     <TextField
                                         name="discountAmount"
-                                        label="Discount Amount"
+                                        label="Discount Percantage"
                                         value={formik.values.discountAmount}
                                         onChange={(e) => {
                                             const value = Math.min(100, Math.max(0, Number(e.target.value)));
@@ -84,7 +86,7 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                                         type="number"
                                         InputProps={{
                                             endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                                            inputProps: { min: 0, max: 100,},
+                                            inputProps: { min: 0, max: 100, },
                                         }}
                                         fullWidth
                                     />
@@ -96,8 +98,8 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                                         size="small"
                                         type="number"
                                         error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
-                                    // helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
-                                    fullWidth
+                                        // helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+                                        fullWidth
                                     />
 
                                 </Box>
@@ -110,7 +112,7 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                                         <TextField
                                             name={val.feeHead.toLowerCase()}
                                             label={val.feeHead}
-                                            value={val.totalFees}
+                                            value={formatNumber(val.totalFees, "INR")}
                                             onChange={formik.handleChange}
                                             size="small"
                                             fullWidth
@@ -128,19 +130,19 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                                 disabled
                             />
                         </Box>
-                       
+
                     </Scrollbar>
                     <DialogActions>
-                            {/* <Button onClick={onClose} variant="contained" size="small">
+                        {/* <Button onClick={onClose} variant="contained" size="small">
                                 Cancel
                             </Button> */}
-                            <Button type="submit" variant="contained" size="small">
-                                Save
-                            </Button>
-                        </DialogActions>
-                    </form>
-                </Box>
-            
+                        <Button type="submit" variant="contained" size="small">
+                            Save
+                        </Button>
+                    </DialogActions>
+                </form>
+            </Box>
+
         </CustomDialog>
     )
 }

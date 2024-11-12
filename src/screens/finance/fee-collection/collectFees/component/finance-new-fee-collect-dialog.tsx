@@ -3,8 +3,13 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Divider, Tooltip, TextField, Typography, DialogActions, InputAdornment } from '@mui/material';
 
+import { formatNumber } from 'src/utils/formate_number';
+
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -21,16 +26,25 @@ interface FinanceNewCollectFeeDialogProps {
 interface FormikValues {
   selectStudent: string;
   feeType: number[];
-  amount?: number;
+  amount: number;
   paymentMode: string[];
   transactionId: string;
+  transactionIdOnline: string;
   note: string;
   selectedTerms: string[];
   receiptNumber: string;
   chequeDate: any;
   bankName: string;
-  receivedPayment?: 0,
+  receivedPayment: 0,
   chequeNumber: string;
+  chequeAmount: number;
+  cardAmount: number;
+  onlineAmount: number;
+  cashAmount: number;
+  charges: number;
+  chargesDetails: string;
+
+
 
 }
 
@@ -49,17 +63,24 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   const formik = useFormik<FormikValues>({
     initialValues: {
       selectStudent: data.name,
-      feeType: [], 
-      receivedPayment:0,
+      feeType: [],
+      receivedPayment: 0,
       paymentMode: [],
       transactionId: '',
+      transactionIdOnline: '',
       note: '',
       selectedTerms: [],
       receiptNumber: "",
       chequeDate: dayjs(),
       bankName: "",
-     amount:0,
+      amount: 0,
       chequeNumber: "",
+      chequeAmount: 0,
+      cardAmount: 0,
+      onlineAmount: 0,
+      cashAmount: 0,
+      charges: data.previousCharges,
+      chargesDetails: data.chargesDetails,
     },
     onSubmit: (values) => {
       onSave(values);
@@ -100,6 +121,27 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
     formik.setFieldValue('amount', totalAmount);
   };
 
+  const [chequeAmountState, setChequeAmountState] = useState('');
+  const [cardAmountState, setCardAmountState] = useState('');
+  const [onlineAmountState, setOnlineAmountState] = useState('');
+  const [cashAmountState, setCashAmountState] = useState('');
+
+  const handleChequeAmountChange = (formattedValue: string, numericValue: number) => {
+    setChequeAmountState(formattedValue);
+
+  };
+  const handleCardAmountChange = (formattedValue: string, numericValue: number) => {
+    setCardAmountState(formattedValue);
+
+  };
+  const handleOnlineAmountChange = (formattedValue: string, numericValue: number) => {
+    setOnlineAmountState(formattedValue);
+
+  };
+  const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
+    setCashAmountState(formattedValue);
+
+  };
   return (
     <CustomDialog maxWidth="md" title="Fee Collection" open={dialogValue} handleClose={onClose}>
       <Box px="20px">
@@ -176,100 +218,163 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
 
 
               {formik.values.paymentMode.length > 0 && (
-  <Grid container spacing={2} px={2}>
-    {/* Online Payment Details */}
-    {formik.values.paymentMode.includes("Online") && (
-      <Grid item xs={12} md={6}>
-        <Typography variant="subtitle2" gutterBottom>Online Details</Typography>
-        <TextField
-          name="transactionId"
-          label="Transaction ID"
-          value={formik.values.transactionId}
-          onChange={formik.handleChange}
-          size="small"
-          fullWidth
-        />
-      </Grid>
-    )}
+                <Grid container spacing={2} px={2}>
 
-    {/* Card Payment Details */}
-    {formik.values.paymentMode.includes("Card") && (
-      <Grid item xs={12} md={6}>
-        <Typography variant="subtitle2" gutterBottom>Card Details</Typography>
-        <TextField
-          name="transactionId"
-          label="Transaction ID"
-          value={formik.values.transactionId}
-          onChange={formik.handleChange}
-          size="small"
-          fullWidth
-        />
-      </Grid>
-    )}
 
-    {/* Cheque Payment Details */}
-    {formik.values.paymentMode.includes("Cheque") && (
-      <Grid item xs={12}>
-        <Typography variant="subtitle2" gutterBottom>Cheque Details</Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <TextField
-              name="chequeId"
-              label="Cheque Number"
-              value={formik.values.chequeNumber}
-              onChange={formik.handleChange}
-              size="small"
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <DatePicker
-              label="Cheque Date"
-              value={formik.values.chequeDate}
-              onChange={(date) => formik.setFieldValue("chequeDate", date)}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  size: "small",
-                },
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField
-              name="bankName"
-              label="Bank Name"
-              value={formik.values.bankName}
-              onChange={formik.handleChange}
-              size="small"
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-      </Grid>
-    )}
-  </Grid>
-)}
+                  {/* Online Payment Details */}
+
+
+                  {formik.values.paymentMode.includes("Online") && (
+                    <Grid item xs={12} md={12}>
+                      <Typography variant="subtitle2" gutterBottom>Online Details</Typography>
+                      <Box display="flex" gap={2} flexDirection="row">
+                        <TextField
+                          name="transactionIdForOnline"
+                          label="Transaction ID"
+                          value={formik.values.transactionIdOnline}
+                          onChange={formik.handleChange}
+                          size="small"
+                          fullWidth
+                        />
+                        <FormattedAmountInput
+
+                          label="Online Amount"
+                          value={onlineAmountState}
+                          onChange={handleOnlineAmountChange}
+
+                        />
+                      </Box>
+                      <Divider sx={{ py: "12px", }} />
+                    </Grid>
+                  )}
+
+                  {/* Card Payment Details */}
+                  {formik.values.paymentMode.includes("Card") && (
+                    <Grid item xs={12} md={12}>
+                      <Typography variant="subtitle2" gutterBottom>Card Details</Typography>
+                      <Box display="flex" gap={2} flexDirection="row">
+                        <TextField
+                          name="transactionId"
+                          label="Transaction ID"
+                          value={formik.values.transactionId}
+                          onChange={formik.handleChange}
+                          size="small"
+                          fullWidth
+                        />
+
+                        <FormattedAmountInput
+
+                          label="Card Amount"
+                          value={cardAmountState}
+                          onChange={handleCardAmountChange}
+
+                        />
+                      </Box>
+                      <Divider sx={{ py: "12px", }} />
+                    </Grid>
+                  )}
+
+                  {/* Cheque Payment Details */}
+                  {formik.values.paymentMode.includes("Cheque") && (
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" gutterBottom>Cheque Details</Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={3}>
+                          <TextField
+                            name="chequeId"
+                            label="Cheque Number"
+                            value={formik.values.chequeNumber}
+                            onChange={formik.handleChange}
+                            size="small"
+                            fullWidth
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <DatePicker
+                            label="Cheque Date"
+                            value={formik.values.chequeDate}
+                            onChange={(date) => formik.setFieldValue("chequeDate", date)}
+                            slotProps={{
+                              textField: {
+                                fullWidth: true,
+                                size: "small",
+                              },
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <TextField
+                            name="bankName"
+                            label="Bank Name"
+                            value={formik.values.bankName}
+                            onChange={formik.handleChange}
+                            size="small"
+                            fullWidth
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <FormattedAmountInput
+                            label="chequeAmount"
+                            value={chequeAmountState}
+                            onChange={handleChequeAmountChange}
+                          />
+
+                        </Grid>
+                      </Grid>
+
+                      <Divider sx={{ py: "12px", }} />
+                    </Grid>
+                  )}
+
+
+                  {formik.values.paymentMode.includes("Cash") && (
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" gutterBottom>Cash Details</Typography>
+
+
+                      <FormattedAmountInput
+
+                        label="Cash Amount"
+                        value={cashAmountState}
+                        onChange={handleCashAmountChange}
+
+                      />
+
+                    </Grid>
+                  )}
+                </Grid>
+              )}
 
 
 
               <Grid container spacing={2} display="flex" flexDirection="row" justifyContent="flex-end">
-                
-              
+
+
                 <Grid item xs={12} md={6} display="flex" gap={2}>
-                <TextField
-                    name="reciptNumber"
-                    label="Receipt Number"
-                    value={formik.values.receiptNumber}
+                  <TextField
+                    disabled
+                    name="charges"
+                    label="Charges"
+                    value={formik.values.charges}
                     onChange={formik.handleChange}
                     size="small"
                     fullWidth
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Tooltip title={formik.values.chargesDetails}>
+                            <Iconify icon="material-symbols-light:info-outline" style={{ cursor: 'pointer' }} />
+
+                          </Tooltip>
+                        </InputAdornment>
+                      ),
+                    }}
 
                   />
                   <TextField
                     name="amount"
                     label="Amount Due"
-                    value={formik.values.amount}
+                    value={formatNumber(formik.values.amount)}
                     size="small"
                     InputProps={{ readOnly: true }}
                     fullWidth
@@ -277,7 +382,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                   <TextField
                     name="receivedPayment"
                     label="Received Payment"
-                    value={formik.values.receivedPayment}
+                    value={formatNumber(formik.values.receivedPayment)}
                     size="small"
                     onChange={formik.handleChange}
                     fullWidth
@@ -349,14 +454,17 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
             /> */}
 
           </Box>
-
-
           <Button onClick={onClose} variant="contained" size="small">
             Cancel
           </Button>
+          <Button disabled={formik.values.receivedPayment < 1} onClick={() => { }} variant="contained" size="small">
+            View Receipt
+          </Button>
 
 
-          <Button type="submit" variant="contained" size="small">
+
+
+          <Button disabled={formik.values.receivedPayment < 1} type="submit" variant="contained" size="small">
             Collect
           </Button>
         </DialogActions>
@@ -372,7 +480,7 @@ export default FinanceNewCollectFeeDialog;
 
                 <Grid item xs={12} md={3}>
                   <TextField
-                    name="reciptNumber"
+                    name="charges"
                     label="Receipt Number"
                     value={formik.values.receiptNumber}
                     onChange={formik.handleChange}

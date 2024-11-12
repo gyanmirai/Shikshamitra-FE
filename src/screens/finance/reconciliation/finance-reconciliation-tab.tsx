@@ -12,7 +12,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceReconciliationClearAndBounceChequeDialog from './component/finance-reconciliation-clear-cheque-dialog';
 
-const FinanceReconciliationScreen = () => {
+const FinanceReconciliationTab = () => {
   
     const reconsiliationData = [
       {
@@ -142,4 +142,4 @@ const [selectedEntry, setSelectedEntry] = useState<any>();
   )
 }
 
-export default FinanceReconciliationScreen
+export default FinanceReconciliationTab

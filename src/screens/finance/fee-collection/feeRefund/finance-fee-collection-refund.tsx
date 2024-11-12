@@ -1,17 +1,44 @@
 import React, { useState } from 'react';
 
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundDialog from './component/fee-refund-dialog';
 
 
 const FinanceFeeCollectionRefundTab = () => {
+
+  const historyData = [
+    {
+      className: '1A',
+      grNo: '101',
+      receiptNo: 'RCPT001',
+      refundDate: '01-05-2024',
+      amount: 1500,
+      modeOfPayment: 'Cheque',
+      transactionId: 'TXN12345',
+      receiptBook: 'RB001',
+    },
+    {
+      className: '2B',
+      grNo: '102',
+      receiptNo: 'RCPT002',
+      refundDate: '15-05-2024',
+      amount: 2000,
+      modeOfPayment: 'Transaction',
+      transactionId: 'TXN12346',
+      receiptBook: 'RB002',
+    },
+  ];
   const data = [
     {
       paymentId: 'jack7765',
@@ -49,28 +76,64 @@ const FinanceFeeCollectionRefundTab = () => {
     },
   ];
 
-  const historyData = [
-    {
-      className: '1A',
-      grNo: '101',
-      receiptNo: 'RCPT001',
-      refundDate: '01-05-2024',
-      amount: 1500,
-      modeOfPayment: 'Cheque',
-      transactionId: 'TXN12345',
-      receiptBook: 'RB001',
-    },
-    {
-      className: '2B',
-      grNo: '102',
-      receiptNo: 'RCPT002',
-      refundDate: '15-05-2024',
-      amount: 2000,
-      modeOfPayment: 'Transaction',
-      transactionId: 'TXN12346',
-      receiptBook: 'RB002',
-    },
-  ];
+
+  const dataForRefund = [
+    { 
+     studentId:123,
+     name: "John Doe",
+     grade: 10,
+     paymentTerm: "Monthly",
+     totalPending:38000,
+     totalPaid:40000,
+     discountAmount:0,
+     fixedReduction:0,
+     overAllDueDate:"20-04-2025",
+     totalFees:78000,
+     totalDueAfterDiscount:0,
+     fees: [
+       {
+         feeHeadId:198,
+         feeHead: "Tuition",
+         totalFees:60000,
+         amount: 5000,
+         paymentDates: [
+           { month:"June-2024",  date: "15-01-2024", status: "Paid", amount:5000 },
+           {month:"July-2024" ,  date: "15-02-2024", status: "Paid", amount:5000 },
+           { month:"Aug-2024",   date: "15-03-2024", status: "Paid", amount:5000 },
+           { month:"Sep-2024",   date: "15-03-2024", status: "Paid", amount:5000 },
+           { month:"Oct-2024",   date: "15-03-2024", status: "Paid", amount:5000 },
+           { month:"Nov-2024",   date: "15-03-2024", status: "Paid", amount:5000 },
+           { month:"Dec-2024",   date: "15-03-2024", status: "Paid", amount:5000 },
+           { month:"Jan-2025",   date: "15-03-2024", status: "Paid", amount:5000 },
+           { month:"Feb-2025",   date: "15-03-2024", status: "Unpaid" , amount:5000},
+           { month:"April-2025", date: "15-03-2024", status: "Unpaid" , amount:5000},
+           { month:"May-2025",   date: "15-03-2024", status: "Unpaid", amount:5000 },
+         ],
+       },
+       {
+         feeHeadId:230,
+         feeHead: "Library",
+         totalFees:18000,
+         amount: 1500,
+         paymentDates: [
+           { month:"June-2024",date: "15-01-2024", status: "Paid", amount:1500 },
+           {month:"July-2024" ,date: "15-02-2024", status: "Paid",amount:1500 },
+           { month:"Aug-2024",date: "15-03-2024", status: "Paid",amount:1500 },
+           { month:"Sep-2024",date: "15-03-2024", status: "Paid",amount:1500 },
+           { month:"Oct-2024",date: "15-03-2024", status: "Paid",amount:1500 },
+           { month:"Nov-2024",date: "15-03-2024", status: "Paid",amount:1500 },
+           { month:"Dec-2024",date: "15-03-2024", status: "Paid",amount:1500 },
+           { month:"Jan-2025",date: "15-03-2024", status: "Paid",amount:1500 },
+           { month:"Feb-2025",date: "15-03-2024", status: "Unpaid",amount:1500 },
+           { month:"April-2025",date: "15-03-2024", status: "Unpaid", amount:1500 },
+           { month:"May-2025",date: "15-03-2024", status: "Unpaid" , amount:1500},
+         ],
+       },
+      
+     ],}
+   ];
+   
+  
   const dialog = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
@@ -111,8 +174,83 @@ const FinanceFeeCollectionRefundTab = () => {
 
     dialog.onTrue();
   };
+
+
   return (
     <>
+    <CustomizableTable
+      columns={[
+        { id: 'paymentId', label: 'Payment Id' },
+        { id: 'date', label: 'Date' },
+        { id: 'feeHead', label: 'Fee Head' },
+        {
+          id: 'amount', label: 'Amount', render(value, row) {
+            return <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(row.amount), "INR")}</Typography>;
+          },
+        },
+        { id: 'dueDate', label: 'Due Date' },
+
+        {
+          id: 'status',
+          label: 'Status',
+          render(value, row) {
+            return (
+              <Label
+                variant="soft"
+                color={
+                  value === 'Overdue'
+                    ? 'error'
+                    : value === 'Unpaid'
+                      ? 'warning'
+                      : value === 'Paid'
+                        ? 'success'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            );
+          },
+        },
+        {
+          id: 'action',
+          label: 'Action',
+          render: (row, popover) => (
+            <ThreeDotsActions
+              actions={() => (
+                <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:eye" />
+                   Fee Refund
+                  </MenuItem>
+                  {/* <MenuItem
+                    onClick={() => {
+                      // popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:check" />
+                    Mark as Check
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      // popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:pen" />
+                    Edit
+                  </MenuItem> */}
+                </MenuList>
+              )}
+            />
+          ),
+        },
+      ]}
+      data={paymentHistoryData}
+    />
       <Box display="flex" flexDirection="row" gap={2}>
         <Box py="15px" display="flex" flexDirection="row" gap={3}>
           <CustomSelect
@@ -223,11 +361,11 @@ const FinanceFeeCollectionRefundTab = () => {
         columns={[
           { id: 'className', label: 'Class Name' },
           { id: 'grNo', label: 'GrNo' },
-          { id: 'receiptNo', label: 'ReceiptNo' },
-          { id: 'refundDate', label: 'RefundDate' },
+          { id: 'receiptNo', label: 'Receipt No' },
+          { id: 'refundDate', label: 'Refund Date' },
           { id: 'amount', label: 'Amount' },
-          { id: 'modeOfPayment', label: 'ModeOfPayment' },
-          { id: 'transactionId', label: 'TransactionId' },
+          { id: 'modeOfPayment', label: 'Mode Of Payment' },
+          { id: 'transactionId', label: 'Transaction Id' },
           { id: 'receiptBook', label: 'Receipt Book' },
         ]}
         data={historyData}

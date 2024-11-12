@@ -84,7 +84,7 @@ export function fShortenNumber(inputValue: InputNumberValue, options?: Options) 
     ...options,
   }).format(number);
 
-  return fm.replace(/[A-Z]/g, (match) => match.toLowerCase());
+  return fm.replace(/[A-Z]/g, (match) => match.toUpperCase());
 }
 
 // ----------------------------------------------------------------------

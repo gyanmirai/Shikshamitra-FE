@@ -21,17 +21,35 @@ interface Data {
   id: number;
   paymentStatus: string;
   action?: string;
+  incomeList?: any;
 }
 
 let data: Data[] = [
   {
     id: 1,
-    incomeSource: 'Tuition Fees',
+    incomeSource: 'Fees',
     incomeAmount: '50000',
     paymentMethod: 'Online',
     date: '12-12-2024',
     paymentStatus: 'Paid',
     action: 'View',
+    incomeList: [
+      {
+        incomeName: "Tuition Fees",
+        amount: 25000,
+        date: "11-10-2024"
+
+      },
+      {
+        incomeName: "Tuition Fees",
+        amount: 25000,
+        date: "12-10-2024"
+
+
+      },
+
+    ]
+
   },
   {
     id: 2,
@@ -41,6 +59,22 @@ let data: Data[] = [
     date: '10-10-2024',
     paymentStatus: 'Paid',
     action: 'View',
+    incomeList: [
+      {
+        incomeName: "Sks Trust",
+        amount: 250000,
+        date: "11-10-2024"
+
+      },
+      {
+        incomeName: "Gyan Mirai",
+        amount: 250000,
+        date: "12-08-2024"
+
+
+      },
+
+    ]
   },
 ];
 
@@ -55,7 +89,7 @@ const FinanceIncomeTrackingScreen = () => {
     dialog.onFalse();
   };
 
-  useEffect(() => {}, [selectedEntry, isEdit]);
+  useEffect(() => { }, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: Data) => {
     const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
@@ -108,29 +142,31 @@ const FinanceIncomeTrackingScreen = () => {
       </Box>
       <CustomizableTable
         columns={[
-          { id: 'incomeSource', label: 'Income Source' },
+          { id: 'incomeSource', label: 'Income Source',  },
           { id: 'incomeAmount', label: 'Income Amount' },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
-         
-          { id: 'paymentStatus', label: 'Payment Status',  render(value, row) {
-            return (
-              <Label
-                variant="soft"
-                color={
-                  value === 'Overdue'
-                    ? 'error'
-                    : value === 'Unpaid'
-                      ? 'warning'
-                      : value === 'Paid'
-                        ? 'success'
-                        : 'default'
-                }
-              >
-                {value}
-              </Label>
-            );
-          }, },
+
+          {
+            id: 'paymentStatus', label: 'Payment Status', render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Unpaid'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',
