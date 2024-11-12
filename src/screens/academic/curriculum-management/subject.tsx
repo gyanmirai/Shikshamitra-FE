@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -27,7 +28,6 @@ import {
   ListItemText,
   DialogActions,
   DialogContent,
-  FormHelperText,
   DialogContentText,
 } from '@mui/material';
 
@@ -141,13 +141,8 @@ export const subjectData: TSubjectTable[] = [
   },
 ];
 
-const Subject = ({
-  searchParams,
-  setSearchParams,
-}: {
-  searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
-}) => {
+const Subject = (props: TabComponentType) => {
+  const { searchParams, setSearchParams } = props;
   const [subjectTableData, setSubjectTableData] = useState(subjectData);
   const [filteredData, setFilteredData] = useState<TSubjectTable[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -709,7 +704,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
       learningGoal: data?.learningGoal || '',
       prerequisites: data?.prerequisites || '',
       description: data?.description || '',
-      subjectColor: data?.subjectColor || '#000000',
+      subjectColor: data?.subjectColor || '',
       status: data?.status || 'Unpublish',
     },
     validationSchema,
@@ -824,7 +819,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
             </Grid>
             <Grid item xs={12} md={6}>
               <DateTimePicker
-                label=""
+                label="Schedule Date"
                 value={formik.values.scheduleDate}
                 onChange={(value) => {
                   formik.setFieldValue('scheduleDate', value);
@@ -833,14 +828,10 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                   textField: {
                     size: 'small',
                     fullWidth: true,
-                    error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
                   },
                 }}
                 disablePast
               />
-              {formik.touched.scheduleDate && formik.errors.scheduleDate && (
-                <FormHelperText error>{String(formik.errors.scheduleDate)}</FormHelperText>
-              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <MuiColorInput

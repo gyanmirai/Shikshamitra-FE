@@ -65,6 +65,12 @@ const CurriculumManagementScreen = () => {
     [searchParams.tab]
   );
 
+  const handleTabChange = (newTab: string) => {
+    console.log('new tab---', newTab);
+
+    setSearchParams({ tab: newTab });
+  };
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -121,7 +127,7 @@ const CurriculumManagementScreen = () => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(_, newValue) => handleTabChange(newValue)}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >

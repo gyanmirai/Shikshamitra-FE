@@ -1,7 +1,5 @@
-import type { TabComponentType } from 'src/screens/hr/leave-request';
-
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import {
@@ -66,13 +64,23 @@ const TeacherData: TTeacherData[] = [
   },
 ];
 
-const Teacher = (props: TabComponentType) => {
+const Teacher = ({
+  searchParams,
+  setSearchParams,
+}: {
+  searchParams: Record<string, string>;
+  setSearchParams: (obj: Record<string, any>) => void;
+}) => {
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const [selectedClass, setSelectedClass] = useState('All');
-  const [selectedSubject, setSelectedSubject] = useState('All');
+
+  const selectedClass = searchParams.classId ? searchParams.classId : 'All';
+  const selectedSubject = searchParams.subject ? searchParams.subject : 'All';
+
+  // const [selectedClass, setSelectedClass] = useState('All');
+  // const [selectedSubject, setSelectedSubject] = useState('All');
   const [selectedTeacher, setSelectedTeacher] = useState<any | null>(null);
 
   const [teacherData, setTeacherData] = useState<TTeacherData[]>(TeacherData);
@@ -93,6 +101,7 @@ const Teacher = (props: TabComponentType) => {
     }
   };
 
+
   const classOptions = useMemo(() => {
     if (!classData) return [{ label: 'All', value: 'All' }];
     console.log('class Data----', classData);
@@ -102,7 +111,7 @@ const Teacher = (props: TabComponentType) => {
       // eslint-disable-next-line no-unsafe-optional-chaining
       ...classData?.items.map((cls: any) => ({
         label: cls.name, // Adjust this based on your actual API response structure
-        value: cls.name, // Adjust this based on your actual API response structure
+        value: cls.id, // Adjust this based on your actual API response structure
       })),
     ];
   }, [classData]);
@@ -110,11 +119,12 @@ const Teacher = (props: TabComponentType) => {
   const filteredData = useMemo(
     () =>
       teacherData.filter((item: any) => {
-        const matchesClass = selectedClass === 'All' || item.className === selectedClass;
+        const findClass = classData?.items?.find((c: any) => c.id === selectedClass);
+        const matchesClass = selectedClass === 'All' || item.className === findClass?.name;
         const matchesSubject = selectedSubject === 'All' || item.subject === selectedSubject;
         return matchesClass && matchesSubject;
       }),
-    [teacherData, selectedClass, selectedSubject]
+    [teacherData, classData?.items, selectedClass, selectedSubject]
   );
 
   return (
@@ -130,7 +140,7 @@ const Teacher = (props: TabComponentType) => {
           formControlProps={{ sx: { width: '200px' } }}
           value={selectedClass}
           onChange={(value) => {
-            setSelectedClass(value as string);
+            setSearchParams({ classId: value as string });
           }}
         />
         <CustomSelect
@@ -144,7 +154,7 @@ const Teacher = (props: TabComponentType) => {
           ]}
           formControlProps={{ sx: { width: '200px' } }}
           value={selectedSubject}
-          onChange={(value) => setSelectedSubject(value as string)}
+          onChange={(value) => setSearchParams({ subject: value as string })}
         />
       </Box>
       <Grid2 container spacing={3}>
@@ -155,12 +165,12 @@ const Teacher = (props: TabComponentType) => {
               label: 'Id',
             },
             {
-              id: 'subject',
-              label: 'Subject',
-            },
-            {
               id: 'className',
               label: 'Class',
+            },
+            {
+              id: 'subject',
+              label: 'Subject',
             },
             {
               id: 'assignedTeacher',

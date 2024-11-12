@@ -18,8 +18,8 @@ import LeaveCalender from './leave-calender';
 import AddLeaveRequest from './leave-requst';
 
 export interface TabComponentType {
-  searchParams?: useSearchParamReturnType[0];
-  setSearchParams?: useSearchParamReturnType[1];
+  searchParams: useSearchParamReturnType[0];
+  setSearchParams: useSearchParamReturnType[1];
 }
 
 const TABS = [
