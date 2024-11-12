@@ -2,9 +2,8 @@
 
 import React from 'react';
 
-import { Visibility } from '@mui/icons-material';
+import { Divider, useTheme } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Divider, useTheme, IconButton } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
 // import { AttendanceGraph } from 'src/app/(auth)/student/overview/page';
@@ -167,11 +166,11 @@ const HrDashboard = () => {
             total={89}
             icon="solar:user-rounded-bold"
             chart={{ series: 89 }}
-            renderComp={
-              <IconButton sx={{ color: 'black', zIndex: 10 }}>
-                <Visibility />
-              </IconButton>
-            }
+            // renderComp={
+            //   <IconButton sx={{ color: 'black', zIndex: 10 }}>
+            //     <Visibility />
+            //   </IconButton>
+            // }
           />
         </Grid>
         <Grid xs={12} md={6} lg={4}>
@@ -183,11 +182,11 @@ const HrDashboard = () => {
               series: 10,
               colors: [theme.vars.palette.info.light, theme.vars.palette.info.main],
             }}
-            renderComp={
-              <IconButton sx={{ color: 'black', zIndex: 10 }}>
-                <Visibility />
-              </IconButton>
-            }
+            // renderComp={
+            //   <IconButton sx={{ color: 'black', zIndex: 10 }}>
+            //     <Visibility />
+            //   </IconButton>
+            // }
             sx={{ bgcolor: 'info.dark', [`& .${svgColorClasses.root}`]: { color: 'info.light' } }}
           />
         </Grid>
@@ -200,11 +199,11 @@ const HrDashboard = () => {
               series: 10,
               colors: [theme.vars.palette.warning.light, theme.vars.palette.warning.main],
             }}
-            renderComp={
-              <IconButton sx={{ color: 'black', zIndex: 10 }}>
-                <Visibility />
-              </IconButton>
-            }
+            // renderComp={
+            //   <IconButton sx={{ color: 'black', zIndex: 10 }}>
+            //     <Visibility />
+            //   </IconButton>
+            // }
             sx={{
               bgcolor: 'warning.dark',
               [`& .${svgColorClasses.root}`]: { color: 'warning.light' },

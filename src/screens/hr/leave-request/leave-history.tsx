@@ -47,9 +47,9 @@ const LeaveHistory = (props: TabComponentType) => {
         <MenuItem
           onClick={async () => {
             setEditData(row);
-            if (editData.status === EmployeeLeaveStatusType.Pending) {
+            if (row.status === EmployeeLeaveStatusType.Pending) {
               await changeStatus({
-                id: editData.id,
+                id: row?.id,
                 body: {
                   status: EmployeeLeaveStatusType.Reviewed,
                   rejectionReason: '',
@@ -65,7 +65,7 @@ const LeaveHistory = (props: TabComponentType) => {
         </MenuItem>
       </MenuList>
     ),
-    [changeStatus, editData, modal]
+    [changeStatus, modal]
   );
   const tableData = useMemo(
     () =>
@@ -110,6 +110,13 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Description',
             id: 'description',
+          },
+          {
+            label: 'Rejection Reason',
+            id: 'rejectionReason',
+            render(value, row) {
+              return value || '-';
+            },
           },
           {
             label: 'Status',

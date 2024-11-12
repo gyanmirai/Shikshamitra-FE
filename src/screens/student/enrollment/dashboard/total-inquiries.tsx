@@ -7,7 +7,7 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 
 const TotalInquiries = () => (
   <Grid2 xs={6}>
-    <Card sx={{ boxShadow: 'var(--shadows-2)', height: '100%', p: 2 }}>
+    <Card sx={{ boxShadow: 'var(--shadows-2)', p: 2, height: '100%' }}>
       <Box display="flex" justifyContent="space-between">
         <Typography variant="h6">Total Inquiries</Typography>
       </Box>

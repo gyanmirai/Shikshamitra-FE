@@ -5,7 +5,7 @@ import './styles.css';
 import type { RootState } from 'src/redux/store';
 
 import NProgress from 'nprogress';
-import { Suspense, useEffect } from 'react';
+import { useRef, Suspense, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
@@ -181,9 +181,44 @@ function NProgressDone() {
 
   const searchParams = useSearchParams();
 
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const changes = useRef(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    changes.current = isChanges;
+  }, [isChanges]);
+
+  useEffect(() => {
+    // Add a custom entry to the history stack
+    window.history.pushState(null, document.title, window.location.href);
+
+    // Handle the back button click by pushing the same state again
+    const handlePopState = () => {
+      // Show a custom alert or perform an action when trying to navigate back
+      if (
+        changes.current &&
+        window.confirm('Are you sure you want to leave this page? Unsaved changes will be lost.')
+      ) {
+        router.back(); // Navigate back if confirmed
+        dispatch(setIsChanges(false));
+      } else {
+        // Push a new state to override the back button
+        window.history.pushState(null, document.title, window.location.href);
+      }
+    };
+
+    // Listen for the popstate event
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [dispatch, router]);
+
   useEffect(() => {
     NProgress.done();
-  }, [pathname, router, searchParams]);
+  }, [pathname, searchParams]);
 
   return null;
 }

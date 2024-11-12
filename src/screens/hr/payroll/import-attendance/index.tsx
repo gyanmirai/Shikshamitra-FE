@@ -8,14 +8,13 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Save } from '@mui/icons-material';
+import { Refresh } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Button, Divider, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -48,8 +47,8 @@ const ImportAttendanceScreen = () => {
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Import Attendance' }]}
         sx={{ px: 1, mb: 2 }}
         action={
-          <Button startIcon={<Save />} variant="contained">
-            Save
+          <Button startIcon={<Refresh />} variant="contained">
+            Generate All
           </Button>
         }
       />
@@ -109,7 +108,7 @@ const ImportAttendanceScreen = () => {
           { id: 'employeeType', label: 'Employee Type' },
           { id: 'department', label: 'Department' },
           { id: 'workingDays', label: 'Working Days' },
-          { id: 'leave', label: 'Working Days' },
+          { id: 'leave', label: 'Leave' },
           {
             id: 'status',
             label: 'Status',
@@ -119,17 +118,19 @@ const ImportAttendanceScreen = () => {
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Generate',
+            // renderColumn(value) {
+            //   return (
+            //     <Button size="small" variant="contained">
+            //       Generate All
+            //     </Button>
+            //   );
+            // },
             render(value, row) {
               return (
-                <IconButton
-                  onClick={() => {
-                    dialog.onTrue();
-                    setViewData(row);
-                  }}
-                >
-                  <Iconify icon="mdi:eye" />
-                </IconButton>
+                <Button size="small" variant="contained">
+                  Generate
+                </Button>
               );
             },
           },

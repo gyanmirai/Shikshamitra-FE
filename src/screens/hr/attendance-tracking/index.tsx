@@ -1,30 +1,24 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Tab,
-  Card,
-  Tabs,
-  Paper,
-  Divider,
-  MenuItem,
-  MenuList,
-  Typography,
-} from '@mui/material';
+import { Box, Tab, Card, Tabs, Paper, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
+import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
+import {
+  EmployeeAttendanceStatus,
+  EmployeeAttendanceStatusColor,
+} from 'src/enums/employee-attendance-status';
 import {
   useGetEmployeeQuery,
   useLazyGetAttendanceByEmployeeIdQuery,
@@ -32,15 +26,13 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const AttendanceTrackingScreen = () => {
-  const tabs = useTabs('dateWise');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
   const MAIN_TABS = [
     { value: 'dateWise', label: 'Date Wise' },
     { value: 'employeeWise', label: 'Employee Wise' },
@@ -54,8 +46,8 @@ const AttendanceTrackingScreen = () => {
       />
       <Card>
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -64,15 +56,28 @@ const AttendanceTrackingScreen = () => {
           ))}
         </CustomTabs>
       </Card>
-      <Box p={2}>{tabs.value === 'dateWise' ? <DateWise /> : <EmployeeWise />}</Box>
+      <Box p={2}>
+        {searchParams.tab === 'dateWise' ? (
+          <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
+        ) : (
+          <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
+        )}
+      </Box>
     </Paper>
   );
 };
 
 export default AttendanceTrackingScreen;
 
-const DateWise = () => {
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
+const DateWise = ({
+  searchParams,
+  setSearchParams,
+}: {
+  searchParams: Record<string, string>;
+  setSearchParams: (obj: Record<string, any>) => void;
+}) => {
+  // const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const dateValue = searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs();
   const tabs = useTabs(EmployeeAttendanceStatus.All);
 
   const [getAttendance, { data: attendanceData, isLoading }] = useQueryAndMutation({
@@ -89,8 +94,12 @@ const DateWise = () => {
   );
 
   useEffect(() => {
-    getAttendance(date?.format('YYYY-MM-DD'));
-  }, [date, getAttendance]);
+    if (searchParams.date) {
+      getAttendance(dayjs(searchParams.date, 'DD-MM-YYYY')?.format('YYYY-MM-DD'));
+    } else {
+      getAttendance(dayjs().format('YYYY-MM-DD'));
+    }
+  }, [searchParams.date, getAttendance]);
 
   const counts = useMemo(
     () => ({
@@ -109,23 +118,28 @@ const DateWise = () => {
   );
   const TABS = useMemo(
     () => [
-      { value: EmployeeAttendanceStatus.All, label: 'All', count: counts.all, color: 'default' },
+      {
+        value: EmployeeAttendanceStatus.All,
+        label: 'All',
+        count: counts.all || 0,
+        color: 'default',
+      },
       {
         value: EmployeeAttendanceStatus.Present,
         label: 'Present',
-        count: counts.Present,
+        count: counts.Present || 0,
         color: 'success',
       },
       {
         value: EmployeeAttendanceStatus.FullDayLeave,
         label: 'Absent',
-        count: counts.Absent,
+        count: counts.Absent || 0,
         color: 'error',
       },
       {
         value: EmployeeAttendanceStatus.HalfDayLeave,
         label: 'Half-Day',
-        count: counts['Half-Day'],
+        count: counts['Half-Day'] || 0,
         color: 'warning',
       },
     ],
@@ -137,8 +151,11 @@ const DateWise = () => {
       <DatePicker
         format="DD-MM-YYYY"
         label="Select Date"
-        value={date}
-        onChange={(value) => setDate(value)}
+        value={dateValue}
+        onChange={(value) => {
+          setSearchParams({ date: value?.format('DD-MM-YYYY') });
+          // setDate(value);
+        }}
         sx={{ mb: 2 }}
         slotProps={{
           textField: {
@@ -210,9 +227,18 @@ const DateWise = () => {
   );
 };
 
-const EmployeeWise = () => {
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
-  const [employeeId, setEmployeeId] = useState<string>('');
+const EmployeeWise = ({
+  searchParams,
+  setSearchParams,
+}: {
+  searchParams: Record<string, string>;
+  setSearchParams: (obj: Record<string, any>) => void;
+}) => {
+  const monthYearValue = searchParams.monthYear
+    ? dayjs(searchParams.monthYear, 'DD-MM-YYYY')
+    : dayjs();
+
+  // const [employeeId, setEmployeeId] = useState<string>('');
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
@@ -223,13 +249,16 @@ const EmployeeWise = () => {
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
 
-  console.log(data, 'data');
-
   useEffect(() => {
-    if (employeeId) {
-      getAttendance({ employeeId: `employeeIds=${employeeId}`, month: date?.format('YYYY-MM-DD') });
+    if (searchParams?.employeeId) {
+      getAttendance({
+        employeeId: `employeeIds=${searchParams.employeeId}`,
+        month: searchParams.monthYear
+          ? dayjs(searchParams.monthYear, 'DD-MM-YYYY')?.format('YYYY-MM-DD')
+          : dayjs().format('YYYY-MM-DD'),
+      });
     }
-  }, [date, employeeId, getAttendance]);
+  }, [searchParams.monthYear, searchParams.employeeId, getAttendance]);
 
   return (
     <>
@@ -237,11 +266,12 @@ const EmployeeWise = () => {
         options={employees?.items || []}
         isLoading={isLoading}
         label="Select Employee"
-        value={employeeId}
+        value={searchParams?.employeeId}
         labelKey="lastName"
         valueKey="id"
         onChange={(value) => {
-          setEmployeeId(value as string);
+          // setEmployeeId(value as string);
+          setSearchParams({ employeeId: value as string });
         }}
         formControlProps={{
           sx: {
@@ -255,8 +285,11 @@ const EmployeeWise = () => {
         format="MMM-YYYY"
         label="Select Month Year"
         views={['year', 'month']}
-        value={date}
-        onChange={(value) => setDate(value)}
+        value={monthYearValue}
+        onChange={(value) => {
+          setSearchParams({ monthYear: value?.format('DD-MM-YYYY') });
+          // setDate(value);
+        }}
         sx={{ mb: 2 }}
         slotProps={{
           textField: {
@@ -264,7 +297,7 @@ const EmployeeWise = () => {
           },
         }}
       />
-      {employeeId && (
+      {searchParams?.employeeId && (
         <Box display="flex" gap={2} justifyContent="space-between">
           <Card
             sx={{
@@ -307,60 +340,71 @@ const EmployeeWise = () => {
           </Card>
         </Box>
       )}
-      {employeeId && (
+      {searchParams?.employeeId && (
         <CustomizableTable
           isLoading={attendanceLoading}
           columns={[
-            { id: 'date', label: 'Date' },
+            {
+              id: 'attendanceDate',
+              label: 'Date',
+              render(value, row) {
+                return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
+              },
+            },
 
-            { id: 'inTime', label: 'In-time' },
-            { id: 'outTime', label: 'Out-time' },
-            { id: 'totalTime', label: 'Total Time' },
+            { id: 'timeIn', label: 'In-time' },
+            { id: 'timeOut', label: 'Out-time' },
+            { id: 'totalHoursWorked', label: 'Total Time' },
             {
               id: 'status',
               label: 'Status',
-              render(value, row) {
+              render(value: number, row) {
+                const status = EmployeeAttendanceStatus[row.statusType];
                 return (
                   <Label
+                    variant="soft"
                     color={
-                      value === EmployeeAttendanceStatus.Present
-                        ? 'success'
-                        : value === EmployeeAttendanceStatus.FullDayLeave
-                          ? 'error'
-                          : 'warning'
+                      EmployeeAttendanceStatusColor[
+                        status as keyof typeof EmployeeAttendanceStatusColor
+                      ]
                     }
                   >
-                    {value}
+                    {status}
                   </Label>
                 );
               },
             },
-            {
-              id: 'action',
-              label: 'Action',
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(props: any) => {
-                      const { popover }: any = props;
-                      return (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              popover?.close?.();
-                            }}
-                          >
-                            <Iconify icon="carbon:view" /> View
-                          </MenuItem>
-                        </MenuList>
-                      );
-                    }}
-                  />
-                );
-              },
-            },
+            // {
+            //   id: 'action',
+            //   label: 'Action',
+            //   render(value, row) {
+            //     return (
+            //       <ThreeDotsActions
+            //         actions={(props: any) => {
+            //           const { popover }: any = props;
+            //           return (
+            //             <MenuList>
+            //               <MenuItem
+            //                 onClick={() => {
+            //                   popover?.close?.();
+            //                 }}
+            //               >
+            //                 <Iconify icon="carbon:view" /> View
+            //               </MenuItem>
+            //             </MenuList>
+            //           );
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
           ]}
-          data={data?.employeeAttendances?.items || []}
+          data={
+            data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
+              ...i,
+              status: EmployeeLeaveStatusType[i.statusType],
+            })) || []
+          }
         />
       )}
     </>

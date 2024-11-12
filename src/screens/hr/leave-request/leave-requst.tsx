@@ -14,16 +14,19 @@ import { Grid, Button, MenuItem, Checkbox, TextField, FormControlLabel } from '@
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
+import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   useAddEmployeeLeaveMutation,
   useEmployeeLeaveRequestStatusMutation,
 } from 'src/redux/employee/employeeApi';
 
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
+import { ColorPicker } from 'src/components/color-utils';
 
 import type { TabComponentType } from '.';
 
-const leaveTypes = [
+export const leaveTypes = [
   { value: 'sick', label: 'Sick Leave' },
   { value: 'personal', label: 'Personal Leave' },
   { value: 'maternity', label: 'Maternity Leave' },
@@ -35,6 +38,19 @@ const leaveTypes = [
   { value: 'compensatory', label: 'Compensatory Leave' },
   { value: 'medical', label: 'Medical Leave' },
   { value: 'emergency', label: 'Emergency Leave' },
+];
+
+// ----------------------------------------------------------------------
+
+export const CALENDAR_COLOR_OPTIONS = [
+  primary.main,
+  secondary.main,
+  info.main,
+  info.darker,
+  success.main,
+  warning.main,
+  error.main,
+  error.darker,
 ];
 type AddLeaveRequestProps = TabComponentType & {
   editData?: any;
@@ -49,6 +65,7 @@ interface FormValues {
   description: string;
   status?: number;
   rejectionReason: string;
+  color: string;
 }
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
@@ -88,6 +105,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           is: 'rejected',
           then: (schema) => schema.required('Rejection reason is required'),
         }),
+        color: Yup.string().required('Color is required'),
       }),
     [editData]
   );
@@ -101,6 +119,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         isHalfDay: editData?.halfDay || false,
         rejectionReason: editData?.rejectionReason || '',
         status: editData?.status || 0,
+        color: editData?.color || '',
       }}
       validationSchema={validationSchema}
       onSubmit={async (values: FormValues, { setSubmitting, resetForm }) => {
@@ -118,7 +137,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               userId: userInfo.sub,
               employeeId: userInfo.employee.id,
               leaveType: values.leaveType,
-              color: '#000000',
+              color: values.color,
               halfDay: values.isHalfDay,
               startDate: values.startDate?.format('YYYY-MM-DDTHH:mm:ss'),
               endDate: values.endDate?.format('YYYY-MM-DDTHH:mm:ss'),
@@ -127,8 +146,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             resetForm();
           }
           handleClose?.();
-        } catch (error) {
-          console.log(error);
+        } catch (errors) {
+          console.log(errors);
         }
       }}
     >
@@ -208,6 +227,26 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </Grid>
             )}
             <Grid item xs={12}>
+              <ColorPicker
+                selected={values.color}
+                onSelectColor={(color) => {
+                  setFieldValue('color', color);
+                }}
+                colors={CALENDAR_COLOR_OPTIONS}
+                slotProps={{
+                  button: {
+                    disabled: editData,
+                  },
+                }}
+                error={touched.color && Boolean(errors.color)}
+                helperText={(touched.color && errors.color) || ''}
+                disabled={editData}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <Upload />
+            </Grid>
+            <Grid item xs={6}>
               <Editor
                 onChange={(value) => {
                   setFieldValue('description', value);
@@ -216,43 +255,47 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 placeholder="Leave description"
                 error={touched.description && Boolean(errors.description)}
                 helperText={touched.description && errors.description}
+                editable={!editData}
+                sx={{ height: '100%' }}
+                slotProps={{
+                  wrap: {
+                    height: '100%',
+                  },
+                }}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid item xs={12} display="flex" justifyContent="flex-end">
               {!editData && (
-                <LoadingButton
-                  loading={isLoading}
-                  type="submit"
-                  variant="contained"
-                  size="small"
-                  color="primary"
-                >
+                <LoadingButton loading={isLoading} type="submit" variant="contained" size="small">
                   Submit Leave Request
                 </LoadingButton>
               )}
 
               {editData && (
                 <>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    color="primary"
-                    onClick={async () => {
-                      setFieldValue('status', EmployeeLeaveStatusType.Approved);
-                      // submitForm();
-                      await changeStatus({
-                        id: editData.id,
-                        body: {
-                          status: EmployeeLeaveStatusType.Approved,
-                          rejectionReason: '',
-                        },
-                      });
-                      handleClose?.();
-                    }}
-                    style={{ marginRight: '10px' }}
-                  >
-                    Approve
-                  </Button>
+                  {editData.status !== EmployeeLeaveStatusType.Rejected && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color="primary"
+                      onClick={async () => {
+                        setFieldValue('status', EmployeeLeaveStatusType.Approved);
+                        // submitForm();
+                        await changeStatus({
+                          id: editData.id,
+                          body: {
+                            status: EmployeeLeaveStatusType.Approved,
+                            rejectionReason: '',
+                          },
+                        });
+                        handleClose?.();
+                      }}
+                      style={{ marginRight: '10px' }}
+                    >
+                      Approve
+                    </Button>
+                  )}
                   <Button
                     variant="contained"
                     size="small"
@@ -265,32 +308,31 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   </Button>
                 </>
               )}
-
-              {values.status === EmployeeLeaveStatusType.Rejected && (
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="outlined"
-                    value={values.rejectionReason}
-                    label="Rejection Reason"
-                    onChange={(e) => setFieldValue('rejectionReason', e.target.value)}
-                    error={touched.rejectionReason && Boolean(errors.rejectionReason)}
-                    helperText={touched.rejectionReason && errors.rejectionReason}
-                    sx={{ my: 1 }}
-                  />
-                  <LoadingButton
-                    loading={isChangeStatusLoading}
-                    variant="contained"
-                    type="submit"
-                    sx={{ mt: 2 }}
-                  >
-                    Submit
-                  </LoadingButton>
-                </Grid>
-              )}
             </Grid>
+            {values.status === EmployeeLeaveStatusType.Rejected && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  value={values.rejectionReason}
+                  label="Rejection Reason"
+                  onChange={(e) => setFieldValue('rejectionReason', e.target.value)}
+                  error={touched.rejectionReason && Boolean(errors.rejectionReason)}
+                  helperText={touched.rejectionReason && errors.rejectionReason}
+                  sx={{ my: 1 }}
+                />
+                <LoadingButton
+                  loading={isChangeStatusLoading}
+                  variant="contained"
+                  type="submit"
+                  sx={{ mt: 2 }}
+                >
+                  Submit
+                </LoadingButton>
+              </Grid>
+            )}
           </Grid>
         </Form>
       )}

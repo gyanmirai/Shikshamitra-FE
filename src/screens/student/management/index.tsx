@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
@@ -71,9 +71,10 @@ const StudentManagementScreen = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  const tabs = useTabs('grGeneration');
+  // const tabs = useTabs('grGeneration');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const CurrentComponent = TABS.find((tab) => tab.value === searchParams.tab)?.component;
   return (
     <Box>
       <CustomBreadcrumbs
@@ -120,8 +121,8 @@ const StudentManagementScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(_, val) => setSearchParams({ tab: val })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >

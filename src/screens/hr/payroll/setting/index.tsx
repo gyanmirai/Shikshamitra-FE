@@ -10,7 +10,6 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PF from './pf';
-import TDS from './tds';
 import AddPayElement from './add-pay-element';
 import ProfessionalTax from './professional-tax';
 
@@ -26,7 +25,7 @@ const TABS = [
     component: () => <PF />,
   },
   { value: 'professionalTax', label: 'Professional Tax', component: () => <ProfessionalTax /> },
-  { value: 'tds', label: 'TDS', component: () => <TDS /> },
+  // { value: 'tds', label: 'TDS', component: () => <TDS /> },
 ];
 
 const PayrollSettingScreen = () => {

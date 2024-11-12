@@ -34,6 +34,7 @@ const Overview = () => {
             flexGrow: 1,
             background: varAlpha(theme.palette.primary.mainChannel, 0.21),
             cursor: 'pointer',
+            height: '100%',
           }}
           onClick={() => router.push('/student/enrollment/inquiry')}
         >
@@ -63,6 +64,7 @@ const Overview = () => {
             flexGrow: 1,
             background: varAlpha(theme.palette.secondary.mainChannel, 0.21),
             cursor: 'pointer',
+            height: '100%',
           }}
           onClick={() => router.push('/student/enrollment/registration')}
         >
@@ -92,6 +94,7 @@ const Overview = () => {
             gap: 5,
             background: varAlpha(theme.palette.warning.mainChannel, 0.21),
             cursor: 'pointer',
+            height: '100%',
           }}
           onClick={() => router.push('/student/enrollment/admission')}
         >
