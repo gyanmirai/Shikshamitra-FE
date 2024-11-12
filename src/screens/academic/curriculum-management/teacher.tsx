@@ -3,6 +3,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import { useFormik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
+import Grid2 from '@mui/material/Unstable_Grid2';
 import {
   Box,
   Grid,
@@ -146,57 +147,59 @@ const Teacher = (props: TabComponentType) => {
           onChange={(value) => setSelectedSubject(value as string)}
         />
       </Box>
-      <CustomizableTable
-        columns={[
-          {
-            id: 'id',
-            label: 'Id',
-          },
-          {
-            id: 'subject',
-            label: 'Subject',
-          },
-          {
-            id: 'className',
-            label: 'Class',
-          },
-          {
-            id: 'assignedTeacher',
-            label: 'Assigned Teacher',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip key={audience} label={audience} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={() => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          dialog.onTrue();
-                          setSelectedTeacher(row as any);
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                        Reassign Teacher
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
+      <Grid2 container spacing={3}>
+        <CustomizableTable
+          columns={[
+            {
+              id: 'id',
+              label: 'Id',
             },
-          },
-        ]}
-        data={filteredData}
-      />
+            {
+              id: 'subject',
+              label: 'Subject',
+            },
+            {
+              id: 'className',
+              label: 'Class',
+            },
+            {
+              id: 'assignedTeacher',
+              label: 'Assigned Teacher',
+              render: (value) => (
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  {value.map((audience: string) => (
+                    <Chip key={audience} label={audience} size="small" variant="outlined" />
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={() => (
+                      <MenuList>
+                        <MenuItem
+                          onClick={() => {
+                            dialog.onTrue();
+                            setSelectedTeacher(row as any);
+                          }}
+                        >
+                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                          Reassign Teacher
+                        </MenuItem>
+                      </MenuList>
+                    )}
+                  />
+                );
+              },
+            },
+          ]}
+          data={filteredData}
+        />
+      </Grid2>
       <CustomDialog
         title="Reassign Teacher"
         open={dialog.value}
