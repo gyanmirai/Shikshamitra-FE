@@ -18,7 +18,7 @@ type CustomSelectProps<T extends string, J extends boolean> = Omit<
   SelectProps<string | string[]>,
   'onChange' | 'value'
 > & {
-  options: { [K in T]: string }[];
+  options: { [K in T]: string | number }[];
   label: string;
   multiple?: J;
   value: J extends true ? string[] : string;
@@ -101,7 +101,7 @@ const CustomSelect = <T extends string, J extends boolean>({
           options.map((option) => (
             <MenuItem key={option[valueKey]} value={option[valueKey]}>
               {multiple && (
-                <Checkbox checked={(value as string[]).indexOf(option[valueKey]) > -1} />
+                <Checkbox checked={(value as string[]).indexOf(option[valueKey] as string) > -1} />
               )}
               <ListItemText primary={option[labelKey]} />
             </MenuItem>

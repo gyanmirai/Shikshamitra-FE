@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import CarriculumListDashboardComponent from './component/carriculum-list-dashboard-component';
@@ -5,7 +7,7 @@ import CarriculumnDashboardOverviewComponent from './component/carriculumn-dashb
 import CarriculumContentviewDashboardComponent from './component/carriculum-contentview-dashboard-component';
 import CarriculumDetailedviewDashboardComponent from './component/cariculum-detailedview-dashboard-component';
 
-const CarriculumDashboardTab = () => (
+const CarriculumDashboardTab = (props: TabComponentType) => (
   <>
     <CarriculumnDashboardOverviewComponent />
     <CarriculumListDashboardComponent />

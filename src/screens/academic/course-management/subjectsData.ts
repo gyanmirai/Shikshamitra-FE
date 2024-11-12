@@ -30,7 +30,8 @@ interface Chapter {
 // Define the Subject interface
 interface Subject {
   name: string;
-  assignedTeacher: string;
+  primaryTeacher: string;
+  secondaryTeacher: string[] | null;
   progress: number;
   material: {
     videos: number;
@@ -71,7 +72,8 @@ export const subjectTempData = {
           subjects: [
             {
               name: 'Math',
-              assignedTeacher: 'Jeny',
+              primaryTeacher: 'Ms. Johnson',
+              secondaryTeacher: ['Mr. Smith'],
               progress: 20,
               material: {
                 videos: 50,
@@ -85,6 +87,7 @@ export const subjectTempData = {
                   content: 'Introduction to algebraic expressions and equations.',
                   timeLine: '12/01/2025',
                   documents: [],
+                  assignedTeacher: 'Mr. Smith',
                   assignments: [
                     { title: 'Algebra Assignment', dueDate: '01-01-2024', status: 'Pending' },
                     { title: 'Geometry Assignment', dueDate: '01-02-2024', status: 'Received' },
@@ -95,6 +98,7 @@ export const subjectTempData = {
                   chapterName: 'Geometry',
                   content: 'Basic geometric concepts and theorems.',
                   timeLine: '10/05/2025',
+                  assignedTeacher: 'Mr. Smith',
                   documents: [],
                   progress: 60,
                   assignments: [
@@ -106,7 +110,8 @@ export const subjectTempData = {
             },
             {
               name: 'Science',
-              assignedTeacher: 'Heny',
+              primaryTeacher: 'Ms. Johnson',
+              secondaryTeacher: ['Mr. Smith'],
               progress: 50,
               material: {
                 videos: 65,
@@ -117,6 +122,7 @@ export const subjectTempData = {
                   id: 3,
                   chapterName: 'Physics Basics',
                   progress: 60,
+                  assignedTeacher: 'Mr. Smith',
                   content: 'Introduction to physics and its principles.',
                   timeLine: '05/01/2025',
                   documents: [],
@@ -135,7 +141,8 @@ export const subjectTempData = {
           subjects: [
             {
               name: 'Math',
-              assignedTeacher: 'Helly',
+              primaryTeacher: 'Ms. Johnson',
+              secondaryTeacher: ['Mr. Smith'],
               progress: 80,
               material: {
                 videos: 50,
@@ -145,6 +152,7 @@ export const subjectTempData = {
                 {
                   id: 1,
                   chapterName: 'Algebra Basics',
+                  assignedTeacher: 'Mr. Smith',
                   progress: 60,
                   content: 'Introduction to algebraic expressions and equations.',
                   timeLine: '05/01/2025',
@@ -156,6 +164,7 @@ export const subjectTempData = {
                 {
                   id: 2,
                   chapterName: 'Geometry',
+                  assignedTeacher: 'Mr. Smith',
                   content: 'Basic geometric concepts and theorems.',
                   timeLine: '06/01/2025',
                   documents: [],
@@ -181,7 +190,8 @@ export const subjectTempData = {
           subjects: [
             {
               name: 'Biology',
-              assignedTeacher: 'Kreni',
+              primaryTeacher: 'Ms. Johnson',
+              secondaryTeacher: ['Mr. Smith'],
               progress: 92,
               material: {
                 videos: 50,
@@ -191,6 +201,7 @@ export const subjectTempData = {
                 {
                   id: 4,
                   chapterName: 'Cell Biology',
+                  assignedTeacher: 'Mr. Smith',
                   progress: 80,
                   content: 'Study of cell structure and function.',
                   timeLine: '20/01/2025',

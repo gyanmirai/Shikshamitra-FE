@@ -23,6 +23,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
 type PeriodSetting = {
   label: string;
@@ -55,7 +56,7 @@ type AssignedTeacher = {
   optionList: string[];
 };
 
-const TimeScheduleManagementSetting = () => {
+const TimeScheduleManagementSetting = (props: TabComponentType) => {
   const [selectedEntry, setSelectedEntry] = useState(tableData);
   const [isEdit, setIsEdit] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);

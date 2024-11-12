@@ -72,6 +72,7 @@ const AdmissionOverTime = () => {
             theme.palette.error.main,
           ],
         }}
+        sx={{ height: '100%' }}
       />
     </Grid2>
   );

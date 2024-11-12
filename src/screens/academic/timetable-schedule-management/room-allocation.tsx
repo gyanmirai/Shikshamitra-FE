@@ -5,8 +5,9 @@ import { FiberManualRecord } from '@mui/icons-material';
 import { Box, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
-const RoomAllocation = () => (
+const RoomAllocation = (props: TabComponentType) => (
   <Box>
     <Grid2 container spacing={2}>
       <Grid2 xs={8}>

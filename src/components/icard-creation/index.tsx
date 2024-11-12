@@ -4,8 +4,8 @@ import { MuiColorInput } from 'mui-color-input';
 import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 
-import { Add } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
+import { Add, Cancel } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
@@ -243,13 +243,26 @@ const StudentIDCardCreator = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Box display="flex" justifyContent="flex-end" gap={2} alignItems="center" mb={2}>
+        <Button startIcon={<Add />} variant="contained" onClick={() => setOpenFieldDialog(true)}>
+          Add Field
+        </Button>
+        <Button variant="contained" color="primary" onClick={handleSaveConfiguration}>
+          Save
+        </Button>
+
+        <Button color="warning" variant="contained" onClick={handlePrint}>
+          Print ID Card
+        </Button>
+      </Box>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid item xs={4}>
           <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
               label="Card Width"
               type="number"
               size="small"
+              fullWidth
               value={cardDimensions.width}
               onChange={(e) =>
                 setCardDimensions({
@@ -257,13 +270,13 @@ const StudentIDCardCreator = () => {
                   width: Number(e.target.value),
                 })
               }
-              sx={{ mr: 2 }}
             />
             <TextField
               label="Card Height"
               type="number"
               value={cardDimensions.height}
               size="small"
+              fullWidth
               onChange={(e) =>
                 setCardDimensions({
                   ...cardDimensions,
@@ -271,42 +284,33 @@ const StudentIDCardCreator = () => {
                 })
               }
             />
+            <MuiColorInput
+              format="hex"
+              value={cardBackgroundColor}
+              onChange={(color) => setCardBackgroundColor(color)}
+              fullWidth
+              placeholder="Select background color"
+              label="Background Color"
+              size="small"
+            />
             <Input
               type="file"
               onChange={handleBackgroundImageUpload}
               sx={{ mr: 2 }}
               inputProps={{ accept: 'image/*' }}
-            />
-            <Button variant="contained" onClick={() => setCardBackground(null)}>
-              Remove BackRound
-            </Button>
-            <MuiColorInput
-              format="hex"
-              value={cardBackgroundColor}
-              onChange={(color) => setCardBackgroundColor(color)}
+              fullWidth
             />
             <Button
-              startIcon={<Add />}
-              variant="contained"
-              onClick={() => setOpenFieldDialog(true)}
+              startIcon={<Cancel />}
+              variant="outlined"
+              onClick={() => setCardBackground(null)}
+              disabled={!cardBackground}
             >
-              Add Field
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleSaveConfiguration}>
-              Save
-            </Button>
-            {/* <Button variant="contained" onClick={handleLoadConfiguration} sx={{ mr: 2 }}>
-          Load Configuration
-        </Button>
-        <Button variant="contained" onClick={handleAddStudentData} sx={{ mr: 2 }}>
-          Add Student Data
-        </Button> */}
-            <Button color="warning" variant="contained" onClick={handlePrint}>
-              Print ID Card
+              Remove Background Image
             </Button>
           </Box>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={8}>
           <Paper
             ref={printRef}
             elevation={4}
@@ -456,6 +460,7 @@ const StudentIDCardCreator = () => {
               <MuiColorInput
                 label="Box Background Color"
                 format="hex"
+                fullWidth
                 value={newField.style.backgroundColor || '#ffffff'}
                 onChange={(color) => {
                   setNewField({

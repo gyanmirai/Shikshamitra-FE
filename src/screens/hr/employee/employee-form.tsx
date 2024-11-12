@@ -7,8 +7,10 @@ import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Grid,
   Slide,
   Select,
+  Divider,
   MenuItem,
   TextField,
   InputLabel,
@@ -28,7 +30,9 @@ import { useAddEmployeeMutation, useUpdateEmployeeMutation } from 'src/redux/emp
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
+import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
@@ -92,7 +96,7 @@ const RenderRole = (props: any) => {
   });
   const { formik } = props;
   return (
-    <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
+    <FormControl fullWidth>
       <InputLabel id="Roles-select-label" size="small">
         Roles
       </InputLabel>
@@ -123,6 +127,19 @@ const RenderRole = (props: any) => {
         )}
       </Select>
     </FormControl>
+  );
+};
+
+const RenderPfRules = (props: any) => {
+  const a = null;
+  return (
+    <CustomSelect
+      options={[]}
+      label="PF Rule"
+      value=""
+      onChange={() => {}}
+      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+    />
   );
 };
 
@@ -194,7 +211,7 @@ const InformationFields: FieldsType[] = [
     name: 'gender',
     placeholder: 'Select Gender',
     renderComp: (props) => (
-      <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
+      <FormControl fullWidth>
         <InputLabel id="dropdown-label" size="small">
           Gender
         </InputLabel>
@@ -236,12 +253,38 @@ const InformationFields: FieldsType[] = [
     label: 'Mobile No.',
     name: 'mobileNo',
     placeholder: 'Enter Mobile No.',
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="mobileNo"
+          value={formik.values.mobileNo}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('mobileNo', value);
+          }}
+          placeholder="Enter Mobile No."
+          error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
+        />
+      );
+    },
   },
   {
     type: 'text',
     label: 'Email',
     name: 'email',
     placeholder: 'Enter Email',
+    otherProps: {
+      InputProps: {
+        startAdornment: (
+          <>
+            <Iconify icon="mdi-light:email" />{' '}
+            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+          </>
+        ),
+      },
+    },
   },
 
   {
@@ -269,7 +312,7 @@ const InformationFields: FieldsType[] = [
     name: 'employeeGroup',
     placeholder: 'Select Employee Group',
     renderComp: (props) => (
-      <FormControl sx={{ maxWidth: '200px', width: '100%' }}>
+      <FormControl fullWidth>
         <InputLabel id="dropdown-label" size="small">
           Employee Group
         </InputLabel>
@@ -321,14 +364,28 @@ const InformationFields: FieldsType[] = [
   },
   {
     type: 'text',
-    label: 'Address',
-    name: 'address',
-    placeholder: 'Enter Address',
-    otherProps: {
-      multiline: true,
-      rows: 3,
-    },
+    label: 'State',
+    name: 'state',
+    placeholder: 'State',
   },
+  {
+    type: 'text',
+    label: 'City',
+    name: 'city',
+    placeholder: 'Enter District',
+  },
+  { type: 'text', label: 'Pincode', name: 'pincode', placeholder: 'Enter Pincode' },
+
+  // {
+  //   type: 'text',
+  //   label: 'Address',
+  //   name: 'address',
+  //   placeholder: 'Enter Address',
+  //   otherProps: {
+  //     multiline: true,
+  //     rows: 3,
+  //   },
+  // },
 ];
 
 const PersonalFields: FieldsType[] = [
@@ -349,6 +406,22 @@ const PersonalFields: FieldsType[] = [
     label: 'Father Contact No.',
     name: 'fatherContactNo',
     placeholder: 'Enter Father Contact No.',
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="fatherContactNo"
+          value={formik.values.fatherContactNo}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('fatherContactNo', value);
+          }}
+          placeholder="Enter Father Contact No."
+          error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
+        />
+      );
+    },
   },
   {
     type: 'text',
@@ -373,6 +446,22 @@ const PersonalFields: FieldsType[] = [
     label: 'Mother Contact No.',
     name: 'motherContactNo',
     placeholder: 'Enter Mother Contact No.',
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="motherContactNo"
+          value={formik.values.motherContactNo}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('motherContactNo', value);
+          }}
+          placeholder="Enter Mother Contact No."
+          error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
+        />
+      );
+    },
   },
   {
     type: 'text',
@@ -397,6 +486,22 @@ const PersonalFields: FieldsType[] = [
     label: 'Spouse Contact No.',
     name: 'spouseContactNo',
     placeholder: 'Enter Spouse Contact No.',
+    renderComp(props) {
+      const { formik } = props;
+
+      return (
+        <PhoneInput
+          name="spouseContactNo"
+          value={formik.values.spouseContactNo}
+          onChange={(value) => {
+            console.log(value, 'value====>');
+            formik.setFieldValue('spouseContactNo', value);
+          }}
+          placeholder="Enter Spouse Contact No."
+          error={formik.touched.spouseContactNo && Boolean(formik.errors.spouseContactNo)}
+        />
+      );
+    },
   },
   {
     type: 'text',
@@ -506,6 +611,15 @@ export const PayrollFields: FieldsType[] = [
     placeholder: 'Select PF Type',
   },
   {
+    type: 'dropdown',
+    label: 'PF Rule',
+    name: 'pfRule',
+    placeholder: 'Select PF Rule',
+    renderComp(props) {
+      return <RenderPfRules props={props} />;
+    },
+  },
+  {
     type: 'text',
     label: 'EPF Number',
     name: 'epfNumber',
@@ -534,6 +648,18 @@ export const PayrollFields: FieldsType[] = [
     label: 'Shift Name',
     name: 'shiftName',
     placeholder: 'Enter Shift Name',
+  },
+  {
+    type: 'text',
+    label: 'TDS Percentage',
+    name: 'tdsPercentage',
+    placeholder: 'Enter TDS Percentage',
+  },
+  {
+    type: 'text',
+    label: 'TDS Amount',
+    name: 'tdsAmount',
+    placeholder: 'Enter TDS Amount',
   },
 ];
 const PerformanceAndDevelopmentFields: FieldsType[] = [
@@ -587,7 +713,7 @@ const allFields: FieldsType[][] = [
   CertificateFields,
   WorkExperienceFields,
   PayrollFields,
-  PerformanceAndDevelopmentFields,
+  // PerformanceAndDevelopmentFields,
 ];
 
 const steps = [
@@ -596,7 +722,7 @@ const steps = [
   'Documents',
   'Work Experience',
   'Payroll',
-  'Performance and Development',
+  // 'Performance and Development',
 ];
 
 const EmployeeFrom = ({ editData }: any) => {
@@ -647,7 +773,10 @@ const EmployeeFrom = ({ editData }: any) => {
         identificationMark1: editData ? editData.identificationMark1 : '',
         identificationMark2: editData ? editData.identificationMark2 : '',
         identificationMark3: editData ? editData.identificationMark3 : '',
-        address: editData ? editData.address : '',
+        state: editData ? editData?.state : '',
+        city: editData ? editData?.city : '',
+        pinCode: editData ? editData?.pinCode : '',
+        // address: editData ? editData.address : '',
         // ===============================================================================
 
         userId: editData ? editData.userId : '',
@@ -890,45 +1019,57 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                   </Box>
                 )}
                 <Box p={2} display={step === 2 ? 'block' : 'flex'} flexWrap="wrap" gap={2}>
-                  {' '}
-                  {allFields[step].map((field) =>
-                    field.renderComp ? (
-                      field.renderComp({ formik, field })
-                    ) : field.type === 'date' ? (
-                      <DatePicker
-                        label={field.label}
-                        name={field.name}
-                        value={formik.values[field.name]}
-                        format="DD/MM/YYYY"
-                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                        sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                        slotProps={{
-                          textField: {
-                            placeholder: field.placeholder,
-                            size: 'small',
-                            helperText: formik.touched[field.name] && formik.errors[field.name],
-                            error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                          },
-                        }}
-                      />
-                    ) : (
-                      <TextField
+                  <Grid container spacing={2}>
+                    {' '}
+                    {allFields[step].map((field) => (
+                      <Grid
+                        item
+                        xs={[2, 3].includes(step) ? 12 : 4}
+                        md={[2, 3].includes(step) ? 12 : 4}
                         key={field.name}
-                        type={field.type}
-                        size="small"
-                        label={field.label}
-                        name={field.name}
-                        placeholder={field.placeholder}
-                        value={formik.values[field.name]}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                        helperText={formik.touched[field.name] && formik.errors[field.name]}
-                        sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                        {...(field?.otherProps || {})}
-                      />
-                    )
-                  )}
+                      >
+                        {field.renderComp ? (
+                          field.renderComp({ formik, field })
+                        ) : field.type === 'date' ? (
+                          <DatePicker
+                            label={field.label}
+                            name={field.name}
+                            value={formik.values[field.name]}
+                            format="DD/MM/YYYY"
+                            onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                            sx={{ ...(field?.sx || {}) }}
+                            slotProps={{
+                              textField: {
+                                placeholder: field.placeholder,
+                                fullWidth: true,
+                                size: 'small',
+                                helperText: formik.touched[field.name] && formik.errors[field.name],
+                                error:
+                                  formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                              },
+                            }}
+                          />
+                        ) : (
+                          <TextField
+                            key={field.name}
+                            type={field.type}
+                            size="small"
+                            label={field.label}
+                            name={field.name}
+                            placeholder={field.placeholder}
+                            value={formik.values[field.name]}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                            helperText={formik.touched[field.name] && formik.errors[field.name]}
+                            fullWidth
+                            sx={{ ...(field?.sx || {}) }}
+                            {...(field?.otherProps || {})}
+                          />
+                        )}
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Box>
               </Box>
             </Slide>

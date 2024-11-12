@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Standards, Organization } from 'src/types/school';
+import type { Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useRef, useState, useEffect } from 'react';
@@ -15,20 +15,30 @@ import IcardTemplate from 'src/templates/icard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import StudentIDCardCreator from 'src/components/icard-creation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const EmployeeIcardScreen = () => {
+import IcardPreview from './icard-preview';
+
+const StudentIcardScreen = () => {
   const dialog = useBoolean();
+  const previewDialog = useBoolean();
+
+  const [cardDimensions, setCardDimensions] = useState();
+
+  const [cardBackgroundColor, setCardBackgroundColor] = useState();
+  const [cardBackground, setCardBackground] = useState();
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Employee I-Card"
-        links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
+        heading="I-Card"
+        links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
@@ -38,7 +48,7 @@ const EmployeeIcardScreen = () => {
       />
       <CustomizableTable
         columns={[
-          { label: 'Class', id: 'class' },
+          { label: 'Organization', id: 'organization' },
           {
             label: 'Status',
             id: 'status',
@@ -54,7 +64,7 @@ const EmployeeIcardScreen = () => {
                 <ThreeDotsActions
                   actions={() => (
                     <MenuList>
-                      <MenuItem>
+                      <MenuItem onClick={previewDialog.onTrue}>
                         <Iconify icon="mdi:eye" />
                         Preview
                       </MenuItem>
@@ -78,29 +88,39 @@ const EmployeeIcardScreen = () => {
           },
         ]}
         data={[
-          { class: 'Class 1', status: 'Pending' },
-          { class: 'Class 2', status: 'Completed' },
-          { class: 'Class 3', status: 'Pending' },
-          { class: 'Class 4', status: 'Completed' },
-          { class: 'Class 5', status: 'Pending' },
+          { organization: 'Primary', status: 'Pending' },
+          { organization: 'Pre Primary', status: 'Completed' },
         ]}
       />
-      <CustomDialog maxWidth="lg" title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
-        <Box p={2}>
-          <EmployeeICardForm handleClose={dialog.onFalse} />
-        </Box>
+      <CustomDialog fullScreen title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
+        <Scrollbar sx={{ p: 2 }}>
+          <StudentICardForm handleClose={dialog.onFalse} />
+        </Scrollbar>
+      </CustomDialog>
+      <CustomDialog
+        maxWidth="lg"
+        title="Preview"
+        open={previewDialog.value}
+        handleClose={previewDialog.onFalse}
+      >
+        <IcardPreview
+          cardDimensions={cardDimensions}
+          cardBackgroundColor={cardBackgroundColor}
+          cardBackground={cardBackground}
+          fields={[]}
+        />
       </CustomDialog>
     </Box>
   );
 };
 
-export default EmployeeIcardScreen;
+export default StudentIcardScreen;
 
-const EmployeeICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Element => {
+const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Element => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
+
+  const isCustom = useBoolean();
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -122,10 +142,6 @@ const EmployeeICardForm = ({ handleClose }: { handleClose: () => void }): JSX.El
     setOrganization('all');
   }, [medium]);
 
-  useEffect(() => {
-    setAllClass(allOrganization.find((i) => i.id === organization)?.standards || []);
-  }, [allOrganization, organization]);
-
   const handleSave = (data: Record<string, any>) => {
     console.log(data);
     Template.current = null;
@@ -134,7 +150,14 @@ const EmployeeICardForm = ({ handleClose }: { handleClose: () => void }): JSX.El
   };
 
   return (
-    <Box>
+    <Scrollbar
+      sx={{
+        height: '100%',
+        p: 2,
+        bgcolor: 'background.neutral',
+        '& .simplebar-content': { height: '100%' },
+      }}
+    >
       {selectedTemplate === null && (
         <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
           <CustomSelect
@@ -147,68 +170,63 @@ const EmployeeICardForm = ({ handleClose }: { handleClose: () => void }): JSX.El
             formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             disabled={!medium}
           />
-          {organization !== 'all' && (
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val: string | string[]) => setClass(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!organization}
-            />
+
+          {!isCustom.value && (
+            <Button variant="contained" onClick={isCustom.onTrue}>
+              Create Custom I-card
+            </Button>
           )}
         </Box>
       )}
 
-      {(classes || organization === 'all') &&
-        (selectedTemplate === null ? (
-          <>
-            <Typography variant="h6" mb={2}>
-              Choose Template
-            </Typography>
-            <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
-              {Object.values(IcardTemplate).map((CurrentTemplate, index) => {
-                const Comp = CurrentTemplate.default;
-                return (
-                  <Paper
-                    sx={{
-                      height: 'max-content',
-                      borderRadius: 2,
-                      '&:hover': {
-                        boxShadow: 'var(--shadows-4)',
-                      },
-                    }}
-                    onClick={() => handelClick(index + 1)}
-                  >
-                    <Comp isShowSettings={false} />
-                  </Paper>
-                );
-              })}
-            </Box>
-          </>
-        ) : (
-          <>
-            {isLoading.value ? (
-              <LoadingScreen />
-            ) : (
-              <>
-                <IconButton
-                  sx={{ mb: 1 }}
-                  onClick={() => {
-                    Template.current = null;
-                    setSelectedTemplate(null);
+      {isCustom.value ? (
+        <StudentIDCardCreator />
+      ) : selectedTemplate === null ? (
+        <>
+          <Typography variant="h6" mb={2}>
+            Choose Template
+          </Typography>
+          <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
+            {Object.values(IcardTemplate).map((CurrentTemplate, index) => {
+              const Comp = CurrentTemplate.default;
+              return (
+                <Paper
+                  sx={{
+                    height: 'max-content',
+                    borderRadius: 2,
+                    '&:hover': {
+                      boxShadow: 'var(--shadows-4)',
+                    },
                   }}
+                  onClick={() => handelClick(index + 1)}
                 >
-                  <ArrowBack />
-                </IconButton>
-                {/* eslint-disable-next-line react/jsx-pascal-case */}
-                <Template.current isShowSettings onSave={handleSave} />
-              </>
-            )}
-          </>
-        ))}
-    </Box>
+                  <Comp isShowSettings={false} />
+                </Paper>
+              );
+            })}
+          </Box>
+        </>
+      ) : (
+        <>
+          {isLoading.value ? (
+            <LoadingScreen />
+          ) : (
+            <>
+              <IconButton
+                sx={{ mb: 1 }}
+                onClick={() => {
+                  Template.current = null;
+                  setSelectedTemplate(null);
+                }}
+              >
+                <ArrowBack />
+              </IconButton>
+              {/* eslint-disable-next-line react/jsx-pascal-case */}
+              <Template.current isShowSettings onSave={handleSave} />
+            </>
+          )}
+        </>
+      )}
+    </Scrollbar>
   );
 };

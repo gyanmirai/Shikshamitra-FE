@@ -1,4 +1,5 @@
-import type { EventSourceInput } from '@fullcalendar/core';
+import type { ICalendarEvent } from 'src/types/calendar';
+import type { EventClickArg, EventSourceInput } from '@fullcalendar/core';
 
 import React, { useEffect } from 'react';
 import Calendar from '@fullcalendar/react';
@@ -10,8 +11,6 @@ import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
 
 import { Card } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fDate } from 'src/utils/format-time';
 
@@ -26,10 +25,18 @@ const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' }
 interface CommonCalenderProps {
   data: EventSourceInput | undefined;
   isLoading: boolean;
+  onEventDrop?: (eventData: Partial<ICalendarEvent>) => void;
+  onEventResize?: (eventData: Partial<ICalendarEvent>) => void;
+  onDateClick?: (arg: EventClickArg) => void;
 }
 
-const CommonCalender = ({ data, isLoading }: CommonCalenderProps) => {
-  const openFilters = useBoolean();
+const CommonCalender = ({
+  data,
+  isLoading,
+  onEventDrop = () => {},
+  onEventResize = () => {},
+  onDateClick = () => {},
+}: CommonCalenderProps) => {
   const {
     calendarRef,
     //
@@ -42,15 +49,11 @@ const CommonCalender = ({ data, isLoading }: CommonCalenderProps) => {
     onDropEvent,
     onChangeView,
     onSelectRange,
-    onClickEvent,
+
     onResizeEvent,
     onInitialView,
     //
-    openForm,
-    // onOpenForm,
-    onCloseForm,
-    //
-    selectEventId,
+
     selectedRange,
     //
     // onClickEventInFilters,
@@ -73,7 +76,7 @@ const CommonCalender = ({ data, isLoading }: CommonCalenderProps) => {
             onPrevDate={onDatePrev}
             onToday={onDateToday}
             onChangeView={onChangeView}
-            onOpenFilters={openFilters.onTrue}
+            onOpenFilters={() => {}}
           />
 
           <Calendar
@@ -92,13 +95,13 @@ const CommonCalender = ({ data, isLoading }: CommonCalenderProps) => {
             events={data || []}
             headerToolbar={false}
             select={onSelectRange}
-            eventClick={onClickEvent}
+            eventClick={(props) => onDateClick(props)}
             aspectRatio={3}
             eventDrop={(arg) => {
-              // onDropEvent(arg, updateEvent);
+              onDropEvent(arg, onEventDrop);
             }}
             eventResize={(arg) => {
-              //   onResizeEvent(arg, updateEvent);
+              onResizeEvent(arg, onEventResize);
             }}
             plugins={[listPlugin, dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
           />

@@ -1,4 +1,5 @@
 import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 
@@ -13,7 +14,7 @@ import { SchoolTimetableCalendar } from 'src/sections/calendar/view';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 
-const CurrentTimetableOverview = () => {
+const CurrentTimetableOverview = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
   const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
   const [division, setDivision] = useState<any>();

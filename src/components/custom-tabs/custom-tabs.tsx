@@ -1,5 +1,8 @@
+import type { RootState } from 'src/redux/store';
 import type { TabsProps } from '@mui/material/Tabs';
 import type { Theme, SxProps } from '@mui/material/styles';
+
+import { useSelector, useDispatch } from 'react-redux';
 
 import NoSsr from '@mui/material/NoSsr';
 import { tabClasses } from '@mui/material/Tab';
@@ -7,6 +10,7 @@ import { useTheme } from '@mui/material/styles';
 import Tabs, { tabsClasses } from '@mui/material/Tabs';
 
 import { stylesMode } from 'src/theme/styles';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 // ----------------------------------------------------------------------
 
@@ -21,8 +25,10 @@ export type CustomTabsProps = TabsProps & {
   };
 };
 
-export function CustomTabs({ children, slotProps, sx, ...other }: CustomTabsProps) {
+export function CustomTabs({ children, slotProps, sx, onChange, ...other }: CustomTabsProps) {
   const theme = useTheme();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   return (
     <Tabs
@@ -71,6 +77,14 @@ export function CustomTabs({ children, slotProps, sx, ...other }: CustomTabsProp
           },
         },
         ...sx,
+      }}
+      onChange={(e, val) => {
+        if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+          onChange?.(e, val);
+          dispatch(setIsChanges(false));
+        } else if (!isChanges) {
+          onChange?.(e, val);
+        }
       }}
       {...other}
       TabIndicatorProps={{

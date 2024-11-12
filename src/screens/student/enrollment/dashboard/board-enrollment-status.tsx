@@ -4,25 +4,14 @@ import type { ChartOptions } from 'src/components/chart';
 import React from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { FiberManualRecord } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  List,
-  alpha,
-  useTheme,
-  ListItem,
-  CardHeader,
-  ListItemIcon,
-  ListItemText,
-} from '@mui/material';
+import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
 import { Chart, useChart } from 'src/components/chart';
 
 const BoardEnrollmentStatus = () => (
-  <Grid2 xs={6} height="100%">
+  <Grid2 xs={6}>
     <Box
       display="flex"
       flexDirection="column"
@@ -42,10 +31,10 @@ const BoardEnrollmentStatus = () => (
           categories: ['enrolled', 'pending', 'declined'],
           series: [{ name: '', data: [44, 55, 41] }],
         }}
-        sx={{ boxShadow: 'none' }}
+        sx={{ boxShadow: 'none', height: '100%' }}
       />
 
-      <List>
+      {/* <List>
         <ListItem>
           <ListItemIcon>
             <FiberManualRecord sx={{ fontSize: 8 }} />
@@ -64,7 +53,7 @@ const BoardEnrollmentStatus = () => (
           </ListItemIcon>
           <ListItemText primary="Declined Applications - 20 Declined" />
         </ListItem>
-      </List>
+      </List> */}
     </Box>
   </Grid2>
 );

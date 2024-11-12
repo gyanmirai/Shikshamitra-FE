@@ -4,3 +4,9 @@ export enum EmployeeAttendanceStatus {
   FullDayLeave,
   All,
 }
+
+export enum EmployeeAttendanceStatusColor {
+  Present = 'success',
+  HalfDayLeave = 'warning',
+  FullDayLeave = 'error',
+}

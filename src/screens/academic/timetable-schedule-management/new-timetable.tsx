@@ -16,6 +16,7 @@ import CustomSelect from 'src/components/custom-select';
 
 // eslint-disable-next-line import/no-cycle
 import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const classRoomData = [
@@ -23,7 +24,8 @@ export const classRoomData = [
   { id: '2', name: '102' },
   { id: '3', name: '103' },
 ];
-const NewTimetable = () => {
+
+const NewTimetable = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
   const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
   const [division, setDivision] = useState<any>();

@@ -964,7 +964,7 @@ export const DetailRow = ({ label, value, icon }: any) => (
 const AnnouncementDetails = ({ announcement }: any) => (
   <Box>
     <Scrollbar sx={{ height: '400px' }}>
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
         <Iconify icon="mdi:bullhorn-outline" className="text-gray-500 w-6 h-6" />
         <Typography variant="h6" className="font-semibold">
           {announcement?.title}

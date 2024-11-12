@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card, Button } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -13,7 +15,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Reports from './reports';
 import NewTimetable from './new-timetable';
 import RoomAllocation from './room-allocation';
-import TeacherManagement from './teacher-management';
 import CurrentTimetableOverview from './current-timetable-overvirew';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
@@ -22,39 +23,54 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <TimeScheduleManagementDashboardTab />,
+    component: (props: TabComponentType) => <TimeScheduleManagementDashboardTab {...props} />,
   },
   {
     value: 'currentTimetableOverview',
     label: 'Current Timetable Overview',
-    component: () => <CurrentTimetableOverview />,
+    component: (props: TabComponentType) => <CurrentTimetableOverview {...props} />,
   },
   {
     value: 'createNewTimetable',
     label: 'Create New Timetable',
-    component: () => <NewTimetable />,
+    component: (props: TabComponentType) => <NewTimetable {...props} />,
   },
 
+  // {
+  //   value: 'teacherManagement',
+  //   label: 'Teacher Management',
+  //   component: (props: TabComponentType) => <TeacherManagement {...props} />,
+  // },
   {
-    value: 'teacherManagement',
-    label: 'Teacher Management',
-    component: () => <TeacherManagement />,
+    value: 'roomAllocation',
+    label: 'Room Allocation',
+    component: (props: TabComponentType) => <RoomAllocation {...props} />,
   },
-  { value: 'roomAllocation', label: 'Room Allocation', component: () => <RoomAllocation /> },
-  { value: 'reports', label: 'Reports', component: () => <Reports /> },
-
-  { value: 'settings', label: 'Settings', component: () => <TimeScheduleManagementsetting /> },
+  {
+    value: 'reports',
+    label: 'Reports',
+    component: (props: TabComponentType) => <Reports {...props} />,
+  },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <TimeScheduleManagementsetting {...props} />,
+  },
 ];
 
 const TimetableScheduleManagementScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Timetable Schedule Management"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Timetable Schedule Management' }]}
+        links={[{ name: 'Academic And Assignment' }, { name: 'Timetable Schedule Management' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box
@@ -89,8 +105,8 @@ const TimetableScheduleManagementScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -100,7 +116,12 @@ const TimetableScheduleManagementScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

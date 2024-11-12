@@ -4,19 +4,7 @@ import type { ChartOptions } from 'src/components/chart';
 import React, { useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { FiberManualRecord } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  List,
-  Divider,
-  useTheme,
-  ListItem,
-  CardHeader,
-  Typography,
-  ListItemText,
-  ListItemIcon,
-} from '@mui/material';
+import { Box, Card, Divider, useTheme, CardHeader, Typography } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
@@ -34,7 +22,7 @@ const OrganizationStatus = () => {
 
   const [selectedOrganization, setSelectedOrganization] = useState<string>('');
   return (
-    <Grid2 xs={6} sx={{ boxShadow: 'var(--shadows-2)', height: '100%', borderRadius: 2, p: 2 }}>
+    <Grid2 xs={6} sx={{ boxShadow: 'var(--shadows-2)', borderRadius: 2, p: 2 }}>
       <Box display="flex" justifyContent="space-between">
         <Typography variant="h6">Organization Status</Typography>
         <CustomSelect
@@ -57,9 +45,9 @@ const OrganizationStatus = () => {
       </Box>
       <Box
         sx={{
-          height: '100%',
           justifyContent: 'center',
           padding: '8px',
+          height: '100%',
         }}
         display="flex"
         flexDirection="column"
@@ -76,7 +64,7 @@ const OrganizationStatus = () => {
           }}
           sx={{ boxShadow: 'none' }}
         />
-        <List>
+        {/* <List>
           <ListItem>
             <ListItemIcon>
               <FiberManualRecord sx={{ fontSize: 8 }} />
@@ -95,7 +83,7 @@ const OrganizationStatus = () => {
             </ListItemIcon>
             <ListItemText primary="Inactive Organizations - 2 Inactive Organizations" />
           </ListItem>
-        </List>
+        </List> */}
       </Box>
     </Grid2>
   );

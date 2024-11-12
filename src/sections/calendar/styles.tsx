@@ -38,8 +38,10 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
 
   // Event
   '& .fc .fc-event': {
-    borderColor: 'transparent !important',
-    backgroundColor: 'transparent !important',
+    // borderColor: 'transparent !important',
+    // backgroundColor: 'transparent !important',
+    borderRadius: theme.shape.borderRadius,
+    // borderWidth: 2,
   },
   '& .fc .fc-event .fc-event-main': {
     padding: '2px 4px',
@@ -134,4 +136,9 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
     '& .fc-list-event-time': { color: theme.vars.palette.text.secondary },
   },
   '& .fc .fc-list-table': { '& th, td': { borderColor: 'transparent' } },
+
+  '& .ownEvent': {
+    border: 'none',
+    borderLeft: '5px solid #000',
+  },
 }));
