@@ -1,12 +1,13 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import {
   Box,
-  Stack,
+  Card,
+  Grid,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   DialogActions,
@@ -18,37 +19,36 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
-const Settings = () => {
+const Settings = (props: TabComponentType) => {
   const modal = useBoolean();
   const uploadModal = useBoolean();
   const templateDialog = useBoolean();
   const gradeScalingModal = useBoolean();
   return (
     <Box>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>General Settings</Typography>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pl: '20px', pb: '20px' }}>
-        Curriculum Templates
-      </Typography>
-      <Box sx={{ pl: '20px' }}>
-        <CustomSelect
-          label="Predefined templates"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 220 } }}
-        />
+      <Box sx={{ mb: 1 }}>
+        <Typography variant="h6">General Settings</Typography>
+        <Card sx={{ p: 2, mt: 1 }}>
+          <Typography variant="h6" sx={{ pl: '20px' }}>
+            Curriculum Templates
+          </Typography>
+          <Box sx={{ display: 'flex', pl: '20px', mt: 2, gap: 3 }}>
+            <CustomSelect
+              label="Predefined templates"
+              options={[]}
+              value=""
+              onChange={() => {}}
+              formControlProps={{ sx: { minWidth: 220 } }}
+            />
+            <Button variant="contained" onClick={templateDialog.onTrue}>
+              Add New Template
+            </Button>
+          </Box>
+        </Card>
       </Box>
 
-      <Box sx={{ pl: '90px', pt: '10px', pb: '20px' }}>
-        <Button variant="contained" onClick={templateDialog.onTrue}>
-          Add New Template
-        </Button>
-      </Box>
-
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
+      {/* <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
         Subject Management
       </Typography>
 
@@ -56,9 +56,9 @@ const Settings = () => {
         <Button variant="contained" onClick={() => {}}>
           Add New Subject
         </Button>
-      </Box>
+      </Box> */}
 
-      <CustomizableTable
+      {/* <CustomizableTable
         columns={[
           { id: 'curriculumname', label: 'Curriculum Name' },
           { id: 'gradelevel', label: 'Grade Level' },
@@ -79,7 +79,7 @@ const Settings = () => {
                           popover.onClose();
                         }}
                       >
-                        {/* <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} /> */}
+                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
                         Edit
                       </MenuItem>
                       <MenuItem
@@ -88,7 +88,7 @@ const Settings = () => {
                           popover.onClose();
                         }}
                       >
-                        {/* <Iconify icon="solar:upload-bold" sx={{ height: '16px', width: '16px' }} /> */}
+                        <Iconify icon="solar:upload-bold" sx={{ height: '16px', width: '16px' }} />
                         Duplicate
                       </MenuItem>
                       <MenuItem
@@ -97,7 +97,7 @@ const Settings = () => {
                           popover.onClose();
                         }}
                       >
-                        {/* <Iconify icon="solar:upload-bold" sx={{ height: '16px', width: '16px' }} /> */}
+                        <Iconify icon="solar:upload-bold" sx={{ height: '16px', width: '16px' }} />
                         Archived
                       </MenuItem>
                     </MenuList>
@@ -140,11 +140,11 @@ const Settings = () => {
             status: 'Active',
           },
         ]}
-      />
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px', pt: '20px' }}>
+      /> */}
+      {/* <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px', pt: '20px' }}>
         Learning Goals
-      </Typography>
-      <Box sx={{ pl: '20px', pb: '20px' }}>
+      </Typography> */}
+      {/* <Box sx={{ pl: '20px', pb: '20px' }}>
         <CustomSelect
           label="Subject Name"
           options={[]}
@@ -152,8 +152,8 @@ const Settings = () => {
           onChange={() => {}}
           formControlProps={{ sx: { minWidth: 220 } }}
         />
-      </Box>
-      <Box sx={{ pl: '20px', pb: '20px' }}>
+      </Box> */}
+      {/* <Box sx={{ pl: '20px', pb: '20px' }}>
         <CustomSelect
           label="Learning Goal"
           options={[]}
@@ -161,48 +161,57 @@ const Settings = () => {
           onChange={() => {}}
           formControlProps={{ sx: { minWidth: 220 } }}
         />
-      </Box>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>Notification Section</Typography>
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pl: '20px', pb: '20px' }}>
-        Set Reminders
-      </Typography>
+      </Box> */}
+      <Typography variant="h6">Notification Section</Typography>
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6">Set Reminders</Typography>
 
-      <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
-      <Box sx={{ pb: '20px', pt: '20px', width: '400px' }}>
-        <TextField
-          multiline
-          rows={4}
-          fullWidth
-          placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
-          name="description"
-          label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
-          // value={formik.values.description}
-          // onChange={formik.handleChange}
-          size="small"
-        />
-      </Box>
-      <FormControlLabel control={<Switch />} label="Notify teachers when curriculum is updated" />
-      <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
-        Permission Connection
-      </Typography>
-      <Box sx={{ pl: '20px', pb: '20px' }}>
-        <CustomSelect
-          label="Edit Curriculum"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 220 } }}
-        />
-      </Box>
-      <Box sx={{ pl: '20px', pb: '20px' }}>
-        <CustomSelect
-          label="Approved Curriculum Update"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 220 } }}
-        />
-      </Box>
+            <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
+            <Box sx={{ pb: '20px', pt: '20px', width: '400px' }}>
+              <TextField
+                multiline
+                rows={4}
+                fullWidth
+                placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+                name="description"
+                label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+                // value={formik.values.description}
+                // onChange={formik.handleChange}
+                size="small"
+              />
+            </Box>
+            <FormControlLabel
+              control={<Switch />}
+              label="Notify teachers when curriculum is updated"
+            />
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6">Permission Connection</Typography>
+            <Box sx={{ pl: '20px', pb: '20px' }}>
+              <CustomSelect
+                label="Edit Curriculum"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 220 } }}
+              />
+            </Box>
+            <Box sx={{ pl: '20px', pb: '20px' }}>
+              <CustomSelect
+                label="Approved Curriculum Update"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 220 } }}
+              />
+            </Box>
+          </Card>
+        </Grid>
+      </Grid>
       <CustomDialog
         title="Add New Template"
         open={templateDialog.value}
@@ -216,31 +225,37 @@ const Settings = () => {
 const AddTemplateForm = () => (
   <form>
     <Scrollbar sx={{ background: 'background.neutral', p: 3 }}>
-      <Stack spacing={3}>
-        <TextField
-          fullWidth
-          name="templateName"
-          label="Template Name"
-          onChange={() => {}}
-          size="small"
-        />
-        <CustomSelect
-          label="Grade"
-          name="grade"
-          options={[]}
-          value=""
-          formControlProps={{ fullWidth: true }}
-          onChange={() => {}}
-        />
-        <CustomSelect
-          label="Subjects"
-          name="subjects"
-          value=""
-          options={[]}
-          formControlProps={{ fullWidth: true }}
-          onChange={() => {}}
-        />
-      </Stack>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            name="templateName"
+            label="Template Name"
+            onChange={() => {}}
+            size="small"
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <CustomSelect
+            label="Grade"
+            name="grade"
+            options={[]}
+            value=""
+            formControlProps={{ fullWidth: true }}
+            onChange={() => {}}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <CustomSelect
+            label="Subjects"
+            name="subjects"
+            value=""
+            options={[]}
+            formControlProps={{ fullWidth: true }}
+            onChange={() => {}}
+          />
+        </Grid>
+      </Grid>
     </Scrollbar>
     <DialogActions>
       <Button variant="contained" type="submit">

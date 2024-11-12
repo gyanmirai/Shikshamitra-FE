@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -22,6 +23,7 @@ import {
   TextField,
   Typography,
   IconButton,
+  ListItemIcon,
   ListItemText,
   DialogActions,
   DialogContent,
@@ -65,7 +67,7 @@ interface TSubjectTable {
   status: string;
 }
 
-const subjectData: TSubjectTable[] = [
+export const subjectData: TSubjectTable[] = [
   {
     id: 1,
     subjectName: 'Mathematics',
@@ -133,7 +135,7 @@ const subjectData: TSubjectTable[] = [
   },
 ];
 
-const Subject = () => {
+const Subject = (props: TabComponentType) => {
   const [subjectTableData, setSubjectTableData] = useState(subjectData);
   const [selectedClass, setSelectedClass] = useState('');
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -407,7 +409,7 @@ export default Subject;
 interface ViewSubjectProps {
   subject: TSubjectTable | null;
 }
-const ViewSubject: React.FC<ViewSubjectProps> = ({ subject }) => (
+export const ViewSubject: React.FC<ViewSubjectProps> = ({ subject }) => (
   <Box sx={{ p: 2 }}>
     <Scrollbar sx={{ height: '400px' }}>
       <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -473,6 +475,27 @@ const ViewSubject: React.FC<ViewSubjectProps> = ({ subject }) => (
           </Typography>
         }
       />
+
+      {subject?.documents && subject?.documents.length > 0 && (
+        <Box mt={2}>
+          <Typography variant="subtitle2" gutterBottom>
+            Attached Documents
+          </Typography>
+          <List>
+            {subject?.documents.map((doc: any, index: any) => (
+              <ListItem key={index}>
+                <ListItemIcon>
+                  <Iconify icon="mdi:file-document-outline" />
+                </ListItemIcon>
+                <ListItemText primary={doc.name} />
+                <IconButton href={doc.url} target="_blank">
+                  <Iconify icon="mdi:download" />
+                </IconButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      )}
     </Scrollbar>
   </Box>
 );
@@ -519,6 +542,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
         ...values,
         id: data?.id || Date.now(),
         status: isDraft ? 'Unpublish' : 'Publish',
+        documents,
       });
     },
   });
@@ -533,7 +557,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
     const newDocs: Document[] = files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
-      url: '',
+      url: URL.createObjectURL(file),
       file,
     }));
     setDocuments((prev) => [...prev, ...newDocs]);

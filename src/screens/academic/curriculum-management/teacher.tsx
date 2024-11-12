@@ -1,65 +1,149 @@
-import React, { useState } from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { Edit } from '@mui/icons-material';
-import { Box, MenuList, MenuItem, Typography, ListItemIcon, ListItemText } from '@mui/material';
+import { useFormik } from 'formik';
+import React, { useMemo, useState } from 'react';
 
+import {
+  Box,
+  Grid,
+  Chip,
+  Button,
+  MenuList,
+  MenuItem,
+  Typography,
+  DialogActions,
+} from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const Teacher = () => {
-  const [teacherData, setTeacherData] = useState<any>([
-    {
-      id: 1,
-      subject: 'Mathematics',
-      assignedTeacher: ['John Doe'],
-    },
-    {
-      id: 2,
-      subject: 'Science',
-      assignedTeacher: ['Jane Smith'],
-    },
-    {
-      id: 3,
-      subject: 'English',
-      assignedTeacher: ['Robert Johnson'],
-    },
-    {
-      id: 4,
-      subject: 'History',
-      assignedTeacher: ['Emily Brown'],
-    },
-    {
-      id: 5,
-      subject: 'Physical Education',
-      assignedTeacher: ['Michael Wilson'],
-    },
-  ]);
+interface TTeacherData {
+  id: number;
+  subject: string;
+  className: string;
+  assignedTeacher: string[];
+}
+
+const TeacherData: TTeacherData[] = [
+  {
+    id: 1,
+    subject: 'Math',
+    className: '1',
+    assignedTeacher: ['John Doe'],
+  },
+  {
+    id: 2,
+    subject: 'Science',
+    className: '1',
+    assignedTeacher: ['Jane Smith'],
+  },
+  {
+    id: 3,
+    subject: 'English',
+    className: '2',
+    assignedTeacher: ['Robert Johnson'],
+  },
+  {
+    id: 4,
+    subject: 'History',
+    className: '3',
+    assignedTeacher: ['Emily Brown'],
+  },
+  {
+    id: 5,
+    subject: 'Physical Education',
+    className: '1',
+    assignedTeacher: ['Michael Wilson'],
+  },
+];
+
+const Teacher = (props: TabComponentType) => {
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+  const [selectedClass, setSelectedClass] = useState('All');
+  const [selectedSubject, setSelectedSubject] = useState('All');
+  const [selectedTeacher, setSelectedTeacher] = useState<any | null>(null);
+
+  const [teacherData, setTeacherData] = useState<TTeacherData[]>(TeacherData);
+  const dialog = useBoolean();
 
   console.log('teacher data---------', teacherData);
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const handleTeacherChange = (id: number, newTeacher: any) => {
-    const updatedData = teacherData.map((row: any, index: number) =>
-      row.id === id ? { ...row, assignedTeacher: newTeacher } : row
-    );
-    setTeacherData(updatedData);
-    setEditingIndex(null);
+  const handleTeacherReassignment = (values: { assignedTeacher: string[] }) => {
+    if (selectedTeacher) {
+      const updatedData = teacherData.map((row) =>
+        row.id === selectedTeacher.id ? { ...row, assignedTeacher: values.assignedTeacher } : row
+      );
+      setTeacherData(updatedData);
+      dialog.onFalse();
+      setSelectedTeacher(null);
+    }
   };
+
+  const classOptions = useMemo(() => {
+    if (!classData) return [{ label: 'All', value: 'All' }];
+    console.log('class Data----', classData);
+
+    return [
+      { label: 'All', value: 'All' },
+      // eslint-disable-next-line no-unsafe-optional-chaining
+      ...classData?.items.map((cls: any) => ({
+        label: cls.name, // Adjust this based on your actual API response structure
+        value: cls.name, // Adjust this based on your actual API response structure
+      })),
+    ];
+  }, [classData]);
+
+  const filteredData = useMemo(
+    () =>
+      teacherData.filter((item: any) => {
+        const matchesClass = selectedClass === 'All' || item.className === selectedClass;
+        const matchesSubject = selectedSubject === 'All' || item.subject === selectedSubject;
+        return matchesClass && matchesSubject;
+      }),
+    [teacherData, selectedClass, selectedSubject]
+  );
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
         <Typography variant="h6">Subject-wise Teacher Assignment Table</Typography>
-
+      </Box>
+      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
         <CustomSelect
           label="Class"
           name="class"
-          options={[]}
+          options={classOptions}
           formControlProps={{ sx: { width: '200px' } }}
-          value=""
-          onChange={(value) => {}}
+          value={selectedClass}
+          onChange={(value) => {
+            setSelectedClass(value as string);
+          }}
+        />
+        <CustomSelect
+          label="Subject"
+          name="subject"
+          options={[
+            { value: 'All', label: 'All' },
+            { value: 'Math', label: 'Math' },
+            { value: 'English', label: 'English' },
+            { value: 'Science', label: 'Science' },
+          ]}
+          formControlProps={{ sx: { width: '200px' } }}
+          value={selectedSubject}
+          onChange={(value) => setSelectedSubject(value as string)}
         />
       </Box>
       <CustomizableTable
@@ -73,8 +157,19 @@ const Teacher = () => {
             label: 'Subject',
           },
           {
+            id: 'className',
+            label: 'Class',
+          },
+          {
             id: 'assignedTeacher',
             label: 'Assigned Teacher',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
           },
           {
             id: 'action',
@@ -84,18 +179,14 @@ const Teacher = () => {
                 <ThreeDotsActions
                   actions={() => (
                     <MenuList>
-                      <MenuItem onClick={() => {}}>
-                        <ListItemIcon>
-                          <Edit />
-                        </ListItemIcon>
-                        <ListItemText>Edit</ListItemText>
-                      </MenuItem>
                       <MenuItem
                         onClick={() => {
-                          setEditingIndex(row.id);
+                          dialog.onTrue();
+                          setSelectedTeacher(row as any);
                         }}
                       >
-                        <ListItemText>Reassign Teacher</ListItemText>
+                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                        Reassign Teacher
                       </MenuItem>
                     </MenuList>
                   )}
@@ -104,10 +195,72 @@ const Teacher = () => {
             },
           },
         ]}
-        data={teacherData}
+        data={filteredData}
       />
+      <CustomDialog
+        title="Reassign Teacher"
+        open={dialog.value}
+        handleClose={() => {
+          dialog.onFalse();
+        }}
+        maxWidth="sm"
+      >
+        <TeacherReassign selectedTeacher={selectedTeacher} onSubmit={handleTeacherReassignment} />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default Teacher;
+
+interface TeacherReassignProps {
+  selectedTeacher: TTeacherData | null;
+  onSubmit: (values: any) => void;
+}
+
+const TeacherReassign: React.FC<TeacherReassignProps> = ({ selectedTeacher, onSubmit }) => {
+  console.log('selected teacher---', selectedTeacher);
+
+  const formik = useFormik({
+    initialValues: {
+      assignedTeacher: selectedTeacher?.assignedTeacher || [],
+    },
+    onSubmit: (values) => {
+      onSubmit(values);
+    },
+  });
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2} p={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <CustomSelect
+              label="Assigned Teacher"
+              options={[
+                { value: 'John Doe', label: 'John Doe' },
+                { value: 'Jane Smith', label: 'Jane Smith' },
+                { value: 'Robert Johnson', label: 'Robert Johnson' },
+                { value: 'Emily Brown', label: 'Emily Brown' },
+                { value: 'Michael Wilson', label: 'Michael Wilson' },
+              ]}
+              name="assignedTeacher"
+              multiple
+              value={formik.values.assignedTeacher}
+              formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+              onChange={(val) => {
+                formik.setFieldValue('assignedTeacher', val);
+              }}
+              error={formik.touched.assignedTeacher}
+            />
+          </Grid>
+          <DialogActions>
+            <Button type="submit" variant="contained">
+              Reassign
+            </Button>
+          </DialogActions>
+        </Grid>
+      </form>
+    </Box>
+  );
+};
