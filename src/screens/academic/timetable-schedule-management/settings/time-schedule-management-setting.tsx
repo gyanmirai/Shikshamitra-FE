@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
@@ -23,7 +25,6 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 type PeriodSetting = {
   label: string;
@@ -129,7 +130,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
   return (
     <Box>
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
-        <Button variant="contained" onClick={dialog.onTrue}>
+        <Button startIcon={<Iconify icon="mdi:plus" />} variant="contained" onClick={dialog.onTrue}>
           Create New Room
         </Button>
       </Box>
@@ -307,7 +308,12 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           <Button variant="contained">Save Changes</Button>
         </Box>
       </Card>
-      <CustomDialog title="New Room" open={dialog.value} handleClose={dialog.onFalse} maxWidth="sm">
+      <CustomDialog
+        title={isEdit ? 'Update Room' : 'Create Room'}
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        maxWidth="sm"
+      >
         <RoomCreationForm
           onSave={handleSave}
           dialogValue={dialog.value}
@@ -427,8 +433,8 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
             </Grid>
           </Grid>
           <DialogActions>
-            <Button type="submit" variant="contained" onClick={() => {}}>
-              Save
+            <Button type="submit" variant="contained">
+              {isEdit ? 'Update' : 'Save'}
             </Button>
           </DialogActions>
         </form>

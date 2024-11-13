@@ -75,7 +75,11 @@ const CurriculumManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Curriculum Management"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Curriculum Management' }]}
+        links={[
+          { name: 'Academic And Assessment' },
+          { name: 'Curriculum Management' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box

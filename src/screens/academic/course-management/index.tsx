@@ -31,7 +31,7 @@ const TABS = [
   // },
   {
     value: 'subjects',
-    label: 'Subjects/Course',
+    label: 'Course/Subject',
     component: (props: TabComponentType) => <Subjects {...props} />,
   },
   {
@@ -40,7 +40,7 @@ const TABS = [
     component: (props: TabComponentType) => <LearningResources {...props} />,
   },
   {
-    value: 'Course Progress',
+    value: 'courseProgress',
     label: 'Course Progress',
     component: (props: TabComponentType) => <CourseProgress {...props} />,
   },
@@ -68,7 +68,7 @@ const CourseManagementSystemScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Course Management"
         links={[
           { name: 'Academic And Assignments' },
           { name: 'Course Management System' },
