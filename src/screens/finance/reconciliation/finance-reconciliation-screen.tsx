@@ -24,7 +24,7 @@ const TABS = [
   {
     value: 'bounce-check-list',
     label: 'Bounce Check Details',
-    icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
+    icon: <Iconify icon="fluent:check-24-filled"  width={20} />,
     component: () => <FinanceBounceTab />,
   },
 ];

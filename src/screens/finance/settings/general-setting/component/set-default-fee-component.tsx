@@ -11,8 +11,26 @@ const SetDefaultFeeComponent = () => (
     
 
 <Box display="flex" flexDirection="column" gap={2}>
+<Grid item xs={12} md={6}>
+      <Box pt="15px" display="flex" justifyItems="center" alignItems="center" flexDirection="row" gap={3}>
+        <TextField
+          name="Add new fee head"
+          label="Add New Fee Head"
+          size="small"
+         
+        />
+        
+        <Button variant="contained" size="small">
+          Add
+        </Button>
+     
+       
+      </Box>
+      
+    </Grid>
+
   <Grid container spacing={2}>
-    <Grid item xs={12} md={6}>
+    <Grid item xs={12} md={12}>
       <Box>
         <DataTable
           columns={[
@@ -52,28 +70,7 @@ const SetDefaultFeeComponent = () => (
       </Box>
     </Grid>
 
-    <Grid item xs={12} md={6}>
-      <Box pt="15px" display="flex" flexDirection="column" gap={3}>
-        <TextField
-          name="Add new fee head"
-          label="Add New Fee Head"
-          size="small"
-          fullWidth
-        />
-        {/* <CustomSelect
-          label="Predefined components"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 150 } }}
-        /> */}
-      </Box>
-      <Box py="15px" display="flex" justifyContent="flex-end">
-        <Button variant="contained" size="small">
-          Add
-        </Button>
-      </Box>
-    </Grid>
+  
   </Grid>
 </Box>
 

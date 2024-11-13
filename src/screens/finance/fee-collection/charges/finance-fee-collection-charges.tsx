@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -77,7 +77,7 @@ const [selectedEntry, setSelectedEntry] = useState<any>();
   return (
     <>
     <Box>
-   <Typography variant="h6" gutterBottom >Charges </Typography>
+   {/* <Typography variant="h6" gutterBottom >Charges </Typography> */}
    </Box>
    <CustomizableTable columns={
     [

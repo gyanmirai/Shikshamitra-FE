@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { formatNumber } from 'src/utils/formate_number';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceChequeBounceChargeCollect from '../fee-collection/charges/component/finance-cheque-bounce-charge-collect';
@@ -23,7 +22,7 @@ const FinanceBounceTab = () => {
       chequeDate: "15-08-2024",
       bounceDate: "20-08-2024",
       reason: "Insufficient Funds",
-      amount: "₹5000",
+      amount: "5000",
         status: "Pending"
     },
     {
@@ -32,7 +31,7 @@ const FinanceBounceTab = () => {
       chequeDate: "10-09-2024",
       bounceDate: "15-09-2024",
       reason: "Account Closed",
-      amount: "₹25000",
+      amount: "25000",
       status: "Pending"
     },
     {
@@ -41,7 +40,7 @@ const FinanceBounceTab = () => {
       chequeDate: "01-10-2024",
       bounceDate: "05-10-2024",
       reason: "Signature Mismatch",
-      amount: "₹12000",
+      amount: "12000",
       status: "Paid"
     },
     {
@@ -50,7 +49,7 @@ const FinanceBounceTab = () => {
       chequeDate: "25-11-2024",
       bounceDate: "28-11-2024",
       reason: "Funds Not Cleared",
-      amount: "₹8000",
+      amount: "8000",
       status: "Paid"
     },
     {
@@ -59,7 +58,7 @@ const FinanceBounceTab = () => {
       chequeDate: "10-12-2024",
       bounceDate: "15-12-2024",
       reason: "Stale Cheque",
-      amount: "₹15000",
+      amount: "15000",
       status: "Paid"
     }
   ];
@@ -80,7 +79,7 @@ useEffect(()=>{},[selectedEntry, ])
 return (
 <>
 <Box>
-<Typography variant="h6" gutterBottom >Charges </Typography>
+{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}
 </Box>
 <CustomizableTable columns={
 [
@@ -89,66 +88,72 @@ return (
  {id:"chequeDate", label:"Cheque Date"},
  {id:"bounceDate", label:"Bounce Date"},
  {id:"reason", label:"Reason"},
- {id:"amount", label:"Amount"},
- {
-    id: 'status',
-    label: 'Status',
-    render(value, row) {
-    return (
-      value !== "" ?   <Label
-          variant="soft"
-          color={
-            value === 'Overdue'
-              ? 'error'
-              : value === 'Pending'
-                ? 'warning'
-                : value === 'Paid'
-                  ? 'success'
-                  : 'default'
-          }
-        >
-          {value}
-        </Label> : <Box/>
-      );
-    },
-  },
-{
-  id: 'action',
-  label: 'Action',
-  render(value, row: any) {
-    return (
-      <ThreeDotsActions
-        actions={({ popover }: any) => (
-          <MenuList>
-          { row.status === "Pending" && <MenuItem
-              onClick={() => {
-                // setIsClearCheck(false)
-                setSelectedEntry(row);
+ {id:"amount", label:"Amount", render(value, row){
+  return (
+    <Typography fontSize="12px">{formatNumber(row.amount,  "INR")}</Typography>
+  )
+}},
+//  {
+//     id: 'status',
+//     label: 'Status',
+//     render(value, row) {
+//     return (
+//       value !== "" ?   <Label
+//           variant="soft"
+//           color={
+//             value === 'Overdue'
+//               ? 'error'
+//               : value === 'Pending'
+//                 ? 'warning'
+//                 : value === 'Paid'
+//                   ? 'success'
+//                   : 'default'
+//           }
+//         >
+//           {value}
+//         </Label> : <Box/>
+//       );
+//     },
+//   },
+// {
+//   id: 'action',
+//   label: 'Action',
+//   render(value, row: any) {
+//     return (
+//       <ThreeDotsActions
+//         actions={({ popover }: any) => (
+//           <MenuList>
+//           { row.status === "Pending" && <MenuItem
+//               onClick={() => {
+//                 // setIsClearCheck(false)
+//                 setSelectedEntry(row);
 
-                dialog.onTrue();
-              }}
-            >
-              <Iconify icon="fluent:check-24-regular" />
-              Collect Charges
+//                 dialog.onTrue();
+//               }}
+//             >
+//               <Iconify icon="fluent:check-24-regular" />
+//               Collect Charges
              
-            </MenuItem>}
-           { row.status === "Paid" && <MenuItem
-              onClick={() => {
-                // setIsClearCheck(true)
-                // setSelectedEntry(row);
+//             </MenuItem>}
+//            { row.status === "Paid" && <MenuItem
+//               onClick={() => {
+//                 // setIsClearCheck(true)
+//                 // setSelectedEntry(row);
 
-                // dialog.onTrue();
-              }}
-            >
-              <Iconify icon="circum:receipt"   />
-            Generate Receipt
-            </MenuItem>}
-          </MenuList>
-        )}
-      />
-    );
-  },
-},]} data={chargesData}/> 
+//                 // dialog.onTrue();
+//               }}
+//             >
+//               <Iconify icon="circum:receipt"   />
+//             Generate Receipt
+//             </MenuItem>}
+//           </MenuList>
+//         )}
+//       />
+//     );
+//   },
+// },
+
+]} data={chargesData}/> 
 
 {dialog.value  && (
       <FinanceChequeBounceChargeCollect

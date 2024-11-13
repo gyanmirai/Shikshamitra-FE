@@ -25,6 +25,8 @@ interface FormikValue {
   date: any;
   paymentStatus: string;
   id: number;
+  incomeName:string;
+  notes?: string;
 }
 
 const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
@@ -47,6 +49,8 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
       id: isEdit
         ? data.id ?? Math.floor(Math.random() * 1000000000)
         : Math.floor(Math.random() * 1000000000),
+       incomeName:  "", 
+       notes:"",
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {
@@ -97,6 +101,13 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
               />
+              <TextField
+                name="incomeName"
+                label="Income Name"
+                value={formik.values.incomeName}
+                onChange={formik.handleChange}
+                size="small"
+              />
               
               <TextField
                 name="incomeAmount"
@@ -104,6 +115,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                 value={formik.values.incomeAmount}
                 onChange={formik.handleChange}
                 size="small"
+                type="number"
               />
               <CustomSelect
                 label="Payment Method"
@@ -129,6 +141,17 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                 onChange={(value) => formik.setFieldValue("paymentStatus", value)}
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
+              />
+
+               <TextField
+               multiline
+               rows={3}
+                name="notes"
+                label="Notes"
+                value={formik.values.notes}
+                onChange={formik.handleChange}
+                size="small"
+                
               />
             </Box>
           

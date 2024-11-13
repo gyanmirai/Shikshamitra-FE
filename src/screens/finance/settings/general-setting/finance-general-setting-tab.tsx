@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 
 import { Box, Tab, Card } from '@mui/material';

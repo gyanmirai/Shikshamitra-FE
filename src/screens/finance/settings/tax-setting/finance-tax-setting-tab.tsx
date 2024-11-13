@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 
 import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';

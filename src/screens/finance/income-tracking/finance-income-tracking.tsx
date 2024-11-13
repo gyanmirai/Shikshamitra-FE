@@ -6,6 +6,8 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -141,9 +143,39 @@ const FinanceIncomeTrackingScreen = () => {
         </Typography>
       </Box>
       <CustomizableTable
+        isScrollbar={false}
         columns={[
-          { id: 'incomeSource', label: 'Income Source',  },
-          { id: 'incomeAmount', label: 'Income Amount' },
+          {
+            id: 'incomeSource', label: 'Income Source', children(row) {
+              return (
+                <CustomizableTable
+                  isFilter={false}
+                  isPagination={false}
+                  isSearch={false}
+                  columns={[
+                    { id: "incomeName", label: "Income Name" },
+                    {
+                      id: "amount",
+                      label: "Amount",
+                      render(value) {
+
+                        return (
+                          <Typography fontSize="12px">
+                            {formatNumber(value, "INR")}
+                          </Typography>
+                        );
+                      },
+                    },
+                    { id: "date", label: "Received Date" },
+                  ]} data={row.incomeList} />
+              );
+            },
+          },
+          {
+            id: 'incomeAmount', label: 'Income Amount', render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.incomeAmount, "INR")}</Typography>
+            },
+          },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
 
@@ -175,6 +207,14 @@ const FinanceIncomeTrackingScreen = () => {
                 <ThreeDotsActions
                   actions={({ popover }: any) => (
                     <MenuList>
+                      {/* <MenuItem
+                        onClick={() => {
+                          handleDelete(row);
+                        }}
+                      >
+                        <Iconify icon="solar:trash-bin-trash-bold" />
+                       View Detail
+                      </MenuItem> */}
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);

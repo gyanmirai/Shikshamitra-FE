@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 
-import { Box, Tab, Button, Tooltip, useTheme, MenuList, MenuItem } from '@mui/material';
+import { Box, Tab, Button, Tooltip, useTheme, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -26,7 +28,6 @@ const getIncomeColor = (amount: any) =>
   amount > 0 ? 'green' : 'red'
   ;
 
-const formatNumber = (num: any) => new Intl.NumberFormat().format(num);
 
 const FinanceNewBudgetingScreen = () => {
   const budgetDummyData = {
@@ -312,9 +313,32 @@ const FinanceNewBudgetingScreen = () => {
         
         columns={[
           { id: 'name', label: 'Income Category' },
-          { id: 'totalAmountExpected', label: 'Total Expected' },
-          { id: 'collectedAmount', label: 'Collected' },
-          { id: 'outstandingAmount', label: 'Outstanding' },
+          { id: 'totalAmountExpected', label: 'Total Expected ', render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
+          { id: 'collectedAmount', label: 'Collected',render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
+          { id: 'outstandingAmount', label: 'Outstanding',render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
+          { id: 'receivedPercantage', label: 'Received Percantage' },
+          
           { id: 'action', label: 'Action', render(value, row) {
             return <ThreeDotsActions
             actions={({ popover, }: any) => (
@@ -347,10 +371,31 @@ const FinanceNewBudgetingScreen = () => {
         
         columns={[
           { id: 'name', label: 'Expense Category' },
-          { id: 'allocatedAmount', label: 'Allocated Amount' },
-          { id: 'spentAmount', label: 'Spent Amount' },
-          { id: 'remainingAmount', label: 'Remaining Amount' },
-          { id: 'expensePercantage', label: 'expense Percantage %' },
+          { id: 'allocatedAmount', label: 'Allocated Amount', render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
+          { id: 'spentAmount', label: 'Spent Amount', render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
+          { id: 'remainingAmount', label: 'Remaining Amount', render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
+          { id: 'expensePercantage', label: 'Expense Percantage %' },
           { id: 'action', label: 'Action', render(value, row) {
             return <ThreeDotsActions
             actions={({ popover, }: any) => (
@@ -374,9 +419,9 @@ const FinanceNewBudgetingScreen = () => {
           }, },
         ]}
         data={[
-          { id: "expense_02", name: "Maintenance", allocatedAmount: 40000, spentAmount: 0, remainingAmount: 40000 },
-      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000 },
-      { id: "expense_03", name: "Total", allocatedAmount: 60000, spentAmount: 0, remainingAmount: 60000 }
+          { id: "expense_02", name: "Maintenance", allocatedAmount: 40000, spentAmount: 0, remainingAmount: 40000,expensePercantage:"0 %"  },
+      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000,expensePercantage:"0 %" },
+      { id: "expense_03", name: "Total", allocatedAmount: 60000, spentAmount: 0, remainingAmount: 60000, expensePercantage:"0 %" }
         ]}
       />}
         

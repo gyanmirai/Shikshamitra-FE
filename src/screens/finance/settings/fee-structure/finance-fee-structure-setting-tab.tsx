@@ -1,9 +1,13 @@
+'use client';
+
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 
 import { Box, Paper, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -243,17 +247,17 @@ const FinanceFeeStructureSettingTab = () => {
   return (
     <>
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-        <Button variant="contained" size="small">
+        {/* <Button variant="contained" size="small">
           Save
-        </Button>
+        </Button> */}
         <Button onClick={dialog.onTrue} variant="contained" size="small">
-          Add New Fee Category
+          Add New Fee Structure
         </Button>
       </Box>
       <Box>
-        <Typography component="span" variant="h6" gutterBottom>
+        {/* <Typography component="span" variant="h6" gutterBottom>
           Fee Categories Overview
-        </Typography>
+        </Typography> */}
       </Box>
       <CustomizableTable
         columns={[
@@ -309,7 +313,7 @@ const FinanceFeeStructureSettingTab = () => {
               console.log('Row data:', row);
               console.log('Total amount:', totalAmount);
 
-              return <Typography sx={{ fontSize: '14px' }}>{totalAmount}</Typography>;
+              return <Typography sx={{ fontSize: '12px' }}>{formatNumber(totalAmount)}</Typography>;
             },
           },
           {

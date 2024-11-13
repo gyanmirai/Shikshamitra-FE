@@ -25,6 +25,8 @@ interface FormikValue {
   date: any;
   paymentStatus: string;
   id: number;
+  expenseName:string;
+  notes?: string;
 }
 
 const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogProps> = ({
@@ -42,11 +44,14 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
       expenseCategory: isEdit ? data.expenseCategory ?? '' : '',
       expenseAmount: isEdit ? data.expenseAmount ?? '' : '',
       paymentMethod: isEdit ? data.paymentMethod ?? '' : '',
-      date: isEdit ? data.date ?? dayjs("24-12-2025", 'DD-MM-YYYY') : dayjs("24-12-2025", 'DD-MM-YYYY'),
+      date: isEdit ? dayjs(data.date) ?? dayjs() : dayjs(),
       paymentStatus: isEdit ? data.paymentStatus ?? '' : '',
       id: isEdit
         ? data.id ?? Math.floor(Math.random() * 1000000000)
         : Math.floor(Math.random() * 1000000000),
+        expenseName:  "", 
+        notes:"",
+
     },
     // validationSchema: validationSchema,  // Uncomment if using validation schema
     onSubmit: (values) => {
@@ -98,6 +103,14 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
               />
+               <TextField
+                name="expenseName"
+                label="Expense Name"
+                value={formik.values.expenseName}
+                onChange={formik.handleChange}
+                size="small"
+                
+              />
 
               <TextField
                 name="expenseAmount"
@@ -131,6 +144,16 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 onChange={(value) => formik.setFieldValue("paymentStatus", value)}
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
+              />
+                <TextField
+               multiline
+               rows={3}
+                name="notes"
+                label="Notes"
+                value={formik.values.notes}
+                onChange={formik.handleChange}
+                size="small"
+                
               />
             </Box>
 
