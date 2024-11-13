@@ -32,7 +32,7 @@ const Dashboard = (props: TabComponentType) => {
   return (
     <Box>
       <Grid2 container spacing={3}>
-        <Grid2 xs={12} md={3}>
+        <Grid2 xs={12} md={4}>
           <Card
             sx={{
               ...bgGradient({
@@ -74,7 +74,7 @@ const Dashboard = (props: TabComponentType) => {
             />
           </Card>
         </Grid2>
-        <Grid2 xs={12} md={3}>
+        <Grid2 xs={12} md={4}>
           <Card
             sx={{
               ...bgGradient({
@@ -116,7 +116,7 @@ const Dashboard = (props: TabComponentType) => {
             />
           </Card>
         </Grid2>
-        <Grid2 xs={12} md={3}>
+        <Grid2 xs={12} md={4}>
           <Card
             sx={{
               ...bgGradient({
@@ -140,48 +140,6 @@ const Dashboard = (props: TabComponentType) => {
               <Box sx={{ flexGrow: 1, minWidth: 112 }}>
                 <Box sx={{ mb: 1, typography: 'subtitle2' }}>Total Subjects</Box>
                 <Box sx={{ typography: 'h4' }}>50</Box>
-              </Box>
-            </Box>
-
-            <SvgColor
-              src={`${CONFIG.site.basePath}/assets/background/shape-square.svg`}
-              sx={{
-                top: 0,
-                left: -20,
-                width: 240,
-                zIndex: -1,
-                height: 240,
-                opacity: 0.24,
-                position: 'absolute',
-                color: `${color}.main`,
-              }}
-            />
-          </Card>
-        </Grid2>
-        <Grid2 xs={12} md={3}>
-          <Card
-            sx={{
-              ...bgGradient({
-                color: `135deg, ${varAlpha(theme.vars.palette.primary.lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette.primary.lightChannel, 0.48)}`,
-              }),
-              p: 3,
-              boxShadow: 'none',
-              position: 'relative',
-              color: `${color}.darker`,
-              backgroundColor: 'common.white',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Box sx={{ flexGrow: 1, minWidth: 112 }}>
-                <Box sx={{ mb: 1, typography: 'subtitle2' }}>Total Assignments</Box>
-                <Box sx={{ typography: 'h4' }}>120</Box>
               </Box>
             </Box>
 

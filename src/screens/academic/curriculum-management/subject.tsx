@@ -15,7 +15,6 @@ import {
   Box,
   List,
   Grid,
-  Chip,
   Button,
   Switch,
   MenuItem,
@@ -282,7 +281,20 @@ const Subject = (props: TabComponentType) => {
                 render: (value) => (
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {value.map((audience: string) => (
-                      <Chip key={audience} label={audience} size="small" variant="outlined" />
+                      // <Chip key={audience} label={audience} size="small" variant="outlined" />
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{
+                          px: 1.0,
+                          py: 0.5,
+                          borderRadius: '30px',
+                          border: `1px solid black`,
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {audience}
+                      </Typography>
                     ))}
                   </Box>
                 ),
@@ -323,18 +335,17 @@ const Subject = (props: TabComponentType) => {
                     placement="right-top"
                     actions={({ popover: pop }) => (
                       <MenuList>
-                        {row.status === 'Unpublish' && (
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedSubject(row as any);
-                              setIsEdit(true);
-                              dialog.onTrue();
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                            Edit
-                          </MenuItem>
-                        )}
+                        <MenuItem
+                          onClick={() => {
+                            setSelectedSubject(row as any);
+                            setIsEdit(true);
+                            dialog.onTrue();
+                          }}
+                        >
+                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                          Edit
+                        </MenuItem>
+
                         {row.status === 'Publish' && (
                           <MenuItem
                             onClick={() => {
@@ -680,6 +691,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
   const [subjectColor, setSubjectColor] = useState('');
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
   const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
+  const isPublished = data?.status === 'Publish';
 
   const validationSchema = Yup.object().shape({
     subjectCode: Yup.string().required('Subject Code is Required'),
@@ -756,6 +768,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 }}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                 error={formik.touched.className && Boolean(formik.errors.className)}
+                disabled={isPublished}
               />
             </Grid>
             <Grid item xs={12} md={4}>
@@ -766,6 +779,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 size="small"
                 value={formik.values.subjectCode}
                 onChange={formik.handleChange}
+                disabled={isPublished}
                 error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
               />
             </Grid>
@@ -775,6 +789,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 label="Subject Name"
                 name="subjectName"
                 size="small"
+                disabled={isPublished}
                 value={formik.values.subjectName}
                 onChange={formik.handleChange}
                 error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
@@ -824,6 +839,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 onChange={(value) => {
                   formik.setFieldValue('scheduleDate', value);
                 }}
+                disabled={isPublished}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -842,6 +858,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 onChange={(e) => {
                   formik.setFieldValue('subjectColor', e);
                 }}
+                disabled={isPublished}
                 sx={{
                   minWidth: 180,
                   width: '100%',
@@ -861,6 +878,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 fullWidth
                 multiline
                 rows={3}
+                disabled={isPublished}
                 label="Learning Goals"
                 name="learningGoal"
                 onChange={formik.handleChange}
@@ -875,6 +893,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 fullWidth
                 multiline
                 rows={3}
+                disabled={isPublished}
                 label="Prerequisites or Resources"
                 name="prerequisites"
                 size="small"
@@ -888,6 +907,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 fullWidth
                 multiline
                 rows={3}
+                disabled={isPublished}
                 label="Description"
                 name="description"
                 value={formik.values.description}

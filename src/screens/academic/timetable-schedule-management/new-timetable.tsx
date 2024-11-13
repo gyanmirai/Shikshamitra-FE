@@ -1,7 +1,9 @@
 import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
 
-import React, { useMemo, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { Box, Card, Button, Switch, Typography, FormControlLabel } from '@mui/material';
 
@@ -11,12 +13,12 @@ import { uuidv4 } from 'src/utils/uuidv4';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomSelect from 'src/components/custom-select';
 
 // eslint-disable-next-line import/no-cycle
 import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const classRoomData = [
@@ -26,6 +28,9 @@ export const classRoomData = [
 ];
 
 const NewTimetable = (props: TabComponentType) => {
+  const [isManual, setIsManual] = useState<boolean>(false);
+  const dispatch = useDispatch();
+
   const [classes, setClasses] = useState<string>('');
   const [showTimeTable, setShowTimeTable] = useState<boolean>(false);
   const [division, setDivision] = useState<any>();
@@ -40,6 +45,12 @@ const NewTimetable = (props: TabComponentType) => {
   const handleCreateTimetable = () => {
     setShowTimeTable(true);
   };
+
+  useEffect(() => {
+    if (isManual) {
+      dispatch(setIsChanges(true));
+    }
+  }, [dispatch, isManual]);
 
   const predefinedBreaks = useMemo<CalendarEvent[]>(
     () => [
@@ -66,6 +77,7 @@ const NewTimetable = (props: TabComponentType) => {
   const handleEventsChange = (events: CalendarEvent[]) => {
     console.log('Updated events from CalendarTimeTable:', events);
     setTimetableEvents(events);
+    setIsManual(!isManual);
   };
 
   const dialog = useBoolean();
@@ -142,7 +154,7 @@ const NewTimetable = (props: TabComponentType) => {
                   name="class"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+                  formControlProps={{ sx: { minWidth: 150, width: '100%' } }}
                 />
                 &nbsp;
                 <FormControlLabel control={<Switch />} label="Auto Assign" />
@@ -160,7 +172,7 @@ const NewTimetable = (props: TabComponentType) => {
                   name="class"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: 350, width: '100%' } }}
+                  formControlProps={{ sx: { minWidth: 150, width: '100%' } }}
                 />
                 &nbsp;
                 <FormControlLabel control={<Switch />} label="Weekly" />
