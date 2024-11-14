@@ -8,6 +8,7 @@ import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
 import React, { useState, useEffect } from 'react';
 
+import { TimelineDot } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -74,7 +75,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Math01',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '#0000',
+    subjectColor: '#f04622',
     className: '1',
     primaryTeacher: 'Ms. Johnson',
     secondaryTeacher: ['Mr. Smith'],
@@ -88,7 +89,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Sci02',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '#0111',
+    subjectColor: '#4e7dbe',
     className: '2',
     primaryTeacher: 'Mr. Smith',
     secondaryTeacher: ['Ms. Johnson'],
@@ -102,7 +103,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Eng03',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '#0333',
+    subjectColor: '#4e7dbe',
     className: '1',
     primaryTeacher: 'Ms. Johnson',
     secondaryTeacher: ['Mrs. Green'],
@@ -116,7 +117,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Hist01',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '#4444',
+    subjectColor: '#7abe4e',
     className: '1',
     primaryTeacher: 'Ms. Johnson',
     secondaryTeacher: ['Mrs. Green'],
@@ -273,7 +274,21 @@ const Subject = (props: TabComponentType) => {
               { id: 'className', label: 'Class' },
               { id: 'subjectCode', label: 'Subject Code' },
               { id: 'subjectName', label: 'Subject Name' },
-              { id: 'subjectColor', label: 'Subject Color' },
+              {
+                id: 'subjectColor',
+                label: 'Subject Color',
+                render(value, row) {
+                  return (
+                    <TimelineDot
+                      sx={{
+                        bgcolor: value,
+                        width: '12px',
+                        height: '12px',
+                      }}
+                    />
+                  );
+                },
+              },
               { id: 'primaryTeacher', label: 'Primary Teacher' },
               {
                 id: 'secondaryTeacher',

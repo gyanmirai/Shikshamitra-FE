@@ -14,7 +14,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Reports from './reports';
 import NewTimetable from './new-timetable';
-import CurrentTimetableOverview from './current-timetable-overvirew';
+import CurrentTimetable from './currentTimetable';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
 
@@ -27,13 +27,13 @@ const TABS = [
   {
     value: 'currentTimetableOverview',
     label: 'Current Timetable Overview',
-    component: (props: TabComponentType) => <CurrentTimetableOverview {...props} />,
+    component: (props: TabComponentType) => <CurrentTimetable {...props} />,
   },
-  {
-    value: 'createNewTimetable',
-    label: 'Create New Timetable',
-    component: (props: TabComponentType) => <NewTimetable {...props} />,
-  },
+  // {
+  //   value: 'createNewTimetable',
+  //   label: 'Create New Timetable',
+  //   component: (props: TabComponentType) => <NewTimetable {...props} />,
+  // },
 
   // {
   //   value: 'teacherManagement',
