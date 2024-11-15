@@ -1,9 +1,8 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -41,13 +40,11 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 
   const formik = useFormik({
     initialValues: {
-      startDate: dayjs('24-04-2024', 'DD-MM-YYYY'),
-      endDate: dayjs('24-06-2025', 'DD-MM-YYYY'),
+      startDate: dayjs(edit ? data.startDate : '2024-04-24', 'YYYY-MM-DD'),
+      endDate: dayjs(edit ? data.endDate : '2025-06-24', 'YYYY-MM-DD'),
       categoryType: edit ? (data.id.includes('expense') ? '345' : '123') : '',
       categoryName: edit ? data.id : '',
       categoryId: edit ? data.id : '',
-      categoryTypeId: '',
-
       fundAllocation: edit
         ? data.id.includes('expense')
           ? data.allocatedAmount
@@ -55,108 +52,68 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
         : 0,
     },
     onSubmit: (values: any) => {
-      console.log('Form Submitted type:', values);
+      console.log('Form Submitted:', values);
       onSave(values);
     },
   });
 
-  const categoryListHandlerBasedOnCateoryType = (categoryType: any) => {
-    if (categoryType === '123') {
+  // Update category list dynamically based on selected category type
+  useEffect(() => {
+    if (formik.values.categoryType === '123') {
       setCategoryListBasedOnType(incomeCategories);
-    } else {
+    } else if (formik.values.categoryType === '345') {
       setCategoryListBasedOnType(expenseCategories);
+    } else {
+      setCategoryListBasedOnType([]);
     }
-  };
+  }, [formik.values.categoryType]);
 
   return (
     <CustomDialog title="Create New Budget" open={dialogValue} handleClose={onClose}>
-      <Box>
-        <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <Grid2 container spacing={2}>
-                <Grid2 xs={6}>
-                  <CustomSelect
-                    label="Category Type"
-                    options={[
-                      { value: '123', label: 'Income' },
-                      { value: '345', label: 'Expense' },
-                    ]}
-                    value={formik.values.categoryType}
-                    onChange={(value) => {
-                      const selectedValue = value;
-                      formik.setFieldValue('categoryType', selectedValue);
-                      categoryListHandlerBasedOnCateoryType(selectedValue);
-                    }}
-                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                    disabled={edit}
-                  />
-                </Grid2>
-                <Grid2 xs={6}>
-                  <CustomSelect
-                    label="Select Category"
-                    options={categoryListBasedOnType}
-                    value={formik.values.categoryName}
-                    onChange={(value) => formik.setFieldValue('categoryName', value)}
-                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                    disabled={edit}
-                  />
-                </Grid2>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+          <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+            <Grid2 container spacing={2}>
+              <Grid2 xs={6}>
+                <CustomSelect
+                  label="Category Type"
+                  options={[
+                    { value: '123', label: 'Income' },
+                    { value: '345', label: 'Expense' },
+                  ]}
+                  value={formik.values.categoryType}
+                  onChange={(value) => formik.setFieldValue('categoryType', value)}
+                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                  disabled={edit}
+                />
               </Grid2>
-
-                                </Box>
-                            </Grid2>
-
-                            
-
-                            <Grid2 container>
-                                <Grid2 sm={6}>
-
-                                    <TextField
-                                        name="fundAllocation"
-                                        label="Fund Allocation"
-                                        value={formik.values.fundAllocation}
-                                        onChange={formik.handleChange}
-                                        size="small"
-                                        type="number"
-                                        fullWidth
-                                    />
-
-                                </Grid2>
-                            </Grid2>
-
-
-                        </Box>
-                       
-                        </Scrollbar>
-                    </form>
-                    <DialogActions>
-                            {/* <Button onClick={onClose} variant="contained" size="small">
-                                Cancel
-                            </Button> */}
-                            <Button type="submit" variant="contained" size="small">
-                                Save
-                            </Button>
-                        </DialogActions>
-                </Box>
+              <Grid2 xs={6}>
+                <CustomSelect
+                  label="Select Category"
+                  options={categoryListBasedOnType}
+                  value={formik.values.categoryName}
+                  onChange={(value) => formik.setFieldValue('categoryName', value)}
+                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                  disabled={edit}
+                />
               </Grid2>
+            </Grid2>
 
-              <Grid2 container>
-                <Grid2 sm={6}>
-                  <TextField
-                    name="fundAllocation"
-                    label="Fund Allocation"
-                    value={formik.values.fundAllocation}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="number"
-                    fullWidth
-                  />
-                </Grid2>
+            <Grid2 container spacing={2}>
+              <Grid2 xs={6}>
+                <TextField
+                  name="fundAllocation"
+                  label="Fund Allocation"
+                  value={formik.values.fundAllocation}
+                  onChange={formik.handleChange}
+                  size="small"
+                  type="number"
+                  fullWidth
+                />
               </Grid2>
-            </Box>
-          </Scrollbar>
-        </form>
+            </Grid2>
+          </Box>
+        </Scrollbar>
         <DialogActions>
           <Button onClick={onClose} variant="contained" size="small">
             Cancel
@@ -165,7 +122,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
             Save
           </Button>
         </DialogActions>
-      </Box>
+      </form>
     </CustomDialog>
   );
 };

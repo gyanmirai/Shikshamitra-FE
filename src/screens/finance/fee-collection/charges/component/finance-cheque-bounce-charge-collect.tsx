@@ -28,7 +28,6 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
             remarks: "",
 
 
-      remarks: '',
     },
     onSubmit: (values: any) => {
       console.log('Form Submitted type:', values);
@@ -217,7 +216,8 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             type="text"
                             fullWidth
                         />
-
+                        
+ 
                     </Scrollbar>
                 </form>
                 <DialogActions>
@@ -241,6 +241,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
               type="text"
               fullWidth
             />
+           </Box>
           </Scrollbar>
         </form>
         <DialogActions>
