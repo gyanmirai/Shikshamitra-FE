@@ -1,5 +1,5 @@
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import {
@@ -100,7 +100,6 @@ const Teacher = ({
       setSelectedTeacher(null);
     }
   };
-
 
   const classOptions = useMemo(() => {
     if (!classData) return [{ label: 'All', value: 'All' }];
