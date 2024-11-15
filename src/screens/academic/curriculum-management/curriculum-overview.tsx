@@ -131,6 +131,7 @@ const CurriculumOverview = (props: TabComponentType) => {
     dialog.onFalse();
     setSelectedCurriculum(null);
     setIsEdit(false);
+    confirmPublishDialog.onFalse();
   };
 
   const handleEditCurriculum = (curriculum: any) => {

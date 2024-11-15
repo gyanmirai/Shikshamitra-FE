@@ -1,5 +1,6 @@
-import type { DateSelectArg } from '@fullcalendar/core';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
+import dayjs from 'dayjs';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -8,14 +9,17 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { Card } from '@mui/material';
 
-import { uuidv4 } from 'src/utils/uuidv4';
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { updateEvent } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 
+import CustomDialog from 'src/components/customDialog';
+
 import { StyledCalendar } from '../styles';
 // eslint-disable-next-line import/no-cycle
 import { EventDialog } from './eventDialog';
+// eslint-disable-next-line import/no-cycle
 
 export type CalendarEvent = {
   id: string;
@@ -50,6 +54,7 @@ const teachers: Teacher[] = [
 
 interface CalendarTimeTableProps {
   grade: number;
+  isEdit: boolean;
   division: string;
   duration: string;
   schoolStartTime: string;
@@ -61,6 +66,7 @@ interface CalendarTimeTableProps {
 
 export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
   grade,
+  isEdit,
   division,
   duration,
   schoolStartTime,
@@ -69,101 +75,135 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
   onEventsChange,
   breakEvents = [],
 }: CalendarTimeTableProps) => {
-  //   const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef<FullCalendar>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
+  const dialog = useBoolean();
+  // const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  // const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [newEventInfo, setNewEventInfo] = useState<DateSelectArg | null>(null);
   const [selectedRoom, setSelectedRoom] = useState(classRoomNumber);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
-  console.log('events0000', events);
-
-  const calendarRef = useRef<FullCalendar>(null);
-  // const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  // const resources = weekDays.map((day) => ({ id: day, title: day }));
-
-  const handleDateSelect = (selectInfo: DateSelectArg) => {
-    // to open the dialog after click on box
-    console.log('select info===', selectInfo);
-
-    setNewEventInfo(selectInfo);
-    setOpenDialog(true);
-  };
-
-  const filterTeachers = () => {
-    // eslint-disable-next-line no-useless-return
-    if (!selectedSubject && !newEventInfo) return;
-
-    // need to access available teacher based on subject and their availabality
-
-    // temp
-    const subject = subjects.find((sub) => sub.id === selectedSubject);
-    const subjectTeachers = subject?.teachers
-      .map((tid) => teachers.find((teacher) => tid === teacher.id))
-      .filter((teacher): teacher is Teacher => teacher !== undefined);
-    setFilteredTeachers(subjectTeachers || []);
-  };
+  const [isNewEvent, setIsNewEvent] = useState(true);
 
   useEffect(() => {
-    if (selectedSubject) {
-      filterTeachers();
+    setEvents((currentEvents) => {
+      const nonBreakEvents = currentEvents.filter(
+        (event) => !breakEvents.some((breakEvent) => breakEvent.id === event.id)
+      );
+      return [...nonBreakEvents, ...breakEvents];
+    });
+  }, [breakEvents]);
+
+  const handleDateSelect = (selectInfo: DateSelectArg) => {
+    const eventData = {
+      isNewEvent: true,
+      newEventInfo: selectInfo,
+      selectedEvent: null,
+      selectedRoom: classRoomNumber,
+    };
+
+    // Batch state updates together
+    setIsNewEvent(true);
+    setNewEventInfo(selectInfo);
+    setSelectedEvent(null);
+    setSelectedRoom(classRoomNumber);
+    dialog.onTrue();
+  };
+
+  const handleEventClick = (clickInfo: EventClickArg) => {
+    // Skip editing for break events
+    if (clickInfo.event.title.includes('Break')) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSubject]);
+
+    const event = events.find((e) => e.id === clickInfo.event.id);
+    if (event) {
+      // Batch state updates together
+      const dateSelectInfo = {
+        start: clickInfo.event.start!,
+        end: clickInfo.event.end!,
+        startStr: clickInfo.event.startStr,
+        endStr: clickInfo.event.endStr,
+        allDay: clickInfo.event.allDay,
+        view: clickInfo.view,
+      } as DateSelectArg;
+
+      setIsNewEvent(false);
+      setSelectedEvent(event);
+      setSelectedRoom(event.classRoomNumber || classRoomNumber);
+      setNewEventInfo(dateSelectInfo);
+      dialog.onTrue();
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setNewEventInfo(null);
+    setSelectedEvent(null);
+    // setSelectedSubject(null);
+    // setSelectedTeacher(null);
+    setSelectedRoom(classRoomNumber);
+    dialog.onFalse();
+  };
 
   useMemo(() => {
     setEvents((prevEvents) => [...prevEvents, ...breakEvents]);
   }, [breakEvents]);
 
   const updateEvents = (newEvents: CalendarEvent[]) => {
-    setEvents(newEvents);
-    if (onEventsChange) {
-      onEventsChange(newEvents); // Notify parent of the event change
-    }
-  };
-
-  const handleSaveEvent = () => {
-    // save function after submit the the subject and teacher
-    if (selectedSubject && selectedTeacher && newEventInfo) {
-      const subject = subjects.find((sub) => sub.id === selectedSubject);
-      const teacher = filteredTeachers.find((teach) => teach.id === selectedTeacher);
-      console.log('subject---', subject);
-
-      const newEvent = {
-        id: uuidv4(),
-        start: newEventInfo.startStr,
-        end: newEventInfo.endStr,
-        title: `${subject?.name} / ${teacher?.name}    ${selectedRoom}`,
-        textColor: subject?.color,
-        teacherId: teacher?.id,
-        subjectId: subject?.id,
-        classRoomNumber: selectedRoom,
-      };
-
-      const updatedEvents = [...events, newEvent];
-      updateEvents(updatedEvents);
-      setOpenDialog(false);
-      updateEvent(newEvent);
-      setSelectedSubject(null);
-      setSelectedTeacher(null);
-    }
-  };
-
-  const handleEventResize = (info: any) => {
-    const { event } = info;
-
-    const updatedEvent = {
-      id: event.id,
-      start: event.startStr,
-      end: event.endStr,
-      resourceId: event.resourceId,
-    };
-    setEvents((prevEvents) =>
-      prevEvents.map((ev) => (ev.id === updatedEvent.id ? { ...ev, ...updatedEvent } : ev))
+    const updatedEvents = newEvents.filter(
+      (event) => !breakEvents.some((breakEvent) => breakEvent.id === event.id)
     );
-    updateEvent(updatedEvent);
+    setEvents([...updatedEvents, ...breakEvents]);
+
+    if (onEventsChange) {
+      onEventsChange([...updatedEvents, ...breakEvents]);
+    }
+  };
+
+  const handleSaveEvent = (formValues: any) => {
+    const subject = subjects.find((sub) => sub.id === formValues.subject);
+    const teacher = teachers.find((teach) => teach.id === formValues.teacher);
+
+    const startDate = dayjs(newEventInfo!.start);
+    const endDate = dayjs(newEventInfo!.end);
+
+    // Get the time from the TimePicker values
+    const startTime = dayjs(formValues.start);
+    const endTime = dayjs(formValues.end);
+
+    // Combine the date and time
+    const combinedStart = startDate.hour(startTime.hour()).minute(startTime.minute()).toISOString();
+
+    const combinedEnd = endDate.hour(endTime.hour()).minute(endTime.minute()).toISOString();
+
+    const eventData = {
+      id: formValues.id,
+      start: combinedStart,
+      end: combinedEnd,
+      title: `${subject?.name} / ${teacher?.name}    ${formValues.classRoom}`,
+      textColor: subject?.color,
+      teacherId: teacher?.id,
+      subjectId: subject?.id,
+      classRoomNumber: formValues.classRoom,
+    };
+
+    if (isNewEvent) {
+      updateEvents([...events, eventData]);
+    } else {
+      updateEvents(events.map((ev) => (ev.id === eventData.id ? eventData : ev)));
+    }
+
+    dialog.onFalse();
+    updateEvent(eventData);
+  };
+
+  const handleDeleteEvent = () => {
+    if (selectedEvent) {
+      const updatedEvents = events.filter((ev) => ev.id !== selectedEvent.id);
+      updateEvents(updatedEvents);
+      dialog.onFalse();
+    }
   };
 
   const isEventOverlappingBreak = (start: Date, end: Date) =>
@@ -206,6 +246,21 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
     updateEvent(updatedEvent);
   };
 
+  const handleEventResize = (info: any) => {
+    const { event } = info;
+
+    const updatedEvent = {
+      id: event.id,
+      start: event.startStr,
+      end: event.endStr,
+      resourceId: event.resourceId,
+    };
+    setEvents((prevEvents) =>
+      prevEvents.map((ev) => (ev.id === updatedEvent.id ? { ...ev, ...updatedEvent } : ev))
+    );
+    updateEvent(updatedEvent);
+  };
+
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
 
   return (
@@ -237,6 +292,7 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
               hiddenDays={[0]}
               selectable
               select={handleDateSelect}
+              eventClick={handleEventClick}
               eventAllow={(dropInfo, draggedEvent) => {
                 if (draggedEvent?.title.includes('Break')) {
                   return false;
@@ -253,67 +309,25 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
                 meridiem: false,
               }}
             />
-            {/* <FullCalendar
-              weekends
-              editable
-              droppable
-              selectable
-              rerenderDelay={10}
-              allDayMaintainDuration
-              eventResizableFromStart
-              height="auto"
-              resourceAreaWidth="15%"
-              ref={calendarRef}
-              initialDate={date}
-              initialView="timeGridWeek"
-              dayMaxEventRows={3}
-              events={dataFiltered}
-              headerToolbar={false}
-              eventClick={handleEventClick}
-              slotDuration="01:00:00"
-              slotLabelInterval="01:00:00"
-              slotMinTime="07:00:00" // Start at 7 AM
-              slotMaxTime="13:00:00" // End at 7 PM
-              aspectRatio={3}
-              eventDrop={(arg) => {
-                onDropEvent(arg, updateEvent);
-              }}
-              eventResize={(arg) => {
-                onResizeEvent(arg, updateEvent);
-              }}
-              plugins={[
-                listPlugin,
-                dayGridPlugin,
-                timelinePlugin,
-                timeGridPlugin,
-                interactionPlugin,
-              ]}
-              eventReceive={handleEventReceive}
-              select={handleDateSelect}
-              // drop={(info: any) => {
-              //   if (checkbox.checked) {
-              //     // if so, remove the element from the "Draggable Events" list
-              //     info.draggedEl.parentNode.removeChild(info.draggedEl);
-              //   }
-              // }}
-            /> */}
           </StyledCalendar>
         </Card>
       </DashboardContent>
-
-      <EventDialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        subjects={subjects}
-        teachers={filteredTeachers}
-        selectedSubject={selectedSubject}
-        selectedTeacher={selectedTeacher}
-        selectedClassRoom={selectedRoom}
-        onSelectSubject={setSelectedSubject}
-        onSelectTeacher={setSelectedTeacher}
-        onClassRoomSelect={setSelectedRoom}
-        onSave={handleSaveEvent}
-      />
+      {dialog.value && (
+        <CustomDialog
+          open={dialog.value}
+          handleClose={handleCloseDialog}
+          title={isNewEvent ? 'Create Timetable Entry' : 'Edit Timetable Entry'}
+        >
+          <EventDialog
+            subjects={subjects}
+            teachers={teachers}
+            event={selectedEvent}
+            onSave={handleSaveEvent}
+            onDelete={!isNewEvent ? handleDeleteEvent : undefined}
+            isEdit={!isNewEvent}
+          />
+        </CustomDialog>
+      )}
     </>
   );
 };
