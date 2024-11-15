@@ -143,9 +143,9 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                         </Scrollbar>
                     </form>
                     <DialogActions>
-                            <Button onClick={onClose} variant="contained" size="small">
+                            {/* <Button onClick={onClose} variant="contained" size="small">
                                 Cancel
-                            </Button>
+                            </Button> */}
                             <Button type="submit" variant="contained" size="small">
                                 Save
                             </Button>
