@@ -686,8 +686,8 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
     subjectCode: Yup.string().required('Subject Code is Required'),
     subjectName: Yup.string().required('Subject Name is required'),
     className: Yup.string().required('Class is required'),
-    primaryTeacher : Yup.string().required('Primary teacher is required'),
-    secondaryTeacher : Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
+    primaryTeacher: Yup.string().required('Primary teacher is required'),
+    secondaryTeacher: Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
     learningGoal: Yup.string().required('Learning Goal is required'),
     prerequisites: Yup.string().required('Prerequisites are required'),
     description: Yup.string().required('Description is required'),
