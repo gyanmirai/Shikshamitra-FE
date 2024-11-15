@@ -187,6 +187,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
                 onChange={tabs.onChange}
                 sx={{
                   mb: 2,
+                  px: 2,
                   '& .MuiTabs-flexContainer': { gap: 2 },
                   flexGrow: 1,
                 }}

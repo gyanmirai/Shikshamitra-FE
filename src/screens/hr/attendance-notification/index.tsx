@@ -60,7 +60,7 @@ const HrAttendanceNotificationScreen = () => {
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'date', label: 'Date' },
-          { id: 'recipient', label: 'Recipient' },
+          // { id: 'recipient', label: 'Recipient' },
           { id: 'notificationType', label: 'Notification Type' },
           {
             id: 'status',

@@ -1,99 +1,200 @@
-import React from 'react';
+import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import React, { useState, useEffect } from 'react';
 
-import { Dialog, Select, Button, MenuItem, DialogTitle } from '@mui/material';
+import { TimePicker } from '@mui/x-date-pickers';
+import { Box, Grid, Button, DialogActions } from '@mui/material';
 
 // eslint-disable-next-line import/no-cycle
 import { classRoomData } from 'src/screens/academic/timetable-schedule-management/new-timetable';
 
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
+
+const validationSchema = Yup.object().shape({
+  subject: Yup.string().required('Subject is required'),
+  teacher: Yup.string().required('Teacher is required'),
+  classRoom: Yup.string().required('Classroom is required'),
+});
+
 interface EventDialogProps {
-  open: boolean;
-  onClose: () => void;
-  subjects: { id: string; name: string; color: string }[];
+  subjects: { id: string; name: string; color: string; teachers: string[] }[];
   teachers: { id: string; name: string }[];
-  selectedSubject: string | null;
-  selectedTeacher: string | null;
-  selectedClassRoom: string | null;
-  onSelectSubject: (subject: string) => void;
-  onSelectTeacher: (teacher: string) => void;
-  onClassRoomSelect: (classRoom: string) => void;
-  onSave: () => void;
+  event?: {
+    id: string;
+    title: string;
+    subjectId?: string;
+    teacherId?: string;
+    start?: string;
+    end?: string;
+    classRoomNumber?: string;
+  } | null;
+  onSave: (values: any) => void;
+  onDelete?: () => void;
+  isEdit?: boolean;
 }
 
 export const EventDialog: React.FC<EventDialogProps> = ({
-  open,
-  onClose,
   subjects,
   teachers,
-  selectedSubject,
-  selectedTeacher,
-  selectedClassRoom,
-  onSelectSubject,
-  onSelectTeacher,
-  onClassRoomSelect,
+  event,
   onSave,
-}) => (
-  <Dialog open={open} onClose={onClose} fullWidth>
-    <DialogTitle>Select Subject and Teacher</DialogTitle>
-    <div style={{ padding: '16px' }}>
-      <Select
-        fullWidth
-        value={selectedSubject || ''}
-        onChange={(e) => onSelectSubject(e.target.value)}
-        displayEmpty
-      >
-        <MenuItem value="" disabled>
-          Select Subject
-        </MenuItem>
-        {subjects.map((subject) => (
-          <MenuItem key={subject.id} value={subject.id}>
-            {subject.name}
-          </MenuItem>
-        ))}
-      </Select>
+  onDelete,
+  isEdit,
+}) => {
+  const formik = useFormik({
+    initialValues: {
+      subject: event?.subjectId || '',
+      teacher: event?.teacherId || '',
+      classRoom: event?.classRoomNumber || '',
+      start: event?.start ? dayjs(event.start) : null,
+      end: event?.end ? dayjs(event.end) : null,
+    },
+    validationSchema,
+    onSubmit: (values) => {
+      onSave({
+        ...values,
+        id: event?.id || Date.now().toString(),
+        start: values.start?.toISOString(),
+        end: values.end?.toISOString(),
+      });
+    },
+  });
 
-      <Select
-        fullWidth
-        value={selectedTeacher || ''}
-        onChange={(e) => onSelectTeacher(e.target.value)}
-        displayEmpty
-        style={{ marginTop: '16px' }}
-        disabled={!selectedSubject}
-      >
-        <MenuItem value="" disabled>
-          Select Teacher
-        </MenuItem>
-        {teachers.map((teacher) => (
-          <MenuItem key={teacher.id} value={teacher.id}>
-            {teacher.name}
-          </MenuItem>
-        ))}
-      </Select>
+  const [availableTeachers, setAvailableTeachers] = useState<any>([]);
 
-      <Select
-        fullWidth
-        value={selectedClassRoom || ''}
-        onChange={(e) => onClassRoomSelect(e.target.value)}
-        displayEmpty
-        style={{ marginTop: '16px' }}
-      >
-        <MenuItem value="" disabled>
-          Select ClassRoom
-        </MenuItem>
-        {classRoomData.map((classRoom) => (
-          <MenuItem key={classRoom.id} value={classRoom.name}>
-            {classRoom.name}
-          </MenuItem>
-        ))}
-      </Select>
-      <Button
-        variant="contained"
-        color="primary"
-        fullWidth
-        onClick={onSave}
-        style={{ marginTop: '16px' }}
-      >
-        Schedule Task
-      </Button>
-    </div>
-  </Dialog>
-);
+  // Filter teachers based on selected subject
+  useEffect(() => {
+    if (formik.values.subject) {
+      const selectedSubject = subjects.find((sub) => sub.id === formik.values.subject);
+      const filteredTeachers = teachers.filter((teacher) =>
+        selectedSubject?.teachers.includes(teacher.id)
+      );
+      setAvailableTeachers(filteredTeachers);
+
+      // Reset teacher selection if current selection is not valid for new subject
+      if (!filteredTeachers.find((t) => t.id === formik.values.teacher)) {
+        formik.setFieldValue('teacher', '');
+      }
+    } else {
+      setAvailableTeachers([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.subject, subjects, teachers]);
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Subject"
+                name="subject"
+                options={subjects}
+                valueKey="id"
+                labelKey="name"
+                value={formik.values.subject}
+                onChange={(value) => {
+                  formik.setFieldValue('subject', value);
+                }}
+                error={formik.touched.subject && Boolean(formik.errors.subject)}
+                // helperText={formik.touched.subject && formik.errors.subject}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Teacher"
+                name="teacher"
+                options={availableTeachers}
+                valueKey="id"
+                labelKey="name"
+                value={formik.values.teacher}
+                onChange={(value) => {
+                  formik.setFieldValue('teacher', value);
+                }}
+                disabled={!formik.values.subject}
+                error={formik.touched.teacher && Boolean(formik.errors.teacher)}
+                // helperText={formik.touched.teacher && formik.errors.teacher}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Classroom"
+                name="classRoom"
+                options={classRoomData}
+                valueKey="name"
+                labelKey="name"
+                value={formik.values.classRoom}
+                onChange={(value) => {
+                  formik.setFieldValue('classRoom', value);
+                }}
+                error={formik.touched.classRoom && Boolean(formik.errors.classRoom)}
+                // helperText={formik.touched.classRoom && formik.errors.classRoom}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TimePicker
+                label="Start Time"
+                format="HH:mm"
+                name="start"
+                value={formik.values.start}
+                onChange={(newValue) => {
+                  formik.setFieldValue('start', newValue);
+                }}
+                views={['hours', 'minutes']}
+                slotProps={{ textField: { size: 'small' } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TimePicker
+                label="End Time"
+                format="HH:mm"
+                name="end"
+                value={formik.values.end}
+                onChange={(newValue) => {
+                  formik.setFieldValue('end', newValue);
+                }}
+                views={['hours', 'minutes']}
+                slotProps={{ textField: { size: 'small' } }}
+              />
+            </Grid>
+          </Grid>
+        </Scrollbar>
+        <DialogActions>
+          {isEdit ? (
+            <>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  formik.handleSubmit();
+                }}
+              >
+                Update
+              </Button>
+              {isEdit && onDelete && (
+                <Button variant="outlined" color="error" onClick={onDelete}>
+                  Delete
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button
+              type="submit"
+              variant="contained"
+              onClick={() => {
+                formik.handleSubmit();
+              }}
+            >
+              Schedule Subject
+            </Button>
+          )}
+        </DialogActions>
+      </form>
+    </Box>
+  );
+};

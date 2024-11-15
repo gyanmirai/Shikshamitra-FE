@@ -6,13 +6,23 @@ import type { UsePopoverReturn } from 'src/components/custom-popover';
 import React, { useCallback } from 'react';
 
 import { Search } from '@mui/icons-material';
-import { Box, MenuList, MenuItem, TextField, InputAdornment } from '@mui/material';
+import {
+  Box,
+  Button,
+  MenuList,
+  MenuItem,
+  TextField,
+  DialogActions,
+  InputAdornment,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -21,6 +31,8 @@ import EmployeeFrom from '../employee/employee-form';
 
 const StaffDirectoryScreen = () => {
   const dialog = useBoolean();
+  const statusDialog = useBoolean();
+
   const actions = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
     ({ popover }: { popover: UsePopoverReturn }, row: any) => (
@@ -37,18 +49,15 @@ const StaffDirectoryScreen = () => {
         <MenuItem
           onClick={() => {
             popover.onClose();
+            statusDialog.onTrue();
           }}
-          sx={{ color: row.status === 'Active' ? 'error.main' : 'success.main' }}
         >
-          <Iconify
-            icon="material-symbols:tab-close-inactive"
-            sx={{ height: '16px', width: '16px' }}
-          />
-          {row.status === 'Active' ? 'In Active' : 'Active'}
+          <Iconify icon="mdi:form-dropdown" sx={{ height: '16px', width: '16px' }} />
+          Change Status
         </MenuItem>
       </MenuList>
     ),
-    [dialog]
+    [dialog, statusDialog]
   );
   return (
     <Box>
@@ -177,6 +186,40 @@ const StaffDirectoryScreen = () => {
         }}
       >
         <EmployeeFrom />
+      </CustomDialog>
+
+      <CustomDialog
+        open={statusDialog.value}
+        handleClose={statusDialog.onFalse}
+        title="Change Status"
+      >
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+          <CustomSelect
+            options={[
+              { label: 'Active', value: 'active' },
+              { label: 'In Active', value: 'inActive' },
+              { label: 'Left', value: 'left' },
+              { label: 'Retired', value: 'retired' },
+            ]}
+            value=""
+            onChange={() => {}}
+            label="Change Status"
+            formControlProps={{
+              fullWidth: true,
+              sx: {
+                maxWidth: 'unset',
+              },
+            }}
+          />
+        </Scrollbar>
+        <DialogActions>
+          <Button variant="outlined" onClick={statusDialog.onFalse}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={statusDialog.onFalse}>
+            Change Status
+          </Button>
+        </DialogActions>
       </CustomDialog>
     </Box>
   );

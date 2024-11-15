@@ -100,7 +100,7 @@ export const subjectTempData = {
                   timeLine: '10/05/2025',
                   assignedTeacher: 'Mr. Smith',
                   documents: [],
-                  progress: 60,
+                  progress: 30,
                   assignments: [
                     { title: 'Algebra Assignment', dueDate: '01-01-2024', status: 'Pending' },
                     { title: 'Geometry Assignment', dueDate: '01-02-2024', status: 'Received' },

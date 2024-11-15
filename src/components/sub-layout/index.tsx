@@ -1,15 +1,21 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 import { Box, List, useTheme, ListItem, ListItemButton } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
+import { yearApi } from 'src/redux/year/yearApi';
+import { boardApi } from 'src/redux/board/boardApi';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 
 import { Scrollbar } from '../scrollbar';
 import CustomAccordion from '../custom-accordian';
+import { LoadingScreen } from '../loading-screen';
 import { StyledNavItem } from '../nav-section/mini/nav-item';
 import { sharedStyles, navSectionClasses, NavSectionVertical } from '../nav-section';
 
@@ -18,6 +24,13 @@ const SubLayout = ({ children }: any) => {
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
   const currentData = navSubData[`/${currentModule}` as keyof typeof navSubData];
+
+  const yearLoading = useSelector(
+    (state: RootState) => yearApi.endpoints.getYear.select(undefined)(state)?.isLoading
+  );
+  const boardLoading = useSelector(
+    (state: RootState) => boardApi.endpoints.getBoards.select(undefined)(state)?.isLoading
+  );
 
   return (
     <Box
@@ -50,19 +63,23 @@ const SubLayout = ({ children }: any) => {
           bgcolor: (theme) => theme.palette.background.paper,
         }}
       >
-        <Scrollbar
-          sx={{
-            maxWidth: '1440px',
-            width: '100%',
-            mx: 'auto',
-            height: '100%',
-            overflow: 'auto',
-            p: 2,
-            '& .simplebar-content': { height: '100%' },
-          }}
-        >
-          {children}
-        </Scrollbar>
+        {(yearLoading || boardLoading) && removeLastSlash !== '/setting/academic-setup' ? (
+          <LoadingScreen />
+        ) : (
+          <Scrollbar
+            sx={{
+              maxWidth: '1440px',
+              width: '100%',
+              mx: 'auto',
+              height: '100%',
+              overflow: 'auto',
+              p: 2,
+              '& .simplebar-content': { height: '100%' },
+            }}
+          >
+            {children}
+          </Scrollbar>
+        )}
       </Box>
     </Box>
   );

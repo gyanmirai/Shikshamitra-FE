@@ -99,7 +99,7 @@ const CurriculumData: TCurriculum[] = [
   },
 ];
 
-const subjectData =   {
+const subjectData = {
   id: 1,
   subjectName: 'Mathematics',
   subjectCode: 'Math01',
@@ -107,12 +107,12 @@ const subjectData =   {
   description: '',
   subjectColor: '',
   className: '1',
-  primaryTeacher : 'Ms. Johnson',
-  secondaryTeacher : ['Mr. Smith'],
+  primaryTeacher: 'Ms. Johnson',
+  secondaryTeacher: ['Mr. Smith'],
   prerequisites: 'Basic counting skills',
   learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
   status: 'Publish',
-}
+};
 
 const CurriculumOverview = (props: TabComponentType) => {
   const { setSearchParams } = props;
@@ -131,6 +131,7 @@ const CurriculumOverview = (props: TabComponentType) => {
     dialog.onFalse();
     setSelectedCurriculum(null);
     setIsEdit(false);
+    confirmPublishDialog.onFalse();
   };
 
   const handleEditCurriculum = (curriculum: any) => {
@@ -424,6 +425,7 @@ const CurriculumOverview = (props: TabComponentType) => {
         title={isEdit ? 'Update Curriculum' : 'Add Curriculum'}
       >
         <CurriculumForm
+          setSearchParams={setSearchParams}
           onSubmit={handleSubmit}
           onClose={handleCloseDialog}
           isEdit={isEdit}
@@ -470,13 +472,20 @@ const CurriculumOverview = (props: TabComponentType) => {
 export default CurriculumOverview;
 
 interface CurriculumFormProps {
+  setSearchParams: any;
   onSubmit: (values: TCurriculum) => void;
   onClose: () => void;
   data: TCurriculum | null;
   isEdit: boolean;
 }
 
-const CurriculumForm: React.FC<CurriculumFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
+const CurriculumForm: React.FC<CurriculumFormProps> = ({
+  setSearchParams,
+  onSubmit,
+  onClose,
+  data,
+  isEdit,
+}) => {
   // const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -541,6 +550,22 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({ onSubmit, onClose, data
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 onChange={(value) => {}}
               />
+              <Typography
+                onClick={() => {
+                  setSearchParams?.({
+                    tab: 'settings',
+                  });
+                }}
+                sx={{
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  textAlign: 'right',
+                  color: 'blue',
+                  fontWeight: 'bold',
+                }}
+              >
+                Add Template ?
+              </Typography>
             </Grid>
             <Grid item xs={12} md={6}>
               <CustomSelect

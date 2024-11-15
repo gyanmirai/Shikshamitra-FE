@@ -1,268 +1,536 @@
 'use client';
 
 import React from 'react';
+// import Chart from 'react-apexcharts';
 
-import { Divider, useTheme } from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import type { LabelColor } from 'src/components/label';
 
-import { CONFIG } from 'src/config-global';
-// import { AttendanceGraph } from 'src/app/(auth)/student/overview/page';
+import Link from 'next/link';
+import Autoplay from 'embla-carousel-autoplay';
 
-import { AttendanceGraph } from 'src/app/(auth)/student/overview/enrollments-trends';
+import {
+  Box,
+  List,
+  Grid,
+  Card,
+  Avatar,
+  Divider,
+  useTheme,
+  ListItem,
+  Typography,
+  CardContent,
+  ListItemText,
+  ListItemAvatar,
+} from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select';
-import { svgColorClasses } from 'src/components/svg-color';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { fNumber } from 'src/utils/format-number';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
+import { Chart } from 'src/components/chart';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import UserHoverProfile from 'src/components/student-popover';
+import {
+  Carousel,
+  useCarousel,
+  CarouselDotButtons,
+  CarouselArrowBasicButtons,
+} from 'src/components/carousel';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
+import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-import { AppWidget } from './app-widget';
-import { AppWidgetSummary } from './app-widget-summary';
+// Sample data
+const stats = {
+  totalEmployees: 120,
+  attendance: { present: 85, absent: 20, onLeave: 15 },
+  newJoiners: 5,
+  pendingLeaveRequests: 3,
+  payroll: {
+    total: formatCurrency(50000),
+    pending: formatCurrency(10000),
+    discrepancies: formatCurrency(200),
+  },
+};
 
-export const _appFeatured = [...Array(3)].map((_, index) => ({
-  id: `${index + 3}`,
-  title: `Approve leave application`,
-  description: `test${index + 3}`,
-  coverUrl: 'https://minimal-assets-api.vercel.app/assets/images/covers/cover_1.jpg',
-}));
-export const _appInvoices = [...Array(5)].map((_, index) => {
-  const category = ['Android', 'Mac', 'Windows', 'Android', 'Mac'][index];
+// Icons
+const icons = {
+  employees: 'mdi:account-multiple',
+  attendance: 'mdi:calendar-check',
+  newJoiners: 'mdi:account-plus',
+  leaveRequests: 'mdi:clock-alert',
+  payroll: 'mdi:wallet',
+};
 
-  const status = ['paid', 'out of date', 'progress', 'paid', 'paid'][index];
-
-  return {
-    id: `${index}`,
-    invoiceNumber: `INV-199${index}`,
-    price: index,
-    category,
-    status,
-  };
-});
-export const _appRelated = [
-  'Microsoft office 365',
-  'Opera',
-  'Adobe acrobat reader DC',
-  'Joplin',
-  'Topaz photo AI',
-].map((name, index) => ({
-  id: `${index}`,
-  name,
-  downloaded: index,
-  ratingNumber: index,
-  size: index * 1024,
-  totalReviews: index,
-  shortcut: `${CONFIG.site.basePath}/assets/icons/app/ic-app-${index + 1}.webp`,
-  price: [2, 4].includes(index) ? index : 0,
-}));
-export const _appInstalled = ['Germany', 'England', 'France', 'Korean', 'USA'].map(
-  (country, index) => ({
-    id: `${index}`,
-    countryName: country,
-    android: index,
-    windows: index + 1,
-    apple: index + 2,
-    countryCode: ['de', 'gb', 'fr', 'kr', 'us'][index],
-  })
-);
-
-export const _appAuthors = [...Array(3)].map((_, index) => ({
-  id: `${index}`,
-  name: `${index}`,
-  avatarUrl: `${index}`,
-  totalFavorites: index,
-}));
-const HrDashboard = () => {
+const Dashboard = () => {
   const theme = useTheme();
+  const carousel = useCarousel({ loop: true }, [
+    Autoplay({ playOnInit: true, delay: 2000, stopOnMouseEnter: true }),
+  ]);
   return (
-    <>
-      <Grid container spacing={3} width="100%">
-        <Grid xs={12}>
-          <CustomSelect
-            label="Organization"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
-          />
-        </Grid>
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidgetSummary
+    <Box sx={{ p: 3 }}>
+      <Grid container spacing={3}>
+        {/* Statistics Cards */}
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
             title="Total Employees"
-            percent={null}
-            total={10000}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
-            }}
-          />
-        </Grid>
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidgetSummary
-            title="Total Male Employees"
-            percent={null}
-            total={8000}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
-            }}
-          />
-        </Grid>
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidgetSummary
-            title="Total Female Employees"
-            percent={null}
-            total={2000}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
-            }}
-          />
-        </Grid>
-        <Grid xs={12}>
-          <Divider sx={{ borderStyle: 'doted' }} />
-        </Grid>
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidgetSummary
-            title="Leave requests"
-            percent={null}
-            total={10}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
-            }}
+            icon={icons.employees}
+            value={stats.totalEmployees}
+            labels={[
+              { name: 'Teaching: 70', color: 'info' },
+              { name: 'Non-teaching: 50', color: 'secondary' },
+            ]}
+            color="primary.main"
+            href="/hr/employee"
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidgetSummary
-            title="Open Positions"
-            percent={null}
-            total={12}
-            chart={{
-              colors: [theme.vars.palette.info.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [20, 41, 63, 33, 28, 35, 50, 46],
-            }}
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
+            title="Attendance Overview"
+            icon={icons.attendance}
+            value={`${stats.attendance.present}%`}
+            labels={[
+              { name: 'Present: 100', color: 'success' },
+              { name: 'Absent: 2', color: 'error' },
+              { name: 'On Leave: 5', color: 'warning' },
+            ]}
+            color="secondary.main"
+            href="/hr/attendance-tracking"
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidgetSummary
-            title="Upcoming Review"
-            percent={null}
-            total={678}
-            chart={{
-              colors: [theme.vars.palette.error.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [18, 19, 31, 8, 16, 37, 12, 33],
-            }}
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
+            title="New Joiners"
+            icon={icons.newJoiners}
+            value={stats.newJoiners}
+            labels={[{ name: 'This Month', color: 'info' }]}
+            color="warning.main"
           />
         </Grid>
-      </Grid>
-      <Grid container spacing={3} width="100%">
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidget
-            title="Attendance Percentage"
-            total={89}
-            icon="solar:user-rounded-bold"
-            chart={{ series: 89 }}
-            // renderComp={
-            //   <IconButton sx={{ color: 'black', zIndex: 10 }}>
-            //     <Visibility />
-            //   </IconButton>
-            // }
-          />
-        </Grid>
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidget
-            title="Payroll Status"
-            total={10}
-            icon="fluent:payment-48-filled"
-            chart={{
-              series: 10,
-              colors: [theme.vars.palette.info.light, theme.vars.palette.info.main],
-            }}
-            // renderComp={
-            //   <IconButton sx={{ color: 'black', zIndex: 10 }}>
-            //     <Visibility />
-            //   </IconButton>
-            // }
-            sx={{ bgcolor: 'info.dark', [`& .${svgColorClasses.root}`]: { color: 'info.light' } }}
-          />
-        </Grid>
-        <Grid xs={12} md={6} lg={4}>
-          <AppWidget
+
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
             title="Pending Leave Requests"
-            total={10}
-            icon="pepicons-pencil:leave-circle-filled"
-            chart={{
-              series: 10,
-              colors: [theme.vars.palette.warning.light, theme.vars.palette.warning.main],
-            }}
-            // renderComp={
-            //   <IconButton sx={{ color: 'black', zIndex: 10 }}>
-            //     <Visibility />
-            //   </IconButton>
-            // }
-            sx={{
-              bgcolor: 'warning.dark',
-              [`& .${svgColorClasses.root}`]: { color: 'warning.light' },
-            }}
+            icon={icons.leaveRequests}
+            value={stats.pendingLeaveRequests}
+            color="warning.main"
+            href="/hr/leave-requests/?tab=leaveHistory"
           />
         </Grid>
-        <Grid xs={12} md={6}>
-          <AttendanceGraph
-            title="Attendance Analytics"
-            subheader="(+43%) than last year"
+
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
+            title="Payroll Summary"
+            icon={icons.payroll}
+            value={stats.payroll.total}
+            labels={[{ name: `Pending: ${stats.payroll.pending}`, color: 'warning' }]}
+            color="info.main"
+            href="/hr/payroll/pay-process"
+          />
+        </Grid>
+
+        {/* Graphs and Charts */}
+        <Grid item xs={12} md={6}>
+          <AppCurrentDownload
+            title="Employee Count by Group"
+            subheader=""
             chart={{
               series: [
+                { label: 'Non-teaching Staff', value: 1224 },
+                { label: 'Teaching Staff', value: 53345 },
+              ],
+              colors: [theme.palette.primary.light, theme.palette.primary.darker],
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <EcommerceYearlySales
+            id="demo__4"
+            title="Attendance Trends"
+            subheader=""
+            chart={{
+              categories: [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+              ],
+              series: [
                 {
-                  name: 'Weekly',
-                  categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+                  name: '2024',
                   data: [
-                    { name: '', data: [24, 41, 35, 151, 49] },
-                    // { name: 'Savings', data: [24, 56, 77, 88, 99] },
-                    // { name: 'Investment', data: [40, 34, 77, 88, 99] },
+                    {
+                      name: 'Total Attendance',
+                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
+                    },
                   ],
                 },
                 {
-                  name: 'Monthly',
-                  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                  name: '2023',
                   data: [
-                    { name: '', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
-                    // { name: 'Savings', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
-                    // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
-                  ],
-                },
-                {
-                  name: 'Yearly',
-                  categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                  data: [
-                    { name: '', data: [76, 42, 29, 41, 27, 96] },
-                    // { name: 'Savings', data: [46, 44, 24, 43, 44, 43] },
-                    // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
+                    {
+                      name: 'Total Attendance',
+                      data: [91, 148, 35, 51, 49, 10, 41, 35, 51, 49, 62, 69],
+                    },
                   ],
                 },
               ],
             }}
+            sx={{ height: 1 }}
           />
         </Grid>
-        <Grid xs={12} md={6}>
-          <CustomizableTable
-            columns={[
-              { id: 'name', label: 'Name' },
-              { id: 'employeeId', label: 'Employee Id' },
-              { id: 'department', label: 'Department' },
-            ]}
-            data={[]}
+
+        <Grid item xs={12} md={6}>
+          <AnalyticsCurrentVisits
+            title="Leave Analysis"
+            chart={{
+              series: [
+                { label: 'Sick Leave', value: 40 },
+                { label: 'Casual Leave', value: 30 },
+                { label: 'Maternity', value: 20 },
+                { label: 'Other', value: 10 },
+              ],
+            }}
           />
         </Grid>
-        <Grid xs={12}>
-          <CalendarView />
+
+        <Grid item xs={12} md={6}>
+          <AnalyticsWebsiteVisits
+            title="Payroll Distribution"
+            subheader=""
+            chart={{
+              categories: ['Admin', 'Teaching', 'Non-teaching', 'Support', 'Other'],
+              series: [{ name: 'Payroll', data: [15000, 12000, 8000, 10000, 5000] }],
+              options: {
+                yaxis: {
+                  labels: {
+                    formatter: (value: number) => `${formatCurrency(value)}`,
+                  },
+                },
+                tooltip: {
+                  y: {
+                    formatter: (value: number) => `${formatCurrency(value)}`,
+                  },
+                },
+              },
+            }}
+            sx={{ height: '100%' }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%' }}>
+              <Typography variant="h6">Employee Turnover Rate</Typography>
+              <Chart
+                type="area"
+                series={[{ name: 'Turnover Rate', data: [3, 5, 2, 4, 3, 2, 6] }]}
+                options={{
+                  xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'] },
+                  colors: ['#FFA600'],
+                  chart: {
+                    toolbar: {
+                      show: false,
+                    },
+                  },
+                }}
+                height="100%"
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              p: 3,
+              // height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+
+              borderRadius: '16px',
+              height: '100%',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Iconify
+                icon="mdi:cake-variant"
+                width={32}
+                height={32}
+                sx={{ color: 'primary.main' }}
+              />
+              <Typography variant="h5" sx={{ ml: 2, fontWeight: 'bold' }}>
+                Employee Birthdays & Anniversary
+              </Typography>
+            </Box>
+
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                Todays Birthday & Anniversary
+              </Typography>
+
+              <Card sx={{ bgcolor: 'background.neutral' }}>
+                <CarouselDotButtons
+                  scrollSnaps={carousel.dots.scrollSnaps}
+                  selectedIndex={carousel.dots.selectedIndex}
+                  onClickDot={carousel.dots.onClickDot}
+                  sx={{
+                    bottom: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    position: 'absolute',
+                    color: 'primary.dark',
+                  }}
+                />
+
+                <CarouselArrowBasicButtons
+                  {...carousel.arrows}
+                  options={carousel.options}
+                  sx={{ top: 8, right: 8, position: 'absolute', color: 'common.black' }}
+                />
+
+                <Carousel carousel={carousel}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: 'primary.lighter',
+                      p: 2,
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <UserHoverProfile
+                      avatarComp={
+                        <Avatar
+                          sx={{
+                            bgcolor: 'primary.main',
+                            mr: 2,
+                            width: 56,
+                            height: 56,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          JD
+                        </Avatar>
+                      }
+                      user={{
+                        name: 'John Doe',
+                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                        role: 'Student',
+                        email: 'john.doe@example.com',
+                        class: '10th',
+                        division: 'A',
+                        board: 'CBSE',
+                        medium: 'English',
+                        organization: 'Higher Secondary',
+                      }}
+                    />
+
+                    <Box>
+                      <Typography color="primary" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        John Doe
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        Turning 20 today
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: 'primary.lighter',
+                      p: 2,
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <UserHoverProfile
+                      avatarComp={
+                        <Avatar sx={{ bgcolor: 'primary.main', mr: 2, width: 56, height: 56 }}>
+                          JD
+                        </Avatar>
+                      }
+                      user={{
+                        name: 'John Doe',
+                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                        role: 'Student',
+                        email: 'john.doe@example.com',
+                        class: '10th',
+                        division: 'A',
+                        board: 'CBSE',
+                        medium: 'English',
+                        organization: 'Higher Secondary',
+                      }}
+                    />
+
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        John Doe
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        Turning 30 today
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Carousel>
+              </Card>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                Upcoming Birthdays & Anniversary
+              </Typography>
+              <Scrollbar sx={{ height: 300 }}>
+                <List>
+                  {[
+                    { name: 'Jane Smith', date: 'May 15', age: 19 },
+                    { name: 'Mike Johnson', date: 'May 18', age: 21 },
+                    { name: 'Sarah Brown', date: 'May 20', age: 20 },
+                  ].map((student, index) => (
+                    <ListItem
+                      key={index}
+                      disablePadding
+                      sx={{
+                        backgroundColor: 'background.paper',
+                        borderRadius: '8px',
+                        p: 2,
+                        boxShadow: 2,
+                        my: 1,
+                      }}
+                    >
+                      <ListItemAvatar>
+                        <UserHoverProfile
+                          avatarComp={
+                            <Avatar
+                              sx={{
+                                bgcolor: 'secondary.main',
+                                width: 48,
+                                height: 48,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {student.name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')}
+                            </Avatar>
+                          }
+                          user={{
+                            name: student.name,
+                            avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                            role: 'Student',
+                            email: 'john.doe@example.com',
+                            class: '10th',
+                            division: 'A',
+                            board: 'CBSE',
+                            medium: 'English',
+                            organization: 'Higher Secondary',
+                          }}
+                        />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                            {student.name}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="body2">{`${student.date} (Turning ${student.age})`}</Typography>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Scrollbar>
+            </Box>
+          </Card>
+        </Grid>
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Events & Holidays</Typography>
+              <CalendarView />
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
-    </>
+    </Box>
   );
 };
 
-export default HrDashboard;
+export default Dashboard;
+
+interface DashboardCardProps {
+  title: string;
+  icon: string;
+  value?: number | string;
+  labels?: { name: string; color: LabelColor }[];
+  color: string;
+  href?: string;
+}
+
+export const EmployeeDashboardCard = ({
+  title,
+  icon,
+  value,
+  labels = [],
+  href = '',
+  color,
+}: DashboardCardProps) => (
+  <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
+    <Card sx={{ height: '100%' }}>
+      <CardContent
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
+        <Box display="flex" flexDirection="column" justifyContent="space-between" height="100%">
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+            <Box sx={{ typography: 'subtitle1' }}>{title}</Box>
+            {/* <Typography variant="h6">Total Employees</Typography> */}
+          </Box>
+          {typeof value === 'number' && (
+            <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{fNumber(value)}</Box>
+          )}
+          {typeof value === 'string' && (
+            <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{value}</Box>
+          )}
+          {/* <Typography variant="h4">{stats.totalEmployees}</Typography> */}
+          <Box
+            sx={{
+              mt: 1.5,
+              mb: 1,
+              typography: 'subtitle2',
+              display: 'flex',
+              gap: 1,
+              flexWrap: 'wrap',
+            }}
+          >
+            {labels.map((label, index) => (
+              <Label color={label.color || 'success'}>{label.name}</Label>
+            ))}
+          </Box>
+        </Box>
+        <Iconify icon={icon} sx={{ width: 50, height: 50, color }} />
+        {/* <Typography variant="body2"></Typography> */}
+      </CardContent>
+    </Card>
+  </Box>
+);

@@ -14,8 +14,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Reports from './reports';
 import NewTimetable from './new-timetable';
-import RoomAllocation from './room-allocation';
-import CurrentTimetableOverview from './current-timetable-overvirew';
+import CurrentTimetable from './currentTimetable';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
 
@@ -28,24 +27,24 @@ const TABS = [
   {
     value: 'currentTimetableOverview',
     label: 'Current Timetable Overview',
-    component: (props: TabComponentType) => <CurrentTimetableOverview {...props} />,
+    component: (props: TabComponentType) => <CurrentTimetable {...props} />,
   },
-  {
-    value: 'createNewTimetable',
-    label: 'Create New Timetable',
-    component: (props: TabComponentType) => <NewTimetable {...props} />,
-  },
+  // {
+  //   value: 'createNewTimetable',
+  //   label: 'Create New Timetable',
+  //   component: (props: TabComponentType) => <NewTimetable {...props} />,
+  // },
 
   // {
   //   value: 'teacherManagement',
   //   label: 'Teacher Management',
   //   component: (props: TabComponentType) => <TeacherManagement {...props} />,
   // },
-  {
-    value: 'roomAllocation',
-    label: 'Room Allocation',
-    component: (props: TabComponentType) => <RoomAllocation {...props} />,
-  },
+  // {
+  //   value: 'roomAllocation',
+  //   label: 'Room Allocation',
+  //   component: (props: TabComponentType) => <RoomAllocation {...props} />,
+  // },
   {
     value: 'reports',
     label: 'Reports',
@@ -77,26 +76,42 @@ const TimetableScheduleManagementScreen = () => {
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
         <Button
-          startIcon={<Iconify icon="mdi:account-plus" />}
-          color="secondary"
+          startIcon={<Iconify icon="mdi:plus" />}
+          color="primary"
           variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'createNewTimetable',
+            });
+          }}
         >
-          Add New Teacher
-        </Button>
-        <Button startIcon={<Iconify icon="mdi:plus" />} color="primary" variant="contained">
-          Add New Subject
+          Create New TimeTable
         </Button>
 
         <Button
           startIcon={<Iconify icon="mdi:file-document-outline" />}
           color="error"
           variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'reports',
+            });
+          }}
         >
           Generate Timetable Report
         </Button>
 
-        <Button startIcon={<Iconify icon="mdi:pencil" />} color="warning" variant="contained">
-          Recent Update
+        <Button
+          startIcon={<Iconify icon="mdi:plus" />}
+          color="warning"
+          variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'settings',
+            });
+          }}
+        >
+          Add New Room
         </Button>
       </Box>
       <Card

@@ -11,6 +11,8 @@ import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -100,12 +102,48 @@ const PayProcessScreen = () => {
           { id: 'year', label: 'Year' },
           { id: 'workingDays', label: 'Working Days' },
           { id: 'presentDays', label: 'Present Days' },
-          { id: 'salary', label: 'Salary' },
-          { id: 'grossSalary', label: 'Gross Salary' },
-          { id: 'pr', label: 'PR' },
-          { id: 'profTax', label: 'Prof. Tax' },
-          { id: 'tds', label: 'TDS' },
-          { id: 'netSalary', label: 'Net Salary' },
+          {
+            id: 'salary',
+            label: 'Salary',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'grossSalary',
+            label: 'Gross Salary',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'pr',
+            label: 'PR',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'profTax',
+            label: 'Prof. Tax',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'tds',
+            label: 'TDS',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'netSalary',
+            label: 'Net Salary',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
           {
             id: 'payrollStatus',
             label: 'Payroll Status',

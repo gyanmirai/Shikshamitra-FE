@@ -1,5 +1,3 @@
-import type { Store } from '@reduxjs/toolkit';
-
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
@@ -42,7 +40,7 @@ const reducers = combineReducers({
   [employeeApi.reducerPath]: employeeApi.reducer,
 });
 
-const store: Store = configureStore({
+const store = configureStore({
   reducer: persistReducer(persistConfig, reducers),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()

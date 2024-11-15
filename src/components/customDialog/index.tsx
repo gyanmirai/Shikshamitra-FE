@@ -3,7 +3,7 @@ import type { PaperProps, DialogProps } from '@mui/material';
 import React from 'react';
 
 import { Close } from '@mui/icons-material';
-import { Dialog, useTheme, IconButton, DialogTitle } from '@mui/material';
+import { Box, Dialog, useTheme, IconButton, Typography } from '@mui/material';
 
 type CustomDialogProps = DialogProps & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
@@ -47,19 +47,21 @@ const CustomDialog = ({
       }}
       {...props}
     >
-      <DialogTitle sx={{ minHeight: 76 }}>{title}</DialogTitle>
-      <IconButton
-        aria-label="close"
-        onClick={() => handleClose()}
-        sx={{
-          position: 'absolute',
-          right: 8,
-          top: 8,
-          color: theme.palette.grey[500],
-        }}
-      >
-        <Close />
-      </IconButton>
+      <Box display="flex" alignItems="center" justifyContent="space-between" py={1} px={2}>
+        <Typography variant="h5">{title}</Typography>
+        <IconButton
+          aria-label="close"
+          onClick={() => handleClose()}
+          sx={{
+            // position: 'absolute',
+            // right: 8,
+            // top: 8,
+            color: theme.palette.grey[500],
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Box>
       {children}
     </Dialog>
   );

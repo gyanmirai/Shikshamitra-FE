@@ -101,6 +101,7 @@
     "react-draggable": "^4.4.6",
     "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.51.5",
+    "react-hotkeys-hook": "^4.6.1",
     "react-image-crop": "^11.0.6",
     "react-lazy-load-image-component": "^1.6.2",
     "react-leaflet": "^4.2.1",

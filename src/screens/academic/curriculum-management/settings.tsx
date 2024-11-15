@@ -384,62 +384,65 @@ const Settings = (props: TabComponentType) => {
         />
       </Box> */}
       <Typography variant="h6">Notification Section</Typography>
-      <Grid container spacing={2} mt={1}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6">Set Reminders</Typography>
+      <Card sx={{ p: 2 }}>
+        <Grid container spacing={2} mt={1}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6">Set Reminders</Typography>
 
-            <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
-            <Box sx={{ pb: '20px', pt: '20px', width: '400px' }}>
-              <TextField
-                multiline
-                rows={4}
-                fullWidth
-                placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
-                name="description"
-                label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
-                // value={formik.values.description}
-                // onChange={formik.handleChange}
-                size="small"
+              <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
+              <Box sx={{ pb: '20px', pt: '20px', width: '400px' }}>
+                <TextField
+                  multiline
+                  rows={4}
+                  fullWidth
+                  placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+                  name="description"
+                  label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+                  // value={formik.values.description}
+                  // onChange={formik.handleChange}
+                  size="small"
+                />
+              </Box>
+              <FormControlLabel
+                control={<Switch />}
+                label="Notify teachers when curriculum is updated"
               />
-            </Box>
-            <FormControlLabel
-              control={<Switch />}
-              label="Notify teachers when curriculum is updated"
-            />
-          </Card>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6">Permission Connection</Typography>
+              <Box sx={{ pl: '20px', pb: '20px', pt: 2 }}>
+                <CustomSelect
+                  label="Edit Curriculum"
+                  options={[]}
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { minWidth: 220 } }}
+                />
+              </Box>
+              <Box sx={{ pl: '20px', pb: '20px' }}>
+                <CustomSelect
+                  label="Approved Curriculum Update"
+                  options={[]}
+                  value=""
+                  onChange={() => {}}
+                  formControlProps={{ sx: { minWidth: 220 } }}
+                />
+              </Box>
+            </Card>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6">Permission Connection</Typography>
-            <Box sx={{ pl: '20px', pb: '20px', pt: 2 }}>
-              <CustomSelect
-                label="Edit Curriculum"
-                options={[]}
-                value=""
-                onChange={() => {}}
-                formControlProps={{ sx: { minWidth: 220 } }}
-              />
-            </Box>
-            <Box sx={{ pl: '20px', pb: '20px' }}>
-              <CustomSelect
-                label="Approved Curriculum Update"
-                options={[]}
-                value=""
-                onChange={() => {}}
-                formControlProps={{ sx: { minWidth: 220 } }}
-              />
-            </Box>
-          </Card>
-        </Grid>
-      </Grid>
-      <Button
-        color="secondary"
-        variant="contained"
-        sx={{ maxWidth: '200px', width: '100%', alignSelf: 'flex-end', mt: 2, mb: 2 }}
-      >
-        Save Changes
-      </Button>
+        <Button
+          color="secondary"
+          variant="contained"
+          sx={{ maxWidth: '200px', width: '100%', alignSelf: 'flex-end', mt: 2, mb: 2 }}
+        >
+          Save Changes
+        </Button>
+      </Card>
+
       <CustomDialog
         title={isEdit ? `Update ${selectedTemplate?.templateName}` : 'Add New Template'}
         open={dialog.value}

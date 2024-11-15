@@ -15,7 +15,7 @@ import { Chart, useChart } from 'src/components/chart';
 type Props = CardProps & {
   title: string;
   total: number;
-  percent: number | null;
+  percent?: number;
   chart: {
     colors?: string[];
     categories: string[];
@@ -52,7 +52,7 @@ export function AppWidgetSummary({
 
   const renderTrending = (
     <Box sx={{ gap: 0.5, display: 'flex', alignItems: 'center' }}>
-      {percent !== null && (
+      {percent !== undefined && (
         <>
           <Iconify
             width={24}
@@ -67,13 +67,15 @@ export function AppWidgetSummary({
               ...(percent < 0 && { color: 'error.main' }),
             }}
           />
-          <Box component="span" sx={{ typography: 'subtitle2' }}>
-            {percent > 0 && '+'}
-            {fPercent(percent)}
-          </Box>
-          <Box component="span" sx={{ typography: 'body2', color: 'text.secondary' }}>
+          {percent !== undefined && (
+            <Box component="span" sx={{ typography: 'subtitle2' }}>
+              {percent > 0 && '+'}
+              {fPercent(percent)}
+            </Box>
+          )}
+          {/* <Box component="span" sx={{ typography: 'body2', color: 'text.secondary' }}>
             last 7 days
-          </Box>
+          </Box> */}
         </>
       )}
     </Box>

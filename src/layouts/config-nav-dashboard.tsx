@@ -428,11 +428,11 @@ const settingModule = {
           path: '/setting/academic-setup',
           _action: 'academic-year-setup',
         },
-        {
-          title: 'Curriculum Setup',
-          path: '/setting/curriculum-setup',
-          _action: 'curriculum-setup',
-        },
+        // {
+        //   title: 'Curriculum Setup',
+        //   path: '/setting/curriculum-setup',
+        //   _action: 'curriculum-setup',
+        // },
       ],
     },
   ],
@@ -489,6 +489,11 @@ const hrModule = {
               title: 'Dashboard',
               path: '/hr/payroll/dashboard',
               _action: 'payroll-dashboard',
+            },
+            {
+              title: 'Payroll Structure',
+              path: '/hr/payroll/structure',
+              _action: 'payroll-structure',
             },
             {
               title: 'Import Attendance',

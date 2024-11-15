@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
@@ -7,7 +9,6 @@ import { Box, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mu
 import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 const TeacherManagement = (props: TabComponentType) => {
   const [reassigedTeacher, setReassigedTeacher] = useState<string>('');

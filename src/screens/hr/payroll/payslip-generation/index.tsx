@@ -22,6 +22,8 @@ import {
   Autocomplete,
 } from '@mui/material';
 
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
 import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
@@ -121,7 +123,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.25),
+            background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -133,13 +135,13 @@ const PaySlipGenerationScreen = () => {
             sx={{ color: 'success.main' }}
           />
           <CardContent sx={{ color: 'success.main' }}>
-            <Typography variant="h3">40,000</Typography>
+            <Typography variant="h3">{formatCurrency(40000)}</Typography>
           </CardContent>
         </Card>
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.25),
+            background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -151,13 +153,13 @@ const PaySlipGenerationScreen = () => {
             sx={{ color: 'error.main' }}
           />
           <CardContent sx={{ color: 'error.main' }}>
-            <Typography variant="h3">10,000</Typography>
+            <Typography variant="h3">{formatCurrency(10000)}</Typography>
           </CardContent>
         </Card>
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.25),
+            background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -169,7 +171,7 @@ const PaySlipGenerationScreen = () => {
             sx={{ color: 'info.main' }}
           />
           <CardContent sx={{ color: 'info.main' }}>
-            <Typography variant="h3">30,000</Typography>
+            <Typography variant="h3">{formatCurrency(30000)}</Typography>
           </CardContent>
         </Card>
       </Box>
@@ -225,16 +227,26 @@ const PaySlipGenerationScreen = () => {
           <CustomizableTable
             columns={[
               { id: 'employeeType', label: 'Employee Type' },
-              { id: 'amount', label: 'Amount' },
-              { id: 'total', label: 'Total' },
+              {
+                id: 'amount',
+                label: 'Amount',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
+              {
+                id: 'total',
+                label: 'Total',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
             ]}
             data={[
               { employeeType: 'Teaching Allowance', amount: 5000, total: 5000 },
               { employeeType: 'Transport Allowance', amount: 2000, total: 2000 },
               { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
               { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
-              { employeeType: 'Library Allowance', amount: 1000, total: 1000 },
-              { employeeType: 'Research Allowance', amount: 2000, total: 2000 },
             ]}
           />
         </Grid>
@@ -243,8 +255,20 @@ const PaySlipGenerationScreen = () => {
           <CustomizableTable
             columns={[
               { id: 'deductionType', label: 'Deduction Type' },
-              { id: 'amount', label: 'Amount' },
-              { id: 'totalDeduction', label: 'Total Deduction' },
+              {
+                id: 'amount',
+                label: 'Amount',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
+              {
+                id: 'totalDeduction',
+                label: 'Total Deduction',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
             ]}
             data={[
               { deductionType: 'Income Tax', amount: 5000, totalDeduction: 5000 },

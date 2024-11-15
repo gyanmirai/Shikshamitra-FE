@@ -186,6 +186,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
                 aria-label="scrollable auto tabs example"
                 sx={{
                   mb: 2,
+                  px: 2,
                   '& .MuiTabs-flexContainer': { gap: 2 },
                 }}
               >

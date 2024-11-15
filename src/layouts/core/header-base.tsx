@@ -161,7 +161,7 @@ export function HeaderBase({
 
   useEffect(() => {
     if (currentBoard?.id) {
-      if (currentBoard?.educationMediums?.length) {
+      if (currentBoard?.educationMediums?.length && !currentMedium?.id) {
         dispatch(setCurrentMedium(currentBoard?.educationMediums?.[0]));
       }
     } else {

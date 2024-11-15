@@ -4,17 +4,18 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { MuiColorInput } from 'mui-color-input';
+import React, { useState, useEffect } from 'react';
 
+import { TimelineDot } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import Grid2 from '@mui/material/Unstable_Grid2';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   List,
   Grid,
-  Chip,
   Button,
   Switch,
   MenuItem,
@@ -27,7 +28,6 @@ import {
   ListItemText,
   DialogActions,
   DialogContent,
-  FormHelperText,
   DialogContentText,
 } from '@mui/material';
 
@@ -75,7 +75,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Math01',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '',
+    subjectColor: '#f04622',
     className: '1',
     primaryTeacher: 'Ms. Johnson',
     secondaryTeacher: ['Mr. Smith'],
@@ -89,7 +89,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Sci02',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '',
+    subjectColor: '#4e7dbe',
     className: '2',
     primaryTeacher: 'Mr. Smith',
     secondaryTeacher: ['Ms. Johnson'],
@@ -103,7 +103,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Eng03',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '',
+    subjectColor: '#4e7dbe',
     className: '1',
     primaryTeacher: 'Ms. Johnson',
     secondaryTeacher: ['Mrs. Green'],
@@ -117,7 +117,7 @@ export const subjectData: TSubjectTable[] = [
     subjectCode: 'Hist01',
     scheduleDate: dayjs('2024-10-28'),
     description: '',
-    subjectColor: '',
+    subjectColor: '#7abe4e',
     className: '1',
     primaryTeacher: 'Ms. Johnson',
     secondaryTeacher: ['Mrs. Green'],
@@ -131,7 +131,7 @@ export const subjectData: TSubjectTable[] = [
     scheduleDate: dayjs('2024-10-28'),
     subjectCode: 'Geo01',
     description: '',
-    subjectColor: '',
+    subjectColor: '#4444',
     className: '3',
     primaryTeacher: 'Ms. Davis',
     secondaryTeacher: ['Mrs. Green'],
@@ -142,12 +142,15 @@ export const subjectData: TSubjectTable[] = [
 ];
 
 const Subject = (props: TabComponentType) => {
+  const { searchParams, setSearchParams } = props;
   const [subjectTableData, setSubjectTableData] = useState(subjectData);
-  const [selectedClass, setSelectedClass] = useState('');
+  const [filteredData, setFilteredData] = useState<TSubjectTable[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  console.log('filteredData--', filteredData);
 
   const dialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
@@ -163,9 +166,21 @@ const Subject = (props: TabComponentType) => {
     newValue: string;
   } | null>(null);
 
-  const filteredData = selectedClass
-    ? subjectTableData.filter((item) => item.className === selectedClass)
-    : [];
+  useEffect(() => {
+    if (classData?.items?.length) {
+      if (!searchParams.classId) {
+        const firstClass = classData.items[0];
+        setSearchParams({
+          classId: firstClass.id,
+        });
+      }
+      const selectedClass = classData.items.find((c: any) => c.id === searchParams.classId);
+      if (selectedClass) {
+        const filtered = subjectTableData.filter((item) => item.className === selectedClass?.name);
+        setFilteredData(filtered);
+      }
+    }
+  }, [searchParams.classId, classData, subjectTableData, setSearchParams]);
 
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
@@ -242,70 +257,99 @@ const Subject = (props: TabComponentType) => {
         name="class"
         isLoading={isLoading}
         options={classData?.items || []}
-        valueKey="name"
+        valueKey="id"
         labelKey="name"
         formControlProps={{ sx: { width: '200px' } }}
-        value={selectedClass}
+        value={searchParams?.classId || ''}
         onChange={(value) => {
-          setSelectedClass(value as string);
+          setSearchParams({
+            classId: value as string,
+          });
         }}
       />
-
-      {selectedClass && (
-        <CustomizableTable
-          columns={[
-            { id: 'className', label: 'Class' },
-            { id: 'subjectCode', label: 'Subject Code' },
-            { id: 'subjectName', label: 'Subject Name' },
-            { id: 'primaryTeacher', label: 'Primary Teacher' },
-            {
-              id: 'secondaryTeacher',
-              label: 'Secondary Teacher',
-              render: (value) => (
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  {value.map((audience: string) => (
-                    <Chip key={audience} label={audience} size="small" variant="outlined" />
-                  ))}
-                </Box>
-              ),
-            },
-            { id: 'prerequisites', label: 'Prerequisites' },
-            { id: 'learningGoal', label: 'Learning Goal' },
-            {
-              id: 'status',
-              label: 'Publish',
-              render: (value: string, row: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Switch
-                    size="small"
-                    checked={value === 'Publish'}
-                    onChange={() => handleStatusChange(row.id, value as string)}
-                  />
-                </Box>
-              ),
-            },
-            {
-              id: 'viewChapters',
-              label: 'View Details',
-              render: (_, row) => {
-                const subject = subjectTableData.find((s) => s.id === row.id);
-                return (
-                  <IconButton onClick={() => subject && handleViewSubject(subject)} sx={{}}>
-                    <Iconify icon="mdi:eye" />
-                  </IconButton>
-                );
+      <Grid2 container spacing={3}>
+        {searchParams?.classId && (
+          <CustomizableTable
+            columns={[
+              { id: 'className', label: 'Class' },
+              { id: 'subjectCode', label: 'Subject Code' },
+              { id: 'subjectName', label: 'Subject Name' },
+              {
+                id: 'subjectColor',
+                label: 'Subject Color',
+                render(value, row) {
+                  return (
+                    <TimelineDot
+                      sx={{
+                        bgcolor: value,
+                        width: '12px',
+                        height: '12px',
+                      }}
+                    />
+                  );
+                },
               },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover: pop }) => (
-                    <MenuList>
-                      {row.status === 'Unpublish' && (
+              { id: 'primaryTeacher', label: 'Primary Teacher' },
+              {
+                id: 'secondaryTeacher',
+                label: 'Secondary Teacher',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((audience: string) => (
+                      // <Chip key={audience} label={audience} size="small" variant="outlined" />
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{
+                          px: 1.0,
+                          py: 0.5,
+                          borderRadius: '30px',
+                          border: `1px solid black`,
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {audience}
+                      </Typography>
+                    ))}
+                  </Box>
+                ),
+              },
+              { id: 'prerequisites', label: 'Prerequisites' },
+              { id: 'learningGoal', label: 'Learning Goal' },
+              {
+                id: 'status',
+                label: 'Publish',
+                render: (value: string, row: any) => (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Switch
+                      size="small"
+                      checked={value === 'Publish'}
+                      onChange={() => handleStatusChange(row.id, value as string)}
+                    />
+                  </Box>
+                ),
+              },
+              {
+                id: 'viewChapters',
+                label: 'View Details',
+                render: (_, row) => {
+                  const subject = subjectTableData.find((s) => s.id === row.id);
+                  return (
+                    <IconButton onClick={() => subject && handleViewSubject(subject)} sx={{}}>
+                      <Iconify icon="mdi:eye" />
+                    </IconButton>
+                  );
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                render: (value, row) => (
+                  <ThreeDotsActions
+                    placement="right-top"
+                    actions={({ popover: pop }) => (
+                      <MenuList>
                         <MenuItem
                           onClick={() => {
                             setSelectedSubject(row as any);
@@ -316,43 +360,34 @@ const Subject = (props: TabComponentType) => {
                           <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
                           Edit
                         </MenuItem>
-                      )}
-                      {row.status === 'Publish' && (
-                        <MenuItem
-                          onClick={() => {
-                            setSelectedSubject(row as any);
-                            deleteConfirmDialog.onTrue();
-                            pop.onClose();
-                          }}
-                          sx={{ color: 'error.main' }}
-                        >
-                          <Iconify
-                            icon="solar:trash-bin-trash-bold"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Delete
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  )}
-                />
-              ),
-            },
-          ]}
-          data={filteredData}
-        />
-      )}
-      {selectedClass && (
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            addBulkDialog.onTrue();
-          }}
-        >
-          Add Bulk
-        </Button>
-      )}
+
+                        {row.status === 'Publish' && (
+                          <MenuItem
+                            onClick={() => {
+                              setSelectedSubject(row as any);
+                              deleteConfirmDialog.onTrue();
+                              pop.onClose();
+                            }}
+                            sx={{ color: 'error.main' }}
+                          >
+                            <Iconify
+                              icon="solar:trash-bin-trash-bold"
+                              sx={{ height: '16px', width: '16px' }}
+                            />
+                            Delete
+                          </MenuItem>
+                        )}
+                      </MenuList>
+                    )}
+                  />
+                ),
+              },
+            ]}
+            data={filteredData}
+          />
+        )}
+      </Grid2>
+
       <CustomDialog
         maxWidth="sm"
         open={dialog.value}
@@ -418,16 +453,6 @@ const Subject = (props: TabComponentType) => {
         maxWidth="sm"
       >
         <ViewSubject subject={selectedSubject} />
-      </CustomDialog>
-
-      <CustomDialog
-        title="Add Bulk"
-        open={addBulkDialog.value}
-        handleClose={() => {
-          addBulkDialog.onFalse();
-        }}
-      >
-        <AddBulk selectedClass={selectedClass} />
       </CustomDialog>
     </Box>
   );
@@ -681,13 +706,14 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
   const [subjectColor, setSubjectColor] = useState('');
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
   const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
+  const isPublished = data?.status === 'Publish';
 
   const validationSchema = Yup.object().shape({
     subjectCode: Yup.string().required('Subject Code is Required'),
     subjectName: Yup.string().required('Subject Name is required'),
     className: Yup.string().required('Class is required'),
-    primaryTeacher : Yup.string().required('Primary teacher is required'),
-    secondaryTeacher : Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
+    primaryTeacher: Yup.string().required('Primary teacher is required'),
+    secondaryTeacher: Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
     learningGoal: Yup.string().required('Learning Goal is required'),
     prerequisites: Yup.string().required('Prerequisites are required'),
     description: Yup.string().required('Description is required'),
@@ -705,7 +731,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
       learningGoal: data?.learningGoal || '',
       prerequisites: data?.prerequisites || '',
       description: data?.description || '',
-      subjectColor: data?.subjectColor || '#000000',
+      subjectColor: data?.subjectColor || '',
       status: data?.status || 'Unpublish',
     },
     validationSchema,
@@ -757,6 +783,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 }}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                 error={formik.touched.className && Boolean(formik.errors.className)}
+                disabled={isPublished}
               />
             </Grid>
             <Grid item xs={12} md={4}>
@@ -767,6 +794,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 size="small"
                 value={formik.values.subjectCode}
                 onChange={formik.handleChange}
+                disabled={isPublished}
                 error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
               />
             </Grid>
@@ -776,6 +804,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 label="Subject Name"
                 name="subjectName"
                 size="small"
+                disabled={isPublished}
                 value={formik.values.subjectName}
                 onChange={formik.handleChange}
                 error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
@@ -820,23 +849,20 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
             </Grid>
             <Grid item xs={12} md={6}>
               <DateTimePicker
-                label=""
+                label="Schedule Date"
                 value={formik.values.scheduleDate}
                 onChange={(value) => {
                   formik.setFieldValue('scheduleDate', value);
                 }}
+                disabled={isPublished}
                 slotProps={{
                   textField: {
                     size: 'small',
                     fullWidth: true,
-                    error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
                   },
                 }}
                 disablePast
               />
-              {formik.touched.scheduleDate && formik.errors.scheduleDate && (
-                <FormHelperText error>{String(formik.errors.scheduleDate)}</FormHelperText>
-              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <MuiColorInput
@@ -847,6 +873,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 onChange={(e) => {
                   formik.setFieldValue('subjectColor', e);
                 }}
+                disabled={isPublished}
                 sx={{
                   minWidth: 180,
                   width: '100%',
@@ -866,6 +893,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 fullWidth
                 multiline
                 rows={3}
+                disabled={isPublished}
                 label="Learning Goals"
                 name="learningGoal"
                 onChange={formik.handleChange}
@@ -880,6 +908,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 fullWidth
                 multiline
                 rows={3}
+                disabled={isPublished}
                 label="Prerequisites or Resources"
                 name="prerequisites"
                 size="small"
@@ -893,6 +922,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
                 fullWidth
                 multiline
                 rows={3}
+                disabled={isPublished}
                 label="Description"
                 name="description"
                 value={formik.values.description}

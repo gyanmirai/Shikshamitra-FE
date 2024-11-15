@@ -302,7 +302,7 @@ const Subjects = (props: TabComponentType) => {
               render(value, row) {
                 const { videos, pdfs } = value;
                 return (
-                  <Typography sx={{ mr: 2 }} fontSize={11}>
+                  <Typography sx={{ mr: 2 }} fontSize={12}>
                     {videos} Videos and {pdfs} PDF/Notes
                   </Typography>
                 );
@@ -807,7 +807,7 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
             New Chapter
           </Button>
           {division === 'All' && (
-            <Label variant="soft" color="success" marginTop={1}>
+            <Label variant="soft" color={subjectProgress < 50 ? 'error' : 'success'} marginTop={1}>
               Subject Progress : {subjectProgress}% Completed
             </Label>
           )}
@@ -826,7 +826,11 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                     {division !== 'All' && (
-                      <Label variant="soft" color="success" marginRight={2}>
+                      <Label
+                        variant="soft"
+                        color={chapter.progress < 50 ? 'error' : 'success'}
+                        marginRight={2}
+                      >
                         {chapter.progress}% Completed
                       </Label>
                     )}
@@ -840,8 +844,11 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
                       }}
                     >
                       {/* Icon for deadline can be added here */}
-                      <span style={{ marginRight: '4px' }}>📅</span>{' '}
                       {/* Placeholder for deadline icon */}
+                      <Iconify
+                        icon="solar:calendar-mark-bold-duotone"
+                        sx={{ height: '16px', width: '16px', color: 'black' }}
+                      />
                       Deadline : {dayjs(chapter.timeLine).format('DD MMM YYYY')}
                     </Typography>
                     <ThreeDotsActions
