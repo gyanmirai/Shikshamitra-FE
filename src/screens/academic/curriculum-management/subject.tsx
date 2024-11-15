@@ -168,19 +168,19 @@ const Subject = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!searchParams.classId) {
+      if (!searchParams?.classId) {
         const firstClass = classData.items[0];
-        setSearchParams({
+        setSearchParams?.({
           classId: firstClass.id,
         });
       }
-      const selectedClass = classData.items.find((c: any) => c.id === searchParams.classId);
+      const selectedClass = classData.items.find((c: any) => c.id === searchParams?.classId);
       if (selectedClass) {
         const filtered = subjectTableData.filter((item) => item.className === selectedClass?.name);
         setFilteredData(filtered);
       }
     }
-  }, [searchParams.classId, classData, subjectTableData, setSearchParams]);
+  }, [searchParams?.classId, classData, subjectTableData, setSearchParams]);
 
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
@@ -262,7 +262,7 @@ const Subject = (props: TabComponentType) => {
         formControlProps={{ sx: { width: '200px' } }}
         value={searchParams?.classId || ''}
         onChange={(value) => {
-          setSearchParams({
+          setSearchParams?.({
             classId: value as string,
           });
         }}

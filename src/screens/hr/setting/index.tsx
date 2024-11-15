@@ -6,14 +6,8 @@ import { Tab, Box } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
-import { TimeUnitType } from 'src/enums/time-units';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
-import {
-  useGetEmployeeCustomAttendanceRuleQuery,
-  useAddEmployeeCustomAttendanceRuleMutation,
-  useUpdateEmployeeCustomAttendanceRuleMutation,
-} from 'src/redux/employee/employeeApi';
+import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -64,10 +58,10 @@ const HrAttendanceSettingScreen = () => {
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });
   console.log(data, 'data');
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
-  };
+  // const handleClose = () => {
+  //   setEditData(null);
+  //   dialog.onFalse();
+  // };
   return (
     <Box>
       <CustomBreadcrumbs

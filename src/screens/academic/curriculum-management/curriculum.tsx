@@ -25,7 +25,7 @@ const Curriculum = () => {
         {/* <Typography variant="h4">Curriculum Management</Typography> */}
 
         <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-        New Curriculum
+          New Curriculum
         </Button>
       </Box>
       <CustomizableTable
@@ -116,30 +116,30 @@ const CurriculumForm = () => {
       <Scrollbar sx={{ background: 'background.neutral', p: 3 }}>
         <Stack spacing={3}>
           <Box display="flex" flexDirection="row" gap={2}>
-          <CustomSelect
-            label="Grade"
-            name="grade"
-            options={[]}
-            formControlProps={{ fullWidth: true }}
-            value={formik.values.grade}
-            onChange={(value) => formik.setFieldValue('grade', value)}
-          />
-          <CustomSelect
-            label="Subject"
-            name="subject"
-            options={[]}
-            formControlProps={{ fullWidth: true }}
-            value={formik.values.subject}
-            onChange={(value) => formik.setFieldValue('subject', value)}
-          />
-          <CustomSelect
-            label="Teacher"
-            name="teacher"
-            options={[]}
-            formControlProps={{ fullWidth: true }}
-            value={formik.values.teacher}
-            onChange={(value) => formik.setFieldValue('teacher', value)}
-          />
+            <CustomSelect
+              label="Grade"
+              name="grade"
+              options={[]}
+              formControlProps={{ fullWidth: true }}
+              value={formik.values.grade}
+              onChange={(value) => formik.setFieldValue('grade', value)}
+            />
+            <CustomSelect
+              label="Subject"
+              name="subject"
+              options={[]}
+              formControlProps={{ fullWidth: true }}
+              value={formik.values.subject}
+              onChange={(value) => formik.setFieldValue('subject', value)}
+            />
+            <CustomSelect
+              label="Teacher"
+              name="teacher"
+              options={[]}
+              formControlProps={{ fullWidth: true }}
+              value={formik.values.teacher}
+              onChange={(value) => formik.setFieldValue('teacher', value)}
+            />
           </Box>
           {/* <UploadBox
                 onDrop={() => {}}
@@ -164,27 +164,25 @@ const CurriculumForm = () => {
                   borderRadius: 1.5,
                 }}
               /> */}
-           
-          
-          
+
           <Upload />
           <Box display="flex" flexDirection="row" gap={2}>
-          <DatePicker
-            label="Start Date"
-            name="startDate"
-            value={formik.values.startDate}
-            onChange={(value) => formik.setFieldValue('startDate', value)}
-            format="DD-MM-YYYY"
-            slotProps={{ textField: { fullWidth: true } }}
-          />
-          <DatePicker
-            label="End Date"
-            name="endDate"
-            value={formik.values.endDate}
-            onChange={(value) => formik.setFieldValue('endDate', value)}
-            format="DD-MM-YYYY"
-            slotProps={{ textField: { fullWidth: true } }}
-          />
+            <DatePicker
+              label="Start Date"
+              name="startDate"
+              value={formik.values.startDate}
+              onChange={(value) => formik.setFieldValue('startDate', value)}
+              format="DD-MM-YYYY"
+              slotProps={{ textField: { fullWidth: true } }}
+            />
+            <DatePicker
+              label="End Date"
+              name="endDate"
+              value={formik.values.endDate}
+              onChange={(value) => formik.setFieldValue('endDate', value)}
+              format="DD-MM-YYYY"
+              slotProps={{ textField: { fullWidth: true } }}
+            />
           </Box>
         </Stack>
       </Scrollbar>

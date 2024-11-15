@@ -6,7 +6,7 @@ import { MuiTelInput } from 'mui-tel-input';
 
 import { Box } from '@mui/material';
 
-type PhoneInputProps = TextFieldProps & {
+type PhoneInputProps = Omit<TextFieldProps, 'value' | 'onChange' | 'placeholder'> & {
   value: string;
   onChange: (value: string, info?: MuiTelInputInfo) => void;
   placeholder?: string;
@@ -23,14 +23,8 @@ const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: Pho
       error={error}
       helperText={helperText}
       fullWidth
-      inputProps={{
-        sx: {
-          fontSize: '12px !important',
-        },
-      }}
-      {...props}
+      {...(props as any)}
     />
   </Box>
 );
-
 export default PhoneInput;

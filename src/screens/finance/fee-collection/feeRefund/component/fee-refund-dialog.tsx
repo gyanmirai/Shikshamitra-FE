@@ -39,7 +39,7 @@ interface FormikValues {
   receiptNumber: string;
   chequeDate: any;
   bankName: string;
-  receivedPayment: 0,
+  receivedPayment: 0;
   chequeNumber: string;
   chequeAmount: number;
   cardAmount: number;
@@ -77,7 +77,6 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
   tuitionFeeAmount,
   libraryFeeFeeAmount,
   totalFeeAmount,
-
 }) => {
   console.log('selectedEntry', data);
   console.log('alldata', allData);
@@ -94,7 +93,6 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
 
   const formik = useFormik<FormikValues>({
     initialValues: {
-
       totalAmount: totalFeeAmount,
 
       transectionIdOrCheque: '',
@@ -102,9 +100,9 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       remarks: '',
 
       id: isEdit
-        ? data.id ?? Math.floor(Math.random() * 1000000000)
+        ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
-      selectStudent: "jay",
+      selectStudent: 'jay',
       feeType: [],
       receivedPayment: 0,
       paymentMode: '',
@@ -112,11 +110,11 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       transactionIdOnline: '',
       note: '',
       selectedTerms: [],
-      receiptNumber: "",
+      receiptNumber: '',
       chequeDate: dayjs(),
-      bankName: "",
+      bankName: '',
       amount: 0,
-      chequeNumber: "",
+      chequeNumber: '',
       chequeAmount: 0,
       cardAmount: 0,
       onlineAmount: 0,
@@ -148,29 +146,24 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
   };
   const handleChequeAmountChange = (formattedValue: string, numericValue: number) => {
     setChequeAmountState(formattedValue);
-
   };
   const handleCardAmountChange = (formattedValue: string, numericValue: number) => {
     setCardAmountState(formattedValue);
-
   };
   const handleOnlineAmountChange = (formattedValue: string, numericValue: number) => {
     setOnlineAmountState(formattedValue);
-
   };
   const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
     setCashAmountState(formattedValue);
-
   };
-
 
   const dataForRefund = [
     {
-      studentName: "JAY",
-      paymentId: "j878d",
+      studentName: 'JAY',
+      paymentId: 'j878d',
       feeHead: 'Tuition',
       paidAmount: '10000',
-      refundAmount: "0",
+      refundAmount: '0',
       paidDate: '20-04-2024',
       status: 'Paid',
       totalFees: 60000,
@@ -178,47 +171,74 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       fees: [
         {
           feeHeadId: 198,
-          feeHead: "Tuition",
+          feeHead: 'Tuition',
           totalFees: 60000,
           amount: 5000,
           paymentDates: [
             {
-              month: "June-2024",
-              date: "15-01-2024",
-              status: "Unpaid",
+              month: 'June-2024',
+              date: '15-01-2024',
+              status: 'Unpaid',
               amount: 5000,
               paymentHistory: [
-                { paymentMode: "Card", amount: "2000", paymentId: "54j8", paymentStatus: "Success" },
-                { paymentMode: "Cash", amount: "2000" },
-                { paymentMode: "Online", amount: "1000", paymentId: "h8749", paymentStatus: "Failed" },
-                { paymentMode: "Online", amount: "500", paymentId: "h8749", paymentStatus: "Success" },
-                { paymentMode: "Check", amount: "500", paymentId: "h8749", paymentStatus: "Not Clear", charges: 500 },
+                {
+                  paymentMode: 'Card',
+                  amount: '2000',
+                  paymentId: '54j8',
+                  paymentStatus: 'Success',
+                },
+                { paymentMode: 'Cash', amount: '2000' },
+                {
+                  paymentMode: 'Online',
+                  amount: '1000',
+                  paymentId: 'h8749',
+                  paymentStatus: 'Failed',
+                },
+                {
+                  paymentMode: 'Online',
+                  amount: '500',
+                  paymentId: 'h8749',
+                  paymentStatus: 'Success',
+                },
+                {
+                  paymentMode: 'Check',
+                  amount: '500',
+                  paymentId: 'h8749',
+                  paymentStatus: 'Not Clear',
+                  charges: 500,
+                },
               ],
             },
             {
-              month: "July-2024",
-              date: "15-02-2024",
-              status: "Paid",
+              month: 'July-2024',
+              date: '15-02-2024',
+              status: 'Paid',
               amount: 5000,
               paymentHistory: [
-                { paymentMode: "Bank Transfer", amount: "3000", paymentId: "jh238", paymentStatus: "Success" },
-                { paymentMode: "Card", amount: "2000", paymentId: "aa123", paymentStatus: "Success" },
+                {
+                  paymentMode: 'Bank Transfer',
+                  amount: '3000',
+                  paymentId: 'jh238',
+                  paymentStatus: 'Success',
+                },
+                {
+                  paymentMode: 'Card',
+                  amount: '2000',
+                  paymentId: 'aa123',
+                  paymentStatus: 'Success',
+                },
               ],
             },
-          ]
+          ],
         },
-
-
-      ]
-
-
+      ],
     },
     {
-      studentName: "JAY",
-      paymentId: "j878d",
+      studentName: 'JAY',
+      paymentId: 'j878d',
       feeHead: 'Library',
       paidAmount: '4000',
-      refundAmount: "0",
+      refundAmount: '0',
       paidDate: '20-04-2024',
       status: 'Paid',
       totalFees: 60000,
@@ -226,44 +246,42 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       fees: [
         {
           feeHeadId: 198,
-          feeHead: "Tuition",
+          feeHead: 'Tuition',
           totalFees: 60000,
           amount: 5000,
           paymentDates: [
-
             {
-              month: "July-2024",
-              date: "15-02-2024",
-              status: "Paid",
+              month: 'July-2024',
+              date: '15-02-2024',
+              status: 'Paid',
               amount: 5000,
               paymentHistory: [
-                { paymentMode: "Bank Transfer", amount: "3000", paymentId: "jh238", paymentStatus: "Success" },
-                { paymentMode: "Card", amount: "2000", paymentId: "aa123", paymentStatus: "Success" },
+                {
+                  paymentMode: 'Bank Transfer',
+                  amount: '3000',
+                  paymentId: 'jh238',
+                  paymentStatus: 'Success',
+                },
+                {
+                  paymentMode: 'Card',
+                  amount: '2000',
+                  paymentId: 'aa123',
+                  paymentStatus: 'Success',
+                },
               ],
             },
-          ]
+          ],
         },
-
-
-      ]
-
-
+      ],
     },
-
-
-
   ];
 
   return (
     <CustomDialog maxWidth="md" title="Refund" open={dialogValue} handleClose={onClose}>
-
-
-      <Box >
+      <Box>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-
               {/* <Typography variant="subtitle2">Student: </Typography>
 
               */}
@@ -296,17 +314,17 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                 ]}
                 data={[
                   {
-                    feeHead: "Tuition",
+                    feeHead: 'Tuition',
                     refundAmount: tuitionFeeAmount,
                     paidViaCash: 4000,
                     account: 0,
                   },
                   {
-                    feeHead: "Library",
+                    feeHead: 'Library',
                     refundAmount: libraryFeeFeeAmount,
                     paidViaCash: 0,
                     account: 0,
-                  }
+                  },
                 ]}
               />
 
@@ -331,20 +349,15 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                   ]}
                   // @ts-ignore
                   value={formik.values.paymentMode}
-                  onChange={(selectedValues) =>
-                    formik.setFieldValue('paymentMode', selectedValues)
-                  }
+                  onChange={(selectedValues) => formik.setFieldValue('paymentMode', selectedValues)}
                   formControlProps={{ sx: { minWidth: 190 } }}
                 />
               </Box>
               {formik.values.paymentMode.length > 0 && (
                 <Grid container spacing={2} px={2}>
-
-
                   {/* Online Payment Details */}
 
-
-                  {formik.values.paymentMode.includes("Online") && (
+                  {formik.values.paymentMode.includes('Online') && (
                     <Grid item xs={12} md={12}>
                       <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
                         <Typography sx={{ pb: "15px" }} variant="subtitle2">Online Details</Typography>
@@ -404,9 +417,11 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                   )}
 
                   {/* Card Payment Details */}
-                  {formik.values.paymentMode.includes("Card") && (
+                  {formik.values.paymentMode.includes('Card') && (
                     <Grid item xs={12} md={12}>
-                      <Typography variant="subtitle2" gutterBottom>Card Details</Typography>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Card Details
+                      </Typography>
                       <Box display="flex" gap={2} flexDirection="row">
                         <TextField
                           name="transactionId"
@@ -418,11 +433,9 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                         />
 
                         <FormattedAmountInput
-
                           label="Card Amount"
                           value={cardAmountState}
                           onChange={handleCardAmountChange}
-
                         />
                       </Box>
                       {/* <Divider sx={{ py: "12px", }} /> */}
@@ -430,9 +443,11 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                   )}
 
                   {/* Cheque Payment Details */}
-                  {formik.values.paymentMode.includes("Cheque") && (
+                  {formik.values.paymentMode.includes('Cheque') && (
                     <Grid item xs={12}>
-                      <Typography variant="subtitle2" gutterBottom>Cheque Details</Typography>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Cheque Details
+                      </Typography>
                       <Grid container spacing={2}>
                         <Grid item xs={12} md={3}>
                           <TextField
@@ -448,11 +463,11 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                           <DatePicker
                             label="Cheque Date"
                             value={formik.values.chequeDate}
-                            onChange={(date) => formik.setFieldValue("chequeDate", date)}
+                            onChange={(date) => formik.setFieldValue('chequeDate', date)}
                             slotProps={{
                               textField: {
                                 fullWidth: true,
-                                size: "small",
+                                size: 'small',
                               },
                             }}
                           />
@@ -473,7 +488,6 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                             value={chequeAmountState}
                             onChange={handleChequeAmountChange}
                           />
-
                         </Grid>
                       </Grid>
 
@@ -569,17 +583,15 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
 
                   {formik.values.paymentMode.includes("Cash") && (
                     <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" gutterBottom>Cash Details</Typography>
-
+                      <Typography variant="subtitle2" gutterBottom>
+                        Cash Details
+                      </Typography>
 
                       <FormattedAmountInput
-
                         label="Cash Amount"
                         value={cashAmountState}
                         onChange={handleCashAmountChange}
-
                       />
-
                     </Grid>
                   )} */}
                 </Grid>
@@ -613,7 +625,6 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
               />
             </Box>
             <Box pb="20px" />
-
           </Scrollbar>
           <DialogActions>
             {/* <Button onClick={onClose} variant="contained" size="small">
@@ -625,14 +636,9 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
             <Button disabled onClick={onClose} variant="contained" size="small">
               Generate Receipt
             </Button>
-
           </DialogActions>
         </form>
       </Box>
-
-
-
-
     </CustomDialog>
   );
 };

@@ -40,8 +40,10 @@ const FinanceStudentPendingFeeTab = () => {
           { id: 'feeName', label: 'Fee Name' },
           // { id: 'statusId', label: 'Status Id' },
           {
-            id: 'amountDue', label: 'Amount Due', render(value, row) {
-              return <Typography fontSize="12px" >{formatNumber(row.amountDue, "INR")}</Typography>
+            id: 'amountDue',
+            label: 'Amount Due',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.amountDue, 'INR')}</Typography>;
             },
           },
           { id: 'dueDate', label: 'Due Date' },
@@ -76,9 +78,13 @@ const FinanceStudentPendingFeeTab = () => {
         columns={[
           { id: 'feeName', label: 'Fee Name' },
           // { id: 'statusId', label: 'Status Id' },
-          { id: 'amountDue', label: 'Amount Due' , render(value, row) {
-            return <Typography fontSize="12px" >{formatNumber(row.amountDue, "INR")}</Typography>
-          },},
+          {
+            id: 'amountDue',
+            label: 'Amount Due',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.amountDue, 'INR')}</Typography>;
+            },
+          },
           { id: 'dueDate', label: 'Due Date' },
           {
             id: 'action',
@@ -103,8 +109,7 @@ const FinanceStudentPendingFeeTab = () => {
         ]}
         data={upcomingPaymentList}
       />
-      <Box pb="20px"/>
-    
+      <Box pb="20px" />
     </>
   );
 };

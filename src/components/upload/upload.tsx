@@ -112,7 +112,7 @@ export function Upload({
         </FormHelperText>
       )}
 
-      <RejectionFiles files={fileRejections} />
+      <RejectionFiles files={[...fileRejections]} />
 
       {/* Multi files */}
       {renderMultiPreview}

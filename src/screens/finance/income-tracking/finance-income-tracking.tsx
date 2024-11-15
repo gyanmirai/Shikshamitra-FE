@@ -38,21 +38,16 @@ let data: Data[] = [
     action: 'View',
     incomeList: [
       {
-        incomeName: "Tuition Fees",
+        incomeName: 'Tuition Fees',
         amount: 25000,
-        date: "11-10-2024"
-
+        date: '11-10-2024',
       },
       {
-        incomeName: "Tuition Fees",
+        incomeName: 'Tuition Fees',
         amount: 25000,
-        date: "12-10-2024"
-
-
+        date: '12-10-2024',
       },
-
-    ]
-
+    ],
   },
   {
     id: 2,
@@ -64,20 +59,16 @@ let data: Data[] = [
     action: 'View',
     incomeList: [
       {
-        incomeName: "Sks Trust",
+        incomeName: 'Sks Trust',
         amount: 250000,
-        date: "11-10-2024"
-
+        date: '11-10-2024',
       },
       {
-        incomeName: "Gyan Mirai",
+        incomeName: 'Gyan Mirai',
         amount: 250000,
-        date: "12-08-2024"
-
-
+        date: '12-08-2024',
       },
-
-    ]
+    ],
   },
 ];
 
@@ -154,41 +145,48 @@ const FinanceIncomeTrackingScreen = () => {
         isScrollbar={false}
         columns={[
           {
-            id: 'incomeSource', label: 'Income Source', children(row) {
+            id: 'incomeSource',
+            label: 'Income Source',
+            children(row) {
               return (
                 <CustomizableTable
                   isFilter={false}
                   isPagination={false}
                   isSearch={false}
                   columns={[
-                    { id: "incomeName", label: "Income Name" },
+                    { id: 'incomeName', label: 'Income Name' },
                     {
-                      id: "amount",
-                      label: "Amount",
+                      id: 'amount',
+                      label: 'Amount',
                       render(value) {
-
                         return (
-                          <Typography fontSize="12px">
-                            {formatNumber(value, "INR")}
-                          </Typography>
+                          <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
                         );
                       },
                     },
-                    { id: "date", label: "Received Date" },
-                  ]} data={row.incomeList} />
+                    { id: 'date', label: 'Received Date' },
+                  ]}
+                  data={row.incomeList}
+                />
               );
             },
           },
           {
-            id: 'incomeAmount', label: 'Income Amount', render(value, row) {
-              return <Typography fontSize="12px">{formatNumber(row.incomeAmount, "INR")}</Typography>
+            id: 'incomeAmount',
+            label: 'Income Amount',
+            render(value, row) {
+              return (
+                <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
+              );
             },
           },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
 
           {
-            id: 'paymentStatus', label: 'Payment Status', render(value, row) {
+            id: 'paymentStatus',
+            label: 'Payment Status',
+            render(value, row) {
               return (
                 <Label
                   variant="soft"

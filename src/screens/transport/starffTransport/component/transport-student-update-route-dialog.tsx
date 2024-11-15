@@ -89,12 +89,12 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   const formik = useFormik<FormikValue>({
     initialValues: {
       id: isEdit ? data.id : Math.random(),
-      name: isEdit ? data.name ?? '' : '',
-      grade: isEdit ? data.grade ?? '' : '',
+      name: isEdit ? (data.name ?? '') : '',
+      grade: isEdit ? (data.grade ?? '') : '',
       // position: isEdit ? data.position ?? '' : '',
-      assignedRoute: isEdit ? data.assignedRoute ?? '' : '',
-      pickupPoint: isEdit ? data.pickupPoint ?? '' : '',
-      dropoffPoint: isEdit ? data.dropoffPoint ?? '' : '',
+      assignedRoute: isEdit ? (data.assignedRoute ?? '') : '',
+      pickupPoint: isEdit ? (data.pickupPoint ?? '') : '',
+      dropoffPoint: isEdit ? (data.dropoffPoint ?? '') : '',
     },
     onSubmit: (values) => {
       // const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();

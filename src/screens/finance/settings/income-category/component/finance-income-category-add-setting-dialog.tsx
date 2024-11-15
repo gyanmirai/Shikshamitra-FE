@@ -30,11 +30,11 @@ const FinanceIncomeCategoryAddSettingDialog: React.FC<
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      categoryName: isEdit ? data.categoryName ?? '' : '',
-      discription: isEdit ? data.parentCategory ?? '' : '',
-      incomeType: isEdit ? data.incomeType ?? '' : '',
-      effectiveDate: isEdit ? data.effectiveDate ?? '' : '',
-      amount: isEdit ? data.amount ?? '' : '',
+      categoryName: isEdit ? (data.categoryName ?? '') : '',
+      discription: isEdit ? (data.parentCategory ?? '') : '',
+      incomeType: isEdit ? (data.incomeType ?? '') : '',
+      effectiveDate: isEdit ? (data.effectiveDate ?? '') : '',
+      amount: isEdit ? (data.amount ?? '') : '',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {

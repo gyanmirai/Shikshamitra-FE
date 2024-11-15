@@ -38,13 +38,13 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      dateOfMaintenance: isEdit ? dayjs(data.maintenanceDate, 'DD-MM-YYYY') ?? null : null,
+      dateOfMaintenance: isEdit ? (dayjs(data.maintenanceDate, 'DD-MM-YYYY') ?? null) : null,
       nextScheduleMaintenance: isEdit
-        ? dayjs(data.nextScheduledMaintenance, 'DD-MM-YYYY') ?? null
+        ? (dayjs(data.nextScheduledMaintenance, 'DD-MM-YYYY') ?? null)
         : null,
-      serviceDetails: isEdit ? data.serviceDetails ?? '' : '',
+      serviceDetails: isEdit ? (data.serviceDetails ?? '') : '',
       id: isEdit
-        ? data.id ?? Math.floor(Math.random() * 1000000000)
+        ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
     },
     onSubmit: (values) => {
@@ -63,90 +63,89 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
     },
   });
 
-    return (
-        <CustomDialog
-            title={`${isEdit ? 'Edit' : 'Add New'} Maintenance Record`}
-            open={dialogValue}
-            handleClose={onClose}
-        >
-            <Scrollbar>
-                <Box px="15px">
-                    <form onSubmit={formik.handleSubmit}>
-                        <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <DatePicker
-                                        name="dateOfMaintenance"
-                                        label="Date Of Maintenance"
-                                        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                                        format="DD-MM-YYYY"
-                                        value={formik.values.dateOfMaintenance}
-                                        onChange={(date) => {
-                                            formik.setFieldValue('dateOfMaintenance', date);
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <DatePicker
-                                        name="nextScheduleMaintenance"
-                                        label="Next Schedule Maintenance"
-                                        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                                        format="DD-MM-YYYY"
-                                        value={formik.values.nextScheduleMaintenance}
-                                        onChange={(date) => {
-
-                                            formik.setFieldValue('nextScheduleMaintenance', date);
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
-                            <TextField
-                                rows={4}
-                                multiline
-                                name="serviceDetails"
-                                label="Service Details"
-                                value={formik.values.serviceDetails}
-                                onChange={formik.handleChange}
-                                size="small"
-                                fullWidth
-                            />
-                            <UploadBox
-                                onDrop={() => { }}
-                                placeholder={
-                                    <Box
-                                        sx={{
-                                            gap: 0.5,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            color: 'text.disabled',
-                                            flexDirection: 'column',
-                                        }}
-                                    >
-                                        <Iconify icon="eva:cloud-upload-fill" width={40} />
-                                        <Typography variant="body2">upload file</Typography>
-                                    </Box>
-                                }
-                                sx={{
-                                    py: 2.5,
-                                    width: '100%',
-                                    height: 'auto',
-                                    borderRadius: 1.5,
-                                }}
-                            />
-                        </Box>
-                        <DialogActions>
-                            <Button onClick={onClose} variant="contained" size="small">
-                                Cancel
-                            </Button>
-                            <Button type="submit" variant="contained" size="small">
-                                Save
-                            </Button>
-                        </DialogActions>
-                    </form>
-                </Box>
-            </Scrollbar>
-        </CustomDialog>
-    );
-}
+  return (
+    <CustomDialog
+      title={`${isEdit ? 'Edit' : 'Add New'} Maintenance Record`}
+      open={dialogValue}
+      handleClose={onClose}
+    >
+      <Scrollbar>
+        <Box px="15px">
+          <form onSubmit={formik.handleSubmit}>
+            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <DatePicker
+                    name="dateOfMaintenance"
+                    label="Date Of Maintenance"
+                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                    format="DD-MM-YYYY"
+                    value={formik.values.dateOfMaintenance}
+                    onChange={(date) => {
+                      formik.setFieldValue('dateOfMaintenance', date);
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <DatePicker
+                    name="nextScheduleMaintenance"
+                    label="Next Schedule Maintenance"
+                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                    format="DD-MM-YYYY"
+                    value={formik.values.nextScheduleMaintenance}
+                    onChange={(date) => {
+                      formik.setFieldValue('nextScheduleMaintenance', date);
+                    }}
+                  />
+                </Grid>
+              </Grid>
+              <TextField
+                rows={4}
+                multiline
+                name="serviceDetails"
+                label="Service Details"
+                value={formik.values.serviceDetails}
+                onChange={formik.handleChange}
+                size="small"
+                fullWidth
+              />
+              <UploadBox
+                onDrop={() => {}}
+                placeholder={
+                  <Box
+                    sx={{
+                      gap: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.disabled',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">upload file</Typography>
+                  </Box>
+                }
+                sx={{
+                  py: 2.5,
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 1.5,
+                }}
+              />
+            </Box>
+            <DialogActions>
+              <Button onClick={onClose} variant="contained" size="small">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" size="small">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </Box>
+      </Scrollbar>
+    </CustomDialog>
+  );
+};
 
 export default TransportMaintenanceDialog;

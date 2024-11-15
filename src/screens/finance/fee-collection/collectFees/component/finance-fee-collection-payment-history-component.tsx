@@ -14,7 +14,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import FinanceStudentPaymentHistoryDialog from './finance-student-payment-history-dialog';
 
 // const paymentHistoryData = [
-//   { 
+//   {
 //    studentId:123,
 //    name: "John Doe",
 //    grade: 10,
@@ -29,7 +29,7 @@ import FinanceStudentPaymentHistoryDialog from './finance-student-payment-histor
 //    totalDueAfterDiscount:0,
 //    previousCharges:500,
 //    chargesDetails:"The payment of 500 made by cheque in June 2024 was bounced. Cheque No: H8749.",
-   
+
 //    fees: [
 //      {
 //        feeHeadId:198,
@@ -142,7 +142,7 @@ import FinanceStudentPaymentHistoryDialog from './finance-student-payment-histor
 //           paymentHistory: [],
 //         },
 //       ]
-      
+
 //      },
 //      {
 //        feeHeadId:230,
@@ -252,11 +252,11 @@ import FinanceStudentPaymentHistoryDialog from './finance-student-payment-histor
 //           paymentHistory: [],
 //         },
 //       ]
-      
+
 //      },
-    
+
 //    ],},
-  
+
 //  ];
 
 const paymentHistoryData = [
@@ -265,29 +265,28 @@ const paymentHistoryData = [
     date: '12-06-2024',
     feeHead: 'Tuition',
     dueDate: '15 June',
-    amountPaid:5000,
-    amountPending:500,
+    amountPaid: 5000,
+    amountPending: 500,
     status: 'Paid',
     paymentHistory: [
       {
-        paymentMode: "Card",
-        amount: "2000",
-        paymentId: "54j8",
-        paymentStatus: "Success",
+        paymentMode: 'Card',
+        amount: '2000',
+        paymentId: '54j8',
+        paymentStatus: 'Success',
         isRefunded: false,
-        refundAmount: "",
-        refundDate:"",
-        refundReason: "",
-        
+        refundAmount: '',
+        refundDate: '',
+        refundReason: '',
       },
       {
-        paymentMode: "Cash",
-        amount: "3000",
+        paymentMode: 'Cash',
+        amount: '3000',
         isRefunded: false,
-        refundAmount: "",
-        refundDate:"",
-        refundReason: "",
-        paymentStatus: "Success",
+        refundAmount: '',
+        refundDate: '',
+        refundReason: '',
+        paymentStatus: 'Success',
       },
       // {
       //   paymentMode: "Online",
@@ -320,10 +319,8 @@ const paymentHistoryData = [
       //   refundDate:"",
       //   refundReason: "",
       // }
-    ]
+    ],
   },
-
-
 ];
 
 

@@ -1,5 +1,5 @@
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import {
@@ -68,16 +68,16 @@ const Teacher = ({
   searchParams,
   setSearchParams,
 }: {
-  searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
+  searchParams?: Record<string, string>;
+  setSearchParams?: (obj: Record<string, any>) => void;
 }) => {
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  const selectedClass = searchParams.classId ? searchParams.classId : 'All';
-  const selectedSubject = searchParams.subject ? searchParams.subject : 'All';
+  const selectedClass = searchParams?.classId ? searchParams?.classId : 'All';
+  const selectedSubject = searchParams?.subject ? searchParams?.subject : 'All';
 
   // const [selectedClass, setSelectedClass] = useState('All');
   // const [selectedSubject, setSelectedSubject] = useState('All');
@@ -100,7 +100,6 @@ const Teacher = ({
       setSelectedTeacher(null);
     }
   };
-
 
   const classOptions = useMemo(() => {
     if (!classData) return [{ label: 'All', value: 'All' }];
@@ -140,7 +139,7 @@ const Teacher = ({
           formControlProps={{ sx: { width: '200px' } }}
           value={selectedClass}
           onChange={(value) => {
-            setSearchParams({ classId: value as string });
+            setSearchParams?.({ classId: value as string });
           }}
         />
         <CustomSelect
@@ -154,7 +153,7 @@ const Teacher = ({
           ]}
           formControlProps={{ sx: { width: '200px' } }}
           value={selectedSubject}
-          onChange={(value) => setSearchParams({ subject: value as string })}
+          onChange={(value) => setSearchParams?.({ subject: value as string })}
         />
       </Box>
       <Grid2 container spacing={3}>

@@ -35,8 +35,8 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
     initialValues: {
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
 
-      receiptBookName: isEdit ? data.receiptBookName ?? '' : '',
-      receiptBookCode: isEdit ? data.receiptBookCode ?? '' : '',
+      receiptBookName: isEdit ? (data.receiptBookName ?? '') : '',
+      receiptBookCode: isEdit ? (data.receiptBookCode ?? '') : '',
     },
     // validationSchema,
     onSubmit: (values) => {

@@ -48,7 +48,6 @@ let expenseData: ExpenseData[] = [
   //       amount: 25000,
   //       date: "12-10-2024"
 
-
   //     },
 
   //   ]
@@ -64,22 +63,16 @@ let expenseData: ExpenseData[] = [
     action: 'View',
     expenseList: [
       {
-        expenseName: "Admin",
+        expenseName: 'Admin',
         amount: 500,
-        date: "11-10-2024"
-
+        date: '11-10-2024',
       },
       {
-        expenseName: "School",
+        expenseName: 'School',
         amount: 1000,
-        date: "11-10-2024"
-
+        date: '11-10-2024',
       },
-     
-     
-        
-
-    ]
+    ],
   },
 ];
 
@@ -154,60 +147,64 @@ const FinanceExpenseTrackingScreen = () => {
       </Box>
       <CustomizableTable
         columns={[
-          { id: 'expenseCategory', label: 'Expense Category',children(row) {
-            return (
-              <CustomizableTable
-                isFilter={false}
-                isPagination={false}
-                isSearch={false}
-                columns={[
-                  { id: "expenseName", label: "Expense Name" },
-                  {
-                    id: "amount",
-                    label: "Amount",
-                    render(value) {
-
-                      return (
-                        <Typography fontSize="12px">
-                          {formatNumber(value, "INR")}
-                        </Typography>
-                      );
-                    },
-                  },
-                  { id: "date", label: "Received Date" },
-                ]} data={row.expenseList} />
-            );
-          }, },
-          { id: 'expenseAmount', label: 'Expense Amount', 
-            render(value) {
-
+          {
+            id: 'expenseCategory',
+            label: 'Expense Category',
+            children(row) {
               return (
-                <Typography fontSize="12px">
-                  {formatNumber(value, "INR")}
-                </Typography>
+                <CustomizableTable
+                  isFilter={false}
+                  isPagination={false}
+                  isSearch={false}
+                  columns={[
+                    { id: 'expenseName', label: 'Expense Name' },
+                    {
+                      id: 'amount',
+                      label: 'Amount',
+                      render(value) {
+                        return (
+                          <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
+                        );
+                      },
+                    },
+                    { id: 'date', label: 'Received Date' },
+                  ]}
+                  data={row.expenseList}
+                />
               );
             },
-           },
+          },
+          {
+            id: 'expenseAmount',
+            label: 'Expense Amount',
+            render(value) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+            },
+          },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
-          { id: 'paymentStatus', label: 'Payment Status',  render(value, row) {
-            return (
-              <Label
-                variant="soft"
-                color={
-                  value === 'Overdue'
-                    ? 'error'
-                    : value === 'Unpaid'
-                      ? 'warning'
-                      : value === 'Paid'
-                        ? 'success'
-                        : 'default'
-                }
-              >
-                {value}
-              </Label>
-            );
-          }, },
+          {
+            id: 'paymentStatus',
+            label: 'Payment Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Unpaid'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',

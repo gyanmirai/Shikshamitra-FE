@@ -91,7 +91,7 @@ export async function updateEvent(eventData: Partial<ICalendarEvent>) {
    */
   mutate(
     CALENDAR_ENDPOINT,
-    (currentData : any) => {
+    (currentData: any) => {
       const currentEvents: ICalendarEvent[] = currentData?.events;
 
       const events = currentEvents?.map((event) =>

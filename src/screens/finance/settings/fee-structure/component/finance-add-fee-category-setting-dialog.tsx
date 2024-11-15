@@ -113,9 +113,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   const formik = useFormik<FormikValue>({
     initialValues: {
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
-      feeName: isEdit ? data.feeCategoryName ?? '' : '',
+      feeName: isEdit ? (data.feeCategoryName ?? '') : '',
       totalAmount: isEdit ? data.amount : totalAmount,
-      applicableGrade: isEdit ? data.applicableGrade ?? '' : '',
+      applicableGrade: isEdit ? (data.applicableGrade ?? '') : '',
       paymentDueDate:
         isEdit && data.paymentDueDate ? dayjs(data.paymentDueDate, 'DD-MM-YYYY') : null,
       paymentMethod: '',

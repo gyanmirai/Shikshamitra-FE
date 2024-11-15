@@ -7,75 +7,66 @@ import DataTable from 'src/components/commonTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
 const SetDefaultFeeComponent = () => (
-  
-    
+  <Box display="flex" flexDirection="column" gap={2}>
+    <Grid item xs={12} md={6}>
+      <Box
+        pt="15px"
+        display="flex"
+        justifyItems="center"
+        alignItems="center"
+        flexDirection="row"
+        gap={3}
+      >
+        <TextField name="Add new fee head" label="Add New Fee Head" size="small" />
 
-<Box display="flex" flexDirection="column" gap={2}>
-<Grid item xs={12} md={6}>
-      <Box pt="15px" display="flex" justifyItems="center" alignItems="center" flexDirection="row" gap={3}>
-        <TextField
-          name="Add new fee head"
-          label="Add New Fee Head"
-          size="small"
-         
-        />
-        
         <Button variant="contained" size="small">
           Add
         </Button>
-     
-       
       </Box>
-      
     </Grid>
 
-  <Grid container spacing={2}>
-    <Grid item xs={12} md={12}>
-      <Box>
-        <DataTable
-          columns={[
-            { key: 'existingFeeHead', label: 'Existing Fee Head' },
-            {
-              key: 'action',
-              label: 'Action',
-              render(row: any) {
-                return (
-                  <ThreeDotsActions
-                    actions={({ popover }: any) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            // uploadModal.onTrue();
-                            // popover.onClose();
-                          }}
-                        >
-                          <Iconify
-                            icon="solar:trash-bin-trash-bold"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Delete
-                        </MenuItem>
-                      </MenuList>
-                    )}
-                  />
-                );
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={12}>
+        <Box>
+          <DataTable
+            columns={[
+              { key: 'existingFeeHead', label: 'Existing Fee Head' },
+              {
+                key: 'action',
+                label: 'Action',
+                render(row: any) {
+                  return (
+                    <ThreeDotsActions
+                      actions={({ popover }: any) => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              // uploadModal.onTrue();
+                              // popover.onClose();
+                            }}
+                          >
+                            <Iconify
+                              icon="solar:trash-bin-trash-bold"
+                              sx={{ height: '16px', width: '16px' }}
+                            />
+                            Delete
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
               },
-            },
-          ]}
-          data={[
-            { existingFeeHead: 'Tuition Fee', action: 'Delete' },
-            { existingFeeHead: 'Sports Fee', action: 'Delete' },
-          ]}
-        />
-      </Box>
+            ]}
+            data={[
+              { existingFeeHead: 'Tuition Fee', action: 'Delete' },
+              { existingFeeHead: 'Sports Fee', action: 'Delete' },
+            ]}
+          />
+        </Box>
+      </Grid>
     </Grid>
-
-  
-  </Grid>
-</Box>
-
-   
- 
+  </Box>
 );
 
 export default SetDefaultFeeComponent;

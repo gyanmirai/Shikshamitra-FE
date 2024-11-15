@@ -58,8 +58,6 @@ interface Column {
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
   sticky?: boolean;
-  
-
 }
 
 interface Data {
@@ -95,7 +93,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
-  handleRowClick = () => { },
+  handleRowClick = () => {},
   isLoading = false,
   isPagination = true,
   isFilter = true,
@@ -219,17 +217,17 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       serverSide
         ? data
         : data.filter(
-          (row) =>
-            Object.entries(row).some(
-              ([key, value]) =>
-                columnVisibility[key] &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '')
-                  .toString()
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
-            ) && applyFilter(row)
-        ),
+            (row) =>
+              Object.entries(row).some(
+                ([key, value]) =>
+                  columnVisibility[key] &&
+                  _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+                  _.get(row, columns.find((col) => col.id === key)?.id || '')
+                    .toString()
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+              ) && applyFilter(row)
+          ),
     [serverSide, data, columnVisibility, columns, searchTerm, applyFilter]
   );
 
@@ -309,195 +307,198 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
-        {isSearch && <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          value={searchTerm}
-          onChange={handleSearch}
-          InputProps={{
-            endAdornment: (
-              <>
-                {searchTerm ? (
-                  <IconButton size="small" onClick={() => setSearchTerm('')}>
-                    <ClearIcon />
-                  </IconButton>
-                ) : (
-                  <IconButton size="small">
-                    <SearchIcon />
-                  </IconButton>
-                )}
-              </>
-            ),
-          }}
-        />}
-        {isFilter &&  <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center">
-          <Box sx={{ ml: 2 }}>
-            <Button
-              // variant="outlined"
-              size="small"
-              startIcon={<RemoveRedEyeIcon />}
-              onClick={(event) => setColumnAnchorEl(event.currentTarget)}
-            >
-              Columns
-            </Button>
-            <Popover
-              open={Boolean(anchorColumnEl)}
-              anchorEl={anchorColumnEl}
-              onClose={() => setColumnAnchorEl(null)}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
-            >
-              <Box sx={{ p: 2, width: 250 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Search columns"
-                  value={columnSearchTerm}
-                  onChange={(e) => setColumnSearchTerm(e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-                <FormGroup>
-                  {columns
-                    .filter((column) =>
-                      column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
-                    )
-                    .map((column) => (
-                      <FormControlLabel
-                        key={column.id}
-                        control={
-                          <Checkbox
-                            checked={columnVisibility[column.id]}
-                            onChange={(e) => {
-                              setColumnVisibility((prev) => ({
-                                ...prev,
-                                [column.id]: e.target.checked,
-                              }));
-                            }}
-                          />
-                        }
-                        label={column.label}
-                      />
-                    ))}
-                </FormGroup>
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
+        {isSearch && (
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearch}
+            InputProps={{
+              endAdornment: (
+                <>
+                  {searchTerm ? (
+                    <IconButton size="small" onClick={() => setSearchTerm('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  ) : (
+                    <IconButton size="small">
+                      <SearchIcon />
+                    </IconButton>
+                  )}
+                </>
+              ),
+            }}
+          />
+        )}
+        {isFilter && (
+          <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center">
+            <Box sx={{ ml: 2 }}>
+              <Button
+                // variant="outlined"
+                size="small"
+                startIcon={<RemoveRedEyeIcon />}
+                onClick={(event) => setColumnAnchorEl(event.currentTarget)}
+              >
+                Columns
+              </Button>
+              <Popover
+                open={Boolean(anchorColumnEl)}
+                anchorEl={anchorColumnEl}
+                onClose={() => setColumnAnchorEl(null)}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+              >
+                <Box sx={{ p: 2, width: 250 }}>
+                  <TextField
+                    fullWidth
                     size="small"
-                    onClick={() => {
-                      setColumnVisibility(
-                        Object.fromEntries(columns.map((column) => [column.id, true]))
-                      );
-                      setColumnSearchTerm('');
-                    }}
-                  >
-                    Reset
-                  </Button>
+                    placeholder="Search columns"
+                    value={columnSearchTerm}
+                    onChange={(e) => setColumnSearchTerm(e.target.value)}
+                    sx={{ mb: 2 }}
+                  />
+                  <FormGroup>
+                    {columns
+                      .filter((column) =>
+                        column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                      )
+                      .map((column) => (
+                        <FormControlLabel
+                          key={column.id}
+                          control={
+                            <Checkbox
+                              checked={columnVisibility[column.id]}
+                              onChange={(e) => {
+                                setColumnVisibility((prev) => ({
+                                  ...prev,
+                                  [column.id]: e.target.checked,
+                                }));
+                              }}
+                            />
+                          }
+                          label={column.label}
+                        />
+                      ))}
+                  </FormGroup>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setColumnVisibility(
+                          Object.fromEntries(columns.map((column) => [column.id, true]))
+                        );
+                        setColumnSearchTerm('');
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            </Popover>{' '}
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
-            <Button
-              size="small"
-              startIcon={<FilterAltIcon />}
-              onClick={(event) => setAnchorEl(event.currentTarget)}
-            >
-              Filters
-            </Button>
-            <Popover
-              open={Boolean(anchorEl)}
-              anchorEl={anchorEl}
-              onClose={() => setAnchorEl(null)}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
-            >
-              <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-                <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Column</InputLabel>
-                  <Select
-                    value={filterColumn}
-                    onChange={(e) => setFilterColumn(e.target.value as string)}
-                    label="Column"
-                  >
-                    {columns.map((column) => (
-                      <MenuItem key={column.id} value={column.id}>
-                        {column.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Filter Type</InputLabel>
-                  <Select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value as string)}
-                    label="Filter Type"
-                  >
-                    <MenuItem value="contains">Contains</MenuItem>
-                    <MenuItem value="equals">Equals</MenuItem>
-                    <MenuItem value="startsWith">Starts With</MenuItem>
-                    <MenuItem value="endsWith">Ends With</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  label="Filter Value"
-                  variant="outlined"
-                  size="small"
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
-                />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                  <Button
-                    variant="contained"
+              </Popover>{' '}
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
+              <Button
+                size="small"
+                startIcon={<FilterAltIcon />}
+                onClick={(event) => setAnchorEl(event.currentTarget)}
+              >
+                Filters
+              </Button>
+              <Popover
+                open={Boolean(anchorEl)}
+                anchorEl={anchorEl}
+                onClose={() => setAnchorEl(null)}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+              >
+                <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Column</InputLabel>
+                    <Select
+                      value={filterColumn}
+                      onChange={(e) => setFilterColumn(e.target.value as string)}
+                      label="Column"
+                    >
+                      {columns.map((column) => (
+                        <MenuItem key={column.id} value={column.id}>
+                          {column.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Filter Type</InputLabel>
+                    <Select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value as string)}
+                      label="Filter Type"
+                    >
+                      <MenuItem value="contains">Contains</MenuItem>
+                      <MenuItem value="equals">Equals</MenuItem>
+                      <MenuItem value="startsWith">Starts With</MenuItem>
+                      <MenuItem value="endsWith">Ends With</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    label="Filter Value"
+                    variant="outlined"
                     size="small"
-                    onClick={() => {
-                      handleApplyFilter();
-                    }}
-                  >
-                    Apply
-                  </Button>
-                  <Button size="small" variant="outlined" onClick={clearFilter}>
-                    Clear
-                  </Button>
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => {
+                        handleApplyFilter();
+                      }}
+                    >
+                      Apply
+                    </Button>
+                    <Button size="small" variant="outlined" onClick={clearFilter}>
+                      Clear
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            </Popover>
-          </Box>
-          <Box>
-            <Button
-              startIcon={<Iconify icon="solar:export-bold" />}
-              size="small"
-              onClick={(event) => setExportAnchorEl(event.currentTarget)}
-            >
-              Export
-            </Button>
-            <Menu
-              anchorEl={exportAnchorEl}
-              open={Boolean(exportAnchorEl)}
-              onClose={() => setExportAnchorEl(null)}
-            >
-              <MenuItem onClick={() => handleExport('excel')}>
-                <Iconify icon="solar:document-bold" />
-                &nbsp; Export as Excel
-              </MenuItem>
+              </Popover>
+            </Box>
+            <Box>
+              <Button
+                startIcon={<Iconify icon="solar:export-bold" />}
+                size="small"
+                onClick={(event) => setExportAnchorEl(event.currentTarget)}
+              >
+                Export
+              </Button>
+              <Menu
+                anchorEl={exportAnchorEl}
+                open={Boolean(exportAnchorEl)}
+                onClose={() => setExportAnchorEl(null)}
+              >
+                <MenuItem onClick={() => handleExport('excel')}>
+                  <Iconify icon="solar:document-bold" />
+                  &nbsp; Export as Excel
+                </MenuItem>
 
-              <MenuItem onClick={() => handleExport('pdf')}>
-                <Iconify icon="solar:document-bold" />
-                &nbsp; Export as PDF
-              </MenuItem>
-              {/* <MenuItem onClick={() => handleExport('import')}>
+                <MenuItem onClick={() => handleExport('pdf')}>
+                  <Iconify icon="solar:document-bold" />
+                  &nbsp; Export as PDF
+                </MenuItem>
+                {/* <MenuItem onClick={() => handleExport('import')}>
                 {' '}
                 <Iconify icon="solar:import-bold" />
                 &nbsp; Import
@@ -506,10 +507,11 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 <Iconify icon="fluent:print-28-filled" />
                 &nbsp; Print
               </MenuItem> */}
-            </Menu>
+              </Menu>
+            </Box>
           </Box>
-        </Box>}
-      </Box> 
+        )}
+      </Box>
       {filters.length > 0 && (
         <FilterChips
           filters={filters}
@@ -578,7 +580,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                   }}
                                 >
                                   {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                    'asc' ? (
+                                  'asc' ? (
                                     <ArrowUpwardIcon fontSize="inherit" />
                                   ) : (
                                     <ArrowDownwardIcon fontSize="inherit" />

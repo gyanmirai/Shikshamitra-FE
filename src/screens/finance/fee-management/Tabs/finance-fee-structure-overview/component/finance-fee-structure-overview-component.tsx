@@ -203,9 +203,9 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           data={feeStructureOverViewData}
         /> */}
         <CustomizableTable
-        isSearch = {false}
-        isFilter = {false}
-         isPagination={false}
+          isSearch={false}
+          isFilter={false}
+          isPagination={false}
           columns={[
             {
               id: 'bookRecipt',
@@ -228,7 +228,6 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                                   <Switch checked onChange={() => { }} />
                                 </Box>
 
-                               
                                 <Box display="flex" flexDirection="column" gap={1}>
                                   <Typography fontSize="12px">Monthly: {formatNumber(val.amount / 12, "INR")}</Typography>
                                   <Typography fontSize="12px">Quarterly: {formatNumber(val.amount / 4, "INR")}</Typography>
@@ -237,7 +236,6 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                                 </Box>
                               </Paper>
                             </Box>
-
                           </React.Fragment>
                         ))}
                       </Box>
@@ -266,7 +264,11 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                 // console.log('Row data:', row);
                 // console.log('Total amount:', totalAmount);
 
-                return <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(row.amount), "INR")}</Typography>;
+                return (
+                  <Typography sx={{ fontSize: '12px' }}>
+                    {formatNumber(Number(row.amount), 'INR')}
+                  </Typography>
+                );
               },
             },
             {

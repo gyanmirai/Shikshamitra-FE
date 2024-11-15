@@ -1,9 +1,13 @@
+import type { RootState } from 'src/redux/store';
 import type { PaperProps, DialogProps } from '@mui/material';
 
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, useTheme, IconButton, Typography } from '@mui/material';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 type CustomDialogProps = DialogProps & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
@@ -22,12 +26,19 @@ const CustomDialog = ({
 }: CustomDialogProps) => {
   const theme = useTheme();
   const { sx, ...paper } = paperProps || {};
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   return (
     <Dialog
       open={open}
       onClose={(e, reason) => {
         if (reason === 'backdropClick') return;
-        handleClose(e, reason);
+        if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+          handleClose(e, reason);
+          dispatch(setIsChanges(false));
+        } else if (!isChanges) {
+          handleClose(e, reason);
+        }
       }}
       fullWidth
       maxWidth="xs"

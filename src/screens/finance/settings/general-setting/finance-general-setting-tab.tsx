@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 
@@ -26,12 +26,12 @@ const TABS = [
   {
     value: 'defineSchoolWideRules',
     label: 'Define School-Wide Rules',
-    component: () => <DefinedSchoolWideRulesComponent />, 
+    component: () => <DefinedSchoolWideRulesComponent />,
   },
   {
     value: 'currencySettingsForDifferentRegions',
     label: 'Currency Settings for Different Regions',
-    component: () => <CurrencySettingForDifferentRegionComponent />, 
+    component: () => <CurrencySettingForDifferentRegionComponent />,
   },
   {
     value: 'currencyAndTaxSettings',
@@ -58,23 +58,14 @@ const TABS = [
     label: 'Present Categories and Departments for Budgeting',
     component: () => <PresetCategoryAndDepartmentForBudget />,
   },
-  
-  
 ];
 const FinanceGeneralSettingTab = () => {
-
   const tabs = useTabs('setDefaultFeeComponents');
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (
     <Box>
       <Card>
-        <CustomTabs
-       
-          value={tabs.value}
-          onChange={tabs.onChange}
-         
-        
-        >
+        <CustomTabs value={tabs.value} onChange={tabs.onChange}>
           {TABS.map((tab) => (
             <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
           ))}
@@ -85,21 +76,21 @@ const FinanceGeneralSettingTab = () => {
       </Box>
     </Box>
   );
-}
+};
 
 export default FinanceGeneralSettingTab;
 // <Box display="flex" flexDirection="row" gap={10}>
-  //   <Grid2 lg={3} md={12} spacing={1}>
-  //     <SetDefaultFeeComponent />
-  //     <CurrencySettingForDifferentRegionComponent />
-  //     <ConfigurePaymentStatusComponent />
-  //     <CurrencyAndTaxSavingsComponent />
-  //   </Grid2>
+//   <Grid2 lg={3} md={12} spacing={1}>
+//     <SetDefaultFeeComponent />
+//     <CurrencySettingForDifferentRegionComponent />
+//     <ConfigurePaymentStatusComponent />
+//     <CurrencyAndTaxSavingsComponent />
+//   </Grid2>
 
-  //   <Grid2 lg={9} md={12}>
-  //     <DefinedSchoolWideRulesComponent />
-  //     <PredefinedCategoryIncomeExpenseComponent />
-  //     <BudgetThresoldAlertComponent />
-  //     <PresetCategoryAndDepartmentForBudget />
-  //   </Grid2>
-  // </Box>
+//   <Grid2 lg={9} md={12}>
+//     <DefinedSchoolWideRulesComponent />
+//     <PredefinedCategoryIncomeExpenseComponent />
+//     <BudgetThresoldAlertComponent />
+//     <PresetCategoryAndDepartmentForBudget />
+//   </Grid2>
+// </Box>

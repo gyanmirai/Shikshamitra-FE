@@ -27,6 +27,7 @@ const HrEmployee = () => {
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const payrollDialog = useBoolean();
+
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>

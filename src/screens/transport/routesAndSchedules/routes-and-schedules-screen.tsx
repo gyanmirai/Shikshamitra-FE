@@ -1,14 +1,28 @@
 'use client';
 
-import "leaflet/dist/leaflet.css";
+import 'leaflet/dist/leaflet.css';
 
-import type { LatLngExpression } from "leaflet";
+import type { LatLngExpression } from 'leaflet';
 
 import * as yup from 'yup';
 import { useMapEvents } from 'react-leaflet';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Paper, Table, Button, MenuItem, MenuList, TableRow, TableBody, TableCell, TableHead, TextField, Typography, TableContainer } from '@mui/material';
+import {
+  Box,
+  Paper,
+  Table,
+  Button,
+  MenuItem,
+  MenuList,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  TextField,
+  Typography,
+  TableContainer,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,10 +33,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
-import TransportMap from "./component/view-on-map-dialog";
-
-
-
+import TransportMap from './component/view-on-map-dialog';
 
 interface DropLocation {
   busStop: string;
@@ -39,12 +50,9 @@ interface Route {
   assignedDrivers: string;
   assignedVehicles: string;
   dropLocations: DropLocation[];
-  startPointLatAndLong: [number, number],
-  endPointLatAndLong: [number, number],
-  wayPointLatAndLong:[number, number][],
-   
-    
- 
+  startPointLatAndLong: [number, number];
+  endPointLatAndLong: [number, number];
+  wayPointLatAndLong: [number, number][];
 }
 
 const routesData: Route[] = [
@@ -82,35 +90,30 @@ const routesData: Route[] = [
     endPoint: 'South City',
     startPointLatAndLong: [21.233659274910956, 72.862602819098],
     endPointLatAndLong: [21.14843573826047, 72.88572990744605],
-    wayPointLatAndLong:[
+    wayPointLatAndLong: [
       [21.200659, 72.870602],
       [21.180435, 72.880729],
-      
-  ],
+    ],
     totalStops: 2,
-    assignedDrivers: "Emily Davis",
-    assignedVehicles: "Bus C",
+    assignedDrivers: 'Emily Davis',
+    assignedVehicles: 'Bus C',
     dropLocations: [
       {
-        busStop: "Downtown Station",
+        busStop: 'Downtown Station',
 
-        pickupTime: "08:15 AM",
-        dropoffTime: "08:45 AM"
+        pickupTime: '08:15 AM',
+        dropoffTime: '08:45 AM',
       },
       {
-        busStop: "Market Square",
+        busStop: 'Market Square',
 
-        pickupTime: "08:50 AM",
-        dropoffTime: "09:15 AM"
-      }
-    ]
-  }
+        pickupTime: '08:50 AM',
+        dropoffTime: '09:15 AM',
+      },
+    ],
+  },
   // Add more routes as needed
 ];
-
-
-
-
 
 const RoutesAndSchedulesScreen = () => {
   const columns = [
@@ -147,8 +150,7 @@ const RoutesAndSchedulesScreen = () => {
                 </MenuItem> */}
                 <MenuItem
                   onClick={() => {
-                   
-                    handleViewOnMap(row)
+                    handleViewOnMap(row);
                   }}
                 >
                   <Iconify icon="solar:eye-bold" />
@@ -180,63 +182,64 @@ const RoutesAndSchedulesScreen = () => {
   const handleViewOnMap = (data: any) => {
     const { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong } = data;
 
-        setMapData({ startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
-        console.log("Map data being set:", { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
-        setMapDialogOpen(true);
-   
-  }
-  
- 
+    setMapData({ startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
+    console.log('Map data being set:', {
+      startPointLatAndLong,
+      endPointLatAndLong,
+      wayPointLatAndLong,
+    });
+    setMapDialogOpen(true);
+  };
+
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
   };
   const mapDialogClose = () => {
-    setMapDialogOpen(false); 
-    setMapData(null); 
-};
-
-  useEffect(() => { }, [selectedExpense, isEdit, mapDialogOpen]);
-
-  
-
-  const handleSave = (item: any) => {
-     console.log("from the save", item)
-      const updatedData = [...tableData, item];
-      setTableData(updatedData);
-    
+    setMapDialogOpen(false);
+    setMapData(null);
   };
 
-  return (<>
-    <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-      <Button onClick={dialog.onTrue} variant="contained" size="small">
-        Create New Route
-      </Button>
-    </Box>
-    <Box>
-      <Typography component="span" variant="h6" gutterBottom>
-        Routes List
-      </Typography>
-    </Box>
-    <CustomizableTable data={tableData} columns={columns} />
-    <CustomDialog
-      maxWidth="sm"
-      open={dialog.value}
-      handleClose={dialog.onFalse}
-      title="Create New Route"
-    >
-      <CreateRoutesForm onClose={dialog.onFalse} addNewRouteHandle={handleSave} />
-    </CustomDialog>
-    {mapDialogOpen && (
-                <CustomDialog maxWidth="md" title="R102" open={mapDialogOpen} handleClose={mapDialogClose}>
-                    <TransportMap
-                        start={mapData?.startPointLatAndLong}
-                        end={mapData?.endPointLatAndLong}
-                        waypoints={mapData?.wayPointLatAndLong}
-                    />
-                </CustomDialog>
-            )}
-  </>);
+  useEffect(() => {}, [selectedExpense, isEdit, mapDialogOpen]);
+
+  const handleSave = (item: any) => {
+    console.log('from the save', item);
+    const updatedData = [...tableData, item];
+    setTableData(updatedData);
+  };
+
+  return (
+    <>
+      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+        <Button onClick={dialog.onTrue} variant="contained" size="small">
+          Create New Route
+        </Button>
+      </Box>
+      <Box>
+        <Typography component="span" variant="h6" gutterBottom>
+          Routes List
+        </Typography>
+      </Box>
+      <CustomizableTable data={tableData} columns={columns} />
+      <CustomDialog
+        maxWidth="sm"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        title="Create New Route"
+      >
+        <CreateRoutesForm onClose={dialog.onFalse} addNewRouteHandle={handleSave} />
+      </CustomDialog>
+      {mapDialogOpen && (
+        <CustomDialog maxWidth="md" title="R102" open={mapDialogOpen} handleClose={mapDialogClose}>
+          <TransportMap
+            start={mapData?.startPointLatAndLong}
+            end={mapData?.endPointLatAndLong}
+            waypoints={mapData?.wayPointLatAndLong}
+          />
+        </CustomDialog>
+      )}
+    </>
+  );
 };
 
 export default RoutesAndSchedulesScreen;
@@ -248,13 +251,12 @@ interface RouteDetails {
 }
 
 interface NewEntry {
-  stopDetails: SelectedStop[]
-  startPoint: string,
-  endPoint: string,
-  routeName: string,
-  assignedDriver: string,
-  assignedBus: string,
-
+  stopDetails: SelectedStop[];
+  startPoint: string;
+  endPoint: string;
+  routeName: string;
+  assignedDriver: string;
+  assignedBus: string;
 }
 
 interface EnterRouteDetailsProps {
@@ -288,14 +290,12 @@ const EnterRouteDetails: React.FC<EnterRouteDetailsProps> = ({ onChange, routeDe
   </Box>
 );
 
-
-
 interface SelectedStop {
   stopId: number;
   stopName: string;
   pickupTime?: string;
   dropoffTime?: string;
-  assignedStudents?: string[];  // Updated to hold student names
+  assignedStudents?: string[]; // Updated to hold student names
 }
 
 interface AddBusStopsProps {
@@ -307,7 +307,7 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
   const [busStops, setBusStops] = useState<SelectedStop[]>(selectedStop);
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
   const handleTimeChange = (stopId: number, type: 'pickupTime' | 'dropoffTime', time: string) => {
-    const updatedStops = busStops.map(stop =>
+    const updatedStops = busStops.map((stop) =>
       stop.stopId === stopId ? { ...stop, [type]: time } : stop
     );
     setBusStops(updatedStops);
@@ -315,7 +315,7 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
   };
 
   const handleStudentChange = (stopId: number, selectedStudents: string[]) => {
-    const updatedStops = busStops.map(stop =>
+    const updatedStops = busStops.map((stop) =>
       stop.stopId === stopId ? { ...stop, assignedStudents: selectedStudents } : stop
     );
     setBusStops(updatedStops);
@@ -324,14 +324,17 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
   const position: LatLngExpression = [21.212907926175802, 72.85037234842194];
 
   const fetchCityName = async (lat: number, lng: number) => {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
     const data = await response.json();
     console.log(data);
-    return data.display_name || data.address?.suburb || data.address?.neighbourhood ||  "Unknown Location";
+    return (
+      data.display_name || data.address?.suburb || data.address?.neighbourhood || 'Unknown Location'
+    );
   };
 
   const isPointOnRoute = (lat: number, lng: number) => {
-
     const startLat = 21.212907926175802;
     const startLng = 72.85037234842194;
     const endLat = 21.232128871923543;
@@ -367,53 +370,48 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
           setMarkers((prevMarkers) => [...prevMarkers, { lat, lng }]);
           onChange([...busStops, newStop]);
         } else {
-          return alert("This stop is outside the defined route.");
+          return alert('This stop is outside the defined route.');
         }
-
-      }
+      },
     });
     return null;
   };
 
   useEffect(() => {
-    console.log("Current bus stops:", busStops);
+    console.log('Current bus stops:', busStops);
   }, [busStops]);
   const handleRemoveStop = (stopId: number) => {
-    const updatedStops = busStops.filter(stop => stop.stopId !== stopId);
+    const updatedStops = busStops.filter((stop) => stop.stopId !== stopId);
     setBusStops(updatedStops);
     onChange(updatedStops);
   };
 
-
   return (
     <Box display="flex" flexDirection="row" gap={2}>
-
-             <Box flex={3}>
+      <Box flex={3}>
         <CustomSelect
-            multiple
-            options={[
-                { value: "dindoli", label: "Dindoli" },
-                { value: "varachha", label: "Varachha" },
-            ]}
-            label="Select Bus Stop"
-            name="selectedBusStop"
-             // @ts-ignore
-            value={busStops.map(stop => stop.stopName)} 
-            onChange={(e) => {
-               // @ts-ignore
-                const selectedBusStops = e.map((value: string) => 
-                    ({
-                        stopId: Math.random(),
-                        stopName: value,
-                        pickupTime: '',
-                        dropoffTime: '',
-                        assignedStudents: [],  // Initialize with an empty array
-                    })
-                );
-                setBusStops(selectedBusStops);
-                onChange(selectedBusStops);
-            }}
-            formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+          multiple
+          options={[
+            { value: 'dindoli', label: 'Dindoli' },
+            { value: 'varachha', label: 'Varachha' },
+          ]}
+          label="Select Bus Stop"
+          name="selectedBusStop"
+          // @ts-ignore
+          value={busStops.map((stop) => stop.stopName)}
+          onChange={(e) => {
+            // @ts-ignore
+            const selectedBusStops = e.map((value: string) => ({
+              stopId: Math.random(),
+              stopName: value,
+              pickupTime: '',
+              dropoffTime: '',
+              assignedStudents: [], // Initialize with an empty array
+            }));
+            setBusStops(selectedBusStops);
+            onChange(selectedBusStops);
+          }}
+          formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
         />
         {/* {busStops.map(stop => (
             <Box key={stop.stopId} sx={{ width: "100%", display: 'flex', gap: 2 , justifyContent:"center" , alignItems:"center", justifyItems:"center" }}>
@@ -463,7 +461,7 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
                 />
             </Box>
         ))} */}
-    </Box>
+      </Box>
       {/* <Box height="250px" width="250px">
         <MapContainer style={{ height: '100%', width: '100%' }} center={position} zoom={13} scrollWheelZoom={false} >
           <TileLayer
@@ -489,7 +487,9 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
               justifyContent="space-between"
               sx={{ mb: 1 }}
             >
-              <Typography variant="body2" noWrap>{stop.stopName}</Typography>
+              <Typography variant="body2" noWrap>
+                {stop.stopName}
+              </Typography>
               <Button
                 onClick={() => handleRemoveStop(stop.stopId)}
                 size="small"
@@ -506,11 +506,8 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
         )}
       </Box>
     </Box>
-
-    
   );
 };
-
 
 interface AssignVehicleAndDriverProps {
   onChange: (e: any, name: string) => void;
@@ -565,7 +562,7 @@ interface SetScheduleProps {
   onChange: (value: SelectedStop[]) => void;
 }
 
-const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData , onChange}) => {
+const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData, onChange }) => {
   const [localScheduleData, setLocalScheduleData] = useState<NewEntry[]>(scheduleData);
 
   const columnsTable = [
@@ -574,26 +571,32 @@ const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData , onChange}) => 
     { key: 'dropoffTime', label: 'Dropoff Time' },
   ];
 
-  
-  console.log("console.log", scheduleData)
-  const handleTimeChange = (routeName: string, stopName: string, timeType: 'pickupTime' | 'dropoffTime', time: string, stopId: number,) => {
+  console.log('console.log', scheduleData);
+  const handleTimeChange = (
+    routeName: string,
+    stopName: string,
+    timeType: 'pickupTime' | 'dropoffTime',
+    time: string,
+    stopId: number
+  ) => {
     const updateData: SelectedStop[] = scheduleData[0].stopDetails.map((e) => {
       if (e.stopId === stopId) {
-          return {
-              ...e,
-              [timeType]: time, 
-          };
+        return {
+          ...e,
+          [timeType]: time,
+        };
       }
-      return e; 
-  });
+      return e;
+    });
 
-  onChange(updateData);
-   
-    setLocalScheduleData(prevData => prevData.map(entry => {
+    onChange(updateData);
+
+    setLocalScheduleData((prevData) =>
+      prevData.map((entry) => {
         if (entry.routeName === routeName) {
           return {
             ...entry,
-            stopDetails: entry.stopDetails.map(stop => {
+            stopDetails: entry.stopDetails.map((stop) => {
               if (stop.stopName === stopName) {
                 return { ...stop, [timeType]: time };
               }
@@ -602,11 +605,12 @@ const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData , onChange}) => 
           };
         }
         return entry;
-      }));
+      })
+    );
   };
 
   useEffect(() => {
-    setLocalScheduleData(scheduleData); 
+    setLocalScheduleData(scheduleData);
   }, [scheduleData]);
 
   return (
@@ -615,13 +619,13 @@ const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData , onChange}) => 
         <Table>
           <TableHead>
             <TableRow>
-              {columnsTable.map(column => (
+              {columnsTable.map((column) => (
                 <TableCell key={column.key}>{column.label}</TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {localScheduleData.map((entry, index) => (
+            {localScheduleData.map((entry, index) =>
               entry.stopDetails.map((stop) => (
                 <TableRow key={`${entry.routeName}-${index}-${stop.stopName}`}>
                   <TableCell>{stop.stopName}</TableCell>
@@ -629,21 +633,37 @@ const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData , onChange}) => 
                     <TextField
                       type="time"
                       value={stop.pickupTime || ''}
-                      onChange={(e) => handleTimeChange(entry.routeName, stop.stopName, 'pickupTime', e.target.value, stop.stopId)}
-                      inputProps={{ style: { padding: '5px' } }} 
+                      onChange={(e) =>
+                        handleTimeChange(
+                          entry.routeName,
+                          stop.stopName,
+                          'pickupTime',
+                          e.target.value,
+                          stop.stopId
+                        )
+                      }
+                      inputProps={{ style: { padding: '5px' } }}
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
                       type="time"
                       value={stop.dropoffTime || ''}
-                      onChange={(e) => handleTimeChange(entry.routeName, stop.stopName, 'dropoffTime', e.target.value, stop.stopId)}
-                      inputProps={{ style: { padding: '5px' } }} 
+                      onChange={(e) =>
+                        handleTimeChange(
+                          entry.routeName,
+                          stop.stopName,
+                          'dropoffTime',
+                          e.target.value,
+                          stop.stopId
+                        )
+                      }
+                      inputProps={{ style: { padding: '5px' } }}
                     />
                   </TableCell>
                 </TableRow>
               ))
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -651,14 +671,12 @@ const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData , onChange}) => 
   );
 };
 
-interface CreateRoutesProps{
+interface CreateRoutesProps {
   onClose: () => void;
-  addNewRouteHandle: (route: Route) => void
+  addNewRouteHandle: (route: Route) => void;
 }
 
-const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHandle}) => {
- 
-  
+const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHandle }) => {
   const [activeStep, setActiveStep] = useState<number>(0);
   const [routeDetails, setRouteDetails] = useState({
     routeName: '',
@@ -681,16 +699,17 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
       assignedBus: vehicle,
     };
 
-    
     if (activeStep === 3) {
-     
-      setScheduleData(prev => [...prev.filter(entry => entry.routeName !== newScheduleData.routeName), newScheduleData]);
+      setScheduleData((prev) => [
+        ...prev.filter((entry) => entry.routeName !== newScheduleData.routeName),
+        newScheduleData,
+      ]);
     }
   }, [selectedStop, routeDetails, driver, vehicle, activeStep]);
 
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
-    setRouteDetails(prev => ({ ...prev, [name]: value }));
+    setRouteDetails((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (selectedStops: SelectedStop[]) => {
@@ -698,7 +717,7 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
   };
 
   const handleVehicleChange = (e: any, name: string) => {
-    if (name === "driver") {
+    if (name === 'driver') {
       setDriver(e);
     } else {
       setVehicle(e);
@@ -710,7 +729,7 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
       setActiveStep(activeStep - 1);
     }
   };
-  
+
   const handleNext = (isLastStep: boolean) => {
     if (isLastStep) {
       handleSubmit();
@@ -721,12 +740,12 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
 
   const handleSubmit = () => {
     if (scheduleData.length <= 0) {
-      console.warn("No scheduled data available");
-     onClose();
+      console.warn('No scheduled data available');
+      onClose();
       return;
     }
-    
-    const newRoute:any = {
+
+    const newRoute: any = {
       routeNumber: scheduleData[0].routeName,
       startPoint: scheduleData[0].startPoint,
       endPoint: scheduleData[0].endPoint,
@@ -742,9 +761,7 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
 
     addNewRouteHandle(newRoute);
 
-
-    console.log("New Route", newRoute);
-
+    console.log('New Route', newRoute);
 
     setSelectedStop([]);
     setVehicle('');
@@ -755,13 +772,7 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
       endPoint: '',
     });
 
-
     onClose();
-
-   
-    
-  
-   
   };
 
   interface RoutePoint {
@@ -769,63 +780,51 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({onClose, addNewRouteHand
     name: string;
     coordinates: [number, number];
   }
-  
+
   interface RouteDetailsNew {
     startPoint: RoutePoint | null;
     endPoint: RoutePoint | null;
     stops: RoutePoint[];
   }
-  
+
   const [allRouteDetails, setAllRouteDetails] = useState<any>({
     startPoint: null,
     endPoint: null,
     stops: [],
   });
-  
+
   const [stepOneInfo, setStepOneInfo] = useState<any>(null);
   const handleLocationData = (data: any, locationType: string) => {
     // Update route details based on locationType
-    setAllRouteDetails((prevDetails:any) => {
+    setAllRouteDetails((prevDetails: any) => {
       const newDetails = {
         ...prevDetails,
-        startPoint: locationType === "start" ? data.start : prevDetails.startPoint,
-        endPoint: locationType === "end" ? data.end : prevDetails.endPoint,
+        startPoint: locationType === 'start' ? data.start : prevDetails.startPoint,
+        endPoint: locationType === 'end' ? data.end : prevDetails.endPoint,
       };
-  
-      
-      setStepOneInfo(newDetails); 
-      return newDetails; 
+
+      setStepOneInfo(newDetails);
+      return newDetails;
     });
   };
 
   useEffect(() => {
-    console.log("Updated route data:", allRouteDetails);
+    console.log('Updated route data:', allRouteDetails);
   }, [allRouteDetails, allRouteDetails.stops]);
-  
 
+  const handleStop = (newStop: RoutePoint) => {
+    console.log('new stop from handle stop', newStop);
 
-const handleStop = (newStop: RoutePoint) => {
-  console.log("new stop from handle stop", newStop)
-
-
-  
-  setAllRouteDetails((prevDetails:any) => {
-     
-     
-    
+    setAllRouteDetails((prevDetails: any) => {
       const updatedDetails = {
         ...prevDetails,
         stops: [...prevDetails.stops, newStop],
       };
-      console.log("Updated route details:", updatedDetails); 
-      
+      console.log('Updated route details:', updatedDetails);
 
-   
       return updatedDetails;
-  });
-};
-
-
+    });
+  };
 
   const allRouteSteps = [
     // <LocationPicker onLocationSelect={handleLocationData}/>,
@@ -833,50 +832,28 @@ const handleStop = (newStop: RoutePoint) => {
     // <BusStopPicker stepOneInfo={stepOneInfo} onStopsChange={handleStop} />,
     <AddBusStops onChange={handleSelectChange} selectedStop={selectedStop} />,
     // <FinalRoute routeDetails={allRouteDetails} />,
-    <AssignVehicleAndDriver
-      onChange={handleVehicleChange}
-      vehicle={vehicle}
-      driver={driver}
-    />,
-    <SetSchedule scheduleData={scheduleData} onChange={handleSelectChange} />
-
-
-    
-
+    <AssignVehicleAndDriver onChange={handleVehicleChange} vehicle={vehicle} driver={driver} />,
+    <SetSchedule scheduleData={scheduleData} onChange={handleSelectChange} />,
   ];
 
-
-
-const validationSchemas = [
-  yup.object().shape({
-    routeName: yup.string().required('Route name is required'), 
-    startPoint: yup.string().required('start point is required'), 
-    endPoint: yup.string().required('end point is required'), 
-   
-  }),
-  
-];
-
+  const validationSchemas = [
+    yup.object().shape({
+      routeName: yup.string().required('Route name is required'),
+      startPoint: yup.string().required('start point is required'),
+      endPoint: yup.string().required('end point is required'),
+    }),
+  ];
 
   return (
     <CustomStepperWithFormik
       initialValues={{}}
-      steps={[
-        'Enter Route Details',
-        'Add Bus Stops',
-        'Assign Vehicle and Driver',
-        'Set Schedule',
-      ]}
+      steps={['Enter Route Details', 'Add Bus Stops', 'Assign Vehicle and Driver', 'Set Schedule']}
       activeStep={activeStep}
       handleBack={handleBack}
       validationSchema={yup.object()}
       // validationSchema={validationSchemas[activeStep]}
       handleNext={handleNext}
-      renderItem={({ formik, activeStep: step }: any) => (
-        <Box p={2}>
-          {allRouteSteps[step]}
-        </Box>
-      )}
+      renderItem={({ formik, activeStep: step }: any) => <Box p={2}>{allRouteSteps[step]}</Box>}
     />
   );
 };

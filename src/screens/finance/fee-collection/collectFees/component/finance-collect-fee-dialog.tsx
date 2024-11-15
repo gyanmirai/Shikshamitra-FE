@@ -69,11 +69,11 @@ const FinanceCollectFeeDialog: React.FC<FinanceCollectFeeDialogProps> = ({
   const formik = useFormik<FormikValues>({
     initialValues: {
       selectStudent: studentData.name,
-      feeType: isEdit ? data.feeType ?? '' : '',
-      amount: isEdit ? data.amount ?? '' : '',
-      paymentMode: isEdit ? data.paymentMode ?? '' : '',
-      transactionId: isEdit ? data.transactionId ?? '' : '',
-      note: isEdit ? data.note ?? '' : '',
+      feeType: isEdit ? (data.feeType ?? '') : '',
+      amount: isEdit ? (data.amount ?? '') : '',
+      paymentMode: isEdit ? (data.paymentMode ?? '') : '',
+      transactionId: isEdit ? (data.transactionId ?? '') : '',
+      note: isEdit ? (data.note ?? '') : '',
       term: '',
       multipleTerm: [],
     },

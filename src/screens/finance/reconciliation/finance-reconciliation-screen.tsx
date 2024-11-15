@@ -12,8 +12,6 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import FinanceBounceTab from './finance-bounce-checklist-tab';
 import FinanceReconciliationTab from './finance-reconciliation-tab';
 
-
-
 const TABS = [
   {
     value: 'reconciliation-list',
@@ -24,7 +22,7 @@ const TABS = [
   {
     value: 'bounce-check-list',
     label: 'Bounce Check Details',
-    icon: <Iconify icon="fluent:check-24-filled"  width={20} />,
+    icon: <Iconify icon="fluent:check-24-filled" width={20} />,
     component: () => <FinanceBounceTab />,
   },
 ];
@@ -32,7 +30,6 @@ const TABS = [
 const FinanceReconciliationScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'reconciliation-list' });
 
-  
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
@@ -44,18 +41,22 @@ const FinanceReconciliationScreen = () => {
         <CustomTabs
           value={searchParams.tab}
           onChange={(e, value) => setSearchParams({ tab: value })}
-    
-         
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-        role="tablist"
+          role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              icon={tab.icon}
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-      {currentActiveComponent?.component && (
+        {currentActiveComponent?.component && (
           <currentActiveComponent.component
           // searchParams={searchParams}
           // setSearchParams={setSearchParams}

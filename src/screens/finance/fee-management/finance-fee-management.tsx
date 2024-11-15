@@ -30,7 +30,6 @@ const TABS = [
 const FinanceFeeManagementScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'Fee-structure-overview' });
 
-  
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
@@ -42,18 +41,22 @@ const FinanceFeeManagementScreen = () => {
         <CustomTabs
           value={searchParams.tab}
           onChange={(e, value) => setSearchParams({ tab: value })}
-    
-         
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-        role="tablist"
+          role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              icon={tab.icon}
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-      {currentActiveComponent?.component && (
+        {currentActiveComponent?.component && (
           <currentActiveComponent.component
           // searchParams={searchParams}
           // setSearchParams={setSearchParams}

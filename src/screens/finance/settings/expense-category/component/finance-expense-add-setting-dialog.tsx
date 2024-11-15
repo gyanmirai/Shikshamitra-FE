@@ -35,10 +35,10 @@ const FinanceExpenseAddSettingDialog: React.FC<FinanceExpenseAddSettingDialogPro
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      categoryName: isEdit ? data.categoryName ?? '' : '',
-      parentCategory: isEdit ? data.parentCategory ?? '' : '',
-      assignDepartment: isEdit ? data.assignDepartment ?? '' : '',
-      budgetLimit: isEdit ? data.budgetLimit ?? '' : '',
+      categoryName: isEdit ? (data.categoryName ?? '') : '',
+      parentCategory: isEdit ? (data.parentCategory ?? '') : '',
+      assignDepartment: isEdit ? (data.assignDepartment ?? '') : '',
+      budgetLimit: isEdit ? (data.budgetLimit ?? '') : '',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {

@@ -14,16 +14,18 @@ interface BusStop {
 }
 
 interface BusStopPickerProps {
-   stepOneInfo:any;
+  stepOneInfo: any;
   onStopsChange: (stops: any) => void;
 }
 
 const BusStopPicker: React.FC<BusStopPickerProps> = ({ onStopsChange, stepOneInfo }) => {
-    console.log("stepOneinfo", stepOneInfo)
+  console.log('stepOneinfo', stepOneInfo);
   const [busStops, setBusStops] = useState<BusStop[]>([]);
 
   const fetchCityName = async (lat: number, lng: number) => {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
     const data = await response.json();
     return data.display_name || 'Unknown Location';
   };
@@ -61,7 +63,15 @@ const BusStopPicker: React.FC<BusStopPickerProps> = ({ onStopsChange, stepOneInf
           />
           <DetectClick />
           {busStops.map((stop) => (
-            <Marker key={stop.id} position={stop.coordinates} icon={L.icon({ iconUrl: `${CONFIG.site.basePath}/assets/images/location/placeholder.png`, iconSize: [25, 41], iconAnchor: [12, 41] })}>
+            <Marker
+              key={stop.id}
+              position={stop.coordinates}
+              icon={L.icon({
+                iconUrl: `${CONFIG.site.basePath}/assets/images/location/placeholder.png`,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+              })}
+            >
               <Popup>{stop.name}</Popup>
             </Marker>
           ))}
@@ -72,16 +82,25 @@ const BusStopPicker: React.FC<BusStopPickerProps> = ({ onStopsChange, stepOneInf
         <Typography variant="h6">Bus Stops</Typography>
         <List>
           {busStops.map((stop) => (
-            <ListItem key={stop.id} secondaryAction={
-              <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteStop(stop.id)}>
-                <DeleteIcon />
-              </IconButton>
-            }>
+            <ListItem
+              key={stop.id}
+              secondaryAction={
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={() => handleDeleteStop(stop.id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              }
+            >
               <ListItemText primary={stop.name} />
             </ListItem>
           ))}
         </List>
-        <Button onClick={() => setBusStops([])} color="secondary">Clear All Stops</Button>
+        <Button onClick={() => setBusStops([])} color="secondary">
+          Clear All Stops
+        </Button>
       </Box>
     </Box>
   );

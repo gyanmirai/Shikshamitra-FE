@@ -30,9 +30,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
   const [selectedEndDetail, setSelectedEndDetail] = useState<string | null>(null);
 
   const fetchCityName = async (lat: number, lng: number): Promise<string> => {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
     const data = await response.json();
-    return data.display_name || data.address?.suburb || data.address?.neighbourhood || "Unknown Location";
+    return (
+      data.display_name || data.address?.suburb || data.address?.neighbourhood || 'Unknown Location'
+    );
   };
 
   const DetectClick: React.FC = () => {
@@ -45,17 +49,21 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
         if (isStartPoint) {
           setSelectedStart(coordinates);
           setSelectedStartDetail(locationName);
-          onLocationSelect({
-            start: { coordinates, name: locationName },
-        },"start");
-        
+          onLocationSelect(
+            {
+              start: { coordinates, name: locationName },
+            },
+            'start'
+          );
         } else {
           setSelectedEnd(coordinates);
           setSelectedEndDetail(locationName);
-          onLocationSelect({
-            end: { coordinates, name: locationName },
-          }, "end");
-           
+          onLocationSelect(
+            {
+              end: { coordinates, name: locationName },
+            },
+            'end'
+          );
         }
       },
     });
@@ -84,12 +92,26 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {selectedStart && (
-          <Marker position={selectedStart} icon={L.icon({ iconUrl: `${CONFIG.site.basePath}/assets/images/location/placeholder.png`, iconSize: [25, 41], iconAnchor: [12, 41] })}>
+          <Marker
+            position={selectedStart}
+            icon={L.icon({
+              iconUrl: `${CONFIG.site.basePath}/assets/images/location/placeholder.png`,
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+            })}
+          >
             <Popup>Start Point: {selectedStartDetail}</Popup>
           </Marker>
         )}
         {selectedEnd && (
-          <Marker position={selectedEnd} icon={L.icon({ iconUrl: `${CONFIG.site.basePath}/assets/images/location/placeholder.png`, iconSize: [25, 41], iconAnchor: [12, 41] })}>
+          <Marker
+            position={selectedEnd}
+            icon={L.icon({
+              iconUrl: `${CONFIG.site.basePath}/assets/images/location/placeholder.png`,
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+            })}
+          >
             <Popup>End Point: {selectedEndDetail}</Popup>
           </Marker>
         )}

@@ -70,28 +70,31 @@ const FinanceStudentFeeBreakdownTab = () => {
   ];
   return (
     <>
-    <CustomizableTable
-      isFilter={false}
-      isPagination={false}
-      isSearch={false}
-      columns={[
-        { id: 'date', label: 'Date' },
-        { id: 'type', label: 'Type' },
-        {
-          id: 'discount', label: 'Discount', render(value, row) {
-            return <Typography fontSize="12px" >{formatNumber(row.discount, "INR")}</Typography>
+      <CustomizableTable
+        isFilter={false}
+        isPagination={false}
+        isSearch={false}
+        columns={[
+          { id: 'date', label: 'Date' },
+          { id: 'type', label: 'Type' },
+          {
+            id: 'discount',
+            label: 'Discount',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.discount, 'INR')}</Typography>;
+            },
           },
-        },
-        {
-          id: 'amount', label: 'Amount', render(value, row) {
-            return <Typography fontSize="12px" >{formatNumber(row.amount, "INR")}</Typography>
+          {
+            id: 'amount',
+            label: 'Amount',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
+            },
           },
-
-        },
-      ]}
-      data={data}
-    />
-    <Box pb="20px"/>
+        ]}
+        data={data}
+      />
+      <Box pb="20px" />
     </>
   );
 };

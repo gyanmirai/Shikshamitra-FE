@@ -13,9 +13,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import FeeRefundDialog from './component/fee-refund-dialog';
 import FormattedAmountInput from '../../common/input-for-finance';
 
-
 const FinanceFeeCollectionRefundTab = () => {
-
   const historyData = [
     {
       className: '1A',
@@ -40,11 +38,11 @@ const FinanceFeeCollectionRefundTab = () => {
   ];
   const data = [
     {
-      studentName:"JAY",
-      paymentId: "j878d",
+      studentName: 'JAY',
+      paymentId: 'j878d',
       feeHead: 'Tuition',
       paidAmount: '10000',
-      refundAmount: "0",
+      refundAmount: '0',
       paidDate: '20-04-2024',
       status: 'Paid',
       totalFees: 60000,
@@ -52,47 +50,74 @@ const FinanceFeeCollectionRefundTab = () => {
       fees: [
         {
           feeHeadId: 198,
-          feeHead: "Tuition",
+          feeHead: 'Tuition',
           totalFees: 60000,
           amount: 5000,
           paymentDates: [
             {
-              month: "June-2024",
-              date: "15-01-2024",
-              status: "Unpaid",
+              month: 'June-2024',
+              date: '15-01-2024',
+              status: 'Unpaid',
               amount: 5000,
               paymentHistory: [
-                { paymentMode: "Card", amount: "2000", paymentId: "54j8", paymentStatus: "Success" },
-                { paymentMode: "Cash", amount: "2000" },
-                { paymentMode: "Online", amount: "1000", paymentId: "h8749", paymentStatus: "Failed" },
-                { paymentMode: "Online", amount: "500", paymentId: "h8749", paymentStatus: "Success" },
-                { paymentMode: "Check", amount: "500", paymentId: "h8749", paymentStatus: "Not Clear", charges: 500 },
+                {
+                  paymentMode: 'Card',
+                  amount: '2000',
+                  paymentId: '54j8',
+                  paymentStatus: 'Success',
+                },
+                { paymentMode: 'Cash', amount: '2000' },
+                {
+                  paymentMode: 'Online',
+                  amount: '1000',
+                  paymentId: 'h8749',
+                  paymentStatus: 'Failed',
+                },
+                {
+                  paymentMode: 'Online',
+                  amount: '500',
+                  paymentId: 'h8749',
+                  paymentStatus: 'Success',
+                },
+                {
+                  paymentMode: 'Check',
+                  amount: '500',
+                  paymentId: 'h8749',
+                  paymentStatus: 'Not Clear',
+                  charges: 500,
+                },
               ],
             },
             {
-              month: "July-2024",
-              date: "15-02-2024",
-              status: "Paid",
+              month: 'July-2024',
+              date: '15-02-2024',
+              status: 'Paid',
               amount: 5000,
               paymentHistory: [
-                { paymentMode: "Bank Transfer", amount: "3000", paymentId: "jh238", paymentStatus: "Success" },
-                { paymentMode: "Card", amount: "2000", paymentId: "aa123", paymentStatus: "Success" },
+                {
+                  paymentMode: 'Bank Transfer',
+                  amount: '3000',
+                  paymentId: 'jh238',
+                  paymentStatus: 'Success',
+                },
+                {
+                  paymentMode: 'Card',
+                  amount: '2000',
+                  paymentId: 'aa123',
+                  paymentStatus: 'Success',
+                },
               ],
             },
-          ]
+          ],
         },
-        
-
-      ]
-
-
+      ],
     },
     {
-       studentName:"JAY",
-      paymentId: "j878d",
+      studentName: 'JAY',
+      paymentId: 'j878d',
       feeHead: 'Library',
       paidAmount: '4000',
-      refundAmount: "0",
+      refundAmount: '0',
       paidDate: '20-04-2024',
       status: 'Paid',
       totalFees: 60000,
@@ -100,32 +125,34 @@ const FinanceFeeCollectionRefundTab = () => {
       fees: [
         {
           feeHeadId: 198,
-          feeHead: "Tuition",
+          feeHead: 'Tuition',
           totalFees: 60000,
           amount: 5000,
           paymentDates: [
-            
             {
-              month: "July-2024",
-              date: "15-02-2024",
-              status: "Paid",
+              month: 'July-2024',
+              date: '15-02-2024',
+              status: 'Paid',
               amount: 5000,
               paymentHistory: [
-                { paymentMode: "Bank Transfer", amount: "3000", paymentId: "jh238", paymentStatus: "Success" },
-                { paymentMode: "Card", amount: "2000", paymentId: "aa123", paymentStatus: "Success" },
+                {
+                  paymentMode: 'Bank Transfer',
+                  amount: '3000',
+                  paymentId: 'jh238',
+                  paymentStatus: 'Success',
+                },
+                {
+                  paymentMode: 'Card',
+                  amount: '2000',
+                  paymentId: 'aa123',
+                  paymentStatus: 'Success',
+                },
               ],
             },
-          ]
+          ],
         },
-        
-
-      ]
-
-
+      ],
     },
-
-
-
   ];
 
   const dialog = useBoolean();
@@ -135,7 +162,6 @@ const FinanceFeeCollectionRefundTab = () => {
   const [paymentHistoryData, setPaymentHistoryData] = useState(data);
 
   const handleRefundChange = (index: any, value: any) => {
- 
     const newData = [...paymentHistoryData];
     const existingIndex = newData.findIndex((val) => val.paymentId === index);
     newData[existingIndex].refundAmount = value;
@@ -147,8 +173,6 @@ const FinanceFeeCollectionRefundTab = () => {
     0
   );
 
-
- 
   const totalRow = {
     paymentId: '',
     feeHead: '',
@@ -159,7 +183,7 @@ const FinanceFeeCollectionRefundTab = () => {
     status: '',
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
   const closeDialog = () => {
     dialog.onFalse();
@@ -172,55 +196,43 @@ const FinanceFeeCollectionRefundTab = () => {
     dialog.onTrue();
   };
 
-  
-
-
   const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState('');
   const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState('');
   const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState(0);
 
-  const parseNumericValue = (formattedValue: string) => parseFloat(formattedValue.replace(/,/g, '')) || 0;
+  const parseNumericValue = (formattedValue: string) =>
+    parseFloat(formattedValue.replace(/,/g, '')) || 0;
 
   useEffect(() => {
     const a = parseNumericValue(tuitionFeeRefundAmount);
     const b = parseNumericValue(libraryFeeRefundAmount);
     setTotalFeeRefundAmount(a + b);
-   
   }, [tuitionFeeRefundAmount, libraryFeeRefundAmount]);
- 
 
   const handleChangeForTuition = (formattedValue: string, numericValue: number) => {
     setTuitionFeeRefundAmount(formattedValue);
-   
-    
-
   };
 
   const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
-    
-    setlibraryFeeRefundAmount(formattedValue)
-   
+    setlibraryFeeRefundAmount(formattedValue);
   };
-
-
 
   return (
     <>
-
       <Box display="flex" flexDirection="row" gap={2}>
         <Box py="15px" display="flex" flexDirection="row" gap={3}>
           <CustomSelect
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -229,7 +241,7 @@ const FinanceFeeCollectionRefundTab = () => {
             size="small"
             fullWidth
             value=""
-            onChange={(e) => { }}
+            onChange={(e) => {}}
           />
         </Box>
       </Box>
@@ -243,19 +255,25 @@ const FinanceFeeCollectionRefundTab = () => {
           { id: 'studentName', label: 'Student Name' },
           { id: 'feeHead', label: 'Fee Head' },
           {
-            id: 'paidAmount', label: 'Paid Amount', render(value, row) {
-              if(row.paidAmount === "Total") {
-                return  <Typography fontSize="12px" fontWeight="bold">Total Refund</Typography>
+            id: 'paidAmount',
+            label: 'Paid Amount',
+            render(value, row) {
+              if (row.paidAmount === 'Total') {
+                return (
+                  <Typography fontSize="12px" fontWeight="bold">
+                    Total Refund
+                  </Typography>
+                );
               }
-                 return <Typography fontSize="12px">{formatNumber(row.paidAmount, "INR")}</Typography>   
+              return <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>;
             },
           },
-         
+
           {
             id: 'refundAmount',
             label: 'Refund Amount',
             render: (value: any, row: any) => {
-              if (row.feeHead === "Tuition") {
+              if (row.feeHead === 'Tuition') {
                 return (
                   <FormattedAmountInput
                     label="Tuition Refund"
@@ -263,7 +281,8 @@ const FinanceFeeCollectionRefundTab = () => {
                     onChange={handleChangeForTuition}
                   />
                 );
-              } if (row.feeHead === "Library") {
+              }
+              if (row.feeHead === 'Library') {
                 return (
                   <FormattedAmountInput
                     label="Library Refund"
@@ -284,15 +303,14 @@ const FinanceFeeCollectionRefundTab = () => {
               
             }
           },
-          
 
           // { id: 'paidDate', label: 'Paid Date' },
           {
             id: 'status',
             label: 'Status',
             render(value, row) {
-              return (
-                value !== "" ? <Label
+              return value !== '' ? (
+                <Label
                   variant="soft"
                   color={
                     value === 'Overdue'
@@ -305,7 +323,9 @@ const FinanceFeeCollectionRefundTab = () => {
                   }
                 >
                   {value}
-                </Label> : <Box />
+                </Label>
+              ) : (
+                <Box />
               );
             },
           },
@@ -373,7 +393,6 @@ const FinanceFeeCollectionRefundTab = () => {
             tuitionFeeAmount={tuitionFeeRefundAmount}
             libraryFeeFeeAmount={libraryFeeRefundAmount}
             totalFeeAmount={totalFeeRefundAmount}
-            
           />
         )}
       </Box>

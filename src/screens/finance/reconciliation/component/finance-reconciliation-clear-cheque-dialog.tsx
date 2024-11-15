@@ -15,27 +15,26 @@ interface FinanceReconciliationClearAndBounceChequeDialogProps {
   data: any;
   onSave: (values: any) => void;
   onClose: () => void;
-
 }
 
-const FinanceReconciliationClearAndBounceChequeDialog: React.FC<FinanceReconciliationClearAndBounceChequeDialogProps> = ({ fromClearCheck, dialogValue, data, onSave, onClose }) => {
+const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
+  FinanceReconciliationClearAndBounceChequeDialogProps
+> = ({ fromClearCheck, dialogValue, data, onSave, onClose }) => {
   const formik = useFormik({
     initialValues: {
-      grNumber: "",
+      grNumber: '',
       studentName: data.studentName,
       class: data.class,
       chequeNo: data.chequeNo,
       bankName: data.bankName,
-      chequeDate: dayjs(data.chequeDate, "DD-MM-YYYY"),
+      chequeDate: dayjs(data.chequeDate, 'DD-MM-YYYY'),
       amount: data.amount,
       id: data.id,
       checkBounceDate: dayjs(),
-      checkBounceCharges: "",
-      checkBounceReason: "",
-      remarks: "",
+      checkBounceCharges: '',
+      checkBounceReason: '',
+      remarks: '',
       chequeClearDate: dayjs(),
-
-
     },
     onSubmit: (values: any) => {
       console.log('Form Submitted type:', values);
@@ -43,9 +42,12 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<FinanceReconcili
     },
   });
   return (
-    <CustomDialog title={fromClearCheck ? "Clear Cheque" : "Bounce Cheque"} open={dialogValue} handleClose={onClose}>
-
-      <Box >
+    <CustomDialog
+      title={fromClearCheck ? 'Clear Cheque' : 'Bounce Cheque'}
+      open={dialogValue}
+      handleClose={onClose}
+    >
+      <Box>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
@@ -138,67 +140,68 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<FinanceReconcili
                     disabled
                   />
                 </Grid2>
-                {fromClearCheck && <Grid2 xs={6}>
-                <DatePicker
-                    label="Cheque Clear Date"
-                    value={formik.values.chequeClearDate}
-                    onChange={(newValue) => formik.setFieldValue('chequeClearDate', newValue)}
-                    format="DD-MM-YYYY"
-                    slotProps={{ textField: { size: 'small' } }}
-                  />
-                 
-                </Grid2>}
-                {!fromClearCheck && <Grid2 xs={6}>
-                <DatePicker
-                    label="Cheque Bounce Date"
-                    value={formik.values.checkBounceDate}
-                    onChange={(newValue) => formik.setFieldValue('checkBounceDate', newValue)}
-                    format="DD-MM-YYYY"
-                    slotProps={{ textField: { size: 'small' } }}
-                  />
-                 
-                </Grid2>}
+                {fromClearCheck && (
+                  <Grid2 xs={6}>
+                    <DatePicker
+                      label="Cheque Clear Date"
+                      value={formik.values.chequeClearDate}
+                      onChange={(newValue) => formik.setFieldValue('chequeClearDate', newValue)}
+                      format="DD-MM-YYYY"
+                      slotProps={{ textField: { size: 'small' } }}
+                    />
+                  </Grid2>
+                )}
+                {!fromClearCheck && (
+                  <Grid2 xs={6}>
+                    <DatePicker
+                      label="Cheque Bounce Date"
+                      value={formik.values.checkBounceDate}
+                      onChange={(newValue) => formik.setFieldValue('checkBounceDate', newValue)}
+                      format="DD-MM-YYYY"
+                      slotProps={{ textField: { size: 'small' } }}
+                    />
+                  </Grid2>
+                )}
               </Grid2>
-             {!fromClearCheck && <Grid2 container spacing={2}>
-              <Grid2 xs={6}>
-                <TextField
-                    name="checkBounceCharges"
-                    label="Check Bounce Charges"
-                    value={formik.values.checkBounceCharges}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="text"
-                    fullWidth
-                  />
-                  
+              {!fromClearCheck && (
+                <Grid2 container spacing={2}>
+                  <Grid2 xs={6}>
+                    <TextField
+                      name="checkBounceCharges"
+                      label="Check Bounce Charges"
+                      value={formik.values.checkBounceCharges}
+                      onChange={formik.handleChange}
+                      size="small"
+                      type="text"
+                      fullWidth
+                    />
+                  </Grid2>
+                  <Grid2 xs={6}>
+                    <TextField
+                      name="checkBounceReason"
+                      label="Check Bounce Reason"
+                      value={formik.values.checkBounceReason}
+                      onChange={formik.handleChange}
+                      size="small"
+                      type="text"
+                      fullWidth
+                    />
+                  </Grid2>
                 </Grid2>
-                <Grid2 xs={6}>
-                  <TextField
-                    name="checkBounceReason"
-                    label="Check Bounce Reason"
-                    value={formik.values.checkBounceReason}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="text"
-                    fullWidth
-                  />
-                </Grid2>
-                
-              </Grid2>}
+              )}
             </Box>
-            <Box pt="17px"/>
+            <Box pt="17px" />
             <TextField
-            multiline
-            rows={3}
-                    name="remarks"
-                    label="Remarks"
-                    value={formik.values.remarks}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="text"
-                    fullWidth
-                  />
-
+              multiline
+              rows={3}
+              name="remarks"
+              label="Remarks"
+              value={formik.values.remarks}
+              onChange={formik.handleChange}
+              size="small"
+              type="text"
+              fullWidth
+            />
           </Scrollbar>
         </form>
         <DialogActions>
@@ -210,10 +213,9 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<FinanceReconcili
           </Button>
         </DialogActions>
       </Box>
-
     </CustomDialog>
-  )
-}
+  );
+};
 
 export default FinanceReconciliationClearAndBounceChequeDialog;
 

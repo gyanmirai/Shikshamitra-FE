@@ -298,38 +298,83 @@
 // };
 import React from 'react';
 
-import { Table, Paper, TableRow, TableBody, TableCell, TableHead, Typography, TableContainer } from '@mui/material';
+import {
+  Table,
+  Paper,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  TableContainer,
+} from '@mui/material';
 
 // Function to get the color based on amount
-const getExpenseColor = (amount:any) => 
-   amount > 0 ? 'red' : 'green' // Red for spent > 0, Green for remaining
-;
-
-const getIncomeColor = (amount:any) => 
-   amount > 0 ? 'green' : 'red' // Green for collected > 0, Red for outstanding
-;
-
-const formatNumber = (num:any) => new Intl.NumberFormat().format(num);
+const getExpenseColor = (amount: any) => (amount > 0 ? 'red' : 'green'); // Red for spent > 0, Green for remaining
+const getIncomeColor = (amount: any) => (amount > 0 ? 'green' : 'red'); // Green for collected > 0, Red for outstanding
+const formatNumber = (num: any) => new Intl.NumberFormat().format(num);
 
 const FinanceBudgetingScreen = () => {
   const budgetData = {
     incomeCategories: [
-      { id: "income_01", name: "Tuition Fees", totalAmountExpected: 150000, collectedAmount: 0, outstandingAmount: 150000 },
-      { id: "income_02", name: "Donations", totalAmountExpected: 50000, collectedAmount: 0, outstandingAmount: 50000 },
-      { id: "income_03", name: "Government Grants", totalAmountExpected: 30000, collectedAmount: 0, outstandingAmount: 30000 }
+      {
+        id: 'income_01',
+        name: 'Tuition Fees',
+        totalAmountExpected: 150000,
+        collectedAmount: 0,
+        outstandingAmount: 150000,
+      },
+      {
+        id: 'income_02',
+        name: 'Donations',
+        totalAmountExpected: 50000,
+        collectedAmount: 0,
+        outstandingAmount: 50000,
+      },
+      {
+        id: 'income_03',
+        name: 'Government Grants',
+        totalAmountExpected: 30000,
+        collectedAmount: 0,
+        outstandingAmount: 30000,
+      },
     ],
     expenseCategories: [
-      { id: "expense_01", name: "Salaries", allocatedAmount: 100000, spentAmount: 0, remainingAmount: 100000 },
-      { id: "expense_02", name: "Maintenance", allocatedAmount: 40000, spentAmount: 0, remainingAmount: 40000 },
-      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000 }
-    ]
+      {
+        id: 'expense_01',
+        name: 'Salaries',
+        allocatedAmount: 100000,
+        spentAmount: 0,
+        remainingAmount: 100000,
+      },
+      {
+        id: 'expense_02',
+        name: 'Maintenance',
+        allocatedAmount: 40000,
+        spentAmount: 0,
+        remainingAmount: 40000,
+      },
+      {
+        id: 'expense_03',
+        name: 'Educational Supplies',
+        allocatedAmount: 20000,
+        spentAmount: 0,
+        remainingAmount: 20000,
+      },
+    ],
   };
-  const totalIncome = budgetData.incomeCategories.reduce((acc, curr) => acc + curr.totalAmountExpected, 0);
-  const totalExpenses = budgetData.expenseCategories.reduce((acc, curr) => acc + curr.allocatedAmount, 0);
+  const totalIncome = budgetData.incomeCategories.reduce(
+    (acc, curr) => acc + curr.totalAmountExpected,
+    0
+  );
+  const totalExpenses = budgetData.expenseCategories.reduce(
+    (acc, curr) => acc + curr.allocatedAmount,
+    0
+  );
   const netBudget = totalIncome - totalExpenses;
   return (
     <>
-    {/* <TableContainer component={Paper}>
+      {/* <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
@@ -341,8 +386,8 @@ const FinanceBudgetingScreen = () => {
           </TableRow>
         </TableHead>
         <TableBody> */}
-          {/* Income Categories */}
-          {/* {budgetData.incomeCategories.map((income) => (
+      {/* Income Categories */}
+      {/* {budgetData.incomeCategories.map((income) => (
             <TableRow key={income.id}>
               <TableCell align="center">Income</TableCell>
               <TableCell align="center">{income.name}</TableCell>
@@ -356,8 +401,8 @@ const FinanceBudgetingScreen = () => {
             </TableRow>
           ))} */}
 
-          {/* Expense Categories */}
-          {/* {budgetData.expenseCategories.map((expense) => (
+      {/* Expense Categories */}
+      {/* {budgetData.expenseCategories.map((expense) => (
             <TableRow key={expense.id}>
               <TableCell align="center">Expense</TableCell>
               <TableCell align="center">{expense.name}</TableCell>
@@ -371,8 +416,8 @@ const FinanceBudgetingScreen = () => {
             </TableRow>
           ))} */}
 
-          {/* Net Budget Summary (Surplus/Deficit) */}
-          {/* <TableRow>
+      {/* Net Budget Summary (Surplus/Deficit) */}
+      {/* <TableRow>
             <TableCell colSpan={2} align="center"><strong>Net Budgeted Balance</strong></TableCell>
             <TableCell align="center" colSpan={3}>
               <strong>
@@ -384,71 +429,79 @@ const FinanceBudgetingScreen = () => {
         </TableBody>
       </Table>
     </TableContainer> */}
-    <div>
-      {/* Income Table */}
-      <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
-        <Table sx={{ minWidth: 650 }} aria-label="income table">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">IncomeCategory</TableCell>
-              <TableCell align="right">Total Expected</TableCell>
-              <TableCell align="right">Collected</TableCell>
-              <TableCell align="right">Outstanding</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {budgetData.incomeCategories.map((income) => (
-              <TableRow key={income.id}>
-                <TableCell align="center">{income.name}</TableCell>
-                <TableCell align="right">{formatNumber(income.totalAmountExpected)}</TableCell>
-                <TableCell align="right" style={{ color: getIncomeColor(income.collectedAmount) }}>
-                  {formatNumber(income.collectedAmount)}
-                </TableCell>
-                <TableCell align="right" style={{ color: getIncomeColor(income.outstandingAmount) }}>
-                  {formatNumber(income.outstandingAmount)}
-                </TableCell>
+      <div>
+        {/* Income Table */}
+        <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
+          <Table sx={{ minWidth: 650 }} aria-label="income table">
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">IncomeCategory</TableCell>
+                <TableCell align="right">Total Expected</TableCell>
+                <TableCell align="right">Collected</TableCell>
+                <TableCell align="right">Outstanding</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {budgetData.incomeCategories.map((income) => (
+                <TableRow key={income.id}>
+                  <TableCell align="center">{income.name}</TableCell>
+                  <TableCell align="right">{formatNumber(income.totalAmountExpected)}</TableCell>
+                  <TableCell
+                    align="right"
+                    style={{ color: getIncomeColor(income.collectedAmount) }}
+                  >
+                    {formatNumber(income.collectedAmount)}
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    style={{ color: getIncomeColor(income.outstandingAmount) }}
+                  >
+                    {formatNumber(income.outstandingAmount)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Expense Table */}
-      <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
-        <Table sx={{ minWidth: 650 }} aria-label="expense table">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">Expense Category</TableCell>
-              <TableCell align="right">Total Allocated</TableCell>
-              <TableCell align="right">Spent</TableCell>
-              <TableCell align="right">Remaining</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {budgetData.expenseCategories.map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell align="center">{expense.name}</TableCell>
-                <TableCell align="right">{formatNumber(expense.allocatedAmount)}</TableCell>
-                <TableCell align="right" style={{ color: getExpenseColor(expense.spentAmount) }}>
-                  {formatNumber(expense.spentAmount)}
-                </TableCell>
-                <TableCell align="right" style={{ color: getExpenseColor(expense.remainingAmount) }}>
-                  {formatNumber(expense.remainingAmount)}
-                </TableCell>
+        {/* Expense Table */}
+        <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
+          <Table sx={{ minWidth: 650 }} aria-label="expense table">
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">Expense Category</TableCell>
+                <TableCell align="right">Total Allocated</TableCell>
+                <TableCell align="right">Spent</TableCell>
+                <TableCell align="right">Remaining</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {budgetData.expenseCategories.map((expense) => (
+                <TableRow key={expense.id}>
+                  <TableCell align="center">{expense.name}</TableCell>
+                  <TableCell align="right">{formatNumber(expense.allocatedAmount)}</TableCell>
+                  <TableCell align="right" style={{ color: getExpenseColor(expense.spentAmount) }}>
+                    {formatNumber(expense.spentAmount)}
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    style={{ color: getExpenseColor(expense.remainingAmount) }}
+                  >
+                    {formatNumber(expense.remainingAmount)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Net Budgeted Balance */}
-      <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
-        Net Budgeted Balance: {formatNumber(netBudget)}
-      </Typography>
-    </div>
-  </>
+        {/* Net Budgeted Balance */}
+        <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+          Net Budgeted Balance: {formatNumber(netBudget)}
+        </Typography>
+      </div>
+    </>
   );
 };
-
 
 export default FinanceBudgetingScreen;
