@@ -1,4 +1,5 @@
 import type { SxProps } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -43,7 +44,7 @@ interface FieldsType {
   label: string;
   name: string;
   placeholder?: string;
-  sx?: SxProps;
+  sx?: SxProps<Theme>;
   otherProps?: Record<string, any>;
   renderComp?: (props: any) => React.ReactNode;
 }
@@ -1037,7 +1038,10 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                             value={formik.values[field.name]}
                             format="DD/MM/YYYY"
                             onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                            sx={{ ...(field?.sx || {}) }}
+                            // sx={{ ...(field?.sx || {}) }}
+                            sx={{
+                              ...((field?.sx as any) || {}),
+                            }}
                             slotProps={{
                               textField: {
                                 placeholder: field.placeholder,

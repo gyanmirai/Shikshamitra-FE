@@ -1,9 +1,7 @@
 import React from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Typography } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles';
+import { Box, Card, Button, Typography } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 
@@ -89,20 +87,20 @@ const CarriculumnDashboardOverviewComponent = () => (
             </Typography>
           </Box>
         </Card>
-      </Grid2> */}
+      </Grid2>
       <Grid2 xs={12} md={6}>
-          <Card
-            sx={{
-              p: 3,
-              height: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
-            }}
-          >
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Typography component="span" variant="h6" gutterBottom color="error.main">
+        <Card
+          sx={{
+            p: 3,
+            height: '100%',
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+          }}
+        >
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Typography component="span" variant="h6" gutterBottom color="error.main">
               Grade Levels Managed
-              </Typography>
-              {/* <CustomSelect
+            </Typography>
+            {/* <CustomSelect
                 label="class"
                 options={ []}
                 value=""
@@ -114,29 +112,29 @@ const CarriculumnDashboardOverviewComponent = () => (
                 }}
                 formControlProps={{ sx: { minWidth: 120 } }}
               /> */}
-            </Box>
+          </Box>
 
-            <Box sx={{ mt: 2 }}>
-              <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    padding: 0,
-                  }}
-                >
-                  {['08 Grade Managed'].map((exam, index) => (
-                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                        {exam}
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-            </Box>
-          </Card>
-        </Grid2>
+          <Box sx={{ mt: 2 }}>
+            <Scrollbar sx={{ mt: 1.5, height: '120px' }}>
+              <Box
+                component="ul"
+                sx={{
+                  listStyle: 'none',
+                  padding: 0,
+                }}
+              >
+                {['08 Grade Managed'].map((exam, index) => (
+                  <Box component="li" key={index} sx={{ mb: 1 }}>
+                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                      {exam}
+                    </Button>
+                  </Box>
+                ))}
+              </Box>
+            </Scrollbar>
+          </Box>
+        </Card>
+      </Grid2>
     </Grid2>
   </Box>
 );

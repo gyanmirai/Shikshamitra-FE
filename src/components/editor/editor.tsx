@@ -1,4 +1,5 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+import type { NodeViewProps } from '@tiptap/react';
+
 import { common, createLowlight } from 'lowlight';
 import LinkExtension from '@tiptap/extension-link';
 import ImageExtension from '@tiptap/extension-image';
@@ -75,7 +76,9 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         }),
         CodeBlockLowlightExtension.extend({
           addNodeView() {
-            return ReactNodeViewRenderer(CodeHighlightBlock);
+            return ReactNodeViewRenderer(
+              CodeHighlightBlock as unknown as React.ComponentType<NodeViewProps>
+            );
           },
         }).configure({ lowlight, HTMLAttributes: { class: editorClasses.content.codeBlock } }),
       ],

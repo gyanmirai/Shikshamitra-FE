@@ -58,10 +58,10 @@ const HrAttendanceSettingScreen = () => {
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });
   console.log(data, 'data');
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
-  };
+  // const handleClose = () => {
+  //   setEditData(null);
+  //   dialog.onFalse();
+  // };
   return (
     <Box>
       <CustomBreadcrumbs

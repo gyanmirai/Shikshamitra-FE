@@ -111,19 +111,19 @@ const CurrentTimetable = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!searchParams.classId) {
+      if (!searchParams?.classId) {
         const firstClass = classData.items[0];
-        setSearchParams({
+        setSearchParams?.({
           classId: firstClass.id,
         });
       }
-      const classes = classData.items.find((c: any) => c.id === searchParams.classId);
+      const classes = classData.items.find((c: any) => c.id === searchParams?.classId);
       const filteredData = timeTableData?.items?.find((item) => item.className === classes?.name);
       console.log('filtered data----', filteredData);
 
       setSelectedClassData(filteredData?.divisions || []);
     }
-  }, [searchParams.classId, classData, setSearchParams, timeTableData?.items]);
+  }, [searchParams?.classId, classData, setSearchParams, timeTableData?.items]);
 
   const handleCloseDialog = () => {
     dialog.onFalse();
@@ -143,7 +143,7 @@ const CurrentTimetable = (props: TabComponentType) => {
         formControlProps={{ sx: { width: '200px' } }}
         value={searchParams?.classId || ''}
         onChange={(value) => {
-          setSearchParams({
+          setSearchParams?.({
             classId: value as string,
           });
         }}
@@ -260,7 +260,7 @@ const CurrentTimetable = (props: TabComponentType) => {
         title={isEdit ? 'Update Timetable' : 'Create Timetable'}
       >
         <NewTimetable
-          selectedClass={searchParams?.classId}
+          selectedClass={searchParams?.classId || ''}
           selectedDivision={selectedRow?.division}
           isEdit={isEdit}
         />

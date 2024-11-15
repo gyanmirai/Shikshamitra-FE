@@ -156,7 +156,7 @@ const CourseProgress = (props: TabComponentType) => {
         formControlProps={{ sx: { width: '200px' } }}
         value={searchParams?.classId || ''}
         onChange={(value) => {
-          setSearchParams({
+          setSearchParams?.({
             classId: value as string,
           });
         }}
