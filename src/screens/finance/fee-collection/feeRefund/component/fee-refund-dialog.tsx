@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -31,7 +31,7 @@ interface FormikValues {
   selectStudent: string;
   feeType: number[];
   amount: number;
-  paymentMode: string[];
+  paymentMode: string;
   transactionId: string;
   transactionIdOnline: string;
   note: string;
@@ -53,6 +53,11 @@ interface FormikValues {
 
   remarks: string;
   id: number;
+  accountNumber: number;
+  bankNameForAccount: string;
+  accountAmount: number;
+  ifscNumber: string;
+  upiId: string;
 
 
 
@@ -102,7 +107,7 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       selectStudent: "jay",
       feeType: [],
       receivedPayment: 0,
-      paymentMode: [],
+      paymentMode: '',
       transactionId: '',
       transactionIdOnline: '',
       note: '',
@@ -118,6 +123,11 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       cashAmount: 0,
       charges: data.previousCharges,
       chargesDetails: data.chargesDetails,
+      accountNumber: 0,
+      bankNameForAccount: '',
+      accountAmount: 0,
+      ifscNumber: '',
+      upiId: '',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {
@@ -128,10 +138,14 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
   });
 
   const [chequeAmountState, setChequeAmountState] = useState('');
+  const [bankAmountState, setBankAmountState] = useState('');
   const [cardAmountState, setCardAmountState] = useState('');
   const [onlineAmountState, setOnlineAmountState] = useState('');
   const [cashAmountState, setCashAmountState] = useState('');
+  const handleBankAmountChange = (formattedValue: string, numericValue: number) => {
+    setBankAmountState(formattedValue);
 
+  };
   const handleChequeAmountChange = (formattedValue: string, numericValue: number) => {
     setChequeAmountState(formattedValue);
 
@@ -264,9 +278,21 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                 isPagination={false}
                 columns={[
                   { key: 'feeHead', label: 'Fee Head' },
-                  { key: 'refundAmount', label: 'Refund Amount' },
-                  { key: 'paidViaCash', label: 'Cash Payment' },
-                  { key: 'account', label: 'Account Payment' },
+                  {
+                    key: 'refundAmount', label: 'Refund Amount', render(row) {
+                      return <Typography fontSize="12px">{formatNumber(row.refundAmount, "INR")}</Typography>
+                    },
+                  },
+                  {
+                    key: 'paidViaCash', label: 'Total Cash Payment', render(row) {
+                      return <Typography fontSize="12px">{formatNumber(row.paidViaCash, "INR")}</Typography>
+                    },
+                  },
+                  {
+                    key: 'account', label: 'Total Account Payment', render(row) {
+                      return <Typography fontSize="12px">{formatNumber(row.account, "INR")}</Typography>
+                    },
+                  },
                 ]}
                 data={[
                   {
@@ -286,8 +312,8 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
 
               <Box pt="10px" display="flex" flexDirection="row" gap={3}>
                 <TextField
-                  name="amount"
-                  label="Amount"
+                  name="totalAmount"
+                  label="Total Refund Amount"
                   value={formatNumber(formik.values.totalAmount, "INR")}
                   onChange={formik.handleChange}
                   size="small"
@@ -295,13 +321,13 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                 />
 
                 <CustomSelect
-                  multiple
+
                   label="Payment Mode"
                   options={[
                     { value: 'Cash', label: 'Cash' },
-                    { value: 'Card', label: 'Card' },
-                    { value: 'Online', label: 'Online' },
-                    { value: 'Cheque', label: 'Cheque' },
+                    { value: 'inAccount', label: 'In Account' },
+                    { value: 'Online', label: 'Upi' },
+
                   ]}
                   // @ts-ignore
                   value={formik.values.paymentMode}
@@ -320,7 +346,30 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
 
                   {formik.values.paymentMode.includes("Online") && (
                     <Grid item xs={12} md={12}>
-                      <Typography variant="subtitle2" gutterBottom>Online Details</Typography>
+                      <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
+                        <Typography sx={{ pb: "15px" }} variant="subtitle2">Online Details</Typography>
+                      
+
+                        <Box>
+                          {/* Linked Account Row */}
+                          <Tooltip placement="top-start" title="Issue refund to this account">
+                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                              <Typography variant="subtitle2">Linked Account:</Typography>
+                              <Typography variant="subtitle2">notaxytz@oksbi</Typography>
+                            </Box>
+                          </Tooltip>
+
+                          {/* Last Transaction Row */}
+                          <Tooltip placement="top-start" title="Issue refund to this account">
+                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                              <Typography variant="subtitle2">Last Transaction:</Typography>
+                              <Typography variant="subtitle2">dummy@upi</Typography>
+                            </Box>
+                          </Tooltip>
+                        </Box>
+                        </Box>
+
+                      
                       <Box display="flex" gap={2} flexDirection="row">
                         <TextField
                           name="transactionIdForOnline"
@@ -330,15 +379,27 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                           size="small"
                           fullWidth
                         />
-                        <FormattedAmountInput
+                        <TextField
+                          name="upiId"
+                          label="Upi ID"
+                          value={formik.values.upiId}
+                          onChange={formik.handleChange}
+                          size="small"
+                          fullWidth
+                        />
+                        {/* <FormattedAmountInput
 
                           label="Online Amount"
                           value={onlineAmountState}
                           onChange={handleOnlineAmountChange}
 
-                        />
+                        /> */}
                       </Box>
-                      {/* <Divider sx={{ py: "12px", }} /> */}
+                      <Box pt="15px" display="flex" justifyContent="flex-end" justifyItems="flex-end">
+                        <Button disabled onClick={onClose} variant="contained" size="small">
+                          Proceed
+                        </Button>
+                      </Box>
                     </Grid>
                   )}
 
@@ -408,7 +469,7 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                         </Grid>
                         <Grid item xs={12} md={3}>
                           <FormattedAmountInput
-                            label="chequeAmount"
+                            label="ChequeAmount"
                             value={chequeAmountState}
                             onChange={handleChequeAmountChange}
                           />
@@ -420,6 +481,91 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                     </Grid>
                   )}
 
+                  {formik.values.paymentMode.includes("inAccount") && (
+                    <Grid item xs={12}>
+                      <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
+                        <Typography sx={{ pb: "15px" }} variant="subtitle2">Bank Details</Typography>
+                      
+
+                        <Box>
+                          {/* Linked Account Row */}
+                          <Tooltip placement="top-start" title="Issue refund to this account">
+                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                              <Typography variant="subtitle2">Linked Account:</Typography>
+                              <Typography variant="subtitle2">Bank Of Baroda</Typography>
+                            </Box>
+                          </Tooltip>
+
+                          {/* Last Transaction Row */}
+                          <Tooltip placement="top-start" title="Issue refund to this account">
+                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                              <Typography variant="subtitle2">Last Transaction:</Typography>
+                              <Typography variant="subtitle2">Bank Of Baroda</Typography>
+                            </Box>
+                          </Tooltip>
+                        </Box>
+                        </Box>
+
+
+
+
+
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              name="accountNumber"
+                              label="Bank Account Number"
+                              value={formik.values.accountNumber}
+                              onChange={formik.handleChange}
+                              size="small"
+                              fullWidth
+                              type="number"
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              name="ifscNumber"
+                              label="IFSC Number"
+                              value={formik.values.ifscNumber}
+                              onChange={formik.handleChange}
+                              size="small"
+                              fullWidth
+
+                            />
+                          </Grid>
+
+                          <Grid item xs={12} md={6}>
+
+                            <CustomSelect
+                              label="Bank Name"
+                              options={[
+
+                              ]}
+                              name="bankNameForAccount"
+                              value={formik.values.bankNameForAccount}
+                              onChange={(val) => formik.setFieldValue('bankNameForAccount', val)}
+                              formControlProps={{ sx: { minWidth: 410 } }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <FormattedAmountInput
+                              label="Amount"
+                              value={bankAmountState}
+                              onChange={handleBankAmountChange}
+                            />
+
+                          </Grid>
+                        </Grid>
+
+                        <Box pt="15px" display="flex" justifyContent="flex-end" justifyItems="flex-end">
+                          <Button disabled onClick={onClose} variant="contained" size="small">
+                            Proceed
+                          </Button>
+                        </Box>
+                    </Grid>
+                  )}
+
+                  {/* 
 
                   {formik.values.paymentMode.includes("Cash") && (
                     <Grid item xs={12} md={6}>
@@ -435,7 +581,7 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                       />
 
                     </Grid>
-                  )}
+                  )} */}
                 </Grid>
               )}
 

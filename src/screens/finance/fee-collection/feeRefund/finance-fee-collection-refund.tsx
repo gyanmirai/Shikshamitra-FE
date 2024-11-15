@@ -234,6 +234,11 @@ const FinanceFeeCollectionRefundTab = () => {
         </Box>
       </Box>
       <CustomizableTable
+      isFilter={false}
+      isShowedDense={false}
+      isPagination={false}
+      isScrollbar={false}
+      
         columns={[
           { id: 'studentName', label: 'Student Name' },
           { id: 'feeHead', label: 'Fee Head' },
@@ -270,7 +275,7 @@ const FinanceFeeCollectionRefundTab = () => {
                 return (
                   <FormattedAmountInput
                     label="Total Refund"
-                    value={totalFeeRefundAmount.toString()} 
+                    value={formatNumber(totalFeeRefundAmount.toString())} 
                     onChange={()=>{}}
                     
                     
@@ -335,7 +340,7 @@ const FinanceFeeCollectionRefundTab = () => {
           variant="contained"
           size="small"
         >
-          Next
+          Proceed For Refund
         </Button>
       </Box>
       <Typography variant="h6" sx={{ ml: 2 }}>

@@ -273,16 +273,16 @@ const FinanceFeeStructureSettingTab = () => {
                       {row.feeSubCategoryList.map((val: any, index: any) => (
                         <React.Fragment key={index}>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <Paper elevation={4} sx={{ p: 2 }}>
-                              {val.name}: {val.amount}
+                            <Paper  elevation={4} sx={{ p: 2 , fontSize:"13PX"}}>
+                              {val.name}: {formatNumber(val.amount, "INR")}
                               <Switch
                                 checked={switchState[index]}
                                 onChange={() => handleSwitchChange(row.id, index)}
                               />
-                              <Typography>Monthly: {(val.amount / 12).toFixed(2)}</Typography>
-                              <Typography>Quartly: {(val.amount / 4).toFixed(2)}</Typography>
-                              <Typography>Bi-annual: {(val.amount / 2).toFixed(2)}</Typography>
-                              <Typography>Yearly: {val.amount}</Typography>
+                              <Typography fontSize="13PX">Monthly: {formatNumber((val.amount / 12), "INR")}</Typography>
+                              <Typography fontSize="13PX">Quartly: {formatNumber((val.amount / 4), "INR")}</Typography>
+                              <Typography fontSize="13PX">Bi-annual: {formatNumber((val.amount / 2), "INR")}</Typography>
+                              <Typography fontSize="13PX">Yearly: {formatNumber((val.amount), "INR")}</Typography>
                             </Paper>
                           </Box>
                         </React.Fragment>
@@ -313,7 +313,7 @@ const FinanceFeeStructureSettingTab = () => {
               console.log('Row data:', row);
               console.log('Total amount:', totalAmount);
 
-              return <Typography sx={{ fontSize: '12px' }}>{formatNumber(totalAmount)}</Typography>;
+              return <Typography sx={{ fontSize: '12px' }}>{formatNumber(totalAmount, "INR")}</Typography>;
             },
           },
           {
@@ -322,7 +322,7 @@ const FinanceFeeStructureSettingTab = () => {
           },
           {
             id: 'statustoggle',
-            label: 'Status Toggle',
+            label: 'Unpublish/Publish',
             render(statusToggle) {
               return <Switch value={statusToggle} />;
             },

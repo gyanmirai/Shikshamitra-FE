@@ -146,7 +146,7 @@ const FinanceTaxSettingTab = () => {
                 >
                   <Typography
                     component="span"
-                    fontSize={14}
+                    fontSize={12}
                     style={{ cursor: region.length > 1 ? 'pointer' : 'default', color: 'black' }}
                     role="button"
                     tabIndex={0}
@@ -169,7 +169,7 @@ const FinanceTaxSettingTab = () => {
               return (
                 <Typography
                   component="span"
-                  fontSize={14}
+                  fontSize={12}
                   style={{ cursor: categories.length > 1 ? 'pointer' : 'default', color: 'black' }}
                   role="button"
                   tabIndex={0}

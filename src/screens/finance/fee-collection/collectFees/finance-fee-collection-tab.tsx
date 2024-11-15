@@ -10,7 +10,6 @@ import CustomSelect from 'src/components/custom-select';
 
 import FinanceNewCollectFeeDialog from './component/finance-new-fee-collect-dialog';
 import FinanceCollectFeeStudentCardComponent from './component/finance-collect-fee-student-card-component';
-import FinanceFeeCollectionPaymentHistoryComponent from './component/finance-fee-collection-payment-history-component';
 
 import type { IUserCard } from './component/finance-collect-fee-student-card-component';
 
@@ -287,7 +286,8 @@ const FinanceFeeCollectionTab = () => {
 
   return (
     <>
-      <Box py="15px" display="flex" flexDirection="row" gap={3}>
+      <Box py="15px" display="flex"  justifyContent="space-between">
+        <Box display="flex" flexDirection="row" gap={3}  >
         <CustomSelect
           label="Class/Grade"
           options={[]}
@@ -311,8 +311,8 @@ const FinanceFeeCollectionTab = () => {
             console.log(e);
           }}
         />
-      </Box>
-      <Box pl="20px" pb="15px" display="flex" justifyContent="flex-end" alignItems="flex-end">
+        </Box>
+         <Box  display="flex" justifyContent="flex-end" alignItems="center">
         <Button
           variant="contained"
           size="small"
@@ -325,9 +325,31 @@ const FinanceFeeCollectionTab = () => {
           Collect Fees
         </Button>
       </Box>
-
+      </Box>
+      {/* <Box pl="20px" pb="15px" display="flex" justifyContent="flex-end" alignItems="flex-end">
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => {
+            setSelectedStudent(students[0])
+            setIsEdit(true);
+            dialog.onTrue();
+          }}
+        >
+          Collect Fees
+        </Button>
+      </Box> */}
+{/* 
+      <Grid container spacing={2} justifyContent="center">
+        <Grid item md={6}><StudentNewCard user={_userCards[0]} /></Grid>
+      
+      </Grid> */}
+  
+      {/* <Box height="30%">
+      <StudentNewCard user={_userCards[0]} />
+      </Box> */}
       <FinanceCollectFeeStudentCardComponent user={dummyUser} />
-      <FinanceFeeCollectionPaymentHistoryComponent />
+      {/* <FinanceFeeCollectionPaymentHistoryComponent /> */}
       <Box pb="20px" />
       {/* {dialog.value && selectedEntry && (
         <FinanceCollectFeeDialog

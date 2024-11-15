@@ -755,16 +755,16 @@ const financeModule = {
               path: '/finance/settings/fee-structure',
               _action: 'fee-structure-setting',
             },
-            {
-              title: 'Expenense',
-              path: '/finance/settings/expense-category',
-              _action: 'expenense-category-setting',
-            },
-            {
-              title: 'Income',
-              path: '/finance/settings/income-category',
-              _action: 'income-category-setting',
-            },
+            // {
+            //   title: 'Expenense',
+            //   path: '/finance/settings/expense-category',
+            //   _action: 'expenense-category-setting',
+            // },
+            // {
+            //   title: 'Income',
+            //   path: '/finance/settings/income-category',
+            //   _action: 'income-category-setting',
+            // },
             {
               title: 'Tax Setting',
               path: '/finance/settings/tax-setting',
@@ -775,11 +775,11 @@ const financeModule = {
               path: '/finance/settings/payment-method-setting',
               _action: 'payment-method-setting',
             },
-            {
-              title: 'Budget',
-              path: '/finance/settings/budget-setting',
-              _action: 'budget-setting',
-            },
+            // {
+            //   title: 'Budget',
+            //   path: '/finance/settings/budget-setting',
+            //   _action: 'budget-setting',
+            // },
             {
               title: 'Notification',
               path: '/finance/settings/notification-setting',

@@ -10,8 +10,6 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import { AppWidgetSummary } from 'src/sections/overview/app/app-widget-summary';
-
 import FinanceSettingCreateBudgetDialog from './component/finance-setting-create-budget-dialog';
 
 interface Data {
@@ -106,7 +104,7 @@ const FinanceBudgetSettingTab = () => {
         </Button>
       </Box>
       <Box display="flex" flexDirection="row" gap={3}>
-        <AppWidgetSummary
+        {/* <AppWidgetSummary
           title="Total Expenses"
           percent={73.9}
           total={73900}
@@ -115,7 +113,7 @@ const FinanceBudgetSettingTab = () => {
             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
             series: [15, 18, 12, 51, 68, 11, 39, 37],
           }}
-        />
+        /> */}
         {/* <BookingAvailable
                     title="Budget OverView"
                     chart={{

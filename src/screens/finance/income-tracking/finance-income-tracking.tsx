@@ -14,6 +14,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceAddNewIncomeDialog from './component/finance-add-new-income-dialog';
+import FinanceIncomeDetailsDialog from './component/finance-income-details-dialog';
 
 interface Data {
   incomeSource: string;
@@ -82,6 +83,7 @@ let data: Data[] = [
 
 const FinanceIncomeTrackingScreen = () => {
   const dialog = useBoolean();
+  const dialogForDetailsInSource = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(data);
@@ -89,6 +91,12 @@ const FinanceIncomeTrackingScreen = () => {
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
+  };
+
+
+  const closeDialogForDetailsInSource = () => {
+
+    dialogForDetailsInSource.onFalse();
   };
 
   useEffect(() => { }, [selectedEntry, isEdit]);
@@ -207,14 +215,16 @@ const FinanceIncomeTrackingScreen = () => {
                 <ThreeDotsActions
                   actions={({ popover }: any) => (
                     <MenuList>
-                      {/* <MenuItem
+                      <MenuItem
                         onClick={() => {
-                          handleDelete(row);
+                          console.log("data row", row)
+                          dialogForDetailsInSource.onTrue();
+                          setSelectedEntry(row)
                         }}
                       >
-                        <Iconify icon="solar:trash-bin-trash-bold" />
-                       View Detail
-                      </MenuItem> */}
+                        <Iconify icon="mdi:eye" />
+                        View Details
+                      </MenuItem>
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);
@@ -255,6 +265,11 @@ const FinanceIncomeTrackingScreen = () => {
           />
         )}
       </Box>
+
+      {dialogForDetailsInSource.value && <FinanceIncomeDetailsDialog 
+        dialogValue={dialogForDetailsInSource.value}
+        onClose={closeDialogForDetailsInSource}
+        data={selectedEntry} />}
     </>
   );
 };

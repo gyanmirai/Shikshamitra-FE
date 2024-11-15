@@ -27,9 +27,9 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
             receiptBook: "",
             amount: data.amount,
             id: data.id,
-          
+
             remarks: "",
-           
+
 
 
         },
@@ -63,20 +63,20 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                                         label="Payment Mode"
                                         options={[
                                             { value: 'Cash', label: 'Cash' },
-                                            { value: 'Card', label: 'Card' },
-                                            { value: 'Online', label: 'Online' },
-                                            { value: 'Cheque', label: 'Cheque' },
+                                            // { value: 'Card', label: 'In Account' },
+                                            { value: 'Online', label: 'Upi' },
+
                                         ]}
                                         value={formik.values.paymentMode}
                                         onChange={(selectedValues) =>
                                             formik.setFieldValue('paymentMode', selectedValues)
                                         }
                                         formControlProps={{ sx: { width: '100%' } }}
-                                       
+
                                     />
                                 </Grid2>
                             </Grid2>
-                           {(formik.values.paymentMode !== "Cash" && formik.values.paymentMode !== "") &&  <Grid2 container spacing={2}>
+                            {(formik.values.paymentMode !== "Cash" && formik.values.paymentMode !== "") && <Grid2 container spacing={2}>
                                 <Grid2 xs={6}>
                                     {(formik.values.paymentMode === "Online" || formik.values.paymentMode === "Card") &&
                                         <TextField
@@ -88,20 +88,20 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                                         />
                                     }
 
-                                    {formik.values.paymentMode === "Cheque" && 
-                                    <TextField
-                                    name="chequeNo"
-                                    label="Cheque No"
-                                    value={formik.values.chequeNo}
-                                    onChange={formik.handleChange}
-                                    size="small"
-                                />}
+                                    {formik.values.paymentMode === "Cheque" &&
+                                        <TextField
+                                            name="chequeNo"
+                                            label="Cheque No"
+                                            value={formik.values.chequeNo}
+                                            onChange={formik.handleChange}
+                                            size="small"
+                                        />}
                                 </Grid2>
                                 {formik.values.paymentMode !== "Cash" && <Grid2 xs={6}>
                                     <TextField
-                                        name="bankName"
-                                        label="Bank Name"
-                                        value={formik.values.bankName}
+                                        name="upiId"
+                                        label="Upi Id"
+                                        value={formik.values.upiId}
                                         onChange={formik.handleChange}
                                         size="small"
                                         type="text"
@@ -111,27 +111,27 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                                 </Grid2>}
 
                             </Grid2>}
-                          
-                            <Grid2 container spacing={2}>
-                                <Grid2 xs={6}>
-                                <CustomSelect
+
+                            {/* <Grid2 container spacing={2}>
+                                 <Grid2 xs={6}>
+                                    <CustomSelect
                                         label="Receipt Book"
                                         options={[
                                             { value: 'GSEB', label: 'GSEB' },
                                             { value: 'CBSE', label: 'CBSE' },
-                                            
+
                                         ]}
                                         value={formik.values.paymentMode}
                                         onChange={(selectedValues) =>
                                             formik.setFieldValue('paymentMode', selectedValues)
                                         }
                                         formControlProps={{ sx: { width: '100%' } }}
-                                       
+
                                     />
-                                </Grid2>
+                                </Grid2> 
 
 
-                            </Grid2>
+                            </Grid2> */}
 
                         </Box>
                         <Box pt="17px" />
@@ -150,10 +150,10 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                     </Scrollbar>
                 </form>
                 <DialogActions>
-                    <Button onClick={onClose} variant="contained" size="small">
+                    {/* <Button onClick={onClose} variant="contained" size="small">
                         Cancel
-                    </Button>
-                    <Button type="submit" variant="contained" size="small">
+                    </Button> */}
+                    <Button disabled type="submit" variant="contained" size="small">
                         Generate Receipt
                     </Button>
                 </DialogActions>

@@ -6,6 +6,8 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -124,7 +126,14 @@ const FinanceIncomeSettingTab = () => {
           { id: 'description', label: 'Description' },
           { id: 'incomeType', label: 'Income Type' },
 
-          { id: 'amount', label: 'Amount' },
+          { id: 'amount', label: 'Amount',render(value) {
+
+            return (
+              <Typography fontSize="12px">
+                {formatNumber(value, "INR")}
+              </Typography>
+            );
+          }, },
           {
             id: 'action',
             label: 'Action',

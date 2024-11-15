@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Grid,
   Button,
   Switch,
   TextField,
@@ -13,6 +14,8 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
+
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -75,6 +78,18 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   const [availableFeeSubCategoryList, setavailableFeeSubCategoryList] = useState([]);
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
   const [showWhatAreChanging, setShowWhatAreChanging] = useState(false);
+  const [feeAmountState, setFeeAmountState] = useState('');
+  const [fixedReductionAmountState, setfixedReductionAmountState] = useState('');
+
+  const handleFeeAmountChange = (formattedValue: string, numericValue: number) => {
+    setFeeAmountState(formattedValue);
+
+  };
+
+  const handlefixedReductionAmountChange = (formattedValue: string, numericValue: number) => {
+    setfixedReductionAmountState(formattedValue);
+
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -306,17 +321,23 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                       formik.errors.feeAmountForAvailbleHead
                     }
 
-                    // error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
-                    // helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
+                  // error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
+                  // helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
                   />
                 </Box>
               )}
               {!isEdit && (
                 <Box width="200px">
-                  <TextField
+
+                  <FormattedAmountInput
+                    label="Fee Amount"
+                    value={feeAmountState}
+                    onChange={handleFeeAmountChange}
+                  />
+                  {/* <TextField
                     name="amount"
                     label="Fee Amount"
-                    value={formik.values.amount}
+                    value={formatNumber(formik.values.amount)}
                     onChange={formik.handleChange}
                     fullWidth
                     sx={{ width: '100%' }}
@@ -327,7 +348,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
 
                     // error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
                     // helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
-                  />
+                  /> */}
                 </Box>
               )}
             </Box>
@@ -356,6 +377,15 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 slotProps={{ textField: { size: 'small' } }}
               />
             </Box>
+            <Grid item xs={12} md={6}>
+            <FormattedAmountInput
+                label="Fixed Reduction"
+                value={fixedReductionAmountState}
+                onChange={handlefixedReductionAmountChange}
+              />
+            </Grid>
+             
+        
             {/* <Box pt="10px" display="flex" flexDirection="column" gap={3}>
 
 
@@ -410,9 +440,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
               )}
             </Box>
             <DialogActions>
-              <Button onClick={onClose} variant="contained" size="small">
+              {/* <Button onClick={onClose} variant="contained" size="small">
                 Cancel
-              </Button>
+              </Button> */}
               <Button type="submit" variant="contained" size="small">
                 Save
               </Button>

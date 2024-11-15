@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { MenuItem, MenuList, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -8,6 +10,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import FinanceStudentPaymentHistoryDialog from './finance-student-payment-history-dialog';
 
 // const paymentHistoryData = [
 //   { 
@@ -321,88 +325,63 @@ const paymentHistoryData = [
 
 
 ];
+
+
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
-  const data = [];
+  const dialog = useBoolean();
+
+  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+
+  const closeDialog = () => {
+    dialog.onFalse();
+  };
+
+  const handleSave = () => {};
   return (
+   <>
     <CustomizableTable
       columns={[
-        // {
-        //   id: 'paymentId', label: 'Payment Id', children(row) {
-        //     return (
-        //       <CustomizableTable 
-        //       isFilter={false}
-        //       isScrollbar={false}
-        //       isSearch={false}
-        //       isPagination={false}
-        //       columns={[
-        //         {id:"paymentId", label:"Payment Id / Cheque No"},
-        //         {id:"amount", label:"Amount"},
-        //         {id:"paymentMode", label:"PaymentMode"},
-        //         {id:"paymentStatus", label:"Status"},
-        //         {id:"action", label:"Action", render(value,) {
-        //           return (
-        //             <ThreeDotsActions
-        //             actions={(popover) => (
-        //               <MenuList>
-        //                 <MenuItem
-        //                   onClick={() => {
-        //                     // popover.onClose();
-        //                   }}
-        //                 >
-        //                   <Iconify icon="lets-icons:refund-back-light" />
-        //                   Refund
-        //                 </MenuItem>
-      
-        //               </MenuList>
-        //             )}
-        //           />
-        //           );
-        //         },},
-        //       ]} data={
-        //         row.paymentHistory
-        //       }/>
-
-        //     );
-        //   },
-        // },
+        
         { id: 'date', label: 'Paid Date' },
-        { id: 'feeHead', label: 'Fee Head',children(row) {
-          return (
-            <CustomizableTable 
-            isFilter={false}
-            isScrollbar={false}
-            isSearch={false}
-            isPagination={false}
-            columns={[
-              {id:"paymentId", label:"Payment Id / Cheque No"},
-              {id:"amount", label:"Amount"},
-              {id:"paymentMode", label:"PaymentMode"},
-              {id:"paymentStatus", label:"Status"},
-              {id:"action", label:"Action", render(value,) {
-                return (
-                  <ThreeDotsActions
-                  actions={(popover) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          // popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="lets-icons:refund-back-light" />
-                        Refund
-                      </MenuItem>
+       { id: 'feeHead', label: 'Fee Head',
+       // children(row) {
+        //   return (
+        //     <CustomizableTable 
+        //     isFilter={false}
+        //     isScrollbar={false}
+        //     isSearch={false}
+        //     isPagination={false}
+        //     columns={[
+        //       {id:"paymentId", label:"Payment Id / Cheque No"},
+        //       {id:"amount", label:"Amount"},
+        //       {id:"paymentMode", label:"PaymentMode"},
+        //       {id:"paymentStatus", label:"Status"},
+        //       {id:"action", label:"Action", render(value,) {
+        //         return (
+        //           <ThreeDotsActions
+        //           actions={(popover) => (
+        //             <MenuList>
+        //               <MenuItem
+        //                 onClick={() => {
+        //                   // popover.onClose();
+        //                 }}
+        //               >
+        //                 <Iconify icon="lets-icons:refund-back-light" />
+        //                 Refund
+        //               </MenuItem>
     
-                    </MenuList>
-                  )}
-                />
-                );
-              },},
-            ]} data={
-              row.paymentHistory
-            }/>
+        //             </MenuList>
+        //           )}
+        //         />
+        //         );
+        //       },},
+        //     ]} data={
+        //       row.paymentHistory
+        //     }/>
 
-          );
-        }, },
+        //   );
+        // },
+         },
         {id:"amountPaid", label:"Amount", render(value, row:any) {
           return <Typography fontSize="12px">{formatNumber(row.amountPaid,"INR")}</Typography>
         },},
@@ -436,7 +415,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
         {
           id: 'action',
           label: 'Action',
-          render: (row) => (
+          render: (value, row) => (
             <ThreeDotsActions
               actions={() => (
                 <MenuList>
@@ -445,8 +424,18 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
                       // popover.onClose();
                     }}
                   >
-                    <Iconify icon="mdi:eye" />
+                    <Iconify  icon="tabler:receipt"  />
                     View Receipt
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      console.log("data row", row)
+                      dialog.onTrue();
+                      setSelectedEntry(row)
+                    }}
+                  >
+                    <Iconify icon="mdi:eye" />
+                    View Details
                   </MenuItem>
 
                 </MenuList>
@@ -457,6 +446,16 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
       ]}
       data={paymentHistoryData}
     />
+
+    {dialog.value  && (
+      <FinanceStudentPaymentHistoryDialog
+        onSave={handleSave}
+        dialogValue={dialog.value}
+        onClose={closeDialog}
+        data={selectedEntry}
+      />
+    )}
+   </>
   );
 };
 

@@ -125,15 +125,15 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
             render(value, row) {
               return (
                 <Box>
-                  <Typography>{row.serviceProviderDetail.serviceProviderName}</Typography>
-                  <Typography>{row.serviceProviderDetail.serviceProviderMobile}</Typography>
+                  <Typography fontSize="12px">{row.serviceProviderDetail.serviceProviderName}</Typography>
+                  <Typography fontSize="12px">{row.serviceProviderDetail.serviceProviderMobile}</Typography>
                 </Box>
               );
             },
           },
           {
             id: 'toggle',
-            label: 'Status Toggle',
+            label: 'Active',
             render() {
               return <Switch />;
             },

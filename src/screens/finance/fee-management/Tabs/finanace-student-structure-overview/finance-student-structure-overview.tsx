@@ -149,6 +149,7 @@ import { useBoolean } from "src/hooks/use-boolean";
 import { formatNumber } from "src/utils/formate_number";
 
 import { Iconify } from "src/components/iconify";
+import { Scrollbar } from "src/components/scrollbar";
 import CustomDialog from "src/components/customDialog";
 import ThreeDotsActions from "src/components/three-dots-actions";
 import CustomizableTable from "src/components/customizabaleTable";
@@ -385,140 +386,143 @@ const FinanceStudentFeeManagement = () => {
           open={open}
           handleClose={handleClose}
           maxWidth="md"
-
+         
         >
+             <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
 
 
-          <CustomizableTable
-            isPagination={false}
-            isFilter={false}
-            isSearch={false}
+            <CustomizableTable
+              isPagination={false}
+              isFilter={false}
+              isSearch={false}
+              isShowedDense={false}
 
-            columns={[
-              { id: 'paymentTerm', label: 'Payment Term' },
-              ...selectedStudent.fees.map((fee: any) => ({
-                id: fee.feeHead.toLowerCase(),
-                label: fee.feeHead,
-                render: (value: any) => (
-                  <Typography
+              columns={[
+                { id: 'paymentTerm', label: 'Payment Term' },
+                ...selectedStudent.fees.map((fee: any) => ({
+                  id: fee.feeHead.toLowerCase(),
+                  label: fee.feeHead,
+                  render: (value: any) => (
+                    <Typography
 
-                    style={{
-                      color: value.status === 'Paid' ? 'green' : 'red',
-                      fontSize: "12px"
+                      style={{
+                        color: value.status === 'Paid' ? 'green' : 'red',
+                        fontSize: "12px"
 
-                    }}
-                  >
-                    {formatNumber(value.amount, "INR")}
-                  </Typography>
-                ),
-              })),
-              {
-                id: 'action',
-                label: 'Action',
-                render: (value, row) => {
-
-
+                      }}
+                    >
+                      {formatNumber(value.amount, "INR")}
+                    </Typography>
+                  ),
+                })),
+                {
+                  id: 'action',
+                  label: 'Action',
+                  render: (value, row) => {
 
 
-                  const unpaidFees = selectedStudent.fees
-                    .filter((fee: any) =>
-                      fee.paymentDates.some(
-                        (payment: any) => payment.month === row.paymentTerm && payment.status === "Unpaid"
-                      )
+
+
+                    const unpaidFees = selectedStudent.fees
+                      .filter((fee: any) =>
+                        fee.paymentDates.some(
+                          (payment: any) => payment.month === row.paymentTerm && payment.status === "Unpaid"
+                        )
+                      );
+
+                    const actionLabel = unpaidFees.length > 0 ? "Send Reminder" : "Print Receipt";
+
+                    const handleAction = () => {
+                      if (unpaidFees.length > 0) {
+                        const message = unpaidFees
+                          .map((fee: any) => `${actionLabel} for ${fee.feeHead} - ${row.paymentTerm}`)
+                          .join("\n");
+                        alert(message);
+                      } else {
+                        alert(`${actionLabel} for ${selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`);
+                      }
+                    };
+
+                    return (
+
+                      <Tooltip title={actionLabel === "Send Reminder" ? "Send Reminder" : "Print"}>
+                        <Iconify
+                          icon={actionLabel === "Send Reminder" ? "carbon:reminder" : "flat-color-icons:print"}
+                          sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                          onClick={() => {
+                            if (actionLabel === "Send Reminder") {
+                              // Handle send reminder action
+                              console.log("Reminder sent!");
+                            } else {
+                              // Handle Print action
+                              console.log("Item Print!");
+                            }
+                          }}
+                        />
+                      </Tooltip>
+
+
                     );
+                  },
+                }
 
-                  const actionLabel = unpaidFees.length > 0 ? "Send Reminder" : "Print Receipt";
 
-                  const handleAction = () => {
-                    if (unpaidFees.length > 0) {
-                      const message = unpaidFees
-                        .map((fee: any) => `${actionLabel} for ${fee.feeHead} - ${row.paymentTerm}`)
-                        .join("\n");
-                      alert(message);
-                    } else {
-                      alert(`${actionLabel} for ${selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`);
-                    }
+                // {
+                //   id: 'action',
+                //   label: 'Action',
+                //   render: (value, row) => {
+
+                //     const unpaidFee = selectedStudent.fees.find((fee: any) =>
+                //       fee.paymentDates.some(
+                //         (payment: any) => payment.month === row.paymentTerm && payment.status === 'Unpaid'
+                //       )
+                //     );
+
+                //     // If there is any unpaid fee, show "Send Reminder" else "Print Receipt"
+
+                //     // const actionLabel  = unpaidFee ? "Send Reminder" : "Print Receipt";
+                //     // const handleAction = () => {
+                //     //   alert(
+                //     //     actionLabel === "Send Reminder" 
+                //     //     ? 'Reminder Sent' 
+                //     //     : 'Print Receipt'
+                //     //   );
+                //     //   // alert(
+                //     //   //   // `${actionLabel} for ${unpaidFee ? unpaidFee.feeHead : selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`
+                //     //   // );
+                //     // };
+
+
+
+
+
+                //     return (
+                //       <Button
+                //         size="small"
+                //         variant="outlined"
+                //         onClick={handleAction}
+                //       >
+                //         {actionLabel}
+                //       </Button>
+                //     );
+                //   },
+                // },
+
+              ]}
+              data={selectedStudent.fees[0].paymentDates.map((date: any, idx: any) => ({
+                paymentTerm: date.month,
+                ...selectedStudent.fees.reduce((acc: any, fee: any) => {
+                  acc[fee.feeHead.toLowerCase()] = {
+                    amount: fee.amount,
+                    status: fee.paymentDates[idx].status,
                   };
+                  return acc;
+                }, {}),
 
-                  return (
-
-                    <Tooltip title={actionLabel === "Send Reminder" ? "Send Reminder" : "Print"}>
-                      <Iconify
-                        icon={actionLabel === "Send Reminder" ? "carbon:reminder" : "flat-color-icons:print"}
-                        sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                        onClick={() => {
-                          if (actionLabel === "Send Reminder") {
-                            // Handle send reminder action
-                            console.log("Reminder sent!");
-                          } else {
-                            // Handle Print action
-                            console.log("Item Print!");
-                          }
-                        }}
-                      />
-                    </Tooltip>
-
-
-                  );
-                },
-              }
-
-
-              // {
-              //   id: 'action',
-              //   label: 'Action',
-              //   render: (value, row) => {
-
-              //     const unpaidFee = selectedStudent.fees.find((fee: any) =>
-              //       fee.paymentDates.some(
-              //         (payment: any) => payment.month === row.paymentTerm && payment.status === 'Unpaid'
-              //       )
-              //     );
-
-              //     // If there is any unpaid fee, show "Send Reminder" else "Print Receipt"
-
-              //     // const actionLabel  = unpaidFee ? "Send Reminder" : "Print Receipt";
-              //     // const handleAction = () => {
-              //     //   alert(
-              //     //     actionLabel === "Send Reminder" 
-              //     //     ? 'Reminder Sent' 
-              //     //     : 'Print Receipt'
-              //     //   );
-              //     //   // alert(
-              //     //   //   // `${actionLabel} for ${unpaidFee ? unpaidFee.feeHead : selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`
-              //     //   // );
-              //     // };
-
-
-
-
-
-              //     return (
-              //       <Button
-              //         size="small"
-              //         variant="outlined"
-              //         onClick={handleAction}
-              //       >
-              //         {actionLabel}
-              //       </Button>
-              //     );
-              //   },
-              // },
-
-            ]}
-            data={selectedStudent.fees[0].paymentDates.map((date: any, idx: any) => ({
-              paymentTerm: date.month,
-              ...selectedStudent.fees.reduce((acc: any, fee: any) => {
-                acc[fee.feeHead.toLowerCase()] = {
-                  amount: fee.amount,
-                  status: fee.paymentDates[idx].status,
-                };
-                return acc;
-              }, {}),
-
-            }))}
-          />
-
+              }))}
+            />
+           </Scrollbar>
+         
         </CustomDialog>
 
 
