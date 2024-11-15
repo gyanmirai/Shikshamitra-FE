@@ -205,88 +205,59 @@ const CurriculumOverview = (props: TabComponentType) => {
         {/* <Grid2 xs={12} md={6} lg={6}>
         <Card sx={{ p: 3, height: '100%' }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography component="span" variant="h6" gutterBottom>
+            <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
               Curriculum Overview
             </Typography>
             <CustomSelect
-              label="class"
+              label="Class"
               options={[]}
               value=""
               onChange={() => {}}
-              formControlProps={{ sx: { minWidth: 120 } }}
+              formControlProps={{ sx: { minWidth: 120, bgcolor: 'white' } }}
             />
           </Box>
 
-          <Box sx={{ mt: 2 }}>
-            <Box component="ul" sx={{ pl: 2, listStyleType: 'disc' }}>
-              <Box component="li">Guj A Grade - 10 </Box>
-              <Box component="li">Guj B Grade - 20</Box>
-            </Box>
-          </Box>
-        </Card>
-      </Grid2>
-      <Grid2 xs={12} md={6} lg={6}>
-        <Card sx={{ p: 3 }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography component="span" variant="h6" gutterBottom>
-              Curriculum Overview
-            </Typography>
-            <CustomSelect
-              label="class"
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { minWidth: 120 } }}
-            />
-          </Box>
-
-          <Box sx={{ mt: 2 }} display="flex" gap={2}>
+          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
             <Box
               display="flex"
               flexDirection="column"
-              gap={1}
               alignItems="center"
               justifyContent="center"
+              sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
             >
-              <Typography component="span" variant="h5">
-                {' '}
-                Subjects{' '}
+              <Typography component="span" variant="h6">
+                Subjects
               </Typography>
-              <Typography component="span" variant="h3">
-                {' '}
-                12{' '}
+              <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                12
               </Typography>
             </Box>
             <Box
               display="flex"
               flexDirection="column"
-              gap={1}
               alignItems="center"
               justifyContent="center"
+              sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
             >
-              <Typography component="span" variant="h5">
-                {' '}
-                Teachers{' '}
+              <Typography component="span" variant="h6">
+                Teachers
               </Typography>
-              <Typography component="span" variant="h3">
-                {' '}
-                12{' '}
+              <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                12
               </Typography>
             </Box>
             <Box
               display="flex"
               flexDirection="column"
-              gap={1}
               alignItems="center"
               justifyContent="center"
+              sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
             >
-              <Typography component="span" variant="h5">
-                {' '}
-                Topic Covered{' '}
+              <Typography component="span" variant="h6">
+                Topics Covered
               </Typography>
-              <Typography component="span" variant="h3">
-                {' '}
-                12{' '}
+              <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                12
               </Typography>
             </Box>
           </Box>

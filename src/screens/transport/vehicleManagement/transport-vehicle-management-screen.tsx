@@ -221,6 +221,7 @@ const TransportVehicleManagementScreen = () => {
             padding: 2,
             margin: '16px',
             borderRadius: '8px',
+            height:"90vh"
           },
         }}
       >

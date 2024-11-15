@@ -155,7 +155,7 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
 
   return (
     <>
-      <CustomizableTable data={tableData} columns={columnData} />
+      
       <Box py="20px" display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
           variant="contained"
@@ -169,6 +169,7 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
           Add New Record
         </Button>
       </Box>
+      <CustomizableTable data={tableData} columns={columnData}/>
       {dialog.value && (
         <TransportMaintenanceDialog
           onSave={handleSave}

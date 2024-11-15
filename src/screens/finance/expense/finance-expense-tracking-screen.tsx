@@ -6,6 +6,9 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -20,27 +23,62 @@ interface ExpenseData {
   id: number;
   paymentStatus: string;
   action?: string;
+  expenseList?: any;
 }
 
 let expenseData: ExpenseData[] = [
-  {
-    id: 1,
-    expenseCategory: 'Office Rent',
-    expenseAmount: '1000',
-    paymentMethod: 'Bank Transfer',
-    date: '2024-09-10',
-    paymentStatus: 'Paid',
-    action: 'View',
-  },
+  // {
+  //   id: 1,
+  //   expenseCategory: 'Office Rent',
+  //   expenseAmount: '1000',
+  //   paymentMethod: 'Bank Transfer',
+  //   date: '2024-09-10',
+  //   paymentStatus: 'Paid',
+  //   action: 'View',
+  //   incomeList: [
+  //     {
+  //       incomeName: "Tuition Fees",
+  //       amount: 25000,
+  //       date: "11-10-2024"
+
+  //     },
+  //     {
+  //       incomeName: "Tuition Fees",
+  //       amount: 25000,
+  //       date: "12-10-2024"
+
+
+  //     },
+
+  //   ]
+  // },
 
   {
     id: 3,
     expenseCategory: 'Internet Bills',
-    expenseAmount: '150',
+    expenseAmount: '1500',
     paymentMethod: 'Credit Card',
     date: '2024-09-15',
     paymentStatus: 'Paid',
     action: 'View',
+    expenseList: [
+      {
+        expenseName: "Admin",
+        amount: 500,
+        date: "11-10-2024"
+
+      },
+      {
+        expenseName: "School",
+        amount: 1000,
+        date: "11-10-2024"
+
+      },
+     
+     
+        
+
+    ]
   },
 ];
 
@@ -108,11 +146,60 @@ const FinanceExpenseTrackingScreen = () => {
       </Box>
       <CustomizableTable
         columns={[
-          { id: 'expenseCategory', label: 'Expense Category' },
-          { id: 'expenseAmount', label: 'Expense Amount' },
+          { id: 'expenseCategory', label: 'Expense Category',children(row) {
+            return (
+              <CustomizableTable
+                isFilter={false}
+                isPagination={false}
+                isSearch={false}
+                columns={[
+                  { id: "expenseName", label: "Expense Name" },
+                  {
+                    id: "amount",
+                    label: "Amount",
+                    render(value) {
+
+                      return (
+                        <Typography fontSize="12px">
+                          {formatNumber(value, "INR")}
+                        </Typography>
+                      );
+                    },
+                  },
+                  { id: "date", label: "Received Date" },
+                ]} data={row.expenseList} />
+            );
+          }, },
+          { id: 'expenseAmount', label: 'Expense Amount', 
+            render(value) {
+
+              return (
+                <Typography fontSize="12px">
+                  {formatNumber(value, "INR")}
+                </Typography>
+              );
+            },
+           },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
-          { id: 'paymentStatus', label: 'Payment Status' },
+          { id: 'paymentStatus', label: 'Payment Status',  render(value, row) {
+            return (
+              <Label
+                variant="soft"
+                color={
+                  value === 'Overdue'
+                    ? 'error'
+                    : value === 'Unpaid'
+                      ? 'warning'
+                      : value === 'Paid'
+                        ? 'success'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            );
+          }, },
           {
             id: 'action',
             label: 'Action',

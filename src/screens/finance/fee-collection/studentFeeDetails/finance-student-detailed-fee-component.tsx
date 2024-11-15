@@ -10,7 +10,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceStudentPendingFeeTab from './finance-student-pending-fee-tab';
 import FinanceStudentFeeBreakdownTab from './finance-student-fee-breakdown-tab';
-import { FinanceStudentPaymentHistoryTab } from './finance-student-payment-history-tab';
+import FinanceFeeCollectionPaymentHistoryComponent from '../collectFees/component/finance-fee-collection-payment-history-component';
 
 const TABS = [
   {
@@ -21,7 +21,7 @@ const TABS = [
   {
     value: 'payment-history',
     label: 'Payment History',
-    component: () => <FinanceStudentPaymentHistoryTab />,
+    component: () => <FinanceFeeCollectionPaymentHistoryComponent />,
   },
   {
     value: 'pending-fees',

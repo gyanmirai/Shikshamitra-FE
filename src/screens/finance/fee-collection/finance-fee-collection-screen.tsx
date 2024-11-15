@@ -1,15 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceStudentFeeTab from './finance-student-fee-tab';
 import FinanceFeeCollectionTab from './collectFees/finance-fee-collection-tab';
+import FinanceFeeCollectionCharges from './charges/finance-fee-collection-charges';
 import FinanceFeeCollectionRefundTab from './feeRefund/finance-fee-collection-refund';
 import FinanceFeeCollectionPaymentHistoryTab from './paymentHistory/finance-fee-collection-payment-history.tab';
 
@@ -17,45 +19,65 @@ const TABS = [
   {
     value: 'collect-fee',
     label: 'Collect Fees',
+    icon: <Iconify icon="prime:indian-rupee" width={20} />,
+   
     component: () => <FinanceFeeCollectionTab />,
   },
   {
     value: 'student-fee',
     label: 'Student Fees',
+    icon: <Iconify icon="ph:student-thin"  width={20} />,
     component: () => <FinanceStudentFeeTab />,
   },
   {
     value: 'payment-history',
     label: 'Payment History',
+    icon: <Iconify icon="material-symbols-light:history" width={20} />,
     component: () => <FinanceFeeCollectionPaymentHistoryTab />,
   },
   {
     value: 'fee-refund',
     label: 'Fee Refund',
+    icon: <Iconify icon="gridicons:refund" width={20} />,
     component: () => <FinanceFeeCollectionRefundTab />,
+  },
+  {
+    value: 'charges',
+    label: 'Charges',
+    icon: <Iconify icon="tdesign:money" width={20} />,
+    component: () => <FinanceFeeCollectionCharges />,
   },
 ];
 
 const FinanceFeeCollectionScreen = () => {
-  const tabs = useTabs('collect-fee');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'collect-fee' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
   return (
     <Box>
       <Card>
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+           value={searchParams.tab}
+           onChange={(e, value) => setSearchParams({ tab: value })}
+         
+          
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+      {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+          // searchParams={searchParams}
+          // setSearchParams={setSearchParams}
+          />
+        )}
       </Box>
     </Box>
   );

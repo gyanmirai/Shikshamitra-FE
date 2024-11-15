@@ -1,10 +1,13 @@
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 
 interface FinanceAddNewIncomeDialogProps {
   dialogValue: boolean;
@@ -19,9 +22,11 @@ interface FormikValue {
   incomeSource: string;
   incomeAmount: string;
   paymentMethod: string;
-  date: string;
+  date: any;
   paymentStatus: string;
   id: number;
+  incomeName:string;
+  notes?: string;
 }
 
 const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
@@ -39,11 +44,13 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
       incomeSource: isEdit ? data.incomeSource ?? '' : '',
       incomeAmount: isEdit ? data.incomeAmount ?? '' : '',
       paymentMethod: isEdit ? data.paymentMethod ?? '' : '',
-      date: isEdit ? data.date ?? '' : '',
+      date: isEdit ? dayjs(data.date) ?? dayjs() : dayjs(),
       paymentStatus: isEdit ? data.paymentStatus ?? '' : '',
       id: isEdit
         ? data.id ?? Math.floor(Math.random() * 1000000000)
         : Math.floor(Math.random() * 1000000000),
+       incomeName:  "", 
+       notes:"",
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {
@@ -82,48 +89,74 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
         )}
       </Box>
       <Scrollbar>
-        <Box px="15px">
+        <Box >
           <form onSubmit={formik.handleSubmit}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <TextField
-                disabled={isEdit}
-                name="incomeSource"
-                label="Income Source Name"
+            <CustomSelect
+                label="Income Category"
+                options={[]}
                 value={formik.values.incomeSource}
+                onChange={(value) => formik.setFieldValue("incomeSource", value)}
+                formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                disabled={isEdit}
+              />
+              <TextField
+                name="incomeName"
+                label="Income Name"
+                value={formik.values.incomeName}
                 onChange={formik.handleChange}
                 size="small"
               />
+              
               <TextField
                 name="incomeAmount"
                 label="Income Amount"
                 value={formik.values.incomeAmount}
                 onChange={formik.handleChange}
                 size="small"
+                type="number"
               />
-              <TextField
-                name="date"
+              <CustomSelect
+                label="Payment Method"
+                options={[]}
+                value={formik.values.paymentMethod}
+                onChange={(value) => formik.setFieldValue("paymentMethod", value)}
+                formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                disabled={isEdit}
+              />
+              <DatePicker
                 label="Date"
                 value={formik.values.date}
-                onChange={formik.handleChange}
-                size="small"
-              />
-              <TextField
-                name="paymentMethod"
-                label="Payment Method"
-                value={formik.values.paymentMethod}
-                onChange={formik.handleChange}
-                size="small"
+                onChange={(newValue) => formik.setFieldValue('date', newValue)}
+                format="DD-MM-YYYY"
+                slotProps={{ textField: { size: 'small' } }}
+                disabled={isEdit}
               />
 
-              <TextField
-                name="paymentStatus"
+              <CustomSelect
                 label="Payment Status"
+                options={[]}
                 value={formik.values.paymentStatus}
+                onChange={(value) => formik.setFieldValue("paymentStatus", value)}
+                formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                disabled={isEdit}
+              />
+
+               <TextField
+               multiline
+               rows={3}
+                name="notes"
+                label="Notes"
+                value={formik.values.notes}
                 onChange={formik.handleChange}
                 size="small"
+                
               />
             </Box>
-            <DialogActions>
+          
+          </Scrollbar>
+          <DialogActions>
               <Button onClick={onClose} variant="contained" size="small">
                 Cancel
               </Button>

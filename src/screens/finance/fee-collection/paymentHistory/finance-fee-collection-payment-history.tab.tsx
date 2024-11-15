@@ -3,6 +3,7 @@ import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, MenuItem, MenuList } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -77,7 +78,28 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
           { id: 'class', label: 'Class' },
           { id: 'feeType', label: 'Fee Type' },
           { id: 'amount', label: 'Amount' },
-          { id: 'status', label: 'Status' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Unpaid'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',

@@ -1,6 +1,8 @@
 import React from 'react';
 
-import { MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+
+import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -11,8 +13,8 @@ const FinanceStudentPendingFeeTab = () => {
     {
       id: 1,
       feeName: 'Tuition Fee',
-      statusId: '1234',
-      amountDue: '500',
+
+      amountDue: '5000',
       dueDate: '23-12-2024',
       action: 'mark as paid',
     },
@@ -22,7 +24,7 @@ const FinanceStudentPendingFeeTab = () => {
     {
       id: 1,
       feeName: 'Sports Fee',
-      statusId: '1234',
+
       amountDue: '2500',
       dueDate: '23-01-2025',
       action: 'mark as paid',
@@ -36,19 +38,23 @@ const FinanceStudentPendingFeeTab = () => {
       <CustomizableTable
         columns={[
           { id: 'feeName', label: 'Fee Name' },
-          { id: 'statusId', label: 'Status Id' },
-          { id: 'amountDue', label: 'Amount Due' },
+          // { id: 'statusId', label: 'Status Id' },
+          {
+            id: 'amountDue', label: 'Amount Due', render(value, row) {
+              return <Typography fontSize="12px" >{formatNumber(row.amountDue, "INR")}</Typography>
+            },
+          },
           { id: 'dueDate', label: 'Due Date' },
           {
             id: 'action',
             label: 'Action',
-            render: (data) => (
+            render: (data, popover) => (
               <ThreeDotsActions
                 actions={() => (
                   <MenuList>
                     <MenuItem
                       onClick={() => {
-                        // popover.onClose();
+                        popover.onClose();
                       }}
                     >
                       <Iconify icon="mdi:check" />
@@ -69,19 +75,21 @@ const FinanceStudentPendingFeeTab = () => {
       <CustomizableTable
         columns={[
           { id: 'feeName', label: 'Fee Name' },
-          { id: 'statusId', label: 'Status Id' },
-          { id: 'amountDue', label: 'Amount Due' },
+          // { id: 'statusId', label: 'Status Id' },
+          { id: 'amountDue', label: 'Amount Due' , render(value, row) {
+            return <Typography fontSize="12px" >{formatNumber(row.amountDue, "INR")}</Typography>
+          },},
           { id: 'dueDate', label: 'Due Date' },
           {
             id: 'action',
             label: 'Action',
-            render: (data) => (
+            render: (data, popover) => (
               <ThreeDotsActions
                 actions={() => (
                   <MenuList>
                     <MenuItem
                       onClick={() => {
-                        // popover.onClose();
+                        popover.onClose();
                       }}
                     >
                       <Iconify icon="mdi:check" />
@@ -95,6 +103,8 @@ const FinanceStudentPendingFeeTab = () => {
         ]}
         data={upcomingPaymentList}
       />
+      <Box pb="20px"/>
+    
     </>
   );
 };

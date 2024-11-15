@@ -720,6 +720,11 @@ const financeModule = {
           _action: 'fee-collection',
         },
         {
+          title: 'Reconciliation',
+          path: '/finance/reconciliation',
+          _action: 'reconciliation',
+        },
+        {
           title: 'Income Tracking',
           path: '/finance/income-tracking',
           _action: 'finance-income-tracking',
@@ -742,13 +747,57 @@ const financeModule = {
         },
         {
           title: 'Setting',
-          path: '/finance/settings',
+          path: '',
           _action: 'finance-settings',
+          children: [
+            {
+              title: 'General Setting',
+              path: '/finance/settings/general',
+              _action: 'general-setting',
+            },
+            {
+              title: 'Fee Structure',
+              path: '/finance/settings/fee-structure',
+              _action: 'fee-structure-setting',
+            },
+            {
+              title: 'Expenense',
+              path: '/finance/settings/expense-category',
+              _action: 'expenense-category-setting',
+            },
+            {
+              title: 'Income',
+              path: '/finance/settings/income-category',
+              _action: 'income-category-setting',
+            },
+            {
+              title: 'Tax Setting',
+              path: '/finance/settings/tax-setting',
+              _action: 'tax-setting',
+            },
+            {
+              title: 'Payment Method',
+              path: '/finance/settings/payment-method-setting',
+              _action: 'payment-method-setting',
+            },
+            {
+              title: 'Budget',
+              path: '/finance/settings/budget-setting',
+              _action: 'budget-setting',
+            },
+            {
+              title: 'Notification',
+              path: '/finance/settings/notification-setting',
+              _action: 'notification-setting',
+            },
+          ]
         },
       ],
     },
   ],
 };
+
+
 
 const transportModule = {
   [transportPath]: [

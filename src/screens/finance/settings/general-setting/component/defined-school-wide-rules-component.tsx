@@ -1,15 +1,13 @@
 import React from 'react';
 
-import { Box, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
+import { Box, Switch, TextField, FormControlLabel } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 
 const DefinedSchoolWideRulesComponent = () => (
-  <>
-    <Typography component="span" variant="h6">
-      Define School-Wide Rules
-    </Typography>
-    <Box display="flex" flexDirection="row" justifyContent="space-between" gap={3}>
+
+   
+    <Box display="flex" flexDirection="row"  gap={3}>
       <Box display="flex" flexDirection="column" gap={3}>
         <FormControlLabel
           label="Discount"
@@ -51,7 +49,7 @@ const DefinedSchoolWideRulesComponent = () => (
         />
       </Box>
     </Box>
-  </>
+ 
 );
 
 export default DefinedSchoolWideRulesComponent;

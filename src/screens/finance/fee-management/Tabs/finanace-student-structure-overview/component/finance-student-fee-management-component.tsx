@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import CustomSelect from 'src/components/custom-select';
+import { Label } from 'src/components/label/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -12,12 +12,13 @@ import FinanceStudentUpdatePaymentDialog from './finance-student-update-payment-
 
 import type studentFeePaymentStatusUpdated from '../data/student-fee-payment-status-updated';
 
+
 const data = [
   {
     class: '10th',
     studentName: 'Raj',
     gradeLevel: '10TH A',
-    feeStatus: 'Paid',
+    feeStatus: 'Unpaid',
     action: 'View',
   },
   {
@@ -31,7 +32,7 @@ const data = [
     class: '10th',
     studentName: 'Jay',
     gradeLevel: '10TH A',
-    feeStatus: 'Fullypaid',
+    feeStatus: 'Overdue',
     action: 'View',
   },
 ];
@@ -72,11 +73,11 @@ const FinanceStudentFeeManagementComponent = () => {
 
   return (
     <>
-      <Typography component="span" variant="h6">
+      {/* <Typography component="span" variant="h6">
         Student Fee Management
-      </Typography>
+      </Typography> */}
       <Box>
-        <Box display="flex" gap={3} py="10px">
+        {/* <Box display="flex" gap={3} py="10px">
           <CustomSelect
             label="Class/Grade"
             options={[]}
@@ -105,14 +106,35 @@ const FinanceStudentFeeManagementComponent = () => {
           // value={formik.values.description}
           // onChange={formik.handleChange}
           size="small"
-        />
+        /> */}
 
         <Box>
           <CustomizableTable
             columns={[
               { id: 'studentName', label: 'Student Name' },
               { id: 'gradeLevel', label: 'Grade Level' },
-              { id: 'feeStatus', label: 'Fee Status' },
+              {
+               id: 'feeStatus', label: 'Fee Status',
+                render(value, row) {
+                  return (
+                    <Label
+                      variant="soft"
+                      color={
+                        value === 'Unpaid'
+                          ? 'warning'
+                          : value === 'Overdue'
+                            ? 'error'
+                            : value === 'Paid'
+                              ? 'success'
+                              : 'default'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              
               {
                 id: 'action',
                 label: 'Action',
@@ -128,12 +150,13 @@ const FinanceStudentFeeManagementComponent = () => {
                             }}
                           >
                             {/* <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} /> */}
-                            Set Reminder
+                            Sent Reminder
                           </MenuItem>
                           <MenuItem
                             onClick={() => {
                               setSelectedEntry(row);
                               dialog.onTrue();
+                              popover.onClose();
                             }}
                           >
                             {/* <Iconify icon="solar:upload-bold" sx={{ height: '16px', width: '16px' }} /> */}

@@ -6,6 +6,9 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -20,17 +23,35 @@ interface Data {
   id: number;
   paymentStatus: string;
   action?: string;
+  incomeList?: any;
 }
 
 let data: Data[] = [
   {
     id: 1,
-    incomeSource: 'Tuition Fees',
+    incomeSource: 'Fees',
     incomeAmount: '50000',
     paymentMethod: 'Online',
     date: '12-12-2024',
     paymentStatus: 'Paid',
     action: 'View',
+    incomeList: [
+      {
+        incomeName: "Tuition Fees",
+        amount: 25000,
+        date: "11-10-2024"
+
+      },
+      {
+        incomeName: "Tuition Fees",
+        amount: 25000,
+        date: "12-10-2024"
+
+
+      },
+
+    ]
+
   },
   {
     id: 2,
@@ -40,6 +61,22 @@ let data: Data[] = [
     date: '10-10-2024',
     paymentStatus: 'Paid',
     action: 'View',
+    incomeList: [
+      {
+        incomeName: "Sks Trust",
+        amount: 250000,
+        date: "11-10-2024"
+
+      },
+      {
+        incomeName: "Gyan Mirai",
+        amount: 250000,
+        date: "12-08-2024"
+
+
+      },
+
+    ]
   },
 ];
 
@@ -54,7 +91,7 @@ const FinanceIncomeTrackingScreen = () => {
     dialog.onFalse();
   };
 
-  useEffect(() => {}, [selectedEntry, isEdit]);
+  useEffect(() => { }, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: Data) => {
     const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
@@ -106,12 +143,62 @@ const FinanceIncomeTrackingScreen = () => {
         </Typography>
       </Box>
       <CustomizableTable
+        isScrollbar={false}
         columns={[
-          { id: 'incomeSource', label: 'Income Source' },
-          { id: 'incomeAmount', label: 'Income Amount' },
+          {
+            id: 'incomeSource', label: 'Income Source', children(row) {
+              return (
+                <CustomizableTable
+                  isFilter={false}
+                  isPagination={false}
+                  isSearch={false}
+                  columns={[
+                    { id: "incomeName", label: "Income Name" },
+                    {
+                      id: "amount",
+                      label: "Amount",
+                      render(value) {
+
+                        return (
+                          <Typography fontSize="12px">
+                            {formatNumber(value, "INR")}
+                          </Typography>
+                        );
+                      },
+                    },
+                    { id: "date", label: "Received Date" },
+                  ]} data={row.incomeList} />
+              );
+            },
+          },
+          {
+            id: 'incomeAmount', label: 'Income Amount', render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.incomeAmount, "INR")}</Typography>
+            },
+          },
           { id: 'paymentMethod', label: 'Payment Method' },
           { id: 'date', label: 'Date' },
-          { id: 'paymentStatus', label: 'Payment Status' },
+
+          {
+            id: 'paymentStatus', label: 'Payment Status', render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Unpaid'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',
@@ -120,6 +207,14 @@ const FinanceIncomeTrackingScreen = () => {
                 <ThreeDotsActions
                   actions={({ popover }: any) => (
                     <MenuList>
+                      {/* <MenuItem
+                        onClick={() => {
+                          handleDelete(row);
+                        }}
+                      >
+                        <Iconify icon="solar:trash-bin-trash-bold" />
+                       View Detail
+                      </MenuItem> */}
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);

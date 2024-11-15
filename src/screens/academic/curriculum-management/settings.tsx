@@ -253,9 +253,7 @@ const Settings = (props: TabComponentType) => {
       {/* <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
         Subject Management
       </Typography>
-
-      <Box sx={{ pr: '40px', pt: '10px', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="contained" onClick={() => {}}>
+        <Button size="small" variant="contained" onClick={() => {}}>
           Add New Subject
         </Button>
       </Box> */}
@@ -266,7 +264,28 @@ const Settings = (props: TabComponentType) => {
           { id: 'gradelevel', label: 'Grade Level' },
           { id: 'subject', label: 'Subjects' },
           { id: 'lastupdated', label: 'Last Updated' },
-          { id: 'status', label: 'Status' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Archived'
+                      ? 'warning'
+                      : value === 'Pending'
+                        ? 'error'
+                        : value === 'Active'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',

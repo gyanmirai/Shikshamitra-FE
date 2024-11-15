@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { Box, TextField } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
 
 import CustomSelect from 'src/components/custom-select';
 
@@ -12,7 +11,7 @@ import type { IUserCard } from './component/finance-student-info-card-component'
 const dummyUser: IUserCard = {
   id: '12345',
   name: 'John Doe',
-  role: 'Content Creator',
+  role: '10-B',
   coverUrl: 'https://example.com/cover.jpg',
   avatarUrl: 'https://example.com/avatar.jpg',
   totalPosts: 120,
@@ -39,8 +38,16 @@ const FinanceStudentFeeCardComponent = () => {
           onChange={() => {}}
           formControlProps={{ sx: { minWidth: 140 } }}
         />
+        <TextField
+              label="Search by student name or grade"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value=""
+              onChange={(e) => {}}
+            />
       </Box>
-      <Grid2 container spacing={2}>
+      {/* <Grid2 container spacing={2}>
         <Grid2 xs={12} md={6} lg={6}>
           <Box width="100%" pb="15px">
             <TextField
@@ -53,7 +60,7 @@ const FinanceStudentFeeCardComponent = () => {
             />
           </Box>
         </Grid2>
-      </Grid2>
+      </Grid2> */}
 
       <FinanceStudentInfoCardComponent user={dummyUser} />
     </>

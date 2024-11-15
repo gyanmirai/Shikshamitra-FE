@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -44,7 +45,28 @@ const FinanceStudentTransectionOverviewComponent = () => (
         { id: 'amountDue', label: 'Amount Due' },
         { id: 'amountPaid', label: 'Amount Paid' },
         { id: 'totalAmount', label: 'Total Amount' },
-        { id: 'status', label: 'Status' },
+        {
+          id: 'status',
+          label: 'Status',
+          render(value, row) {
+            return (
+              <Label
+                variant="soft"
+                color={
+                  value === 'Overdue'
+                    ? 'error'
+                    : value === 'Unpaid'
+                      ? 'warning'
+                      : value === 'Paid'
+                        ? 'success'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            );
+          },
+        },
         {
           id: 'action',
           label: 'Action',

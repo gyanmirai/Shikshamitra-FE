@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceFeeStructureOverview from './Tabs/finance-fee-structure-overview/finance-fee-structure-overview';
@@ -15,35 +16,49 @@ const TABS = [
   {
     value: 'Fee-structure-overview',
     label: 'Fee Structure overview',
+    icon: <Iconify icon="stash:feed-duotone" width={20} />,
     component: () => <FinanceFeeStructureOverview />,
   },
   {
     value: 'student-fee-managment',
     label: 'Student Fee Managment',
+    icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
     component: () => <FinanceStudentStructureOverview />,
   },
 ];
 
 const FinanceFeeManagementScreen = () => {
-  const tabs = useTabs('Fee-structure-overview');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'Fee-structure-overview' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+
   return (
     <Box>
       <Card>
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
+    
+         
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+        role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+      {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+          // searchParams={searchParams}
+          // setSearchParams={setSearchParams}
+          />
+        )}
       </Box>
     </Box>
   );

@@ -58,6 +58,8 @@ interface Column {
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
   sticky?: boolean;
+  
+
 }
 
 interface Data {
@@ -77,6 +79,11 @@ interface CustomizableTableProps {
   totalCount?: number;
   handleRowClick?: (row: Data, index: number) => void;
   isLoading?: boolean;
+  isPagination?: boolean;
+  isFilter?: boolean;
+  isSearch?: boolean;
+  isScrollbar?: boolean;
+
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -87,8 +94,12 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
-  handleRowClick = () => {},
+  handleRowClick = () => { },
   isLoading = false,
+  isPagination = true,
+  isFilter = true,
+  isSearch = true,
+  isScrollbar = true,
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -206,17 +217,17 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       serverSide
         ? data
         : data.filter(
-            (row) =>
-              Object.entries(row).some(
-                ([key, value]) =>
-                  columnVisibility[key] &&
-                  _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                  _.get(row, columns.find((col) => col.id === key)?.id || '')
-                    .toString()
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
-              ) && applyFilter(row)
-          ),
+          (row) =>
+            Object.entries(row).some(
+              ([key, value]) =>
+                columnVisibility[key] &&
+                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+                _.get(row, columns.find((col) => col.id === key)?.id || '')
+                  .toString()
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+            ) && applyFilter(row)
+        ),
     [serverSide, data, columnVisibility, columns, searchTerm, applyFilter]
   );
 
@@ -296,7 +307,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
-        <TextField
+        {isSearch && <TextField
           label="Search"
           variant="outlined"
           size="small"
@@ -317,8 +328,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               </>
             ),
           }}
-        />
-        <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center">
+        />}
+        {isFilter &&  <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center">
           <Box sx={{ ml: 2 }}>
             <Button
               // variant="outlined"
@@ -495,8 +506,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               </MenuItem> */}
             </Menu>
           </Box>
-        </Box>
-      </Box>
+        </Box>}
+      </Box> 
       {filters.length > 0 && (
         <FilterChips
           filters={filters}
@@ -506,7 +517,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       )}
       <Box px="2px">
         <ComponentBlock>
-          <Scrollbar sx={{ overflow: 'auto', maxHeight: '70vh' }}>
+          <Scrollbar sx={{ overflow: isScrollbar ? 'auto' : 'hidden', maxHeight: '70vh' }}>
             <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
               <TableHead>
                 <TableRow>
@@ -565,7 +576,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                   }}
                                 >
                                   {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                  'asc' ? (
+                                    'asc' ? (
                                     <ArrowUpwardIcon fontSize="inherit" />
                                   ) : (
                                     <ArrowDownwardIcon fontSize="inherit" />
@@ -662,7 +673,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
               label="Dense"
             />
-            <TablePagination
+            {isPagination && <TablePagination
               rowsPerPageOptions={[10, 25, 100]}
               component="div"
               count={serverSide ? totalCount || 0 : filteredData.length}
@@ -679,7 +690,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                   height: 'auto',
                 },
               }}
-            />
+            />}
           </Paper>
         </ComponentBlock>
       </Box>

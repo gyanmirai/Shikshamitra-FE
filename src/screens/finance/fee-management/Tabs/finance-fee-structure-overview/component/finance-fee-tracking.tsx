@@ -3,7 +3,7 @@ import React from 'react';
 import { Typography } from '@mui/material';
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 
-import { CONFIG } from 'src/config-global';
+import { Iconify } from 'src/components/iconify';
 
 import { AnalyticsWidgetSummary } from 'src/sections/overview/analytics/analytics-widget-summary';
 
@@ -17,9 +17,11 @@ const FinanceFeeTrackingComponent = () => (
         <AnalyticsWidgetSummary
           title="Total Fees Collected"
           percent={2.6}
-          total={714000}
+          total={1500}
           icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
+            <Iconify icon="pen" sx={{ height: '16px', width: '16px' }} />
+
+            // <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
           }
           chart={{
             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
@@ -34,7 +36,8 @@ const FinanceFeeTrackingComponent = () => (
           total={1723315}
           color="warning"
           icon={
-            <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-buy.svg`} />
+            <Iconify icon="pen" sx={{ height: '16px', width: '16px' }} />
+            // <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-buy.svg`} />
           }
           chart={{
             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
@@ -46,13 +49,14 @@ const FinanceFeeTrackingComponent = () => (
         <AnalyticsWidgetSummary
           title="Total Fees Due"
           percent={3.6}
-          total={234}
+          total={234677}
           color="error"
           icon={
-            <img
-              alt="icon"
-              src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-message.svg`}
-            />
+            <Iconify icon="pen" sx={{ height: '16px', width: '16px' }} />
+            // <img
+            //   alt="icon"
+            //   src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-message.svg`}
+            // />
           }
           chart={{
             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
