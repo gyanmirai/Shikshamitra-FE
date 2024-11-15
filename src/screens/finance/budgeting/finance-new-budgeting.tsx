@@ -16,39 +16,56 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceNewBudgetCreateDialog from './component/finance-new-budget-create-dialog';
 
-
-
-
-
-const getExpenseColor = (amount: any) =>
-  amount > 0 ? 'red' : 'green'
-  ;
-
-const getIncomeColor = (amount: any) =>
-  amount > 0 ? 'green' : 'red'
-  ;
-
-
+const getExpenseColor = (amount: any) => (amount > 0 ? 'red' : 'green');
+const getIncomeColor = (amount: any) => (amount > 0 ? 'green' : 'red');
 const FinanceNewBudgetingScreen = () => {
   const budgetDummyData = {
-    expenseCategoryId: "345",
-    incomeCategoryId: "123",
+    expenseCategoryId: '345',
+    incomeCategoryId: '123',
     incomeCategories: [
-
-      { id: "income_02", name: "Donations", totalAmountExpected: 50000, collectedAmount: 0, outstandingAmount: 50000 },
-      { id: "income_03", name: "Government Grants", totalAmountExpected: 30000, collectedAmount: 0, outstandingAmount: 30000 }
+      {
+        id: 'income_02',
+        name: 'Donations',
+        totalAmountExpected: 50000,
+        collectedAmount: 0,
+        outstandingAmount: 50000,
+      },
+      {
+        id: 'income_03',
+        name: 'Government Grants',
+        totalAmountExpected: 30000,
+        collectedAmount: 0,
+        outstandingAmount: 30000,
+      },
     ],
     expenseCategories: [
-
-      { id: "expense_02", name: "Maintenance", allocatedAmount: 40000, spentAmount: 0, remainingAmount: 40000 },
-      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000 }
-    ]
+      {
+        id: 'expense_02',
+        name: 'Maintenance',
+        allocatedAmount: 40000,
+        spentAmount: 0,
+        remainingAmount: 40000,
+      },
+      {
+        id: 'expense_03',
+        name: 'Educational Supplies',
+        allocatedAmount: 20000,
+        spentAmount: 0,
+        remainingAmount: 20000,
+      },
+    ],
   };
 
   const dialog = useBoolean();
   const calculateNetBudget = (data: any) => {
-    const totalIncome = data.incomeCategories.reduce((acc: any, curr: any) => acc + curr.totalAmountExpected, 0);
-    const totalExpenses = data.expenseCategories.reduce((acc: any, curr: any) => acc + curr.allocatedAmount, 0);
+    const totalIncome = data.incomeCategories.reduce(
+      (acc: any, curr: any) => acc + curr.totalAmountExpected,
+      0
+    );
+    const totalExpenses = data.expenseCategories.reduce(
+      (acc: any, curr: any) => acc + curr.allocatedAmount,
+      0
+    );
     return totalIncome - totalExpenses;
   };
   const [budgetData, setNewBudgetData] = useState<any>(budgetDummyData);
@@ -61,30 +78,28 @@ const FinanceNewBudgetingScreen = () => {
     dialog.onFalse();
   };
 
-
   const addNewBudgetHandler = (data: any) => {
-    console.log("data for adding new budget", data);
+    console.log('data for adding new budget', data);
     const { categoryType, categoryName, fundAllocation } = data;
-
 
     const categoryNameHandler = (type: string, name: string) => {
       const expenseNames: { [key: string]: string } = {
-        "expense_01": "Salaries",
-        "expense_02": "Maintenance",
-        "expense_03": "Educational Supplies",
+        expense_01: 'Salaries',
+        expense_02: 'Maintenance',
+        expense_03: 'Educational Supplies',
       };
 
       const incomeNames: { [key: string]: string } = {
-        "income_01": "Tuition Fees",
-        "income_02": "Donations",
-        "income_03": "Government Grants",
+        income_01: 'Tuition Fees',
+        income_02: 'Donations',
+        income_03: 'Government Grants',
       };
 
-      return type === "345" ? expenseNames[name] : incomeNames[name] || "Unknown Category";
+      return type === '345' ? expenseNames[name] : incomeNames[name] || 'Unknown Category';
     };
 
     // Handling Expense Categories
-    if (categoryType === "345") {
+    if (categoryType === '345') {
       const dataForExpense = {
         id: categoryName,
         name: categoryNameHandler(categoryType, categoryName),
@@ -95,16 +110,15 @@ const FinanceNewBudgetingScreen = () => {
       setNewBudgetData((prevBudgetData: any) => {
         const updatedData = {
           ...prevBudgetData,
-          expenseCategories: [...prevBudgetData.expenseCategories, dataForExpense]
+          expenseCategories: [...prevBudgetData.expenseCategories, dataForExpense],
         };
         setNetBudget(calculateNetBudget(updatedData));
         return updatedData;
       });
-      console.log("Expense Data:", dataForExpense);
-
+      console.log('Expense Data:', dataForExpense);
 
       // Handling Income Categories
-    } else if (categoryType === "123") {
+    } else if (categoryType === '123') {
       const dataForIncome = {
         id: categoryName,
         name: categoryNameHandler(categoryType, categoryName),
@@ -115,37 +129,33 @@ const FinanceNewBudgetingScreen = () => {
       setNewBudgetData((prevBudgetData: any) => {
         const updatedData = {
           ...prevBudgetData,
-          incomeCategories: [...prevBudgetData.incomeCategories, dataForIncome]
+          incomeCategories: [...prevBudgetData.incomeCategories, dataForIncome],
         };
         setNetBudget(calculateNetBudget(updatedData));
         return updatedData;
       });
 
-      console.log("Income Data:", dataForIncome);
-
-
+      console.log('Income Data:', dataForIncome);
     }
-    closeDialog()
+    closeDialog();
   };
   const TABS = [
     {
       value: 'income',
       label: 'Income',
       // percent: 8.2,
-      total:formatNumber(80000),
-
+      total: formatNumber(80000),
     },
     {
       value: 'expenses',
       label: 'Expenses',
       // percent: -6.6,
       total: formatNumber(60000),
-
     },
   ];
   const tabs = useTabs('income');
   const theme = useTheme();
-  
+
   return (
     <>
       {/* <TableContainer component={Paper}>
@@ -265,21 +275,23 @@ const FinanceNewBudgetingScreen = () => {
                     }}
                   >
                     {tab.label}
-                    <Tooltip   title={
-    <Box sx={{ whiteSpace: 'pre-line' }}>
-      {tab.value === "income" ? (budgetData.incomeCategories.map((e: any) => e.name).join('\n')) : (budgetData.expenseCategories.map((e: any) => e.name).join('\n'))}
-    </Box>
-  }
-  placement="top">
+                    <Tooltip
+                      title={
+                        <Box sx={{ whiteSpace: 'pre-line' }}>
+                          {tab.value === 'income'
+                            ? budgetData.incomeCategories.map((e: any) => e.name).join('\n')
+                            : budgetData.expenseCategories.map((e: any) => e.name).join('\n')}
+                        </Box>
+                      }
+                      placement="top"
+                    >
                       <Iconify width={16} icon="eva:info-outline" sx={{ color: 'text.disabled' }} />
                     </Tooltip>
                   </Box>
 
                   <Box sx={{ typography: 'h4' }}>₹ {tab.total}</Box>
-
-
                 </div>
-                
+
                 {/* <Label
                 color={tab.percent < 0 ? 'error' : 'success'}
                 startIcon={
@@ -309,122 +321,170 @@ const FinanceNewBudgetingScreen = () => {
       </Box>
       <div>
         {/* Income Table */}
-        {tabs.value === "income" && <CustomizableTable
-        
-        columns={[
-          { id: 'name', label: 'Income Category' },
-          { id: 'totalAmountExpected', label: 'Total Expected ', render(value) {
+        {tabs.value === 'income' && (
+          <CustomizableTable
+            columns={[
+              { id: 'name', label: 'Income Category' },
+              {
+                id: 'totalAmountExpected',
+                label: 'Total Expected ',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              {
+                id: 'collectedAmount',
+                label: 'Collected',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              {
+                id: 'outstandingAmount',
+                label: 'Outstanding',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              { id: 'receivedPercantage', label: 'Received Percantage' },
 
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
-          { id: 'collectedAmount', label: 'Collected',render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
-          { id: 'outstandingAmount', label: 'Outstanding',render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
-          { id: 'receivedPercantage', label: 'Received Percantage' },
-          
-          { id: 'action', label: 'Action', render(value, row) {
-            return <ThreeDotsActions
-            actions={({ popover, }: any) => (
-              <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    setIsEdit(true);
-                    setSelectedEntry(row)
-                    dialog.onTrue();
-                    popover.onClose();
-                    console.log("income", row)
-                  }}
-                >
-                  <Iconify icon="solar:pen-bold" />
-                  Edit
-                </MenuItem>
-
-              </MenuList>
-            )}
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={({ popover }: any) => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              setIsEdit(true);
+                              setSelectedEntry(row);
+                              dialog.onTrue();
+                              popover.onClose();
+                              console.log('income', row);
+                            }}
+                          >
+                            <Iconify icon="solar:pen-bold" />
+                            Edit
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={[
+              {
+                id: 'income_02',
+                name: 'Donations',
+                totalAmountExpected: 50000,
+                collectedAmount: 0,
+                outstandingAmount: 50000,
+                receivedPercantage: '0 %',
+              },
+              {
+                id: 'income_03',
+                name: 'Government Grants',
+                totalAmountExpected: 30000,
+                collectedAmount: 0,
+                outstandingAmount: 30000,
+                receivedPercantage: '0 %',
+              },
+              {
+                id: 'income_03',
+                name: 'Total',
+                totalAmountExpected: 80000,
+                collectedAmount: 0,
+                outstandingAmount: 80000,
+                receivedPercantage: '0 %',
+              },
+            ]}
           />
-          }, },
-        ]}
-        data={[
-          { id: "income_02", name: "Donations", totalAmountExpected: 50000, collectedAmount: 0, outstandingAmount: 50000, receivedPercantage:"0 %" },
-      { id: "income_03", name: "Government Grants", totalAmountExpected: 30000, collectedAmount: 0, outstandingAmount: 30000, receivedPercantage:"0 %" },
-      { id: "income_03", name: "Total", totalAmountExpected: 80000, collectedAmount: 0, outstandingAmount: 80000 , receivedPercantage:"0 %"}
-        ]}
-      />}   
-       {tabs.value === "expenses" && <CustomizableTable
-        
-        columns={[
-          { id: 'name', label: 'Expense Category' },
-          { id: 'allocatedAmount', label: 'Allocated Amount', render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
-          { id: 'spentAmount', label: 'Spent Amount', render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
-          { id: 'remainingAmount', label: 'Remaining Amount', render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
-          { id: 'expensePercantage', label: 'Expense Percantage %' },
-          { id: 'action', label: 'Action', render(value, row) {
-            return <ThreeDotsActions
-            actions={({ popover, }: any) => (
-              <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    setIsEdit(true);
-                    setSelectedEntry(row)
-                    dialog.onTrue();
-                    popover.onClose();
-                    console.log("income", row)
-                  }}
-                >
-                  <Iconify icon="solar:pen-bold" />
-                  Edit
-                </MenuItem>
-
-              </MenuList>
-            )}
+        )}
+        {tabs.value === 'expenses' && (
+          <CustomizableTable
+            columns={[
+              { id: 'name', label: 'Expense Category' },
+              {
+                id: 'allocatedAmount',
+                label: 'Allocated Amount',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              {
+                id: 'spentAmount',
+                label: 'Spent Amount',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              {
+                id: 'remainingAmount',
+                label: 'Remaining Amount',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              { id: 'expensePercantage', label: 'Expense Percantage %' },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={({ popover }: any) => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              setIsEdit(true);
+                              setSelectedEntry(row);
+                              dialog.onTrue();
+                              popover.onClose();
+                              console.log('income', row);
+                            }}
+                          >
+                            <Iconify icon="solar:pen-bold" />
+                            Edit
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={[
+              {
+                id: 'expense_02',
+                name: 'Maintenance',
+                allocatedAmount: 40000,
+                spentAmount: 0,
+                remainingAmount: 40000,
+                expensePercantage: '0 %',
+              },
+              {
+                id: 'expense_03',
+                name: 'Educational Supplies',
+                allocatedAmount: 20000,
+                spentAmount: 0,
+                remainingAmount: 20000,
+                expensePercantage: '0 %',
+              },
+              {
+                id: 'expense_03',
+                name: 'Total',
+                allocatedAmount: 60000,
+                spentAmount: 0,
+                remainingAmount: 60000,
+                expensePercantage: '0 %',
+              },
+            ]}
           />
-          }, },
-        ]}
-        data={[
-          { id: "expense_02", name: "Maintenance", allocatedAmount: 40000, spentAmount: 0, remainingAmount: 40000,expensePercantage:"0 %"  },
-      { id: "expense_03", name: "Educational Supplies", allocatedAmount: 20000, spentAmount: 0, remainingAmount: 20000,expensePercantage:"0 %" },
-      { id: "expense_03", name: "Total", allocatedAmount: 60000, spentAmount: 0, remainingAmount: 60000, expensePercantage:"0 %" }
-        ]}
-      />}
-        
+        )}
+
         {/* Net Budgeted Balance */}
         {/* <Typography variant="h6" sx={{ textAlign: 'end' }}>
           Net Budgeted Balance : 
@@ -449,15 +509,11 @@ const FinanceNewBudgetingScreen = () => {
           edit={isEdit}
         />
       )}
-
     </>
   );
 };
 
-
 export default FinanceNewBudgetingScreen;
-
-
 
 /* <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
           <Table sx={{ minWidth: 650 }} aria-label="income table">
@@ -506,50 +562,49 @@ export default FinanceNewBudgetingScreen;
           </Table>
         </TableContainer> */
 
-        
-        // <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
-        //   <Table sx={{ minWidth: 650 }} aria-label="expense table">
-        //     <TableHead>
-        //       <TableRow>
-        //         <TableCell align="center">Expense Category</TableCell>
-        //         <TableCell align="right">Total Allocated</TableCell>
-        //         <TableCell align="right">Spent</TableCell>
-        //         <TableCell align="right">Remaining</TableCell>
-        //         <TableCell align="right">Action</TableCell>
-        //       </TableRow>
-        //     </TableHead>
-        //     <TableBody>
-        //       {budgetData.expenseCategories.map((expense: any) => (
-        //         <TableRow key={expense.id}>
-        //           <TableCell align="center">{expense.name}</TableCell>
-        //           <TableCell align="right">{formatNumber(expense.allocatedAmount)}</TableCell>
-        //           <TableCell align="right" style={{ color: getExpenseColor(expense.spentAmount) }}>
-        //             {formatNumber(expense.spentAmount)}
-        //           </TableCell>
-        //           <TableCell align="right" style={{ color: getExpenseColor(expense.remainingAmount) }}>
-        //             {formatNumber(expense.remainingAmount)}
-        //           </TableCell>
-        //           <TableCell align="right"> <ThreeDotsActions
-        //             actions={({ popover, }: any) => (
-        //               <MenuList>
-        //                 <MenuItem
-        //                   onClick={() => {
-        //                     setIsEdit(true);
-        //                     setSelectedEntry(expense)
-        //                     dialog.onTrue();
-        //                     popover.onClose();
-        //                     console.log("expense", expense)
-        //                   }}
-        //                 >
-        //                   <Iconify icon="solar:pen-bold" />
-        //                   Edit
-        //                 </MenuItem>
+// <TableContainer component={Paper} sx={{ marginBottom: 2 }}>
+//   <Table sx={{ minWidth: 650 }} aria-label="expense table">
+//     <TableHead>
+//       <TableRow>
+//         <TableCell align="center">Expense Category</TableCell>
+//         <TableCell align="right">Total Allocated</TableCell>
+//         <TableCell align="right">Spent</TableCell>
+//         <TableCell align="right">Remaining</TableCell>
+//         <TableCell align="right">Action</TableCell>
+//       </TableRow>
+//     </TableHead>
+//     <TableBody>
+//       {budgetData.expenseCategories.map((expense: any) => (
+//         <TableRow key={expense.id}>
+//           <TableCell align="center">{expense.name}</TableCell>
+//           <TableCell align="right">{formatNumber(expense.allocatedAmount)}</TableCell>
+//           <TableCell align="right" style={{ color: getExpenseColor(expense.spentAmount) }}>
+//             {formatNumber(expense.spentAmount)}
+//           </TableCell>
+//           <TableCell align="right" style={{ color: getExpenseColor(expense.remainingAmount) }}>
+//             {formatNumber(expense.remainingAmount)}
+//           </TableCell>
+//           <TableCell align="right"> <ThreeDotsActions
+//             actions={({ popover, }: any) => (
+//               <MenuList>
+//                 <MenuItem
+//                   onClick={() => {
+//                     setIsEdit(true);
+//                     setSelectedEntry(expense)
+//                     dialog.onTrue();
+//                     popover.onClose();
+//                     console.log("expense", expense)
+//                   }}
+//                 >
+//                   <Iconify icon="solar:pen-bold" />
+//                   Edit
+//                 </MenuItem>
 
-        //               </MenuList>
-        //             )}
-        //           /></TableCell>
-        //         </TableRow>
-        //       ))}
-        //     </TableBody>
-        //   </Table>
-        // </TableContainer> */}
+//               </MenuList>
+//             )}
+//           /></TableCell>
+//         </TableRow>
+//       ))}
+//     </TableBody>
+//   </Table>
+// </TableContainer> */}

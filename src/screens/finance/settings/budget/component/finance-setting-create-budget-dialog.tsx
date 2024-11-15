@@ -39,10 +39,10 @@ const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialo
 }) => {
   const formik = useFormik<FormikValue>({
     initialValues: {
-      departmentName: isEdit ? data.departmentName ?? '' : '',
-      allocatedAmount: isEdit ? data.allocatedAmount ?? '' : '',
-      startDate: isEdit ? data.incomeType ?? '' : '',
-      endDate: isEdit ? data.effectiveDate ?? '' : '',
+      departmentName: isEdit ? (data.departmentName ?? '') : '',
+      allocatedAmount: isEdit ? (data.allocatedAmount ?? '') : '',
+      startDate: isEdit ? (data.incomeType ?? '') : '',
+      endDate: isEdit ? (data.effectiveDate ?? '') : '',
     },
     validationSchema,
     onSubmit: (values) => {

@@ -25,7 +25,7 @@ interface FormikValue {
   date: any;
   paymentStatus: string;
   id: number;
-  expenseName:string;
+  expenseName: string;
   notes?: string;
 }
 
@@ -41,17 +41,16 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      expenseCategory: isEdit ? data.expenseCategory ?? '' : '',
-      expenseAmount: isEdit ? data.expenseAmount ?? '' : '',
-      paymentMethod: isEdit ? data.paymentMethod ?? '' : '',
-      date: isEdit ? dayjs(data.date) ?? dayjs() : dayjs(),
-      paymentStatus: isEdit ? data.paymentStatus ?? '' : '',
+      expenseCategory: isEdit ? (data.expenseCategory ?? '') : '',
+      expenseAmount: isEdit ? (data.expenseAmount ?? '') : '',
+      paymentMethod: isEdit ? (data.paymentMethod ?? '') : '',
+      date: isEdit ? (dayjs(data.date) ?? dayjs()) : dayjs(),
+      paymentStatus: isEdit ? (data.paymentStatus ?? '') : '',
       id: isEdit
-        ? data.id ?? Math.floor(Math.random() * 1000000000)
+        ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
-        expenseName:  "", 
-        notes:"",
-
+      expenseName: '',
+      notes: '',
     },
     // validationSchema: validationSchema,  // Uncomment if using validation schema
     onSubmit: (values) => {
@@ -99,17 +98,16 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 label="Expense Category"
                 options={[]}
                 value={formik.values.expenseCategory}
-                onChange={(value) => formik.setFieldValue("expenseCategory", value)}
+                onChange={(value) => formik.setFieldValue('expenseCategory', value)}
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
               />
-               <TextField
+              <TextField
                 name="expenseName"
                 label="Expense Name"
                 value={formik.values.expenseName}
                 onChange={formik.handleChange}
                 size="small"
-                
               />
 
               <TextField
@@ -124,7 +122,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 label="Payment Method"
                 options={[]}
                 value={formik.values.paymentMethod}
-                onChange={(value) => formik.setFieldValue("paymentMethod", value)}
+                onChange={(value) => formik.setFieldValue('paymentMethod', value)}
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
               />
@@ -141,22 +139,20 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 label="Payment Status"
                 options={[]}
                 value={formik.values.paymentStatus}
-                onChange={(value) => formik.setFieldValue("paymentStatus", value)}
+                onChange={(value) => formik.setFieldValue('paymentStatus', value)}
                 formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                 disabled={isEdit}
               />
-                <TextField
-               multiline
-               rows={3}
+              <TextField
+                multiline
+                rows={3}
                 name="notes"
                 label="Notes"
                 value={formik.values.notes}
                 onChange={formik.handleChange}
                 size="small"
-                
               />
             </Box>
-
           </Scrollbar>
           <DialogActions>
             <Button onClick={onClose} variant="contained" size="small">
@@ -167,9 +163,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
             </Button>
           </DialogActions>
         </form>
-
       </Box>
-
     </CustomDialog>
   );
 };

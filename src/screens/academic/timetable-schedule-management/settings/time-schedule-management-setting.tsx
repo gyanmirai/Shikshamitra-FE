@@ -357,10 +357,10 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      roomNumber: isEdit ? data.roomNumber ?? '' : '',
-      buildingName: isEdit ? data.buildingName ?? '' : '',
-      floor: isEdit ? data.floor ?? '' : '',
-      capacity: isEdit ? data.capacity ?? '' : '',
+      roomNumber: isEdit ? (data.roomNumber ?? '') : '',
+      buildingName: isEdit ? (data.buildingName ?? '') : '',
+      floor: isEdit ? (data.floor ?? '') : '',
+      capacity: isEdit ? (data.capacity ?? '') : '',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {

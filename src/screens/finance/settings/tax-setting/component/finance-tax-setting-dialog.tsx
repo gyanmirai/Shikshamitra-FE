@@ -44,10 +44,10 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      taxName: isEdit ? data.taxName ?? '' : '',
-      taxPercentage: isEdit ? data.taxPercentage ?? '' : '',
-      applicableRegion: isEdit ? data.applicableRegion ?? [] : [],
-      applicableCategory: isEdit ? data.applicableCategory ?? [] : [],
+      taxName: isEdit ? (data.taxName ?? '') : '',
+      taxPercentage: isEdit ? (data.taxPercentage ?? '') : '',
+      applicableRegion: isEdit ? (data.applicableRegion ?? []) : [],
+      applicableCategory: isEdit ? (data.applicableCategory ?? []) : [],
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
     },
     validationSchema,

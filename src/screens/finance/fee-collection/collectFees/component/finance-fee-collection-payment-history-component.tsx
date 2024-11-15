@@ -10,7 +10,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 // const paymentHistoryData = [
-//   { 
+//   {
 //    studentId:123,
 //    name: "John Doe",
 //    grade: 10,
@@ -25,7 +25,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 //    totalDueAfterDiscount:0,
 //    previousCharges:500,
 //    chargesDetails:"The payment of 500 made by cheque in June 2024 was bounced. Cheque No: H8749.",
-   
+
 //    fees: [
 //      {
 //        feeHeadId:198,
@@ -138,7 +138,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 //           paymentHistory: [],
 //         },
 //       ]
-      
+
 //      },
 //      {
 //        feeHeadId:230,
@@ -248,11 +248,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 //           paymentHistory: [],
 //         },
 //       ]
-      
+
 //      },
-    
+
 //    ],},
-  
+
 //  ];
 
 const paymentHistoryData = [
@@ -261,29 +261,28 @@ const paymentHistoryData = [
     date: '12-06-2024',
     feeHead: 'Tuition',
     dueDate: '15 June',
-    amountPaid:5000,
-    amountPending:500,
+    amountPaid: 5000,
+    amountPending: 500,
     status: 'Paid',
     paymentHistory: [
       {
-        paymentMode: "Card",
-        amount: "2000",
-        paymentId: "54j8",
-        paymentStatus: "Success",
+        paymentMode: 'Card',
+        amount: '2000',
+        paymentId: '54j8',
+        paymentStatus: 'Success',
         isRefunded: false,
-        refundAmount: "",
-        refundDate:"",
-        refundReason: "",
-        
+        refundAmount: '',
+        refundDate: '',
+        refundReason: '',
       },
       {
-        paymentMode: "Cash",
-        amount: "3000",
+        paymentMode: 'Cash',
+        amount: '3000',
         isRefunded: false,
-        refundAmount: "",
-        refundDate:"",
-        refundReason: "",
-        paymentStatus: "Success",
+        refundAmount: '',
+        refundDate: '',
+        refundReason: '',
+        paymentStatus: 'Success',
       },
       // {
       //   paymentMode: "Online",
@@ -316,10 +315,8 @@ const paymentHistoryData = [
       //   refundDate:"",
       //   refundReason: "",
       // }
-    ]
+    ],
   },
-
-
 ];
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
   const data = [];
@@ -329,7 +326,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
         // {
         //   id: 'paymentId', label: 'Payment Id', children(row) {
         //     return (
-        //       <CustomizableTable 
+        //       <CustomizableTable
         //       isFilter={false}
         //       isScrollbar={false}
         //       isSearch={false}
@@ -352,7 +349,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
         //                   <Iconify icon="lets-icons:refund-back-light" />
         //                   Refund
         //                 </MenuItem>
-      
+
         //               </MenuList>
         //             )}
         //           />
@@ -366,49 +363,65 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
         //   },
         // },
         { id: 'date', label: 'Paid Date' },
-        { id: 'feeHead', label: 'Fee Head',children(row) {
-          return (
-            <CustomizableTable 
-            isFilter={false}
-            isScrollbar={false}
-            isSearch={false}
-            isPagination={false}
-            columns={[
-              {id:"paymentId", label:"Payment Id / Cheque No"},
-              {id:"amount", label:"Amount"},
-              {id:"paymentMode", label:"PaymentMode"},
-              {id:"paymentStatus", label:"Status"},
-              {id:"action", label:"Action", render(value,) {
-                return (
-                  <ThreeDotsActions
-                  actions={(popover) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          // popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="lets-icons:refund-back-light" />
-                        Refund
-                      </MenuItem>
-    
-                    </MenuList>
-                  )}
-                />
-                );
-              },},
-            ]} data={
-              row.paymentHistory
-            }/>
-
-          );
-        }, },
-        {id:"amountPaid", label:"Amount", render(value, row:any) {
-          return <Typography fontSize="12px">{formatNumber(row.amountPaid,"INR")}</Typography>
-        },},
-        {id:"amountPending", label:"Amount Pending", render(value, row:any) {
-          return <Typography fontSize="12px">{formatNumber(row.amountPending,"INR")}</Typography>
-        },},
+        {
+          id: 'feeHead',
+          label: 'Fee Head',
+          children(row) {
+            return (
+              <CustomizableTable
+                isFilter={false}
+                isScrollbar={false}
+                isSearch={false}
+                isPagination={false}
+                columns={[
+                  { id: 'paymentId', label: 'Payment Id / Cheque No' },
+                  { id: 'amount', label: 'Amount' },
+                  { id: 'paymentMode', label: 'PaymentMode' },
+                  { id: 'paymentStatus', label: 'Status' },
+                  {
+                    id: 'action',
+                    label: 'Action',
+                    render(value) {
+                      return (
+                        <ThreeDotsActions
+                          actions={(popover) => (
+                            <MenuList>
+                              <MenuItem
+                                onClick={() => {
+                                  // popover.onClose();
+                                }}
+                              >
+                                <Iconify icon="lets-icons:refund-back-light" />
+                                Refund
+                              </MenuItem>
+                            </MenuList>
+                          )}
+                        />
+                      );
+                    },
+                  },
+                ]}
+                data={row.paymentHistory}
+              />
+            );
+          },
+        },
+        {
+          id: 'amountPaid',
+          label: 'Amount',
+          render(value, row: any) {
+            return <Typography fontSize="12px">{formatNumber(row.amountPaid, 'INR')}</Typography>;
+          },
+        },
+        {
+          id: 'amountPending',
+          label: 'Amount Pending',
+          render(value, row: any) {
+            return (
+              <Typography fontSize="12px">{formatNumber(row.amountPending, 'INR')}</Typography>
+            );
+          },
+        },
         // { id: 'dueDate', label: 'Due Date' },
 
         {
@@ -448,7 +461,6 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
                     <Iconify icon="mdi:eye" />
                     View Receipt
                   </MenuItem>
-
                 </MenuList>
               )}
             />

@@ -12,7 +12,6 @@ import CustomSelect from 'src/components/custom-select';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
-
 const lineChartData = {
   labels: ['January', 'February', 'March', 'April', 'May'],
   datasets: [
@@ -215,59 +214,55 @@ const TransportReportsScreen = () => {
             </Box>
           </Card>
         </Grid>
-
       </Grid>
       <Grid>
-      <Card sx={{ p: 3, height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2}>
-          <CustomSelect
-            label="Vehicle"
-            options={[]}
-            value=""
-            onChange={() => { }}
-            formControlProps={{ sx: { maxWidth: 125 } }}
-          />
-          <AnalyticsWebsiteVisits
-            title="Vehicle Overview Report"
-            chart={{
-
-              categories: ['January', 'February', 'March', 'April', 'May'],
-              series: [
-                {
-                  name: 'Fuel Consumption (liters)',
-                  data: [150, 130, 140, 120, 160],
-                },
-                {
-                  name: 'Maintenance Cost ($)',
-                  data: [200, 180, 220, 150, 230],
-                },
-                {
-                  name: 'Number of Trips',
-                  data: [20, 25, 30, 18, 27],
-                },
-                {
-                  name: 'Document Expirations',
-                  data: [5, 3, 4, 2, 6],
-
-                },
-                {
-                  name: 'Distance Traveled (km)',
-                  data: [150, 200, 180, 220, 240],
-
-                },
-              ],
-              colors: [
-                theme.palette.primary.dark,
-                theme.palette.warning.main,
-                theme.palette.secondary.main,
-                theme.palette.primary.light,
-                theme.palette.warning.light,
-                theme.palette.secondary.light,
-              ],
-            }}
-            sx={{ height: '100%' }}
-          />
-        </Box>
+        <Card sx={{ p: 3, height: '100%' }}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            <CustomSelect
+              label="Vehicle"
+              options={[]}
+              value=""
+              onChange={() => {}}
+              formControlProps={{ sx: { maxWidth: 125 } }}
+            />
+            <AnalyticsWebsiteVisits
+              title="Vehicle Overview Report"
+              chart={{
+                categories: ['January', 'February', 'March', 'April', 'May'],
+                series: [
+                  {
+                    name: 'Fuel Consumption (liters)',
+                    data: [150, 130, 140, 120, 160],
+                  },
+                  {
+                    name: 'Maintenance Cost ($)',
+                    data: [200, 180, 220, 150, 230],
+                  },
+                  {
+                    name: 'Number of Trips',
+                    data: [20, 25, 30, 18, 27],
+                  },
+                  {
+                    name: 'Document Expirations',
+                    data: [5, 3, 4, 2, 6],
+                  },
+                  {
+                    name: 'Distance Traveled (km)',
+                    data: [150, 200, 180, 220, 240],
+                  },
+                ],
+                colors: [
+                  theme.palette.primary.dark,
+                  theme.palette.warning.main,
+                  theme.palette.secondary.main,
+                  theme.palette.primary.light,
+                  theme.palette.warning.light,
+                  theme.palette.secondary.light,
+                ],
+              }}
+              sx={{ height: '100%' }}
+            />
+          </Box>
         </Card>
       </Grid>
 
@@ -312,7 +307,6 @@ const TransportReportsScreen = () => {
               fill: true,
             },
           ],
-
         }}
         sx={{ height: '100%', boxShadow: 'none' }}
       />

@@ -39,13 +39,13 @@ const FinanceStudentFeeCardComponent = () => {
           formControlProps={{ sx: { minWidth: 140 } }}
         />
         <TextField
-              label="Search by student name or grade"
-              variant="outlined"
-              size="small"
-              fullWidth
-              value=""
-              onChange={(e) => {}}
-            />
+          label="Search by student name or grade"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value=""
+          onChange={(e) => {}}
+        />
       </Box>
       {/* <Grid2 container spacing={2}>
         <Grid2 xs={12} md={6} lg={6}>

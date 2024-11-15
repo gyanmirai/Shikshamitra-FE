@@ -2,7 +2,6 @@ import React from 'react';
 
 import { Box, Card, Avatar, Button, Typography } from '@mui/material';
 
-
 export type IUserCard = {
   id: string;
   name: string;
@@ -61,7 +60,11 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
         >
           {['Paid Fees', 'Pending Fees', 'Overdue Fees'].map((label, index) => (
             <Box key={label} sx={{ textAlign: 'center' }}>
-              <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
+              <Typography
+                variant="caption"
+                component="div"
+                sx={{ mb: 0.5, color: 'text.secondary' }}
+              >
                 {label}
               </Typography>
               {index === 0 ? '10,000' : index === 1 ? '20,000' : '30,000'}
@@ -71,16 +74,16 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
 
         {/* Bottom-Left Buttons */}
         <Box display="flex" justifyContent="flex-end" gap={2}>
-          <Button size='small' variant="contained">Send Reminder</Button>
-          <Button size='small' variant="contained">Generate Report</Button>
+          <Button size="small" variant="contained">
+            Send Reminder
+          </Button>
+          <Button size="small" variant="contained">
+            Generate Report
+          </Button>
         </Box>
       </Box>
     </Card>
-
   );
 };
 
 export default FinanceStudentInfoCardComponent;
-
-
-

@@ -790,14 +790,12 @@ const financeModule = {
               path: '/finance/settings/notification-setting',
               _action: 'notification-setting',
             },
-          ]
+          ],
         },
       ],
     },
   ],
 };
-
-
 
 const transportModule = {
   [transportPath]: [

@@ -20,13 +20,13 @@ const TABS = [
     value: 'collect-fee',
     label: 'Collect Fees',
     icon: <Iconify icon="prime:indian-rupee" width={20} />,
-   
+
     component: () => <FinanceFeeCollectionTab />,
   },
   {
     value: 'student-fee',
     label: 'Student Fees',
-    icon: <Iconify icon="ph:student-thin"  width={20} />,
+    icon: <Iconify icon="ph:student-thin" width={20} />,
     component: () => <FinanceStudentFeeTab />,
   },
   {
@@ -52,7 +52,6 @@ const TABS = [
 const FinanceFeeCollectionScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'collect-fee' });
 
-  
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
@@ -61,18 +60,22 @@ const FinanceFeeCollectionScreen = () => {
     <Box>
       <Card>
         <CustomTabs
-           value={searchParams.tab}
-           onChange={(e, value) => setSearchParams({ tab: value })}
-         
-          
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
         >
           {TABS.map((tab) => (
-            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              icon={tab.icon}
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-      {currentActiveComponent?.component && (
+        {currentActiveComponent?.component && (
           <currentActiveComponent.component
           // searchParams={searchParams}
           // setSearchParams={setSearchParams}

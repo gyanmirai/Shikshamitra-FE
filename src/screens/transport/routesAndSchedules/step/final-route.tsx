@@ -1,12 +1,8 @@
 import React from 'react';
 
-import { Box,  List,  ListItem,  Typography,  ListItemText } from '@mui/material';
+import { Box, List, ListItem, Typography, ListItemText } from '@mui/material';
 
 import TransportMap from '../component/view-on-map-dialog';
-
-
-
-
 
 interface RoutePoint {
   id: number;
@@ -15,8 +11,8 @@ interface RoutePoint {
 }
 
 interface RouteDetailsNew {
-  startPoint:any;
-  endPoint:any;
+  startPoint: any;
+  endPoint: any;
   stops: any;
 }
 
@@ -27,9 +23,9 @@ interface FinalRouteProps {
 const FinalRoute: React.FC<FinalRouteProps> = ({ routeDetails }) => {
   const { startPoint, endPoint, stops } = routeDetails;
 
-  const lastIndex = stops.length-1;
- 
-  console.log("final screen final route", stops)
+  const lastIndex = stops.length - 1;
+
+  console.log('final screen final route', stops);
 
   return (
     <Box padding={2} border={1} borderColor="grey.300" borderRadius={2}>
@@ -51,7 +47,7 @@ const FinalRoute: React.FC<FinalRouteProps> = ({ routeDetails }) => {
       </Typography>
       <List>
         {stops[lastIndex].length > 0 ? (
-          stops[lastIndex].map((stop:any) => (
+          stops[lastIndex].map((stop: any) => (
             <ListItem key={stop.id}>
               <ListItemText primary={stop.name} />
             </ListItem>
@@ -62,16 +58,15 @@ const FinalRoute: React.FC<FinalRouteProps> = ({ routeDetails }) => {
           </Typography>
         )}
       </List>
-   
 
       {startPoint && endPoint && (
-        <TransportMap 
-          start={startPoint.coordinates} 
-          end={endPoint.coordinates} 
-          waypoints={stops[lastIndex].map((stop:any) => stop.coordinates)} 
+        <TransportMap
+          start={startPoint.coordinates}
+          end={endPoint.coordinates}
+          waypoints={stops[lastIndex].map((stop: any) => stop.coordinates)}
         />
-      )} 
-     </Box>
+      )}
+    </Box>
   );
 };
 

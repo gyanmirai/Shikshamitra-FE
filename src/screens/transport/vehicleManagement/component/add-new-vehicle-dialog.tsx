@@ -53,13 +53,13 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      vehicleNumber: isEdit ? data.vehicleNumber ?? '' : '',
-      capacity: isEdit ? data.capacity ?? '' : '',
-      model: isEdit ? data.model ?? '' : '',
-      assignedRoutes: isEdit ? data.assignedRoutes ?? '' : '',
-      driver: isEdit ? data.driver ?? '' : '',
+      vehicleNumber: isEdit ? (data.vehicleNumber ?? '') : '',
+      capacity: isEdit ? (data.capacity ?? '') : '',
+      model: isEdit ? (data.model ?? '') : '',
+      assignedRoutes: isEdit ? (data.assignedRoutes ?? '') : '',
+      driver: isEdit ? (data.driver ?? '') : '',
       id: isEdit
-        ? data.id ?? Math.floor(Math.random() * 1000000000)
+        ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
     },
 

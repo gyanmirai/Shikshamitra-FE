@@ -23,7 +23,7 @@ const CurrencyAndTaxSavingsComponent = () => (
         // value={formik.values.description}
         // onChange={formik.handleChange}
         size="small"
-        sx={{width : 230}}
+        sx={{ width: 230 }}
       />
       <FormControlLabel
         label="Tax-inclusive pricing."

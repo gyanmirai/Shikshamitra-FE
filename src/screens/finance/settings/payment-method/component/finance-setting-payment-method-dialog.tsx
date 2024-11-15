@@ -50,14 +50,14 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
   const formik = useFormik<FormikValue>({
     initialValues: {
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
-      paymentMethodName: isEdit ? data.paymentMethodName ?? '' : '',
+      paymentMethodName: isEdit ? (data.paymentMethodName ?? '') : '',
       serviceProviderDetail: {
-        serviceProviderName: isEdit ? data.serviceProviderDetail?.serviceProviderName ?? '' : '',
+        serviceProviderName: isEdit ? (data.serviceProviderDetail?.serviceProviderName ?? '') : '',
         serviceProviderMobile: isEdit
-          ? data.serviceProviderDetail?.serviceProviderMobile ?? ''
+          ? (data.serviceProviderDetail?.serviceProviderMobile ?? '')
           : '',
       },
-      integrationKey: isEdit ? data.integrationKey ?? '' : '',
+      integrationKey: isEdit ? (data.integrationKey ?? '') : '',
     },
     validationSchema,
     onSubmit: (values) => {

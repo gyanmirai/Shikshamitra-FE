@@ -12,7 +12,6 @@ import FinanceStudentUpdatePaymentDialog from './finance-student-update-payment-
 
 import type studentFeePaymentStatusUpdated from '../data/student-fee-payment-status-updated';
 
-
 const data = [
   {
     class: '10th',
@@ -114,7 +113,8 @@ const FinanceStudentFeeManagementComponent = () => {
               { id: 'studentName', label: 'Student Name' },
               { id: 'gradeLevel', label: 'Grade Level' },
               {
-               id: 'feeStatus', label: 'Fee Status',
+                id: 'feeStatus',
+                label: 'Fee Status',
                 render(value, row) {
                   return (
                     <Label
@@ -134,7 +134,7 @@ const FinanceStudentFeeManagementComponent = () => {
                   );
                 },
               },
-              
+
               {
                 id: 'action',
                 label: 'Action',
