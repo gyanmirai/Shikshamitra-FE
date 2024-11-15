@@ -1,6 +1,6 @@
 {
   "name": "Shikshamitra",
-  "author": "Minimals",
+  "author": "Shikshamitra",
   "version": "6.0.1",
   "description": "Next Starter & TypeScript",
   "private": true,
@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "npm install && next dev",
     "start": "next start",
-    "build": "next build",
+    "build": "npm install && next build",
     "build:window": "build-and-copy.bat",
     "build:linux": "./build-and-copy.sh",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
@@ -24,12 +24,12 @@
     "ts:watch": "yarn ts --watch",
     "start:out": "npx serve@latest out -p 8083",
     "prepare": "husky",
-    "prepush-check": "npm run lint:fix && npm run fm:fix"
+    "prepush-check": "npm run build && npm run lint:fix && npm run fm:fix"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write",
+      "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
+      "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
       "git add"
     ]
   },
