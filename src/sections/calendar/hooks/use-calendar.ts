@@ -3,13 +3,19 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { EventDropArg, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 import type { ICalendarView, ICalendarRange, ICalendarEvent } from 'src/types/calendar';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { useResponsive } from 'src/hooks/use-responsive';
 
 // ----------------------------------------------------------------------
 
-export function useCalendar() {
+export function useCalendar({
+  initialDate,
+  initialView,
+}: {
+  initialDate?: any;
+  initialView?: any;
+} = {}) {
   const calendarRef = useRef<FullCalendar>(null);
 
   const calendarEl = calendarRef.current;
@@ -26,6 +32,22 @@ export function useCalendar() {
 
   const [view, setView] = useState<ICalendarView>(smUp ? 'dayGridMonth' : 'listWeek');
 
+  useEffect(() => {
+    if (initialDate) {
+      setDate(initialDate);
+    } else {
+      setDate(new Date());
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    } else {
+      setView(initialView || smUp ? 'dayGridMonth' : 'listWeek');
+    }
+  }, [initialView, smUp]);
+
   const onOpenForm = useCallback(() => {
     setOpenForm(true);
   }, []);
@@ -40,11 +62,11 @@ export function useCalendar() {
     if (calendarEl) {
       const calendarApi = calendarEl.getApi();
 
-      const newView = smUp ? 'dayGridMonth' : 'listWeek';
+      const newView = initialView || (smUp ? 'dayGridMonth' : 'listWeek');
       calendarApi.changeView(newView);
       setView(newView);
     }
-  }, [calendarEl, smUp]);
+  }, [calendarEl, initialView, smUp]);
 
   const onChangeView = useCallback(
     (newView: ICalendarView) => {

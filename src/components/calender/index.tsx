@@ -1,5 +1,5 @@
 import type { ICalendarEvent } from 'src/types/calendar';
-import type { EventClickArg, EventSourceInput } from '@fullcalendar/core';
+import type { EventClickArg, CalendarOptions, EventSourceInput } from '@fullcalendar/core';
 
 import React, { useEffect } from 'react';
 import Calendar from '@fullcalendar/react';
@@ -22,13 +22,14 @@ import { CalendarToolbar } from 'src/sections/calendar/calendar-toolbar';
 
 const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
 
-interface CommonCalenderProps {
+type CommonCalenderProps = CalendarOptions & {
   data: EventSourceInput | undefined;
   isLoading: boolean;
   onEventDrop?: (eventData: Partial<ICalendarEvent>) => void;
   onEventResize?: (eventData: Partial<ICalendarEvent>) => void;
   onDateClick?: (arg: EventClickArg) => void;
-}
+  showCalendarToolbar?: boolean;
+};
 
 const CommonCalender = ({
   data,
@@ -36,6 +37,10 @@ const CommonCalender = ({
   onEventDrop = () => {},
   onEventResize = () => {},
   onDateClick = () => {},
+  showCalendarToolbar = true,
+  initialView,
+  initialDate,
+  ...props
 }: CommonCalenderProps) => {
   const {
     calendarRef,
@@ -57,7 +62,10 @@ const CommonCalender = ({
     selectedRange,
     //
     // onClickEventInFilters,
-  } = useCalendar();
+  } = useCalendar({
+    initialView,
+    initialDate,
+  });
 
   useEffect(() => {
     onInitialView();
@@ -67,17 +75,19 @@ const CommonCalender = ({
     <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
       <Card sx={{ ...flexProps, minHeight: '70vh' }}>
         <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
-          <CalendarToolbar
-            date={fDate(date)}
-            view={view}
-            canReset
-            loading={isLoading}
-            onNextDate={onDateNext}
-            onPrevDate={onDatePrev}
-            onToday={onDateToday}
-            onChangeView={onChangeView}
-            onOpenFilters={() => {}}
-          />
+          {showCalendarToolbar && (
+            <CalendarToolbar
+              date={fDate(date)}
+              view={view}
+              canReset
+              loading={isLoading}
+              onNextDate={onDateNext}
+              onPrevDate={onDatePrev}
+              onToday={onDateToday}
+              onChangeView={onChangeView}
+              onOpenFilters={() => {}}
+            />
+          )}
 
           <Calendar
             weekends
@@ -95,7 +105,7 @@ const CommonCalender = ({
             events={data || []}
             headerToolbar={false}
             select={onSelectRange}
-            eventClick={(props) => onDateClick(props)}
+            eventClick={onDateClick}
             aspectRatio={3}
             eventDrop={(arg) => {
               onDropEvent(arg, onEventDrop);
@@ -104,6 +114,7 @@ const CommonCalender = ({
               onResizeEvent(arg, onEventResize);
             }}
             plugins={[listPlugin, dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
+            {...props}
           />
         </StyledCalendar>
       </Card>
