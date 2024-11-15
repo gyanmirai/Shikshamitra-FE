@@ -66,11 +66,21 @@ const CurriculumManagementScreen = () => {
     [searchParams.tab]
   );
 
+  const handleTabChange = (newTab: string) => {
+    console.log('new tab---', newTab);
+
+    setSearchParams({ tab: newTab });
+  };
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Curriculum Management"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Curriculum Management' }]}
+        links={[
+          { name: 'Academic And Assessment' },
+          { name: 'Curriculum Management' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box
@@ -122,7 +132,7 @@ const CurriculumManagementScreen = () => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(_, newValue) => handleTabChange(newValue)}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
