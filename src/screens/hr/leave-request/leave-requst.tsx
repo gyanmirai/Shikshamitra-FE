@@ -4,9 +4,9 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, Field, Formik } from 'formik';
+import React, { useMemo, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -66,6 +66,7 @@ interface FormValues {
   status?: number;
   rejectionReason: string;
   color: string;
+  docs: File[];
 }
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
@@ -109,6 +110,31 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       }),
     [editData]
   );
+
+  const uploadProps = {
+    multiple: true,
+    accept: { 'image/*': [] },
+  };
+
+  const handleRemoveFile = useCallback(
+    (
+      inputFile: File | string,
+      values: FormValues,
+      setFieldValue: (field: string, value: any) => void
+    ) => {
+      const filtered = values.docs && values.docs?.filter((file) => file !== inputFile);
+      setFieldValue('docs', filtered);
+    },
+    []
+  );
+
+  const handleRemoveAllFiles = useCallback(
+    (values: FormValues, setFieldValue: (field: string, value: any) => void) => {
+      setFieldValue('docs', []);
+    },
+    []
+  );
+
   return (
     <Formik
       initialValues={{
@@ -120,6 +146,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         rejectionReason: editData?.rejectionReason || '',
         status: editData?.status || 0,
         color: editData?.color || '',
+        docs: [],
       }}
       validationSchema={validationSchema}
       onSubmit={async (values: FormValues, { setSubmitting, resetForm }) => {
@@ -244,7 +271,20 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               />
             </Grid>
             <Grid item xs={6}>
-              <Upload />
+              <Upload
+                {...uploadProps}
+                thumbnail
+                value={values.docs}
+                onDrop={(acceptedFiles) => {
+                  const value = [...values.docs, ...acceptedFiles];
+
+                  setFieldValue('docs', value);
+                }}
+                onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
+                onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                onUpload={() => console.info('ON UPLOAD')}
+                disabled={editData}
+              />
             </Grid>
             <Grid item xs={6}>
               <Editor

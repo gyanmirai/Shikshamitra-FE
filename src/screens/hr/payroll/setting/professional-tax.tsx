@@ -5,6 +5,8 @@ import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -22,9 +24,27 @@ const ProfessionalTax = () => {
       <CustomizableTable
         columns={[
           { id: 'gender', label: 'Gender' },
-          { id: 'fromSalary', label: 'From salary' },
-          { id: 'toSalary', label: 'To salary' },
-          { id: 'Tax amount', label: 'tax Amount' },
+          {
+            id: 'fromSalary',
+            label: 'From salary',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'toSalary',
+            label: 'To salary',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
+          {
+            id: 'Tax amount',
+            label: 'tax Amount',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
         ]}
         data={[
           { gender: 'Male', fromSalary: 0, toSalary: 10000, 'Tax amount': 0 },
