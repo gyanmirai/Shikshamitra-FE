@@ -99,7 +99,7 @@ const CurriculumData: TCurriculum[] = [
   },
 ];
 
-const subjectData =   {
+const subjectData = {
   id: 1,
   subjectName: 'Mathematics',
   subjectCode: 'Math01',
@@ -107,12 +107,12 @@ const subjectData =   {
   description: '',
   subjectColor: '',
   className: '1',
-  primaryTeacher : 'Ms. Johnson',
-  secondaryTeacher : ['Mr. Smith'],
+  primaryTeacher: 'Ms. Johnson',
+  secondaryTeacher: ['Mr. Smith'],
   prerequisites: 'Basic counting skills',
   learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
   status: 'Publish',
-}
+};
 
 const CurriculumOverview = (props: TabComponentType) => {
   const { setSearchParams } = props;

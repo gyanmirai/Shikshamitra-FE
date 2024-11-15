@@ -14,6 +14,7 @@ import { Snackbar } from 'src/components/snackbar';
 import { ProgressBar } from 'src/components/progress-bar';
 import { MotionLazy } from 'src/components/animate/motion-lazy';
 import { detectSettings } from 'src/components/settings/server';
+import KeyboardShortcut from 'src/components/keyboard-shortcut';
 import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/components/settings';
 import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: Props) {
       <body>
         {getInitColorSchemeScript}
         <ReduxProvider>
+          <KeyboardShortcut />
           <LocalizationProvider>
             <SettingsProvider
               settings={settings}

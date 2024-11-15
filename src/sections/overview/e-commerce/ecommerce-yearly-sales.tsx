@@ -33,7 +33,7 @@ type Props = CardProps & {
 export function EcommerceYearlySales({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const [selectedSeries, setSelectedSeries] = useState('2023');
+  const [selectedSeries, setSelectedSeries] = useState(chart.series[0].name);
 
   const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
 

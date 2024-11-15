@@ -1,4 +1,5 @@
 import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { CalendarEvent } from 'src/sections/calendar/view/calendarTimeTable';
 
 import React, { useMemo, useState } from 'react';
@@ -16,7 +17,6 @@ import CustomSelect from 'src/components/custom-select';
 
 // eslint-disable-next-line import/no-cycle
 import { CalendarTimeTable } from 'src/sections/calendar/view/calendarTimeTable';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const classRoomData = [

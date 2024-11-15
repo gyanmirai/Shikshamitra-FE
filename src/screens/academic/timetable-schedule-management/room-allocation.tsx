@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
@@ -5,7 +7,6 @@ import { FiberManualRecord } from '@mui/icons-material';
 import { Box, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
 
 import { CalendarView } from 'src/sections/calendar/view';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 const RoomAllocation = (props: TabComponentType) => (
   <Box>

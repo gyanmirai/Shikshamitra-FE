@@ -2,19 +2,10 @@
 import React from 'react';
 
 import { Box, Grid, Paper, Divider, Typography } from '@mui/material';
-import { red, blue, green, orange, purple } from '@mui/material/colors';
-import {
-  Error,
-  People,
-  Insights,
-  Equalizer,
-  TrendingUp,
-  AccessTime,
-  AttachMoney,
-  VerifiedUser,
-  EventAvailable,
-  AccountBalanceWallet,
-} from '@mui/icons-material';
+
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
+import { EmployeeDashboardCard } from '../../dashboard/dashboard';
 
 interface DashboardCardProps {
   title: string;
@@ -57,88 +48,98 @@ const Dashboard = () => (
   <Grid container spacing={3} padding={3} style={{ minHeight: '100vh' }}>
     <Grid container spacing={3}>
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Payroll Summary"
-          icon={<AccountBalanceWallet fontSize="large" style={{ color: green[700] }} />}
-          color={green}
-          data={[
-            'Total Payroll Cost: $200,000',
-            'Total Employees Paid: 50',
-            'Overtime Costs: $5,000',
-            'Bonuses/Allowances: $3,000',
+          icon="solar:wallet-bold"
+          color="primary.main"
+          value={formatCurrency(200000)}
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Total Employees Paid: ${formatCurrency(20000)}`, color: 'secondary' },
+            { name: `Overtime Costs: ${formatCurrency(5000)}`, color: 'error' },
+            { name: `Bonuses/Allowances: ${formatCurrency(2000)}`, color: 'warning' },
           ]}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Payroll Breakdown by Department"
-          icon={<People fontSize="large" style={{ color: blue[700] }} />}
-          color={blue}
-          data={['Engineering: $80,000', 'Marketing: $50,000', 'Sales: $70,000']}
+          icon="tabler:credit-card-pay"
+          color="secondary.main"
+          value={formatCurrency(110000)}
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Engineering: ${formatCurrency(80000)}`, color: 'secondary' },
+            { name: `Marketing: ${formatCurrency(50000)}`, color: 'error' },
+            { name: `Sales: ${formatCurrency(10000)}`, color: 'warning' },
+          ]}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Salary Distribution"
-          icon={<TrendingUp fontSize="large" style={{ color: orange[700] }} />}
-          color={orange}
-          data={['Average Salary: $60,000', 'Top 10% Earners: $100,000+', 'Median Salary: $55,000']}
+          icon="lsicon:amount-dollar-filled"
+          color="warning.main"
+          value={formatCurrency(110000)}
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Average: ${formatCurrency(60000)}`, color: 'secondary' },
+            { name: `Top 10% Earners: ${formatCurrency(10000)}+`, color: 'error' },
+            { name: `Median: ${formatCurrency(5500)}`, color: 'warning' },
+          ]}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Deductions and Benefits"
-          icon={<AttachMoney fontSize="large" style={{ color: red[700] }} />}
-          color={red}
-          data={['Taxes Deducted: $20,000', 'Other Deductions: $5,000', 'Benefits Costs: $10,000']}
+          icon="carbon:cut-out"
+          color="error.main"
+          value={formatCurrency(110000)}
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Taxes Deducted: ${formatCurrency(20000)}`, color: 'secondary' },
+            { name: `Other Deductions: ${formatCurrency(5000)}`, color: 'error' },
+            { name: `Benefits Costs: ${formatCurrency(10000)}`, color: 'warning' },
+          ]}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Overtime and Additional Hours"
-          icon={<AccessTime fontSize="large" style={{ color: purple[700] }} />}
-          color={purple}
-          data={['Total Overtime Hours: 200 hrs', 'Overtime Cost: $5,000']}
+          icon="mingcute:hours-fill"
+          color="success.main"
+          value="20hrs"
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Total Overtime Hours: 200 hrs`, color: 'secondary' },
+            { name: `Overtime Cost: ${formatCurrency(5000)}`, color: 'error' },
+          ]}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Attendance Insights"
-          icon={<Insights fontSize="large" style={{ color: blue[800] }} />}
-          color={blue}
-          data={['Average Working Hours: 160 hrs', 'Absenteeism Rate: 5%']}
+          icon="healthicons:i-schedule-school-date-time"
+          color="secondary.main"
+          value="160hrs"
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Average Working Hours: 160 hrs`, color: 'secondary' },
+            { name: `Absenteeism Rate: 5%`, color: 'error' },
+          ]}
         />
       </Grid>
+
       <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
-          title="Payroll Trends"
-          icon={<Equalizer fontSize="large" style={{ color: green[700] }} />}
-          color={green}
-          data={['Past 3 Months Comparison']}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
+        <EmployeeDashboardCard
           title="Retention Insights"
-          icon={<EventAvailable fontSize="large" style={{ color: orange[700] }} />}
-          color={orange}
-          data={['New Hires: 5', 'Attrition Rate: 3%']}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
-          title="Compliance and Error Tracking"
-          icon={<Error fontSize="large" style={{ color: red[700] }} />}
-          color={red}
-          data={['Payroll Errors: 2', 'Adjustments Made: 1']}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4}>
-        <DashboardCard
-          title="KPIs and Metrics"
-          icon={<VerifiedUser fontSize="large" style={{ color: purple[700] }} />}
-          color={purple}
-          data={['Payroll as % of Revenue: 30%', 'Cost per Employee: $4,000']}
+          icon="fluent:data-usage-edit-24-filled"
+          color="warning.main"
+          value="5"
+          labels={[
+            // { name: `Total Payroll Cost: ${formatCurrency(200000)}`, color: 'success' },
+            { name: `Attrition Rate: 3%`, color: 'secondary' },
+          ]}
         />
       </Grid>
     </Grid>

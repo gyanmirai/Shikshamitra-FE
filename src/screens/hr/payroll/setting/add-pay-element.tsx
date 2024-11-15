@@ -6,6 +6,8 @@ import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } fro
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -25,7 +27,13 @@ const AddPayElement = () => {
           { id: 'code', label: 'Code' },
           { id: 'name', label: 'Name' },
           { id: 'payElementType', label: 'Pay element type' },
-          { id: 'dependAmount', label: 'Depend Amount' },
+          {
+            id: 'dependAmount',
+            label: 'Depend Amount',
+            render(value, row) {
+              return formatCurrency(value);
+            },
+          },
           { id: 'dependent', label: 'Dependent' },
         ]}
         data={[
