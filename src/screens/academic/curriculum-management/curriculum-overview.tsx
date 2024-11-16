@@ -187,7 +187,7 @@ const CurriculumOverview = (props: TabComponentType) => {
   const handleSubjectClick = () => {};
 
   return (
-    <Box>
+    <Box sx={{ mb: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="h6">Curriculum Management</Typography>
         <Button

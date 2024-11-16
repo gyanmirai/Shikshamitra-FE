@@ -76,6 +76,7 @@ const DateWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
+  
   // const [date, setDate] = useState<Dayjs | null>(dayjs());
   const dateValue = searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs();
   const tabs = useTabs(EmployeeAttendanceStatus.All);

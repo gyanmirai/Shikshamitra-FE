@@ -3,8 +3,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 
-import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -68,19 +67,6 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
             }}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            startIcon={<Add />}
-            variant="contained"
-            onClick={() => {
-              setSearchParams?.({
-                tab: 'createNewTimetable',
-              });
-            }}
-          >
-            Create New Timetable
-          </Button>
         </Box>
       </Box>
       <CalendarView />

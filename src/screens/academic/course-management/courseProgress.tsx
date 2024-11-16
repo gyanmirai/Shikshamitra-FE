@@ -1,6 +1,6 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Card, Grid, MenuList, MenuItem, Typography } from '@mui/material';
 
@@ -143,6 +143,17 @@ const CourseProgress = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  useEffect(() => {
+    if (classData?.items?.length) {
+      if (!searchParams?.classId) {
+        const firstClass = classData.items[0];
+        setSearchParams?.({
+          classId: firstClass.id,
+        });
+      }
+    }
+  }, [classData?.items, searchParams?.classId, setSearchParams]);
 
   return (
     <Box>

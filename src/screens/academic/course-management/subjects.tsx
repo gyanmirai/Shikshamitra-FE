@@ -96,7 +96,7 @@ const assignmentData: AssignmentRow[] = [
 ];
 
 const Subjects = (props: TabComponentType) => {
-  const { setSearchParams } = props;
+  const { searchParams, setSearchParams } = props;
   const router = useRouter();
   const [classes, setClasses] = useState<string>('');
   const chapterDialog = useBoolean();
@@ -116,6 +116,10 @@ const Subjects = (props: TabComponentType) => {
   console.log('props===', props);
 
   useEffect(() => {
+    if (!classes) {
+      const firstClass = classData?.items[0];
+      setClasses(firstClass?.name);
+    }
     if (classes) {
       const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
       if (selectedClassData) {
@@ -137,7 +141,7 @@ const Subjects = (props: TabComponentType) => {
     } else {
       setSubjectTableData([]);
     }
-  }, [classes, subjectData]);
+  }, [classData?.items, classes, subjectData]);
 
   const handleDocumentUpload = async (files: File[]): Promise<Document[]> =>
     files.map((file) => ({
