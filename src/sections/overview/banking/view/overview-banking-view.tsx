@@ -5,7 +5,6 @@ import Grid from '@mui/material/Unstable_Grid2';
 
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _bankingContacts, _bankingCreditCard, _bankingRecentTransitions } from 'src/_mock';
 
 import { Iconify } from 'src/components/iconify/iconify';
 
@@ -92,7 +91,7 @@ export function OverviewBankingView() {
 
             <BankingRecentTransitions
               title="Recent transitions"
-              tableData={_bankingRecentTransitions}
+              tableData={[]}
               headLabel={[
                 { id: 'description', label: 'Description' },
                 { id: 'date', label: 'Date' },
@@ -106,14 +105,14 @@ export function OverviewBankingView() {
 
         <Grid xs={12} md={5} lg={4}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-            <BankingCurrentBalance list={_bankingCreditCard} />
+            <BankingCurrentBalance list={[]} />
 
-            <BankingQuickTransfer title="Quick transfer" list={_bankingContacts} />
+            <BankingQuickTransfer title="Quick transfer" list={[]} />
 
             <BankingContacts
               title="Contacts"
               subheader="You have 122 contacts"
-              list={_bankingContacts.slice(-5)}
+              list={[].slice(-5)}
             />
 
             <BankingInviteFriends

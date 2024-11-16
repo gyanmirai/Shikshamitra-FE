@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Unstable_Grid2';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _bookings, _bookingNew, _bookingReview, _bookingsOverview } from 'src/_mock';
 import {
   BookingIllustration,
   CheckInIllustration,
@@ -87,11 +86,7 @@ export function OverviewBookingView() {
                   }}
                 />
 
-                <BookingBooked
-                  title="Booked"
-                  data={_bookingsOverview}
-                  sx={{ boxShadow: { md: 'none' } }}
-                />
+                <BookingBooked title="Booked" data={[]} sx={{ boxShadow: { md: 'none' } }} />
               </Box>
 
               <BookingCheckInWidgets
@@ -152,25 +147,21 @@ export function OverviewBookingView() {
 
               <BookingCustomerReviews
                 title="Customer reviews"
-                subheader={`${_bookingReview.length} Reviews`}
-                list={_bookingReview}
+                subheader={`${[].length} Reviews`}
+                list={[]}
               />
             </Box>
           </Grid>
         </Grid>
 
         <Grid xs={12}>
-          <BookingNewest
-            title="Newest booking"
-            subheader={`${_bookingNew.length} bookings`}
-            list={_bookingNew}
-          />
+          <BookingNewest title="Newest booking" subheader={`${[].length} bookings`} list={[]} />
         </Grid>
 
         <Grid xs={12}>
           <BookingDetails
             title="Booking details"
-            tableData={_bookings}
+            tableData={[]}
             headLabel={[
               { id: 'destination', label: 'Destination' },
               { id: 'customer', label: 'Customer' },

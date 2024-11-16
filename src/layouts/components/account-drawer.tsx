@@ -25,8 +25,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateAvatar } from 'src/components/animate';
 import CustomDialog from 'src/components/customDialog';
 
-import { useMockedUser } from 'src/auth/hooks';
-
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
 
@@ -47,8 +45,6 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
   // const router = useRouter();
 
   // const pathname = usePathname();
-
-  const { user } = useMockedUser();
 
   const { userInfo } = useSelector((state: any) => state.user);
 
@@ -78,7 +74,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
     <AnimateAvatar
       width={96}
       slotProps={{
-        avatar: { src: user?.photoURL, alt: user?.displayName },
+        avatar: { src: '', alt: '' },
         overlay: {
           border: 2,
           spacing: 3,
@@ -95,8 +91,8 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
       <AccountButton
         open={open}
         onClick={handleOpenDrawer}
-        photoURL={user?.photoURL}
-        displayName={user?.displayName}
+        photoURL=""
+        displayName=""
         sx={sx}
         {...other}
       />

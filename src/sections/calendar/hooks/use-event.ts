@@ -3,8 +3,6 @@ import type { ICalendarEvent, ICalendarRange } from 'src/types/calendar';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 
-import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
-
 // ----------------------------------------------------------------------
 
 export function useEvent(
@@ -20,7 +18,7 @@ export function useEvent(
       id: '',
       title: '',
       description: '',
-      color: CALENDAR_COLOR_OPTIONS[1],
+      color: [][1],
       allDay: false,
       start: selectedRange ? selectedRange.start : dayjs(new Date()).format(),
       end: selectedRange ? selectedRange.end : dayjs(new Date()).format(),

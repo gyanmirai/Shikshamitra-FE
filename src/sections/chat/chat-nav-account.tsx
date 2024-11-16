@@ -16,16 +16,27 @@ import ListItemText from '@mui/material/ListItemText';
 import { svgIconClasses } from '@mui/material/SvgIcon';
 import Badge, { badgeClasses } from '@mui/material/Badge';
 
+import { today } from 'src/utils/format-time';
+
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
-import { useMockedUser } from 'src/auth/hooks';
+const user = {
+  id: '8864c717-587d-472a-929a-8e5f298024da-0',
+  role: 'admin',
+  email: 'admin@example.com',
+  address: '123 Main St, Anytown, USA',
+  displayName: 'John Doe',
+  name: 'John Doe',
+  lastActivity: today(),
+  photoURL: 'https://minimal-assets-api.vercel.app/assets/images/avatars/avatar_1.jpg',
+  phoneNumber: '123-456-7890',
+  status: 'online' as 'online' | 'offline' | 'alway' | 'busy',
+};
 
 // ----------------------------------------------------------------------
 
 export function ChatNavAccount() {
-  const { user } = useMockedUser();
-
   const popover = usePopover();
 
   const [status, setStatus] = useState<'online' | 'alway' | 'busy' | 'offline'>('online');

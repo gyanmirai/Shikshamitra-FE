@@ -29,7 +29,7 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
-      "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+      "prettier --check",
       "git add"
     ]
   },

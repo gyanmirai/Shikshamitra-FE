@@ -8,7 +8,6 @@ import Typography from '@mui/material/Typography';
 import { CONFIG } from 'src/config-global';
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _coursesContinue, _coursesFeatured, _coursesReminder } from 'src/_mock';
 
 import { CourseProgress } from '../course-progress';
 import { CourseContinue } from '../course-continue';
@@ -132,10 +131,10 @@ export function OverviewCourseView() {
               }}
             />
 
-            <CourseContinue title="Continue course" list={_coursesContinue} />
+            <CourseContinue title="Continue course" list={[]} />
           </Box>
 
-          <CourseFeatured title="Featured course" list={_coursesFeatured} />
+          <CourseFeatured title="Featured course" list={[]} />
         </Box>
 
         <Box
@@ -167,7 +166,7 @@ export function OverviewCourseView() {
             }}
           />
 
-          <CourseReminders title="Reminders" list={_coursesReminder} />
+          <CourseReminders title="Reminders" list={[]} />
         </Box>
       </Box>
     </DashboardContent>

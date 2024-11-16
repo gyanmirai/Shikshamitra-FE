@@ -28,18 +28,20 @@ const CustomDialog = ({
   const { sx, ...paper } = paperProps || {};
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
+    if (reason === 'backdropClick') return;
+    if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+      handleClose(e, reason);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      handleClose(e, reason);
+    }
+  };
   return (
     <Dialog
       open={open}
-      onClose={(e, reason) => {
-        if (reason === 'backdropClick') return;
-        if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
-          handleClose(e, reason);
-          dispatch(setIsChanges(false));
-        } else if (!isChanges) {
-          handleClose(e, reason);
-        }
-      }}
+      onClose={handleCloseDialog}
       fullWidth
       maxWidth="xs"
       transitionDuration={{
@@ -62,11 +64,8 @@ const CustomDialog = ({
         <Typography variant="h5">{title}</Typography>
         <IconButton
           aria-label="close"
-          onClick={() => handleClose()}
+          onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
           sx={{
-            // position: 'absolute',
-            // right: 8,
-            // top: 8,
             color: theme.palette.grey[500],
           }}
         >

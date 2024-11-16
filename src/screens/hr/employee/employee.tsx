@@ -35,7 +35,6 @@ const HrEmployee = () => {
         <MenuList>
           <MenuItem
             onClick={() => {
-              // confirm.onTrue();
               setSearchParams({ employee: row?.id });
               pop.onClose();
             }}
@@ -46,7 +45,6 @@ const HrEmployee = () => {
 
           <MenuItem
             onClick={() => {
-              // modal.onTrue();
               setOpen(true);
               pop.onClose();
             }}
@@ -181,9 +179,6 @@ const HrEmployee = () => {
                       ]}
                     />
                   </Grid>
-                  {/* <Grid item xs={12} md={6}>
-            
-            </Grid> */}
                 </Grid>
               </Box>
             </CustomDialog>

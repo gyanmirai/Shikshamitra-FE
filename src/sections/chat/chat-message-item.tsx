@@ -6,11 +6,9 @@ import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
-import { fToNow } from 'src/utils/format-time';
+import { today, fToNow } from 'src/utils/format-time';
 
 import { Iconify } from 'src/components/iconify';
-
-import { useMockedUser } from 'src/auth/hooks';
 
 import { useMessage } from './hooks/use-message';
 
@@ -21,10 +19,20 @@ type Props = {
   participants: IChatParticipant[];
   onOpenLightbox: (value: string) => void;
 };
+const user = {
+  id: '8864c717-587d-472a-929a-8e5f298024da-0',
+  role: 'admin',
+  email: 'admin@example.com',
+  address: '123 Main St, Anytown, USA',
+  displayName: 'John Doe',
+  name: 'John Doe',
+  lastActivity: today(),
+  photoURL: 'https://minimal-assets-api.vercel.app/assets/images/avatars/avatar_1.jpg',
+  phoneNumber: '123-456-7890',
+  status: 'online' as 'online' | 'offline' | 'alway' | 'busy',
+};
 
 export function ChatMessageItem({ message, participants, onOpenLightbox }: Props) {
-  const { user } = useMockedUser();
-
   const { me, senderDetails, hasImage } = useMessage({
     message,
     participants,

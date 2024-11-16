@@ -4,16 +4,10 @@ import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 
+import { today } from 'src/utils/format-time';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { MotivationIllustration } from 'src/assets/illustrations';
-import {
-  _ecommerceNewProducts,
-  _ecommerceBestSalesman,
-  _ecommerceSalesOverview,
-  _ecommerceLatestProducts,
-} from 'src/_mock';
-
-import { useMockedUser } from 'src/auth/hooks';
 
 import { EcommerceWelcome } from '../ecommerce-welcome';
 import { EcommerceNewProducts } from '../ecommerce-new-products';
@@ -27,9 +21,20 @@ import { EcommerceCurrentBalance } from '../ecommerce-current-balance';
 
 // ----------------------------------------------------------------------
 
-export function OverviewEcommerceView() {
-  const { user } = useMockedUser();
+const user = {
+  id: '8864c717-587d-472a-929a-8e5f298024da-0',
+  role: 'admin',
+  email: 'admin@example.com',
+  address: '123 Main St, Anytown, USA',
+  displayName: 'John Doe',
+  name: 'John Doe',
+  lastActivity: today(),
+  photoURL: 'https://minimal-assets-api.vercel.app/assets/images/avatars/avatar_1.jpg',
+  phoneNumber: '123-456-7890',
+  status: 'online' as 'online' | 'offline' | 'alway' | 'busy',
+};
 
+export function OverviewEcommerceView() {
   const theme = useTheme();
 
   return (
@@ -49,7 +54,7 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid xs={12} md={4}>
-          <EcommerceNewProducts list={_ecommerceNewProducts} />
+          <EcommerceNewProducts list={[]} />
         </Grid>
 
         <Grid xs={12} md={4}>
@@ -156,7 +161,7 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid xs={12} md={6} lg={8}>
-          <EcommerceSalesOverview title="Sales overview" data={_ecommerceSalesOverview} />
+          <EcommerceSalesOverview title="Sales overview" data={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
@@ -172,7 +177,7 @@ export function OverviewEcommerceView() {
         <Grid xs={12} md={6} lg={8}>
           <EcommerceBestSalesman
             title="Best salesman"
-            tableData={_ecommerceBestSalesman}
+            tableData={[]}
             headLabel={[
               { id: 'name', label: 'Seller' },
               { id: 'category', label: 'Product' },
@@ -184,7 +189,7 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <EcommerceLatestProducts title="Latest products" list={_ecommerceLatestProducts} />
+          <EcommerceLatestProducts title="Latest products" list={[]} />
         </Grid>
       </Grid>
     </DashboardContent>
