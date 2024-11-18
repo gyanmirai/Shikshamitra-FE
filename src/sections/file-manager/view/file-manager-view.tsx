@@ -16,7 +16,6 @@ import { useSetState } from 'src/hooks/use-set-state';
 import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _allFiles, FILE_TYPE_OPTIONS } from 'src/_mock';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -44,7 +43,7 @@ export function FileManagerView() {
 
   const [view, setView] = useState('list');
 
-  const [tableData, setTableData] = useState<IFile[]>(_allFiles);
+  const [tableData, setTableData] = useState<IFile[]>([]);
 
   const filters = useSetState<IFileFilters>({
     name: '',
@@ -119,7 +118,7 @@ export function FileManagerView() {
         openDateRange={openDateRange.value}
         onOpenDateRange={openDateRange.onTrue}
         onCloseDateRange={openDateRange.onFalse}
-        options={{ types: FILE_TYPE_OPTIONS }}
+        options={{ types: [] }}
       />
 
       <ToggleButtonGroup size="small" value={view} exclusive onChange={handleChangeView}>

@@ -15,11 +15,9 @@ import { useRouter, usePathname } from 'src/routes/hooks';
 
 import { useResponsive } from 'src/hooks/use-responsive';
 
-import { fToNow } from 'src/utils/format-time';
+import { today, fToNow } from 'src/utils/format-time';
 
 import { clickConversation } from 'src/actions/chat';
-
-import { useMockedUser } from 'src/auth/hooks';
 
 import { useNavItem } from './hooks/use-nav-item';
 
@@ -32,9 +30,20 @@ type Props = {
   conversation: IChatConversation;
 };
 
-export function ChatNavItem({ selected, collapse, conversation, onCloseMobile }: Props) {
-  const { user } = useMockedUser();
+const user = {
+  id: '8864c717-587d-472a-929a-8e5f298024da-0',
+  role: 'admin',
+  email: 'admin@example.com',
+  address: '123 Main St, Anytown, USA',
+  displayName: 'John Doe',
+  name: 'John Doe',
+  lastActivity: today(),
+  photoURL: 'https://minimal-assets-api.vercel.app/assets/images/avatars/avatar_1.jpg',
+  phoneNumber: '123-456-7890',
+  status: 'online' as 'online' | 'offline' | 'alway' | 'busy',
+};
 
+export function ChatNavItem({ selected, collapse, conversation, onCloseMobile }: Props) {
   const mdUp = useResponsive('up', 'md');
 
   const router = useRouter();

@@ -5,13 +5,12 @@ import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 
+import { today } from 'src/utils/format-time';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
-import { _appAuthors, _appRelated, _appFeatured, _appInvoices, _appInstalled } from 'src/_mock';
 
 import { svgColorClasses } from 'src/components/svg-color';
-
-import { useMockedUser } from 'src/auth/hooks';
 
 import { AppWidget } from '../app-widget';
 import { AppWelcome } from '../app-welcome';
@@ -26,9 +25,20 @@ import { AppTopInstalledCountries } from '../app-top-installed-countries';
 
 // ----------------------------------------------------------------------
 
-export function OverviewAppView() {
-  const { user } = useMockedUser();
+const user = {
+  id: '8864c717-587d-472a-929a-8e5f298024da-0',
+  role: 'admin',
+  email: 'admin@example.com',
+  address: '123 Main St, Anytown, USA',
+  displayName: 'John Doe',
+  name: 'John Doe',
+  lastActivity: today(),
+  photoURL: 'https://minimal-assets-api.vercel.app/assets/images/avatars/avatar_1.jpg',
+  phoneNumber: '123-456-7890',
+  status: 'online' as 'online' | 'offline' | 'alway' | 'busy',
+};
 
+export function OverviewAppView() {
   const theme = useTheme();
 
   return (
@@ -48,7 +58,7 @@ export function OverviewAppView() {
         </Grid>
 
         <Grid xs={12} md={4}>
-          <AppFeatured list={_appFeatured} />
+          <AppFeatured list={[]} />
         </Grid>
 
         <Grid xs={12} md={4}>
@@ -156,7 +166,7 @@ export function OverviewAppView() {
         <Grid xs={12} lg={8}>
           <AppNewInvoice
             title="New invoice"
-            tableData={_appInvoices}
+            tableData={[]}
             headLabel={[
               { id: 'id', label: 'Invoice ID' },
               { id: 'category', label: 'Category' },
@@ -168,15 +178,15 @@ export function OverviewAppView() {
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AppTopRelated title="Related applications" list={_appRelated} />
+          <AppTopRelated title="Related applications" list={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AppTopInstalledCountries title="Top installed countries" list={_appInstalled} />
+          <AppTopInstalledCountries title="Top installed countries" list={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AppTopAuthors title="Top authors" list={_appAuthors} />
+          <AppTopAuthors title="Top authors" list={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>

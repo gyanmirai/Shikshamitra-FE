@@ -64,7 +64,7 @@ export async function createEvent(eventData: ICalendarEvent) {
    */
   mutate(
     CALENDAR_ENDPOINT,
-    (currentData) => {
+    (currentData: any) => {
       const currentEvents: ICalendarEvent[] = currentData?.events;
 
       const events = [...currentEvents, eventData];
@@ -120,7 +120,7 @@ export async function deleteEvent(eventId: string) {
    */
   mutate(
     CALENDAR_ENDPOINT,
-    (currentData) => {
+    (currentData: any) => {
       const currentEvents: ICalendarEvent[] = currentData?.events;
 
       const events = currentEvents.filter((event) => event.id !== eventId);

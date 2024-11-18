@@ -5,12 +5,6 @@ import Typography from '@mui/material/Typography';
 
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
-import {
-  _analyticTasks,
-  _analyticPosts,
-  _analyticTraffic,
-  _analyticOrderTimeline,
-} from 'src/_mock';
 
 import { AnalyticsNews } from '../analytics-news';
 import { AnalyticsTasks } from '../analytics-tasks';
@@ -158,19 +152,19 @@ export function OverviewAnalyticsView() {
         </Grid>
 
         <Grid xs={12} md={6} lg={8}>
-          <AnalyticsNews title="News" list={_analyticPosts} />
+          <AnalyticsNews title="News" list={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AnalyticsOrderTimeline title="Order timeline" list={_analyticOrderTimeline} />
+          <AnalyticsOrderTimeline title="Order timeline" list={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AnalyticsTrafficBySite title="Traffic by site" list={_analyticTraffic} />
+          <AnalyticsTrafficBySite title="Traffic by site" list={[]} />
         </Grid>
 
         <Grid xs={12} md={6} lg={8}>
-          <AnalyticsTasks title="Tasks" list={_analyticTasks} />
+          <AnalyticsTasks title="Tasks" list={[]} />
         </Grid>
       </Grid>
     </DashboardContent>

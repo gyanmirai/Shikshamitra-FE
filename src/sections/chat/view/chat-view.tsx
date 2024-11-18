@@ -7,12 +7,12 @@ import { useState, useEffect, useCallback } from 'react';
 // import { paths } from 'src/routes/paths';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
 
+import { today } from 'src/utils/format-time';
+
 import { CONFIG } from 'src/config-global';
 import { useGetContacts, useGetConversation, useGetConversations } from 'src/actions/chat';
 
 import { EmptyContent } from 'src/components/empty-content';
-
-import { useMockedUser } from 'src/auth/hooks';
 
 import { Layout } from '../layout';
 import { ChatNav } from '../chat-nav';
@@ -25,10 +25,21 @@ import { useCollapseNav } from '../hooks/use-collapse-nav';
 
 // ----------------------------------------------------------------------
 
+const user = {
+  id: '8864c717-587d-472a-929a-8e5f298024da-0',
+  role: 'admin',
+  email: 'admin@example.com',
+  address: '123 Main St, Anytown, USA',
+  displayName: 'John Doe',
+  name: 'John Doe',
+  lastActivity: today(),
+  photoURL: 'https://minimal-assets-api.vercel.app/assets/images/avatars/avatar_1.jpg',
+  phoneNumber: '123-456-7890',
+  status: 'online' as 'online' | 'offline' | 'alway' | 'busy',
+};
+
 export function ChatView() {
   const router = useRouter();
-
-  const { user } = useMockedUser();
 
   const { contacts } = useGetContacts();
 

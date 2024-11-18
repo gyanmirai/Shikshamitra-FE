@@ -25,7 +25,6 @@ import { useSetState } from 'src/hooks/use-set-state';
 import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
 import { updateEvent, useGetEvents } from 'src/actions/calendar';
 
 import { StyledCalendar } from '../styles';
@@ -193,11 +192,7 @@ export function CalendarView() {
           {openForm && <> {currentEvent?.id ? 'Edit' : 'Add'} event</>}
         </DialogTitle>
 
-        <CalendarForm
-          currentEvent={currentEvent}
-          colorOptions={CALENDAR_COLOR_OPTIONS}
-          onClose={onCloseForm}
-        />
+        <CalendarForm currentEvent={currentEvent} colorOptions={[]} onClose={onCloseForm} />
       </Dialog>
 
       {/* <CalendarFilters

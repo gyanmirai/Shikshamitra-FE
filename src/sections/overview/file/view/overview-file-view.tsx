@@ -10,7 +10,6 @@ import Typography from '@mui/material/Typography';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { CONFIG } from 'src/config-global';
-import { _files, _folders } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
@@ -183,12 +182,12 @@ export function OverviewFileView() {
 
               <Scrollbar sx={{ mb: 3, minHeight: 186 }}>
                 <Box sx={{ gap: 3, display: 'flex' }}>
-                  {_folders.map((folder) => (
+                  {[].map((folder: any) => (
                     <FileManagerFolderItem
                       key={folder.id}
                       folder={folder}
                       onDelete={() => console.info('DELETE', folder.id)}
-                      sx={{ ...(_folders.length > 3 && { width: 240, flexShrink: 0 }) }}
+                      sx={{ ...([].length > 3 && { width: 240, flexShrink: 0 }) }}
                     />
                   ))}
                 </Box>
@@ -197,9 +196,9 @@ export function OverviewFileView() {
               <FileManagerPanel title="Recent files" link={pathname} onOpen={upload.onTrue} />
 
               <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
-                {_files.slice(0, 5).map((file) => (
+                {[].slice(0, 5).map((file: any) => (
                   <FileRecentItem
-                    key={file.id}
+                    key={file?.id}
                     file={file}
                     onDelete={() => console.info('DELETE', file.id)}
                   />
