@@ -127,7 +127,7 @@ const FinanceCollectFeeStudentCardComponent = ({ user }: Props) => {
           {[
             { label: 'Class', icon: "fa:mortar-board", value: "10-A" },
             { label: 'Parents Contact', icon: "material-symbols-light:call-outline", value: '9876542347' },
-            { label: 'Charges', icon: "arcticons:mymoney-pro", value: '₹ 0' }
+            { label: 'Total Fees', icon: "arcticons:mymoney-pro", value: '₹ 60,000' }
           ].map(({ label, icon, value }) => (
             <Box key={label} sx={{ textAlign: 'center' }}>
               <Typography variant="caption" sx={{ mb: 0.5, color: 'text.secondary' }}>{label}</Typography>

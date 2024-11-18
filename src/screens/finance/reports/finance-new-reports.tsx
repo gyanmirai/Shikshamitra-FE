@@ -9,6 +9,7 @@ import { Form, Field, Formik } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Card, Button, Typography, FormControl, FormHelperText } from '@mui/material';
 
+import { varAlpha } from 'src/theme/styles/utils';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -227,15 +228,51 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                   }
 
                   <Grid item xs={12} justifyContent="flex-end" display="flex" gap={3}>
-                    <Button size="small" startIcon={<Iconify icon="mdi:file-pdf-box" />} color="error" variant="contained">
+                    <Button
+                      startIcon={<Iconify icon="ion:download" />}
+                      variant="contained"
+                      color="primary"
+                      sx={{
+                        backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                        color: 'primary.main',
+                        '&:hover': {
+                          backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                        },
+                      }}
+                    >
                       Download PDF
                     </Button>
-                    <Button size="small" startIcon={<Iconify icon="mdi:file-excel" />} color="success" variant="contained">
+
+                    <Button
+                      startIcon={<Iconify icon="ion:download" />}
+                      variant="contained"
+                      color="warning"
+                      sx={{
+                        backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                        color: 'warning.main',
+                        '&:hover': {
+                          backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                        },
+                      }}
+                    >
                       Download Excel
                     </Button>
-                    <Button size="small" type="submit" variant="contained">
+                    <Button
+                      startIcon={<Iconify icon="ion:print" />}
+                      variant="contained"
+                      color="secondary"
+                      sx={{
+                        backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        color: 'secondary.main',
+                        '&:hover': {
+                          backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        },
+                      }}
+                    >
                       Generate Report
                     </Button>
+
+
                   </Grid>
                 </Grid>
               </Box>

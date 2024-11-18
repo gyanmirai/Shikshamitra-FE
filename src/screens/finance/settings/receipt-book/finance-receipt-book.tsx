@@ -110,7 +110,7 @@ const FinanceReceiptBookSetting = () => {
 
           {
             id: 'toggle',
-            label: 'Status Toggle',
+            label: 'Active',
             render() {
               return <Switch />;
             },

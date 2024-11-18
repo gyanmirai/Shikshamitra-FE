@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Label } from 'src/components/label';
-import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundDialog from './component/fee-refund-dialog';
@@ -183,7 +182,7 @@ const FinanceFeeCollectionRefundTab = () => {
     status: '',
   };
 
-  const handleSave = () => {};
+  const handleSave = () => { };
 
   const closeDialog = () => {
     dialog.onFalse();
@@ -220,19 +219,19 @@ const FinanceFeeCollectionRefundTab = () => {
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>
-        <Box py="15px" display="flex" flexDirection="row" gap={3}>
+        {/* <Box py="15px" display="flex" flexDirection="row" gap={3}>
           <CustomSelect
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => {}}
+            onChange={() => { }}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => {}}
+            onChange={() => { }}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -241,16 +240,17 @@ const FinanceFeeCollectionRefundTab = () => {
             size="small"
             fullWidth
             value=""
-            onChange={(e) => {}}
+            onChange={(e) => { }}
           />
-        </Box>
+        </Box> */}
       </Box>
       <CustomizableTable
-      isFilter={false}
-      isShowedDense={false}
-      isPagination={false}
-      isScrollbar={false}
-      
+        isFilter={false}
+        isShowedDense={false}
+        isPagination={false}
+        isScrollbar={false}
+        isSearch={false}
+
         columns={[
           { id: 'studentName', label: 'Student Name' },
           { id: 'feeHead', label: 'Fee Head' },
@@ -284,23 +284,33 @@ const FinanceFeeCollectionRefundTab = () => {
               }
               if (row.feeHead === 'Library') {
                 return (
+                  // <CurrencyInput
+                  //   value={libraryFeeRefundAmount}
+                  //   currencyCode="INR"
+                  //   onChange={(formattedValue, numericValue) => {
+                  //     console.log('Formatted Value:', formattedValue);
+                  //     console.log('Numeric Value:', numericValue);
+                  //     setlibraryFeeRefundAmount(formattedValue);
+                  //   }}
+                  //   label="Enter Amount"
+                  // />
                   <FormattedAmountInput
                     label="Library Refund"
                     value={libraryFeeRefundAmount}
                     onChange={handleChangeForLibrary}
                   />
                 );
-              } 
-                return (
-                  <FormattedAmountInput
-                    label="Total Refund"
-                    value={formatNumber(totalFeeRefundAmount.toString())} 
-                    onChange={()=>{}}
-                    
-                    
-                  />
-                );
-              
+              }
+              return (
+                <FormattedAmountInput
+                  label="Total Refund"
+                  value={formatNumber(totalFeeRefundAmount.toString())}
+                  onChange={() => { }}
+
+
+                />
+              );
+
             }
           },
 

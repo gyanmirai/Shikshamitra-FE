@@ -21,7 +21,9 @@ interface FeeSubCategoryList {
   amount: string;
   isCounted: boolean;
   value: string;
-  paymentMethod?: string;
+  paymentMethod?: string[];
+  discountAmount: number;
+  discountCategory: string;
 }
 
 const feeHeadList = [
@@ -33,19 +35,21 @@ const feeHeadList = [
 interface Data {
   id: number;
   // feeCategoryName: string;
-  amount: string;
+  
   applicableGrade: string;
   statusToggle: boolean;
   action: string;
   bookRecipt: string;
   feeSubCategoryList: FeeSubCategoryList[];
   paymentDueDate?: any;
+  totalAmount: string;
+
 }
 
 const initialData: Data[] = [
   {
     id: 1,
-    amount: '3,000',
+    totalAmount: "75000",
     applicableGrade: '2',
     bookRecipt: 'CBSE',
     paymentDueDate: '20-12-2024',
@@ -53,26 +57,33 @@ const initialData: Data[] = [
       {
         id: 1,
         name: 'Tuition Fee',
-        amount: '500',
+        amount: '50000',
         isCounted: true,
         value: 'tuitionFee',
-        paymentMethod: 'Cash',
+        paymentMethod: ['cash', 'online'],
+        discountAmount: 4000,
+        discountCategory: "Summer Campaign"
+
       },
       {
         id: 2,
         name: 'Sports Fee',
-        amount: '1500',
+        amount: '15000',
         isCounted: false,
         value: 'sportsFee',
-        paymentMethod: 'Cash',
+        paymentMethod: ['cash', 'online'],
+        discountAmount: 0,
+        discountCategory: "-"
       },
       {
         id: 3,
         name: 'Transport Fee',
-        amount: '1000',
+        amount: '10000',
         isCounted: true,
         value: 'transportFee',
-        paymentMethod: 'Check',
+        paymentMethod: ['cash', 'online'],
+        discountAmount: 0,
+        discountCategory: "-"
       },
     ],
     statusToggle: true,
@@ -108,6 +119,9 @@ const FinanceFeeStructureSettingTab = () => {
       bookRecipt,
       feeHead,
       feeAmountForAvailbleHead,
+      discountAmount,
+      discountCategory,
+      totalAmount
     } = dataFromDialog;
 
     const formattedPaymentDueDate = dayjs(paymentDueDate).format('DD-MM-YYYY');
@@ -200,7 +214,7 @@ const FinanceFeeStructureSettingTab = () => {
       // Single fee structure case
       const newFeeStructure: Data = {
         id: Math.floor(Math.random() * 10000),
-        amount,
+        totalAmount,
         applicableGrade,
         bookRecipt: bookRecipt.toUpperCase(),
         paymentDueDate: formattedPaymentDueDate,
@@ -211,6 +225,8 @@ const FinanceFeeStructureSettingTab = () => {
             amount,
             isCounted: true,
             value: normalize(feeHead),
+            discountAmount,
+            discountCategory,
           },
         ],
         statusToggle: true,
@@ -273,7 +289,7 @@ const FinanceFeeStructureSettingTab = () => {
                       {row.feeSubCategoryList.map((val: any, index: any) => (
                         <React.Fragment key={index}>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <Paper  elevation={4} sx={{ p: 2 , fontSize:"13PX"}}>
+                            <Paper elevation={4} sx={{ p: 2, fontSize: "13PX" }}>
                               {val.name}: {formatNumber(val.amount, "INR")}
                               <Switch
                                 checked={switchState[index]}

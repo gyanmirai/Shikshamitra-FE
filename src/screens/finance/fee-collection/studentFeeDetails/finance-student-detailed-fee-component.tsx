@@ -10,6 +10,8 @@ import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceStudentPendingFeeTab from './finance-student-pending-fee-tab';
 import FinanceStudentFeeBreakdownTab from './finance-student-fee-breakdown-tab';
+import FinanceFeeCollectionCharges from '../charges/finance-fee-collection-charges';
+import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
 import FinanceFeeCollectionPaymentHistoryComponent from '../collectFees/component/finance-fee-collection-payment-history-component';
 
 const TABS = [
@@ -27,6 +29,16 @@ const TABS = [
     value: 'pending-fees',
     label: 'Pending Fees',
     component: () => <FinanceStudentPendingFeeTab />,
+  },
+  {
+    value: 'charges',
+    label: 'Charges',
+    component: () => <FinanceFeeCollectionCharges />,
+  },
+  {
+    value: 'fee-refund',
+    label: 'Fee-Refund',
+    component: () => <FinanceFeeCollectionRefundTab />,
   },
 ];
 

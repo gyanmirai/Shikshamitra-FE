@@ -7,6 +7,7 @@ type FormattedAmountInputProps = {
   onChange: (formattedValue: string, numericValue: number) => void;
   label?: string;
   name?: string;
+  sx?:any;
 };
 
 const formatWithCommas = (value: string) => {
@@ -26,6 +27,7 @@ const FormattedAmountInput: React.FC<FormattedAmountInputProps> = ({
   onChange,
   label,
   name,
+  sx,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value.replace(/,/g, '');
@@ -43,6 +45,7 @@ const FormattedAmountInput: React.FC<FormattedAmountInputProps> = ({
       onChange={handleChange}
       fullWidth
       size="small"
+      sx={sx}
     />
   );
 };

@@ -158,6 +158,7 @@ const students = [
     paymentTerm: 'Monthly',
     totalPending: 38000,
     totalPaid: 40000,
+
     discountAmount: 0,
     fixedReduction: 0,
     overAllDueDate: '20-04-2025',
@@ -316,6 +317,15 @@ const FinanceStudentFeeManagement = () => {
           { id: 'name', label: 'Student Name' },
           { id: 'grade', label: 'Grade' },
           {
+            id: 'totalFees', label: 'Total Fees', render(value, row) {
+              return (
+                <Typography fontSize="12px" >
+                  {formatNumber(row.totalFees, 'INR')}
+                </Typography>
+              );
+            },
+          },
+          {
             id: 'totalPaid',
             label: 'Total Paid',
             render(value, row) {
@@ -376,13 +386,13 @@ const FinanceStudentFeeManagement = () => {
       {/* Details Modal */}
       {selectedStudent && (
         <CustomDialog
-          title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th`}
+          title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th -A `}
           open={open}
           handleClose={handleClose}
           maxWidth="md"
-         
+
         >
-             <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
 
 
             <CustomizableTable
@@ -515,8 +525,8 @@ const FinanceStudentFeeManagement = () => {
 
               }))}
             />
-           </Scrollbar>
-         
+          </Scrollbar>
+
         </CustomDialog>
       )}
       {dialog.value && selectedStudent && (

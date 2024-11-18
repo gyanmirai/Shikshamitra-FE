@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
 import InputAdornment from '@mui/material/InputAdornment';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -40,16 +40,20 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
   });
   console.log('data from parent', data);
   return (
-    <CustomDialog title="Edit Fee Structure" open={dialogValue} handleClose={onClose}>
+    <CustomDialog maxWidth="md" title="Edit Fee Structure" open={dialogValue} handleClose={onClose}>
       <Box>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+            <Box>
+              <Typography fontSize="12px">John Doe Class: 10th-A</Typography>
+
+            </Box>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
               <Grid2 xl={6}>
                 <Box display="flex" flexDirection="row" gap={2}>
                   <TextField
                     name="class"
-                    label="Class/Grade"
+                    label="Class"
                     value={data.grade}
                     onChange={formik.handleChange}
                     size="small"
