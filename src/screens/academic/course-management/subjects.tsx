@@ -267,7 +267,7 @@ const Subjects = (props: TabComponentType) => {
   return (
     <Box>
       <Typography variant="h6" marginBottom={3}>
-        Subject Management
+        Subject&apos;s Content Management
       </Typography>
       <CustomSelect
         options={classData?.items || []}

@@ -20,8 +20,9 @@ import { Iconify } from 'src/components/iconify';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
-const Dashboard = () => {
+const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box sx={{ p: 3 }}>

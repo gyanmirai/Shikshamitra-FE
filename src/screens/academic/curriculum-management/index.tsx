@@ -8,6 +8,8 @@ import { Box, Tab, Card, Button } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { varAlpha } from 'src/theme/styles';
+
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -89,6 +91,13 @@ const CurriculumManagementScreen = () => {
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           color="primary"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            },
+          }}
           variant="contained"
           onClick={() => {
             setSearchParams?.({
@@ -103,6 +112,13 @@ const CurriculumManagementScreen = () => {
           startIcon={<Iconify icon="mdi:file-document-outline" />}
           color="error"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            },
+          }}
           onClick={() => {
             setSearchParams?.({
               tab: 'reports',
@@ -116,6 +132,13 @@ const CurriculumManagementScreen = () => {
           startIcon={<Iconify icon="mdi:pencil" />}
           color="warning"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
           onClick={() => {
             setSearchParams?.({
               tab: 'curriculumOverview',

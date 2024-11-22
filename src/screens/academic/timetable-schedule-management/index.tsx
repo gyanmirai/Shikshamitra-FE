@@ -8,6 +8,8 @@ import { Box, Tab, Card, Button } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { varAlpha } from 'src/theme/styles';
+
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -77,10 +79,17 @@ const TimetableScheduleManagementScreen = () => {
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           color="primary"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            },
+          }}
           variant="contained"
           onClick={() => {
             setSearchParams?.({
-              tab: 'createNewTimetable',
+              tab: 'currentTimetableOverview',
             });
           }}
         >
@@ -90,6 +99,13 @@ const TimetableScheduleManagementScreen = () => {
         <Button
           startIcon={<Iconify icon="mdi:file-document-outline" />}
           color="error"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            },
+          }}
           variant="contained"
           onClick={() => {
             setSearchParams?.({
@@ -103,6 +119,13 @@ const TimetableScheduleManagementScreen = () => {
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           color="warning"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
           variant="contained"
           onClick={() => {
             setSearchParams?.({

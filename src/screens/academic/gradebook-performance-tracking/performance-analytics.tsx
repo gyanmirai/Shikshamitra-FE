@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Card, Grid, alpha, useTheme, CardHeader, Typography } from '@mui/material';
@@ -10,7 +12,7 @@ import CustomSelect from 'src/components/custom-select';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsConversionRates } from 'src/sections/overview/analytics/analytics-conversion-rates';
 
-const PerformanceAnalytics = () => {
+const PerformanceAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>

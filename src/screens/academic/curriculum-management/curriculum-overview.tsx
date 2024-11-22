@@ -538,6 +538,20 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <CustomSelect
+                label="Class"
+                options={classData?.items || []}
+                value={formik.values.className}
+                isLoading={isLoading}
+                labelKey="name"
+                valueKey="name"
+                onChange={(val) => {
+                  formik.setFieldValue('className', val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
                 label="Predefined Template"
                 name="predefinedTemplate"
                 options={[
@@ -567,20 +581,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 Add Template ?
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Class"
-                options={classData?.items || []}
-                value={formik.values.className}
-                isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                onChange={(val) => {
-                  formik.setFieldValue('className', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </Grid>
+
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Subject"

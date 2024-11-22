@@ -10,83 +10,100 @@ const Settings = (props: TabComponentType) => (
   <Box sx={{ flexGrow: 1, p: 3 }}>
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
-        <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6" marginBottom={1}>
+        <Card
+          sx={{
+            p: 2,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Typography variant="h6" marginBottom={2}>
             Notification Setting
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 1 }}>
-            <Switch
-              checked={false}
-              onChange={() => {}}
-              inputProps={{ 'aria-label': 'controlled' }}
-            />
-            <Typography sx={{ mr: 2 }}>Course Updates</Typography>
-          </Box>
-          <CustomSelect
-            options={[]}
-            value=""
-            onChange={(val) => {}}
-            defaultChecked
-            label="Notification Frequency"
-            formControlProps={{ sx: { minWidth: 300, ml: 1 } }}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 1, marginTop: 2 }}>
-            <Switch
-              checked={false}
-              onChange={() => {}}
+
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
+              <Switch
+                checked={false}
+                onChange={() => {}}
+                inputProps={{ 'aria-label': 'controlled' }}
+              />
+              <Typography sx={{ ml: 1 }}>Course Updates</Typography>
+            </Box>
+
+            <CustomSelect
+              options={[]}
+              value=""
+              onChange={(val) => {}}
               defaultChecked
-              inputProps={{ 'aria-label': 'controlled' }}
+              label="Notification Frequency"
+              formControlProps={{
+                sx: {
+                  minWidth: 300,
+                  mb: 2,
+                },
+              }}
             />
-            <Typography sx={{ mr: 2 }}>New Assignments</Typography>
           </Box>
-          <CustomSelect
-            options={[]}
-            value=""
-            onChange={(val) => {}}
-            label="Notification Frequency"
-            formControlProps={{ sx: { minWidth: 300, ml: 1 } }}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 1, marginTop: 2 }}>
-            <Switch
-              checked={false}
-              onChange={() => {}}
-              defaultChecked
-              inputProps={{ 'aria-label': 'controlled' }}
-            />
-            <Typography sx={{ mr: 2 }}>Student Progress</Typography>
-          </Box>
-          <CustomSelect
-            options={[]}
-            value=""
-            onChange={(val) => {}}
-            label="Notification Frequency"
-            formControlProps={{ sx: { minWidth: 300, ml: 1 } }}
-          />
-          <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
-            {' '}
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              mt: 'auto',
+              pt: 2,
+            }}
+          >
             <Button variant="contained">Save</Button>
           </Box>
         </Card>
       </Grid>
+
       <Grid item xs={12} md={6}>
-        <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6" marginBottom={1}>
+        <Card
+          sx={{
+            p: 2,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Typography variant="h6" marginBottom={2}>
             Course Creation Workflow
           </Typography>
-          <Box display="flex" alignItems="center">
-            <Checkbox size="small" checked />
-            <Typography variant="body2">Step 1 : Course Title</Typography>
+
+          <Box sx={{ flex: 1 }}>
+            <Box display="flex" alignItems="center" mb={1}>
+              <Checkbox size="small" checked />
+              <Typography variant="body2" sx={{ ml: 1 }}>
+                Step 1 : Course Title
+              </Typography>
+            </Box>
+
+            <Box display="flex" alignItems="center" mb={1}>
+              <Checkbox size="small" />
+              <Typography variant="body2" sx={{ ml: 1 }}>
+                Step 2 : Course Description
+              </Typography>
+            </Box>
+
+            <Box display="flex" alignItems="center" mb={1}>
+              <Checkbox size="small" />
+              <Typography variant="body2" sx={{ ml: 1 }}>
+                Step 3 : Upload File
+              </Typography>
+            </Box>
           </Box>
-          <Box display="flex" alignItems="center">
-            <Checkbox size="small" />
-            <Typography variant="body2">Step 2 : Course Description</Typography>
-          </Box>
-          <Box display="flex" alignItems="center">
-            <Checkbox size="small" />
-            <Typography variant="body2">Step 3 : Upload File</Typography>
-          </Box>
-          <Box display="flex" justifyContent="flex-end" alignItems="center">
-            {' '}
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              mt: 'auto',
+              pt: 2,
+            }}
+          >
             <Button variant="contained">Save</Button>
           </Box>
         </Card>

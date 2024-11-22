@@ -16,8 +16,9 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const [classes1, setClasses1] = useState('all');
-  const [classes2, setClasses2] = useState('all');
+
+  const [classes1, setClasses1] = useState('All');
+  const [classes2, setClasses2] = useState('All');
 
   const classOptions = React.useMemo(() => {
     const allOption = { name: 'All', value: 'all' };
