@@ -248,7 +248,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                 );
               },
             },
-            { id: 'applicableGrade', label: 'Applicable Grade' },
+            { id: 'applicableGrade', label: 'Standard' },
             {
               id: 'amount',
               label: 'Amount',

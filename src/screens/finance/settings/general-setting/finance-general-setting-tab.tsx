@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import BankConfiguration from './component/bank-configuration';
 import SetDefaultFeeComponent from './component/set-default-fee-component';
 import BudgetThresoldAlertComponent from './component/budget-thresold-alert-component';
 import CurrencyAndTaxSavingsComponent from './component/currency-and-tax-savings-component';
@@ -22,6 +24,11 @@ const TABS = [
     value: 'setDefaultFeeComponents',
     label: 'Set Default Fee Components',
     component: () => <SetDefaultFeeComponent />,
+  },
+  {
+    value: 'bankList',
+    label: 'Bank Configuration',
+    component: () => <BankConfiguration />,
   },
   {
     value: 'defineSchoolWideRules',
@@ -60,19 +67,48 @@ const TABS = [
   },
 ];
 const FinanceGeneralSettingTab = () => {
-  const tabs = useTabs('setDefaultFeeComponents');
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'setDefaultFeeComponents' });
+
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  // const tabs = useTabs('setDefaultFeeComponents');
+  // const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const breadcrumbTabName = TABS.find((tab) => tab.value === searchParams?.tab)?.label || '';
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="General Settings"
+        links={[{ name: 'Finance' }, { name: 'General Settings' }, { name: breadcrumbTabName }]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Card>
-        <CustomTabs value={tabs.value} onChange={tabs.onChange}>
+        <CustomTabs
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
+        >
           {TABS.map((tab) => (
-            <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+          // searchParams={searchParams}
+          // setSearchParams={setSearchParams}
+          />
+        )}
       </Box>
     </Box>
   );

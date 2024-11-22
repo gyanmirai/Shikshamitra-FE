@@ -7,7 +7,7 @@ import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, Typography, FormControl, FormHelperText } from '@mui/material';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles/utils';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -15,6 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const initialValues = {
   report: '',
@@ -45,7 +46,13 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>Download Reports</Typography>
+      <CustomBreadcrumbs
+        heading="Reports"
+        links={[{ name: 'Finance' }, { name: 'Reports' },]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
+      {/* <Typography variant="h6" gutterBottom>Download Reports</Typography> */}
       {/* <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
         <Button startIcon={<Iconify icon="mdi:file-pdf-box" />} color="error" variant="contained">
           Download PDF

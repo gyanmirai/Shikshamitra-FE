@@ -379,7 +379,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             <Box py="13px" display="flex" flexDirection="row" gap={4}>
               <DatePicker
                 minDate={dayjs()}
-                label="Payment Due Date"
+                label="Total Fees Due Date"
                 value={formik.values.paymentDueDate}
                 onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
                 format="DD-MM-YYYY"

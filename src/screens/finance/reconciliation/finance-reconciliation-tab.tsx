@@ -86,6 +86,12 @@ const FinanceReconciliationTab = () => {
 
   return (
     <>
+     {/* <CustomBreadcrumbs
+        heading="Reconciliation"
+        links={[{ name: 'Finance' }, { name: 'Reconciliation' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      /> */}
       <Box py="15px" display="flex" justifyContent="space-between">
         <Box display="flex" flexDirection="row" gap={3}  >
           <CustomSelect
@@ -142,6 +148,7 @@ const FinanceReconciliationTab = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
+                placement='right-top'
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem

@@ -8,6 +8,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceFeeStructureOverview from './Tabs/finance-fee-structure-overview/finance-fee-structure-overview';
 import FinanceStudentStructureOverview from './Tabs/finanace-student-structure-overview/finance-student-structure-overview';
@@ -21,7 +22,7 @@ const TABS = [
   },
   {
     value: 'student-fee-managment',
-    label: 'Student Fee Managment',
+    label: 'Student Fee Management',
     icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
     component: () => <FinanceStudentStructureOverview />,
   },
@@ -37,6 +38,12 @@ const FinanceFeeManagementScreen = () => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Fee Management"
+        links={[{ name: 'Finance' }, { name: 'Fee Management' }, { name: searchParams.tab !== "Fee-structure-overview" ? 'Student Fee Management' : 'Fee-Structure-Overview' }]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Card>
         <CustomTabs
           value={searchParams.tab}

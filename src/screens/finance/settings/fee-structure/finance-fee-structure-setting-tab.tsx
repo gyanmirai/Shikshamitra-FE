@@ -12,6 +12,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
 
@@ -262,6 +263,12 @@ const FinanceFeeStructureSettingTab = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Fee Structure"
+        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Fee Structure' },]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">
           Save

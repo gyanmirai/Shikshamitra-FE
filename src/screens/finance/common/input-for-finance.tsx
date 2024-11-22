@@ -10,15 +10,25 @@ type FormattedAmountInputProps = {
   sx?:any;
 };
 
-const formatWithCommas = (value: string) => {
-  const parts = value.split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{2})+(?!\d))/g, ',').replace(/,(\d{3})$/, '$1');
-  //   parts[0] = parts[0]
-  //   .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  //   .replace(/\B(?=(\d{2})+(?=\d{3}))/g, ',');
-  return parts.join('.');
-};
+// const formatWithCommas = (value: string) => {
+//   const parts = value.split('.');
+//   if (parts[0].length > 4){
+//     parts[0] = parts[0].replace(/\B(?=(\d{2})+(?!\d))/g, ',').replace(/,(\d{3})$/, '$1');
 
+//   }
+//   //   parts[0] = parts[0]
+//   //   .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+//   //   .replace(/\B(?=(\d{2})+(?=\d{3}))/g, ',');
+//   return parts.join('.');
+// };
+const formatWithCommas = (value: string) => {
+  const parts = value.split('.'); // Split into integer and decimal parts
+  if (parts[0].length > 3) {
+    // Format with commas for Western style (every 3 digits)
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  return parts.join('.'); // Join integer and decimal parts
+};
 const parseNumericValue = (formattedValue: string) =>
   parseFloat(formattedValue.replace(/,/g, '')) || 0;
 

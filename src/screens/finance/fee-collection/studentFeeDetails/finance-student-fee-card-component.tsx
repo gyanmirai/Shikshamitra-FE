@@ -6,6 +6,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomSelect from 'src/components/custom-select';
 
+import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
 import FinanceStudentInfoCardComponent from './component/finance-student-info-card-component';
 import FinanceNewCollectFeeDialog from '../collectFees/component/finance-new-fee-collect-dialog';
 
@@ -38,7 +39,6 @@ const students = [
     totalDueAfterDiscount: 0,
     previousCharges: 500,
     chargesDetails: 'The payment of 500 made by cheque in June 2024 was bounced. Cheque No: H8749.',
-
     fees: [
       {
         feeHeadId: 198,
@@ -354,6 +354,7 @@ const students = [
 
 const FinanceStudentFeeCardComponent = () => {
   const dialog = useBoolean();
+  const feeRefundDialog = useBoolean();
 
 
   const [tableData, setTableData] = useState(dummyUser);
@@ -363,61 +364,88 @@ const FinanceStudentFeeCardComponent = () => {
     dialog.onFalse();
   };
 
+  const feeRefundCloseDialog = () =>{
+    feeRefundDialog.onFalse();
+  }
   const handleSave = () => { };
   return (
     <>
-      <Box py="15px" display="flex" flexDirection="row" gap={3}>
-        <CustomSelect
-          label="Class/Grade"
-          options={[]}
-          value=""
-          onChange={() => { }}
-          formControlProps={{ sx: { minWidth: 140 } }}
-        />
-        <CustomSelect
-          label="Division"
-          options={[]}
-          value=""
-          onChange={() => { }}
-          formControlProps={{ sx: { minWidth: 140 } }}
-        />
-        <TextField
-          label="Search by student name"
-          variant="outlined"
-          size="small"
+      <Box display="flex" flexDirection="row" justifyContent="space-between">
+        <Box py="15px" display="flex" flexDirection="row" gap={3}>
+          <CustomSelect
+            label="Standard"
+            options={[]}
+            value=""
+            onChange={() => { }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <CustomSelect
+            label="Division"
+            options={[]}
+            value=""
+            onChange={() => { }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <TextField
+            label="Search by student name"
+            variant="outlined"
+            size="small"
 
-          value=""
-          onChange={(e) => { }}
-        />
+            value=""
+            onChange={(e) => { }}
+          />
+        </Box>
         <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => {
-            setSelectedStudent(students[0]);
-            // setIsEdit(true);
-            dialog.onTrue();
-          }}
-        >
-          Collect Fees
-        </Button>
-      </Box>
-    </Box >
-    <FinanceStudentInfoCardComponent user={dummyUser} />
+          <Box display="flex" flexDirection="row" gap={2}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                feeRefundDialog.onFalse();
+                setSelectedStudent(students[0]);
+                // setIsEdit(true);
+                dialog.onTrue();
+              }}
+            >
+              Collect Fees
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                dialog.onFalse();
+                setSelectedStudent(students[0]);
+                // setIsEdit(true);
+                feeRefundDialog.onTrue();
+              }}
+            >
+              Fee Refund
+            </Button>
+          </Box>
+        </Box>
+      </Box >
+      <FinanceStudentInfoCardComponent user={dummyUser} />
+      {
+        feeRefundDialog.value &&
+        <FinanceFeeCollectionRefundTab
+          dialogValue={feeRefundDialog.value}
+          onClose={feeRefundCloseDialog}
+          selectedData={selectedStudent} />
+      }
 
-      
-  {
-    dialog.value && (
-      <FinanceNewCollectFeeDialog
-        onSave={handleSave}
-        dialogValue={dialog.value}
-        onClose={closeDialog}
-        data={selectedStudent}
-        isEdit={false}
-        allData={tableData}
-      />
-    )
-  }
+
+      {
+        dialog.value && (
+          <FinanceNewCollectFeeDialog
+            onSave={handleSave}
+            dialogValue={dialog.value}
+            onClose={closeDialog}
+            data={selectedStudent}
+            isEdit={false}
+            allData={tableData}
+          />
+        )
+      }
     </>
   );
 };

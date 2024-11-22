@@ -94,6 +94,12 @@ const FinanceBounceTab = () => {
   useEffect(() => { }, [selectedEntry]);
   return (
     <>
+    {/* <CustomBreadcrumbs
+        heading="Bounce Check Details"
+        links={[{ name: 'Finance' }, { name: 'Bounce Check Details' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      /> */}
       <Box py="15px" display="flex" justifyContent="space-between">
         <Box display="flex" flexDirection="row" gap={3}  >
           <CustomSelect

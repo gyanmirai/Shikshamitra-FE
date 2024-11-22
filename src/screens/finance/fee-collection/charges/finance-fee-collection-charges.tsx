@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceChequeBounceChargeCollectDialog from './component/finance-cheque-bounce-charge-collect';
@@ -137,45 +135,45 @@ const FinanceFeeCollectionCharges = () => {
               );
             },
           },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      {row.status === 'Pending' && (
-                        <MenuItem
-                          onClick={() => {
-                            // setIsClearCheck(false)
-                            setSelectedEntry(row);
+          // {
+          //   id: 'action',
+          //   label: 'Action',
+          //   render(value, row: any) {
+          //     return (
+          //       <ThreeDotsActions
+          //         actions={({ popover }: any) => (
+          //           <MenuList>
+          //             {row.status === 'Pending' && (
+          //               <MenuItem
+          //                 onClick={() => {
+          //                   // setIsClearCheck(false)
+          //                   setSelectedEntry(row);
 
-                            dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="fluent:check-24-regular" />
-                          Collect Charges
-                        </MenuItem>
-                      )}
-                      {row.status === 'Paid' && (
-                        <MenuItem
-                          onClick={() => {
-                            // setIsClearCheck(true)
-                            // setSelectedEntry(row);
-                            // dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="circum:receipt" />
-                          Generate Receipt
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  )}
-                />
-              );
-            },
-          },
+          //                   dialog.onTrue();
+          //                 }}
+          //               >
+          //                 <Iconify icon="fluent:check-24-regular" />
+          //                 Collect Charges
+          //               </MenuItem>
+          //             )}
+          //             {row.status === 'Paid' && (
+          //               <MenuItem
+          //                 onClick={() => {
+          //                   // setIsClearCheck(true)
+          //                   // setSelectedEntry(row);
+          //                   // dialog.onTrue();
+          //                 }}
+          //               >
+          //                 <Iconify icon="circum:receipt" />
+          //                 Generate Receipt
+          //               </MenuItem>
+          //             )}
+          //           </MenuList>
+          //         )}
+          //       />
+          //     );
+          //   },
+          // },
         ]}
         data={chargesData}
       />

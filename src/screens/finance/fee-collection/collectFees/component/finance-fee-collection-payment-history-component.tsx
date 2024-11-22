@@ -414,7 +414,8 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           label: 'Action',
           render: (value, row) => (
             <ThreeDotsActions
-              actions={() => (
+            placement='right-top'
+              actions={(popover) => (
                 <MenuList>
                   <MenuItem
                     onClick={() => {

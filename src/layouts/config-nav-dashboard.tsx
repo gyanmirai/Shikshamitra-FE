@@ -720,6 +720,11 @@ const financeModule = {
           _action: 'fee-collection',
         },
         {
+          title: 'Fee Refund',
+          path: '/finance/fee-refund',
+          _action: 'fee-refund',
+        },
+        {
           title: 'Reconciliation',
           path: '/finance/reconciliation',
           _action: 'reconciliation',
@@ -780,11 +785,11 @@ const financeModule = {
               path: '/finance/settings/payment-method-setting',
               _action: 'payment-method-setting',
             },
-            // {
-            //   title: 'Budget',
-            //   path: '/finance/settings/budget-setting',
-            //   _action: 'budget-setting',
-            // },
+            {
+              title: 'Bounce Check Charges',
+              path: '/finance/settings/bounce-check-charges-setting',
+              _action: 'bounce-check-charges-setting',
+            },
             {
               title: 'Notification',
               path: '/finance/settings/notification-setting',

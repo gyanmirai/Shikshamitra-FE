@@ -9,9 +9,10 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceStudentPendingFeeTab from './finance-student-pending-fee-tab';
+import FinanceFeeRefundHistory from '../feeRefund/finance-fee-refund-history';
 import FinanceStudentFeeBreakdownTab from './finance-student-fee-breakdown-tab';
 import FinanceFeeCollectionCharges from '../charges/finance-fee-collection-charges';
-import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
+// import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
 import FinanceFeeCollectionPaymentHistoryComponent from '../collectFees/component/finance-fee-collection-payment-history-component';
 
 const TABS = [
@@ -37,8 +38,8 @@ const TABS = [
   },
   {
     value: 'fee-refund',
-    label: 'Fee-Refund',
-    component: () => <FinanceFeeCollectionRefundTab />,
+    label: 'Refund History',
+    component: () => <FinanceFeeRefundHistory />,
   },
 ];
 
@@ -53,13 +54,14 @@ const FinanceStudentDetailedFeeComponent = () => {
       </Typography>
       <Card>
         <CustomTabs
+
           value={tabs.value}
           onChange={tabs.onChange}
           variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>

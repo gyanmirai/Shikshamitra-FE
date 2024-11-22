@@ -4,13 +4,18 @@ import { useFormik } from 'formik';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import InputAdornment from '@mui/material/InputAdornment';
-import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Button,
+  TextField,
+  DialogActions,
+} from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 
 interface FinanceEditFeeStructureForStudentProps {
   dialogValue: boolean;
@@ -31,105 +36,153 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
       fixedReduction: 0,
       date: dayjs(data.overAllDueDate, 'DD-MM-YYYY'),
       id: data.studentId,
+      totalFee: data.totalFees,
+      finalFee: data.finalFees,
     },
-    // validationSchema: validationSchema,
     onSubmit: (values: any) => {
-      console.log('Form Submitted type:', values);
+      console.log('Form Submitted:', values);
       onSave(values);
     },
   });
-  console.log('data from parent', data);
+
   return (
-    <CustomDialog maxWidth="md" title="Edit Fee Structure" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="sm"
+      title="Edit Fee Structure"
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Box>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-            <Box>
-              <Typography fontSize="12px">John Doe Class: 10th-A</Typography>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: 300 }}>
+            {/* Header Info */}
+            {/* <Box>
+              <Typography fontSize="12px">
+                {data.name} | St: {data.grade}
+              </Typography>
+            </Box> */}
 
-            </Box>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <Grid2 xl={6}>
-                <Box display="flex" flexDirection="row" gap={2}>
+            {/* Form Fields */}
+            <Box pt={2}>
+              <Grid2 container spacing={2}>
+                {/* Row 1: Class and Student Name */}
+                <Grid2 xs={12} md={6}>
                   <TextField
                     name="class"
-                    label="Class"
+                    label="Standard"
                     value={data.grade}
-                    onChange={formik.handleChange}
                     size="small"
                     disabled
+                    fullWidth
                   />
+                </Grid2>
+                <Grid2 xs={12} md={6}>
                   <TextField
                     name="studentName"
                     label="Student Name"
                     value={data.name}
-                    onChange={formik.handleChange}
                     size="small"
                     disabled
-                  />
-                </Box>
-              </Grid2>
-
-              <Grid2 xl={6}>
-                <Box display="flex" flexDirection="row" gap={2}>
-                  <TextField
-                    name="discountAmount"
-                    label="Discount Percantage"
-                    value={formik.values.discountAmount}
-                    onChange={(e) => {
-                      const value = Math.min(100, Math.max(0, Number(e.target.value)));
-                      formik.setFieldValue('discountAmount', value);
-                    }}
-                    size="small"
-                    type="number"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                      inputProps: { min: 0, max: 100 },
-                    }}
                     fullWidth
                   />
+                </Grid2>
+
+                {/* Row 2: Discount Category and Amount */}
+                <Grid2 xs={12} md={6}>
+                  <CustomSelect
+                    options={[]} // Dynamic options for discount categories
+                    label="Additional Discount Category"
+                    value={formik.values.discountPercantage}
+                    onChange={(e) => {
+                      const value = Math.min(100, Math.max(0, Number(e)));
+                      formik.setFieldValue('discountPercantage', value);
+                    }}
+                    formControlProps={{ sx: { minWidth: 275 } }}
+
+
+                    placeholder="No categories available"
+                  />
+                </Grid2>
+                <Grid2 xs={12} md={6}>
                   <TextField
                     name="fixedReduction"
-                    label="Fixed Reduction"
+                    label="Additional Discount Amount"
                     value={formik.values.fixedReduction}
                     onChange={formik.handleChange}
                     size="small"
                     type="number"
-                    error={formik.touched.paymentAmount && Boolean(formik.errors.paymentAmount)}
-                    // helperText={formik.touched.paymentAmount && formik.errors.paymentAmount}
                     fullWidth
+                    error={Boolean(formik.errors.fixedReduction)}
                   />
-                </Box>
-              </Grid2>
-              <Grid2 container spacing={2} wrap="wrap">
-                {data.fees.map((val: any) => (
-                  <Grid2 xl={6} key={val.feeHeadId}>
-                    <TextField
-                      name={val.feeHead.toLowerCase()}
-                      label={val.feeHead}
-                      value={formatNumber(val.totalFees, 'INR')}
-                      onChange={formik.handleChange}
-                      size="small"
-                      fullWidth
-                      disabled
-                    />
-                  </Grid2>
+                </Grid2>
+
+                {/* Dynamic Fee Breakdown */}
+                {data.fees.map((fee: any) => (
+                  <React.Fragment key={fee.feeHeadId}>
+                    <Grid2 xs={12} md={6}>
+                      <TextField
+                        label={`Payable ${fee.feeHead} Fee`}
+                        value={formatNumber(fee.finalFees, 'INR')}
+                        size="small"
+                        fullWidth
+                        disabled
+                      />
+                    </Grid2>
+                    <Grid2 xs={12} md={6}>
+                      <TextField
+                        label={`${fee.feeHead} Fee Discount`}
+                        value={formatNumber(fee.totalDiscount, 'INR')}
+                        size="small"
+                        fullWidth
+                        disabled
+                      />
+                    </Grid2>
+                  </React.Fragment>
                 ))}
+
+                {/* Row 3: Final and Total Fee */}
+                <Grid2 xs={12} md={6}>
+                  <TextField
+                    name="finalFee"
+                    label="Payable Fee"
+                    value={formatNumber(formik.values.finalFee, 'INR')}
+                    size="small"
+                    fullWidth
+                    disabled
+                  />
+                </Grid2>
+                <Grid2 xs={12} md={6}>
+                  <TextField
+                    name="totalFee"
+                    label="Gross Fee"
+                    value={formatNumber(formik.values.totalFee, 'INR')}
+                    size="small"
+                    fullWidth
+                    disabled
+                  />
+                </Grid2>
+
+                {/* Row 4: Due Date */}
+                <Grid2 xs={12} md={6}>
+                  <DatePicker
+                    label="Due Date"
+                    value={formik.values.date}
+                    format="DD-MM-YYYY"
+                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                    disabled
+
+
+                  />
+                </Grid2>
               </Grid2>
-              <DatePicker
-                label="Due Date"
-                value={formik.values.date}
-                //   onChange={(newValue) => formik.setFieldValue('toDate', newValue)}
-                format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small' } }}
-                disabled
-              />
             </Box>
           </Scrollbar>
+
+          {/* Dialog Actions */}
           <DialogActions>
-            {/* <Button onClick={onClose} variant="contained" size="small">
-                                Cancel
-                            </Button> */}
+            {/* <Button onClick={onClose} variant="outlined" size="small">
+              Cancel
+            </Button> */}
             <Button type="submit" variant="contained" size="small">
               Save
             </Button>

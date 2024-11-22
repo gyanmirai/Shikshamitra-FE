@@ -12,6 +12,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceAddNewIncomeDialog from './component/finance-add-new-income-dialog';
 import FinanceIncomeDetailsDialog from './component/finance-income-details-dialog';
@@ -131,6 +132,12 @@ const FinanceIncomeTrackingScreen = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Income Tracking"
+        links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
           Add New Income
@@ -147,29 +154,29 @@ const FinanceIncomeTrackingScreen = () => {
           {
             id: 'incomeSource',
             label: 'Income Source',
-            children(row) {
-              return (
-                <CustomizableTable
-                  isFilter={false}
-                  isPagination={false}
-                  isSearch={false}
-                  columns={[
-                    { id: 'incomeName', label: 'Income Name' },
-                    {
-                      id: 'amount',
-                      label: 'Amount',
-                      render(value) {
-                        return (
-                          <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
-                        );
-                      },
-                    },
-                    { id: 'date', label: 'Received Date' },
-                  ]}
-                  data={row.incomeList}
-                />
-              );
-            },
+            // children(row) {
+            //   return (
+            //     <CustomizableTable
+            //       isFilter={false}
+            //       isPagination={false}
+            //       isSearch={false}
+            //       columns={[
+            //         { id: 'incomeName', label: 'Income Name' },
+            //         {
+            //           id: 'amount',
+            //           label: 'Amount',
+            //           render(value) {
+            //             return (
+            //               <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
+            //             );
+            //           },
+            //         },
+            //         { id: 'date', label: 'Received Date' },
+            //       ]}
+            //       data={row.incomeList}
+            //     />
+            //   );
+            // },
           },
           {
             id: 'incomeAmount',
@@ -211,6 +218,7 @@ const FinanceIncomeTrackingScreen = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
+                placement='right-top'
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem

@@ -8,6 +8,7 @@ import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 
 interface FinanceReconciliationClearAndBounceChequeDialogProps {
   fromClearCheck: boolean;
@@ -131,7 +132,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                 <Grid2 xs={6}>
                   <TextField
                     name="amount"
-                    label="Amount"
+                    label="Paid Amount"
                     value={formik.values.amount}
                     onChange={formik.handleChange}
                     size="small"
@@ -166,26 +167,35 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
               {!fromClearCheck && (
                 <Grid2 container spacing={2}>
                   <Grid2 xs={6}>
+
                     <TextField
+                      disabled
                       name="checkBounceCharges"
-                      label="Check Bounce Charges"
-                      value={formik.values.checkBounceCharges}
-                      onChange={formik.handleChange}
-                      size="small"
-                      type="text"
-                      fullWidth
+                      label="Bounce Charges"
+                      size='small'
+                      value=""
+                      onChange={() => { }}
+                      // InputProps={{
+                      //   endAdornment: (
+                      //     <InputAdornment position="end">
+                      //       <Tooltip title="Includes ₹ 27 GST charges" arrow>
+                      //         <Iconify icon="material-symbols-light:info-outline" style={{ cursor: 'pointer' }} />
+                      //       </Tooltip>
+                      //     </InputAdornment>
+                      //   ),
+                      // }}
+
                     />
                   </Grid2>
                   <Grid2 xs={6}>
-                    <TextField
-                      name="checkBounceReason"
+                    <CustomSelect
                       label="Check Bounce Reason"
-                      value={formik.values.checkBounceReason}
-                      onChange={formik.handleChange}
-                      size="small"
-                      type="text"
-                      fullWidth
+                      options={[]}
+                      value=""
+                      onChange={() => { }}
+
                     />
+
                   </Grid2>
                 </Grid2>
               )}
@@ -205,9 +215,9 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
           </Scrollbar>
         </form>
         <DialogActions>
-          <Button onClick={onClose} variant="contained" size="small">
+          {/* <Button onClick={onClose} variant="contained" size="small">
             Cancel
-          </Button>
+          </Button> */}
           <Button type="submit" variant="contained" size="small">
             Save
           </Button>
