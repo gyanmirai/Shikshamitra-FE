@@ -52,6 +52,7 @@ const FinanceStudentPendingFeeTab = () => {
             label: 'Action',
             render: (data, popover) => (
               <ThreeDotsActions
+              placement='right-top'
                 actions={() => (
                   <MenuList>
                     <MenuItem
@@ -91,6 +92,7 @@ const FinanceStudentPendingFeeTab = () => {
             label: 'Action',
             render: (data, popover) => (
               <ThreeDotsActions
+              placement='right-top'
                 actions={() => (
                   <MenuList>
                     <MenuItem

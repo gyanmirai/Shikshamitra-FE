@@ -12,7 +12,9 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import FinanceExpenseDetailsDialog from './component/finance-expense-details-dialog';
 import FinanceAddExpenseTrackingDialog from './component/finance-add-expense-tracking-dialog';
 
 interface ExpenseData {
@@ -77,6 +79,7 @@ let expenseData: ExpenseData[] = [
 
 const FinanceExpenseTrackingScreen = () => {
   const dialog = useBoolean();
+  const dialogForDetailsInExpense = useBoolean();
   const [selectedExpense, setSelectedExpense] = useState(expenseData);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(expenseData);
@@ -86,7 +89,13 @@ const FinanceExpenseTrackingScreen = () => {
     dialog.onFalse();
   };
 
-  useEffect(() => {}, [selectedExpense, isEdit]);
+  const closeDialogForDetailsInExpense = () => {
+
+    dialogForDetailsInExpense.onFalse();
+  };
+
+
+  useEffect(() => { }, [selectedExpense, isEdit]);
 
   const handleSave = (dataFromDialog: ExpenseData) => {
     const { expenseCategory, expenseAmount, paymentMethod, date, paymentStatus, id } =
@@ -127,6 +136,12 @@ const FinanceExpenseTrackingScreen = () => {
 
   return (
     <>
+      <CustomBreadcrumbs
+        heading="Expense Tracking"
+        links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
           Add New Expense
@@ -142,29 +157,29 @@ const FinanceExpenseTrackingScreen = () => {
           {
             id: 'expenseCategory',
             label: 'Expense Category',
-            children(row) {
-              return (
-                <CustomizableTable
-                  isFilter={false}
-                  isPagination={false}
-                  isSearch={false}
-                  columns={[
-                    { id: 'expenseName', label: 'Expense Name' },
-                    {
-                      id: 'amount',
-                      label: 'Amount',
-                      render(value) {
-                        return (
-                          <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
-                        );
-                      },
-                    },
-                    { id: 'date', label: 'Received Date' },
-                  ]}
-                  data={row.expenseList}
-                />
-              );
-            },
+            // children(row) {
+            //   return (
+            //     <CustomizableTable
+            //       isFilter={false}
+            //       isPagination={false}
+            //       isSearch={false}
+            //       columns={[
+            //         { id: 'expenseName', label: 'Expense Name' },
+            //         {
+            //           id: 'amount',
+            //           label: 'Amount',
+            //           render(value) {
+            //             return (
+            //               <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
+            //             );
+            //           },
+            //         },
+            //         { id: 'date', label: 'Received Date' },
+            //       ]}
+            //       data={row.expenseList}
+            //     />
+            //   );
+            // },
           },
           {
             id: 'expenseAmount',
@@ -203,8 +218,19 @@ const FinanceExpenseTrackingScreen = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
+                  placement='right-top'
                   actions={({ popover }: any) => (
                     <MenuList>
+                      <MenuItem
+                        onClick={() => {
+                          console.log("data row", row)
+                          dialogForDetailsInExpense.onTrue();
+                          setSelectedExpense(row)
+                        }}
+                      >
+                        <Iconify icon="mdi:eye" />
+                        View Details
+                      </MenuItem>
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);
@@ -244,6 +270,11 @@ const FinanceExpenseTrackingScreen = () => {
           />
         )}
       </Box>
+
+      {dialogForDetailsInExpense.value && <FinanceExpenseDetailsDialog
+        dialogValue={dialogForDetailsInExpense.value}
+        onClose={closeDialogForDetailsInExpense}
+        data={selectedExpense} />}
     </>
   );
 };

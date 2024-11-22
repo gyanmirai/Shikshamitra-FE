@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceTaxSettingDialog from './component/finance-tax-setting-dialog';
 
@@ -108,6 +109,12 @@ const FinanceTaxSettingTab = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Tax Settings"
+        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Tax Settings' },]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
           Add New Tax
@@ -146,7 +153,7 @@ const FinanceTaxSettingTab = () => {
                 >
                   <Typography
                     component="span"
-                    fontSize={14}
+                    fontSize={12}
                     style={{ cursor: region.length > 1 ? 'pointer' : 'default', color: 'black' }}
                     role="button"
                     tabIndex={0}
@@ -169,7 +176,7 @@ const FinanceTaxSettingTab = () => {
               return (
                 <Typography
                   component="span"
-                  fontSize={14}
+                  fontSize={12}
                   style={{ cursor: categories.length > 1 ? 'pointer' : 'default', color: 'black' }}
                   role="button"
                   tabIndex={0}

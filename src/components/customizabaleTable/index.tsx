@@ -81,6 +81,8 @@ interface CustomizableTableProps {
   isFilter?: boolean;
   isSearch?: boolean;
   isScrollbar?: boolean;
+  isShowedDense?:boolean;
+
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -97,6 +99,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   isFilter = true,
   isSearch = true,
   isScrollbar = true,
+  isShowedDense = true,
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -660,7 +663,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               </TableBody>
             </Table>
           </Scrollbar>
-          <Paper
+         {isShowedDense && <Paper
             elevation={1}
             sx={{
               display: 'flex',
@@ -670,31 +673,29 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               width: '100%',
             }}
           >
-            <FormControlLabel
+          { isShowedDense && <FormControlLabel
               control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
               label="Dense"
-            />
-            {isPagination && (
-              <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
-                component="div"
-                count={serverSide ? totalCount || 0 : filteredData.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                size="small"
-                sx={{
-                  '& *': { fontSize: '14px !important' },
-                  '& svg': { fontSize: '18px !important' },
-                  '& .MuiToolbar-root': {
-                    minHeight: 'unset',
-                    height: 'auto',
-                  },
-                }}
-              />
-            )}
-          </Paper>
+            />}
+            {isPagination && <TablePagination
+              rowsPerPageOptions={[10, 25, 100]}
+              component="div"
+              count={serverSide ? totalCount || 0 : filteredData.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              size="small"
+              sx={{
+                '& *': { fontSize: '14px !important' },
+                '& svg': { fontSize: '18px !important' },
+                '& .MuiToolbar-root': {
+                  minHeight: 'unset',
+                  height: 'auto',
+                },
+              }}
+            />}
+          </Paper>}
         </ComponentBlock>
       </Box>
     </Box>

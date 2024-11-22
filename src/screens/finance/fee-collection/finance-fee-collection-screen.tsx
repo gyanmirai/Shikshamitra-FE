@@ -10,47 +10,43 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import FinanceStudentFeeTab from './finance-student-fee-tab';
-import FinanceFeeCollectionTab from './collectFees/finance-fee-collection-tab';
-import FinanceFeeCollectionCharges from './charges/finance-fee-collection-charges';
-import FinanceFeeCollectionRefundTab from './feeRefund/finance-fee-collection-refund';
-import FinanceFeeCollectionPaymentHistoryTab from './paymentHistory/finance-fee-collection-payment-history.tab';
 
 const TABS = [
-  {
-    value: 'collect-fee',
-    label: 'Collect Fees',
-    icon: <Iconify icon="prime:indian-rupee" width={20} />,
+  // {
+  //   value: 'collect-fee',
+  //   label: 'Collect Fees',
+  //   icon: <Iconify icon="prime:indian-rupee" width={20} />,
 
-    component: () => <FinanceFeeCollectionTab />,
-  },
+  //   component: () => <FinanceFeeCollectionTab />,
+  // },
   {
     value: 'student-fee',
     label: 'Student Fees',
     icon: <Iconify icon="ph:student-thin" width={20} />,
     component: () => <FinanceStudentFeeTab />,
   },
-  {
-    value: 'payment-history',
-    label: 'Payment History',
-    icon: <Iconify icon="material-symbols-light:history" width={20} />,
-    component: () => <FinanceFeeCollectionPaymentHistoryTab />,
-  },
-  {
-    value: 'fee-refund',
-    label: 'Fee Refund',
-    icon: <Iconify icon="gridicons:refund" width={20} />,
-    component: () => <FinanceFeeCollectionRefundTab />,
-  },
-  {
-    value: 'charges',
-    label: 'Charges',
-    icon: <Iconify icon="tdesign:money" width={20} />,
-    component: () => <FinanceFeeCollectionCharges />,
-  },
+  // {
+  //   value: 'payment-history',
+  //   label: 'Payment History',
+  //   icon: <Iconify icon="material-symbols-light:history" width={20} />,
+  //   component: () => <FinanceFeeCollectionPaymentHistoryTab />,
+  // },
+  // {
+  //   value: 'fee-refund',
+  //   label: 'Fee Refund',
+  //   icon: <Iconify icon="gridicons:refund" width={20} />,
+  //   component: () => <FinanceFeeCollectionRefundTab />,
+  // },
+  // {
+  //   value: 'charges',
+  //   label: 'Charges',
+  //   icon: <Iconify icon="tdesign:money" width={20} />,
+  //   component: () => <FinanceFeeCollectionCharges />,
+  // },
 ];
 
 const FinanceFeeCollectionScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'collect-fee' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'student-fee' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

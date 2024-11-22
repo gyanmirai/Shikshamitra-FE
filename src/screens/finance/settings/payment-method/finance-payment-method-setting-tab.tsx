@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceSettingPaymentMethodDialog from './component/finance-setting-payment-method-dialog';
 
@@ -99,6 +100,12 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Payment Method"
+        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Payment Method' },]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
           onClick={() => {
@@ -111,11 +118,11 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
           Add Payment Method
         </Button>
       </Box>
-      <Box>
+      {/* <Box>
         <Typography component="span" variant="h6" gutterBottom>
           Payment Methods Overview
         </Typography>
-      </Box>
+      </Box> */}
       <CustomizableTable
         columns={[
           { id: 'paymentMethodName', label: 'Payment Method Name' },
@@ -125,15 +132,15 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
             render(value, row) {
               return (
                 <Box>
-                  <Typography>{row.serviceProviderDetail.serviceProviderName}</Typography>
-                  <Typography>{row.serviceProviderDetail.serviceProviderMobile}</Typography>
+                  <Typography fontSize="12px">{row.serviceProviderDetail.serviceProviderName}</Typography>
+                  <Typography fontSize="12px">{row.serviceProviderDetail.serviceProviderMobile}</Typography>
                 </Box>
               );
             },
           },
           {
             id: 'toggle',
-            label: 'Status Toggle',
+            label: 'Active',
             render() {
               return <Switch />;
             },

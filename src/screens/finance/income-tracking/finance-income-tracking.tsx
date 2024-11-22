@@ -12,8 +12,10 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceAddNewIncomeDialog from './component/finance-add-new-income-dialog';
+import FinanceIncomeDetailsDialog from './component/finance-income-details-dialog';
 
 interface Data {
   incomeSource: string;
@@ -73,6 +75,7 @@ let data: Data[] = [
 
 const FinanceIncomeTrackingScreen = () => {
   const dialog = useBoolean();
+  const dialogForDetailsInSource = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(data);
@@ -82,7 +85,13 @@ const FinanceIncomeTrackingScreen = () => {
     dialog.onFalse();
   };
 
-  useEffect(() => {}, [selectedEntry, isEdit]);
+
+  const closeDialogForDetailsInSource = () => {
+
+    dialogForDetailsInSource.onFalse();
+  };
+
+  useEffect(() => { }, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: Data) => {
     const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
@@ -123,6 +132,12 @@ const FinanceIncomeTrackingScreen = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Income Tracking"
+        links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
           Add New Income
@@ -139,29 +154,29 @@ const FinanceIncomeTrackingScreen = () => {
           {
             id: 'incomeSource',
             label: 'Income Source',
-            children(row) {
-              return (
-                <CustomizableTable
-                  isFilter={false}
-                  isPagination={false}
-                  isSearch={false}
-                  columns={[
-                    { id: 'incomeName', label: 'Income Name' },
-                    {
-                      id: 'amount',
-                      label: 'Amount',
-                      render(value) {
-                        return (
-                          <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
-                        );
-                      },
-                    },
-                    { id: 'date', label: 'Received Date' },
-                  ]}
-                  data={row.incomeList}
-                />
-              );
-            },
+            // children(row) {
+            //   return (
+            //     <CustomizableTable
+            //       isFilter={false}
+            //       isPagination={false}
+            //       isSearch={false}
+            //       columns={[
+            //         { id: 'incomeName', label: 'Income Name' },
+            //         {
+            //           id: 'amount',
+            //           label: 'Amount',
+            //           render(value) {
+            //             return (
+            //               <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
+            //             );
+            //           },
+            //         },
+            //         { id: 'date', label: 'Received Date' },
+            //       ]}
+            //       data={row.incomeList}
+            //     />
+            //   );
+            // },
           },
           {
             id: 'incomeAmount',
@@ -203,16 +218,19 @@ const FinanceIncomeTrackingScreen = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
+                placement='right-top'
                   actions={({ popover }: any) => (
                     <MenuList>
-                      {/* <MenuItem
+                      <MenuItem
                         onClick={() => {
-                          handleDelete(row);
+                          console.log("data row", row)
+                          dialogForDetailsInSource.onTrue();
+                          setSelectedEntry(row)
                         }}
                       >
-                        <Iconify icon="solar:trash-bin-trash-bold" />
-                       View Detail
-                      </MenuItem> */}
+                        <Iconify icon="mdi:eye" />
+                        View Details
+                      </MenuItem>
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);
@@ -253,6 +271,11 @@ const FinanceIncomeTrackingScreen = () => {
           />
         )}
       </Box>
+
+      {dialogForDetailsInSource.value && <FinanceIncomeDetailsDialog 
+        dialogValue={dialogForDetailsInSource.value}
+        onClose={closeDialogForDetailsInSource}
+        data={selectedEntry} />}
     </>
   );
 };

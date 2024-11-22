@@ -220,32 +220,19 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                           <React.Fragment key={index}>
                             <Box display="flex" alignItems="center" gap={1}>
                               <Paper elevation={4} sx={{ p: 2, width: '100%' }}>
-                                <Box
-                                  display="flex"
-                                  alignItems="center"
-                                  justifyContent="space-between"
-                                  sx={{ mb: 1 }}
-                                >
-                                  <Typography variant="body1" fontWeight="bold">
+                                <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                                  <Typography sx={{pr: 1}} fontSize="12px" fontWeight="bold">
                                     {val.name}:
                                   </Typography>
-                                  <Typography variant="body1">
-                                    {formatNumber(val.amount, 'INR')}
-                                  </Typography>
-                                  <Switch checked onChange={() => {}} />
+                                  <Typography fontSize="12px">{formatNumber(val.amount, "INR")}</Typography>
+                                  <Switch checked onChange={() => { }} />
                                 </Box>
 
                                 <Box display="flex" flexDirection="column" gap={1}>
-                                  <Typography>
-                                    Monthly: {formatNumber(val.amount / 12, 'INR')}
-                                  </Typography>
-                                  <Typography>
-                                    Quarterly: {formatNumber(val.amount / 4, 'INR')}
-                                  </Typography>
-                                  <Typography>
-                                    Bi-annual: {formatNumber(val.amount / 2, 'INR')}
-                                  </Typography>
-                                  <Typography>Yearly: {formatNumber(val.amount, 'INR')}</Typography>
+                                  <Typography fontSize="12px">Monthly: {formatNumber(val.amount / 12, "INR")}</Typography>
+                                  <Typography fontSize="12px">Quarterly: {formatNumber(val.amount / 4, "INR")}</Typography>
+                                  <Typography fontSize="12px">Bi-annual: {formatNumber(val.amount / 2, "INR")}</Typography>
+                                  <Typography fontSize="12px">Yearly: {formatNumber(val.amount, "INR")}</Typography>
                                 </Box>
                               </Paper>
                             </Box>
@@ -261,7 +248,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                 );
               },
             },
-            { id: 'applicableGrade', label: 'Applicable Grade' },
+            { id: 'applicableGrade', label: 'Standard' },
             {
               id: 'amount',
               label: 'Amount',

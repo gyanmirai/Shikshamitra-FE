@@ -12,6 +12,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
 
@@ -21,7 +22,9 @@ interface FeeSubCategoryList {
   amount: string;
   isCounted: boolean;
   value: string;
-  paymentMethod?: string;
+  paymentMethod?: string[];
+  discountAmount: number;
+  discountCategory: string;
 }
 
 const feeHeadList = [
@@ -33,19 +36,21 @@ const feeHeadList = [
 interface Data {
   id: number;
   // feeCategoryName: string;
-  amount: string;
+  
   applicableGrade: string;
   statusToggle: boolean;
   action: string;
   bookRecipt: string;
   feeSubCategoryList: FeeSubCategoryList[];
   paymentDueDate?: any;
+  totalAmount: string;
+
 }
 
 const initialData: Data[] = [
   {
     id: 1,
-    amount: '3,000',
+    totalAmount: "75000",
     applicableGrade: '2',
     bookRecipt: 'CBSE',
     paymentDueDate: '20-12-2024',
@@ -53,26 +58,33 @@ const initialData: Data[] = [
       {
         id: 1,
         name: 'Tuition Fee',
-        amount: '500',
+        amount: '50000',
         isCounted: true,
         value: 'tuitionFee',
-        paymentMethod: 'Cash',
+        paymentMethod: ['cash', 'online'],
+        discountAmount: 4000,
+        discountCategory: "Summer Campaign"
+
       },
       {
         id: 2,
         name: 'Sports Fee',
-        amount: '1500',
+        amount: '15000',
         isCounted: false,
         value: 'sportsFee',
-        paymentMethod: 'Cash',
+        paymentMethod: ['cash', 'online'],
+        discountAmount: 0,
+        discountCategory: "-"
       },
       {
         id: 3,
         name: 'Transport Fee',
-        amount: '1000',
+        amount: '10000',
         isCounted: true,
         value: 'transportFee',
-        paymentMethod: 'Check',
+        paymentMethod: ['cash', 'online'],
+        discountAmount: 0,
+        discountCategory: "-"
       },
     ],
     statusToggle: true,
@@ -108,6 +120,9 @@ const FinanceFeeStructureSettingTab = () => {
       bookRecipt,
       feeHead,
       feeAmountForAvailbleHead,
+      discountAmount,
+      discountCategory,
+      totalAmount
     } = dataFromDialog;
 
     const formattedPaymentDueDate = dayjs(paymentDueDate).format('DD-MM-YYYY');
@@ -200,7 +215,7 @@ const FinanceFeeStructureSettingTab = () => {
       // Single fee structure case
       const newFeeStructure: Data = {
         id: Math.floor(Math.random() * 10000),
-        amount,
+        totalAmount,
         applicableGrade,
         bookRecipt: bookRecipt.toUpperCase(),
         paymentDueDate: formattedPaymentDueDate,
@@ -211,6 +226,8 @@ const FinanceFeeStructureSettingTab = () => {
             amount,
             isCounted: true,
             value: normalize(feeHead),
+            discountAmount,
+            discountCategory,
           },
         ],
         statusToggle: true,
@@ -246,6 +263,12 @@ const FinanceFeeStructureSettingTab = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Fee Structure"
+        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Fee Structure' },]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">
           Save
@@ -273,16 +296,16 @@ const FinanceFeeStructureSettingTab = () => {
                       {row.feeSubCategoryList.map((val: any, index: any) => (
                         <React.Fragment key={index}>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <Paper elevation={4} sx={{ p: 2 }}>
-                              {val.name}: {val.amount}
+                            <Paper elevation={4} sx={{ p: 2, fontSize: "13PX" }}>
+                              {val.name}: {formatNumber(val.amount, "INR")}
                               <Switch
                                 checked={switchState[index]}
                                 onChange={() => handleSwitchChange(row.id, index)}
                               />
-                              <Typography>Monthly: {(val.amount / 12).toFixed(2)}</Typography>
-                              <Typography>Quartly: {(val.amount / 4).toFixed(2)}</Typography>
-                              <Typography>Bi-annual: {(val.amount / 2).toFixed(2)}</Typography>
-                              <Typography>Yearly: {val.amount}</Typography>
+                              <Typography fontSize="13PX">Monthly: {formatNumber((val.amount / 12), "INR")}</Typography>
+                              <Typography fontSize="13PX">Quartly: {formatNumber((val.amount / 4), "INR")}</Typography>
+                              <Typography fontSize="13PX">Bi-annual: {formatNumber((val.amount / 2), "INR")}</Typography>
+                              <Typography fontSize="13PX">Yearly: {formatNumber((val.amount), "INR")}</Typography>
                             </Paper>
                           </Box>
                         </React.Fragment>
@@ -313,7 +336,7 @@ const FinanceFeeStructureSettingTab = () => {
               console.log('Row data:', row);
               console.log('Total amount:', totalAmount);
 
-              return <Typography sx={{ fontSize: '12px' }}>{formatNumber(totalAmount)}</Typography>;
+              return <Typography sx={{ fontSize: '12px' }}>{formatNumber(totalAmount, "INR")}</Typography>;
             },
           },
           {
@@ -322,7 +345,7 @@ const FinanceFeeStructureSettingTab = () => {
           },
           {
             id: 'statustoggle',
-            label: 'Status Toggle',
+            label: 'Unpublish/Publish',
             render(statusToggle) {
               return <Switch value={statusToggle} />;
             },

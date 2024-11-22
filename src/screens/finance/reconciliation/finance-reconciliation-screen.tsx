@@ -8,6 +8,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceBounceTab from './finance-bounce-checklist-tab';
 import FinanceReconciliationTab from './finance-reconciliation-tab';
@@ -37,6 +38,12 @@ const FinanceReconciliationScreen = () => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Reconciliation"
+        links={[{ name: 'Finance' }, { name: 'Reconciliation' }, { name: searchParams.tab === "reconciliation-list" ? 'Reconciliation' : 'Bounce Check Details' }]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Card>
         <CustomTabs
           value={searchParams.tab}

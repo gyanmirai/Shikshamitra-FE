@@ -13,6 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceNewBudgetCreateDialog from './component/finance-new-budget-create-dialog';
 
@@ -23,6 +24,13 @@ const FinanceNewBudgetingScreen = () => {
     expenseCategoryId: '345',
     incomeCategoryId: '123',
     incomeCategories: [
+      {
+        id: 'income_01',
+        name: 'Tuition Fees',
+        totalAmountExpected: 300000000,
+        collectedAmount: 0,
+        outstandingAmount: 300000000,
+      },
       {
         id: 'income_02',
         name: 'Donations',
@@ -39,6 +47,13 @@ const FinanceNewBudgetingScreen = () => {
       },
     ],
     expenseCategories: [
+      {
+        id: 'expense_01',
+        name: 'Salaries',
+        allocatedAmount: 10000000,
+        spentAmount: 0,
+        remainingAmount: 10000000,
+      },
       {
         id: 'expense_02',
         name: 'Maintenance',
@@ -158,6 +173,12 @@ const FinanceNewBudgetingScreen = () => {
 
   return (
     <>
+    <CustomBreadcrumbs
+        heading="Budgeting"
+        links={[{ name: 'Finance' }, { name: 'Budgeting' }]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       {/* <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
@@ -354,6 +375,7 @@ const FinanceNewBudgetingScreen = () => {
                 render(value, row) {
                   return (
                     <ThreeDotsActions
+                    placement='right-top'
                       actions={({ popover }: any) => (
                         <MenuList>
                           <MenuItem
@@ -376,6 +398,14 @@ const FinanceNewBudgetingScreen = () => {
               },
             ]}
             data={[
+              {
+                id: 'income_01',
+                name: 'Tuition Fees',
+                totalAmountExpected: 150000000,
+                collectedAmount: 0,
+                outstandingAmount: 150000000,
+                receivedPercantage: '0 %',
+              },
               {
                 id: 'income_02',
                 name: 'Donations',
@@ -435,6 +465,7 @@ const FinanceNewBudgetingScreen = () => {
                 render(value, row) {
                   return (
                     <ThreeDotsActions
+                    placement="right-bottom"
                       actions={({ popover }: any) => (
                         <MenuList>
                           <MenuItem
@@ -457,6 +488,14 @@ const FinanceNewBudgetingScreen = () => {
               },
             ]}
             data={[
+              {
+                id: 'expense_01',
+                name: 'Salaries',
+                allocatedAmount: 100000000,
+                spentAmount: 0,
+                remainingAmount: 100000000,
+                expensePercantage: '0 %',
+              },
               {
                 id: 'expense_02',
                 name: 'Maintenance',

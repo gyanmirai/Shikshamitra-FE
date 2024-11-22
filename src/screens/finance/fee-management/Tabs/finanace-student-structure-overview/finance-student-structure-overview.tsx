@@ -136,151 +136,160 @@
 // export default FinanceStudentStructureOverviewTabScreen;
 import React, { useState } from 'react';
 
-import { Tooltip, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, MenuList, MenuItem, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { Scrollbar } from "src/components/scrollbar";
+import CustomDialog from "src/components/customDialog";
+import ThreeDotsActions from "src/components/three-dots-actions";
+import CustomizableTable from "src/components/customizabaleTable";
 
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';
 
 const students = [
   {
     studentId: 123,
-    name: 'John Doe',
+    name: 'Vishal Rameshbhai Patel',
     grade: 10,
     paymentTerm: 'Monthly',
-    totalPending: 38000,
-    totalPaid: 40000,
+    paymentTermNumber: 12,
+    totalPending: 26000,
+    totalPaid: 52000,
+    totalGeneralDiscount: 3000,
+    totalAdditionalDiscount: 0,
+
     discountAmount: 0,
     fixedReduction: 0,
     overAllDueDate: '20-04-2025',
-    totalFees: 78000,
+    totalFees: 81000,
+    finalFees: 78000,
     totalDueAfterDiscount: 0,
     fees: [
       {
         feeHeadId: 198,
         feeHead: 'Tuition',
-        totalFees: 60000,
-        amount: 5000,
+        totalFees: 63000,
+        finalFees: 60000,
+        grossAmount: 5250,
+        payableAmount: 5000,
         totalPaidAmount: 40000,
+        discount: (3000 / 12),
+        totalDiscount: 3000,
         paymentDates: [
-          { month: 'May-2025', date: '15-03-2024', status: 'Unpaid' },
-          { month: 'April-2025', date: '15-03-2024', status: 'Unpaid' },
-          { month: 'March-2025', date: '15-03-2024', status: 'Unpaid' },
-
-          { month: 'Feb-2025', date: '15-03-2024', status: 'Unpaid' },
-          { month: 'Jan-2025', date: '15-03-2024', status: 'Paid' },
-          { month: 'Dec-2024', date: '15-03-2024', status: 'Paid' },
-
-          { month: 'Nov-2024', date: '15-03-2024', status: 'Paid' },
-
-          { month: 'Oct-2024', date: '15-03-2024', status: 'Paid' },
-          { month: 'Sep-2024', date: '15-03-2024', status: 'Paid' },
-          { month: 'Aug-2024', date: '15-03-2024', status: 'Paid' },
-          { month: 'July-2024', date: '15-02-2024', status: 'Paid' },
-          { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
+          { month: 'May-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
+          { month: 'April-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
+          { month: 'March-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
+          { month: 'Feb-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
+          { month: 'Jan-2025', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'Dec-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'Nov-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'Oct-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'Sep-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'Aug-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'July-2024', date: '15-02-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          { month: 'June-2024', date: '15-01-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
         ],
       },
       {
         feeHeadId: 230,
         feeHead: 'Library',
         totalFees: 18000,
-        amount: 1500,
+        finalFees: 18000,
+        grossAmount: 1500,
+        paybleAmount: 1500,
         totalPaidAmount: 12000,
+        discount: 0,
+        totalDiscount: 0,
         paymentDates: [
-          { month: 'May-2025', date: '15-03-2024', status: 'Unpaid' },
-          { month: 'April-2025', date: '15-03-2024', status: 'Unpaid' },
-          { month: 'March-2025', date: '15-03-2024', status: 'Unpaid' },
-
-          { month: 'Feb-2025', date: '15-03-2024', status: 'Unpaid' },
-          { month: 'Jan-2025', date: '15-03-2024', status: 'Paid' },
-          { month: 'Dec-2024', date: '15-03-2024', status: 'Paid' },
-
-          { month: 'Nov-2024', date: '15-03-2024', status: 'Paid' },
-
-          { month: 'Oct-2024', date: '15-03-2024', status: 'Paid' },
-          { month: 'Sep-2024', date: '15-03-2024', status: 'Paid' },
-          { month: 'Aug-2024', date: '15-03-2024', status: 'Paid' },
-          { month: 'July-2024', date: '15-02-2024', status: 'Paid' },
-          { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
+          { month: 'May-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
+          { month: 'April-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
+          { month: 'March-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
+          { month: 'Feb-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
+          { month: 'Jan-2025', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'Dec-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'Nov-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'Oct-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'Sep-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'Aug-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'July-2024', date: '15-02-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          { month: 'June-2024', date: '15-01-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
         ],
       },
     ],
   },
-  {
-    studentId: 1235,
-    name: 'John Wick',
-    grade: 10,
-    paymentTerm: 'Yearly',
-    totalPending: 38000,
-    totalPaid: 40000,
-    discountAmount: 0,
-    fixedReduction: 0,
-    overAllDueDate: '20-04-2025',
-    totalFees: 78000,
-    totalDueAfterDiscount: 0,
-    fees: [
-      {
-        feeHeadId: 198,
-        feeHead: 'Tuition',
-        totalFees: 60000,
-        amount: 60000,
-        paymentDates: [{ month: 'June-2024', date: '15-01-2024', status: 'Paid' }],
-      },
-      {
-        feeHeadId: 230,
-        feeHead: 'Library',
-        totalFees: 18000,
-        amount: 18000,
-        paymentDates: [{ month: 'June-2024', date: '15-01-2024', status: 'Paid' }],
-      },
-    ],
-  },
-  {
-    studentId: 12357,
-    name: 'Jack Sparrow',
-    grade: 10,
-    paymentTerm: 'Quartly',
-    totalPending: 38000,
-    totalPaid: 40000,
-    discountAmount: 0,
-    fixedReduction: 0,
-    overAllDueDate: '20-04-2025',
-    totalFees: 78000,
-    totalDueAfterDiscount: 0,
-    fees: [
-      {
-        feeHeadId: 198,
-        feeHead: 'Tuition',
-        totalFees: 60000,
-        amount: 15000,
-        paymentDates: [
-          { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
-          { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
-          { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
-          { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
-        ],
-      },
-      {
-        feeHeadId: 230,
-        feeHead: 'Library',
-        totalFees: 18000,
-        amount: 4500,
-        paymentDates: [
-          { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
-          { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
-          { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
-          { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
-        ],
-      },
-    ],
-  },
+  // {
+  //   studentId: 1235,
+  //   name: 'John Wick',
+  //   grade: 10,
+  //   paymentTerm: 'Yearly',
+  //   totalPending: 38000,
+  //   totalPaid: 40000,
+  //   discountAmount: 0,
+  //   fixedReduction: 0,
+  //   overAllDueDate: '20-04-2025',
+  //   totalFees: 81000,
+  //   finalFees: 78000,
+  //   totalDueAfterDiscount: 0,
+  //   fees: [
+  //     {
+  //       feeHeadId: 198,
+  //       feeHead: 'Tuition',
+  //       totalFees: 60000,
+  //       amount: 60000,
+  //       paymentDates: [{ month: 'April-2024', date: '15-04-2024', status: 'Paid', paidAmount: "60000", pendingAmount: "0" },],
+  //     },
+  //     {
+  //       feeHeadId: 230,
+  //       feeHead: 'Library',
+  //       totalFees: 18000,
+  //       amount: 18000,
+  //       paymentDates: [{ month: 'April-2024', date: '15-04-2024', status: 'Paid', paidAmount: "18000", pendingAmount: "0" },],
+  //     },
+  //   ],
+  // },
+  // {
+  //   studentId: 12357,
+  //   name: 'Jack Sparrow',
+  //   grade: 10,
+  //   paymentTerm: 'Quartly',
+  //   totalPending: 38000,
+  //   totalPaid: 40000,
+  //   discountAmount: 0,
+  //   fixedReduction: 0,
+  //   overAllDueDate: '20-04-2025',
+  //   totalFees: 78000,
+  //   totalDueAfterDiscount: 0,
+  //   fees: [
+  //     {
+  //       feeHeadId: 198,
+  //       feeHead: 'Tuition',
+  //       totalFees: 60000,
+  //       amount: 15000,
+  //       paymentDates: [
+  //         { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
+  //         { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
+  //         { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
+  //         { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
+  //       ],
+  //     },
+  //     {
+  //       feeHeadId: 230,
+  //       feeHead: 'Library',
+  //       totalFees: 18000,
+  //       amount: 4500,
+  //       paymentDates: [
+  //         { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
+  //         { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
+  //         { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
+  //         { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
+  //       ],
+  //     },
+  //   ],
+  // },
 ];
 
 const FinanceStudentFeeManagement = () => {
@@ -308,18 +317,96 @@ const FinanceStudentFeeManagement = () => {
     console.log('data for edit fee structure', data);
   };
 
+  const headerCellStyle = {
+    border: "1px solid #ccc",
+    padding: "10px",
+    position: "sticky",
+    top: 0,
+    background: "#f4f6f8",
+    zIndex: 1,
+
+  };
+
+  const cellStyle: React.CSSProperties = {
+    border: "1px solid #ccc",
+    padding: "10px",
+    fontSize: "12px",
+    textAlign: "right"
+  };
+
+
   return (
     <>
+    {/* <CustomBreadcrumbs
+        heading="Student Fee Management"
+        links={[{ name: 'Finance' }, { name: 'Fee Management' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      /> */}
       <CustomizableTable
-        columns={[
-          { id: 'name', label: 'Student Name' },
-          { id: 'grade', label: 'Grade' },
+
+        columns=
+        {[
+          {
+            id: 'name', label: 'Student Name',
+            render(value, row) {
+              return (
+                <Typography minWidth="120px" fontSize="12px" >
+                  {row.name}
+                </Typography>
+              );
+            },
+          },
+          { id: 'grade', label: 'Standard' },
+          {
+            id: 'totalFees', label: 'Gross Fees', render(value, row) {
+              return (
+                <Typography minWidth="100px" fontSize="12px" >
+                  {formatNumber(row.totalFees, 'INR')}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'finalFees', label: 'Payable Fees', render(value, row) {
+              return (
+                <Typography minWidth="120px" fontSize="12px" >
+                  {formatNumber(row.finalFees, 'INR')}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'totalGeneralDiscount',
+            label: 'Total General Discount',
+
+            render(value, row) {
+              return (
+                <Typography minWidth="180px" fontSize="12px" >
+                  {formatNumber(row.totalGeneralDiscount, 'INR')}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'totalAdditionalDiscount',
+            label: 'Total Additional Discount',
+
+            render(value, row) {
+              return (
+                <Typography minWidth="180px" fontSize="12px">
+                  {formatNumber(row.totalAdditionalDiscount, 'INR')}
+                </Typography>
+              );
+            },
+          },
           {
             id: 'totalPaid',
             label: 'Total Paid',
+
             render(value, row) {
               return (
-                <Typography fontSize="12px" color="green">
+                <Typography minWidth="100px" fontSize="12px" color="green">
                   {formatNumber(row.totalPaid, 'INR')}
                 </Typography>
               );
@@ -328,21 +415,28 @@ const FinanceStudentFeeManagement = () => {
           {
             id: 'totalPending',
             label: 'Total Pending',
+
             render(value, row) {
               return (
-                <Typography fontSize="12px" color="red">
+                <Typography minWidth="120px" fontSize="12px" color="red">
                   {formatNumber(row.totalPending, 'INR')}
                 </Typography>
               );
             },
           },
 
+
+
+
+
           {
             id: 'action',
             label: 'Action',
+
             render(value: any, row: any) {
               return (
                 <ThreeDotsActions
+                  placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem
@@ -350,6 +444,7 @@ const FinanceStudentFeeManagement = () => {
                           handleOpen(row);
                         }}
                       >
+                        <Iconify icon="mdi:eye" />
                         View Details
                       </MenuItem>
 
@@ -360,6 +455,7 @@ const FinanceStudentFeeManagement = () => {
                           popover.onClose();
                         }}
                       >
+                        <Iconify icon="solar:pen-bold" />
                         Edit
                       </MenuItem>
                     </MenuList>
@@ -374,131 +470,364 @@ const FinanceStudentFeeManagement = () => {
 
       {/* Details Modal */}
       {selectedStudent && (
+
+
+
+
         <CustomDialog
-          title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th`}
+          title={`Fee Details for ${selectedStudent.name} / Standard: ${selectedStudent.grade}th -A `}
           open={open}
           handleClose={handleClose}
-          maxWidth="md"
+          maxWidth="xl"
         >
-          <CustomizableTable
-            isPagination={false}
-            isFilter={false}
-            isSearch={false}
-            columns={[
-              { id: 'paymentTerm', label: 'Payment Term' },
-              ...selectedStudent.fees.map((fee: any) => ({
-                id: fee.feeHead.toLowerCase(),
-                label: fee.feeHead,
-                render: (value: any) => (
-                  <Typography
-                    style={{
-                      color: value.status === 'Paid' ? 'green' : 'red',
-                      fontSize: '12px',
-                    }}
+          <Scrollbar sx={{ overflow: 'auto', maxHeight: '550px' }}>
+            <div>
+              {selectedStudent.fees.map((feeHead: any) => (
+                <Accordion key={feeHead.feeHeadId}>
+                  <AccordionSummary
+                    expandIcon={<Iconify icon="iconamoon:arrow-up-2-thin" />}
+                    aria-controls={`panel-${feeHead.feeHeadId}-content`}
+                    id={`panel-${feeHead.feeHeadId}-header`}
                   >
-                    {formatNumber(value.amount, 'INR')}
-                  </Typography>
-                ),
-              })),
-              {
-                id: 'action',
-                label: 'Action',
-                render: (value, row) => {
-                  const unpaidFees = selectedStudent.fees.filter((fee: any) =>
-                    fee.paymentDates.some(
-                      (payment: any) =>
-                        payment.month === row.paymentTerm && payment.status === 'Unpaid'
-                    )
-                  );
-
-                  const actionLabel = unpaidFees.length > 0 ? 'Send Reminder' : 'Print Receipt';
-
-                  const handleAction = () => {
-                    if (unpaidFees.length > 0) {
-                      const message = unpaidFees
-                        .map((fee: any) => `${actionLabel} for ${fee.feeHead} - ${row.paymentTerm}`)
-                        .join('\n');
-                      alert(message);
-                    } else {
-                      alert(
-                        `${actionLabel} for ${selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`
-                      );
-                    }
-                  };
-
-                  return (
-                    <Tooltip title={actionLabel === 'Send Reminder' ? 'Send Reminder' : 'Print'}>
-                      <Iconify
-                        icon={
-                          actionLabel === 'Send Reminder'
-                            ? 'carbon:reminder'
-                            : 'flat-color-icons:print'
-                        }
-                        sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                        onClick={() => {
-                          if (actionLabel === 'Send Reminder') {
-                            // Handle send reminder action
-                            console.log('Reminder sent!');
-                          } else {
-                            // Handle Print action
-                            console.log('Item Print!');
-                          }
+                    <Box display="flex" flexDirection="column" gap={3} width="100%">
+                      <Typography
+                        variant="subtitle1"
+                        component="div"
+                        sx={{ fontWeight: "bold", marginBottom: 1 }}
+                      >
+                        {feeHead.feeHead}
+                      </Typography>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center", // Center aligns Paid & Pending vertically with others
+                          gap: "10px",
+                          fontSize: "14px",
+                          width: "100%", // Ensures full width for proper spacing
                         }}
-                      />
-                    </Tooltip>
-                  );
-                },
-              },
+                      >
+                        <Box display="flex" flexWrap="wrap" gap="10px">
+                          <Typography variant="body2" component="span">
+                            <strong>Gross Fee:</strong> {formatNumber(feeHead.totalFees, "INR")}
+                          </Typography>
+                          <Typography variant="body2" component="span">
+                            <strong>Payable Fee:</strong> {formatNumber(feeHead.finalFees, "INR")}
+                          </Typography>
+                          <Typography variant="body2" component="span">
+                            <strong>General Discount:</strong> {formatNumber(feeHead.totalDiscount, "INR")}
+                          </Typography>
+                          <Typography variant="body2" component="span">
+                            <strong>Additional Discount:</strong> {formatNumber(0, "INR")}
+                          </Typography>
+                        </Box>
+                        <Box display="flex" gap="20px" alignItems="center">
+                          <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{ color: "#138e58", fontWeight: "bold" }}
+                          >
+                            <strong>Paid:</strong> {formatNumber(feeHead.totalPaidAmount, "INR")}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{ color: "#b76e00", fontWeight: "bold" }}
+                          >
+                            <strong>Pending:</strong> {formatNumber(feeHead.finalFees - feeHead.totalPaidAmount, "INR")}
+                          </Typography>
+                        </Box>
+                      </div>
+                    </Box>
+                  </AccordionSummary>
 
-              // {
-              //   id: 'action',
-              //   label: 'Action',
-              //   render: (value, row) => {
+                  <AccordionDetails>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px",
 
-              //     const unpaidFee = selectedStudent.fees.find((fee: any) =>
-              //       fee.paymentDates.some(
-              //         (payment: any) => payment.month === row.paymentTerm && payment.status === 'Unpaid'
-              //       )
-              //     );
 
-              //     // If there is any unpaid fee, show "Send Reminder" else "Print Receipt"
+                          }}>Month</th>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px"
 
-              //     // const actionLabel  = unpaidFee ? "Send Reminder" : "Print Receipt";
-              //     // const handleAction = () => {
-              //     //   alert(
-              //     //     actionLabel === "Send Reminder"
-              //     //     ? 'Reminder Sent'
-              //     //     : 'Print Receipt'
-              //     //   );
-              //     //   // alert(
-              //     //   //   // `${actionLabel} for ${unpaidFee ? unpaidFee.feeHead : selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`
-              //     //   // );
-              //     // };
+                          }}>Gross Fee</th>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px"
 
-              //     return (
-              //       <Button
-              //         size="small"
-              //         variant="outlined"
-              //         onClick={handleAction}
-              //       >
-              //         {actionLabel}
-              //       </Button>
-              //     );
-              //   },
-              // },
-            ]}
-            data={selectedStudent.fees[0].paymentDates.map((date: any, idx: any) => ({
-              paymentTerm: date.month,
-              ...selectedStudent.fees.reduce((acc: any, fee: any) => {
-                acc[fee.feeHead.toLowerCase()] = {
-                  amount: fee.amount,
-                  status: fee.paymentDates[idx].status,
-                };
-                return acc;
-              }, {}),
-            }))}
-          />
+                          }}>Payable Fee</th>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px"
+
+                          }}>Paid</th>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px"
+
+                          }}>Pending</th>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px"
+
+                          }}>General Discount</th>
+                          <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+                            fontSize: "12px"
+
+                          }}>Additional Discount</th>
+                          {/* <th style={{
+                            border: "1px solid #ccc",
+                            padding: "10px",
+                            position: "sticky",
+                            top: 0,
+                            background: "#f4f6f8",
+                            zIndex: 1,
+
+                          }}>Status</th> */}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {feeHead.paymentDates.map((payment: any, index: any) => (
+                          <tr key={index}>
+                            <td style={{
+                              border: "1px solid #ccc",
+                              padding: "10px",
+                              fontSize: "12px",
+                              textAlign: "center"
+
+                            }}>{payment.month}</td>
+                            <td style={cellStyle}>{formatNumber(feeHead.grossAmount, "INR")}</td>
+                            <td style={cellStyle}>{formatNumber(feeHead.payableAmount, "INR")}</td>
+                            <td style={{ ...cellStyle, color: payment.paidAmount > 0 ? "#138e58" : "black", }}>
+                              {formatNumber(payment.paidAmount, "INR")}
+                            </td>
+                            <td style={{ ...cellStyle, color: payment.pendingAmount > 0 ? "#b76e00" : "black", }}>
+                              {formatNumber(payment.pendingAmount, "INR")}
+                            </td>
+                            <td style={{ ...cellStyle, color: feeHead.discount > 0 ? "#856404" : "#000", }}>
+                              {formatNumber(feeHead.discount, "INR")}
+                            </td>
+                            <td style={{ ...cellStyle, color: feeHead.discount > 0 ? "#856404" : "#000", }}>
+                              {formatNumber(0, "INR")}
+                            </td>
+                            {/* <td style={cellStyle}>
+                              <Label
+                                variant="soft"
+                                color={
+                                  payment.status === 'Overdue'
+                                    ? 'error'
+                                    : payment.status === 'Unpaid'
+                                      ? 'warning'
+                                      : payment.status === 'Paid'
+                                        ? 'success'
+                                        : 'default'
+                                }
+                              >
+                                {payment.status}
+                              </Label>
+                            </td> */}
+                          </tr>
+                        ))}
+
+                      </tbody>
+                    </table>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </div>
+          </Scrollbar>
         </CustomDialog>
+
+
+        // <CustomDialog
+        //   title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th -A `}
+        //   open={open}
+        //   handleClose={handleClose}
+        //   maxWidth="xl"
+        // >
+        //   <Scrollbar sx={{ overflow: 'auto', maxHeight: '550px' }}>
+        //     <div >
+        //       <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        //         <thead>
+        //           <tr>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Fee Head</th>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Month</th>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Total Fee</th>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Paid</th>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Pending</th>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Discount</th>
+        //             <th style={{
+        //               border: "1px solid #ccc",
+        //               padding: "10px",
+        //               position: "sticky",
+        //               top: 0,
+        //               background: "#f4f6f8",
+        //               zIndex: 1,
+
+        //             }}>Status</th>
+        //           </tr>
+        //         </thead>
+        //         <tbody>
+        //           {selectedStudent.fees.map((feeHead: any) => (
+        //             <>
+        //               {/* Header row for each fee head */}
+        //               <tr key={feeHead.feeHeadId} style={{ background: "#f4f6f8", fontWeight: "bold" }}>
+        //                 <td style={{ border: "1px solid #ccc", padding: "10px" }}>
+        //                   {feeHead.feeHead}
+        //                   (Total Fee: {formatNumber(feeHead.totalFees, "INR")},
+        //                   <span style={{ color: "#138e58" }}> Paid: {formatNumber(feeHead.totalPaidAmount, "INR")} </span>,
+        //                   <span style={{ color: "#b76e00" }}> Pending: {formatNumber(feeHead.totalFees - feeHead.totalPaidAmount, "INR")} </span>)
+        //                 </td>
+        //               </tr>
+
+        //               {/* Rows for each month's payment term */}
+        //               {feeHead.paymentDates.map((payment: any, index: any) => (
+        //                 <tr key={index}>
+        //                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>{index === 0 ? feeHead.feeHead : ""}</td>
+        //                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>{payment.month}</td>
+        //                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>{formatNumber(feeHead.amount, "INR")}</td>
+        //                   <td style={{
+        //                     border: "1px solid #ccc",
+        //                     padding: "10px",
+        //                     fontWeight: "bold",
+        //                     color: payment.paidAmount > 0 ? "#138e58" : "black", // Green for amounts greater than 0, Red for 0
+        //                   }}>
+        //                     {formatNumber(payment.paidAmount, "INR")}
+        //                   </td>
+        //                   <td style={{
+        //                     border: "1px solid #ccc",
+        //                     padding: "10px",
+        //                     fontWeight: "bold",
+        //                     color: payment.pendingAmount > 0 ? "#b76e00" : "black", // Red for amounts greater than 0, Green for 0
+        //                   }}>
+        //                     {formatNumber(payment.pendingAmount, "INR")}
+        //                   </td>
+        //                   <td style={{
+        //                     border: "1px solid #ccc",
+        //                     padding: "10px",
+        //                     fontWeight: "bold",
+        //                     color: feeHead.discount > 0 ? "#856404" : "#000", // Amber for discounts greater than 0
+        //                   }}>
+        //                     {formatNumber(feeHead.discount, "INR")}
+        //                   </td>
+        //                   <td style={{ border: "1px solid #ccc", padding: "10px" }}>
+        //                     <Label
+        //                       variant="soft"
+        //                       color={
+        //                         payment.status === 'Overdue'
+        //                           ? 'error'
+        //                           : payment.status === 'Unpaid'
+        //                             ? 'warning'
+        //                             : payment.status === 'Paid'
+        //                               ? 'success'
+        //                               : 'default'
+        //                       }
+        //                     >
+        //                       {payment.status}
+        //                     </Label>
+        //                   </td>
+        //                 </tr>
+        //               ))}
+        //             </>
+        //           ))}
+        //         </tbody>
+        //       </table>
+        //     </div>
+        //   </Scrollbar>
+        // </CustomDialog>
+
+
+
+
       )}
       {dialog.value && selectedStudent && (
         <FinanceEditFeeStructureForStudent
@@ -513,3 +842,125 @@ const FinanceStudentFeeManagement = () => {
 };
 
 export default FinanceStudentFeeManagement;
+// eslint-disable-next-line no-lone-blocks
+{/* selectedStudent.fees.map((feeHead: any) => (
+  
+  // <Card key={feeHead.feeHeadId} style={{ marginBottom: "20px" }}>
+                //   <h3>{feeHead.feeHead}</h3>
+                //   <div>Total Fees: {feeHead.totalFees}</div>
+                //   <div>Total Paid: {feeHead.totalPaidAmount}</div>
+                //   <div>Total Pending: {feeHead.totalFees - feeHead.totalPaidAmount}</div>
+                //   <div>Discount per Month: {feeHead.discount.toFixed(2)}</div>
+
+                //   {/* Nested Payment Term Details */}
+//   <div style={{ marginTop: "15px", borderTop: "1px solid #ccc", paddingTop: "10px" }}>
+//     <h4>Payment Details (Monthly):</h4>
+//     {
+//       feeHead.paymentDates.map((payment: any, index: any) => (
+//         <Card key={index} style={{ marginBottom: "10px", padding: "10px", background: "#f9f9f9" }}>
+//           <div><strong>Month:</strong> {payment.month}</div>
+//           <div><strong>Due Date:</strong> {payment.date}</div>
+//           <div><strong>Status:</strong> {payment.status}</div>
+//           <div><strong>Paid Amount:</strong> {payment.paidAmount}</div>
+//           <div><strong>Pending Amount:</strong> {payment.pendingAmount}</div>
+//         </Card>
+//       ))
+//     }
+//   </div>
+// </Card>
+// ))}} */}
+
+
+
+// eslint-disable-next-line no-lone-blocks
+{/* <CustomizableTable
+              isPagination={false}
+              isFilter={false}
+              isSearch={false}
+              isShowedDense={false}
+
+              columns={[
+                { id: 'paymentTerm', label: 'Payment Term' },
+                ...selectedStudent.fees.map((fee: any) => ({
+                  id: fee.feeHead.toLowerCase(),
+                  label: fee.feeHead,
+                  render: (value: any) => (
+                    <Typography
+
+                      style={{
+                        color: value.status === 'Paid' ? 'green' : 'red',
+                        fontSize: "12px"
+
+                      }}
+                    >
+                      {formatNumber(value.amount, "INR")}
+                    </Typography>
+                  ),
+                })),
+              
+                {
+                  id: 'action',
+                  label: 'Action',
+                  render: (value, row) => {
+
+
+
+
+                    const unpaidFees = selectedStudent.fees
+                      .filter((fee: any) =>
+                        fee.paymentDates.some(
+                          (payment: any) => payment.month === row.paymentTerm && payment.status === "Unpaid"
+                        )
+                      );
+
+                    const actionLabel = unpaidFees.length > 0 ? "Send Reminder" : "Print Receipt";
+
+                    const handleAction = () => {
+                      if (unpaidFees.length > 0) {
+                        const message = unpaidFees
+                          .map((fee: any) => `${actionLabel} for ${fee.feeHead} - ${row.paymentTerm}`)
+                          .join("\n");
+                        alert(message);
+                      } else {
+                        alert(`${actionLabel} for ${selectedStudent.fees[0].feeHead} - ${row.paymentTerm}`);
+                      }
+                    };
+
+                    return (
+
+                      <Tooltip title={actionLabel === "Send Reminder" ? "Send Reminder" : "Print"}>
+                        <Iconify
+                          icon={actionLabel === "Send Reminder" ? "carbon:reminder" : "flat-color-icons:print"}
+                          sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                          onClick={() => {
+                            if (actionLabel === "Send Reminder") {
+                              // Handle send reminder action
+                              console.log("Reminder sent!");
+                            } else {
+                              // Handle Print action
+                              console.log("Item Print!");
+                            }
+                          }}
+                        />
+                      </Tooltip>
+
+
+                    );
+                  },
+                }
+
+
+
+              ]}
+              data={selectedStudent.fees[0].paymentDates.map((date: any, idx: any) => ({
+                paymentTerm: date.month,
+                ...selectedStudent.fees.reduce((acc: any, fee: any) => {
+                  acc[fee.feeHead.toLowerCase()] = {
+                    amount: fee.amount,
+                    status: fee.paymentDates[idx].status,
+                  };
+                  return acc;
+                }, {}),
+
+              }))}
+            /> */}

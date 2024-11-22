@@ -720,6 +720,11 @@ const financeModule = {
           _action: 'fee-collection',
         },
         {
+          title: 'Fee Refund',
+          path: '/finance/fee-refund',
+          _action: 'fee-refund',
+        },
+        {
           title: 'Reconciliation',
           path: '/finance/reconciliation',
           _action: 'reconciliation',
@@ -760,15 +765,15 @@ const financeModule = {
               path: '/finance/settings/fee-structure',
               _action: 'fee-structure-setting',
             },
+            // {
+            //   title: 'Expenense',
+            //   path: '/finance/settings/expense-category',
+            //   _action: 'expenense-category-setting',
+            // },
             {
-              title: 'Expenense',
-              path: '/finance/settings/expense-category',
-              _action: 'expenense-category-setting',
-            },
-            {
-              title: 'Income',
-              path: '/finance/settings/income-category',
-              _action: 'income-category-setting',
+              title: 'Receipt Book',
+              path: '/finance/settings/receipt-book',
+              _action: 'receipt-book',
             },
             {
               title: 'Tax Setting',
@@ -781,9 +786,9 @@ const financeModule = {
               _action: 'payment-method-setting',
             },
             {
-              title: 'Budget',
-              path: '/finance/settings/budget-setting',
-              _action: 'budget-setting',
+              title: 'Bounce Check Charges',
+              path: '/finance/settings/bounce-check-charges-setting',
+              _action: 'bounce-check-charges-setting',
             },
             {
               title: 'Notification',

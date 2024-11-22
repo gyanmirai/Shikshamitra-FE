@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Button, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
-import { Label } from 'src/components/label';
-import CustomSelect from 'src/components/custom-select';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundDialog from './component/fee-refund-dialog';
 import FormattedAmountInput from '../../common/input-for-finance';
 
-const FinanceFeeCollectionRefundTab = () => {
+interface FinanceFeeCollectionRefundTabProps {
+  dialogValue: boolean;
+  selectedData: any;
+  onClose: () => void;
+
+}
+
+const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps> = ({ dialogValue, selectedData, onClose }) => {
   const historyData = [
     {
       className: '1A',
@@ -38,6 +45,7 @@ const FinanceFeeCollectionRefundTab = () => {
   ];
   const data = [
     {
+      grNumber: "28877",
       studentName: 'JAY',
       paymentId: 'j878d',
       feeHead: 'Tuition',
@@ -113,6 +121,7 @@ const FinanceFeeCollectionRefundTab = () => {
       ],
     },
     {
+      grNumber: "28877",
       studentName: 'JAY',
       paymentId: 'j878d',
       feeHead: 'Library',
@@ -183,7 +192,7 @@ const FinanceFeeCollectionRefundTab = () => {
     status: '',
   };
 
-  const handleSave = () => {};
+  const handleSave = () => { };
 
   const closeDialog = () => {
     dialog.onFalse();
@@ -218,161 +227,96 @@ const FinanceFeeCollectionRefundTab = () => {
   };
 
   return (
-    <>
-      <Box display="flex" flexDirection="row" gap={2}>
-        <Box py="15px" display="flex" flexDirection="row" gap={3}>
-          <CustomSelect
-            label="Class/Grade"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <CustomSelect
-            label="Division"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <TextField
-            label="Search by student name"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value=""
-            onChange={(e) => {}}
-          />
-        </Box>
-      </Box>
-      <CustomizableTable
-        columns={[
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'feeHead', label: 'Fee Head' },
-          {
-            id: 'paidAmount',
-            label: 'Paid Amount',
-            render(value, row) {
-              if (row.paidAmount === 'Total') {
-                return (
-                  <Typography fontSize="12px" fontWeight="bold">
-                    Total Refund
-                  </Typography>
-                );
-              }
-              return <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>;
-            },
-          },
+    <CustomDialog maxWidth="md" title="Fee Refund" open={dialogValue} handleClose={onClose}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+        <CustomizableTable
+          isFilter={false}
+          isShowedDense={false}
+          isPagination={false}
+          isScrollbar={false}
+          isSearch={false}
 
-          {
-            id: 'refundAmount',
-            label: 'Refund Amount',
-            render: (value: any, row: any) => {
-              if (row.feeHead === 'Tuition') {
+          columns={[
+            { id: 'grNumber', label: 'Gr Number' },
+            { id: 'studentName', label: 'Student Name' },
+            { id: 'feeHead', label: 'Fee Head' },
+            {
+              id: 'paidAmount',
+              label: 'Paid Amount',
+              render(value, row) {
+                if (row.paidAmount === 'Total') {
+                  return (
+                    <Typography fontSize="12px" fontWeight="bold">
+                      Total Refund
+                    </Typography>
+                  );
+                }
+                return <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>;
+              },
+            },
+
+            {
+              id: 'refundAmount',
+              label: 'Refund Amount',
+              render: (value: any, row: any) => {
+                if (row.feeHead === 'Tuition') {
+                  return (
+                    <FormattedAmountInput
+                      label="Tuition Refund"
+                      value={tuitionFeeRefundAmount}
+                      onChange={handleChangeForTuition}
+                    />
+                  );
+                }
+                if (row.feeHead === 'Library') {
+                  return (
+                    // <CurrencyInput
+                    //   value={libraryFeeRefundAmount}
+                    //   currencyCode="INR"
+                    //   onChange={(formattedValue, numericValue) => {
+                    //     console.log('Formatted Value:', formattedValue);
+                    //     console.log('Numeric Value:', numericValue);
+                    //     setlibraryFeeRefundAmount(formattedValue);
+                    //   }}
+                    //   label="Enter Amount"
+                    // />
+                    <FormattedAmountInput
+                      label="Library Refund"
+                      value={libraryFeeRefundAmount}
+                      onChange={handleChangeForLibrary}
+                    />
+                  );
+                }
                 return (
                   <FormattedAmountInput
-                    label="Tuition Refund"
-                    value={tuitionFeeRefundAmount}
-                    onChange={handleChangeForTuition}
+                    label="Total Refund"
+                    value={formatNumber(totalFeeRefundAmount.toString())}
+                    onChange={() => { }}
+
+
                   />
                 );
-              }
-              if (row.feeHead === 'Library') {
-                return (
-                  <FormattedAmountInput
-                    label="Library Refund"
-                    value={libraryFeeRefundAmount}
-                    onChange={handleChangeForLibrary}
-                  />
-                );
-              }
-              return (
-                <FormattedAmountInput
-                  label="Total Refund"
-                  value={totalFeeRefundAmount.toString()}
-                  onChange={() => {}}
-                />
-              );
-            },
-          },
 
-          // { id: 'paidDate', label: 'Paid Date' },
-          {
-            id: 'status',
-            label: 'Status',
-            render(value, row) {
-              return value !== '' ? (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              ) : (
-                <Box />
-              );
+              }
             },
-          },
-          // {
-          //     id: 'action',
-          //     label: 'Action',
-          //     render: (datax:any) => (
-          //         <ThreeDotsActions
-          //             actions={() => (
-          //                 <MenuList>
-          //                     <MenuItem onClick={() => { /* View Receipt action */ }}>
-          //                         <Iconify icon="mdi:check" />
-          //                         View Receipt
-          //                     </MenuItem>
-          //                     <MenuItem onClick={() => { /* Send Reminder action */ }}>
-          //                         <Iconify icon="mdi:check" />
-          //                         Send Reminder
-          //                     </MenuItem>
-          //                 </MenuList>
-          //             )}
-          //         />
-          //     ),
-          // },
-        ]}
-        data={[...paymentHistoryData, totalRow]}
-      />
-      <Box display="flex" justifyContent="flex-end" py={2}>
-        <Button
-          onClick={() => {
-            handleDilog();
-          }}
-          variant="contained"
-          size="small"
-        >
-          Next
-        </Button>
-      </Box>
-      <Typography variant="h6" sx={{ ml: 2 }}>
-        Refund History
-      </Typography>
-      <CustomizableTable
-        columns={[
-          { id: 'className', label: 'Class Name' },
-          { id: 'grNo', label: 'GrNo' },
-          { id: 'receiptNo', label: 'Receipt No' },
-          { id: 'refundDate', label: 'Refund Date' },
-          { id: 'amount', label: 'Amount' },
-          { id: 'modeOfPayment', label: 'Mode Of Payment' },
-          { id: 'transactionId', label: 'Transaction Id' },
-          { id: 'receiptBook', label: 'Receipt Book' },
-        ]}
-        data={historyData}
-      />
+          ]}
+          data={[...paymentHistoryData, totalRow]}
+        />
 
-      <Box>
+        <FeeRefundDialog
+          onSave={handleSave}
+          dialogValue
+          onClose={closeDialog}
+          data={selectedEntry}
+          isEdit={isEdit}
+          allData={paymentHistoryData}
+          total={totalRefundAmount}
+          tuitionFeeAmount={tuitionFeeRefundAmount}
+          libraryFeeFeeAmount={libraryFeeRefundAmount}
+          totalFeeAmount={totalFeeRefundAmount}
+        />
+
+        {/* <Box>
         {dialog.value && selectedEntry && (
           <FeeRefundDialog
             onSave={handleSave}
@@ -387,8 +331,16 @@ const FinanceFeeCollectionRefundTab = () => {
             totalFeeAmount={totalFeeRefundAmount}
           />
         )}
-      </Box>
-    </>
+      </Box> */}
+      </Scrollbar>
+      <DialogActions>
+
+        <Button type="submit" variant="contained" size="small">
+          View Receipt
+        </Button>
+      </DialogActions>
+
+    </CustomDialog>
   );
 };
 

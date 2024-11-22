@@ -75,7 +75,7 @@ const FinanceStudentFeeBreakdownTab = () => {
         isPagination={false}
         isSearch={false}
         columns={[
-          { id: 'date', label: 'Date' },
+          // { id: 'date', label: 'Date' },
           { id: 'type', label: 'Type' },
           {
             id: 'discount',
@@ -86,7 +86,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           },
           {
             id: 'amount',
-            label: 'Amount',
+            label: 'Payable Fee',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },

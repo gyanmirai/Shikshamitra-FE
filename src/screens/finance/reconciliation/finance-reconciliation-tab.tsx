@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -25,6 +26,9 @@ const FinanceReconciliationTab = () => {
       chequeDate: '01-11-2024',
       amount: '1500',
       id: 1,
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 2,
@@ -35,6 +39,9 @@ const FinanceReconciliationTab = () => {
       chequeDate: '01-11-2024',
       amount: '2000',
       id: 2,
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 3,
@@ -45,6 +52,9 @@ const FinanceReconciliationTab = () => {
       chequeDate: '01-08-2024',
       amount: '2500',
       id: 3,
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 4,
@@ -55,6 +65,9 @@ const FinanceReconciliationTab = () => {
       chequeDate: '05-11-2024',
       amount: '800',
       id: 4,
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
   ];
 
@@ -67,21 +80,61 @@ const FinanceReconciliationTab = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => {};
+  const handleSave = () => { };
 
-  useEffect(() => {}, [selectedEntry, isClearCheck]);
+  useEffect(() => { }, [selectedEntry, isClearCheck]);
 
   return (
     <>
-      <Box>{/* <Typography variant="h6" gutterBottom >Reconciliation Details </Typography> */}</Box>
-      <CustomizableTable
+     {/* <CustomBreadcrumbs
+        heading="Reconciliation"
+        links={[{ name: 'Finance' }, { name: 'Reconciliation' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      /> */}
+      <Box py="15px" display="flex" justifyContent="space-between">
+        <Box display="flex" flexDirection="row" gap={3}  >
+          <CustomSelect
+            label="Class/Grade"
+            options={[]}
+            value=""
+            onChange={() => { }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <CustomSelect
+            label="Division"
+            options={[]}
+            value=""
+            onChange={() => { }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <TextField
+            label="Search by student name"
+            variant="outlined"
+            size="small"
+            value=""
+            onChange={(e: any) => {
+              console.log(e);
+            }}
+          />
+        </Box>
+
+      </Box>      <CustomizableTable
         columns={[
-          { id: 'srNo', label: 'SR No' },
+          { id: "grNumber", label: "GR No" },
+          // { id: 'srNo', label: 'SR No' },
           { id: 'studentName', label: 'Student Name' },
           { id: 'class', label: 'Class' },
           { id: 'chequeNo', label: 'Cheque No' },
           { id: 'bankName', label: 'Bank Name' },
           { id: 'chequeDate', label: 'Cheque Date' },
+          {
+            id: 'chargesAmount', label: 'Charges',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>;
+            },
+          },
+          { id: 'feeHead', label: 'Fee Head' },
           {
             id: 'amount',
             label: 'Amount',
@@ -95,6 +148,7 @@ const FinanceReconciliationTab = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
+                placement='right-top'
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem

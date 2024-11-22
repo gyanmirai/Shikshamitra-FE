@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Switch, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
 
@@ -53,7 +54,7 @@ const FinanceReceiptBookSetting = () => {
     initialData = tableData.filter((val) => val.id !== item.id);
     setTableData([...initialData]);
   };
-  useEffect(() => {}, [selectedEntry, isEdit]);
+  useEffect(() => { }, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: any) => {
     const { id, receiptBookName, receiptBookCode } = dataFromDialog;
@@ -86,6 +87,12 @@ const FinanceReceiptBookSetting = () => {
 
   return (
     <>
+      <CustomBreadcrumbs
+        heading="Receipt Book"
+        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Receipt Book' },]}
+        sx={{ px: 1, mb: 2 }}
+
+      />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
           onClick={() => {
@@ -99,9 +106,9 @@ const FinanceReceiptBookSetting = () => {
         </Button>
       </Box>
       <Box>
-        <Typography component="span" variant="h6" gutterBottom>
+        {/* <Typography component="span" variant="h6" gutterBottom>
           Receipt Book Overview
-        </Typography>
+        </Typography> */}
       </Box>
       <CustomizableTable
         columns={[
@@ -110,7 +117,7 @@ const FinanceReceiptBookSetting = () => {
 
           {
             id: 'toggle',
-            label: 'Status Toggle',
+            label: 'Active',
             render() {
               return <Switch />;
             },

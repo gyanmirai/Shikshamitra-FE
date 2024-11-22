@@ -1,7 +1,8 @@
 import React from 'react';
 
-import FinanceReportsScreen from 'src/screens/finance/reports/finance-reports';
+import FinanceNewReportsScreen from 'src/screens/finance/reports/finance-new-reports';
 
-const FinanceReports = () => <FinanceReportsScreen />;
+
+const FinanceReports = () => <FinanceNewReportsScreen/>;
 
 export default FinanceReports;

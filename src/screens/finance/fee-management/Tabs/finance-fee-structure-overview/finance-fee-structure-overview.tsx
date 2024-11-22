@@ -29,6 +29,12 @@ const FinanceFeeStructureOverview = () => {
 
   return (
     <Box>
+      {/* <CustomBreadcrumbs
+        heading="Fee Structure Overview"
+        links={[{ name: 'Finance' }, { name: 'Fee Structure Overview' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      /> */}
       <FinanceFeeTrackingComponent />
       <FinanceFeeStructureOverviewComponent data={data} />
 

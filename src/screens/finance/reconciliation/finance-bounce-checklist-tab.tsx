@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceChequeBounceChargeCollect from '../fee-collection/charges/component/finance-cheque-bounce-charge-collect';
@@ -22,6 +23,10 @@ const FinanceBounceTab = () => {
       reason: 'Insufficient Funds',
       amount: '5000',
       status: 'Pending',
+      studentName: 'Ishita Desai',
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 2,
@@ -31,6 +36,10 @@ const FinanceBounceTab = () => {
       reason: 'Account Closed',
       amount: '25000',
       status: 'Pending',
+      studentName: 'Ishita Desai',
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 3,
@@ -40,6 +49,10 @@ const FinanceBounceTab = () => {
       reason: 'Signature Mismatch',
       amount: '12000',
       status: 'Paid',
+      studentName: 'Ishita Desai',
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 4,
@@ -49,6 +62,10 @@ const FinanceBounceTab = () => {
       reason: 'Funds Not Cleared',
       amount: '8000',
       status: 'Paid',
+      studentName: 'Ishita Desai',
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
     {
       srNo: 5,
@@ -58,6 +75,10 @@ const FinanceBounceTab = () => {
       reason: 'Stale Cheque',
       amount: '15000',
       status: 'Paid',
+      studentName: 'Ishita Desai',
+      chargesAmount: "300",
+      feeHead: "Library",
+      grNumber: 89554,
     },
   ];
   const dialog = useBoolean();
@@ -68,17 +89,59 @@ const FinanceBounceTab = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => {};
+  const handleSave = () => { };
 
-  useEffect(() => {}, [selectedEntry]);
+  useEffect(() => { }, [selectedEntry]);
   return (
     <>
-      <Box>{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}</Box>
+    {/* <CustomBreadcrumbs
+        heading="Bounce Check Details"
+        links={[{ name: 'Finance' }, { name: 'Bounce Check Details' }]}
+        sx={{ px: 1, mb: 2 }}
+        
+      /> */}
+      <Box py="15px" display="flex" justifyContent="space-between">
+        <Box display="flex" flexDirection="row" gap={3}  >
+          <CustomSelect
+            label="Class/Grade"
+            options={[]}
+            value=""
+            onChange={() => { }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <CustomSelect
+            label="Division"
+            options={[]}
+            value=""
+            onChange={() => { }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <TextField
+            label="Search by student name"
+            variant="outlined"
+            size="small"
+            value=""
+            onChange={(e: any) => {
+              console.log(e);
+            }}
+          />
+        </Box>
+
+      </Box>
       <CustomizableTable
         columns={[
           //  {id:"srNo", label:"SR No"},
+          { id: "grNumber", label: "GR No" },
           { id: 'chequeNumber', label: 'Cheque Number' },
           { id: 'chequeDate', label: 'Cheque Date' },
+          {
+            id: 'chargesAmount', label: 'Charges',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>;
+            },
+          },
+          { id: 'feeHead', label: 'Fee Head' },
+          { id: 'studentName', label: 'Student Name' },
           { id: 'bounceDate', label: 'Bounce Date' },
           { id: 'reason', label: 'Reason' },
           {
