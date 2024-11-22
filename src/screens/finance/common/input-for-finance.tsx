@@ -7,7 +7,7 @@ type FormattedAmountInputProps = {
   onChange: (formattedValue: string, numericValue: number) => void;
   label?: string;
   name?: string;
-  sx?:any;
+  sx?: any;
 };
 
 // const formatWithCommas = (value: string) => {
@@ -62,15 +62,6 @@ const FormattedAmountInput: React.FC<FormattedAmountInputProps> = ({
 
 export default FormattedAmountInput;
 
-
-
-
-
-
-
-
-
-
 // import React, { useState } from 'react';
 
 // import TextField from '@mui/material/TextField';
@@ -82,7 +73,6 @@ export default FormattedAmountInput;
 //     name?: string;
 //     currency?: string;
 // };
-
 
 // export const formatNumber = (num: number | string, currency?: string): string => {
 //     const numericValue = Number(num);
@@ -107,23 +97,21 @@ export default FormattedAmountInput;
 //     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 //         const inputValue = e.target.value;
 
-      
 //         const cleanedValue = inputValue.replace(/,/g, '');
 
 //         if (!/^\d*\.?\d{0,2}$/.test(cleanedValue)) return;
 
 //         const numericValue = parseFloat(cleanedValue);
-//         setRawValue(numericValue); 
-//         setInternalValue(inputValue); 
+//         setRawValue(numericValue);
+//         setInternalValue(inputValue);
 
-        
 //         onChange(inputValue, numericValue);
 //     };
 
 //     const handleBlur = () => {
-      
+
 //         const formattedValue = formatNumber(rawValue, currency);
-//         setInternalValue(formattedValue); 
+//         setInternalValue(formattedValue);
 //     };
 
 //     return (

@@ -109,11 +109,10 @@ const FinanceTaxSettingTab = () => {
 
   return (
     <>
-    <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Tax Settings"
-        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Tax Settings' },]}
+        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Tax Settings' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">

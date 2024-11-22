@@ -54,7 +54,7 @@ const FinanceReceiptBookSetting = () => {
     initialData = tableData.filter((val) => val.id !== item.id);
     setTableData([...initialData]);
   };
-  useEffect(() => { }, [selectedEntry, isEdit]);
+  useEffect(() => {}, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: any) => {
     const { id, receiptBookName, receiptBookCode } = dataFromDialog;
@@ -89,9 +89,8 @@ const FinanceReceiptBookSetting = () => {
     <>
       <CustomBreadcrumbs
         heading="Receipt Book"
-        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Receipt Book' },]}
+        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Receipt Book' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button

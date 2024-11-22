@@ -40,9 +40,17 @@ const FinanceFeeManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Fee Management"
-        links={[{ name: 'Finance' }, { name: 'Fee Management' }, { name: searchParams.tab !== "Fee-structure-overview" ? 'Student Fee Management' : 'Fee-Structure-Overview' }]}
+        links={[
+          { name: 'Finance' },
+          { name: 'Fee Management' },
+          {
+            name:
+              searchParams.tab !== 'Fee-structure-overview'
+                ? 'Student Fee Management'
+                : 'Fee-Structure-Overview',
+          },
+        ]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Card>
         <CustomTabs

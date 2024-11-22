@@ -85,13 +85,11 @@ const FinanceIncomeTrackingScreen = () => {
     dialog.onFalse();
   };
 
-
   const closeDialogForDetailsInSource = () => {
-
     dialogForDetailsInSource.onFalse();
   };
 
-  useEffect(() => { }, [selectedEntry, isEdit]);
+  useEffect(() => {}, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: Data) => {
     const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
@@ -132,11 +130,10 @@ const FinanceIncomeTrackingScreen = () => {
 
   return (
     <>
-    <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Income Tracking"
         links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
         sx={{ px: 1, mb: 2 }}
-        
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
@@ -218,14 +215,14 @@ const FinanceIncomeTrackingScreen = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
-                placement='right-top'
+                  placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem
                         onClick={() => {
-                          console.log("data row", row)
+                          console.log('data row', row);
                           dialogForDetailsInSource.onTrue();
-                          setSelectedEntry(row)
+                          setSelectedEntry(row);
                         }}
                       >
                         <Iconify icon="mdi:eye" />
@@ -272,10 +269,13 @@ const FinanceIncomeTrackingScreen = () => {
         )}
       </Box>
 
-      {dialogForDetailsInSource.value && <FinanceIncomeDetailsDialog 
-        dialogValue={dialogForDetailsInSource.value}
-        onClose={closeDialogForDetailsInSource}
-        data={selectedEntry} />}
+      {dialogForDetailsInSource.value && (
+        <FinanceIncomeDetailsDialog
+          dialogValue={dialogForDetailsInSource.value}
+          onClose={closeDialogForDetailsInSource}
+          data={selectedEntry}
+        />
+      )}
     </>
   );
 };

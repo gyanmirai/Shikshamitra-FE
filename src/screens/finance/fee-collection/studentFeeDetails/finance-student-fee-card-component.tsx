@@ -356,7 +356,6 @@ const FinanceStudentFeeCardComponent = () => {
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
 
-
   const [tableData, setTableData] = useState(dummyUser);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
@@ -364,10 +363,10 @@ const FinanceStudentFeeCardComponent = () => {
     dialog.onFalse();
   };
 
-  const feeRefundCloseDialog = () =>{
+  const feeRefundCloseDialog = () => {
     feeRefundDialog.onFalse();
-  }
-  const handleSave = () => { };
+  };
+  const handleSave = () => {};
   return (
     <>
       <Box display="flex" flexDirection="row" justifyContent="space-between">
@@ -376,23 +375,22 @@ const FinanceStudentFeeCardComponent = () => {
             label="Standard"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
             label="Search by student name"
             variant="outlined"
             size="small"
-
             value=""
-            onChange={(e) => { }}
+            onChange={(e) => {}}
           />
         </Box>
         <Box display="flex" justifyContent="flex-end" alignItems="center">
@@ -423,29 +421,26 @@ const FinanceStudentFeeCardComponent = () => {
             </Button>
           </Box>
         </Box>
-      </Box >
+      </Box>
       <FinanceStudentInfoCardComponent user={dummyUser} />
-      {
-        feeRefundDialog.value &&
+      {feeRefundDialog.value && (
         <FinanceFeeCollectionRefundTab
           dialogValue={feeRefundDialog.value}
           onClose={feeRefundCloseDialog}
-          selectedData={selectedStudent} />
-      }
+          selectedData={selectedStudent}
+        />
+      )}
 
-
-      {
-        dialog.value && (
-          <FinanceNewCollectFeeDialog
-            onSave={handleSave}
-            dialogValue={dialog.value}
-            onClose={closeDialog}
-            data={selectedStudent}
-            isEdit={false}
-            allData={tableData}
-          />
-        )
-      }
+      {dialog.value && (
+        <FinanceNewCollectFeeDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={closeDialog}
+          data={selectedStudent}
+          isEdit={false}
+          allData={tableData}
+        />
+      )}
     </>
   );
 };

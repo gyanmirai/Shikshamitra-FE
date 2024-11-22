@@ -26,11 +26,11 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 0,
-    //   minimumFractionDigits: 2,
-    //   maximumFractionDigits: 2,
+      //   minimumFractionDigits: 2,
+      //   maximumFractionDigits: 2,
     })
       .format(numericValue)
-      .replace(/^₹\s?/, ''); 
+      .replace(/^₹\s?/, '');
   };
 
   // Handle input change
@@ -72,16 +72,6 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
 
 export default CurrencyInput;
 
-
-
-
-
-
-
-
-
-
-
 // import React, { useState } from 'react';
 
 // import TextField from '@mui/material/TextField';
@@ -93,7 +83,6 @@ export default CurrencyInput;
 //     name?: string;
 //     currency?: string;
 // };
-
 
 // export const formatNumber = (num: number | string, currency?: string): string => {
 //     const numericValue = Number(num);
@@ -118,23 +107,21 @@ export default CurrencyInput;
 //     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 //         const inputValue = e.target.value;
 
-      
 //         const cleanedValue = inputValue.replace(/,/g, '');
 
 //         if (!/^\d*\.?\d{0,2}$/.test(cleanedValue)) return;
 
 //         const numericValue = parseFloat(cleanedValue);
-//         setRawValue(numericValue); 
-//         setInternalValue(inputValue); 
+//         setRawValue(numericValue);
+//         setInternalValue(inputValue);
 
-        
 //         onChange(inputValue, numericValue);
 //     };
 
 //     const handleBlur = () => {
-      
+
 //         const formattedValue = formatNumber(rawValue, currency);
-//         setInternalValue(formattedValue); 
+//         setInternalValue(formattedValue);
 //     };
 
 //     return (

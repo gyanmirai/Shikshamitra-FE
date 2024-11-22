@@ -24,8 +24,8 @@ const FinanceBounceTab = () => {
       amount: '5000',
       status: 'Pending',
       studentName: 'Ishita Desai',
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -37,8 +37,8 @@ const FinanceBounceTab = () => {
       amount: '25000',
       status: 'Pending',
       studentName: 'Ishita Desai',
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -50,8 +50,8 @@ const FinanceBounceTab = () => {
       amount: '12000',
       status: 'Paid',
       studentName: 'Ishita Desai',
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -63,8 +63,8 @@ const FinanceBounceTab = () => {
       amount: '8000',
       status: 'Paid',
       studentName: 'Ishita Desai',
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -76,8 +76,8 @@ const FinanceBounceTab = () => {
       amount: '15000',
       status: 'Paid',
       studentName: 'Ishita Desai',
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
   ];
@@ -89,31 +89,31 @@ const FinanceBounceTab = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
-  useEffect(() => { }, [selectedEntry]);
+  useEffect(() => {}, [selectedEntry]);
   return (
     <>
-    {/* <CustomBreadcrumbs
+      {/* <CustomBreadcrumbs
         heading="Bounce Check Details"
         links={[{ name: 'Finance' }, { name: 'Bounce Check Details' }]}
         sx={{ px: 1, mb: 2 }}
         
       /> */}
       <Box py="15px" display="flex" justifyContent="space-between">
-        <Box display="flex" flexDirection="row" gap={3}  >
+        <Box display="flex" flexDirection="row" gap={3}>
           <CustomSelect
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -126,18 +126,20 @@ const FinanceBounceTab = () => {
             }}
           />
         </Box>
-
       </Box>
       <CustomizableTable
         columns={[
           //  {id:"srNo", label:"SR No"},
-          { id: "grNumber", label: "GR No" },
+          { id: 'grNumber', label: 'GR No' },
           { id: 'chequeNumber', label: 'Cheque Number' },
           { id: 'chequeDate', label: 'Cheque Date' },
           {
-            id: 'chargesAmount', label: 'Charges',
+            id: 'chargesAmount',
+            label: 'Charges',
             render(value, row) {
-              return <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>;
+              return (
+                <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
+              );
             },
           },
           { id: 'feeHead', label: 'Fee Head' },

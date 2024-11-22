@@ -36,7 +36,7 @@ const feeHeadList = [
 interface Data {
   id: number;
   // feeCategoryName: string;
-  
+
   applicableGrade: string;
   statusToggle: boolean;
   action: string;
@@ -44,13 +44,12 @@ interface Data {
   feeSubCategoryList: FeeSubCategoryList[];
   paymentDueDate?: any;
   totalAmount: string;
-
 }
 
 const initialData: Data[] = [
   {
     id: 1,
-    totalAmount: "75000",
+    totalAmount: '75000',
     applicableGrade: '2',
     bookRecipt: 'CBSE',
     paymentDueDate: '20-12-2024',
@@ -63,8 +62,7 @@ const initialData: Data[] = [
         value: 'tuitionFee',
         paymentMethod: ['cash', 'online'],
         discountAmount: 4000,
-        discountCategory: "Summer Campaign"
-
+        discountCategory: 'Summer Campaign',
       },
       {
         id: 2,
@@ -74,7 +72,7 @@ const initialData: Data[] = [
         value: 'sportsFee',
         paymentMethod: ['cash', 'online'],
         discountAmount: 0,
-        discountCategory: "-"
+        discountCategory: '-',
       },
       {
         id: 3,
@@ -84,7 +82,7 @@ const initialData: Data[] = [
         value: 'transportFee',
         paymentMethod: ['cash', 'online'],
         discountAmount: 0,
-        discountCategory: "-"
+        discountCategory: '-',
       },
     ],
     statusToggle: true,
@@ -122,7 +120,7 @@ const FinanceFeeStructureSettingTab = () => {
       feeAmountForAvailbleHead,
       discountAmount,
       discountCategory,
-      totalAmount
+      totalAmount,
     } = dataFromDialog;
 
     const formattedPaymentDueDate = dayjs(paymentDueDate).format('DD-MM-YYYY');
@@ -263,11 +261,10 @@ const FinanceFeeStructureSettingTab = () => {
 
   return (
     <>
-    <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Fee Structure"
-        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Fee Structure' },]}
+        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">
@@ -296,16 +293,24 @@ const FinanceFeeStructureSettingTab = () => {
                       {row.feeSubCategoryList.map((val: any, index: any) => (
                         <React.Fragment key={index}>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <Paper elevation={4} sx={{ p: 2, fontSize: "13PX" }}>
-                              {val.name}: {formatNumber(val.amount, "INR")}
+                            <Paper elevation={4} sx={{ p: 2, fontSize: '13PX' }}>
+                              {val.name}: {formatNumber(val.amount, 'INR')}
                               <Switch
                                 checked={switchState[index]}
                                 onChange={() => handleSwitchChange(row.id, index)}
                               />
-                              <Typography fontSize="13PX">Monthly: {formatNumber((val.amount / 12), "INR")}</Typography>
-                              <Typography fontSize="13PX">Quartly: {formatNumber((val.amount / 4), "INR")}</Typography>
-                              <Typography fontSize="13PX">Bi-annual: {formatNumber((val.amount / 2), "INR")}</Typography>
-                              <Typography fontSize="13PX">Yearly: {formatNumber((val.amount), "INR")}</Typography>
+                              <Typography fontSize="13PX">
+                                Monthly: {formatNumber(val.amount / 12, 'INR')}
+                              </Typography>
+                              <Typography fontSize="13PX">
+                                Quartly: {formatNumber(val.amount / 4, 'INR')}
+                              </Typography>
+                              <Typography fontSize="13PX">
+                                Bi-annual: {formatNumber(val.amount / 2, 'INR')}
+                              </Typography>
+                              <Typography fontSize="13PX">
+                                Yearly: {formatNumber(val.amount, 'INR')}
+                              </Typography>
                             </Paper>
                           </Box>
                         </React.Fragment>
@@ -336,7 +341,11 @@ const FinanceFeeStructureSettingTab = () => {
               console.log('Row data:', row);
               console.log('Total amount:', totalAmount);
 
-              return <Typography sx={{ fontSize: '12px' }}>{formatNumber(totalAmount, "INR")}</Typography>;
+              return (
+                <Typography sx={{ fontSize: '12px' }}>
+                  {formatNumber(totalAmount, 'INR')}
+                </Typography>
+              );
             },
           },
           {

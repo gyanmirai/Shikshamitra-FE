@@ -44,9 +44,8 @@ interface FormikValue {
   availableFeeHead?: string;
   feeAmountForAvailbleHead?: string;
   discountCategory: string[];
-  discountAmount: number,
-  finalFee: number,
-
+  discountAmount: number;
+  finalFee: number;
 }
 const validationSchema = Yup.object({
   amount: Yup.string().required("Fee Amount can't be empty"),
@@ -67,9 +66,7 @@ const bookReciptList = [
   { value: 'gseb', label: 'GSEB' },
 ];
 
-const discountCategoryList = [
-  { value: 'summerPromotion', label: 'Summner Campaign' },
-];
+const discountCategoryList = [{ value: 'summerPromotion', label: 'Summner Campaign' }];
 
 const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingDialogProps> = ({
   dialogValue,
@@ -91,16 +88,13 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
 
   const handleFeeDiscountAmountChange = (formattedValue: string, numericValue: number) => {
     setDiscountAmount(formattedValue);
-
   };
   const handleFeeAmountChange = (formattedValue: string, numericValue: number) => {
     setFeeAmountState(formattedValue);
-
   };
 
   const handlefixedReductionAmountChange = (formattedValue: string, numericValue: number) => {
     setfixedReductionAmountState(formattedValue);
-
   };
 
   useEffect(() => {
@@ -138,10 +132,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       bookRecipt: isEdit ? data.bookRecipt.toLowerCase() : '',
       availableFeeHead: data.feeSubCategoryList,
       feeAmountForAvailbleHead: '0',
-      discountAmount: isEdit ? (100) : 0,
+      discountAmount: isEdit ? 100 : 0,
       discountCategory: [],
       finalFee: 0,
-
     },
     validationSchema,
     onSubmit: (values) => {
@@ -206,7 +199,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     }, 0);
 
   return (
-    <CustomDialog maxWidth="md" title="Add/Edit Fee Structure" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="md"
+      title="Add/Edit Fee Structure"
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Box>
@@ -639,7 +637,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     //             helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
     //           />
 
-
     //         </Box>
     //         <Box py="13px" display="flex" flexDirection="row" gap={4}>
     //           <DatePicker
@@ -660,9 +657,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     //           />
     //         </Box>
 
-
     //         {/* <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-
 
     //                         {formik.values.feeType.map((selectedFeeType: string) => {
     //                             const selectedOption = {
@@ -670,8 +665,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     //                                 sportsfee: 'Sports Fee Amount',
     //                                 transportfee: 'Transport Fee Amount',
     //                             }[selectedFeeType];
-
-
 
     //                             return (
     //                                 <TextField
@@ -714,7 +707,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     //             <Box height="13px" />
     //           )}
     //         </Box>
-
 
     //       </Box>
     //     </Scrollbar>

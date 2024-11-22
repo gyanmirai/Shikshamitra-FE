@@ -40,9 +40,17 @@ const FinanceReconciliationScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Reconciliation"
-        links={[{ name: 'Finance' }, { name: 'Reconciliation' }, { name: searchParams.tab === "reconciliation-list" ? 'Reconciliation' : 'Bounce Check Details' }]}
+        links={[
+          { name: 'Finance' },
+          { name: 'Reconciliation' },
+          {
+            name:
+              searchParams.tab === 'reconciliation-list'
+                ? 'Reconciliation'
+                : 'Bounce Check Details',
+          },
+        ]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Card>
         <CustomTabs

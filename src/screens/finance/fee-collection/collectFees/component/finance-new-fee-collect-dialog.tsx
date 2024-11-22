@@ -167,12 +167,12 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   const dialog = useBoolean();
   const errorDialogForReceivedAmount = useBoolean();
   const closeConfirmationDialog = () => {
-    dialog.onFalse()
-  }
+    dialog.onFalse();
+  };
 
   const closeDialogForReceivedAmount = () => {
-    errorDialogForReceivedAmount.onFalse()
-  }
+    errorDialogForReceivedAmount.onFalse();
+  };
 
   return (
     <>
@@ -409,7 +409,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                       value={receivedAmountState}
                       onChange={handleReceivedAmountChange}
                     />
-
                   </Grid>
                 </Grid>
 
@@ -476,7 +475,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
           </Button> */}
             <Button
               disabled={formik.values.receivedPayment < 1}
-              onClick={() => { }}
+              onClick={() => {}}
               variant="contained"
               size="small"
             >
@@ -489,13 +488,11 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
               variant="contained"
               size="small"
               onClick={() => {
-
                 if (parseNumber(receivedAmountState) > parseNumber(amountDueState)) {
-                  errorDialogForReceivedAmount.onTrue()
+                  errorDialogForReceivedAmount.onTrue();
                 } else {
-                  dialog.onTrue()
+                  dialog.onTrue();
                 }
-
               }}
             >
               Collect
@@ -504,32 +501,26 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
         </Box>
       </CustomDialog>
 
-      {
-        dialog.value && <FeeConfirmationDialog
-
+      {dialog.value && (
+        <FeeConfirmationDialog
           onConfirm={closeConfirmationDialog}
           studentName="Vishal Rameshbhai Patel"
           amount={40000}
           open={dialog.value}
           onClose={closeConfirmationDialog}
-
-
         />
-      }
+      )}
 
-      {
-        errorDialogForReceivedAmount.value && <ReceivedAmountWarning
+      {errorDialogForReceivedAmount.value && (
+        <ReceivedAmountWarning
           open={errorDialogForReceivedAmount.value}
           onClose={closeDialogForReceivedAmount}
-
-          title="Received amount cannot exceed the due amount." />
-      }
+          title="Received amount cannot exceed the due amount."
+        />
+      )}
     </>
   );
 };
-
-
-
 
 export default FinanceNewCollectFeeDialog;
 /* 

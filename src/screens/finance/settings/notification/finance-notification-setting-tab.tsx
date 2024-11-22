@@ -2,14 +2,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  Box,
-  Switch,
-  Button,
-  TextField,
-  DialogActions,
-  DialogContent,
-} from '@mui/material';
+import { Box, Switch, Button, TextField, DialogActions, DialogContent } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -99,9 +92,7 @@ const FinanceNotificationTable = () => {
               return (
                 <Switch
                   checked
-                  onChange={(e) =>
-                    console.log(`${item.cardTitle} switch:`, e.target.checked)
-                  }
+                  onChange={(e) => console.log(`${item.cardTitle} switch:`, e.target.checked)}
                 />
               );
             },
@@ -138,8 +129,13 @@ const FinanceNotificationTable = () => {
       />
 
       {/* Dialog for editing details */}
-      <CustomDialog title={`Edit Details For ${currentRow !== null ? currentRow!.cardTitle : ""}`} open={open} handleClose={handleCloseDialog} maxWidth="sm" >
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', }}>
+      <CustomDialog
+        title={`Edit Details For ${currentRow !== null ? currentRow!.cardTitle : ''}`}
+        open={open}
+        handleClose={handleCloseDialog}
+        maxWidth="sm"
+      >
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
           <DialogContent>
             <Box pt="15px" />
             <TextField

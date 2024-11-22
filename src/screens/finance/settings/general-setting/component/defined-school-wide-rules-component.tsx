@@ -17,7 +17,11 @@ const DefinedSchoolWideRulesComponent = () => (
         flexDirection="row"
         gap={3}
       >
-        <TextField name="Additionally Discount Category" label="Additionally Discount Category" size="small" />
+        <TextField
+          name="Additionally Discount Category"
+          label="Additionally Discount Category"
+          size="small"
+        />
 
         <Button variant="contained" size="small">
           Add Additionally Discount Category
@@ -58,10 +62,7 @@ const DefinedSchoolWideRulesComponent = () => (
                 },
               },
             ]}
-            data={[
-              { additionallyDiscountCategory: 'Scholership', action: 'Delete' },
-
-            ]}
+            data={[{ additionallyDiscountCategory: 'Scholership', action: 'Delete' }]}
           />
         </Box>
       </Grid>

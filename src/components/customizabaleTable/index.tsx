@@ -81,8 +81,7 @@ interface CustomizableTableProps {
   isFilter?: boolean;
   isSearch?: boolean;
   isScrollbar?: boolean;
-  isShowedDense?:boolean;
-
+  isShowedDense?: boolean;
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -663,39 +662,45 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               </TableBody>
             </Table>
           </Scrollbar>
-         {isShowedDense && <Paper
-            elevation={1}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1,
-              width: '100%',
-            }}
-          >
-          { isShowedDense && <FormControlLabel
-              control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
-              label="Dense"
-            />}
-            {isPagination && <TablePagination
-              rowsPerPageOptions={[10, 25, 100]}
-              component="div"
-              count={serverSide ? totalCount || 0 : filteredData.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              size="small"
+          {isShowedDense && (
+            <Paper
+              elevation={1}
               sx={{
-                '& *': { fontSize: '14px !important' },
-                '& svg': { fontSize: '18px !important' },
-                '& .MuiToolbar-root': {
-                  minHeight: 'unset',
-                  height: 'auto',
-                },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                p: 1,
+                width: '100%',
               }}
-            />}
-          </Paper>}
+            >
+              {isShowedDense && (
+                <FormControlLabel
+                  control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
+                  label="Dense"
+                />
+              )}
+              {isPagination && (
+                <TablePagination
+                  rowsPerPageOptions={[10, 25, 100]}
+                  component="div"
+                  count={serverSide ? totalCount || 0 : filteredData.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  size="small"
+                  sx={{
+                    '& *': { fontSize: '14px !important' },
+                    '& svg': { fontSize: '18px !important' },
+                    '& .MuiToolbar-root': {
+                      minHeight: 'unset',
+                      height: 'auto',
+                    },
+                  }}
+                />
+              )}
+            </Paper>
+          )}
         </ComponentBlock>
       </Box>
     </Box>

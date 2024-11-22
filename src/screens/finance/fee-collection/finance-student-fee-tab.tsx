@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React from 'react';
 
@@ -11,11 +11,10 @@ const FinanceStudentFeeTab = () => {
   const data = [];
   return (
     <>
-    <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Fee Collection"
         links={[{ name: 'Finance' }, { name: 'Fee Collection' }]}
         sx={{ px: 1, mb: 2 }}
-        
       />
       <FinanceStudentFeeCardComponent />
 

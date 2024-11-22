@@ -90,12 +90,10 @@ const FinanceExpenseTrackingScreen = () => {
   };
 
   const closeDialogForDetailsInExpense = () => {
-
     dialogForDetailsInExpense.onFalse();
   };
 
-
-  useEffect(() => { }, [selectedExpense, isEdit]);
+  useEffect(() => {}, [selectedExpense, isEdit]);
 
   const handleSave = (dataFromDialog: ExpenseData) => {
     const { expenseCategory, expenseAmount, paymentMethod, date, paymentStatus, id } =
@@ -140,7 +138,6 @@ const FinanceExpenseTrackingScreen = () => {
         heading="Expense Tracking"
         links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
@@ -218,14 +215,14 @@ const FinanceExpenseTrackingScreen = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
-                  placement='right-top'
+                  placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem
                         onClick={() => {
-                          console.log("data row", row)
+                          console.log('data row', row);
                           dialogForDetailsInExpense.onTrue();
-                          setSelectedExpense(row)
+                          setSelectedExpense(row);
                         }}
                       >
                         <Iconify icon="mdi:eye" />
@@ -271,10 +268,13 @@ const FinanceExpenseTrackingScreen = () => {
         )}
       </Box>
 
-      {dialogForDetailsInExpense.value && <FinanceExpenseDetailsDialog
-        dialogValue={dialogForDetailsInExpense.value}
-        onClose={closeDialogForDetailsInExpense}
-        data={selectedExpense} />}
+      {dialogForDetailsInExpense.value && (
+        <FinanceExpenseDetailsDialog
+          dialogValue={dialogForDetailsInExpense.value}
+          onClose={closeDialogForDetailsInExpense}
+          data={selectedExpense}
+        />
+      )}
     </>
   );
 };

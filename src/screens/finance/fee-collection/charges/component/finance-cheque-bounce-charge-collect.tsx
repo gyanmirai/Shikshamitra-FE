@@ -19,19 +19,22 @@ interface FinanceChequeBounceChargeCollectDialogProps {
   onClose: () => void;
 }
 
-const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollectDialogProps> = ({ data, dialogValue, onClose, onSave }) => {
+const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollectDialogProps> = ({
+  data,
+  dialogValue,
+  onClose,
+  onSave,
+}) => {
   const formik = useFormik({
     initialValues: {
       paymentMode: '',
       chequeNo: data.chequeNo,
       bankName: data.bankName,
-      receiptBook: "",
+      receiptBook: '',
       amount: data.amount,
       id: data.id,
 
-      remarks: "",
-
-
+      remarks: '',
     },
     onSubmit: (values: any) => {
       console.log('Form Submitted type:', values);
@@ -46,7 +49,6 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
   const [cashAmountState, setCashAmountState] = useState('');
   const handleBankAmountChange = (formattedValue: string, numericValue: number) => {
     setBankAmountState(formattedValue);
-
   };
   const handleChequeAmountChange = (formattedValue: string, numericValue: number) => {
     setChequeAmountState(formattedValue);
@@ -61,7 +63,12 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
     setCashAmountState(formattedValue);
   };
   return (
-    <CustomDialog maxWidth="md" title="Cheque Bounce Charge Collect" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="md"
+      title="Cheque Bounce Charge Collect"
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Box>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
@@ -75,27 +82,23 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                 <Typography variant="subtitle2">Paid Amount via Cash : ₹ 10,000</Typography>
                 <Typography variant="subtitle2">Paid Amount via Account: ₹ 4,000</Typography> */}
               </Box>
-           
-              
 
               <Box pt="10px" display="flex" flexDirection="row" gap={3}>
                 <TextField
                   name="totalAmount"
                   label="Total Charges"
-                  value={formatNumber(formik.values.totalAmount, "INR")}
+                  value={formatNumber(formik.values.totalAmount, 'INR')}
                   onChange={formik.handleChange}
                   size="small"
                   disabled
                 />
 
                 <CustomSelect
-
                   label="Payment Mode"
                   options={[
                     { value: 'Cash', label: 'Cash' },
                     { value: 'inAccount', label: 'In Account' },
                     { value: 'Online', label: 'Upi' },
-
                   ]}
                   // @ts-ignore
                   value={formik.values.paymentMode}
@@ -109,14 +112,26 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
 
                   {formik.values.paymentMode.includes('Online') && (
                     <Grid item xs={12} md={12}>
-                      <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
-                        <Typography sx={{ pb: "15px" }} variant="subtitle2">Online Details</Typography>
-
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        flexDirection="row"
+                        gap={3}
+                      >
+                        <Typography sx={{ pb: '15px' }} variant="subtitle2">
+                          Online Details
+                        </Typography>
 
                         <Box>
                           {/* Linked Account Row */}
                           <Tooltip placement="top-start" title="Issue refund to this account">
-                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                            <Box
+                              display="flex"
+                              flexDirection="row"
+                              alignItems="center"
+                              gap={1}
+                              sx={{ pb: 1 }}
+                            >
                               <Typography variant="subtitle2">Linked Account:</Typography>
                               <Typography variant="subtitle2">notaxytz@oksbi</Typography>
                             </Box>
@@ -124,14 +139,19 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
 
                           {/* Last Transaction Row */}
                           <Tooltip placement="top-start" title="Issue refund to this account">
-                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                            <Box
+                              display="flex"
+                              flexDirection="row"
+                              alignItems="center"
+                              gap={1}
+                              sx={{ pb: 1 }}
+                            >
                               <Typography variant="subtitle2">Last Transaction:</Typography>
                               <Typography variant="subtitle2">dummy@upi</Typography>
                             </Box>
                           </Tooltip>
                         </Box>
                       </Box>
-
 
                       <Box display="flex" gap={2} flexDirection="row">
                         <TextField
@@ -158,7 +178,12 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
 
                         /> */}
                       </Box>
-                      <Box pt="15px" display="flex" justifyContent="flex-end" justifyItems="flex-end">
+                      <Box
+                        pt="15px"
+                        display="flex"
+                        justifyContent="flex-end"
+                        justifyItems="flex-end"
+                      >
                         <Button disabled onClick={onClose} variant="contained" size="small">
                           Proceed
                         </Button>
@@ -245,16 +270,28 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                     </Grid>
                   )}
 
-                  {formik.values.paymentMode.includes("inAccount") && (
+                  {formik.values.paymentMode.includes('inAccount') && (
                     <Grid item xs={12}>
-                      <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
-                        <Typography sx={{ pb: "15px" }} variant="subtitle2">Bank Details</Typography>
-
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        flexDirection="row"
+                        gap={3}
+                      >
+                        <Typography sx={{ pb: '15px' }} variant="subtitle2">
+                          Bank Details
+                        </Typography>
 
                         <Box>
                           {/* Linked Account Row */}
                           <Tooltip placement="top-start" title="Issue refund to this account">
-                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                            <Box
+                              display="flex"
+                              flexDirection="row"
+                              alignItems="center"
+                              gap={1}
+                              sx={{ pb: 1 }}
+                            >
                               <Typography variant="subtitle2">Linked Account:</Typography>
                               <Typography variant="subtitle2">Bank Of Baroda</Typography>
                             </Box>
@@ -262,17 +299,19 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
 
                           {/* Last Transaction Row */}
                           <Tooltip placement="top-start" title="Issue refund to this account">
-                            <Box display="flex" flexDirection="row" alignItems="center" gap={1} sx={{ pb: 1 }}>
+                            <Box
+                              display="flex"
+                              flexDirection="row"
+                              alignItems="center"
+                              gap={1}
+                              sx={{ pb: 1 }}
+                            >
                               <Typography variant="subtitle2">Last Transaction:</Typography>
                               <Typography variant="subtitle2">Bank Of Baroda</Typography>
                             </Box>
                           </Tooltip>
                         </Box>
                       </Box>
-
-
-
-
 
                       <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
@@ -294,17 +333,13 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             onChange={formik.handleChange}
                             size="small"
                             fullWidth
-
                           />
                         </Grid>
 
                         <Grid item xs={12} md={6}>
-
                           <CustomSelect
                             label="Bank Name"
-                            options={[
-
-                            ]}
+                            options={[]}
                             name="bankNameForAccount"
                             value={formik.values.bankNameForAccount}
                             onChange={(val) => formik.setFieldValue('bankNameForAccount', val)}
@@ -317,11 +352,15 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             value={bankAmountState}
                             onChange={handleBankAmountChange}
                           />
-
                         </Grid>
                       </Grid>
 
-                      <Box pt="15px" display="flex" justifyContent="flex-end" justifyItems="flex-end">
+                      <Box
+                        pt="15px"
+                        display="flex"
+                        justifyContent="flex-end"
+                        justifyItems="flex-end"
+                      >
                         <Button disabled onClick={onClose} variant="contained" size="small">
                           Proceed
                         </Button>
@@ -389,7 +428,6 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
           </DialogActions>
         </form>
       </Box>
-
     </CustomDialog>
   );
 };

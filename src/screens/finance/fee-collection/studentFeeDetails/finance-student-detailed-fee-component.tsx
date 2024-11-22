@@ -53,13 +53,7 @@ const FinanceStudentDetailedFeeComponent = () => {
         Detailed Fee View
       </Typography>
       <Card>
-        <CustomTabs
-
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-
-        >
+        <CustomTabs value={tabs.value} onChange={tabs.onChange} variant="fullWidth">
           {TABS.map((tab) => (
             <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
           ))}
