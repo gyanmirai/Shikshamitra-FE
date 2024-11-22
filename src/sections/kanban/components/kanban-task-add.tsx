@@ -1,0 +1,92 @@
+import type { IKanbanTask } from 'src/types/kanban';
+
+import { useMemo, useState, useCallback } from 'react';
+
+import Paper from '@mui/material/Paper';
+import FormHelperText from '@mui/material/FormHelperText';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import InputBase, { inputBaseClasses } from '@mui/material/InputBase';
+
+import { uuidv4 } from 'src/utils/uuidv4';
+
+// ----------------------------------------------------------------------
+
+type Props = {
+  status: string;
+  openAddTask: boolean;
+  onCloseAddTask: () => void;
+  onAddTask: (task: IKanbanTask) => void;
+};
+
+export function KanbanTaskAdd({ status, openAddTask, onAddTask, onCloseAddTask }: Props) {
+  const [taskName, setTaskName] = useState('');
+
+  const defaultTask: IKanbanTask = useMemo(
+    () => ({
+      id: uuidv4(),
+      status,
+      name: taskName.trim() ? taskName : 'Untitled',
+      priority: 'medium',
+      attachments: [],
+      labels: [],
+      comments: [],
+      assignee: [],
+      due: [null, null],
+      reporter: { id: '1', name: '', avatarUrl: '' },
+    }),
+    [status, taskName]
+  );
+
+  const handleChangeName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setTaskName(event.target.value);
+  }, []);
+
+  const handleKeyUpAddTask = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        onAddTask(defaultTask);
+        setTaskName('');
+      }
+    },
+    [defaultTask, onAddTask]
+  );
+
+  const handleCancel = useCallback(() => {
+    setTaskName('');
+    onCloseAddTask();
+  }, [onCloseAddTask]);
+
+  if (!openAddTask) {
+    return null;
+  }
+
+  return (
+    <ClickAwayListener onClickAway={handleCancel}>
+      <div>
+        <Paper
+          sx={{
+            borderRadius: 1.5,
+            bgcolor: 'background.default',
+            boxShadow: (theme) => theme.customShadows.z1,
+          }}
+        >
+          <InputBase
+            autoFocus
+            fullWidth
+            placeholder="Untitled"
+            value={taskName}
+            onChange={handleChangeName}
+            onKeyUp={handleKeyUpAddTask}
+            sx={{
+              px: 2,
+              height: 56,
+              [`& .${inputBaseClasses.input}`]: { p: 0, typography: 'subtitle2' },
+            }}
+          />
+        </Paper>
+
+        <FormHelperText sx={{ mx: 1 }}>Press Enter to create the task.</FormHelperText>
+      </div>
+    </ClickAwayListener>
+  );
+}

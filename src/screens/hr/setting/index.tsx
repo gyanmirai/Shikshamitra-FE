@@ -17,6 +17,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import LeavePolicy from './leave-policy';
 import Notification from './notification';
 import AttendanceRule from './attendance-rule';
+import AttendanceType from './attendance-type';
 import NotificationMethod from './notification-method';
 
 const TABS = [
@@ -43,6 +44,12 @@ const TABS = [
     label: 'Leave Policy',
     icon: <Iconify icon="iconoir:privacy-policy" width={20} />,
     component: () => <LeavePolicy />,
+  },
+  {
+    value: 'attendanceType',
+    label: 'Attendance Type',
+    icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
+    component: () => <AttendanceType />,
   },
 ];
 

@@ -13,7 +13,6 @@ import { DatePicker } from '@mui/x-date-pickers';
 
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
-import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -100,7 +99,7 @@ const PayProcessScreen = () => {
           { id: 'salaryMonth', label: 'Salary Month' },
 
           { id: 'year', label: 'Year' },
-          { id: 'workingDays', label: 'Working Days' },
+          { id: 'workingDays', label: 'Total Days' },
           { id: 'presentDays', label: 'Present Days' },
           {
             id: 'salary',
@@ -144,13 +143,13 @@ const PayProcessScreen = () => {
               return formatCurrency(value);
             },
           },
-          {
-            id: 'payrollStatus',
-            label: 'Payroll Status',
-            render(value, row) {
-              return <Label color={value === 'Generated' ? 'success' : 'warning'}>{value}</Label>;
-            },
-          },
+          // {
+          //   id: 'payrollStatus',
+          //   label: 'Payroll Status',
+          //   render(value, row) {
+          //     return <Label color={value === 'Generated' ? 'success' : 'warning'}>{value}</Label>;
+          //   },
+          // },
         ]}
         data={[
           {

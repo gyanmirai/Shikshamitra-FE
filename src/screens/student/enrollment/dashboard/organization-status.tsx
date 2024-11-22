@@ -22,37 +22,29 @@ const OrganizationStatus = () => {
 
   const [selectedOrganization, setSelectedOrganization] = useState<string>('');
   return (
-    <Grid2 xs={6} sx={{ boxShadow: 'var(--shadows-2)', borderRadius: 2, p: 2 }}>
-      <Box display="flex" justifyContent="space-between">
-        <Typography variant="h6">Organization Status</Typography>
-        <CustomSelect
-          options={organization?.items || []}
-          value={selectedOrganization}
-          onChange={(val) => {
-            setSelectedOrganization(val as string);
-          }}
-          isLoading={isLoading}
-          label="Select organization"
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{
-            sx: {
-              maxWidth: '200px',
-              width: '100%',
-            },
-          }}
-        />
-      </Box>
-      <Box
-        sx={{
-          justifyContent: 'center',
-          padding: '8px',
-          height: '100%',
-        }}
-        display="flex"
-        flexDirection="column"
-        gap={2}
-      >
+    <Grid2 xs={6}>
+      <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)' }}>
+        <Box display="flex" justifyContent="space-between" alignContent="center">
+          <Typography variant="h6">Organization Status</Typography>
+          <CustomSelect
+            options={organization?.items || []}
+            value={selectedOrganization}
+            onChange={(val) => {
+              setSelectedOrganization(val as string);
+            }}
+            isLoading={isLoading}
+            label="Select organization"
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{
+              sx: {
+                maxWidth: '200px',
+                width: '100%',
+              },
+            }}
+          />
+        </Box>
+
         <AnalyticsCurrentVisits
           title=""
           chart={{
@@ -62,29 +54,9 @@ const OrganizationStatus = () => {
               { label: 'pending', value: 300 },
             ],
           }}
-          sx={{ boxShadow: 'none' }}
+          sx={{ boxShadow: 'none', height: '100%' }}
         />
-        {/* <List>
-          <ListItem>
-            <ListItemIcon>
-              <FiberManualRecord sx={{ fontSize: 8 }} />
-            </ListItemIcon>
-            <ListItemText primary="Total Active Organizations - 20 Active Organizations" />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <FiberManualRecord sx={{ fontSize: 8 }} />
-            </ListItemIcon>
-            <ListItemText primary="Pending Approvals - 5 Pending Organizations" />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <FiberManualRecord sx={{ fontSize: 8 }} />
-            </ListItemIcon>
-            <ListItemText primary="Inactive Organizations - 2 Inactive Organizations" />
-          </ListItem>
-        </List> */}
-      </Box>
+      </Card>
     </Grid2>
   );
 };

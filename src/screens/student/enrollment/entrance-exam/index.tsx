@@ -1,38 +1,204 @@
 'use client';
 
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useCallback } from 'react';
 
+import { Upload } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Paper,
   Button,
+  MenuItem,
   Checkbox,
+  MenuList,
   TextField,
   Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CommonCalender from 'src/components/calender';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import EntranceExamDashboard from './dashboard';
+const EntranceExamScreen = () => {
+  const dialog = useBoolean();
+  const resultDialog = useBoolean();
+  const dummyData = [
+    {
+      id: 1,
+      name: 'John Doe',
+      class: '10th',
+      medium: 'English',
+      date: '2023-06-01',
+      totalMarks: 100,
+      obtainedMarks: 85,
+      status: 'Pass',
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      class: '11th',
+      medium: 'Spanish',
+      date: '2023-06-02',
+      totalMarks: 100,
+      obtainedMarks: 92,
+      status: 'Pass',
+    },
+    {
+      id: 3,
+      name: 'Bob Johnson',
+      class: '9th',
+      medium: 'French',
+      date: '2023-06-03',
+      totalMarks: 100,
+      obtainedMarks: '-',
+      status: 'Pending',
+    },
+    {
+      id: 4,
+      name: 'Alice Williams',
+      class: '12th',
+      medium: 'German',
+      date: '2023-06-04',
+      totalMarks: 100,
+      obtainedMarks: 95,
+      status: 'Pass',
+    },
+    {
+      id: 5,
+      name: 'Charlie Brown',
+      class: '8th',
+      medium: 'Mandarin',
+      date: '2023-06-05',
+      totalMarks: 100,
+      obtainedMarks: 68,
+      status: 'Fail',
+    },
+  ];
+  const actions = useCallback(
+    ({ popover }: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            resultDialog.onTrue();
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="carbon:result" sx={{ height: '16px', width: '16px' }} />
+          Upload Result
+        </MenuItem>
 
-const EntranceExamScreen = () => (
-  <Box>
-    <CustomBreadcrumbs
-      heading="Entrance Exam"
-      links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Entrance Exam' }]}
-      sx={{ px: 1, mb: 2 }}
-    />
-    <EntranceExamDashboard />
-  </Box>
-);
+        <MenuItem
+          onClick={() => {
+            dialog.onTrue();
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+          Edit
+        </MenuItem>
+      </MenuList>
+    ),
+    [dialog, resultDialog]
+  );
+  return (
+    <Box>
+      <CustomBreadcrumbs
+        heading="Entrance Exam"
+        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Entrance Exam' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button startIcon={<Upload />} variant="contained" size="small">
+            Upload Results
+          </Button>
+        }
+      />
+      {/* <EntranceExamDashboard /> */}
+      {/* <Card> */}
+      <CommonCalender data={[]} />
+      {/* </Card> */}
+
+      <CustomizableTable
+        columns={[
+          { id: 'date', label: 'Date' },
+          {
+            id: 'name',
+            label: 'Student',
+          },
+          {
+            id: 'medium',
+            label: 'Medium',
+          },
+          {
+            id: 'class',
+            label: 'Class',
+          },
+          {
+            id: 'totalMarks',
+            label: 'Total Marks',
+          },
+          {
+            id: 'obtainedMarks',
+            label: 'Obtained Marks',
+          },
+          {
+            id: 'percentage',
+            label: 'Percentage',
+            render(value, row) {
+              return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
+            },
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  color={value === 'Pass' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'admission',
+            label: '',
+            isSort: false,
+            render(value, row) {
+              return (
+                <Button variant="contained" size="small" color="primary">
+                  Admission
+                </Button>
+              );
+            },
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            render: (value, row) => <ThreeDotsActions placement="right-top" actions={actions} />,
+          },
+        ]}
+        data={dummyData}
+      />
+      <CustomDialog title="Result" handleClose={resultDialog.onFalse} open={resultDialog.value}>
+        <ResultForm />
+      </CustomDialog>
+    </Box>
+  );
+};
 
 export default EntranceExamScreen;
 
@@ -157,3 +323,25 @@ export const ExamForm = () => {
     </form>
   );
 };
+
+const ResultForm = () => (
+  <Box>
+    <Scrollbar
+      sx={{
+        p: 3,
+        bgcolor: 'background.neutral',
+        //   height: 'calc(100vh - 150px)',
+      }}
+    >
+      <Box display="flex" flexDirection="column" gap={2}>
+        <TextField label="Obtained Marks" size="small" fullWidth />
+        <TextField label="Total Marks" size="small" fullWidth />
+      </Box>
+    </Scrollbar>
+    <DialogActions sx={{ flexShrink: 0 }}>
+      <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>
+        Submit
+      </Button>
+    </DialogActions>
+  </Box>
+);

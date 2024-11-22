@@ -1,6 +1,10 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { Search } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Card,
@@ -21,7 +25,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 
 const PerformanceReview = () => {
-  const feedbackDialog = useBoolean();
   const reviewDialog = useBoolean();
 
   return (
@@ -47,34 +50,15 @@ const PerformanceReview = () => {
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2 }}>
-        <ReviewCard onReview={reviewDialog.onTrue} onFeedBack={feedbackDialog.onTrue} />
-        <ReviewCard onReview={reviewDialog.onTrue} onFeedBack={feedbackDialog.onTrue} />
+        <ReviewCard onReview={reviewDialog.onTrue} />
+        <ReviewCard onReview={reviewDialog.onTrue} />
       </Box>
 
       <CustomDialog
-        open={feedbackDialog.value}
-        handleClose={feedbackDialog.onFalse}
-        title="Feedback"
+        open={reviewDialog.value}
+        handleClose={reviewDialog.onFalse}
+        title="Review & feedback"
       >
-        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-          <TextField
-            variant="outlined"
-            placeholder="Leave a comment"
-            fullWidth
-            multiline
-            minRows={3}
-            sx={{
-              mt: 1,
-            }}
-          />
-        </Scrollbar>
-        <DialogActions>
-          <Button variant="outlined">Cancel</Button>
-          <Button variant="contained">Save</Button>
-        </DialogActions>
-      </CustomDialog>
-
-      <CustomDialog open={reviewDialog.value} handleClose={reviewDialog.onFalse} title="Review">
         <ReviewForm />
       </CustomDialog>
     </Box>
@@ -85,10 +69,9 @@ export default PerformanceReview;
 
 interface ReviewCardProps {
   onReview?: () => void;
-  onFeedBack?: () => void;
 }
 
-const ReviewCard = ({ onReview, onFeedBack }: ReviewCardProps) => (
+const ReviewCard = ({ onReview }: ReviewCardProps) => (
   <Card sx={{ borderRadius: 2, p: 2, width: 300 }}>
     <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
       <Avatar
@@ -107,6 +90,8 @@ const ReviewCard = ({ onReview, onFeedBack }: ReviewCardProps) => (
     <Box sx={{ px: 2 }}>
       <Slider
         value={30}
+        valueLabelDisplay="on"
+        step={10}
         sx={{
           color: 'primary.main',
           height: 8,
@@ -128,11 +113,8 @@ const ReviewCard = ({ onReview, onFeedBack }: ReviewCardProps) => (
     </Box>
 
     <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2 }}>
-      <Button variant="outlined" sx={{ width: '45%' }} onClick={onReview}>
-        Review
-      </Button>
-      <Button variant="contained" sx={{ width: '45%' }} onClick={onFeedBack}>
-        Feedback
+      <Button variant="outlined" fullWidth onClick={onReview}>
+        Review & Feedback
       </Button>
     </Box>
   </Card>
@@ -151,6 +133,7 @@ interface Reviews {
 type CategoryType = keyof Reviews;
 
 function ReviewForm() {
+  const [date, setDate] = useState<null | Dayjs>(dayjs());
   const [reviews, setReviews] = useState<Reviews>({
     communication: { rating: 0, comment: '' },
     problemSolving: { rating: 0, comment: '' },
@@ -190,6 +173,14 @@ function ReviewForm() {
   return (
     <Box>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+        <DatePicker
+          label="Select Date"
+          format="DD-MM-YYYY"
+          value={date}
+          onChange={(newValue) => setDate(newValue)}
+          slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+          sx={{ mb: 2 }}
+        />
         {(['communication', 'problemSolving'] as const).map((category) => (
           <Box key={category} mb={3}>
             <Typography variant="subtitle1" gutterBottom>
@@ -213,6 +204,19 @@ function ReviewForm() {
             />
           </Box>
         ))}
+        <Typography variant="subtitle1" gutterBottom>
+          Feedback
+        </Typography>
+        <TextField
+          variant="outlined"
+          placeholder="Leave a comment"
+          fullWidth
+          multiline
+          minRows={3}
+          sx={{
+            mt: 1,
+          }}
+        />
       </Scrollbar>
       <DialogActions>
         <Button variant="outlined" onClick={handleCancel}>
@@ -222,7 +226,7 @@ function ReviewForm() {
           Save Draft
         </Button>
         <Button variant="contained" color="primary" onClick={handleSubmit}>
-          Submit Review
+          Submit
         </Button>
       </DialogActions>
     </Box>

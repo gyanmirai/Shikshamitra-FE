@@ -234,9 +234,12 @@ const EmployeeWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  const monthYearValue = searchParams.monthYear
-    ? dayjs(searchParams.monthYear, 'DD-MM-YYYY')
-    : dayjs();
+  const startDate = searchParams.startDate
+    ? dayjs(searchParams.startDate, 'DD-MM-YYYY')
+    : dayjs().startOf('month');
+  const endDate = searchParams.endDate
+    ? dayjs(searchParams.endDate, 'DD-MM-YYYY')
+    : dayjs().endOf('month');
 
   // const [employeeId, setEmployeeId] = useState<string>('');
   const { data: employees, isLoading } = useQueryAndMutation({
@@ -249,16 +252,16 @@ const EmployeeWise = ({
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
 
-  useEffect(() => {
-    if (searchParams?.employeeId) {
-      getAttendance({
-        employeeId: `employeeIds=${searchParams.employeeId}`,
-        month: searchParams.monthYear
-          ? dayjs(searchParams.monthYear, 'DD-MM-YYYY')?.format('YYYY-MM-DD')
-          : dayjs().format('YYYY-MM-DD'),
-      });
-    }
-  }, [searchParams.monthYear, searchParams.employeeId, getAttendance]);
+  // useEffect(() => {
+  //   if (searchParams?.employeeId) {
+  //     getAttendance({
+  //       employeeId: `employeeIds=${searchParams.employeeId}`,
+  //       month: searchParams.monthYear
+  //         ? dayjs(searchParams.monthYear, 'DD-MM-YYYY')?.format('YYYY-MM-DD')
+  //         : dayjs().format('YYYY-MM-DD'),
+  //     });
+  //   }
+  // }, [searchParams.monthYear, searchParams.employeeId, getAttendance]);
 
   return (
     <>
@@ -282,12 +285,27 @@ const EmployeeWise = ({
       />
       &nbsp;
       <DatePicker
-        format="MMM-YYYY"
-        label="Select Month Year"
-        views={['year', 'month']}
-        value={monthYearValue}
+        format="DD-MM-YYYY"
+        label="Start Date"
+        value={startDate}
         onChange={(value) => {
-          setSearchParams({ monthYear: value?.format('DD-MM-YYYY') });
+          setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
+          // setDate(value);
+        }}
+        sx={{ mb: 2 }}
+        slotProps={{
+          textField: {
+            size: 'small',
+          },
+        }}
+      />
+      &nbsp;
+      <DatePicker
+        format="DD-MM-YYYY"
+        label="End Date"
+        value={endDate}
+        onChange={(value) => {
+          setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
           // setDate(value);
         }}
         sx={{ mb: 2 }}

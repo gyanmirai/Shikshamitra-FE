@@ -32,7 +32,7 @@ interface CustomStepperWithFormikProps {
   activeStep: number;
   initialValues: any;
   steps: string[];
-  handleNext: (isLastStep: boolean, value: any) => void;
+  handleNext: (isLastStep: boolean, value: any, formik: any) => void;
   handleBack: () => void;
   validationSchema: any;
   renderItem: ({
@@ -65,7 +65,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     validateOnMount: true,
     onSubmit: (values) => {
       setIsBackClick(false);
-      handleNext(activeStep === steps.length - 1, values);
+      handleNext(activeStep === steps.length - 1, values, formik);
     },
   });
 

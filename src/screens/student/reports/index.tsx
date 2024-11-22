@@ -101,7 +101,7 @@ const StudentReportsScreen = () => {
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={4}>
                 <FormControl
-                  sx={{ maxWidth: '250px', width: '100%' }}
+                  // sx={{ maxWidth: 'unset', width: '100%' }}
                   error={touched.report && !!errors.report}
                   fullWidth
                 >
@@ -165,7 +165,7 @@ const StudentReportsScreen = () => {
                   }}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -176,7 +176,7 @@ const StudentReportsScreen = () => {
                   onChange={(val: string | string[]) => setFieldValue('organization', val)}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                   disabled={!medium}
                 />
               </Grid>
@@ -188,7 +188,7 @@ const StudentReportsScreen = () => {
                   onChange={(val: string | string[]) => setFieldValue('classes', val)}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                   disabled={!organization}
                 />
               </Grid>
@@ -200,13 +200,13 @@ const StudentReportsScreen = () => {
                   onChange={(val: string | string[]) => setFieldValue('division', val)}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                   disabled={!classes}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <FormControl
-                  sx={{ maxWidth: '250px', width: '100%' }}
+                  sx={{ maxWidth: 'unset', width: '100%' }}
                   error={touched.status && !!errors.status}
                   fullWidth
                 >

@@ -7,6 +7,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
+import { GenderType, GenderTypeArray } from 'src/enums/gender';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -61,8 +63,11 @@ const ProfessionalTax = () => {
             <Box display="flex" flexDirection="column" gap={2}>
               <CustomSelect
                 options={[
-                  { label: 'Male', value: 'male' },
-                  { label: 'Female', value: 'female' },
+                  { label: 'All', value: 3 },
+                  ...GenderTypeArray.map((item, index) => ({
+                    label: GenderType[index],
+                    value: index,
+                  })),
                 ]}
                 label="Gender"
                 value=""

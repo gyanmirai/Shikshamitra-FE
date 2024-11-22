@@ -8,35 +8,17 @@ import type { LabelColor } from 'src/components/label';
 import Link from 'next/link';
 import Autoplay from 'embla-carousel-autoplay';
 
-import {
-  Box,
-  List,
-  Grid,
-  Card,
-  Avatar,
-  Divider,
-  useTheme,
-  ListItem,
-  Typography,
-  CardContent,
-  ListItemText,
-  ListItemAvatar,
-} from '@mui/material';
+import { Box, Grid, Card, useTheme, Typography, CardContent } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
+import { varAlpha } from 'src/theme/styles';
+
 import { Chart } from 'src/components/chart';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import UserHoverProfile from 'src/components/student-popover';
-import {
-  Carousel,
-  useCarousel,
-  CarouselDotButtons,
-  CarouselArrowBasicButtons,
-} from 'src/components/carousel';
+import { useCarousel } from 'src/components/carousel';
 
 import { CalendarView } from 'src/sections/calendar/view';
 import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
@@ -83,6 +65,8 @@ const Dashboard = () => {
             labels={[
               { name: 'Teaching: 70', color: 'info' },
               { name: 'Non-teaching: 50', color: 'secondary' },
+              { name: 'Male: 80', color: 'success' },
+              { name: 'Female: 40', color: 'warning' },
             ]}
             color="primary.main"
             href="/hr/employee"
@@ -178,6 +162,10 @@ const Dashboard = () => {
                       name: 'Total Attendance',
                       data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
                     },
+                    {
+                      name: 'Primary',
+                      data: [10, 41, 35, 69, 91, 148, 35, 51, 49, 62, 51, 49],
+                    },
                   ],
                 },
                 {
@@ -187,8 +175,16 @@ const Dashboard = () => {
                       name: 'Total Attendance',
                       data: [91, 148, 35, 51, 49, 10, 41, 35, 51, 49, 62, 69],
                     },
+                    {
+                      name: 'Primary',
+                      data: [49, 62, 69, 91, 10, 41, 35, 51, 148, 35, 51, 49],
+                    },
                   ],
                 },
+              ],
+              colors: [
+                theme.palette.primary.main,
+                varAlpha(theme.palette.warning.mainChannel, 0.5),
               ],
             }}
             sx={{ height: 1 }}
@@ -236,7 +232,7 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
-              <Typography variant="h6">Employee Turnover Rate</Typography>
+              <Typography variant="h6">Employee Retention Ratio</Typography>
               <Chart
                 type="area"
                 series={[{ name: 'Turnover Rate', data: [3, 5, 2, 4, 3, 2, 6] }]}
@@ -254,7 +250,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={6}>
           <Card
             sx={{
               p: 3,
@@ -458,7 +454,7 @@ const Dashboard = () => {
               </Scrollbar>
             </Box>
           </Card>
-        </Grid>
+        </Grid> */}
         <Grid item xs={12}>
           <Card>
             <CardContent>
@@ -492,7 +488,16 @@ export const EmployeeDashboardCard = ({
   color,
 }: DashboardCardProps) => (
   <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
-    <Card sx={{ height: '100%' }}>
+    <Card
+      sx={{
+        height: '100%',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: 'var(--shadows-8)',
+          scale: 1.03,
+        },
+      }}
+    >
       <CardContent
         sx={{
           display: 'flex',

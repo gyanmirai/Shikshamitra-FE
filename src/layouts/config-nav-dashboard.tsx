@@ -454,7 +454,7 @@ const hrModule = {
           _action: 'employee',
           children: [
             {
-              title: 'Employee Enroll',
+              title: 'Employee List',
               path: '/hr/employee',
               _action: 'employee',
             },
@@ -528,7 +528,7 @@ const hrModule = {
           _action: 'attendance-and-leave-management',
           children: [
             {
-              title: 'Biometric Integration',
+              title: 'Import Attendance',
               path: '/hr/biometric-integration',
               _action: 'biometric-integration',
             },
@@ -565,9 +565,9 @@ const hrModule = {
           _action: 'reports',
         },
         {
-          title: 'Staff Directory',
-          path: '/hr/staff-directory',
-          _action: 'staff-directory',
+          title: 'Events & Holidays',
+          path: '/hr/events-holidays',
+          _action: 'events-holidays',
         },
       ],
     },

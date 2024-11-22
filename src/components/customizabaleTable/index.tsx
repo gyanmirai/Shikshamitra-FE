@@ -1,3 +1,5 @@
+import type { TableRowProps } from '@mui/material';
+
 import _ from 'lodash';
 import jsPDF from 'jspdf';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -82,6 +84,7 @@ interface CustomizableTableProps {
   isSearch?: boolean;
   isScrollbar?: boolean;
   isShowedDense?: boolean;
+  rowProps?: (row: Data, index: number) => TableRowProps;
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -99,6 +102,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   isSearch = true,
   isScrollbar = true,
   isShowedDense = true,
+  rowProps = () => {},
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -308,7 +312,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
         {isSearch && (
           <TextField
-            label="Search"
+            label="Global Search"
             variant="outlined"
             size="small"
             value={searchTerm}
@@ -603,7 +607,12 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 ) : paginatedData.length > 0 ? (
                   paginatedData.map((row, index) => (
                     <React.Fragment key={index}>
-                      <TableRow hover tabIndex={-1} onClick={() => handleRowClick(row, index)}>
+                      <TableRow
+                        hover
+                        tabIndex={-1}
+                        onClick={() => handleRowClick(row, index)}
+                        {...rowProps(row, index)}
+                      >
                         {columns.some((column) => column.children) && (
                           <TableCell sx={{ fontSize: '12px' }}>
                             <IconButton size="small" onClick={() => handleExpandRow(index)}>
@@ -630,7 +639,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 }}
                               >
                                 {column.render
-                                  ? column.render(row[column.id], row)
+                                  ? column.render(_.get(row, column.id, ''), row)
                                   : _.get(row, column.id, '-')}
                               </TableCell>
                             )

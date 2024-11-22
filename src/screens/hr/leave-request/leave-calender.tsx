@@ -52,7 +52,7 @@ const LeaveCalender = (props: TabComponentType) => {
         end: i.endDate,
         allDay: false,
         textColor: i.color,
-        title: i.leaveType,
+        title: `${i.leaveType} [${i.employee.firstName} ${i.employee.lastName}]`,
         description: i.description.replace(/<[^>]+>/g, ''),
         ...(i.employeeId === userInfo?.employee?.id ? { className: 'ownEvent' } : {}),
       })) || [],

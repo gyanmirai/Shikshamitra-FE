@@ -45,6 +45,18 @@ const TABS = [
     icon: <Iconify icon="mdi:clipboard-text-history" width={20} />,
     component: (props: { tabs: UseTabsReturn }) => <EmployeeHistory />,
   },
+  {
+    value: 'payrollSummary',
+    label: 'Payroll Summary',
+    icon: <Iconify icon="fluent:payment-16-filled" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <></>,
+  },
+  {
+    value: 'transport',
+    label: 'Transportation',
+    icon: <Iconify icon="solar:bus-bold" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <></>,
+  },
 ];
 interface EmployeeViewProps {
   setSearchParams: any;
@@ -97,16 +109,21 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
               <Box display="flex" flexDirection="column" gap={1}>
                 <Typography variant="caption" fontWeight="bold" mt={1}>
                   <Label variant="soft" color="success">
-                    {employee?.role || 'Teacher'}
+                    Role: {employee?.role || 'Teacher'}
                   </Label>
                 </Typography>
                 <Typography variant="caption" fontWeight="bold">
                   <Label variant="soft" color="info">
-                    GSEB
+                    Board: GSEB
                   </Label>
                   &nbsp;
                   <Label variant="soft" color="info">
                     ENG-Primary
+                  </Label>
+                </Typography>
+                <Typography variant="caption" fontWeight="bold">
+                  <Label variant="soft" color="warning">
+                    Subject: English
                   </Label>
                 </Typography>
               </Box>

@@ -17,7 +17,6 @@ import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 import Overview from './overview';
-import TotalInquiries from './total-inquiries';
 import AdmissionOverTime from './admission-over-time';
 import OrganizationStatus from './organization-status';
 import BoardEnrollmentStatus from './board-enrollment-status';
@@ -26,7 +25,7 @@ const dashBoardSections = [
   <Overview />,
   <BoardEnrollmentStatus />,
   <OrganizationStatus />,
-  <TotalInquiries />,
+  // <TotalInquiries />,
   <AdmissionOverTime />,
 ];
 const EnrollmentDashboardScreen = () => {
@@ -45,12 +44,12 @@ const EnrollmentDashboardScreen = () => {
       id: '2',
       title: 'Organization Status',
     },
+    // {
+    //   id: '3',
+    //   title: 'Total Inquiries',
+    // },
     {
       id: '3',
-      title: 'Total Inquiries',
-    },
-    {
-      id: '4',
       title: 'Admission over time',
     },
   ]);

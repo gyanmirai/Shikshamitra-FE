@@ -25,6 +25,38 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    addBasicInformation: builder.mutation({
+      query: (body) => ({
+        url: `/app/employee/basic-info`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+    updateFamilyInformation: builder.mutation({
+      query: ({ employeeId, body }) => ({
+        url: `/app/employee/family-info/${employeeId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+    updateExperienceInformation: builder.mutation({
+      query: ({ employeeId, body }) => ({
+        url: `/app/employee/experience-info/${employeeId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+    updateBankDetails: builder.mutation({
+      query: ({ employeeId, body }) => ({
+        url: `/app/employee/bank-details/${employeeId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
     updateEmployee: builder.mutation({
       query: ({ id, body }) => ({
         url: `/app/employee/${id}`,
@@ -155,4 +187,8 @@ export const {
   useUpdateEmployeeCustomAttendanceRuleMutation,
   useDeleteEmployeeCustomAttendanceRuleMutation,
   useGetEmployeeNotificationHistoryQuery,
+  useUpdateBankDetailsMutation,
+  useUpdateExperienceInformationMutation,
+  useUpdateFamilyInformationMutation,
+  useAddBasicInformationMutation,
 } = employeeApi;

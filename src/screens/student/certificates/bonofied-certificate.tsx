@@ -132,7 +132,7 @@ const BonofiedForm = () => {
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allMediums}
               label="Medium"
@@ -144,10 +144,13 @@ const BonofiedForm = () => {
               valueKey="id"
               formControlProps={{
                 fullWidth: true,
+                sx: {
+                  maxWidth: 'unset',
+                },
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allOrganization}
               label="Organization"
@@ -157,11 +160,14 @@ const BonofiedForm = () => {
               valueKey="id"
               formControlProps={{
                 fullWidth: true,
+                sx: {
+                  maxWidth: 'unset',
+                },
               }}
               disabled={!medium}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -171,11 +177,14 @@ const BonofiedForm = () => {
               valueKey="id"
               formControlProps={{
                 fullWidth: true,
+                sx: {
+                  maxWidth: 'unset',
+                },
               }}
               disabled={!organization}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allDivision}
               label="Division"
@@ -183,11 +192,11 @@ const BonofiedForm = () => {
               onChange={(val: string | string[]) => setFieldValue('division', val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
               disabled={!classes}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.grNo}
@@ -197,7 +206,7 @@ const BonofiedForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <DatePicker
               label="Creation Date"
               value={values.creationDate}

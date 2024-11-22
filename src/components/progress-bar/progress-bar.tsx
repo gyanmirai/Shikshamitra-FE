@@ -20,7 +20,6 @@ export function ProgressBar() {
   // const [currentPoint, setCurrentPoint] = useState(0);
   // const [point, setPoint] = useState(0);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  console.log('isChanges', isChanges);
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -51,8 +50,6 @@ export function ProgressBar() {
       const script = document.getElementById('proxy-script');
       if (!script || window.location.href === script.dataset.href) return;
 
-      // @ts-ignore
-      console.log(window?.isChanges, '[]][');
       // @ts-ignore
       const confirm = !window?.isChanges ? true : window.confirm('111111111111111111?');
       if (!confirm) {
