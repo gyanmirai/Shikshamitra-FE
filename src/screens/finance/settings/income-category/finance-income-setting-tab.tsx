@@ -126,14 +126,13 @@ const FinanceIncomeSettingTab = () => {
           { id: 'description', label: 'Description' },
           { id: 'incomeType', label: 'Income Type' },
 
-          { id: 'amount', label: 'Amount',render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          }, },
+          {
+            id: 'amount',
+            label: 'Amount',
+            render(value) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+            },
+          },
           {
             id: 'action',
             label: 'Action',

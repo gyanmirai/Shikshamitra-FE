@@ -118,14 +118,13 @@ const FinanceExpenseSettingTab = () => {
           { id: 'categoryName', label: 'Category Name' },
           { id: 'parentCategory', label: 'Parent Category' },
           { id: 'assignDepartment', label: 'Assign Department' },
-          { id: 'budgetLimit', label: 'Budget Limit' , render(value) {
-
-            return (
-              <Typography fontSize="12px">
-                {formatNumber(value, "INR")}
-              </Typography>
-            );
-          },},
+          {
+            id: 'budgetLimit',
+            label: 'Budget Limit',
+            render(value) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+            },
+          },
           {
             id: 'action',
             label: 'Action',

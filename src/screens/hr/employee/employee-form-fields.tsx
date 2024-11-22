@@ -2,17 +2,28 @@ import type { SxProps } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 
 import {
+  Box,
+  Grid,
+  Stack,
   Select,
   Divider,
   MenuItem,
+  Checkbox,
+  TextField,
   IconButton,
   InputLabel,
+  Typography,
   FormControl,
+  FormControlLabel,
   CircularProgress,
 } from '@mui/material';
 
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
+import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -129,6 +140,51 @@ const InformationFields: FieldsType[] = [
     label: 'Status',
     name: 'status',
     placeholder: 'Enter Status',
+    renderComp: (props) => (
+      <FormControl fullWidth>
+        <InputLabel id="dropdown-label" size="small">
+          Status
+        </InputLabel>
+        <Select
+          labelId="dropdown-label"
+          id="dropdown"
+          value={props.formik.values.status}
+          onChange={props.formik.handleChange}
+          size="small"
+          label="Status"
+          name="status"
+        >
+          {EmployeeStatusTypeArray.map((i, index) => (
+            <MenuItem key={i} value={index}>
+              {EmployeeStatusType[index]}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    ),
+  },
+  {
+    type: 'text',
+    label: 'Subject',
+    name: 'subject',
+    placeholder: 'Enter Subject',
+    renderComp(props) {
+      return (
+        <CustomSelect
+          options={[]}
+          label="Subject"
+          multiple
+          onChange={(val) => props.formik.setFieldValue('subject', val)}
+          value={props.formik.values.subject}
+          formControlProps={{
+            fullWidth: true,
+            sx: {
+              maxWidth: 'unset',
+            },
+          }}
+        />
+      );
+    },
   },
   {
     type: 'date',
@@ -147,6 +203,28 @@ const InformationFields: FieldsType[] = [
     label: 'Cast Category',
     name: 'castCategory',
     placeholder: 'Enter Cast Category',
+    renderComp: (props) => (
+      <FormControl fullWidth>
+        <InputLabel id="dropdown-label" size="small">
+          Cast Category
+        </InputLabel>
+        <Select
+          labelId="dropdown-label"
+          id="dropdown"
+          value={props.formik.values.castCategory}
+          onChange={props.formik.handleChange}
+          size="small"
+          label="Cast Category"
+          name="castCategory"
+        >
+          {EmployeeCastTypeArray.map((i, index) => (
+            <MenuItem key={i} value={index}>
+              {EmployeeCastType[index]}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    ),
   },
   {
     type: 'select',
@@ -161,14 +239,17 @@ const InformationFields: FieldsType[] = [
         <Select
           labelId="dropdown-label"
           id="dropdown"
-          value={props.value}
-          onChange={props.onChange}
+          value={props.formik.values.gender}
+          onChange={props.formik.handleChange}
           size="small"
           label="Gender"
+          name="gender"
         >
-          <MenuItem value="male">Male</MenuItem>
-          <MenuItem value="female">Female</MenuItem>
-          <MenuItem value="other">Other</MenuItem>
+          {GenderTypeArray.map((i, index) => (
+            <MenuItem key={i} value={index}>
+              {GenderType[index]}
+            </MenuItem>
+          ))}
         </Select>
       </FormControl>
     ),
@@ -184,6 +265,28 @@ const InformationFields: FieldsType[] = [
     label: 'Marital Status',
     name: 'maritalStatus',
     placeholder: 'Enter Marital Status',
+    renderComp: (props) => (
+      <FormControl fullWidth>
+        <InputLabel id="dropdown-label" size="small">
+          Marital Status
+        </InputLabel>
+        <Select
+          labelId="dropdown-label"
+          id="dropdown"
+          value={props.formik.values.maritalStatus}
+          onChange={props.formik.handleChange}
+          size="small"
+          label="Marital Status"
+          name="maritalStatus"
+        >
+          {MaritalStatusTypeArray.map((i, index) => (
+            <MenuItem key={i} value={index}>
+              {MaritalStatusType[index]}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    ),
   },
   {
     type: 'text',
@@ -262,9 +365,10 @@ const InformationFields: FieldsType[] = [
         <Select
           labelId="dropdown-label"
           id="dropdown"
-          value={props.value}
+          value={props.formik.values.employeeGroup}
           label="Employee Group"
-          onChange={props.onChange}
+          name="employeeGroup"
+          onChange={props.formik.handleChange}
           size="small"
         >
           <MenuItem value="teaching">Teaching</MenuItem>
@@ -272,6 +376,28 @@ const InformationFields: FieldsType[] = [
         </Select>
       </FormControl>
     ),
+    // renderComp: (props) => (
+    //   <FormControl fullWidth>
+    //     <InputLabel id="dropdown-label" size="small">
+    //       Employee Group
+    //     </InputLabel>
+    //     <Select
+    //       labelId="dropdown-label"
+    //       id="dropdown"
+    //       label="Employee Group"
+    //       value={props.formik.values.employeeGroup}
+    //       onChange={props.formik.handleChange}
+    //       size="small"
+    //       name="employeeGroup"
+    //     >
+    //       {EmployeeGroupTypeArray.map((i, index) => (
+    //         <MenuItem key={i} value={index}>
+    //           {EmployeeGroupType[index]}
+    //         </MenuItem>
+    //       ))}
+    //     </Select>
+    //   </FormControl>
+    // ),
   },
   {
     type: 'text',
@@ -317,7 +443,15 @@ const InformationFields: FieldsType[] = [
     name: 'city',
     placeholder: 'Enter District',
   },
-  { type: 'text', label: 'Pincode', name: 'pincode', placeholder: 'Enter Pincode' },
+  {
+    type: 'text',
+    label: 'Pincode',
+    name: 'pincode',
+    placeholder: 'Enter Pincode',
+    otherProps: {
+      type: 'number',
+    },
+  },
 
   // {
   //   type: 'text',
@@ -331,126 +465,138 @@ const InformationFields: FieldsType[] = [
   // },
 ];
 
-const PersonalFields: FieldsType[] = [
+// const FamilyFields: FieldsType[] = [
+//   {
+//     type: 'text',
+//     label: 'Father Name',
+//     name: 'fatherName',
+//     placeholder: 'Enter Father Name',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Father Occupation',
+//     name: 'fatherOccupation',
+//     placeholder: 'Enter Father Occupation',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Father Contact No.',
+//     name: 'fatherContactNo',
+//     placeholder: 'Enter Father Contact No.',
+//     renderComp(props) {
+//       const { formik } = props;
+
+//       return (
+//         <PhoneInput
+//           name="fatherContactNo"
+//           value={formik.values.fatherContactNo}
+//           onChange={(value) => {
+//             console.log(value, 'value====>');
+//             formik.setFieldValue('fatherContactNo', value);
+//           }}
+//           placeholder="Enter Father Contact No."
+//           error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
+//         />
+//       );
+//     },
+//   },
+//   {
+//     type: 'text',
+//     label: 'Father Address',
+//     name: 'fatherAddress',
+//     placeholder: 'Enter Father Address',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Mother Name',
+//     name: 'motherName',
+//     placeholder: 'Enter Mother Name',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Mother Occupation',
+//     name: 'motherOccupation',
+//     placeholder: 'Enter Mother Occupation',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Mother Contact No.',
+//     name: 'motherContactNo',
+//     placeholder: 'Enter Mother Contact No.',
+//     renderComp(props) {
+//       const { formik } = props;
+
+//       return (
+//         <PhoneInput
+//           name="motherContactNo"
+//           value={formik.values.motherContactNo}
+//           onChange={(value) => {
+//             console.log(value, 'value====>');
+//             formik.setFieldValue('motherContactNo', value);
+//           }}
+//           placeholder="Enter Mother Contact No."
+//           error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
+//         />
+//       );
+//     },
+//   },
+//   {
+//     type: 'text',
+//     label: 'Mother Address',
+//     name: 'motherAddress',
+//     placeholder: 'Enter Mother Address',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Spouse Name',
+//     name: 'spouseName',
+//     placeholder: 'Enter Spouse Name',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Spouse Occupation',
+//     name: 'spouseOccupation',
+//     placeholder: 'Enter Spouse Occupation',
+//   },
+//   {
+//     type: 'text',
+//     label: 'Spouse Contact No.',
+//     name: 'spouseContactNo',
+//     placeholder: 'Enter Spouse Contact No.',
+//     renderComp(props) {
+//       const { formik } = props;
+
+//       return (
+//         <PhoneInput
+//           name="spouseContactNo"
+//           value={formik.values.spouseContactNo}
+//           onChange={(value) => {
+//             console.log(value, 'value====>');
+//             formik.setFieldValue('spouseContactNo', value);
+//           }}
+//           placeholder="Enter Spouse Contact No."
+//           error={formik.touched.spouseContactNo && Boolean(formik.errors.spouseContactNo)}
+//         />
+//       );
+//     },
+//   },
+//   {
+//     type: 'text',
+//     label: 'Spouse Address',
+//     name: 'spouseAddress',
+//     placeholder: 'Enter Spouse Address',
+//   },
+// ];
+
+const FamilyFields = [
   {
     type: 'text',
     label: 'Father Name',
     name: 'fatherName',
     placeholder: 'Enter Father Name',
-  },
-  {
-    type: 'text',
-    label: 'Father Occupation',
-    name: 'fatherOccupation',
-    placeholder: 'Enter Father Occupation',
-  },
-  {
-    type: 'text',
-    label: 'Father Contact No.',
-    name: 'fatherContactNo',
-    placeholder: 'Enter Father Contact No.',
-    renderComp(props) {
-      const { formik } = props;
-
-      return (
-        <PhoneInput
-          name="fatherContactNo"
-          value={formik.values.fatherContactNo}
-          onChange={(value) => {
-            console.log(value, 'value====>');
-            formik.setFieldValue('fatherContactNo', value);
-          }}
-          placeholder="Enter Father Contact No."
-          error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
-        />
-      );
+    renderComp(props: any) {
+      return <RenderFamilyInformation {...props} />;
     },
-  },
-  {
-    type: 'text',
-    label: 'Father Address',
-    name: 'fatherAddress',
-    placeholder: 'Enter Father Address',
-  },
-  {
-    type: 'text',
-    label: 'Mother Name',
-    name: 'motherName',
-    placeholder: 'Enter Mother Name',
-  },
-  {
-    type: 'text',
-    label: 'Mother Occupation',
-    name: 'motherOccupation',
-    placeholder: 'Enter Mother Occupation',
-  },
-  {
-    type: 'text',
-    label: 'Mother Contact No.',
-    name: 'motherContactNo',
-    placeholder: 'Enter Mother Contact No.',
-    renderComp(props) {
-      const { formik } = props;
-
-      return (
-        <PhoneInput
-          name="motherContactNo"
-          value={formik.values.motherContactNo}
-          onChange={(value) => {
-            console.log(value, 'value====>');
-            formik.setFieldValue('motherContactNo', value);
-          }}
-          placeholder="Enter Mother Contact No."
-          error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
-        />
-      );
-    },
-  },
-  {
-    type: 'text',
-    label: 'Mother Address',
-    name: 'motherAddress',
-    placeholder: 'Enter Mother Address',
-  },
-  {
-    type: 'text',
-    label: 'Spouse Name',
-    name: 'spouseName',
-    placeholder: 'Enter Spouse Name',
-  },
-  {
-    type: 'text',
-    label: 'Spouse Occupation',
-    name: 'spouseOccupation',
-    placeholder: 'Enter Spouse Occupation',
-  },
-  {
-    type: 'text',
-    label: 'Spouse Contact No.',
-    name: 'spouseContactNo',
-    placeholder: 'Enter Spouse Contact No.',
-    renderComp(props) {
-      const { formik } = props;
-
-      return (
-        <PhoneInput
-          name="spouseContactNo"
-          value={formik.values.spouseContactNo}
-          onChange={(value) => {
-            console.log(value, 'value====>');
-            formik.setFieldValue('spouseContactNo', value);
-          }}
-          placeholder="Enter Spouse Contact No."
-          error={formik.touched.spouseContactNo && Boolean(formik.errors.spouseContactNo)}
-        />
-      );
-    },
-  },
-  {
-    type: 'text',
-    label: 'Spouse Address',
-    name: 'spouseAddress',
-    placeholder: 'Enter Spouse Address',
   },
 ];
 const CertificateFields: FieldsType[] = [
@@ -591,6 +737,22 @@ export const PayrollFields: FieldsType[] = [
     label: 'Shift Name',
     name: 'shiftName',
     placeholder: 'Enter Shift Name',
+    renderComp(props) {
+      return (
+        <CustomSelect
+          options={[]}
+          label="Select Shift"
+          onChange={() => {}}
+          value=""
+          formControlProps={{
+            fullWidth: true,
+            sx: {
+              maxWidth: 'unset',
+            },
+          }}
+        />
+      );
+    },
   },
   {
     type: 'text',
@@ -652,9 +814,204 @@ const PerformanceAndDevelopmentFields: FieldsType[] = [
 
 export const allFields: FieldsType[][] = [
   InformationFields,
-  PersonalFields,
+  FamilyFields,
   CertificateFields,
   WorkExperienceFields,
   PayrollFields,
   // PerformanceAndDevelopmentFields,
 ];
+
+function RenderFamilyInformation(props: any) {
+  const { formik } = props;
+
+  return (
+    <Box sx={{ width: '100%' }}>
+      <Grid container spacing={2}>
+        <Grid item xs={4}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Father Details
+            </Typography>
+            <Stack spacing={1}>
+              <TextField
+                name="fatherName"
+                label="Father Name"
+                value={formik.values.fatherName}
+                onChange={formik.handleChange}
+                error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
+                helperText={formik.touched.fatherName && formik.errors.fatherName}
+                fullWidth
+                size="small"
+              />
+              <TextField
+                name="fatherOccupation"
+                label="Father Occupation"
+                value={formik.values.fatherOccupation}
+                onChange={formik.handleChange}
+                error={formik.touched.fatherOccupation && Boolean(formik.errors.fatherOccupation)}
+                helperText={formik.touched.fatherOccupation && formik.errors.fatherOccupation}
+                fullWidth
+                size="small"
+              />
+              <PhoneInput
+                name="fatherContactNo"
+                value={formik.values.fatherContactNo}
+                onChange={(value) => {
+                  formik.setFieldValue('fatherContactNo', value);
+                }}
+                placeholder="Enter Father Contact No."
+                error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
+              />
+              <TextField
+                name="fatherAddress"
+                multiline
+                rows={3}
+                label="Father Address"
+                value={formik.values.fatherAddress}
+                onChange={formik.handleChange}
+                error={formik.touched.fatherAddress && Boolean(formik.errors.fatherAddress)}
+                helperText={formik.touched.fatherAddress && formik.errors.fatherAddress}
+                fullWidth
+                size="small"
+              />
+            </Stack>
+          </Box>
+        </Grid>
+        <Grid item xs={4}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Mother Details
+            </Typography>
+            <Stack spacing={1}>
+              <TextField
+                name="motherName"
+                label="Mother Name"
+                value={formik.values.motherName}
+                onChange={formik.handleChange}
+                error={formik.touched.motherName && Boolean(formik.errors.motherName)}
+                helperText={formik.touched.motherName && formik.errors.motherName}
+                fullWidth
+                size="small"
+              />
+              <TextField
+                name="motherOccupation"
+                label="Mother Occupation"
+                value={formik.values.motherOccupation}
+                onChange={formik.handleChange}
+                error={formik.touched.motherOccupation && Boolean(formik.errors.motherOccupation)}
+                helperText={formik.touched.motherOccupation && formik.errors.motherOccupation}
+                fullWidth
+                size="small"
+              />
+              <PhoneInput
+                name="motherContactNo"
+                value={formik.values.motherContactNo}
+                onChange={(value) => {
+                  formik.setFieldValue('motherContactNo', value);
+                }}
+                placeholder="Enter Mother Contact No."
+                error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
+              />
+
+              <TextField
+                name="motherAddress"
+                multiline
+                rows={3}
+                label="Mother Address"
+                value={formik.values.motherAddress}
+                onChange={formik.handleChange}
+                error={formik.touched.motherAddress && Boolean(formik.errors.motherAddress)}
+                helperText={formik.touched.motherAddress && formik.errors.motherAddress}
+                fullWidth
+                size="small"
+                disabled={formik.values.sameAsFatherAddressForMother}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formik.values.sameAsFatherAddressForMother}
+                    onChange={(e) => {
+                      formik.setFieldValue('sameAsFatherAddressForMother', e.target.checked);
+                      if (e.target.checked) {
+                        formik.setFieldValue('motherAddress', formik.values.fatherAddress);
+                      }
+                    }}
+                    name="sameAsFatherAddressForMother"
+                  />
+                }
+                label="Same as Father Address"
+              />
+            </Stack>
+          </Box>
+        </Grid>
+        <Grid item xs={4}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Spouse Details
+            </Typography>
+            <Stack spacing={1}>
+              <TextField
+                name="spouseName"
+                label="Spouse Name"
+                value={formik.values.spouseName}
+                onChange={formik.handleChange}
+                error={formik.touched.spouseName && Boolean(formik.errors.spouseName)}
+                helperText={formik.touched.spouseName && formik.errors.spouseName}
+                fullWidth
+                size="small"
+              />
+              <TextField
+                name="spouseOccupation"
+                label="Spouse Occupation"
+                value={formik.values.spouseOccupation}
+                onChange={formik.handleChange}
+                error={formik.touched.spouseOccupation && Boolean(formik.errors.spouseOccupation)}
+                helperText={formik.touched.spouseOccupation && formik.errors.spouseOccupation}
+                fullWidth
+                size="small"
+              />
+              <PhoneInput
+                name="spouseContactNo"
+                value={formik.values.spouseContactNo}
+                onChange={(value) => {
+                  formik.setFieldValue('spouseContactNo', value);
+                }}
+                placeholder="Enter Spouse Contact No."
+                error={formik.touched.spouseContactNo && Boolean(formik.errors.spouseContactNo)}
+              />
+
+              <TextField
+                name="spouseAddress"
+                multiline
+                rows={3}
+                label="Spouse Address"
+                value={formik.values.spouseAddress}
+                onChange={formik.handleChange}
+                error={formik.touched.spouseAddress && Boolean(formik.errors.spouseAddress)}
+                helperText={formik.touched.spouseAddress && formik.errors.spouseAddress}
+                fullWidth
+                size="small"
+                disabled={formik.values.sameAsFatherAddressForSpouse}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formik.values.sameAsFatherAddressForSpouse}
+                    onChange={(e) => {
+                      formik.setFieldValue('sameAsFatherAddressForSpouse', e.target.checked);
+                      if (e.target.checked) {
+                        formik.setFieldValue('spouseAddress', formik.values.fatherAddress);
+                      }
+                    }}
+                    name="sameAsFatherAddressForSpouse"
+                  />
+                }
+                label="Same as Father Address"
+              />
+            </Stack>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}

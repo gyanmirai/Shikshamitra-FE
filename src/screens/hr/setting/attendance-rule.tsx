@@ -1,5 +1,5 @@
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -28,25 +28,30 @@ import {
   useGetEmployeeCustomAttendanceRuleQuery,
   useAddEmployeeCustomAttendanceRuleMutation,
   useUpdateEmployeeCustomAttendanceRuleMutation,
+  useDeleteEmployeeCustomAttendanceRuleMutation,
 } from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const AttendanceRule = () => {
+  const confirm = useBoolean();
   const dialog = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
+  const [deleteInformation, setDeleteInformation] = useState<any>(null);
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
-            // confirm.onTrue();
+            confirm.onTrue();
             popover.onClose();
+            setDeleteInformation(row);
           }}
           sx={{ color: 'error.main' }}
         >
@@ -66,16 +71,33 @@ const AttendanceRule = () => {
         </MenuItem>
       </MenuList>
     ),
-    [dialog]
+    [confirm, dialog]
   );
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });
+
+  const [deleteRule] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEmployeeCustomAttendanceRuleMutation,
+  });
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
   };
+
+  const tableData = useMemo(
+    () =>
+      data?.items?.map((item: any) => ({
+        ...item,
+        typeValue: EmployeeAttendanceStatus[item.type],
+        lateThresholdUnitValue: TimeUnitType[item.lateThresholdUnit],
+        halfDayThresholdUnitValue: TimeUnitType[item.halfDayThresholdUnit],
+        enableNotification: item.enableNotificationForUpperAuthority ? 'Yes' : 'No',
+      })) || [],
+    [data?.items]
+  );
   return (
     <>
       <Card elevation={3} sx={{ p: 2, my: 2, boxShadow: 'var(--shadows-3)' }}>
@@ -93,59 +115,52 @@ const AttendanceRule = () => {
             isLoading={isLoading}
             columns={[
               { label: 'Name', id: 'name' },
-              { label: 'Type', id: 'type' },
+              { label: 'Type', id: 'typeValue' },
               { label: 'Late Threshold', id: 'lateThreshold' },
-              { label: 'Late Threshold Unit', id: 'lateThresholdUnit' },
+              { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue' },
               { label: 'Half Day Threshold', id: 'halfDayThreshold' },
-              { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnit' },
+              { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnitValue' },
               {
                 label: 'Enable Notification',
                 id: 'enableNotification',
-                render(value, row) {
-                  return value ? 'Yes' : 'No';
-                },
               },
               {
                 label: 'Actions',
                 id: 'action',
                 isSort: false,
                 render(value, row) {
-                  return <ThreeDotsActions actions={(props) => actions(props, row)} />;
+                  return (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={(props) => actions(props, row)}
+                    />
+                  );
                 },
               },
             ]}
-            data={[
-              {
-                name: 'Regular School Day',
-                type: 'Default',
-                lateThreshold: '15',
-                lateThresholdUnit: 0,
-                halfDayThreshold: '180',
-                halfDayThresholdUnit: 0,
-                enableNotification: true,
-              },
-              {
-                name: 'Early Dismissal',
-                type: 'Special',
-                lateThreshold: '10',
-                lateThresholdUnit: 0,
-                halfDayThreshold: '120',
-                halfDayThresholdUnit: 0,
-                enableNotification: false,
-              },
-              {
-                name: 'Assembly Day',
-                type: 'Special',
-                lateThreshold: '5',
-                lateThresholdUnit: 0,
-                halfDayThreshold: '150',
-                halfDayThresholdUnit: 0,
-                enableNotification: true,
-              },
-            ]}
+            data={tableData}
           />
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              deleteRule(deleteInformation?.id);
+              confirm.onFalse();
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
 
       <CustomDialog title="Add Rule" open={dialog.value} handleClose={handleClose}>
         <AttendanceRuleForm handleClose={handleClose} editData={editData} />
@@ -174,7 +189,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
   const formik = useFormik({
     initialValues: {
       name: editData?.name || '',
-      type: editData?.type || '',
+      type: editData?.type === undefined ? '' : editData?.type,
       lateThreshold: editData?.lateThreshold || '',
       lateThresholdUnit: editData?.lateThresholdUnit || TimeUnitType.Minutes,
       halfDayThreshold: editData?.halfDayThreshold || '',
@@ -186,6 +201,18 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
         if (editData) {
           await updateRule({
             id: editData.id,
+            body: {
+              name: values.name,
+              type: values.type,
+              lateThreshold: values.lateThreshold,
+              lateThresholdUnit: values.lateThresholdUnit,
+              halfDayThreshold: values.halfDayThreshold,
+              halfDayThresholdUnit: values.halfDayThresholdUnit,
+              enableNotificationForUpperAuthority: values.enableNotification,
+            },
+          });
+        } else {
+          await addRule({
             name: values.name,
             type: values.type,
             lateThreshold: values.lateThreshold,
@@ -195,15 +222,6 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
             enableNotificationForUpperAuthority: values.enableNotification,
           });
         }
-        await addRule({
-          name: values.name,
-          type: values.type,
-          lateThreshold: values.lateThreshold,
-          lateThresholdUnit: values.lateThresholdUnit,
-          halfDayThreshold: values.halfDayThreshold,
-          halfDayThresholdUnit: values.halfDayThresholdUnit,
-          enableNotificationForUpperAuthority: values.enableNotification,
-        });
         handleClose();
       } catch (error) {
         console.log(error);
@@ -234,7 +252,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
               <CustomSelect
                 options={[
                   { id: EmployeeAttendanceStatus.HalfDayLeave, name: 'Half-day' },
-                  { id: 4, name: 'Late' },
+                  { id: EmployeeAttendanceStatus.Late, name: 'Late' },
                 ]}
                 label="Attendance Type"
                 labelKey="name"

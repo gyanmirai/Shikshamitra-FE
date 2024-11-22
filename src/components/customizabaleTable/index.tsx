@@ -1,3 +1,5 @@
+import type { TableRowProps } from '@mui/material';
+
 import _ from 'lodash';
 import jsPDF from 'jspdf';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -81,8 +83,8 @@ interface CustomizableTableProps {
   isFilter?: boolean;
   isSearch?: boolean;
   isScrollbar?: boolean;
-  isShowedDense?:boolean;
-
+  isShowedDense?: boolean;
+  rowProps?: (row: Data, index: number) => TableRowProps;
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -100,6 +102,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   isSearch = true,
   isScrollbar = true,
   isShowedDense = true,
+  rowProps = () => {},
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -309,7 +312,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
         {isSearch && (
           <TextField
-            label="Search"
+            label="Global Search"
             variant="outlined"
             size="small"
             value={searchTerm}
@@ -604,7 +607,12 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 ) : paginatedData.length > 0 ? (
                   paginatedData.map((row, index) => (
                     <React.Fragment key={index}>
-                      <TableRow hover tabIndex={-1} onClick={() => handleRowClick(row, index)}>
+                      <TableRow
+                        hover
+                        tabIndex={-1}
+                        onClick={() => handleRowClick(row, index)}
+                        {...rowProps(row, index)}
+                      >
                         {columns.some((column) => column.children) && (
                           <TableCell sx={{ fontSize: '12px' }}>
                             <IconButton size="small" onClick={() => handleExpandRow(index)}>
@@ -631,7 +639,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 }}
                               >
                                 {column.render
-                                  ? column.render(row[column.id], row)
+                                  ? column.render(_.get(row, column.id, ''), row)
                                   : _.get(row, column.id, '-')}
                               </TableCell>
                             )
@@ -663,39 +671,45 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               </TableBody>
             </Table>
           </Scrollbar>
-         {isShowedDense && <Paper
-            elevation={1}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1,
-              width: '100%',
-            }}
-          >
-          { isShowedDense && <FormControlLabel
-              control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
-              label="Dense"
-            />}
-            {isPagination && <TablePagination
-              rowsPerPageOptions={[10, 25, 100]}
-              component="div"
-              count={serverSide ? totalCount || 0 : filteredData.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              size="small"
+          {isShowedDense && (
+            <Paper
+              elevation={1}
               sx={{
-                '& *': { fontSize: '14px !important' },
-                '& svg': { fontSize: '18px !important' },
-                '& .MuiToolbar-root': {
-                  minHeight: 'unset',
-                  height: 'auto',
-                },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                p: 1,
+                width: '100%',
               }}
-            />}
-          </Paper>}
+            >
+              {isShowedDense && (
+                <FormControlLabel
+                  control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
+                  label="Dense"
+                />
+              )}
+              {isPagination && (
+                <TablePagination
+                  rowsPerPageOptions={[10, 25, 100]}
+                  component="div"
+                  count={serverSide ? totalCount || 0 : filteredData.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  size="small"
+                  sx={{
+                    '& *': { fontSize: '14px !important' },
+                    '& svg': { fontSize: '18px !important' },
+                    '& .MuiToolbar-root': {
+                      minHeight: 'unset',
+                      height: 'auto',
+                    },
+                  }}
+                />
+              )}
+            </Paper>
+          )}
         </ComponentBlock>
       </Box>
     </Box>

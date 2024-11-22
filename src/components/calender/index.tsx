@@ -24,7 +24,7 @@ const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' }
 
 type CommonCalenderProps = CalendarOptions & {
   data: EventSourceInput | undefined;
-  isLoading: boolean;
+  isLoading?: boolean;
   onEventDrop?: (eventData: Partial<ICalendarEvent>) => void;
   onEventResize?: (eventData: Partial<ICalendarEvent>) => void;
   onDateClick?: (arg: EventClickArg) => void;
@@ -33,7 +33,7 @@ type CommonCalenderProps = CalendarOptions & {
 
 const CommonCalender = ({
   data,
-  isLoading,
+  isLoading = false,
   onEventDrop = () => {},
   onEventResize = () => {},
   onDateClick = () => {},

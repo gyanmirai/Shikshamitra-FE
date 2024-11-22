@@ -82,7 +82,6 @@ const FinanceGeneralSettingTab = () => {
         heading="General Settings"
         links={[{ name: 'Finance' }, { name: 'General Settings' }, { name: breadcrumbTabName }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Card>
         <CustomTabs
@@ -92,13 +91,7 @@ const FinanceGeneralSettingTab = () => {
           role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-
-              key={tab.value}
-              value={tab.value}
-              label={tab.label}
-            />
+            <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>

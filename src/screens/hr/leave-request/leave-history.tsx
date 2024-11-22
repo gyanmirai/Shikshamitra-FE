@@ -90,7 +90,10 @@ const LeaveHistory = (props: TabComponentType) => {
         columns={[
           {
             label: 'Name',
-            id: 'name',
+            id: 'employee.firstName',
+            render(value, row) {
+              return `${value} ${row.employee.lastName}`;
+            },
           },
           {
             label: 'Start Date',

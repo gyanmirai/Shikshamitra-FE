@@ -173,11 +173,10 @@ const FinanceNewBudgetingScreen = () => {
 
   return (
     <>
-    <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Budgeting"
         links={[{ name: 'Finance' }, { name: 'Budgeting' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       {/* <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -375,7 +374,7 @@ const FinanceNewBudgetingScreen = () => {
                 render(value, row) {
                   return (
                     <ThreeDotsActions
-                    placement='right-top'
+                      placement="right-top"
                       actions={({ popover }: any) => (
                         <MenuList>
                           <MenuItem
@@ -465,7 +464,7 @@ const FinanceNewBudgetingScreen = () => {
                 render(value, row) {
                   return (
                     <ThreeDotsActions
-                    placement="right-bottom"
+                      placement="right-bottom"
                       actions={({ popover }: any) => (
                         <MenuList>
                           <MenuItem

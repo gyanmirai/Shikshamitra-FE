@@ -4,12 +4,7 @@ import { useFormik } from 'formik';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Button,
-  TextField,
-  DialogActions,
-} from '@mui/material';
+import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -46,12 +41,7 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
   });
 
   return (
-    <CustomDialog
-      maxWidth="sm"
-      title="Edit Fee Structure"
-      open={dialogValue}
-      handleClose={onClose}
-    >
+    <CustomDialog maxWidth="sm" title="Edit Fee Structure" open={dialogValue} handleClose={onClose}>
       <Box>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: 300 }}>
@@ -98,8 +88,6 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                       formik.setFieldValue('discountPercantage', value);
                     }}
                     formControlProps={{ sx: { minWidth: 275 } }}
-
-
                     placeholder="No categories available"
                   />
                 </Grid2>
@@ -170,8 +158,6 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     format="DD-MM-YYYY"
                     slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     disabled
-
-
                   />
                 </Grid2>
               </Grid2>

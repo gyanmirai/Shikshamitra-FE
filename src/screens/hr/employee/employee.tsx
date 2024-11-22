@@ -3,17 +3,20 @@
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Paper, Button, MenuList, MenuItem } from '@mui/material';
+import { Box, Grid, Paper, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -23,6 +26,7 @@ import EmployeeView from './employee-view';
 import { Sections } from '../payroll/structure';
 
 const HrEmployee = () => {
+  const statusDialog = useBoolean();
   const [searchParams, setSearchParams] = useSearchParam();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
@@ -64,10 +68,19 @@ const HrEmployee = () => {
             />
             Payroll Structure
           </MenuItem>
+          <MenuItem
+            onClick={() => {
+              pop.onClose();
+              statusDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:form-dropdown" sx={{ height: '16px', width: '16px' }} />
+            Change Status
+          </MenuItem>
         </MenuList>
       </>
     ),
-    [payrollDialog, setSearchParams]
+    [payrollDialog, setSearchParams, statusDialog]
   );
 
   const { data: employee } = useQueryAndMutation({
@@ -104,7 +117,7 @@ const HrEmployee = () => {
                 { id: 'middleName', label: 'Middle Name' },
                 { id: 'role', label: 'Role' },
                 {
-                  id: 'status',
+                  id: 'employeeCode',
                   label: 'Status',
                   render(value, row) {
                     return (
@@ -134,15 +147,41 @@ const HrEmployee = () => {
               data={employee?.items || []}
             />
             <CustomDialog
-              maxWidth="lg"
+              open={statusDialog.value}
+              handleClose={statusDialog.onFalse}
+              title="Change Status"
+            >
+              <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+                <CustomSelect
+                  options={EmployeeStatusTypeArray.map((item, index) => ({
+                    label: EmployeeStatusType[index],
+                    value: index,
+                  }))}
+                  value=""
+                  onChange={() => {}}
+                  label="Change Status"
+                  formControlProps={{
+                    fullWidth: true,
+                    sx: {
+                      maxWidth: 'unset',
+                    },
+                  }}
+                />
+              </Scrollbar>
+              <DialogActions>
+                <Button variant="outlined" onClick={statusDialog.onFalse}>
+                  Cancel
+                </Button>
+                <Button variant="contained" onClick={statusDialog.onFalse}>
+                  Change Status
+                </Button>
+              </DialogActions>
+            </CustomDialog>
+            <CustomDialog
+              maxWidth="xl"
               open={open}
               handleClose={() => setOpen(false)}
               title="Add Employee"
-              paperProps={{
-                sx: {
-                  maxHeight: '70vh',
-                },
-              }}
             >
               <EmployeeFrom editData={editData} />
             </CustomDialog>

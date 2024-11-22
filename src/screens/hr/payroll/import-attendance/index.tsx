@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Refresh } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, Divider, Typography } from '@mui/material';
+import { Box, Stack, Button, Divider, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -48,7 +48,7 @@ const ImportAttendanceScreen = () => {
         sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Refresh />} variant="contained">
-            Generate All
+            Generate Selected
           </Button>
         }
       />
@@ -103,6 +103,17 @@ const ImportAttendanceScreen = () => {
       </Box>
       <CustomizableTable
         columns={[
+          {
+            id: 'checkbox',
+            label: ' ',
+            isSort: false,
+            renderColumn(value) {
+              return <Checkbox />;
+            },
+            render(value, row) {
+              return <Checkbox />;
+            },
+          },
           { id: 'employeeCode', label: 'Employee Code' },
           { id: 'name', label: 'Name' },
           { id: 'employeeType', label: 'Employee Type' },

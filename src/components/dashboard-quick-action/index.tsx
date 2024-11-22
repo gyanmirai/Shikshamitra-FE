@@ -21,6 +21,7 @@ const DashBoardQuickAction = ({ actions }: DashboardQuickActionProps) => {
   return (
     <CustomTooltip
       arrow
+      placement="top-start"
       title={
         <Card
           sx={{
@@ -58,7 +59,7 @@ const DashBoardQuickAction = ({ actions }: DashboardQuickActionProps) => {
           width: 50,
           position: 'fixed',
           bottom: 16,
-          right: 24,
+          right: 28,
           zIndex: 999,
           borderRadius: '50%',
           display: 'flex',

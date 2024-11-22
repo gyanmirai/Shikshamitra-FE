@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -48,9 +48,8 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[{ name: 'Finance' }, { name: 'Reports' },]}
+        links={[{ name: 'Finance' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       {/* <Typography variant="h6" gutterBottom>Download Reports</Typography> */}
       {/* <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
@@ -104,7 +103,6 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                       <DatePicker
@@ -133,66 +131,66 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  {values.report === "financeReportsone" && <><Grid item xs={12} sm={6} md={4}>
-                    <Field as={FormControl} error={touched.className && errors.className} fullWidth>
-                      <CustomSelect
-                        label="Class"
-                        name="className"
-                        options={classOptions}
-                        labelKey="name"
-                        valueKey="name"
-                        value={values.className}
-                        onChange={(value) => setFieldValue('className', value)}
-                        formControlProps={{ sx: { minWidth: '200px', width: '100%' } }} />
-                      <FormHelperText>{touched.className && errors.className}</FormHelperText>
-                    </Field>
-                  </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                      <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
-                        <CustomSelect
-                          label="Division"
-                          name="division"
-                          options={[
-                            { value: 'All', label: 'All' },
-                            { value: 'A', label: 'A' },
-                            { value: 'B', label: 'B' },
-                            { value: 'C', label: 'C' },
-                            { value: 'D', label: 'D' },
-                          ]}
-                          formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
-                          value={values.subject}
-                          onChange={(value) => setFieldValue('subject', value)} />
-                        <FormHelperText>{touched.subject && errors.subject}</FormHelperText>
-                      </Field>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                      <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
-                        <CustomSelect
-                          label="Payment Status"
-                          name="paymentStatus"
-                          options={[
-                            { value: 'All', label: 'Paid' },
-                            { value: 'Math', label: 'Pending' },
+                  {values.report === 'financeReportsone' && (
+                    <>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Field
+                          as={FormControl}
+                          error={touched.className && errors.className}
+                          fullWidth
+                        >
+                          <CustomSelect
+                            label="Class"
+                            name="className"
+                            options={classOptions}
+                            labelKey="name"
+                            valueKey="name"
+                            value={values.className}
+                            onChange={(value) => setFieldValue('className', value)}
+                            formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+                          />
+                          <FormHelperText>{touched.className && errors.className}</FormHelperText>
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
+                          <CustomSelect
+                            label="Division"
+                            name="division"
+                            options={[
+                              { value: 'All', label: 'All' },
+                              { value: 'A', label: 'A' },
+                              { value: 'B', label: 'B' },
+                              { value: 'C', label: 'C' },
+                              { value: 'D', label: 'D' },
+                            ]}
+                            formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+                            value={values.subject}
+                            onChange={(value) => setFieldValue('subject', value)}
+                          />
+                          <FormHelperText>{touched.subject && errors.subject}</FormHelperText>
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
+                          <CustomSelect
+                            label="Payment Status"
+                            name="paymentStatus"
+                            options={[
+                              { value: 'All', label: 'Paid' },
+                              { value: 'Math', label: 'Pending' },
+                            ]}
+                            formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+                            value={values.subject}
+                            onChange={(value) => setFieldValue('subject', value)}
+                          />
+                          <FormHelperText>{touched.subject && errors.subject}</FormHelperText>
+                        </Field>
+                      </Grid>
+                    </>
+                  )}
 
-
-                          ]}
-                          formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
-                          value={values.subject}
-                          onChange={(value) => setFieldValue('subject', value)} />
-                        <FormHelperText>{touched.subject && errors.subject}</FormHelperText>
-                      </Field>
-                    </Grid>
-                  </>
-
-
-
-
-
-
-
-                  }
-
-                  {values.report === "income" &&
+                  {values.report === 'income' && (
                     <Grid item xs={12} sm={6} md={4}>
                       <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                         <CustomSelect
@@ -202,18 +200,17 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                             { value: 'All', label: 'All' },
                             { value: 'Fee', label: 'Fee' },
                             { value: 'Donation', label: 'Donation' },
-
                           ]}
                           formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
                           value={values.subject}
-                          onChange={(value) => setFieldValue('subject', value)} />
+                          onChange={(value) => setFieldValue('subject', value)}
+                        />
                         <FormHelperText>{touched.subject && errors.subject}</FormHelperText>
                       </Field>
                     </Grid>
+                  )}
 
-                  }
-
-                  {values.report === "expense" &&
+                  {values.report === 'expense' && (
                     <Grid item xs={12} sm={6} md={4}>
                       <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                         <CustomSelect
@@ -223,16 +220,15 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                             { value: 'All', label: 'All' },
                             { value: 'Maintenance', label: 'Maintenance' },
                             { value: 'Salary', label: 'Salary' },
-
                           ]}
                           formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
                           value={values.subject}
-                          onChange={(value) => setFieldValue('subject', value)} />
+                          onChange={(value) => setFieldValue('subject', value)}
+                        />
                         <FormHelperText>{touched.subject && errors.subject}</FormHelperText>
                       </Field>
                     </Grid>
-
-                  }
+                  )}
 
                   <Grid item xs={12} justifyContent="flex-end" display="flex" gap={3}>
                     <Button
@@ -240,10 +236,12 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                       variant="contained"
                       color="primary"
                       sx={{
-                        backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                        backgroundColor: (theme) =>
+                          varAlpha(theme.palette.primary.mainChannel, 0.1),
                         color: 'primary.main',
                         '&:hover': {
-                          backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                          backgroundColor: (theme) =>
+                            varAlpha(theme.palette.primary.mainChannel, 0.1),
                         },
                       }}
                     >
@@ -255,10 +253,12 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                       variant="contained"
                       color="warning"
                       sx={{
-                        backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                        backgroundColor: (theme) =>
+                          varAlpha(theme.palette.warning.mainChannel, 0.1),
                         color: 'warning.main',
                         '&:hover': {
-                          backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                          backgroundColor: (theme) =>
+                            varAlpha(theme.palette.warning.mainChannel, 0.1),
                         },
                       }}
                     >
@@ -269,17 +269,17 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                       variant="contained"
                       color="secondary"
                       sx={{
-                        backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        backgroundColor: (theme) =>
+                          varAlpha(theme.palette.secondary.mainChannel, 0.1),
                         color: 'secondary.main',
                         '&:hover': {
-                          backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                          backgroundColor: (theme) =>
+                            varAlpha(theme.palette.secondary.mainChannel, 0.1),
                         },
                       }}
                     >
                       Generate Report
                     </Button>
-
-
                   </Grid>
                 </Grid>
               </Box>

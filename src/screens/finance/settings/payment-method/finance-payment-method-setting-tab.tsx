@@ -100,11 +100,10 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
 
   return (
     <>
-    <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Payment Method"
-        links={[{ name: 'Finance' },{ name: 'Settings' }, { name: 'Payment Method' },]}
+        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
         sx={{ px: 1, mb: 2 }}
-
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
@@ -132,8 +131,12 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
             render(value, row) {
               return (
                 <Box>
-                  <Typography fontSize="12px">{row.serviceProviderDetail.serviceProviderName}</Typography>
-                  <Typography fontSize="12px">{row.serviceProviderDetail.serviceProviderMobile}</Typography>
+                  <Typography fontSize="12px">
+                    {row.serviceProviderDetail.serviceProviderName}
+                  </Typography>
+                  <Typography fontSize="12px">
+                    {row.serviceProviderDetail.serviceProviderMobile}
+                  </Typography>
                 </Box>
               );
             },

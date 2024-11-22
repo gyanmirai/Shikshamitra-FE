@@ -167,14 +167,13 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
               {!fromClearCheck && (
                 <Grid2 container spacing={2}>
                   <Grid2 xs={6}>
-
                     <TextField
                       disabled
                       name="checkBounceCharges"
                       label="Bounce Charges"
-                      size='small'
+                      size="small"
                       value=""
-                      onChange={() => { }}
+                      onChange={() => {}}
                       // InputProps={{
                       //   endAdornment: (
                       //     <InputAdornment position="end">
@@ -184,7 +183,6 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       //     </InputAdornment>
                       //   ),
                       // }}
-
                     />
                   </Grid2>
                   <Grid2 xs={6}>
@@ -192,10 +190,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       label="Check Bounce Reason"
                       options={[]}
                       value=""
-                      onChange={() => { }}
-
+                      onChange={() => {}}
                     />
-
                   </Grid2>
                 </Grid2>
               )}

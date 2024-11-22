@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { isEqual } from 'lodash';
 import { useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Slide, TextField } from '@mui/material';
@@ -12,8 +12,15 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useAddEmployeeMutation, useUpdateEmployeeMutation } from 'src/redux/employee/employeeApi';
+import {
+  useUpdateEmployeeMutation,
+  useUpdateBankDetailsMutation,
+  useAddBasicInformationMutation,
+  useUpdateFamilyInformationMutation,
+  useUpdateExperienceInformationMutation,
+} from 'src/redux/employee/employeeApi';
 
 import { UploadAvatar } from 'src/components/upload';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -31,7 +38,8 @@ const personalInformationInitialValues = (editData: any) => ({
   firstName: editData ? editData.firstName : '',
   middleName: editData ? editData.middleName : '',
   shortName: editData ? editData.shortName : '',
-  status: editData ? editData.status : '',
+  status: editData ? editData?.employeeStatusType : EmployeeStatusType.Active,
+  subject: editData ? editData.subject : [],
   dob: editData ? dayjs(editData.dateOfBirth, 'YYYY-MM-DD') : null,
   familyCast: editData ? editData.familyCast : '',
   castCategory: editData ? editData.castCategory : '',
@@ -50,12 +58,15 @@ const personalInformationInitialValues = (editData: any) => ({
   identificationMark1: editData ? editData.identificationMark1 : '',
   identificationMark2: editData ? editData.identificationMark2 : '',
   identificationMark3: editData ? editData.identificationMark3 : '',
+  address: editData ? editData.address : '',
   state: editData ? editData?.state : '',
   city: editData ? editData?.city : '',
   pinCode: editData ? editData?.pinCode : '',
 });
 
 const familyInformationInitialValues = (editData: any) => ({
+  sameAsFatherAddressForMother: false,
+  sameAsFatherAddressForSpouse: false,
   fatherName: editData ? editData.fatherDetails.name : '',
   fatherOccupation: editData ? editData.fatherDetails.occupation : '',
   fatherContactNo: editData ? editData.fatherDetails.contactNo : '',
@@ -108,11 +119,23 @@ const EmployeeFrom = ({ editData }: any) => {
   const [activeStep, setActiveStep] = useState(0);
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddEmployeeMutation,
+    currentQueryAndMutation: useAddBasicInformationMutation,
   });
   const [addUser] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddUserMutation,
+  });
+  const [updateFamilyInfo] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateFamilyInformationMutation,
+  });
+  const [updateExperienceInfo] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateExperienceInformationMutation,
+  });
+  const [updateBankDetails] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateBankDetailsMutation,
   });
 
   const [updateEmployee] = useQueryAndMutation({
@@ -131,6 +154,151 @@ const EmployeeFrom = ({ editData }: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+  const handleBasicInformation = useCallback(
+    async (values: any, formik: any) => {
+      if (!values.employeeId) {
+        const res = await addUser({
+          userName: `${values.firstName}${values.lastName}`,
+          name: values.firstName,
+          surname: values.lastName,
+          email: values.email,
+          phoneNumber: values.mobileNo,
+          isActive: true,
+          lockoutEnabled: true,
+          roleNames: [],
+          password: 'Test@123',
+        });
+        formik.setFieldValue('employeeId', res.data.id);
+        await addEmployee({
+          userId: res.data.id,
+          profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+          employeeCode: values.code,
+          lastName: values.lastName,
+          firstName: values.firstName,
+          middleName: values.middleName,
+          shortName: values.shortName,
+
+          employeeStatusType: values.status,
+
+          dateOfBirth: values.dob.format('YYYY-MM-DD'),
+          familyCast: values.familyCast,
+          castType: 0,
+          gender: 0,
+          religion: values.religion,
+          maritalStatus: 0,
+          bloodGroup: values.bloodGroup,
+          mobileNo: values.mobileNo,
+          email: values.email,
+
+          department: values.department,
+          designation: values.designation,
+          dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+
+          employeeGroup: values.employeeGroup,
+          qualification: values.qualification,
+          roleId: values.role,
+          identificationMark1: values.identificationMark1,
+          identificationMark2: values.identificationMark2,
+          identificationMark3: values.identificationMark3,
+          address: values.address,
+        });
+      } else {
+        updateEmployee({
+          id: values.employeeId,
+          body: {
+            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+            employeeCode: values.code,
+            lastName: values.lastName,
+            firstName: values.firstName,
+            middleName: values.middleName,
+            shortName: values.shortName,
+
+            employeeStatusType: values.status,
+
+            dateOfBirth: values.dob.format('YYYY-MM-DD'),
+            familyCast: values.familyCast,
+            castType: 0,
+            gender: 0,
+            religion: values.religion,
+            maritalStatus: 0,
+            bloodGroup: values.bloodGroup,
+            mobileNo: values.mobileNo,
+            email: values.email,
+
+            department: values.department,
+            designation: values.designation,
+            dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+
+            employeeGroup: values.employeeGroup,
+            qualification: values.qualification,
+            roleId: values.role,
+            identificationMark1: values.identificationMark1,
+            identificationMark2: values.identificationMark2,
+            identificationMark3: values.identificationMark3,
+            address: values.address,
+          },
+        });
+      }
+    },
+    [addEmployee, addUser, updateEmployee]
+  );
+  const handleFamilyInformation = useCallback(
+    async (values: any, formik: any) => {
+      await updateFamilyInfo({
+        employeeId: values.employeeId,
+        body: {
+          fatherDetails: {
+            name: values.fatherName,
+            occupation: values.fatherOccupation,
+            contactNo: values.fatherContactNo,
+            address: values.fatherAddress,
+          },
+          motherDetails: {
+            name: values.motherName,
+            occupation: values.motherOccupation,
+            contactNo: values.motherContactNo,
+            address: values.motherAddress,
+          },
+          spouseDetails: {
+            name: values.spouseName,
+            occupation: values.spouseOccupation,
+            contactNo: values.spouseContactNo,
+            address: values.spouseAddress,
+          },
+        },
+      });
+    },
+    [updateFamilyInfo]
+  );
+  const handleWorkExperience = useCallback(
+    async (values: any, formik: any) => {
+      await updateExperienceInfo({
+        employeeId: values.employeeId,
+        body: values.experiences.map((i: any) => ({
+          ...i,
+          fromDate: i.fromDate.format('YYYY-MM-DD'),
+          toDate: i.toDate.format('YYYY-MM-DD'),
+        })),
+      });
+    },
+    [updateExperienceInfo]
+  );
+  const handleBankDetailsInformation = useCallback(
+    async (values: any, formik: any) => {
+      await updateBankDetails({
+        employeeId: values.employeeId,
+        body: {
+          bankName: values.bankName,
+          branchName: values.branchName,
+          accountHolderName: values.accountHolderName,
+          accountNumber: values.accountNumber,
+          ifscCode: values.ifscCode,
+        },
+      });
+    },
+    [updateBankDetails]
+  );
+
   return (
     <CustomStepperWithFormik
       initialValues={initialValues}
@@ -142,154 +310,56 @@ const EmployeeFrom = ({ editData }: any) => {
       validationSchema={Yup.object({
         name: Yup.string(),
       })}
-      handleNext={async (isLastStep, values) => {
-        if (editData) {
-          updateEmployee({
-            id: editData.id,
-            body: {
-              userId: editData.userId,
-              // organizationName: values.organizationName,
-              code: values.code,
-              lastName: values.lastName,
-              firstName: values.firstName,
-              middleName: values.middleName,
-              shortName: values.shortName,
-              status: values.status,
-              dateOfBirth: values.dob.format('YYYY-MM-DD'),
-              familyCast: values.familyCast,
-              castType: 0,
-              gender: 0,
-              religion: values.religion,
-              maritalStatus: 0,
-              bloodGroup: values.bloodGroup,
-              mobileNo: values.mobileNo,
-              email: values.email,
-              address: values.address,
-              department: values.department,
-              designation: values.designation,
-              dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+      handleNext={async (isLastStep, values, formik) => {
+        try {
+          if (editData && activeStep === 0) {
+            await updateEmployee({
+              id: editData.id,
+              body: {
+                profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+                employeeCode: values.code,
+                lastName: values.lastName,
+                firstName: values.firstName,
+                middleName: values.middleName,
+                shortName: values.shortName,
 
-              employeeGroup: values.employeeGroup,
-              qualification: values.qualification,
-              role: values.role,
-              identificationMark1: values.identificationMark1,
-              identificationMark2: values.identificationMark2,
-              identificationMark3: values.identificationMark3,
-              fatherDetails: {
-                name: values.fatherName,
-                occupation: values.fatherOccupation,
-                contactNo: values.fatherContactNo,
-                address: values.fatherAddress,
-              },
-              motherDetails: {
-                name: values.motherName,
-                occupation: values.motherOccupation,
-                contactNo: values.motherContactNo,
-                address: values.motherAddress,
-              },
-              spouseDetails: {
-                name: values.spouseName,
-                occupation: values.spouseOccupation,
-                contactNo: values.spouseContactNo,
-                address: values.spouseAddress,
-              },
-              bankDetails: {
-                bankName: values.bankName,
-                branchName: values.branchName,
-                accountHolderName: values.accountHolderName,
-                accountNumber: values.accountNumber,
-                ifscCode: values.ifscCode,
-              },
-              workExperiences: values.experiences.map((i: any) => ({
-                ...i,
-                fromDate: i.fromDate.format('YYYY-MM-DD'),
-                toDate: i.toDate.format('YYYY-MM-DD'),
-                employeeId: editData.employeeId,
-              })),
-              profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-            },
-          });
-        } else if (isLastStep) {
-          try {
-            const res = await addUser({
-              userName: `${values.firstName}${values.lastName}`,
-              name: values.firstName,
-              surname: values.lastName,
-              email: values.email,
-              phoneNumber: values.mobileNo,
-              isActive: true,
-              lockoutEnabled: true,
-              roleNames: [],
-              password: 'Test@123',
-            });
-            await addEmployee({
-              userId: res.data.id,
-              // organizationName: values.organizationName,
-              code: values.code,
-              lastName: values.lastName,
-              firstName: values.firstName,
-              middleName: values.middleName,
-              shortName: values.shortName,
-              status: values.status,
-              dateOfBirth: values.dob.format('YYYY-MM-DD'),
-              familyCast: values.familyCast,
-              castType: 0,
-              gender: 0,
-              religion: values.religion,
-              maritalStatus: 0,
-              bloodGroup: values.bloodGroup,
-              mobileNo: values.mobileNo,
-              email: values.email,
-              address: values.address,
-              department: values.department,
-              designation: values.designation,
-              dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+                employeeStatusType: values.status,
 
-              employeeGroup: values.employeeGroup,
-              qualification: values.qualification,
-              role: values.role,
-              identificationMark1: values.identificationMark1,
-              identificationMark2: values.identificationMark2,
-              identificationMark3: values.identificationMark3,
-              fatherDetails: {
-                name: values.fatherName,
-                occupation: values.fatherOccupation,
-                contactNo: values.fatherContactNo,
-                address: values.fatherAddress,
+                dateOfBirth: values.dob.format('YYYY-MM-DD'),
+                familyCast: values.familyCast,
+                castType: 0,
+                gender: 0,
+                religion: values.religion,
+                maritalStatus: 0,
+                bloodGroup: values.bloodGroup,
+                mobileNo: values.mobileNo,
+                email: values.email,
+
+                department: values.department,
+                designation: values.designation,
+                dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+
+                employeeGroup: values.employeeGroup,
+                qualification: values.qualification,
+                roleId: values.role,
+                identificationMark1: values.identificationMark1,
+                identificationMark2: values.identificationMark2,
+                identificationMark3: values.identificationMark3,
+                address: values.address,
               },
-              motherDetails: {
-                name: values.motherName,
-                occupation: values.motherOccupation,
-                contactNo: values.motherContactNo,
-                address: values.motherAddress,
-              },
-              spouseDetails: {
-                name: values.spouseName,
-                occupation: values.spouseOccupation,
-                contactNo: values.spouseContactNo,
-                address: values.spouseAddress,
-              },
-              bankDetails: {
-                bankName: values.bankName,
-                branchName: values.branchName,
-                accountHolderName: values.accountHolderName,
-                accountNumber: values.accountNumber,
-                ifscCode: values.ifscCode,
-              },
-              workExperiences: values.experiences.map((i: any) => ({
-                ...i,
-                fromDate: i.fromDate.format('YYYY-MM-DD'),
-                toDate: i.toDate.format('YYYY-MM-DD'),
-                employeeId: res.data.id,
-              })),
-              profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
             });
-          } catch (error) {
-            console.log(error);
+          } else if (activeStep === 0) {
+            await handleBasicInformation(values, formik);
+          } else if (activeStep === 1) {
+            await handleFamilyInformation(values, formik);
+          } else if (activeStep === 3) {
+            await handleWorkExperience(values, formik);
+          } else if (activeStep === 4) {
+            await handleBankDetailsInformation(values, formik);
           }
-          return;
+        } catch (error) {
+          console.log(error);
         }
-
         setActiveStep(activeStep + 1);
       }}
       renderItem={({ activeStep: step, formik }: any) => (
@@ -318,7 +388,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
             >
               <Box display="flex" gap={2}>
                 {step === 0 && (
-                  <Box flexGrow={1} display="flex" alignItems="center">
+                  <Box display="flex">
                     <UploadAvatar
                       maxSize={3145728}
                       onDrop={async (acceptedFiles: File[]) => {
@@ -328,17 +398,24 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                       }}
                       value={formik.values.photo}
                       error={formik.touched.photo && Boolean(formik.errors.photo)}
+                      sx={{ m: 'initial' }}
                     />
                   </Box>
                 )}
-                <Box p={2} display={step === 2 ? 'block' : 'flex'} flexWrap="wrap" gap={2}>
+                <Box
+                  p={2}
+                  display={step === 2 || step === 1 ? 'block' : 'flex'}
+                  flexWrap="wrap"
+                  gap={2}
+                  width="100%"
+                >
                   <Grid container spacing={2}>
                     {' '}
                     {allFields[step].map((field) => (
                       <Grid
                         item
-                        xs={[2, 3].includes(step) ? 12 : 4}
-                        md={[2, 3].includes(step) ? 12 : 4}
+                        xs={[1, 2, 3].includes(step) ? 12 : 4}
+                        md={[1, 2, 3].includes(step) ? 12 : 4}
                         key={field.name}
                       >
                         {field.renderComp ? (

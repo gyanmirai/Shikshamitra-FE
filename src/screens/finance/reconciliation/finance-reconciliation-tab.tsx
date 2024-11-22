@@ -26,8 +26,8 @@ const FinanceReconciliationTab = () => {
       chequeDate: '01-11-2024',
       amount: '1500',
       id: 1,
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -39,8 +39,8 @@ const FinanceReconciliationTab = () => {
       chequeDate: '01-11-2024',
       amount: '2000',
       id: 2,
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -52,8 +52,8 @@ const FinanceReconciliationTab = () => {
       chequeDate: '01-08-2024',
       amount: '2500',
       id: 3,
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
     {
@@ -65,8 +65,8 @@ const FinanceReconciliationTab = () => {
       chequeDate: '05-11-2024',
       amount: '800',
       id: 4,
-      chargesAmount: "300",
-      feeHead: "Library",
+      chargesAmount: '300',
+      feeHead: 'Library',
       grNumber: 89554,
     },
   ];
@@ -80,32 +80,32 @@ const FinanceReconciliationTab = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
-  useEffect(() => { }, [selectedEntry, isClearCheck]);
+  useEffect(() => {}, [selectedEntry, isClearCheck]);
 
   return (
     <>
-     {/* <CustomBreadcrumbs
+      {/* <CustomBreadcrumbs
         heading="Reconciliation"
         links={[{ name: 'Finance' }, { name: 'Reconciliation' }]}
         sx={{ px: 1, mb: 2 }}
         
       /> */}
       <Box py="15px" display="flex" justifyContent="space-between">
-        <Box display="flex" flexDirection="row" gap={3}  >
+        <Box display="flex" flexDirection="row" gap={3}>
           <CustomSelect
             label="Class/Grade"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -118,10 +118,10 @@ const FinanceReconciliationTab = () => {
             }}
           />
         </Box>
-
-      </Box>      <CustomizableTable
+      </Box>{' '}
+      <CustomizableTable
         columns={[
-          { id: "grNumber", label: "GR No" },
+          { id: 'grNumber', label: 'GR No' },
           // { id: 'srNo', label: 'SR No' },
           { id: 'studentName', label: 'Student Name' },
           { id: 'class', label: 'Class' },
@@ -129,9 +129,12 @@ const FinanceReconciliationTab = () => {
           { id: 'bankName', label: 'Bank Name' },
           { id: 'chequeDate', label: 'Cheque Date' },
           {
-            id: 'chargesAmount', label: 'Charges',
+            id: 'chargesAmount',
+            label: 'Charges',
             render(value, row) {
-              return <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>;
+              return (
+                <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
+              );
             },
           },
           { id: 'feeHead', label: 'Fee Head' },
@@ -148,7 +151,7 @@ const FinanceReconciliationTab = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
-                placement='right-top'
+                  placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem
@@ -182,7 +185,6 @@ const FinanceReconciliationTab = () => {
         ]}
         data={reconsiliationData}
       />
-
       {dialog.value && selectedEntry && (
         <FinanceReconciliationClearAndBounceChequeDialog
           onSave={handleSave}

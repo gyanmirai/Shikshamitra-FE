@@ -136,17 +136,25 @@
 // export default FinanceStudentStructureOverviewTabScreen;
 import React, { useState } from 'react';
 
-import { Box, MenuList, MenuItem, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  Box,
+  MenuList,
+  MenuItem,
+  Accordion,
+  Typography,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from "src/components/scrollbar";
-import CustomDialog from "src/components/customDialog";
-import ThreeDotsActions from "src/components/three-dots-actions";
-import CustomizableTable from "src/components/customizabaleTable";
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';
 
@@ -177,21 +185,93 @@ const students = [
         grossAmount: 5250,
         payableAmount: 5000,
         totalPaidAmount: 40000,
-        discount: (3000 / 12),
+        discount: 3000 / 12,
         totalDiscount: 3000,
         paymentDates: [
-          { month: 'May-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
-          { month: 'April-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
-          { month: 'March-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
-          { month: 'Feb-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "5000" },
-          { month: 'Jan-2025', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'Dec-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'Nov-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'Oct-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'Sep-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'Aug-2024', date: '15-03-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'July-2024', date: '15-02-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
-          { month: 'June-2024', date: '15-01-2024', status: 'Paid', paidAmount: "5000", pendingAmount: "0" },
+          {
+            month: 'May-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '5000',
+          },
+          {
+            month: 'April-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '5000',
+          },
+          {
+            month: 'March-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '5000',
+          },
+          {
+            month: 'Feb-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '5000',
+          },
+          {
+            month: 'Jan-2025',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Dec-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Nov-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Oct-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Sep-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Aug-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'July-2024',
+            date: '15-02-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
+          {
+            month: 'June-2024',
+            date: '15-01-2024',
+            status: 'Paid',
+            paidAmount: '5000',
+            pendingAmount: '0',
+          },
         ],
       },
       {
@@ -205,18 +285,90 @@ const students = [
         discount: 0,
         totalDiscount: 0,
         paymentDates: [
-          { month: 'May-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
-          { month: 'April-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
-          { month: 'March-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
-          { month: 'Feb-2025', date: '15-03-2024', status: 'Unpaid', paidAmount: "0", pendingAmount: "1500" },
-          { month: 'Jan-2025', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'Dec-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'Nov-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'Oct-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'Sep-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'Aug-2024', date: '15-03-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'July-2024', date: '15-02-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
-          { month: 'June-2024', date: '15-01-2024', status: 'Paid', paidAmount: "1500", pendingAmount: "0" },
+          {
+            month: 'May-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '1500',
+          },
+          {
+            month: 'April-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '1500',
+          },
+          {
+            month: 'March-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '1500',
+          },
+          {
+            month: 'Feb-2025',
+            date: '15-03-2024',
+            status: 'Unpaid',
+            paidAmount: '0',
+            pendingAmount: '1500',
+          },
+          {
+            month: 'Jan-2025',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Dec-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Nov-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Oct-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Sep-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'Aug-2024',
+            date: '15-03-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'July-2024',
+            date: '15-02-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
+          {
+            month: 'June-2024',
+            date: '15-01-2024',
+            status: 'Paid',
+            paidAmount: '1500',
+            pendingAmount: '0',
+          },
         ],
       },
     ],
@@ -318,40 +470,37 @@ const FinanceStudentFeeManagement = () => {
   };
 
   const headerCellStyle = {
-    border: "1px solid #ccc",
-    padding: "10px",
-    position: "sticky",
+    border: '1px solid #ccc',
+    padding: '10px',
+    position: 'sticky',
     top: 0,
-    background: "#f4f6f8",
+    background: '#f4f6f8',
     zIndex: 1,
-
   };
 
   const cellStyle: React.CSSProperties = {
-    border: "1px solid #ccc",
-    padding: "10px",
-    fontSize: "12px",
-    textAlign: "right"
+    border: '1px solid #ccc',
+    padding: '10px',
+    fontSize: '12px',
+    textAlign: 'right',
   };
-
 
   return (
     <>
-    {/* <CustomBreadcrumbs
+      {/* <CustomBreadcrumbs
         heading="Student Fee Management"
         links={[{ name: 'Finance' }, { name: 'Fee Management' }]}
         sx={{ px: 1, mb: 2 }}
         
       /> */}
       <CustomizableTable
-
-        columns=
-        {[
+        columns={[
           {
-            id: 'name', label: 'Student Name',
+            id: 'name',
+            label: 'Student Name',
             render(value, row) {
               return (
-                <Typography minWidth="120px" fontSize="12px" >
+                <Typography minWidth="120px" fontSize="12px">
                   {row.name}
                 </Typography>
               );
@@ -359,18 +508,22 @@ const FinanceStudentFeeManagement = () => {
           },
           { id: 'grade', label: 'Standard' },
           {
-            id: 'totalFees', label: 'Gross Fees', render(value, row) {
+            id: 'totalFees',
+            label: 'Gross Fees',
+            render(value, row) {
               return (
-                <Typography minWidth="100px" fontSize="12px" >
+                <Typography minWidth="100px" fontSize="12px">
                   {formatNumber(row.totalFees, 'INR')}
                 </Typography>
               );
             },
           },
           {
-            id: 'finalFees', label: 'Payable Fees', render(value, row) {
+            id: 'finalFees',
+            label: 'Payable Fees',
+            render(value, row) {
               return (
-                <Typography minWidth="120px" fontSize="12px" >
+                <Typography minWidth="120px" fontSize="12px">
                   {formatNumber(row.finalFees, 'INR')}
                 </Typography>
               );
@@ -382,7 +535,7 @@ const FinanceStudentFeeManagement = () => {
 
             render(value, row) {
               return (
-                <Typography minWidth="180px" fontSize="12px" >
+                <Typography minWidth="180px" fontSize="12px">
                   {formatNumber(row.totalGeneralDiscount, 'INR')}
                 </Typography>
               );
@@ -425,10 +578,6 @@ const FinanceStudentFeeManagement = () => {
             },
           },
 
-
-
-
-
           {
             id: 'action',
             label: 'Action',
@@ -470,10 +619,6 @@ const FinanceStudentFeeManagement = () => {
 
       {/* Details Modal */}
       {selectedStudent && (
-
-
-
-
         <CustomDialog
           title={`Fee Details for ${selectedStudent.name} / Standard: ${selectedStudent.grade}th -A `}
           open={open}
@@ -493,48 +638,50 @@ const FinanceStudentFeeManagement = () => {
                       <Typography
                         variant="subtitle1"
                         component="div"
-                        sx={{ fontWeight: "bold", marginBottom: 1 }}
+                        sx={{ fontWeight: 'bold', marginBottom: 1 }}
                       >
                         {feeHead.feeHead}
                       </Typography>
                       <div
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center", // Center aligns Paid & Pending vertically with others
-                          gap: "10px",
-                          fontSize: "14px",
-                          width: "100%", // Ensures full width for proper spacing
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center', // Center aligns Paid & Pending vertically with others
+                          gap: '10px',
+                          fontSize: '14px',
+                          width: '100%', // Ensures full width for proper spacing
                         }}
                       >
                         <Box display="flex" flexWrap="wrap" gap="10px">
                           <Typography variant="body2" component="span">
-                            <strong>Gross Fee:</strong> {formatNumber(feeHead.totalFees, "INR")}
+                            <strong>Gross Fee:</strong> {formatNumber(feeHead.totalFees, 'INR')}
                           </Typography>
                           <Typography variant="body2" component="span">
-                            <strong>Payable Fee:</strong> {formatNumber(feeHead.finalFees, "INR")}
+                            <strong>Payable Fee:</strong> {formatNumber(feeHead.finalFees, 'INR')}
                           </Typography>
                           <Typography variant="body2" component="span">
-                            <strong>General Discount:</strong> {formatNumber(feeHead.totalDiscount, "INR")}
+                            <strong>General Discount:</strong>{' '}
+                            {formatNumber(feeHead.totalDiscount, 'INR')}
                           </Typography>
                           <Typography variant="body2" component="span">
-                            <strong>Additional Discount:</strong> {formatNumber(0, "INR")}
+                            <strong>Additional Discount:</strong> {formatNumber(0, 'INR')}
                           </Typography>
                         </Box>
                         <Box display="flex" gap="20px" alignItems="center">
                           <Typography
                             variant="body2"
                             component="span"
-                            sx={{ color: "#138e58", fontWeight: "bold" }}
+                            sx={{ color: '#138e58', fontWeight: 'bold' }}
                           >
-                            <strong>Paid:</strong> {formatNumber(feeHead.totalPaidAmount, "INR")}
+                            <strong>Paid:</strong> {formatNumber(feeHead.totalPaidAmount, 'INR')}
                           </Typography>
                           <Typography
                             variant="body2"
                             component="span"
-                            sx={{ color: "#b76e00", fontWeight: "bold" }}
+                            sx={{ color: '#b76e00', fontWeight: 'bold' }}
                           >
-                            <strong>Pending:</strong> {formatNumber(feeHead.finalFees - feeHead.totalPaidAmount, "INR")}
+                            <strong>Pending:</strong>{' '}
+                            {formatNumber(feeHead.finalFees - feeHead.totalPaidAmount, 'INR')}
                           </Typography>
                         </Box>
                       </div>
@@ -542,80 +689,100 @@ const FinanceStudentFeeManagement = () => {
                   </AccordionSummary>
 
                   <AccordionDetails>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px",
-
-
-                          }}>Month</th>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px"
-
-                          }}>Gross Fee</th>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px"
-
-                          }}>Payable Fee</th>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px"
-
-                          }}>Paid</th>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px"
-
-                          }}>Pending</th>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px"
-
-                          }}>General Discount</th>
-                          <th style={{
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                            position: "sticky",
-                            top: 0,
-                            background: "#f4f6f8",
-                            zIndex: 1,
-                            fontSize: "12px"
-
-                          }}>Additional Discount</th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            Month
+                          </th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            Gross Fee
+                          </th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            Payable Fee
+                          </th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            Paid
+                          </th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            Pending
+                          </th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            General Discount
+                          </th>
+                          <th
+                            style={{
+                              border: '1px solid #ccc',
+                              padding: '10px',
+                              position: 'sticky',
+                              top: 0,
+                              background: '#f4f6f8',
+                              zIndex: 1,
+                              fontSize: '12px',
+                            }}
+                          >
+                            Additional Discount
+                          </th>
                           {/* <th style={{
                             border: "1px solid #ccc",
                             padding: "10px",
@@ -630,26 +797,49 @@ const FinanceStudentFeeManagement = () => {
                       <tbody>
                         {feeHead.paymentDates.map((payment: any, index: any) => (
                           <tr key={index}>
-                            <td style={{
-                              border: "1px solid #ccc",
-                              padding: "10px",
-                              fontSize: "12px",
-                              textAlign: "center"
-
-                            }}>{payment.month}</td>
-                            <td style={cellStyle}>{formatNumber(feeHead.grossAmount, "INR")}</td>
-                            <td style={cellStyle}>{formatNumber(feeHead.payableAmount, "INR")}</td>
-                            <td style={{ ...cellStyle, color: payment.paidAmount > 0 ? "#138e58" : "black", }}>
-                              {formatNumber(payment.paidAmount, "INR")}
+                            <td
+                              style={{
+                                border: '1px solid #ccc',
+                                padding: '10px',
+                                fontSize: '12px',
+                                textAlign: 'center',
+                              }}
+                            >
+                              {payment.month}
                             </td>
-                            <td style={{ ...cellStyle, color: payment.pendingAmount > 0 ? "#b76e00" : "black", }}>
-                              {formatNumber(payment.pendingAmount, "INR")}
+                            <td style={cellStyle}>{formatNumber(feeHead.grossAmount, 'INR')}</td>
+                            <td style={cellStyle}>{formatNumber(feeHead.payableAmount, 'INR')}</td>
+                            <td
+                              style={{
+                                ...cellStyle,
+                                color: payment.paidAmount > 0 ? '#138e58' : 'black',
+                              }}
+                            >
+                              {formatNumber(payment.paidAmount, 'INR')}
                             </td>
-                            <td style={{ ...cellStyle, color: feeHead.discount > 0 ? "#856404" : "#000", }}>
-                              {formatNumber(feeHead.discount, "INR")}
+                            <td
+                              style={{
+                                ...cellStyle,
+                                color: payment.pendingAmount > 0 ? '#b76e00' : 'black',
+                              }}
+                            >
+                              {formatNumber(payment.pendingAmount, 'INR')}
                             </td>
-                            <td style={{ ...cellStyle, color: feeHead.discount > 0 ? "#856404" : "#000", }}>
-                              {formatNumber(0, "INR")}
+                            <td
+                              style={{
+                                ...cellStyle,
+                                color: feeHead.discount > 0 ? '#856404' : '#000',
+                              }}
+                            >
+                              {formatNumber(feeHead.discount, 'INR')}
+                            </td>
+                            <td
+                              style={{
+                                ...cellStyle,
+                                color: feeHead.discount > 0 ? '#856404' : '#000',
+                              }}
+                            >
+                              {formatNumber(0, 'INR')}
                             </td>
                             {/* <td style={cellStyle}>
                               <Label
@@ -669,7 +859,6 @@ const FinanceStudentFeeManagement = () => {
                             </td> */}
                           </tr>
                         ))}
-
                       </tbody>
                     </table>
                   </AccordionDetails>
@@ -678,7 +867,6 @@ const FinanceStudentFeeManagement = () => {
             </div>
           </Scrollbar>
         </CustomDialog>
-
 
         // <CustomDialog
         //   title={`Fee Details for ${selectedStudent.name} / Grade: ${selectedStudent.grade}th -A `}
@@ -824,10 +1012,6 @@ const FinanceStudentFeeManagement = () => {
         //     </div>
         //   </Scrollbar>
         // </CustomDialog>
-
-
-
-
       )}
       {dialog.value && selectedStudent && (
         <FinanceEditFeeStructureForStudent
@@ -843,7 +1027,8 @@ const FinanceStudentFeeManagement = () => {
 
 export default FinanceStudentFeeManagement;
 // eslint-disable-next-line no-lone-blocks
-{/* selectedStudent.fees.map((feeHead: any) => (
+{
+  /* selectedStudent.fees.map((feeHead: any) => (
   
   // <Card key={feeHead.feeHeadId} style={{ marginBottom: "20px" }}>
                 //   <h3>{feeHead.feeHead}</h3>
@@ -852,7 +1037,8 @@ export default FinanceStudentFeeManagement;
                 //   <div>Total Pending: {feeHead.totalFees - feeHead.totalPaidAmount}</div>
                 //   <div>Discount per Month: {feeHead.discount.toFixed(2)}</div>
 
-                //   {/* Nested Payment Term Details */}
+                //   {/* Nested Payment Term Details */
+}
 //   <div style={{ marginTop: "15px", borderTop: "1px solid #ccc", paddingTop: "10px" }}>
 //     <h4>Payment Details (Monthly):</h4>
 //     {
@@ -870,10 +1056,9 @@ export default FinanceStudentFeeManagement;
 // </Card>
 // ))}} */}
 
-
-
 // eslint-disable-next-line no-lone-blocks
-{/* <CustomizableTable
+{
+  /* <CustomizableTable
               isPagination={false}
               isFilter={false}
               isSearch={false}
@@ -963,4 +1148,5 @@ export default FinanceStudentFeeManagement;
                 }, {}),
 
               }))}
-            /> */}
+            /> */
+}

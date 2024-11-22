@@ -263,7 +263,7 @@ const InquiryForm = ({ handleClose }: any) => {
             sx={{
               p: 3,
               bgcolor: 'background.neutral',
-              height: 'calc(100vh - 150px)',
+              // height: 'calc(100vh - 150px)',
             }}
           >
             <Grid container spacing={3}>
@@ -301,29 +301,7 @@ const InquiryForm = ({ handleClose }: any) => {
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
-                <CustomSelect
-                  name="class"
-                  label="Class"
-                  options={[]}
-                  value={values.class}
-                  onChange={(value) => setFieldValue('class', value)}
-                  error={!!(touched.class && errors.class) || false}
-                  helperText={(touched.class && errors.class) || ''}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="previousSchool"
-                  label="Previous School"
-                  error={touched.previousSchool && errors.previousSchool}
-                  helperText={touched.previousSchool && errors.previousSchool}
-                />
-              </Grid>
+
               <Grid item xs={4}>
                 <Field
                   as={TextField}
@@ -355,6 +333,29 @@ const InquiryForm = ({ handleClose }: any) => {
                   label="Middle Name"
                   error={touched.middleName && errors.middleName}
                   helperText={touched.middleName && errors.middleName}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <CustomSelect
+                  name="class"
+                  label="Class"
+                  options={[]}
+                  value={values.class}
+                  onChange={(value) => setFieldValue('class', value)}
+                  error={!!(touched.class && errors.class) || false}
+                  helperText={(touched.class && errors.class) || ''}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="previousSchool"
+                  label="Previous School"
+                  error={touched.previousSchool && errors.previousSchool}
+                  helperText={touched.previousSchool && errors.previousSchool}
                 />
               </Grid>
               <Grid item xs={6}>

@@ -151,6 +151,10 @@ export const Sections = ({ title, data }: { title?: string; data?: any }) => {
       </Box>
       <Box p={2} pt={0}>
         <CustomizableTable
+          isFilter={false}
+          isPagination={false}
+          isSearch={false}
+          isShowedDense={false}
           columns={[
             { id: 'type', label: 'Type' },
             {

@@ -67,7 +67,12 @@ const AddPayElement = () => {
           },
         ]}
       />
-      <CustomDialog title="New Pay Element" handleClose={dialog.onFalse} open={dialog.value}>
+      <CustomDialog
+        maxWidth="sm"
+        title="New Pay Element"
+        handleClose={dialog.onFalse}
+        open={dialog.value}
+      >
         <AddPayElementForm />
       </CustomDialog>
     </Box>
@@ -77,7 +82,7 @@ const AddPayElement = () => {
 export default AddPayElement;
 
 const AddPayElementForm = () => {
-  const { values } = useFormik({
+  const { values, setFieldValue, handleChange, handleSubmit } = useFormik({
     initialValues: {
       code: '',
       name: '',
@@ -93,7 +98,7 @@ const AddPayElementForm = () => {
 
   return (
     <Box>
-      <form>
+      <form onSubmit={handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -135,25 +140,40 @@ const AddPayElementForm = () => {
               </Box>
             </Grid>
             <Grid item xs={12}>
-              <Box display="flex" alignItems="center" mt={2} gap={2}>
+              <Box display="flex" flexDirection="column" justifyContent="center">
                 <Box display="flex" alignItems="center">
-                  <Checkbox size="small" />
+                  <Checkbox
+                    size="small"
+                    checked={values.depend}
+                    onChange={(e) => setFieldValue('depend', e.target.checked)}
+                  />
                   <Typography variant="body2">Depend</Typography>
                 </Box>
-                <CustomSelect
-                  options={[]}
-                  label="Amount"
-                  value=""
-                  onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '120px', width: '100%' } }}
-                />
-                <TextField size="small" label="Amount Of Percentage" />
+                {values.depend && (
+                  <Box display="flex" gap={2}>
+                    <CustomSelect
+                      options={[]}
+                      label="Depend Name"
+                      value=""
+                      onChange={() => {}}
+                      formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
+                    />
+                    <CustomSelect
+                      options={[]}
+                      label="Amount"
+                      value=""
+                      onChange={() => {}}
+                      formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
+                    />
+                    <TextField size="small" label="Amount Of Percentage" />
+                  </Box>
+                )}
               </Box>
             </Grid>
             <Grid item xs={12}>
-              <Box display="flex" alignItems="center" mt={2}>
+              <Box display="flex" alignItems="center">
                 <Checkbox size="small" />
-                <Typography variant="body2">Pay Slip</Typography>
+                <Typography variant="body2">is pay slip generate</Typography>
               </Box>
             </Grid>
           </Grid>

@@ -3,6 +3,7 @@ export enum EmployeeAttendanceStatus {
   HalfDayLeave,
   FullDayLeave,
   All,
+  Late,
 }
 
 export enum EmployeeAttendanceStatusColor {

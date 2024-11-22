@@ -3,15 +3,7 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Button,
-  Divider,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, Divider, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -113,11 +105,9 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
           Array.isArray(formik.values.feeType) && formik.values.feeType.includes(fee.feeHeadId)
       )
       .flatMap((fee: any) =>
-       
         fee.paymentDates
           .filter((status: any) => status.status === 'Paid')
           .map((status: any) => ({
-         
             value: `${fee.feeHead}-${status.month}`,
             label: `${fee.feeHead} - ${status.month} - ${fee.amount}`,
             amount: fee.amount,
@@ -125,8 +115,6 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
       );
     setTermOptions(paidTerms);
   }, [formik.values.feeType, data]);
-
-
 
   const handleTermSelection = (selectedTerms: any) => {
     formik.setFieldValue('selectedTerms', selectedTerms);
@@ -171,12 +159,12 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
   const dialog = useBoolean();
   const errorDialogForReceivedAmount = useBoolean();
   const closeConfirmationDialog = () => {
-    dialog.onFalse()
-  }
+    dialog.onFalse();
+  };
 
   const closeDialogForReceivedAmount = () => {
-    errorDialogForReceivedAmount.onFalse()
-  }
+    errorDialogForReceivedAmount.onFalse();
+  };
 
   return (
     <>
@@ -194,12 +182,8 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
             <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
               <Box pt="15px" display="flex" flexDirection="column" gap={3}>
                 <Box>
-                <Typography fontSize="14px">
-                Name: Vishal Rameshbhai Patel
-                </Typography>
-                <Typography fontSize="14px">
-                Standard: 10-A
-                </Typography>
+                  <Typography fontSize="14px">Name: Vishal Rameshbhai Patel</Typography>
+                  <Typography fontSize="14px">Standard: 10-A</Typography>
                 </Box>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={3}>
@@ -219,7 +203,6 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
                   </Grid>
                   <Grid item xs={12} md={3}>
                     <CustomSelect
-                     
                       label="Paid Terms"
                       options={termOptions}
                       value={formik.values.selectedTerms}
@@ -422,7 +405,6 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
                       value={receivedAmountState}
                       onChange={handleReceivedAmountChange}
                     />
-
                   </Grid>
                 </Grid>
 
@@ -489,7 +471,7 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
           </Button> */}
             <Button
               disabled={formik.values.receivedPayment < 1}
-              onClick={() => { }}
+              onClick={() => {}}
               variant="contained"
               size="small"
             >
@@ -502,13 +484,11 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
               variant="contained"
               size="small"
               onClick={() => {
-
                 if (parseNumber(receivedAmountState) > parseNumber(amountDueState)) {
-                  errorDialogForReceivedAmount.onTrue()
+                  errorDialogForReceivedAmount.onTrue();
                 } else {
-                  dialog.onTrue()
+                  dialog.onTrue();
                 }
-
               }}
             >
               Collect
@@ -517,32 +497,26 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
         </Box>
       </CustomDialog>
 
-      {
-        dialog.value && <FeeConfirmationDialog
-
+      {dialog.value && (
+        <FeeConfirmationDialog
           onConfirm={closeConfirmationDialog}
           studentName="Vishal Rameshbhai Patel"
           amount={40000}
           open={dialog.value}
           onClose={closeConfirmationDialog}
-
-
         />
-      }
+      )}
 
-      {
-        errorDialogForReceivedAmount.value && <ReceivedAmountWarning
+      {errorDialogForReceivedAmount.value && (
+        <ReceivedAmountWarning
           open={errorDialogForReceivedAmount.value}
           onClose={closeDialogForReceivedAmount}
-
-          title="Received amount cannot exceed the due amount." />
-      }
+          title="Received amount cannot exceed the due amount."
+        />
+      )}
     </>
   );
 };
-
-
-
 
 export default FinanceFeeRefundApprovedDialog;
 /* 

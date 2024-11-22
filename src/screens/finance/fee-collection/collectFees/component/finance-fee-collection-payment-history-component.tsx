@@ -323,7 +323,6 @@ const paymentHistoryData = [
   },
 ];
 
-
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
   const dialog = useBoolean();
 
@@ -335,125 +334,135 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
 
   const handleSave = () => {};
   return (
-   <>
-    <CustomizableTable
-      columns={[
-        
-        { id: 'date', label: 'Paid Date' },
-       { id: 'feeHead', label: 'Fee Head',
-       // children(row) {
-        //   return (
-        //     <CustomizableTable 
-        //     isFilter={false}
-        //     isScrollbar={false}
-        //     isSearch={false}
-        //     isPagination={false}
-        //     columns={[
-        //       {id:"paymentId", label:"Payment Id / Cheque No"},
-        //       {id:"amount", label:"Amount"},
-        //       {id:"paymentMode", label:"PaymentMode"},
-        //       {id:"paymentStatus", label:"Status"},
-        //       {id:"action", label:"Action", render(value,) {
-        //         return (
-        //           <ThreeDotsActions
-        //           actions={(popover) => (
-        //             <MenuList>
-        //               <MenuItem
-        //                 onClick={() => {
-        //                   // popover.onClose();
-        //                 }}
-        //               >
-        //                 <Iconify icon="lets-icons:refund-back-light" />
-        //                 Refund
-        //               </MenuItem>
-    
-        //             </MenuList>
-        //           )}
-        //         />
-        //         );
-        //       },},
-        //     ]} data={
-        //       row.paymentHistory
-        //     }/>
+    <>
+      <CustomizableTable
+        columns={[
+          { id: 'date', label: 'Paid Date' },
+          {
+            id: 'feeHead',
+            label: 'Fee Head',
+            // children(row) {
+            //   return (
+            //     <CustomizableTable
+            //     isFilter={false}
+            //     isScrollbar={false}
+            //     isSearch={false}
+            //     isPagination={false}
+            //     columns={[
+            //       {id:"paymentId", label:"Payment Id / Cheque No"},
+            //       {id:"amount", label:"Amount"},
+            //       {id:"paymentMode", label:"PaymentMode"},
+            //       {id:"paymentStatus", label:"Status"},
+            //       {id:"action", label:"Action", render(value,) {
+            //         return (
+            //           <ThreeDotsActions
+            //           actions={(popover) => (
+            //             <MenuList>
+            //               <MenuItem
+            //                 onClick={() => {
+            //                   // popover.onClose();
+            //                 }}
+            //               >
+            //                 <Iconify icon="lets-icons:refund-back-light" />
+            //                 Refund
+            //               </MenuItem>
 
-        //   );
-        // },
-         },
-        {id:"amountPaid", label:"Amount", render(value, row:any) {
-          return <Typography fontSize="12px">{formatNumber(row.amountPaid,"INR")}</Typography>
-        },},
-        {id:"amountPending", label:"Amount Pending", render(value, row:any) {
-          return <Typography fontSize="12px">{formatNumber(row.amountPending,"INR")}</Typography>
-        },},
-        // { id: 'dueDate', label: 'Due Date' },
+            //             </MenuList>
+            //           )}
+            //         />
+            //         );
+            //       },},
+            //     ]} data={
+            //       row.paymentHistory
+            //     }/>
 
-        {
-          id: 'status',
-          label: 'Status',
-          render(value, row) {
-            return (
-              <Label
-                variant="soft"
-                color={
-                  value === 'Overdue'
-                    ? 'error'
-                    : value === 'Unpaid'
-                      ? 'warning'
-                      : value === 'Paid'
-                        ? 'success'
-                        : 'default'
-                }
-              >
-                {value}
-              </Label>
-            );
+            //   );
+            // },
           },
-        },
-        {
-          id: 'action',
-          label: 'Action',
-          render: (value, row) => (
-            <ThreeDotsActions
-            placement='right-top'
-              actions={(popover) => (
-                <MenuList>
-                  <MenuItem
-                    onClick={() => {
-                      // popover.onClose();
-                    }}
-                  >
-                    <Iconify  icon="tabler:receipt"  />
-                    View Receipt
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      console.log("data row", row)
-                      dialog.onTrue();
-                      setSelectedEntry(row)
-                    }}
-                  >
-                    <Iconify icon="mdi:eye" />
-                    View Details
-                  </MenuItem>
+          {
+            id: 'amountPaid',
+            label: 'Amount',
+            render(value, row: any) {
+              return <Typography fontSize="12px">{formatNumber(row.amountPaid, 'INR')}</Typography>;
+            },
+          },
+          {
+            id: 'amountPending',
+            label: 'Amount Pending',
+            render(value, row: any) {
+              return (
+                <Typography fontSize="12px">{formatNumber(row.amountPending, 'INR')}</Typography>
+              );
+            },
+          },
+          // { id: 'dueDate', label: 'Due Date' },
 
-                </MenuList>
-              )}
-            />
-          ),
-        },
-      ]}
-      data={paymentHistoryData}
-    />
-
-    {dialog.value  && (
-      <FinanceStudentPaymentHistoryDialog
-        onSave={handleSave}
-        dialogValue={dialog.value}
-        onClose={closeDialog}
-        data={selectedEntry}
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Unpaid'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                actions={(popover) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        // popover.onClose();
+                      }}
+                    >
+                      <Iconify icon="tabler:receipt" />
+                      View Receipt
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        console.log('data row', row);
+                        dialog.onTrue();
+                        setSelectedEntry(row);
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" />
+                      View Details
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={paymentHistoryData}
       />
-    )}
-   </>
+
+      {dialog.value && (
+        <FinanceStudentPaymentHistoryDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={closeDialog}
+          data={selectedEntry}
+        />
+      )}
+    </>
   );
 };
 

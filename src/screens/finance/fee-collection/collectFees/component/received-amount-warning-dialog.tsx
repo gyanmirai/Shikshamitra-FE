@@ -7,36 +7,35 @@ import { Box, Typography, DialogContent } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 
 interface ReceivedAmountWarningDialogProps {
-    open: boolean;
-    onClose: () => void;
-   
-    title:string;
-  }
-const ReceivedAmountWarning: React.FC<ReceivedAmountWarningDialogProps> = ({ open, onClose, title }) => {
-    const [isConfirmEnabled, setConfirmEnabled] = useState(false);
-    // eslint-disable-next-line consistent-return
-    useEffect(() => {
-        if (open) {
-          setConfirmEnabled(false);
-          const timer = setTimeout(() => setConfirmEnabled(true), 3000); 
-          return () => clearTimeout(timer); 
-        }
-      }, [open]);
-    return(
-    
-    
-    <CustomDialog maxWidth="sm" title="Error !" open={open} handleClose={onClose} >
-     <Box height="100px">
-         {/* <DialogTitle id="fee-confirmation-dialog-title">
+  open: boolean;
+  onClose: () => void;
+
+  title: string;
+}
+const ReceivedAmountWarning: React.FC<ReceivedAmountWarningDialogProps> = ({
+  open,
+  onClose,
+  title,
+}) => {
+  const [isConfirmEnabled, setConfirmEnabled] = useState(false);
+  // eslint-disable-next-line consistent-return
+  useEffect(() => {
+    if (open) {
+      setConfirmEnabled(false);
+      const timer = setTimeout(() => setConfirmEnabled(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+  return (
+    <CustomDialog maxWidth="sm" title="Error !" open={open} handleClose={onClose}>
+      <Box height="100px">
+        {/* <DialogTitle id="fee-confirmation-dialog-title">
         Confirm Fee Payment
       </DialogTitle> */}
-      <DialogContent>
-        <Typography>
-          {title}
-        </Typography>
-        
-      </DialogContent>
-      {/* <DialogActions>
+        <DialogContent>
+          <Typography>{title}</Typography>
+        </DialogContent>
+        {/* <DialogActions>
         <Button  onClick={onClose} variant="outlined" size="small">
           Cancel
         </Button>
@@ -44,8 +43,9 @@ const ReceivedAmountWarning: React.FC<ReceivedAmountWarningDialogProps> = ({ ope
           Confirm
         </Button>
       </DialogActions> */}
-     </Box>
+      </Box>
     </CustomDialog>
-  )};
+  );
+};
 
 export default ReceivedAmountWarning;

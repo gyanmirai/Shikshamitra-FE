@@ -37,7 +37,7 @@ const WorkExperiences = (props: any) => {
         </Button>
       </Box>
       {values.experiences.map((experience: any, index: number) => (
-        <Grid key={index} container spacing={1}>
+        <Grid key={index} container spacing={1} flexWrap="wrap">
           <Grid xs={1.4375}>
             <TextField
               fullWidth

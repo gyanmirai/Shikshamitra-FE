@@ -158,11 +158,11 @@ export function StudentProfile() {
 
   return (
     <>
-      <CustomBreadcrumbs
+      {/* <CustomBreadcrumbs
         heading="Student List"
         links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student List' }]}
         sx={{ px: 1, mb: 2 }}
-      />
+      /> */}
       {!currentStudent &&
         (students.length ? (
           <CustomizableTable

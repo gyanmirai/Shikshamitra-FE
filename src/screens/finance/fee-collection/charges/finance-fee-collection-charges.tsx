@@ -20,9 +20,9 @@ const FinanceFeeCollectionCharges = () => {
       reason: 'Insufficient Funds',
       amount: '₹5000',
       status: 'Pending',
-      chargesAmount: "300",
-      feeHead: "Tuition",
-      studentName: "john Doe",
+      chargesAmount: '300',
+      feeHead: 'Tuition',
+      studentName: 'john Doe',
     },
     {
       srNo: 2,
@@ -32,9 +32,9 @@ const FinanceFeeCollectionCharges = () => {
       reason: 'Account Closed',
       amount: '₹25000',
       status: 'Pending',
-      chargesAmount: "300",
-      feeHead: "Tuition",
-      studentName: "john Doe",
+      chargesAmount: '300',
+      feeHead: 'Tuition',
+      studentName: 'john Doe',
       grNumber: '674773',
     },
     {
@@ -45,9 +45,9 @@ const FinanceFeeCollectionCharges = () => {
       reason: 'Signature Mismatch',
       amount: '₹12000',
       status: 'Paid',
-      chargesAmount: "300",
-      feeHead: "Tuition",
-      studentName: "john Doe",
+      chargesAmount: '300',
+      feeHead: 'Tuition',
+      studentName: 'john Doe',
       grNumber: '674773',
     },
     {
@@ -58,9 +58,9 @@ const FinanceFeeCollectionCharges = () => {
       reason: 'Funds Not Cleared',
       amount: '₹8000',
       status: 'Paid',
-      chargesAmount: "300",
-      feeHead: "Tuition",
-      studentName: "john Doe",
+      chargesAmount: '300',
+      feeHead: 'Tuition',
+      studentName: 'john Doe',
       grNumber: '674773',
     },
     {
@@ -71,9 +71,9 @@ const FinanceFeeCollectionCharges = () => {
       reason: 'Stale Cheque',
       amount: '₹15000',
       status: 'Paid',
-      chargesAmount: "300",
-      feeHead: "Tuition",
-      studentName: "john Doe",
+      chargesAmount: '300',
+      feeHead: 'Tuition',
+      studentName: 'john Doe',
       grNumber: '674773',
     },
   ];
@@ -85,28 +85,32 @@ const FinanceFeeCollectionCharges = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
-  useEffect(() => { }, [selectedEntry]);
+  useEffect(() => {}, [selectedEntry]);
   return (
     <>
       <Box>{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}</Box>
       <CustomizableTable
         columns={[
           //  {id:"srNo", label:"SR No"},
-          { id: "grNumber", label: "Gr No" },
+          { id: 'grNumber', label: 'Gr No' },
           { id: 'chequeNumber', label: 'Cheque Number' },
           { id: 'chequeDate', label: 'Cheque Date' },
           { id: 'bounceDate', label: 'Bounce Date' },
           { id: 'reason', label: 'Reason' },
           {
-            id: 'amount', label: 'Fee Amount', render(value, row) {
-              return <Typography fontSize="12px">{row.amount}</Typography>
+            id: 'amount',
+            label: 'Fee Amount',
+            render(value, row) {
+              return <Typography fontSize="12px">{row.amount}</Typography>;
             },
           },
           {
-            id: 'chargesAmount', label: 'Charges Amount', render(value, row) {
-              return <Typography fontSize="12px">{row.chargesAmount}</Typography>
+            id: 'chargesAmount',
+            label: 'Charges Amount',
+            render(value, row) {
+              return <Typography fontSize="12px">{row.chargesAmount}</Typography>;
             },
           },
           { id: 'studentName', label: 'Student Name' },

@@ -370,47 +370,47 @@ const FinanceFeeCollectionTab = () => {
 
   return (
     <>
-      <Box py="15px" display="flex"  justifyContent="space-between">
-        <Box display="flex" flexDirection="row" gap={3}  >
-        <CustomSelect
-          label="Standard"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 140 } }}
-        />
-        <CustomSelect
-          label="Division"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 140 } }}
-        />
-        <TextField
-          label="Search by student name"
-          variant="outlined"
-          size="small"
-          value=""
-          onChange={(e) => {
-            console.log(e);
-          }}
-        />
+      <Box py="15px" display="flex" justifyContent="space-between">
+        <Box display="flex" flexDirection="row" gap={3}>
+          <CustomSelect
+            label="Standard"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <CustomSelect
+            label="Division"
+            options={[]}
+            value=""
+            onChange={() => {}}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <TextField
+            label="Search by student name"
+            variant="outlined"
+            size="small"
+            value=""
+            onChange={(e) => {
+              console.log(e);
+            }}
+          />
         </Box>
-         <Box  display="flex" justifyContent="flex-end" justifyItems="flex-end" alignItems="center">
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => {
-            setSelectedStudent(students[0]);
-            setIsEdit(true);
-            dialog.onTrue();
-          }}
-        >
-          Collect Fees
-        </Button>
+        <Box display="flex" justifyContent="flex-end" justifyItems="flex-end" alignItems="center">
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => {
+              setSelectedStudent(students[0]);
+              setIsEdit(true);
+              dialog.onTrue();
+            }}
+          >
+            Collect Fees
+          </Button>
+        </Box>
       </Box>
-      </Box>
-      
+
       <FinanceCollectFeeStudentCardComponent user={dummyUser} />
       {/* <FinanceFeeCollectionPaymentHistoryComponent /> */}
       <Box pb="20px" />

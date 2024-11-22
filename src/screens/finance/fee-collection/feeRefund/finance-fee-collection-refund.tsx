@@ -17,10 +17,13 @@ interface FinanceFeeCollectionRefundTabProps {
   dialogValue: boolean;
   selectedData: any;
   onClose: () => void;
-
 }
 
-const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps> = ({ dialogValue, selectedData, onClose }) => {
+const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps> = ({
+  dialogValue,
+  selectedData,
+  onClose,
+}) => {
   const historyData = [
     {
       className: '1A',
@@ -45,7 +48,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
   ];
   const data = [
     {
-      grNumber: "28877",
+      grNumber: '28877',
       studentName: 'JAY',
       paymentId: 'j878d',
       feeHead: 'Tuition',
@@ -121,7 +124,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
       ],
     },
     {
-      grNumber: "28877",
+      grNumber: '28877',
       studentName: 'JAY',
       paymentId: 'j878d',
       feeHead: 'Library',
@@ -192,7 +195,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
     status: '',
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
   const closeDialog = () => {
     dialog.onFalse();
@@ -235,7 +238,6 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
           isPagination={false}
           isScrollbar={false}
           isSearch={false}
-
           columns={[
             { id: 'grNumber', label: 'Gr Number' },
             { id: 'studentName', label: 'Student Name' },
@@ -251,7 +253,9 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
                     </Typography>
                   );
                 }
-                return <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>;
+                return (
+                  <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
+                );
               },
             },
 
@@ -291,13 +295,10 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
                   <FormattedAmountInput
                     label="Total Refund"
                     value={formatNumber(totalFeeRefundAmount.toString())}
-                    onChange={() => { }}
-
-
+                    onChange={() => {}}
                   />
                 );
-
-              }
+              },
             },
           ]}
           data={[...paymentHistoryData, totalRow]}
@@ -334,12 +335,10 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
       </Box> */}
       </Scrollbar>
       <DialogActions>
-
         <Button type="submit" variant="contained" size="small">
           View Receipt
         </Button>
       </DialogActions>
-
     </CustomDialog>
   );
 };
