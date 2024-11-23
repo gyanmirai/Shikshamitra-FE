@@ -11,8 +11,8 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Reports from './reports';
 import Setting from './setting';
+import Reports from './newReport';
 import Dashboard from './dashboard';
 import Gradebook from './gradebook';
 import ProgressReport from './progress-report';
