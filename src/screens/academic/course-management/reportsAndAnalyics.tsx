@@ -5,12 +5,11 @@ import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, Typography, FormControl, FormHelperText } from '@mui/material';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 
 const initialValues = {
@@ -42,16 +41,6 @@ const Reports = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Typography variant="h6">Download Reports</Typography>
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, mt: 2 }}>
-        <Button startIcon={<Iconify icon="mdi:file-pdf-box" />} color="error" variant="contained">
-          Download PDF
-        </Button>
-        <Button startIcon={<Iconify icon="mdi:file-excel" />} color="success" variant="contained">
-          Download Excel
-        </Button>
-      </Box>
-
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
