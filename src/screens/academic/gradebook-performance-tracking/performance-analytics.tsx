@@ -21,23 +21,26 @@ const PerformanceAnalytics = (props: TabComponentType) => {
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Class Performance</Typography>
-              <CustomSelect
-                label="class"
+
+              {/* <CustomSelect
+                label="Monthly"
                 options={[
-                  { value: 'class1', label: 'Class 1' },
-                  { value: 'class2', label: 'Class 2' },
+                  { value: 'Monthly', label: 'Monthly' },
+                  { value: 'Weekly', label: 'Weekly' },
                 ]}
                 onChange={() => {}}
                 value=""
                 formControlProps={{
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
-              />
+              /> */}
+            </Box>
+            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
               <CustomSelect
-                label="Monthly"
+                label="class"
                 options={[
-                  { value: 'Monthly', label: 'Monthly' },
-                  { value: 'Weekly', label: 'Weekly' },
+                  { value: 'class1', label: 'Class 1' },
+                  { value: 'class2', label: 'Class 2' },
                 ]}
                 onChange={() => {}}
                 value=""
@@ -98,6 +101,8 @@ const PerformanceAnalytics = (props: TabComponentType) => {
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Grade Distribution</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1 }}>
               <CustomSelect
                 label="subject"
                 options={[
@@ -161,6 +166,8 @@ const PerformanceAnalytics = (props: TabComponentType) => {
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Subject Analytics</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1 }}>
               <CustomSelect
                 label="class"
                 options={[
@@ -217,6 +224,8 @@ const PerformanceAnalytics = (props: TabComponentType) => {
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Student Group Comparisons</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1 }}>
               <CustomSelect
                 label="Subject"
                 options={[
