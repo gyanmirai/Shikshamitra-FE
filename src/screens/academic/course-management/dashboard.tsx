@@ -1,11 +1,11 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { color } from '@mui/system';
-import { Box, Card } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid2 from '@mui/material/Unstable_Grid2';
+import { Box, Card, Typography } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
@@ -21,13 +21,31 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 
 const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
-  const [classes1, setClasses1] = useState<string>('');
-  const [classes2, setClasses2] = useState<string>('');
+  const [classes1, setClasses1] = useState<string>('All');
+  const [classes2, setClasses2] = useState<string>('All');
+  const [classes3, setClasses3] = useState<string>('');
+  const [classes4, setClasses4] = useState<string>('');
+  const [classes5, setClasses5] = useState<string>('All');
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  const classOptions = React.useMemo(() => {
+    const allOption = { name: 'All', value: 'all' };
+    return [allOption, ...(classData?.items || [])];
+  }, [classData]);
+
+  useEffect(() => {
+    if (classData?.items?.length) {
+      if (!classes3 || !classes4) {
+        const firstClass = classData.items[0];
+        setClasses3(firstClass?.id);
+        setClasses4(firstClass?.id);
+      }
+    }
+  }, [classData, classes3, classes4]);
 
   return (
     <Box>
@@ -45,18 +63,29 @@ const Dashboard = (props: TabComponentType) => {
               backgroundColor: 'common.white',
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Box sx={{ flexGrow: 1, minWidth: 112 }}>
-                <Box sx={{ mb: 1, typography: 'subtitle2' }}>Total Courses</Box>
-                <Box sx={{ typography: 'h4' }}>120</Box>
-              </Box>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography
+                component="span"
+                sx={{ fontSize: '18px', fontWeight: '600' }}
+                gutterBottom
+              >
+                Total Courses
+              </Typography>
+              <CustomSelect
+                label="Class"
+                name="className"
+                options={classOptions}
+                labelKey="name"
+                valueKey="name"
+                value={classes1}
+                onChange={(value) => setClasses1(value as string)}
+                formControlProps={{ sx: { minWidth: 120 } }}
+              />
+            </Box>
+            <Box display="flex" alignItems="flex-start" mt={2}>
+              <Typography variant="h4" gutterBottom>
+                56
+              </Typography>
             </Box>
 
             <SvgColor
@@ -87,60 +116,29 @@ const Dashboard = (props: TabComponentType) => {
               backgroundColor: 'common.white',
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Box sx={{ flexGrow: 1, minWidth: 112 }}>
-                <Box sx={{ mb: 1, typography: 'subtitle2' }}>Active Courses</Box>
-                <Box sx={{ typography: 'h4' }}>08</Box>
-              </Box>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography
+                component="span"
+                sx={{ fontSize: '18px', fontWeight: '600' }}
+                gutterBottom
+              >
+                Active Courses
+              </Typography>
+              <CustomSelect
+                label="Class"
+                name="className"
+                options={classOptions}
+                labelKey="name"
+                valueKey="name"
+                value={classes2}
+                onChange={(value) => setClasses2(value as string)}
+                formControlProps={{ sx: { minWidth: 120 } }}
+              />
             </Box>
-
-            <SvgColor
-              src={`${CONFIG.site.basePath}/assets/background/shape-square.svg`}
-              sx={{
-                top: 0,
-                left: -20,
-                width: 240,
-                zIndex: -1,
-                height: 240,
-                opacity: 0.24,
-                position: 'absolute',
-                color: `${color}.main`,
-              }}
-            />
-          </Card>
-        </Grid2>
-        <Grid2 xs={12} md={4}>
-          <Card
-            sx={{
-              ...bgGradient({
-                color: `135deg, ${varAlpha(theme.vars.palette.secondary.lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette.secondary.lightChannel, 0.48)}`,
-              }),
-              p: 3,
-              boxShadow: 'none',
-              position: 'relative',
-              color: `${color}.darker`,
-              backgroundColor: 'common.white',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Box sx={{ flexGrow: 1, minWidth: 112 }}>
-                <Box sx={{ mb: 1, typography: 'subtitle2' }}>Total Subjects</Box>
-                <Box sx={{ typography: 'h4' }}>50</Box>
-              </Box>
+            <Box display="flex" alignItems="flex-start" mt={2}>
+              <Typography variant="h4" gutterBottom>
+                30
+              </Typography>
             </Box>
 
             <SvgColor
@@ -169,10 +167,10 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
               <CustomSelect
-                options={classData?.items || []}
-                value={classes1}
+                options={classData?.items}
+                value={classes3}
                 onChange={(val) => {
-                  setClasses1(val as string);
+                  setClasses3(val as string);
                 }}
                 label="Class"
                 isLoading={isLoading}
@@ -200,10 +198,10 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
               <CustomSelect
-                options={classData?.items || []}
-                value={classes2}
+                options={classData?.items}
+                value={classes4}
                 onChange={(val) => {
-                  setClasses2(val as string);
+                  setClasses4(val as string);
                 }}
                 label="Class"
                 isLoading={isLoading}

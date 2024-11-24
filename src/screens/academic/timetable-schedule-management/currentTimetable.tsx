@@ -47,8 +47,8 @@ const dummyClassData = {
         {
           id: 101,
           division: 'A',
-          status: 'Publish', // Division A has been published
-          createdAt: dayjs('2024-01-15'),
+          status: 'Not Create', // Division A has been published
+          createdAt: null,
         },
         {
           id: 102,
@@ -58,9 +58,9 @@ const dummyClassData = {
         },
         {
           id: 103,
-          division: 'B',
-          status: 'Not Create', // Division B is awaiting approval or publication
-          createdAt: dayjs('2024-02-20'),
+          division: 'C',
+          status: 'Publish', // Division B is awaiting approval or publication
+          createdAt: dayjs('2024-01-23'),
         },
       ],
     },
@@ -70,13 +70,13 @@ const dummyClassData = {
       divisions: [
         {
           id: 201,
-          division: 'Division A',
+          division: 'A',
           status: 'Not Create', // Division A has not yet been created
           createdAt: null, // No createdAt date since it's not created
         },
         {
           id: 202,
-          division: 'Division C',
+          division: 'B',
           status: 'Publish', // Division C is published
           createdAt: dayjs('2024-03-12'),
         },
@@ -88,7 +88,7 @@ const dummyClassData = {
       divisions: [
         {
           id: 301,
-          division: 'Division B',
+          division: 'A',
           status: 'Not Create', // Division B is not created
           createdAt: null,
         },
@@ -168,11 +168,14 @@ const CurrentTimetable = (props: TabComponentType) => {
               {
                 id: 'createdAt',
                 label: 'Created At',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
+                render: (value, row) =>
+                  value === null ? (
+                    '-'
+                  ) : (
+                    <Typography fontSize="12px" gutterBottom>
+                      {dayjs(value).format('DD MMM YYYY')}
+                    </Typography>
+                  ),
               },
               {
                 id: 'status',
@@ -234,9 +237,9 @@ const CurrentTimetable = (props: TabComponentType) => {
                         {row.status === 'Publish' && (
                           <MenuItem
                             onClick={() => {
-                              //   setSelectedSubject(row as any);
-                              //   deleteConfirmDialog.onTrue();
-                              //   pop.onClose();
+                              setIsEdit(true);
+                              setSelectedRow(row);
+                              dialog.onTrue();
                             }}
                           >
                             <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />

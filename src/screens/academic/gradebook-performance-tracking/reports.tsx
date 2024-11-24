@@ -1,10 +1,12 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Card, Grid, Button, Typography, CardActions, CardContent } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 
-const Reports = () => (
+const Reports = (props: TabComponentType) => (
   <Box sx={{ padding: 4, minHeight: '100vh' }}>
     {/* Report Creation Section */}
     <Grid container spacing={4} sx={{ marginBottom: 4 }}>
