@@ -3,6 +3,7 @@ import {
   financePath,
   studentPath,
   settingPath,
+  libraryPath,
   securityPath,
   academicPath,
   dashboardPath,
@@ -95,7 +96,7 @@ export const navData = [
         icon: ICONS.communication,
         _action: 'communication',
       },
-      { title: 'Library', path: financePath, icon: ICONS.library, _action: 'library' },
+      { title: 'Library', path: '/library/dashboard', icon: ICONS.library, _action: 'library' },
       {
         title: 'Transport',
         path: '/transport/dashboard',
@@ -802,6 +803,81 @@ const financeModule = {
   ],
 };
 
+const libraryModule = {
+  [libraryPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/library/dashboard',
+          _action: 'dashboard',
+        },
+        {
+          title: 'Book Management',
+          path: '/library/book-management',
+          _action: 'book-management',
+        },
+        {
+          title: 'Member Management',
+          path: '/library/member-management',
+          _action: 'member-management',
+        },
+        {
+          title: 'Circulation',
+          path: '/library/circulation',
+          _action: 'circulation',
+        },
+
+        {
+          title: 'Reports',
+          path: '/library/reports',
+          _action: 'library-reports',
+        },
+        {
+          title: 'Setting',
+          path: '',
+          _action: 'library-settings',
+          children: [
+            {
+              title: 'General Setting',
+              path: '/library/settings/general',
+              _action: 'general-setting',
+            },
+            {
+              title: 'Notification Setting',
+              path: '/library/settings/notification-setting',
+              _action: 'notification-setting',
+            },
+
+            {
+              title: 'Permission',
+              path: '/library/settings/permission',
+              _action: 'permission',
+            },
+            {
+              title: 'Curriculum Templates',
+              path: '/library/settings/curriculum-templates',
+              _action: 'curriculum-templates',
+            },
+            {
+              title: 'Membership Management',
+              path: '/library/settings/membership-management',
+              _action: 'membership-management',
+            },
+            {
+              title: 'Report Configuration',
+              path: '/library/settings/report-configuration',
+              _action: 'report-configuration',
+            },
+
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 const transportModule = {
   [transportPath]: [
     {
@@ -857,4 +933,5 @@ export const navSubData = {
   ...financeModule,
   ...transportModule,
   ...communicationModule,
+  ...libraryModule,
 };
