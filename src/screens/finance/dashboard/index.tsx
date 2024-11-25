@@ -2,88 +2,42 @@
 
 import React from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, useTheme, Typography } from '@mui/material';
+import { Box, Grid, useTheme } from '@mui/material';
 
 import { AppWidgetSummary } from 'src/screens/hr/dashboard/app-widget-summary';
 
-import CustomSelect from 'src/components/custom-select';
-
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { EcommerceSaleByGender } from 'src/sections/overview/e-commerce/ecommerce-sale-by-gender';
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-import { EcommerceWidgetSummary } from 'src/sections/overview/e-commerce/ecommerce-widget-summary';
-import { EcommerceSalesOverview } from 'src/sections/overview/e-commerce/ecommerce-sales-overview';
 
 const FinanceDashboardScreen = () => {
   const theme = useTheme();
   return (
-    <Box>
-      <Box display="flex" gap={2} my={2}>
-        <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
-        <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
-      </Box>
+    <Box sx={{ p: 3 }}>
+      {/* Top Section: Key Metrics */}
+      <Grid container spacing={2} mb={3}>
+        {[
+          { title: "Total Income", value: 120000, percent: 12 },
+          { title: "Total Expenses", value: 80000, percent: 5 },
+          { title: "Profit", value: 40000, percent: 20 },
+          { title: "Outstanding Fees", value: 30000, percent: 15 },
+        ].map((metric, idx) => (
+          <Grid item xs={6} sm={3} key={idx}>
+            <AppWidgetSummary
+              title={metric.title}
+              total={metric.value}
+              percent={metric.percent} chart={{
+                colors: undefined,
+                categories: [],
+                series: [],
+                options: undefined
+              }} />
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Middle Section: Charts */}
       <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
-          <AppWidgetSummary
-            title="Total Income"
-            percent={8.2}
-            total={8200}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <AppWidgetSummary
-            title="Total Expenses"
-            percent={73.9}
-            total={73900}
-            chart={{
-              colors: [theme.vars.palette.warning.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <EcommerceWidgetSummary
-            title="Profit"
-            percent={8.2}
-            total={9990}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <EcommerceWidgetSummary
-            title="Loss"
-            percent={73.9}
-            total={11988}
-            chart={{
-              colors: [theme.vars.palette.error.light, theme.vars.palette.error.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={6} lg={4}>
-          <EcommerceSaleByGender
-            title="Departmental Budget Breakdown"
-            total={9990}
-            chart={{
-              series: [
-                { label: 'HR', value: 25 },
-                { label: 'Sales', value: 50 },
-                { label: 'Marketing', value: 75 },
-              ],
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={6} lg={8}>
+        <Grid item xs={12} md={12}>
           <EcommerceYearlySales
             id=""
             title="Income vs. Expense"
@@ -134,54 +88,84 @@ const FinanceDashboardScreen = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={6} lg={8}>
-          <EcommerceSalesOverview
-            title="Current budget utilization"
-            data={[
-              {
-                label: 'Green for within budget',
-                totalAmount: 60,
-                value: 60,
-                color: 'primary',
-              },
-              {
-                label: 'Red for over budget',
-                totalAmount: 12,
-                value: 12,
-                color: 'error',
-              },
-            ]}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1">Fee Collection Progress</Typography>
-              <CustomSelect
-                label="subject"
-                options={[
-                  { value: '2023', label: '2023' },
-                  { value: '2022', label: '2022' },
-                  { value: '2021', label: '2021' },
-                ]}
-                onChange={() => {}}
-                value=""
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
-              />
-            </Box>
-            <AnalyticsWebsiteVisits
-              title=""
+        <Grid container spacing={2} sx={{ pt: "20px" }}>
+          <Grid item xs={12} md={4}>
+            <EcommerceSaleByGender
+              title="Fee Collection Status"
+              total={9990}
               chart={{
-                categories: ['Tuition', 'Sports', 'Activity', 'Transport'],
-                series: [{ name: '', data: [43, 33, 22, 55] }],
+                series: [
+                  { label: "Collected", value: 75 },
+                  { label: "Pending", value: 15 },
+                  { label: "Overdue", value: 10 },
+                ],
               }}
-              sx={{ boxShadow: 'none', height: '100%', width: '100%' }}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <EcommerceSaleByGender
+              title="Payment Modes Analysis"
+              total={9990}
+              chart={{
+                series: [
+                  { label: "Online", value: 45 },
+                  { label: "Cash", value: 35 },
+                  { label: "Card", value: 20 },
+                ],
+              }}
+            />
+          </Grid>
+
+
+        </Grid>
+        {/* <Grid item xs={12} md={4}>
+          <Card sx={{ p: 2 }}>
+            <Typography variant="h6">Budget Utilization</Typography>
+            {[
+
+              { name: "Sales", percentage: 85 },
+              { name: "Marketing", percentage: 60 },
+            ].map((dept, idx) => (
+              <Box key={idx} sx={{ mb: 2 }}>
+                <Typography variant="subtitle2">{dept.name}</Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={dept.percentage}
+                  color={dept.percentage > 80 ? "error" : "primary"}
+                />
+              </Box>
+            ))}
+          </Card>
+        </Grid> */}
+
+      </Grid>
+
+      {/* Bottom Section: Key Reports */}
+      {/* <Grid container spacing={2} mt={3}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2 }}>
+            <Typography variant="h6">Outstanding Fees Breakdown</Typography>
+            <OutstandingFeesTable
+              data={[
+                { category: "Tuition", pending: 20000 },
+                { category: "Transport", pending: 5000 },
+              ]}
             />
           </Card>
         </Grid>
-      </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2 }}>
+            <Typography variant="h6">Top Income Sources</Typography>
+            <PieChart
+              data={[
+                { label: "HR", value: 25000 },
+                { label: "Sales", value: 50000 },
+                { label: "Marketing", value: 15000 },
+              ]}
+            />
+          </Card>
+        </Grid>
+      </Grid> */}
     </Box>
   );
 };
