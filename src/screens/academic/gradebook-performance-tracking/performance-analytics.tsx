@@ -1,18 +1,39 @@
+import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Box, Card, Grid, alpha, useTheme, CardHeader, Typography } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-import { AnalyticsConversionRates } from 'src/sections/overview/analytics/analytics-conversion-rates';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const PerformanceAnalytics = (props: TabComponentType) => {
+  const [classes1, setClasses1] = useState<string>('');
+  const [classes2, setClasses2] = useState<string>('');
+  const [classes3, setClasses3] = useState<string>('');
+  const [classes4, setClasses4] = useState<string>('');
+
+  const [division1, setDivision1] = useState<string>('');
+  const [division2, setDivision2] = useState<string>('');
+  const [division3, setDivision3] = useState<string>('');
+  const [division4, setDivision4] = useState<string>('');
+
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
   const theme = useTheme();
   return (
     <Box>
@@ -37,13 +58,36 @@ const PerformanceAnalytics = (props: TabComponentType) => {
             </Box>
             <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
               <CustomSelect
-                label="class"
-                options={[
-                  { value: 'class1', label: 'Class 1' },
-                  { value: 'class2', label: 'Class 2' },
-                ]}
-                onChange={() => {}}
-                value=""
+                label="Class"
+                name="className"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                value={classes1}
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  setClasses1(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+              <CustomSelect
+                label="Division"
+                disabled={!classes1}
+                labelKey="name"
+                valueKey="id"
+                options={divisionOptions}
+                value={division1}
+                onChange={(val) => {
+                  const selectedDivision = divisionOptions.find((i: Division) =>
+                    val.includes(i.id)
+                  );
+                  setDivision1(val as string);
+                }}
                 formControlProps={{
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
@@ -104,22 +148,42 @@ const PerformanceAnalytics = (props: TabComponentType) => {
             </Box>
             <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1 }}>
               <CustomSelect
-                label="subject"
-                options={[
-                  { value: 'math', label: 'Math' },
-                  { value: 'science', label: 'Science' },
-                ]}
-                onChange={() => {}}
-                value=""
+                label="Class"
+                name="className"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                value={classes2}
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  setClasses2(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
                 formControlProps={{
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
               />
               <CustomSelect
-                label="class"
+                label="Division"
+                disabled={!classes2}
+                labelKey="name"
+                valueKey="id"
+                options={divisionOptions}
+                value={division2}
+                onChange={(val) => {
+                  setDivision2(val as string);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+              <CustomSelect
+                label="subject"
                 options={[
-                  { value: 'class1', label: 'Class 1' },
-                  { value: 'class2', label: 'Class 2' },
+                  { value: 'math', label: 'Math' },
+                  { value: 'science', label: 'Science' },
                 ]}
                 onChange={() => {}}
                 value=""
@@ -169,13 +233,19 @@ const PerformanceAnalytics = (props: TabComponentType) => {
             </Box>
             <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1 }}>
               <CustomSelect
-                label="class"
-                options={[
-                  { value: 'class1', label: 'Class 1' },
-                  { value: 'class2', label: 'Class 2' },
-                ]}
-                onChange={() => {}}
-                value=""
+                label="Class"
+                name="className"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                value={classes3}
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  setClasses3(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
                 formControlProps={{
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
@@ -227,6 +297,41 @@ const PerformanceAnalytics = (props: TabComponentType) => {
             </Box>
             <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1 }}>
               <CustomSelect
+                label="Class"
+                name="className"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                value={classes4}
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  setClasses4(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+              <CustomSelect
+                label="Division"
+                disabled={!classes4}
+                labelKey="name"
+                valueKey="id"
+                options={divisionOptions}
+                value={division4}
+                onChange={(val) => {
+                  const selectedDivision = divisionOptions.find((i: Division) =>
+                    val.includes(i.id)
+                  );
+                  setDivision4(val as string);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+              <CustomSelect
                 label="Subject"
                 options={[
                   { value: 'Math', label: 'Math' },
@@ -238,25 +343,15 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
               />
-              <CustomSelect
-                label="class"
-                options={[
-                  { value: 'class1', label: 'Class 1' },
-                  { value: 'class2', label: 'Class 2' },
-                ]}
-                onChange={() => {}}
-                value=""
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
-              />
             </Box>
-            <AnalyticsConversionRates
+            <AnalyticsCurrentVisits
               title=""
-              subheader="(+43%) than last year"
               chart={{
-                categories: ['Tpo 10%', 'Middle 10%', 'Bottom 10%'],
-                series: [{ name: '', data: [44, 55, 41] }],
+                series: [
+                  { label: 'Tpo 10%', value: 44 },
+                  { label: 'Middle 10%', value: 55 },
+                  { label: 'Bottom 10%', value: 41 },
+                ],
                 options: {
                   chart: {
                     toolbar: {
