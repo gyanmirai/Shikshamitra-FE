@@ -83,12 +83,17 @@ const dummyData = [
 ];
 
 const Gradebook = (props: TabComponentType) => {
-  const [classes, setClasses] = useState('');
+  const { searchParams, setSearchParams } = props;
+
+  const classes = searchParams?.classId ? searchParams?.classId : '';
+
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const [subject, setSubject] = useState('');
+  const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
   const [assignmentType, setAssignmentType] = useState('');
-  const [assignmentTitle, setAssignmentTitle] = useState('');
+  const [assignmentTitle, setAssignmentTitle] = useState(
+    searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
+  );
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
   const [showTable, setShowTable] = useState(false);
@@ -106,9 +111,18 @@ const Gradebook = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!classes) {
+      if (classes) {
+        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+        setDivisionOptions(selectedClass?.divisions || []);
+        // Set first division if available
+        if (selectedClass?.divisions?.length) {
+          setDivision(selectedClass.divisions[0].id);
+        }
+      } else {
         const firstClass = classData.items[0];
-        setClasses(firstClass?.id);
+        setSearchParams?.({
+          classId: firstClass.id,
+        });
         setDivisionOptions(firstClass?.divisions || []);
         // Set first division if available
         if (firstClass?.divisions?.length) {
@@ -116,7 +130,7 @@ const Gradebook = (props: TabComponentType) => {
         }
       }
     }
-  }, [classData, classes]);
+  }, [classData, classes, setSearchParams]);
 
   const handleCloseDialog = () => {
     viewResultDialog.onFalse();
@@ -163,7 +177,10 @@ const Gradebook = (props: TabComponentType) => {
           onChange={(val) => {
             const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
             // formik.setFieldValue('class', selectedClass?.name || '');
-            setClasses(val as string);
+            setSearchParams?.({
+              classId: val as string,
+            });
+
             setDivisionOptions(selectedClass?.divisions || []);
           }}
           value={classes}
@@ -226,6 +243,10 @@ const Gradebook = (props: TabComponentType) => {
             { value: 'Chapter 1 Quiz', label: 'Chapter 1 Quiz' },
             { value: 'Chapter 2 Quiz', label: 'Chapter 2 Quiz' },
             { value: 'Chapter 3 Quiz', label: 'Chapter 3 Quiz' },
+            { value: 'Assignment 1', label: 'Assignment 1' },
+            { value: 'Assignment 2', label: 'Assignment 2' },
+            { value: 'Quiz 3', label: 'Quiz 3' },
+            { value: 'Lab Report', label: 'Lab Report' },
           ]}
           onChange={(val) => {
             setAssignmentTitle(val as string);
