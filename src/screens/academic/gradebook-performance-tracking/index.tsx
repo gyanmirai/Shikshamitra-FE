@@ -16,6 +16,7 @@ import Reports from './newReport';
 import Dashboard from './dashboard';
 import Gradebook from './gradebook';
 import PerformanceAnalytics from './performance-analytics';
+import SettingScreen from './newSetting';
 
 const TABS = [
   {
@@ -46,7 +47,7 @@ const TABS = [
   {
     value: 'settings',
     label: 'Settings',
-    component: (props: TabComponentType) => <Setting {...props} />,
+    component: (props: TabComponentType) => <SettingScreen {...props} />,
   },
 ];
 

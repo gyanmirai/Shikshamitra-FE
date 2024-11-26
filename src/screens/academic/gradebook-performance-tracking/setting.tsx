@@ -203,7 +203,6 @@ const Setting = (props: TabComponentType) => {
           data={grades}
         />
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
-          <Button variant="outlined">Reset</Button>
           <Button variant="contained">Save</Button>
         </Box>
       </Grid>
@@ -242,7 +241,7 @@ const Setting = (props: TabComponentType) => {
 
       <Grid item xs={12} md={6}>
         <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Weighting Adjustments
           </Typography>
           <CustomSelect
@@ -261,10 +260,8 @@ const Setting = (props: TabComponentType) => {
           <CustomSelect
             formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
             options={[
-              { value: 'homework', label: 'Homework' },
-              { value: 'quiz', label: 'Quiz' },
-              { value: 'exam', label: 'Exam' },
-              { value: 'project', label: 'Project' },
+              { value: 'percentage', label: 'Percentage' },
+              { value: 'point', label: 'Point' },
             ]}
             value=""
             onChange={() => {}}
@@ -285,7 +282,7 @@ const Setting = (props: TabComponentType) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Grade Submission Settings
           </Typography>
           <DatePicker
@@ -309,13 +306,8 @@ const Setting = (props: TabComponentType) => {
           &nbsp;
           <CustomSelect
             formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
-            options={[
-              { value: 'homework', label: 'Homework' },
-              { value: 'quiz', label: 'Quiz' },
-              { value: 'exam', label: 'Exam' },
-              { value: 'project', label: 'Project' },
-            ]}
-            value="standard"
+            options={[]}
+            value=""
             onChange={() => {}}
             label="Who is allowed to submit or edit grades"
           />
@@ -329,7 +321,7 @@ const Setting = (props: TabComponentType) => {
               Reminders about upcoming grade submission deadlines
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
             <Button variant="outlined">Reset</Button>
             <Button variant="contained">Save</Button>
           </Box>
@@ -343,7 +335,7 @@ const Setting = (props: TabComponentType) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6">Missing Grades Alert</Typography>
+          <Typography variant="subtitle1">Missing Grades Alert</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
             <Typography>Missing grades</Typography>
@@ -368,7 +360,7 @@ const Setting = (props: TabComponentType) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6">Overdue Assessments Alert</Typography>
+          <Typography variant="subtitle1">Overdue Assessments Alert</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
             <Typography>Overdue assessments</Typography>
@@ -393,7 +385,7 @@ const Setting = (props: TabComponentType) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6">Performance Alerts</Typography>
+          <Typography variant="subtitle1">Performance Alerts</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
             <Typography>Low-performance alerts</Typography>
@@ -403,7 +395,7 @@ const Setting = (props: TabComponentType) => {
             size="small"
             sx={{ maxWidth: '250px', width: '100%', my: 1 }}
           />
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 4 }}>
             <Button variant="outlined">Reset</Button>
             <Button variant="contained">Save</Button>
           </Box>
@@ -411,7 +403,7 @@ const Setting = (props: TabComponentType) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Card sx={{ p: 2, height: '100%' }}>
-          <Typography variant="h6">Performance Alerts</Typography>
+          <Typography variant="subtitle1">Performance Alerts</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
