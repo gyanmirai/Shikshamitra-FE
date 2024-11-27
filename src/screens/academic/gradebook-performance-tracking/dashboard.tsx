@@ -263,6 +263,7 @@ const Dashboard = (props: TabComponentType) => {
                                 setSearchParams?.({
                                   tab: 'gradebook',
                                   subject: sub.name,
+                                  assignmentType: 'quiz',
                                   assigngmentTitle: assignment,
                                 });
                               }}

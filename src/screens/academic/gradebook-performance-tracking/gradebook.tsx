@@ -90,7 +90,9 @@ const Gradebook = (props: TabComponentType) => {
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
-  const [assignmentType, setAssignmentType] = useState('');
+  const [assignmentType, setAssignmentType] = useState(
+    searchParams?.assignmentType ? searchParams?.assignmentType : ''
+  );
   const [assignmentTitle, setAssignmentTitle] = useState(
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
@@ -130,7 +132,23 @@ const Gradebook = (props: TabComponentType) => {
         }
       }
     }
-  }, [classData, classes, setSearchParams]);
+    if (
+      searchParams?.classId &&
+      searchParams?.subject &&
+      searchParams?.assignmentType &&
+      searchParams?.assigngmentTitle
+    ) {
+      setShowTable(true);
+    }
+  }, [
+    classData,
+    classes,
+    searchParams?.assigngmentTitle,
+    searchParams?.assignmentType,
+    searchParams?.classId,
+    searchParams?.subject,
+    setSearchParams,
+  ]);
 
   const handleCloseDialog = () => {
     viewResultDialog.onFalse();
