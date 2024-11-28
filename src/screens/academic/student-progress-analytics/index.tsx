@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -20,43 +22,52 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: (props: TabComponentType) => <Dashboard {...props} />,
   },
   {
     value: 'classProgress',
     label: 'Class Progress',
-    component: () => <ClassProgress />,
+    component: (props: TabComponentType) => <ClassProgress {...props} />,
   },
   {
     value: 'individualStudentProgress',
     label: 'Individual Student Progress',
-    component: () => <IndividualStudentProgress />,
+    component: (props: TabComponentType) => <IndividualStudentProgress {...props} />,
   },
-
   {
     value: 'comparativeAnalytics',
     label: 'Comparative Analytics',
-    component: () => <ComparativeAnalytics />,
+    component: (props: TabComponentType) => <ComparativeAnalytics {...props} />,
   },
   {
     value: 'reports',
     label: 'Reports',
-    component: () => <Reports />,
+    component: (props: TabComponentType) => <Reports {...props} />,
   },
-
-  { value: 'settings', label: 'Settings', component: () => <StudentProgressAnalyticsSetting /> },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <StudentProgressAnalyticsSetting {...props} />,
+  },
 ];
 
 const StudentProgressAnalyticsScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Student Progress & Analytics"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Student Progress & Analytics' }]}
+        links={[
+          { name: 'Academic And Assessment' },
+          { name: 'Student Progress & Analytics' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
 
@@ -66,8 +77,8 @@ const StudentProgressAnalyticsScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -77,7 +88,12 @@ const StudentProgressAnalyticsScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Search } from '@mui/icons-material';
@@ -17,7 +19,7 @@ import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const Reports = () => {
+const Reports = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>

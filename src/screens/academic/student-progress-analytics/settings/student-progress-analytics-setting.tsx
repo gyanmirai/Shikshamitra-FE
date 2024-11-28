@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
@@ -9,7 +11,7 @@ type PeriodSetting = {
   unit: string;
 };
 
-const StudentProgressAnalyticsSetting = () => {
+const StudentProgressAnalyticsSetting = (props: TabComponentType) => {
   const periodSettings: PeriodSetting[] = [
     { label: 'Letter Grades', unit: 'Letter Grades' },
     { label: 'Percentage-based', unit: 'Percentage-based' },

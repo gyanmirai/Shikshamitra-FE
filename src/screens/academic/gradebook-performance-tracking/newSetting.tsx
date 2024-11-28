@@ -15,6 +15,7 @@ import StudentGroup from './settingsScreen/studentGroup';
 import GradeSubmission from './settingsScreen/gradeSubmission';
 import PermissionAccess from './settingsScreen/permissionAccess';
 import NotificationAlert from './settingsScreen/notificationAlert';
+import DynamicGroupManagement from './settingsScreen/dynamicGroup';
 import WeightingAdjustment from './settingsScreen/weightingAdjustment';
 
 const TABS = [
@@ -33,7 +34,6 @@ const TABS = [
     value: 'gradeSubmission',
     label: 'Grade Submission',
     component: () => <GradeSubmission />,
-
     // component: (props: TabComponentType) => <GradeSubmission {...props} />,
   },
   {
@@ -41,6 +41,12 @@ const TABS = [
     label: 'Permission Access',
     component: () => <PermissionAccess />,
     // component: (props: TabComponentType) => <PermissionAccess {...props} />,
+  },
+  {
+    value: 'dynamicGroup',
+    label: 'Dynamic Group',
+    component: () => <DynamicGroupManagement />,
+    // component: (props: TabComponentType) => <StudentGroup {...props} />,
   },
   {
     value: 'studentGroup',
