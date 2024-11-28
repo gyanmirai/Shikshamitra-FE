@@ -4,22 +4,25 @@ import { Box, alpha, Button } from '@mui/material'
 
 import { varAlpha } from 'src/theme/styles/utils';
 
+import { Iconify } from 'src/components/iconify';
+
 interface CommonCtaComponentProps {
     bookHandler: () => void;
     issueBookHandler: () => void;
     returnBookHandler: () => void;
-    addNewMemberHandler: () => void;
+    createReservationHandler: () => void;
 }
 
 
 const CommonCtaComponent: React.FC<CommonCtaComponentProps> = (
-    { bookHandler, issueBookHandler, returnBookHandler, addNewMemberHandler }
+    { bookHandler, issueBookHandler, returnBookHandler, createReservationHandler }
 ) => {
     const data = []
     return (
         <Box display="flex" flexDirection="row" gap={2} justifyContent="flex-end">
-            <Button
-                // startIcon={<Iconify icon="ion:download" />}
+            {/* <Button
+
+                startIcon={<Iconify icon="fluent-mdl2:reservation-orders" />}
                 variant="contained"
                 color="primary"
                 sx={{
@@ -31,16 +34,17 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = (
                             varAlpha(theme.palette.primary.mainChannel, 0.1),
                     },
                 }}
-                onClick={addNewMemberHandler}
+                onClick={createReservationHandler}
 
 
             >
 
-                Add New Member
-            </Button>
+                Make Reservation
+            </Button> */}
 
             <Button
-                // startIcon={<Iconify icon="ion:download" />}
+
+                startIcon={<Iconify icon="iconoir:book" />}
                 variant="contained"
                 color="warning"
                 sx={{
@@ -57,16 +61,16 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = (
                 Add New Book
             </Button>
             <Button
-                // startIcon={<Iconify icon="ion:print" />}
+                startIcon={<Iconify icon="mingcute:book-5-line" />}
                 variant="contained"
-                color="secondary"
+                color="success"
                 sx={{
                     backgroundColor: (theme) =>
-                        varAlpha(theme.palette.secondary.mainChannel, 0.1),
-                    color: 'secondary.main',
+                        varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    color: 'primary.main',
                     '&:hover': {
                         backgroundColor: (theme) =>
-                            varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                            varAlpha(theme.palette.primary.mainChannel, 0.1),
                     },
                 }}
                 onClick={issueBookHandler}
@@ -74,6 +78,8 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = (
                 Issue Book
             </Button>
             <Button
+                startIcon={<Iconify icon="carbon:return" />}
+
                 variant="contained"
                 sx={{
                     backgroundColor: alpha("#ff5630", 0.1), // Lightened background using 10% opacity

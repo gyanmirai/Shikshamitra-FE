@@ -851,7 +851,7 @@ const libraryModule = {
           children: [
             {
               title: 'General Setting',
-              path: '/library/settings/general',
+              path: '/library/settings/general-setting',
               _action: 'general-setting',
             },
             {
@@ -865,16 +865,16 @@ const libraryModule = {
               path: '/library/settings/permission',
               _action: 'permission',
             },
-            {
-              title: 'Curriculum Templates',
-              path: '/library/settings/curriculum-templates',
-              _action: 'curriculum-templates',
-            },
-            {
-              title: 'Membership Management',
-              path: '/library/settings/membership-management',
-              _action: 'membership-management',
-            },
+            // {
+            //   title: 'Curriculum Templates',
+            //   path: '/library/settings/curriculumn-templates',
+            //   _action: 'curriculum-templates',
+            // },
+            // {
+            //   title: 'Membership Management',
+            //   path: '/library/settings/membership-management',
+            //   _action: 'membership-management',
+            // },
             {
               title: 'Report Configuration',
               path: '/library/settings/report-configuration',
