@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -16,7 +18,7 @@ import {
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const Setting = () => (
+const Setting = (props: TabComponentType) => (
   <Grid container spacing={3}>
     <Grid item xs={12}>
       <Typography variant="h6" my={1}>

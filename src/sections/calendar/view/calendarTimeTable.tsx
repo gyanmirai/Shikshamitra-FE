@@ -96,16 +96,17 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
   }, [breakEvents]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    const eventData = {
-      isNewEvent: true,
-      newEventInfo: selectInfo,
-      selectedEvent: null,
-      selectedRoom: classRoomNumber,
-    };
+    const startTime = dayjs(selectInfo.start);
+    const endTime = dayjs(selectInfo.end);
 
     // Batch state updates together
     setIsNewEvent(true);
-    setNewEventInfo(selectInfo);
+    setNewEventInfo({
+      ...selectInfo,
+      // Store the selected times to pass to EventDialog
+      // startTime: startTime,
+      // endTime: endTime,
+    });
     setSelectedEvent(null);
     setSelectedRoom(classRoomNumber);
     dialog.onTrue();
@@ -322,6 +323,7 @@ export const CalendarTimeTable: React.FC<CalendarTimeTableProps> = ({
             subjects={subjects}
             teachers={teachers}
             event={selectedEvent}
+            newEvent={newEventInfo}
             onSave={handleSaveEvent}
             onDelete={!isNewEvent ? handleDeleteEvent : undefined}
             isEdit={!isNewEvent}

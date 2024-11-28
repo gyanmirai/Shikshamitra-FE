@@ -111,7 +111,10 @@ const NewTimetable: React.FC<NewTimeTableProps> = ({ selectedClass, selectedDivi
             isLoading={isLoading}
             labelKey="name"
             valueKey="id"
-            onChange={(val) => {}}
+            onChange={(val) => {
+              // const classSelected: Standards = classData.items.find((i: Standards) => i.id === val);
+              // setDivisionOptions(classSelected?.divisions || []);
+            }}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect

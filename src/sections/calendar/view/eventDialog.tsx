@@ -30,6 +30,7 @@ interface EventDialogProps {
     end?: string;
     classRoomNumber?: string;
   } | null;
+  newEvent? : any | null;
   onSave: (values: any) => void;
   onDelete?: () => void;
   isEdit?: boolean;
@@ -39,6 +40,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   subjects,
   teachers,
   event,
+  newEvent,
   onSave,
   onDelete,
   isEdit,
@@ -48,7 +50,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       subject: event?.subjectId || '',
       teacher: event?.teacherId || '',
       classRoom: event?.classRoomNumber || '',
-      start: event?.start ? dayjs(event.start) : null,
+      start: event?.start ? dayjs(event.start) : dayjs(newEvent.start) || null,
       end: event?.end ? dayjs(event.end) : null,
     },
     validationSchema,

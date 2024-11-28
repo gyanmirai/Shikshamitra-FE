@@ -24,9 +24,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 // import { EcommerceYearlySales } from 'src/components/studentProfile/academicDashboard';
 
-const ProgressReport = () => (
+const ProgressReport = (props: TabComponentType) => (
   <Box>
     <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
       <CustomSelect
