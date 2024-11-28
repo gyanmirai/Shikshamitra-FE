@@ -1,8 +1,8 @@
-import React from 'react';
+// import React from 'react';
 
-import LibrarySettingScreen from 'src/screens/library/settings/library-setting-screen';
+// import LibrarySettingScreen from 'src/screens/library/settings/library-setting-screen';
 
 
-const LibrarySettings = () => <LibrarySettingScreen />;
+// const LibrarySettings = () => <LibrarySettingScreen />;
 
-export default LibrarySettings;
+// export default LibrarySettings;

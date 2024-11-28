@@ -1,6 +1,7 @@
 import React from 'react'
 import { useFormik } from 'formik';
 
+import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField, DialogActions, } from '@mui/material';
 
 import { Label } from 'src/components/label';
@@ -37,10 +38,10 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({ isRenewMembersh
         },
     });
 
-  
+
     return (
         <CustomDialog
-            title={`${isRenewMembership ? "Renew Membership" : isEdit ? 'Edit Member' : 'Add New Member'} `}
+            title='Make Reservation'
             open={dialogValue}
             handleClose={onClose}
             maxWidth="sm"
@@ -48,7 +49,7 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({ isRenewMembersh
             <Box>
                 <form onSubmit={formik.handleSubmit}>
                     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', }}>
-                        {isEdit && <Box display="flex" justifyContent="flex-end">
+                        {isEdit || isRenewMembership && <Box display="flex" justifyContent="flex-end">
                             <Label
                                 variant="soft"
                                 color={
@@ -67,15 +68,26 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({ isRenewMembersh
                                 <TextField
                                     fullWidth
                                     name="name"
-                                    label="Name"
+                                    label="Book Id"
                                     value={formik.values.name}
                                     onChange={formik.handleChange}
                                     size="small"
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    name="name"
+                                    label="Book Title"
+                                    value={formik.values.name}
+                                    onChange={formik.handleChange}
+                                    size="small"
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={6}>
                                 <CustomSelect
-                                    label="Role"
+                                    label="Year"
                                     options={[]}
                                     value={formik.values.Role}
                                     onChange={(value) => formik.setFieldValue('role', value)}
@@ -85,9 +97,35 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({ isRenewMembersh
                             </Grid>
 
 
-
-                            
                             <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Member"
+                                    options={[]}
+                                    value={formik.values.Role}
+                                    onChange={(value) => formik.setFieldValue('role', value)}
+                                    formControlProps={{ sx: { minWidth: 270 } }}
+                                    disabled={isEdit}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} md={6}>
+                                <DatePicker
+                                    label="Requested Date"
+                                    value={formik.values.issueDate}
+                                    onChange={(value) => {
+                                        console.log("value", value)
+                                        // formik.setFieldValue('issueDate', value);
+                                        // const role = memberData.find((member) => member.id === formik.values.memberID)?.role;
+                                        // const dueDate = calculateDueDate(value, role);
+                                        // formik.setFieldValue('dueDate', dueDate);
+                                    }}
+                                    format="DD-MM-YYYY"
+                                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                />
+                            </Grid>
+
+
+                            {/* <Grid item xs={12} md={6}>
                                 <TextField
                                     fullWidth
                                     name="borrowingLimit"
@@ -96,8 +134,8 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({ isRenewMembersh
                                     onChange={formik.handleChange}
                                     size="small"
                                 />
-                            </Grid>
-                            {isRenewMembership && data !== null  && data.memberStatus === "Expired" && <Grid item xs={12} md={6}>
+                            </Grid> */}
+                            {isRenewMembership && data !== null && data.memberStatus === "Expired" && <Grid item xs={12} md={6}>
                                 <CustomSelect
                                     label="Renewal Duration"
                                     options={[]}
@@ -112,19 +150,22 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({ isRenewMembersh
                         </Grid>
                     </Scrollbar>
                     <DialogActions>
-                        {isRenewMembership && data !== null  && data.memberStatus === "Expired" && <Button type="submit" variant="contained" size="small">
+                        <Button type="submit" variant="contained" size="small">
+                            Make Reservation
+                        </Button>
+                        {/* {isRenewMembership && data !== null && data.memberStatus === "Expired" && <Button type="submit" variant="contained" size="small">
                             Renew Membership
                         </Button>}
-                        {!isEdit &&  !isRenewMembership && <Button type="submit" variant="contained" size="small">
+                        {!isEdit && !isRenewMembership && <Button type="submit" variant="contained" size="small">
                             Add New Member
                         </Button>
-                        
+
                         }
-                          {isEdit && <Button type="submit" variant="contained" size="small">
+                        {isEdit && <Button type="submit" variant="contained" size="small">
                             Save
                         </Button>
-                        
-                        }
+
+                        } */}
                     </DialogActions>
                 </form>
             </Box>
