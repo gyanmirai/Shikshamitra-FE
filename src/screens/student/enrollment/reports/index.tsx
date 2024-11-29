@@ -70,7 +70,15 @@ const StudentReportsScreen = () => (
                       label="List of reports"
                       size="small"
                     >
-                      <MenuItem value="student">Student</MenuItem>
+                      <MenuItem value="total_enrolled">Total number of students enrolled</MenuItem>
+                      <MenuItem value="enrollment_by_class">
+                        Enrollment statistics by class
+                      </MenuItem>
+
+                      <MenuItem value="enrollment_by_gender">Enrollment by gender</MenuItem>
+                      <MenuItem value="enrollment_by_age">Enrollment by age group</MenuItem>
+
+                      <MenuItem value="enrollment_by_location">Enrollment by location</MenuItem>
                     </Select>
                     <FormHelperText>{touched.report && errors.report}</FormHelperText>
                   </Field>

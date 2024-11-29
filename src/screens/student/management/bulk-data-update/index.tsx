@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Save } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,9 +13,9 @@ const allCategory = [
     name: 'General',
     id: 'general',
     subCategory: [
-      { name: 'Roll No.', id: 'rollNo' },
-      { name: 'Gr. No.', id: 'grNo' },
-      { name: 'Last Name', id: 'lastName' },
+      // { name: 'Roll No.', id: 'rollNo123' },
+      // { name: 'Gr. No.', id: 'grNo123' },
+      // { name: 'Last Name', id: 'lastName' },
       { name: 'First Name', id: 'firstName' },
       { name: 'Middle Name', id: 'middleName' },
       { name: 'Gender', id: 'gender' },
@@ -97,18 +97,6 @@ const BulkDataUpdateScreen = () => {
 
   const headerLabel = allSubCategory.find((cat: any) => cat.id === subCategory)?.name || '';
 
-  const columns = useMemo(
-    () => [
-      { id: 'srNo', label: 'Sr. No.' },
-      { id: 'grNo', label: 'GR No.' },
-      { id: 'name', label: 'Name' },
-      {
-        id: subCategory,
-        label: headerLabel,
-      },
-    ],
-    [headerLabel, subCategory]
-  );
   return (
     <Box>
       <Box display="flex" gap={2} flexWrap="wrap">
@@ -144,7 +132,23 @@ const BulkDataUpdateScreen = () => {
           Save
         </Button>
       </Box>
-      {subCategory && <CustomizableTable columns={columns} data={tableData} />}
+      {subCategory && (
+        <CustomizableTable
+          columns={[
+            { id: 'srNo', label: 'Sr. No.' },
+            { id: 'grNo', label: 'GR No.' },
+            { id: 'name', label: 'Name' },
+            {
+              id: 'dynamic',
+              label: '',
+              isSort: false,
+              renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
+              render: (row: any) => <TextField size="small" label={headerLabel} />,
+            },
+          ]}
+          data={tableData}
+        />
+      )}
     </Box>
   );
 };

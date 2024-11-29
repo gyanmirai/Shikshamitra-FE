@@ -30,7 +30,7 @@ interface EventDialogProps {
     end?: string;
     classRoomNumber?: string;
   } | null;
-  newEvent? : any | null;
+  newEvent?: any | null;
   onSave: (values: any) => void;
   onDelete?: () => void;
   isEdit?: boolean;

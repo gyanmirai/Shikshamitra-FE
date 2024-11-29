@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AttendanceChart, YearlyAttendance } from './attendanceChart';
@@ -44,11 +46,14 @@ const Dot: React.FC<DotProps> = ({
         borderRadius: '50%',
         display: 'inline-block',
         marginRight: '5px',
+        wordWrap: 'normal',
+        whiteSpace: 'nowrap',
+
         ...sx,
       }}
       {...props}
     />
-    <Typography color={color} fontSize="14px !important">
+    <Typography color={color} fontSize="12px !important" whiteSpace="nowrap">
       {' '}
       {children}
     </Typography>
@@ -70,20 +75,14 @@ const Attendance = (props: StudentTabsComponentType) => {
         },
       }}
     >
-      <Box width="100%" display="flex" alignItems="center" gap={2} mb={2}>
-        <Dot color="primary.main"> {'>80% '}</Dot>
-        <Dot color="warning.main">70% - 80%</Dot>
-        <Dot color="info.main">50% - 70%</Dot>
-        <Dot color="error.main">{'<50%'}</Dot>
-      </Box>
       <Stack direction="row" spacing={2} alignItems="center">
         <Card
           elevation={3}
           sx={{
-            py: 2,
-            textAlign: 'center',
+            p: 2,
+            // textAlign: 'center',
             typography: 'h4',
-            maxWidth: '250px',
+            maxWidth: '300px',
             width: '100%',
           }}
         >
@@ -91,12 +90,25 @@ const Attendance = (props: StudentTabsComponentType) => {
             direction="row"
             divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
+            <Stack>
+              <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
                 Overall Attendance Percentage &nbsp;
                 <Label variant="soft" color="success">
                   90%
                 </Label>
+                <CustomTooltip
+                  placement="top"
+                  title={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Dot color="primary.main"> {'>80% '}</Dot>
+                      <Dot color="warning.main">70% - 80%</Dot>
+                      <Dot color="info.main">50% - 70%</Dot>
+                      <Dot color="error.main">{'<50%'}</Dot>
+                    </Box>
+                  }
+                >
+                  <Iconify icon="mdi:help-circle-outline" />
+                </CustomTooltip>
               </Box>
             </Stack>
           </Stack>

@@ -11,14 +11,13 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Notification from './notification';
 import DocumentType from './document-type';
-import InquiryFields from './inquiryFields';
 
 const TABS = [
-  {
-    value: 'inquiryFields',
-    label: 'Inquiry Fields',
-    component: () => <InquiryFields />,
-  },
+  // {
+  //   value: 'inquiryFields',
+  //   label: 'Inquiry Fields',
+  //   component: () => <InquiryFields />,
+  // },
   {
     value: 'notificationPreferences',
     label: 'Notification Preferences',
@@ -32,7 +31,7 @@ const TABS = [
 ];
 
 const StudentEnrollmentSettingScreen = () => {
-  const tabs = useTabs('inquiryFields');
+  const tabs = useTabs('notificationPreferences');
 
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (

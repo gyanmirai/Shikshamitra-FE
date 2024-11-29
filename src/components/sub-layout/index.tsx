@@ -56,31 +56,34 @@ const SubLayout = ({ children }: any) => {
           />
         </Scrollbar>
       )}
-      <Box
+      <Scrollbar
         sx={{
-          boxShadow: 'var(--shadows-3)',
+          // maxWidth: '1440px',
           width: currentData?.length ? '82%' : '100%',
+          // mx: 'auto',
+          height: '100%',
+          overflow: 'auto',
+          p: 2,
+          boxShadow: 'var(--shadows-3)',
+          '& .simplebar-content': { height: '100%' },
           bgcolor: (theme) => theme.palette.background.paper,
         }}
       >
         {(yearLoading || boardLoading) && removeLastSlash !== '/setting/academic-setup' ? (
           <LoadingScreen />
         ) : (
-          <Scrollbar
+          <Box
             sx={{
               maxWidth: '1440px',
               width: '100%',
               mx: 'auto',
               height: '100%',
-              overflow: 'auto',
-              p: 2,
-              '& .simplebar-content': { height: '100%' },
             }}
           >
             {children}
-          </Scrollbar>
+          </Box>
         )}
-      </Box>
+      </Scrollbar>
     </Box>
   );
 };

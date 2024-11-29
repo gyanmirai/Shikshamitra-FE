@@ -9,9 +9,24 @@ import { Form, Field, Formik } from 'formik';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Select,
+  Button,
+  MenuList,
+  MenuItem,
+  TextField,
+  InputLabel,
+  FormControl,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import calculateAge from 'src/utils/calculate-age';
+
+import { GenderType, GenderTypeArray } from 'src/enums/gender';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -39,6 +54,7 @@ const dummyData = [
     alternateContact: '987-654-3210',
     previousSchool: 'XYZ High School',
     inquiryPreferences: 'Science Stream',
+    progress: 85,
   },
   {
     inquiryNumber: 'INQ002',
@@ -55,6 +71,7 @@ const dummyData = [
     alternateContact: '876-543-2109',
     previousSchool: 'PQR Secondary School',
     inquiryPreferences: 'Commerce Stream',
+    progress: 50,
   },
   {
     inquiryNumber: 'INQ003',
@@ -71,6 +88,7 @@ const dummyData = [
     alternateContact: '765-432-1098',
     previousSchool: 'DEF High School',
     inquiryPreferences: 'Arts Stream',
+    progress: 78,
   },
 ];
 const InquiryScreen = () => {
@@ -115,6 +133,33 @@ const InquiryScreen = () => {
           { id: 'alternateContact', label: 'Alternate Contact Details' },
           { id: 'previousSchool', label: 'Previous School' },
           { id: 'inquiryPreferences', label: 'Enquiry Preferences' },
+          // {
+          //   id: 'progress',
+          //   label: 'Progress',
+          //   render(value, row) {
+          //     return (
+          //       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+          //         <CircularProgress variant="determinate" value={value} />
+          //         <Box
+          //           sx={{
+          //             top: 0,
+          //             left: 0,
+          //             bottom: 0,
+          //             right: 0,
+          //             position: 'absolute',
+          //             display: 'flex',
+          //             alignItems: 'center',
+          //             justifyContent: 'center',
+          //           }}
+          //         >
+          //           <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+          //             {value}%
+          //           </Typography>
+          //         </Box>
+          //       </Box>
+          //     );
+          //   },
+          // },
           {
             id: 'actions',
             label: 'Actions',
@@ -124,6 +169,10 @@ const InquiryScreen = () => {
                   placement="right-top"
                   actions={() => (
                     <MenuList>
+                      <MenuItem>
+                        <Iconify icon="solar:pen-bold" sx={{ mr: 2 }} />
+                        Edit
+                      </MenuItem>
                       <MenuItem>
                         <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
                         Move To Registration
@@ -241,23 +290,13 @@ const InquiryForm = ({ handleClose }: any) => {
     setSubmitting(false);
   };
 
-  const calculateAge = (dob: string) => {
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age -= 1;
-    }
-    return age.toString();
-  };
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      {({ errors, touched, isSubmitting, setFieldValue, values }) => (
+      {({ errors, touched, handleChange, isSubmitting, setFieldValue, values }) => (
         <Form>
           <Scrollbar
             sx={{
@@ -410,20 +449,79 @@ const InquiryForm = ({ handleClose }: any) => {
                 />
               </Grid>
               <Grid item xs={6}>
-                <Field
-                  as={TextField}
-                  select
-                  fullWidth
-                  size="small"
-                  name="gender"
-                  label="Gender"
-                  error={touched.gender && errors.gender}
-                  helperText={touched.gender && errors.gender}
-                >
-                  {/* Add gender options here */}
-                </Field>
+                <FormControl fullWidth>
+                  <InputLabel id="dropdown-label" size="small">
+                    Gender
+                  </InputLabel>
+                  <Select
+                    labelId="dropdown-label"
+                    id="dropdown"
+                    value={values.gender}
+                    onChange={handleChange}
+                    size="small"
+                    label="Gender"
+                    name="gender"
+                  >
+                    {GenderTypeArray.map((i, index) => (
+                      <MenuItem key={i} value={index}>
+                        {GenderType[index]}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
+              <Grid item xs={6}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="parentsContactNo"
+                  label="Parents Co. No."
+                  error={touched.parentsContactNo && errors.parentsContactNo}
+                  helperText={touched.parentsContactNo && errors.parentsContactNo}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="alternateContactDetails"
+                  label="Alternate Contact Details"
+                  error={touched.alternateContactDetails && errors.alternateContactDetails}
+                  helperText={touched.alternateContactDetails && errors.alternateContactDetails}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <CustomSelect
+                  label="Enquiry Preferences"
+                  name="inquiryPreferences"
+                  options={[
+                    { label: 'Online Classes', value: 'online' },
+                    { label: 'Offline Classes', value: 'offline' },
+                    { label: 'Hybrid Learning', value: 'hybrid' },
+                    { label: 'Weekend Batches', value: 'weekend' },
+                    { label: 'Evening Classes', value: 'evening' },
+                    { label: 'Morning Classes', value: 'morning' },
+                    { label: 'Afternoon Classes', value: 'afternoon' },
+                    { label: 'One-on-One Sessions', value: 'individual' },
+                    { label: 'Group Classes', value: 'group' },
+                    { label: 'Crash Course', value: 'crash' },
+                    { label: 'Regular Batches', value: 'regular' },
+                    { label: 'Fast Track Program', value: 'fasttrack' },
+                  ]}
+                  value={values.inquiryPreferences}
+                  onChange={(value) => setFieldValue('inquiryPreferences', value)}
+                  formControlProps={{
+                    fullWidth: true,
+                    sx: {
+                      maxWidth: 'unset',
+                    },
+                  }}
+                />
+              </Grid>
               <Grid item xs={4}>
                 <Field
                   as={TextField}
@@ -457,41 +555,17 @@ const InquiryForm = ({ handleClose }: any) => {
                   helperText={touched.pinCode && errors.pinCode}
                 />
               </Grid>
-
-              <Grid item xs={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="parentsContactNo"
-                  label="Parents Co. No."
-                  error={touched.parentsContactNo && errors.parentsContactNo}
-                  helperText={touched.parentsContactNo && errors.parentsContactNo}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="alternateContactDetails"
-                  label="Alternate Contact Details"
-                  error={touched.alternateContactDetails && errors.alternateContactDetails}
-                  helperText={touched.alternateContactDetails && errors.alternateContactDetails}
-                />
-              </Grid>
-
               <Grid item xs={12}>
                 <Field
                   as={TextField}
                   fullWidth
                   size="small"
-                  name="inquiryPreferences"
-                  label="Enquiry Preferences"
+                  name="address"
+                  label="Address"
+                  error={touched.address && errors.address}
+                  helperText={touched.address && errors.address}
                   multiline
-                  rows={3}
-                  error={touched.inquiryPreferences && errors.inquiryPreferences}
-                  helperText={touched.inquiryPreferences && errors.inquiryPreferences}
+                  rows={4}
                 />
               </Grid>
             </Grid>
