@@ -162,7 +162,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
             }}
           />{' '}
           <CustomSelect
-            label="Select Students"
+            label="Select Student"
             options={[
               { value: 'student1', label: 'Student 1' },
               { value: 'student2', label: 'Student 2' },

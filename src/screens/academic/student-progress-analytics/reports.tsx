@@ -1,181 +1,190 @@
+import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React from 'react';
+import * as Yup from 'yup';
+import React, { useState } from 'react';
+import { Form, Field, Formik } from 'formik';
 
-import { Search } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Card,
-  alpha,
-  useTheme,
-  TextField,
-  Typography,
-  InputAdornment,
-} from '@mui/material';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
+
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+const initialValues = {
+  report: '',
+  className: '',
+  division: '',
+  student: '',
+  startDate: null,
+  endDate: null,
+};
+
+const validationSchema = Yup.object().shape({
+  report: Yup.string().required('Report is required'),
+  className: Yup.string().required('Class is required'),
+  division: Yup.string().required('Division is required'),
+  student: Yup.string().required('Student is required'),
+  startDate: Yup.string().required('Startdate is required'),
+  endDate: Yup.string().required('EndDate Type is required'),
+});
 
 const Reports = (props: TabComponentType) => {
-  const theme = useTheme();
+  const [classes, setClasses] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
   return (
     <Box>
-      <Typography variant="h6">Individual Student Reports</Typography>
-      <Box display="flex" gap={2} my={2}>
-        <TextField
-          variant="outlined"
-          placeholder="search for individual students by name"
-          label="Student"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ maxWidth: '350px', width: '100%' }}
-        />
-        <DatePicker
-          label="To Date"
-          sx={{ width: '100%', maxWidth: '200px' }}
-          slotProps={{ textField: { size: 'small' } }}
-        />
-        <DatePicker
-          label="End Date"
-          sx={{ width: '100%', maxWidth: '200px' }}
-          slotProps={{ textField: { size: 'small' } }}
-        />
-      </Box>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Report Overview
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              • Overall Grade
-            </Typography>
-            <Typography variant="h3" gutterBottom>
-              A
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              • Attendance
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              • Present days - 265
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              • Absent days - 100
-            </Typography>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={(values, { setSubmitting }) => {
+          setTimeout(() => {
+            alert(JSON.stringify(values, null, 2));
+            setSubmitting(false);
+          }, 400);
+        }}
+      >
+        {({ errors, touched, values, handleChange, setFieldValue }) => (
+          <Card>
+            <Form>
+              <Box sx={{ p: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.report && errors.report} fullWidth>
+                      <CustomSelect
+                        label="List of Reports"
+                        name="report"
+                        options={[
+                          {
+                            value: 'Class Progress Report',
+                            label: 'Class Progress Report',
+                          },
+                          {
+                            value: 'Student Progress Report',
+                            label: 'Student Progress Report',
+                          },
+                        ]}
+                        formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+                        value={values.report}
+                        onChange={(value) => setFieldValue('report', value)}
+                      />
+                      <FormHelperText>{touched.report && errors.report}</FormHelperText>
+                    </Field>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.className && errors.className} fullWidth>
+                      <CustomSelect
+                        label="Class"
+                        name="className"
+                        options={classData?.items || []}
+                        labelKey="name"
+                        valueKey="id"
+                        value={classes}
+                        onChange={(value) => {
+                          const selectedClass: Standards = classData.items.find(
+                            (i: Standards) => i.id === value
+                          );
+                          setClasses(value as string);
+                          setFieldValue('className', selectedClass?.name || '');
+                          setDivisionOptions(selectedClass?.divisions || []);
+                        }}
+                        formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+                      />
+                      <FormHelperText>{touched.className && errors.className}</FormHelperText>
+                    </Field>
+                  </Grid>
 
-            <TextField sx={{ mt: 2 }} size="small" fullWidth placeholder="Teacher Feedback" />
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.division && errors.division} fullWidth>
+                      <CustomSelect
+                        label="Division"
+                        disabled={!values.className}
+                        labelKey="name"
+                        valueKey="id"
+                        options={divisionOptions}
+                        value={division}
+                        onChange={(val) => {
+                          const selectedDivision = divisionOptions.find(
+                            (i: Division) => val === i.id
+                          );
+                          setFieldValue('division', selectedDivision?.name || '');
+                          setDivision(val as string);
+                        }}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                      />
+                      <FormHelperText>{touched.division && errors.division}</FormHelperText>
+                    </Field>
+                  </Grid>
+
+                  {values.report === 'Student Progress Report' && (
+                    <Grid item xs={12} sm={6} md={4}>
+                      <Field as={FormControl} error={touched.student && errors.student} fullWidth>
+                        <CustomSelect
+                          label="Select Student"
+                          disabled={!values.division}
+                          options={[
+                            { value: 'student1', label: 'Student 1' },
+                            { value: 'student2', label: 'Student 2' },
+                            { value: 'student3', label: 'Student 3' },
+                          ]}
+                          value={values.student}
+                          onChange={(val) => {
+                            setFieldValue('student', val);
+                          }}
+                          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                        />
+                        <FormHelperText>{touched.division && errors.division}</FormHelperText>
+                      </Field>
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
+                      <DatePicker
+                        label="Start Date"
+                        name="startDate"
+                        value={values.startDate}
+                        onChange={(date) => setFieldValue('startDate', date)}
+                        format="DD-MM-YYYY"
+                        slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                      />
+                      <FormHelperText>{touched.startDate && errors.startDate}</FormHelperText>
+                    </Field>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
+                      <DatePicker
+                        label="End Date"
+                        name="endDate"
+                        value={values.endDate}
+                        onChange={(date) => setFieldValue('endDate', date)}
+                        format="DD-MM-YYYY"
+                        slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                      />
+                      <FormHelperText>{touched.endDate && errors.endDate}</FormHelperText>
+                    </Field>
+                  </Grid>
+                  <Grid item xs={12} justifyContent="flex-end" display="flex">
+                    <Button type="submit" variant="contained">
+                      Generate Report
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Form>
           </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1">Subject Breakdown</Typography>
-            </Box>
-            <AnalyticsWebsiteVisits
-              title=""
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: ['Math', 'Science', 'ENG'],
-                series: [
-                  { name: 'High Performer', data: [43, 0, 22] },
-                  { name: 'Need Improvemets', data: [0, 70, 0] },
-                ],
-                colors: [
-                  alpha(theme.palette.primary.dark, 0.8),
-                  alpha(theme.palette.error.main, 0.8),
-                ],
-              }}
-              sx={{ height: '100%', boxShadow: 'none' }}
-            />
-          </Card>
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="h6">Class Reports</Typography>
-          <Box display="flex" gap={2} my={2}>
-            <CustomSelect
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              label="Class"
-            />
-            <CustomSelect
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              label="Subject"
-            />
-            <DatePicker
-              label="To Date"
-              sx={{ width: '100%', maxWidth: '200px' }}
-              slotProps={{ textField: { size: 'small' } }}
-            />
-            <DatePicker
-              label="End Date"
-              sx={{ width: '100%', maxWidth: '200px' }}
-              slotProps={{ textField: { size: 'small' } }}
-            />
-          </Box>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Class Summary
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              • Overall Grade
-            </Typography>
-            <Typography variant="h3" gutterBottom>
-              A
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              • Top Performers
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              • Present days - 265
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              • Absent days - 100
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              • Bottom Performers
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              • John Doe
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              • Deja Brady
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1">Performance Breakdown</Typography>
-            </Box>
-            <AnalyticsWebsiteVisits
-              title=""
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: ['Math', 'Science', 'ENG'],
-                series: [{ name: 'High Performer', data: [43, 0, 22] }],
-                colors: [alpha(theme.palette.primary.dark, 0.8)],
-              }}
-              sx={{ height: '100%', boxShadow: 'none' }}
-            />
-          </Card>
-        </Grid>
-      </Grid>
+        )}
+      </Formik>
     </Box>
   );
 };
