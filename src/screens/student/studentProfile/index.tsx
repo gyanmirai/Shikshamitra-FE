@@ -1,17 +1,22 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { useMemo, useState, useEffect } from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Tab, Card, Tabs, Button, Avatar, Typography } from '@mui/material';
+import { Box, Tab, Card, Tabs, Paper, Button, Avatar, Typography, IconButton } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { EmptyContent } from 'src/components/empty-content';
+import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -20,7 +25,6 @@ import Finance from './finance';
 import Academic from './academic';
 import Document from './document';
 import Attendance from './attendance';
-import { ProfileCover } from './profile-cover';
 import StudentDashboard from './studentDashboard';
 import { StudentInformation } from './information';
 
@@ -35,6 +39,7 @@ const students = [
     medium: 'GUJ',
     organization: 'Primary',
     board: 'CBSE',
+    contactNo: '+91 12345 67890',
   },
   {
     id: 2,
@@ -46,6 +51,7 @@ const students = [
     medium: 'ENG',
     organization: 'Primary',
     board: 'ICSE',
+    contactNo: '+91 98765 43210',
   },
   {
     id: 3,
@@ -57,6 +63,7 @@ const students = [
     medium: 'ENG',
     organization: 'Secondary',
     board: 'ICSE',
+    contactNo: '+91 55555 55555',
   },
   {
     id: 4,
@@ -68,6 +75,7 @@ const students = [
     medium: 'ENG',
     organization: 'Secondary',
     board: 'GSEB',
+    contactNo: '+91 11111 11111',
   },
   {
     id: 5,
@@ -79,6 +87,7 @@ const students = [
     medium: 'GUJ',
     organization: 'Primary',
     board: 'GSEB',
+    contactNo: '+91 99999 99999',
   },
 ];
 
@@ -146,6 +155,35 @@ const TABS = [
   },
 ];
 export function StudentProfile() {
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [organization, setOrganization] = useState<string>('');
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClass] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
+
+  useEffect(() => {
+    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
+    setClass(
+      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
+    );
+  }, [organization, allOrganization]);
+
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
   const [searchParams, setSearchParams] = useSearchParam();
   const tabs = useTabs('dashboard');
 
@@ -158,13 +196,58 @@ export function StudentProfile() {
 
   return (
     <>
-      {/* <CustomBreadcrumbs
+      <CustomBreadcrumbs
         heading="Student List"
-        links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student List' }]}
+        links={[{ name: 'Student' }, { name: 'Student Records' }, { name: 'Student List' }]}
         sx={{ px: 1, mb: 2 }}
-      /> */}
-      {!currentStudent &&
-        (students.length ? (
+        action={
+          currentStudent && (
+            <Button
+              size="small"
+              variant="soft"
+              onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
+              startIcon={<Iconify icon="mingcute:back-2-fill" />}
+            >
+              Back To Student list
+            </Button>
+          )
+        }
+      />
+
+      {!currentStudent && (
+        <>
+          <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+            <CustomSelect
+              options={allOrganization}
+              label="Organization"
+              value={organization}
+              onChange={(val: string | string[]) => setOrganization(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!medium}
+            />
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val: string | string[]) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!organization}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val: string | string[]) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!classes}
+            />
+          </Box>
           <CustomizableTable
             data={students}
             columns={[
@@ -186,11 +269,10 @@ export function StudentProfile() {
               },
               { id: 'rollNo', label: 'Roll No' },
               { id: 'GrNo', label: 'Gr No' },
-              { id: 'board', label: 'Board' },
-              { id: 'medium', label: 'Medium' },
               { id: 'organization', label: 'Organization' },
               { id: 'class', label: 'Class' },
               { id: 'division', label: 'Division' },
+              { id: 'contactNo', label: 'Contact No' },
               {
                 id: 'action',
                 label: 'Action',
@@ -211,61 +293,102 @@ export function StudentProfile() {
               },
             ]}
           />
-        ) : (
-          <EmptyContent title="Student Not Found" />
-        ))}
+        </>
+      )}
+
       {currentStudent && (
         <>
-          <CustomBreadcrumbs
-            heading={currentActiveComponent?.label}
-            links={[
-              { name: 'Student' },
-              { name: 'Student Profile' },
-              { name: currentActiveComponent?.label },
-            ]}
-            sx={{ px: 1, pb: 1 }}
-          />
-          <Card sx={{ mb: 3, height: 290 }}>
-            <ProfileCover
-              // eslint-disable-next-line jsx-a11y/aria-role
-              role={`${currentStudent?.class} - ${currentStudent?.division}`}
-              name={currentStudent?.name}
-              avatarUrl="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
-              coverUrl=""
-              setSearchParams={setSearchParams}
-            />
-
-            <Box
-              display="flex"
+          <Card
+            sx={{
+              mb: 3,
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
+              boxShadow: 'var(--shadows-4)',
+            }}
+          >
+            <Paper
               sx={{
-                width: 1,
-                bottom: 0,
-                zIndex: 9,
-                px: { md: 3 },
-                position: 'absolute',
-                bgcolor: 'background.paper',
+                p: 1,
+                borderBottom: '1px dashed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
+                borderRadius: 1,
               }}
             >
-              <Tabs
-                value={tabs.value}
-                onChange={tabs.onChange}
-                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-                role="tablist"
-              >
-                {TABS.map((tab) => (
-                  <Tab
-                    sx={{ fontSize: '12px' }}
-                    key={tab.value}
-                    value={tab.value}
-                    icon={tab.icon}
-                    label={tab.label}
-                    role="tab"
-                  />
-                ))}
-              </Tabs>
-            </Box>
+              <Box display="flex" gap={2} alignItems="center">
+                <Avatar
+                  src="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
+                  sx={{ width: 64, height: 64 }}
+                />
+                <Label variant="filled" color="primary" sx={{ fontSize: '12px' }}>
+                  John Doe
+                </Label>
+                <Label variant="filled" color="info" sx={{ fontSize: '12px' }}>
+                  GR01
+                </Label>
+                <Label variant="filled" color="secondary" sx={{ fontSize: '12px' }}>
+                  Roll No 20
+                </Label>
+                <Label variant="filled" color="warning" sx={{ fontSize: '12px' }}>
+                  10-A
+                </Label>
+                <Label variant="filled" color="error" sx={{ fontSize: '12px' }}>
+                  Higher Secondary
+                </Label>
+              </Box>
+              <Box display="flex" gap={2} alignItems="center">
+                <Button size="small" variant="outlined">
+                  View I-card
+                </Button>
+                <CustomTooltip
+                  arrow
+                  title={
+                    <Box p={1}>
+                      <Label variant="soft" color="success">
+                        Volunteer
+                      </Label>
+                      <Label variant="soft" color="warning" sx={{ ml: 1 }}>
+                        New
+                      </Label>
+                      <Label variant="soft" color="info" sx={{ ml: 1 }}>
+                        VIP
+                      </Label>
+                      <Label variant="soft" color="error" sx={{ ml: 1 }}>
+                        Good Listener
+                      </Label>
+                    </Box>
+                  }
+                >
+                  <IconButton sx={{ color: 'primary.main' }}>
+                    <Iconify
+                      icon="iconamoon:certificate-badge-fill"
+                      sx={{ height: '24px', width: '24px' }}
+                    />
+                  </IconButton>
+                </CustomTooltip>
+              </Box>
+            </Paper>
+            <Tabs
+              value={tabs.value}
+              onChange={tabs.onChange}
+              sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+              role="tablist"
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  sx={{ fontSize: '12px' }}
+                  key={tab.value}
+                  value={tab.value}
+                  icon={tab.icon}
+                  label={tab.label}
+                  role="tab"
+                />
+              ))}
+            </Tabs>
           </Card>
-          {/* <Scrollbar sx={{ height: '100%', overflowY: 'auto' }}> */}
+          {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
           {currentActiveComponent?.component && <currentActiveComponent.component tabs={tabs} />}
           {/* </Scrollbar> */}
         </>

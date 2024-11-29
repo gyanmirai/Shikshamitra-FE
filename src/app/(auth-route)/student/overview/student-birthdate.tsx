@@ -88,8 +88,8 @@ const StudentBirthDate = () => {
                       sx={{
                         bgcolor: 'primary.main',
                         mr: 2,
-                        width: 56,
-                        height: 56,
+                        width: 38,
+                        height: 38,
                         cursor: 'pointer',
                       }}
                     >
@@ -158,12 +158,12 @@ const StudentBirthDate = () => {
             </Carousel>
           </Card>
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 2 }} />
 
           <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
             Upcoming Birthdays
           </Typography>
-          <Scrollbar sx={{ height: 300 }}>
+          <Scrollbar sx={{ height: 150 }}>
             <List>
               {[
                 { name: 'Jane Smith', date: 'May 15', age: 19 },
@@ -176,7 +176,7 @@ const StudentBirthDate = () => {
                   sx={{
                     backgroundColor: 'background.paper',
                     borderRadius: '8px',
-                    p: 2,
+                    p: 1,
                     boxShadow: 2,
                     my: 1,
                   }}
@@ -187,8 +187,8 @@ const StudentBirthDate = () => {
                         <Avatar
                           sx={{
                             bgcolor: 'secondary.main',
-                            width: 48,
-                            height: 48,
+                            width: 36,
+                            height: 36,
                             cursor: 'pointer',
                           }}
                         >

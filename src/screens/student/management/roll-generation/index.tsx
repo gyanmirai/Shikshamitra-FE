@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
-import { Save, Refresh } from '@mui/icons-material';
+import { Box, Button, TextField } from '@mui/material';
+import { Save, Refresh, Grading } from '@mui/icons-material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const RollNoGenerationScreen = () => {
   const [arrangementType, setArrangementType] = useState('');
+  const [isManual, setIsManual] = useState<boolean>(false);
   const [arrangeBy, setArrangeBy] = useState('');
 
   const data = [
@@ -54,16 +55,22 @@ const RollNoGenerationScreen = () => {
         <>
           {' '}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
-            <Button startIcon={<Save />} variant="outlined">
+            <Button
+              startIcon={<Save />}
+              variant="outlined"
+              onClick={() => {
+                setIsManual(false);
+              }}
+            >
               Save
             </Button>
-            {/* <Button
+            <Button
               startIcon={<Grading />}
               variant="outlined"
               onClick={() => setIsManual(!isManual)}
             >
               Manual Generation
-            </Button> */}
+            </Button>
             <Button startIcon={<Refresh />} variant="contained">
               Auto Generate
             </Button>
@@ -77,6 +84,10 @@ const RollNoGenerationScreen = () => {
               {
                 id: 'rollNo',
                 label: 'Roll No.',
+                minWidth: 250,
+                render(value, row) {
+                  return isManual && <TextField size="small" variant="standard" />;
+                },
               },
             ]}
             data={data}

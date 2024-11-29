@@ -11,10 +11,10 @@ const BulkStudentAddScreen = () => (
   // const dialog = useBoolean();
   <Box>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
-      {/* <Button variant="outlined" onClick={dialog.onTrue}>
-          Manually
-        </Button> */}
-      <Button startIcon={<FileDownload />} variant="contained">
+      <Button size="small" variant="outlined">
+        Download Template
+      </Button>
+      <Button size="small" startIcon={<FileDownload />} variant="contained">
         Import
       </Button>
     </Box>

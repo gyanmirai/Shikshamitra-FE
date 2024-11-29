@@ -1,3 +1,5 @@
+import type { IconButtonOwnProps } from '@mui/material';
+
 import React from 'react';
 
 import { IconButton } from '@mui/material';
@@ -32,7 +34,8 @@ const ThreeDotsActions = ({
   onClickThreeDots,
   onClosePopover,
   placement = 'left-top',
-}: IThreeDotesActionsType) => {
+  ...props
+}: Omit<IconButtonOwnProps, 'onClick'> & IThreeDotesActionsType) => {
   const popover = usePopover();
 
   return (
@@ -40,9 +43,11 @@ const ThreeDotsActions = ({
       <IconButton
         color={popover.open ? 'inherit' : 'default'}
         onClick={(e) => {
+          e.stopPropagation();
           popover.onOpen(e);
           onClickThreeDots?.(e);
         }}
+        {...props}
       >
         <Iconify icon="eva:more-vertical-fill" sx={{ height: '16px', width: '16px' }} />
       </IconButton>

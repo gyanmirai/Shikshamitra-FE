@@ -8,12 +8,10 @@ import React, { useState, useEffect } from 'react';
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -65,7 +63,6 @@ const BonofiedForm = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const { values, setFieldValue, handleSubmit, handleChange } = useFormik({
     initialValues: {
-      medium: '',
       organization: '',
       classes: '',
       division: '',
@@ -78,40 +75,18 @@ const BonofiedForm = () => {
       // fresetForm();
     },
   });
-  const { medium, organization, classes, division } = values;
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
-  useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setFieldValue('medium', boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setFieldValue('medium', '');
-    }
-  }, [boardData, currentBoard.id, setFieldValue, getBoard]);
+  const { organization, classes, division } = values;
+
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setFieldValue('medium', boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData, setFieldValue]);
-
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setFieldValue(
-      'organization',
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums, setFieldValue]);
+    setAllOrganization(medium?.educationMediumStages || []);
+    setFieldValue('organization', medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium, setFieldValue]);
 
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
@@ -132,24 +107,6 @@ const BonofiedForm = () => {
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid xs={3}>
-            <CustomSelect
-              options={allMediums}
-              label="Medium"
-              value={medium}
-              onChange={(val: string | string[]) => {
-                setFieldValue('medium', val as string);
-              }}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{
-                fullWidth: true,
-                sx: {
-                  maxWidth: 'unset',
-                },
-              }}
-            />
-          </Grid>
           <Grid xs={3}>
             <CustomSelect
               options={allOrganization}
@@ -197,6 +154,33 @@ const BonofiedForm = () => {
             />
           </Grid>
           <Grid xs={3}>
+            <Autocomplete
+              loading={false}
+              noOptionsText="No Student Found"
+              fullWidth
+              // value={props.formik.values.sponsorStudent}
+              // onChange={(e, value: any) => {
+              //   props.formik.setFieldValue('sponsorStudent', value);
+              // }}
+              options={[]}
+              getOptionLabel={(option: any) => option?.firstName || ''}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Student"
+                  placeholder="Search  Student"
+                  fullWidth
+                />
+              )}
+              renderOption={(prop: any, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.firstName}
+                </li>
+              )}
+            />
+          </Grid>
+          {/* <Grid xs={3}>
             <TextField
               size="small"
               value={values.grNo}
@@ -205,7 +189,7 @@ const BonofiedForm = () => {
               label="GR No"
               fullWidth
             />
-          </Grid>
+          </Grid> */}
           <Grid xs={3}>
             <DatePicker
               label="Creation Date"
@@ -221,7 +205,7 @@ const BonofiedForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={12}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.reason}
@@ -232,6 +216,9 @@ const BonofiedForm = () => {
               label="Reason"
               fullWidth
             />
+          </Grid>
+          <Grid xs={3}>
+            <Button variant="contained">Generate</Button>
           </Grid>
           <Grid xs={12}>
             <BonofiedCertificateTemplate1 />

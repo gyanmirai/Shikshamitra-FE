@@ -194,7 +194,7 @@ const AcademicDashboard = () => {
           },
         ]}
         columns={[
-          { id: 'date', label: 'Date' },
+          { id: 'date', label: 'Exam Date' },
           { id: 'category', label: 'Category' },
           {
             id: 'marks',

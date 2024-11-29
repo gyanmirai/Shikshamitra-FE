@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { Medium, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -8,12 +8,9 @@ import React, { useState, useEffect } from 'react';
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -56,6 +53,7 @@ const CharacterForm = () => {
   const [allMediums, setAllMediums] = useState<Medium[]>([]);
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   const { values, setFieldValue, handleSubmit, handleChange } = useFormik({
     initialValues: {
@@ -66,46 +64,24 @@ const CharacterForm = () => {
       grNo: '',
       creationDate: null,
       reason: '',
+      division: '',
     },
     onSubmit: (val: any) => {
       // submit form logic
       // fresetForm();
     },
   });
-  const { medium, organization, classes } = values;
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
-  useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setFieldValue('medium', boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setFieldValue('medium', '');
-    }
-  }, [boardData, currentBoard.id, setFieldValue, getBoard]);
+  const { division, organization, classes } = values;
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setFieldValue('medium', boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData, setFieldValue]);
-
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setFieldValue(
-      'organization',
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums, setFieldValue]);
+    setAllOrganization(medium?.educationMediumStages || []);
+    setFieldValue('organization', medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium, setFieldValue]);
 
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
@@ -115,25 +91,18 @@ const CharacterForm = () => {
     );
   }, [organization, allOrganization, setFieldValue]);
 
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setFieldValue(
+      'division',
+      allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || ''
+    );
+  }, [allClass, classes, setFieldValue]);
+
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid xs={6}>
-            <CustomSelect
-              options={allMediums}
-              label="Medium"
-              value={medium}
-              onChange={(val: string | string[]) => {
-                setFieldValue('medium', val as string);
-              }}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{
-                fullWidth: true,
-              }}
-            />
-          </Grid>
           <Grid xs={6}>
             <CustomSelect
               options={allOrganization}
@@ -162,8 +131,47 @@ const CharacterForm = () => {
               disabled={!organization}
             />
           </Grid>
-
           <Grid xs={6}>
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val: string | string[]) => setFieldValue('division', val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
+              disabled={!classes}
+            />
+          </Grid>
+          <Grid xs={6}>
+            <Autocomplete
+              loading={false}
+              noOptionsText="No Student Found"
+              fullWidth
+              // value={props.formik.values.sponsorStudent}
+              // onChange={(e, value: any) => {
+              //   props.formik.setFieldValue('sponsorStudent', value);
+              // }}
+              options={[]}
+              getOptionLabel={(option: any) => option?.firstName || ''}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Student"
+                  placeholder="Search  Student"
+                  fullWidth
+                />
+              )}
+              renderOption={(prop: any, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.firstName}
+                </li>
+              )}
+            />
+          </Grid>
+
+          {/* <Grid xs={6}>
             <TextField
               size="small"
               value={values.grNo}
@@ -172,7 +180,7 @@ const CharacterForm = () => {
               label="GR No"
               fullWidth
             />
-          </Grid>
+          </Grid> */}
           <Grid xs={6}>
             <DatePicker
               label="Creation Date"

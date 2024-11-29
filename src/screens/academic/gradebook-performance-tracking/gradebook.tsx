@@ -20,6 +20,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import Academic from 'src/screens/student/studentProfile/academic';
 import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
 
 import { Iconify } from 'src/components/iconify';
@@ -96,6 +97,7 @@ const Gradebook = (props: TabComponentType) => {
   const dialog = useBoolean();
   const bulkGradeDialog = useBoolean();
   const viewResultDialog = useBoolean();
+  const viewProfile = useBoolean();
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -332,6 +334,16 @@ const Gradebook = (props: TabComponentType) => {
                           <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
                           View Result
                         </MenuItem>
+
+                        <MenuItem
+                          onClick={() => {
+                            viewProfile.onTrue();
+                          }}
+                        >
+                          {' '}
+                          <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+                          View Profile
+                        </MenuItem>
                       </MenuList>
                     )}
                   />
@@ -368,6 +380,21 @@ const Gradebook = (props: TabComponentType) => {
         title={`${selectedStudent?.studentName} details`}
       >
         <ViewResult student={selectedStudent} />
+      </CustomDialog>
+
+      <CustomDialog
+        maxWidth="lg"
+        open={viewProfile.value}
+        handleClose={() => {
+          viewProfile.onFalse();
+        }}
+        title="Student Profile"
+      >
+        <Box sx={{ p: 2 }}>
+          <Scrollbar sx={{ height: '600px' }}>
+            <Academic />
+          </Scrollbar>
+        </Box>
       </CustomDialog>
     </Box>
   );

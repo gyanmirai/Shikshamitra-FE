@@ -1,8 +1,8 @@
 'use client';
 
+import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
 
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
@@ -21,11 +21,11 @@ const GrNoGenerationScreen = () => {
     { id: 2, srNo: 2, currentGrNo: 'GR002', name: 'Jane Smith', newGrNo: '' },
     { id: 3, srNo: 3, currentGrNo: 'GR003', name: 'Alice Johnson', newGrNo: '' },
   ];
-  useEffect(() => {
-    if (isManual) {
-      dispatch(setIsChanges(true));
-    }
-  }, [dispatch, isManual]);
+  // useEffect(() => {
+  //   if (isManual) {
+  //     dispatch(setIsChanges(true));
+  //   }
+  // }, [dispatch, isManual]);
 
   const router = useRouter();
 

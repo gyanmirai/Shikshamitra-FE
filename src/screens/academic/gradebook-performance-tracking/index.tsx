@@ -15,7 +15,6 @@ import Setting from './setting';
 import Reports from './newReport';
 import Dashboard from './dashboard';
 import Gradebook from './gradebook';
-import ProgressReport from './progress-report';
 import PerformanceAnalytics from './performance-analytics';
 
 const TABS = [
@@ -29,12 +28,11 @@ const TABS = [
     label: 'Gradebook',
     component: (props: TabComponentType) => <Gradebook {...props} />,
   },
-  {
-    value: 'progressReport',
-    label: 'Progress Report',
-    component: (props: TabComponentType) => <ProgressReport {...props} />,
-  },
-
+  // {
+  //   value: 'progressReport',
+  //   label: 'Progress Report',
+  //   component: (props: TabComponentType) => <ProgressReport {...props} />,
+  // },
   {
     value: 'performanceAnalysis',
     label: 'Performance Analysis',
