@@ -29,6 +29,7 @@ const LibraryPermissionSettingScreen = () => {
         heading="Permission Setting"
         links={[
           { name: 'Library' },
+          { name: 'Setting' },
           { name: 'Permission Setting' },
           // {
           //   name:

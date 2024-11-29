@@ -47,18 +47,18 @@ const LibraryReservationManagement = () => {
     ];
 
     const renderTableActions = (row: any) => (
-        <ThreeDotsActions
+        row.status === "Ready" && (<ThreeDotsActions
             placement="right-top"
             actions={({ popover }: any) => (
                 <MenuList>
-                    <MenuItem
+                    {/* <MenuItem
                         onClick={() => {
                             //   openDialog(addNewBookDialog, row, true);
                         }}
                     >
                         <Iconify icon="mdi-light:check" />
                         Mark as Ready
-                    </MenuItem>
+                    </MenuItem> */}
                     <MenuItem
                         onClick={() => {
                             //   openDialog(issueBookDialog, row);
@@ -71,7 +71,7 @@ const LibraryReservationManagement = () => {
 
 
             )}
-        />
+        />)
     );
     return (
         <CustomizableTable

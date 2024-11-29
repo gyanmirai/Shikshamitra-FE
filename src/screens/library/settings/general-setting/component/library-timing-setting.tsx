@@ -5,6 +5,8 @@ import { Box, TextField } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const LibraryTimingSetting: React.FC = () => {
+  const [globalStartTime, setGlobalStartTime] = useState('');
+  const [globalEndTime, setGlobalEndTime] = useState('');
   const [schedule, setSchedule] = useState([
     { day: 'Monday', startTime: '', endTime: '', isHoliday: false },
     { day: 'Tuesday', startTime: '', endTime: '', isHoliday: false },
@@ -15,21 +17,42 @@ const LibraryTimingSetting: React.FC = () => {
     { day: 'Sunday', startTime: '', endTime: '', isHoliday: false },
   ]);
 
-  const handleUpdate = (field: string, value: any) => {
-    // const updatedSchedule = [...schedule];
+  const handleGlobalUpdate = (field: string, value: string) => {
+    const updatedSchedule = schedule.map((row) => ({
+      ...row,
+      // [field]: row.isHoliday ? row[field] : value, // Update only if not a holiday
+    }));
+    setSchedule(updatedSchedule);
+    if (field === 'startTime') setGlobalStartTime(value);
+    if (field === 'endTime') setGlobalEndTime(value);
+  };
+
+  const handleRowUpdate = (field: string, value: string) => {
+    const updatedSchedule = [...schedule];
     // updatedSchedule[index][field] = value;
-
-    // // If holiday is toggled, reset start and end time
-    // if (field === 'isHoliday' && value) {
-    //   updatedSchedule[index].startTime = '';
-    //   updatedSchedule[index].endTime = '';
-    // }
-
-    // setSchedule(updatedSchedule);
+    setSchedule(updatedSchedule);
   };
 
   return (
     <Box sx={{ padding: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+        <TextField
+          type="time"
+          label="Start Time (Global)"
+          value={globalStartTime}
+          onChange={(e) => handleGlobalUpdate('startTime', e.target.value)}
+          size="small"
+          sx={{ width: '200px' }}
+        />
+        <TextField
+          type="time"
+          label="End Time (Global)"
+          value={globalEndTime}
+          onChange={(e) => handleGlobalUpdate('endTime', e.target.value)}
+          size="small"
+          sx={{ width: '200px' }}
+        />
+      </Box>
       <CustomizableTable
         isFilter={false}
         isShowedDense={false}
@@ -39,11 +62,11 @@ const LibraryTimingSetting: React.FC = () => {
           {
             id: 'startTime',
             label: 'Start Time',
-            render: (value: string, row: any) => (
+            render: (value: string, row: any,) => (
               <TextField
                 type="time"
                 value={row.startTime}
-                onChange={(e) => handleUpdate('startTime', e.target.value)}
+                onChange={(e) => handleRowUpdate('startTime', e.target.value)}
                 disabled={row.isHoliday}
                 variant="outlined"
                 size="small"
@@ -54,11 +77,11 @@ const LibraryTimingSetting: React.FC = () => {
           {
             id: 'endTime',
             label: 'End Time',
-            render: (value: string, row: any) => (
+            render: (value: string, row: any,) => (
               <TextField
                 type="time"
                 value={row.endTime}
-                onChange={(e) => handleUpdate('endTime', e.target.value)}
+                onChange={(e) => handleRowUpdate('endTime', e.target.value)}
                 disabled={row.isHoliday}
                 variant="outlined"
                 size="small"
@@ -66,16 +89,6 @@ const LibraryTimingSetting: React.FC = () => {
               />
             ),
           },
-          // {
-          //   id: 'isHoliday',
-          //   label: 'Holiday',
-          //   render: (value: boolean, row: any,) => (
-          //     <Switch
-          //       checked={row.isHoliday}
-          //       onChange={(e) => handleUpdate('isHoliday', e.target.checked)}
-          //     />
-          //   ),
-          // },
         ]}
         data={schedule}
       />

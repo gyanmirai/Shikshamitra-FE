@@ -53,6 +53,7 @@ const LibraryNotificationSettingScreen = () => {
         heading="Notification Setting"
         links={[
           { name: 'Library' },
+          { name: 'Setting' },
           { name: 'Notification Setting' },
         ]}
         sx={{ px: 1, mb: 5 }}
