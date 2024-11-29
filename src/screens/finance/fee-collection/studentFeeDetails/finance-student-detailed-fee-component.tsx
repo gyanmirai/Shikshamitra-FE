@@ -43,7 +43,12 @@ const TABS = [
   },
 ];
 
-const FinanceStudentDetailedFeeComponent = () => {
+interface FinanceStudentDetailedFeeComponentProps {
+  studentId: string;
+}
+
+
+const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComponentProps> = ({ studentId }) => {
   const tabs = useTabs('fee-breakdown');
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
