@@ -5,6 +5,8 @@ import { Box, Grid, Button, MenuItem, TextField, Typography, DialogActions } fro
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
+
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -57,7 +59,19 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
             formik.setFieldValue('accountHolder', '');
         }
     };
+    const [penaltyAmountState, setPenaltyAmountState] = useState('');
+    const [fineAmountState, setFineAmountState] = useState('');
 
+    function parseNumber(value: string): number {
+        return parseFloat(value.replace(/,/g, ''));
+    }
+
+    const handlePenaltyAmountChange = (formattedValue: string, numericValue: number) => {
+        setPenaltyAmountState(formattedValue);
+    };
+    const handleFineAmountChange = (formattedValue: string, numericValue: number) => {
+        setFineAmountState(formattedValue);
+    };
     return (
         <CustomDialog
             title="Fine Collection"
@@ -71,7 +85,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                         <Grid container spacing={3} pt="10px">
                             <Grid item xs={12}>
                                 <Typography variant="h6">{data?.memberName}</Typography>
-                                <Typography variant="body2">Member ID: {data?.memberId}</Typography>
+                                <Typography variant="body2">Gr Number: {data?.memberId}</Typography>
                             </Grid>
 
                             {/* Table for Fines */}
@@ -119,41 +133,29 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
 
                             {/* Fine Amount */}
                             <Grid item xs={12} md={3}>
-                                <TextField
-                                    fullWidth
-                                    name="fineAmount"
+                                <FormattedAmountInput
                                     label="Fine Amount"
-                                    value={formik.values.fineAmount}
-                                    onChange={(e) => {
-                                        const formattedValue = formatNumber(e.target.value, 'INR');
-                                        formik.setFieldValue('fineAmount', formattedValue);
-                                    }}
-                                    size="small"
+                                    value={fineAmountState}
+                                    onChange={handleFineAmountChange}
                                 />
+
                             </Grid>
                             <Grid item xs={12} md={3}>
-                                <TextField
-                                    fullWidth
-                                    name="fineAmount"
-                                    label="Enter Penalty"
-                                    value=''
-                                    onChange={(e) => {
-                                        const formattedValue = formatNumber(e.target.value, 'INR');
-                                        formik.setFieldValue('fineAmount', formattedValue);
-                                    }}
-                                    size="small"
-                                />
-                            </Grid>
+                                <FormattedAmountInput
+                                    label="Penalty Amount"
+                                    value={penaltyAmountState}
+                                    onChange={handlePenaltyAmountChange}
+                                />                            </Grid>
 
                             <Grid item xs={12} md={3}>
                                 <TextField
                                     fullWidth
-                                    name="fineAmount"
+                                    name="pReason"
                                     label="Penalty Reason"
                                     value=''
                                     onChange={(e) => {
                                         const formattedValue = formatNumber(e.target.value, 'INR');
-                                        formik.setFieldValue('fineAmount', formattedValue);
+                                        formik.setFieldValue('pReason', formattedValue);
                                     }}
                                     size="small"
                                 />
