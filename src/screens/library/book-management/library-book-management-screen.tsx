@@ -102,27 +102,35 @@ const memberData = [
     id: "S001",
     name: "Alice",
     role: "Student",
+    pendingCharges: [
+      { type: 'Damage Fee', amount: 100, status: 'Pending' },
+      { type: 'Late Return Fee', amount: 30, status: 'Pending' },
+    ],
   },
   {
     id: "S002",
     name: "Bob",
     role: "Student",
+    pendingCharges: [
+      { type: 'Overdue Fee', amount: 20, status: 'Pending' },
+    ],
   },
   {
     id: "T001",
     name: "Charlie",
     role: "Teacher",
+    pendingCharges: [],
   },
   {
     id: "T002",
     name: "Dana",
     role: "Teacher",
+    pendingCharges: [
+      { type: 'Damage Fee', amount: 100, status: 'Pending' },
+      { type: 'Late Return Fee', amount: 30, status: 'Pending' },
+    ],
   },
-  {
-    id: "S003",
-    name: "Eve",
-    role: "Student",
-  },
+
 ];
 
 

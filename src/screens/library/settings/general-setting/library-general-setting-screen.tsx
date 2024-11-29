@@ -29,7 +29,7 @@ const TABS = [
   },
   {
     value: 'book-categories-and-tags',
-    label: 'Book Categories and Tags',
+    label: 'Book Categories',
     icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
     component: () => <LibraryBookAndTagsSetting />,
   },
@@ -51,13 +51,9 @@ const LibraryGeneralSettingScreen = () => {
         heading="General Setting"
         links={[
           { name: 'Library' },
+          { name: 'Setting' },
           { name: 'General Setting' },
-          // {
-          //   name:
-          //     searchParams.tab !== 'Fee-structure-overview'
-          //       ? 'Student Fee Management'
-          //       : 'Fee-Structure-Overview',
-          // },
+
         ]}
         sx={{ px: 1, mb: 2 }}
       />

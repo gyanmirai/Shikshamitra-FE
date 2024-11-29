@@ -1,12 +1,14 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 interface CollectFinesDialogProps {
     dialogValue: boolean;
@@ -27,7 +29,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
     const formik = useFormik({
         initialValues: {
             name: data?.memberName || '',
-            fineAmount: data?.fineAmount || '',
+            fineAmount: data?.totalFineAmount || '',
             notes: '',
             paymentMode: 'cash',
             upiId: '',
@@ -45,52 +47,125 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
         const mode = event.target.value;
         setSelectedPaymentMode(mode);
         formik.setFieldValue('paymentMode', mode);
+
+        // Reset related fields when payment mode changes
+        if (mode === 'online') {
+            formik.setFieldValue('upiId', '');
+        } else if (mode === 'bank') {
+            formik.setFieldValue('bankAccount', '');
+            formik.setFieldValue('ifsc', '');
+            formik.setFieldValue('accountHolder', '');
+        }
     };
 
     return (
         <CustomDialog
-            title="Collect Fine"
+            title="Fine Collection"
             open={dialogValue}
             handleClose={onClose}
-            maxWidth="sm"
+            maxWidth="lg"
         >
             <Box>
                 <form onSubmit={formik.handleSubmit}>
-                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
                         <Grid container spacing={3} pt="10px">
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    name="name"
-                                    label="Name"
-                                    value={formik.values.name}
-                                    onChange={formik.handleChange}
-                                    size="small"
-                                    disabled
+                            <Grid item xs={12}>
+                                <Typography variant="h6">{data?.memberName}</Typography>
+                                <Typography variant="body2">Member ID: {data?.memberId}</Typography>
+                            </Grid>
+
+                            {/* Table for Fines */}
+                            <Grid item xs={12}>
+                                <CustomizableTable
+                                    isFilter={false}
+                                    isSearch={false}
+                                    isShowedDense={false}
+                                    columns={[
+                                        { id: 'bookId', label: 'Book ID' },
+                                        { id: 'title', label: 'Book Title' },
+                                        { id: 'issueDate', label: 'Issued Date' },
+                                        { id: 'dueDate', label: 'Due Date' },
+                                        { id: 'returnDate', label: 'Return Date' },
+                                        {
+                                            id: 'fineAmount', label: 'Fine Amount', render(value, row) {
+                                                return (
+                                                    <Typography fontSize="12px">{formatNumber(value, "INR")}</Typography>
+                                                );
+                                            }
+                                        },
+                                        { id: 'fineReason', label: 'Reason' },
+                                        {
+                                            id: 'status', label: 'Status', render(value, row) {
+                                                return (
+                                                    <Label
+                                                        variant="soft"
+                                                        color={
+                                                            value === "Paid"
+                                                                ? 'success'
+                                                                : value === "Pending"
+                                                                    ? 'warning'
+                                                                    : 'error'
+                                                        }
+                                                    >
+                                                        {value}
+                                                    </Label>
+                                                );
+                                            },
+                                        },
+                                    ]}
+                                    data={data?.fines || []}
                                 />
                             </Grid>
 
-                            <Grid item xs={12} md={6}>
+                            {/* Fine Amount */}
+                            <Grid item xs={12} md={3}>
                                 <TextField
                                     fullWidth
                                     name="fineAmount"
                                     label="Fine Amount"
                                     value={formik.values.fineAmount}
                                     onChange={(e) => {
-                                        const formattedValue = formatNumber(e.target.value, "INR");
+                                        const formattedValue = formatNumber(e.target.value, 'INR');
+                                        formik.setFieldValue('fineAmount', formattedValue);
+                                    }}
+                                    size="small"
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                                <TextField
+                                    fullWidth
+                                    name="fineAmount"
+                                    label="Enter Penalty"
+                                    value=''
+                                    onChange={(e) => {
+                                        const formattedValue = formatNumber(e.target.value, 'INR');
                                         formik.setFieldValue('fineAmount', formattedValue);
                                     }}
                                     size="small"
                                 />
                             </Grid>
 
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} md={3}>
+                                <TextField
+                                    fullWidth
+                                    name="fineAmount"
+                                    label="Penalty Reason"
+                                    value=''
+                                    onChange={(e) => {
+                                        const formattedValue = formatNumber(e.target.value, 'INR');
+                                        formik.setFieldValue('fineAmount', formattedValue);
+                                    }}
+                                    size="small"
+                                />
+                            </Grid>
+                            {/* Payment Mode */}
+                            <Grid item xs={12} md={3}>
                                 <TextField
                                     select
                                     fullWidth
                                     name="paymentMode"
                                     label="Payment Mode"
-                                    value={selectedPaymentMode}
+                                    value={formik.values.paymentMode}
                                     onChange={handlePaymentModeChange}
                                     size="small"
                                 >
@@ -102,8 +177,9 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                                 </TextField>
                             </Grid>
 
+                            {/* Dynamic Fields for Online Payment */}
                             {selectedPaymentMode === 'online' && (
-                                <Grid item xs={12} md={6}>
+                                <Grid item xs={12} md={3}>
                                     <TextField
                                         fullWidth
                                         name="upiId"
@@ -115,9 +191,10 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                                 </Grid>
                             )}
 
+                            {/* Dynamic Fields for Bank Transfer */}
                             {selectedPaymentMode === 'bank' && (
                                 <>
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item xs={12} md={3}>
                                         <TextField
                                             fullWidth
                                             name="bankAccount"
@@ -127,7 +204,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                                             size="small"
                                         />
                                     </Grid>
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item xs={12} md={3}>
                                         <TextField
                                             fullWidth
                                             name="ifsc"
@@ -137,7 +214,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                                             size="small"
                                         />
                                     </Grid>
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item xs={12} md={3}>
                                         <TextField
                                             fullWidth
                                             name="accountHolder"
@@ -150,9 +227,10 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                                 </>
                             )}
 
+                            {/* Notes */}
                             <Grid item xs={12}>
                                 <TextField
-                                rows={4}
+                                    rows={4}
                                     multiline
                                     fullWidth
                                     name="notes"
@@ -165,8 +243,11 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({ dialogValue, da
                         </Grid>
                     </Scrollbar>
                     <DialogActions>
+                        {/* <Button type="button" onClick={onClose} size="small" variant="outlined">
+                            Cancel
+                        </Button> */}
                         <Button type="submit" variant="contained" size="small">
-                           Collect Fine
+                            Collect Fine
                         </Button>
                     </DialogActions>
                 </form>
