@@ -3,7 +3,17 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Step, Slide, Button, Stepper, StepLabel } from '@mui/material';
+import {
+  Box,
+  Step,
+  Slide,
+  styled,
+  Button,
+  Stepper,
+  StepLabel,
+  StepConnector,
+  stepConnectorClasses,
+} from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
 
@@ -45,7 +55,44 @@ interface CustomStepperWithFormikProps {
     isBackClick: boolean;
   }) => any;
   onStepClick?: (index: number, label: string, formik: any) => void;
+  errors?: boolean[];
 }
+
+const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
+  '& .MuiStepLabel-iconContainer': {
+    color: error ? theme.palette.error.main : theme.palette.primary.main,
+  },
+  '& .MuiStepLabel-label': {
+    color: error ? theme.palette.error.main : theme.palette.text.primary,
+    fontWeight: error ? 'bold' : 'normal',
+  },
+}));
+
+const QontoConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: 10,
+    left: 'calc(-50% + 16px)',
+    right: 'calc(50% + 16px)',
+  },
+  [`&.${stepConnectorClasses.active}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  [`&.${stepConnectorClasses.completed}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: '#eaeaf0',
+    borderTopWidth: 3,
+    borderRadius: 1,
+    ...theme.applyStyles('dark', {
+      borderColor: theme.palette.grey[800],
+    }),
+  },
+}));
 
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
   activeStep,
@@ -56,6 +103,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   validationSchema,
   renderItem,
   onStepClick = () => {},
+  errors = [],
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const formik = useFormik({
@@ -71,7 +119,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
 
   return (
     <Box sx={{ width: '100%', p: 2 }}>
-      <Stepper activeStep={activeStep} alternativeLabel>
+      <Stepper activeStep={activeStep} alternativeLabel connector={<QontoConnector />}>
         {steps.map((label: string, index: number) => (
           <Step
             key={label}
@@ -80,16 +128,20 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               onStepClick?.(index, label, formik);
             }}
           >
-            <StepLabel sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}>
+            <CustomStepLabel
+              error={errors[index]}
+              sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
+            >
               {label}
-            </StepLabel>
+            </CustomStepLabel>
           </Step>
         ))}
       </Stepper>
       <Box
         component="form"
         sx={{
-          '& input': { fontSize: '14px' },
+          '& input': { fontSize: '12px' },
+          '& textarea': { fontSize: '12px' },
           '& label': { fontSize: '12px' },
         }}
         onSubmit={formik.handleSubmit}

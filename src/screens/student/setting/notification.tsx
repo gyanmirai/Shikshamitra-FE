@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 
 import { Save } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Card, Button, TextField, CardHeader, CardContent } from '@mui/material';
+import {
+  Box,
+  Card,
+  Button,
+  Switch,
+  FormGroup,
+  CardHeader,
+  CardContent,
+  FormControlLabel,
+} from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select';
+import { Editor } from 'src/components/editor';
 
 const Notification = () => {
-  const [trigger, setTrigger] = useState<string>('');
-  const [threshold, setThreshold] = useState('');
-  const [action, setAction] = useState('');
   const [template, setTemplate] = useState('');
 
   return (
@@ -19,63 +25,32 @@ const Notification = () => {
           Save
         </Button>
       </Box>
-      <Card>
-        <CardHeader title="New Rule" />
-        <CardContent>
-          <Grid container spacing={2}>
-            <Grid xs={3}>
-              <CustomSelect
-                options={[]}
-                label="Event trigger"
-                value={trigger}
-                onChange={(val) => setTrigger(val as string)}
-                formControlProps={{
-                  fullWidth: true,
-                }}
-              />
-            </Grid>
-            <Grid xs={3}>
-              <TextField
-                fullWidth
-                label="Threshold"
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                size="small"
-              />
-            </Grid>
-            <Grid xs={3}>
-              <CustomSelect
-                options={[
-                  { label: 'Send Email', value: 'sendEmail' },
-                  { label: 'Push Notification', value: 'pushNotification' },
-                ]}
-                label="Action"
-                value={action}
-                onChange={(val) => setAction(val as string)}
-                formControlProps={{
-                  fullWidth: true,
-                }}
-              />
-            </Grid>
-            <Grid xs={3}>
-              <Button variant="contained">Add Rule</Button>
-            </Grid>
-          </Grid>
-        </CardContent>
+      <Card sx={{ p: 2 }}>
+        <FormGroup>
+          <FormControlLabel
+            control={<Switch defaultChecked />}
+            label="Enable Email Notifications"
+          />
+          <FormControlLabel control={<Switch />} label="Enable SMS Notifications" />
+        </FormGroup>
       </Card>
 
       <Card sx={{ my: 2 }}>
         <CardHeader title="Notification Templates" />
         <CardContent>
           <Grid container spacing={2}>
-            <Grid xs={3}>
-              <CustomSelect
-                options={[]}
-                label="Predefined Templates"
-                value={template}
-                onChange={(val) => setTemplate(val as string)}
-                formControlProps={{
-                  fullWidth: true,
+            <Grid xs={12}>
+              <Editor
+                // onChange={(value) => {
+                //   setFieldValue('description', value);
+                // }}
+                // value={values.description}
+                placeholder="Notification Format"
+                sx={{ height: '100%' }}
+                slotProps={{
+                  wrap: {
+                    height: '100%',
+                  },
                 }}
               />
             </Grid>

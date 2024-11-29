@@ -190,11 +190,16 @@ const studentModule = {
               path: '/student/enrollment/admission',
               _action: 'student-enrollment-admission',
             },
+            {
+              title: 'Admission Fees',
+              path: '/student/enrollment/admission-fees',
+              _action: 'student-enrollment-admission-fees',
+            },
 
             {
-              title: 'Enrollment Status Tracking',
-              path: '/student/enrollment/enrollment-status-tracking',
-              _action: 'student-enrollment-enrollment-status-tracking',
+              title: 'Enrollment',
+              path: '/student/enrollment/enroll',
+              _action: 'student-enrollment-enroll',
             },
             {
               title: 'Reports',

@@ -86,7 +86,7 @@ export function KanbanDetails({
 
   const [taskDescription, setTaskDescription] = useState(task.description);
 
-  const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
+  const rangePicker = useDateRangePicker(dayjs(task.due?.[0]), dayjs(task.due?.[1]));
 
   const handleChangeTaskName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setTaskName(event.target.value);
@@ -129,7 +129,7 @@ export function KanbanDetails({
       taskName={task.name}
       onLike={like.onToggle}
       onDelete={onDeleteTask}
-      taskStatus={task.status}
+      taskStatus={task.status || ''}
       onCloseDetails={onCloseDetails}
     />
   );
@@ -144,7 +144,7 @@ export function KanbanDetails({
       {[
         { value: 'overview', label: 'Overview' },
         { value: 'subTasks', label: 'Subtasks' },
-        { value: 'comments', label: `Comments (${task.comments.length})` },
+        { value: 'comments', label: `Comments (${task?.comments?.length})` },
       ].map((tab) => (
         <Tab key={tab.value} value={tab.value} label={tab.label} />
       ))}
@@ -165,7 +165,7 @@ export function KanbanDetails({
       {/* Reporter */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <StyledLabel>Reporter</StyledLabel>
-        <Avatar alt={task.reporter.name} src={task.reporter.avatarUrl} />
+        <Avatar alt={task?.reporter?.name} src={task?.reporter?.avatarUrl} />
       </Box>
 
       {/* Assignee */}
@@ -173,7 +173,7 @@ export function KanbanDetails({
         <StyledLabel sx={{ height: 40, lineHeight: '40px' }}>Assignee</StyledLabel>
 
         <Box sx={{ gap: 1, display: 'flex', flexWrap: 'wrap' }}>
-          {task.assignee.map((user) => (
+          {task?.assignee?.map((user) => (
             <Avatar key={user.id} alt={user.name} src={user.avatarUrl} />
           ))}
 
@@ -201,7 +201,7 @@ export function KanbanDetails({
       <Box sx={{ display: 'flex' }}>
         <StyledLabel sx={{ height: 24, lineHeight: '24px' }}>Labels</StyledLabel>
 
-        {!!task.labels.length && (
+        {!!task?.labels?.length && (
           <Box sx={{ gap: 1, display: 'flex', flexWrap: 'wrap' }}>
             {task.labels.map((label) => (
               <Chip key={label} color="info" label={label} size="small" variant="soft" />
@@ -249,7 +249,7 @@ export function KanbanDetails({
       {/* Priority */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <StyledLabel>Priority</StyledLabel>
-        <KanbanDetailsPriority priority={priority} onChangePriority={handleChangePriority} />
+        <KanbanDetailsPriority priority={priority || ''} onChangePriority={handleChangePriority} />
       </Box>
 
       {/* Description */}
@@ -269,7 +269,7 @@ export function KanbanDetails({
       {/* Attachments */}
       <Box sx={{ display: 'flex' }}>
         <StyledLabel>Attachments</StyledLabel>
-        <KanbanDetailsAttachments attachments={task.attachments} />
+        <KanbanDetailsAttachments attachments={task.attachments || []} />
       </Box>
     </Box>
   );
@@ -315,7 +315,7 @@ export function KanbanDetails({
   );
 
   const renderTabComments = (
-    <>{!!task.comments.length && <KanbanDetailsCommentList comments={task.comments} />}</>
+    <>{!!task?.comments?.length && <KanbanDetailsCommentList comments={task.comments} />}</>
   );
 
   return (

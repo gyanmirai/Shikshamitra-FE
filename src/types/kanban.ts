@@ -28,15 +28,15 @@ export type IKanbanAssignee = {
 export type IKanbanTask = {
   id: UniqueIdentifier;
   name: string;
-  status: string;
-  priority: string;
-  labels: string[];
+  status?: string;
+  priority?: string;
+  labels?: string[];
   description?: string;
-  attachments: string[];
-  comments: IKanbanComment[];
-  assignee: IKanbanAssignee[];
-  due: [IDateValue, IDateValue];
-  reporter: {
+  attachments?: string[];
+  comments?: IKanbanComment[];
+  assignee?: IKanbanAssignee[];
+  due?: [IDateValue, IDateValue];
+  reporter?: {
     id: string;
     name: string;
     avatarUrl: string;

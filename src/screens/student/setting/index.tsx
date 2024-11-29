@@ -23,11 +23,6 @@ const TABS = [
     label: 'Notification',
     component: () => <Notification />,
   },
-  {
-    value: 'customization',
-    label: 'Customization',
-    //   component: () => <LeavingCertificate />,
-  },
 ];
 
 const StudentRecordSettingScreen = () => {

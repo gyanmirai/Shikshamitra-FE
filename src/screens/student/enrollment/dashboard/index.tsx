@@ -67,7 +67,7 @@ const EnrollmentDashboardScreen = () => {
                 icon: 'mdi:user-add',
                 label: 'Add New Inquiry',
                 href: '/student/enrollment/inquiry',
-                color: 'primary',
+                color: 'success',
               },
               {
                 icon: 'mingcute:search-line',

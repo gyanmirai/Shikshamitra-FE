@@ -36,8 +36,9 @@ const DashBoardQuickAction = ({ actions }: DashboardQuickActionProps) => {
           {actions.map((action) => (
             <Button
               key={action.label}
-              startIcon={<Iconify icon={action.icon} />}
+              startIcon={<Iconify icon={action.icon} sx={{ width: 16, height: 16 }} />}
               variant="contained"
+              size="small"
               sx={{ width: '100%' }}
               color={action.color || 'primary'}
               onClick={() => {
@@ -58,18 +59,21 @@ const DashBoardQuickAction = ({ actions }: DashboardQuickActionProps) => {
           height: 50,
           width: 50,
           position: 'fixed',
-          bottom: 16,
-          right: 28,
+          // top: '50%',
+          // transform: 'translateY(-50%)',
+          bottom: 10,
+          right: 10,
           zIndex: 999,
           borderRadius: '50%',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           cursor: 'pointer',
+          bgcolor: 'primary.main',
         }}
-        elevation={5}
+        elevation={12}
       >
-        <Iconify icon="mdi:interaction-double-tap" />
+        <Iconify icon="mdi:interaction-double-tap" color="white" />
       </Paper>
     </CustomTooltip>
   );

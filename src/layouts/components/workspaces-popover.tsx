@@ -59,6 +59,7 @@ export function WorkspacesPopover({
           gap: { xs: 0.5, [mediaQuery]: 1 },
           border: (theme) => `dashed 1px ${theme.vars.palette.success.main}`,
           borderRadius: 1,
+          zIndex: 0,
           ...sx,
         }}
         {...other}

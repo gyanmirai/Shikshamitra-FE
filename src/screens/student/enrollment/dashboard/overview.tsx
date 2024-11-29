@@ -18,17 +18,17 @@ interface IStudentEnrollmentCardProps {
   count: number | string;
   color: string;
   bgColor: keyof Palette;
-  href: string;
+  href?: string;
   labels?: { name: string; color: LabelColor }[];
 }
 
-function StudentEnrollmentCard({
+export function StudentEnrollmentCard({
   icon,
   title,
   count,
   color,
   bgColor,
-  href,
+  href = '',
   labels = [],
 }: IStudentEnrollmentCardProps) {
   const theme = useTheme();
@@ -87,8 +87,8 @@ const Overview = () => (
             icon="wpf:inspection"
             title="Enrollment"
             count={700}
-            color="primary.main"
-            bgColor="primary"
+            color="success.main"
+            bgColor="success"
             href="/student/enrollment/inquiry"
             labels={[
               { name: 'Male 500', color: 'success' },

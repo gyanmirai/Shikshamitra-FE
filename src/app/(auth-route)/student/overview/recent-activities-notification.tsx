@@ -10,7 +10,7 @@ const RecentActivitiesNotification = () => (
     <Card
       sx={{
         display: 'flex',
-        p: 3,
+        p: 1,
         width: '100%',
       }}
     >
@@ -22,6 +22,7 @@ const RecentActivitiesNotification = () => (
             component="ul"
             sx={{
               listStyle: 'none',
+              width: '100%',
               padding: 0,
               animation: 'scrollAnimation 10s linear infinite',
               animationDelay: '1s',
@@ -54,9 +55,7 @@ const RecentActivitiesNotification = () => (
     </Card>
     <Card
       sx={{
-        display: 'flex',
-
-        p: 3,
+        p: 1,
         // mt: 1,
         width: '100%',
       }}
@@ -64,12 +63,13 @@ const RecentActivitiesNotification = () => (
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ typography: 'subtitle2' }}>Notifications</Box>
 
-        <Scrollbar sx={{ mt: 1.5 }}>
+        <Scrollbar sx={{ mt: 1.5, width: '100%' }}>
           <Box
             component="ul"
             sx={{
               listStyle: 'none',
               padding: 0,
+              width: '100%',
               animation: 'scrollAnimation 10s linear infinite',
               animationDelay: '1s',
               '@keyframes scrollAnimation': {

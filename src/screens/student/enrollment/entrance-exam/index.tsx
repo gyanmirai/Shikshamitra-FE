@@ -25,12 +25,13 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import { CalendarView } from 'src/sections/calendar/view';
 
 const EntranceExamScreen = () => {
   const dialog = useBoolean();
@@ -127,7 +128,8 @@ const EntranceExamScreen = () => {
       />
       {/* <EntranceExamDashboard /> */}
       {/* <Card> */}
-      <CommonCalender data={[]} />
+      {/* <CommonCalender data={[]} /> */}
+      <CalendarView />
       {/* </Card> */}
 
       <CustomizableTable
@@ -179,7 +181,7 @@ const EntranceExamScreen = () => {
             isSort: false,
             render(value, row) {
               return (
-                <Button variant="contained" size="small" color="primary">
+                <Button variant="soft" size="small" color="primary">
                   Admission
                 </Button>
               );
