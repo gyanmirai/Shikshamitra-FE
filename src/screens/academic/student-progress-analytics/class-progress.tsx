@@ -10,6 +10,7 @@ import {
   List,
   Card,
   Grid,
+  Checkbox,
   ListItem,
   MenuList,
   MenuItem,
@@ -256,9 +257,23 @@ const ClassProgress = (props: TabComponentType) => {
           <Typography variant="h6">Detailed Class Breakdown</Typography>
           <CustomizableTable
             columns={[
+              {
+                id: 'select',
+                label: 'Select',
+                render: (value, row: any) => (
+                  <Checkbox
+                  // checked={selectedStudents.includes(row.id)}
+                  // onChange={() => handleSelectStudent(row.id)}
+                  />
+                ),
+              },
               { id: 'studentName', label: 'Student Name' },
               { id: 'overallProgress', label: 'Overall Progress' },
               { id: 'attendanceRecord', label: 'Attendance Record' },
+              {
+                id: 'performanceFlags',
+                label: 'Performance Flags',
+              },
               {
                 id: 'action',
                 label: 'Action',
@@ -284,26 +299,31 @@ const ClassProgress = (props: TabComponentType) => {
                 studentName: 'John Doe',
                 overallProgress: '85%',
                 attendanceRecord: '95%',
+                performanceFlags: 'Excellent',
               },
               {
                 studentName: 'Jane Smith',
                 overallProgress: '92%',
                 attendanceRecord: '98%',
+                performanceFlags: 'Excellent',
               },
               {
                 studentName: 'Mike Johnson',
                 overallProgress: '78%',
                 attendanceRecord: '88%',
+                performanceFlags: 'Satisfaction',
               },
               {
                 studentName: 'Emily Brown',
                 overallProgress: '89%',
                 attendanceRecord: '93%',
+                performanceFlags: 'Satisfaction',
               },
               {
                 studentName: 'Alex Wilson',
                 overallProgress: '72%',
                 attendanceRecord: '82%',
+                performanceFlags: 'Needs Improvement',
               },
             ]}
           />

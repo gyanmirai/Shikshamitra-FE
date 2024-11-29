@@ -6,6 +6,7 @@ import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
+  Chip,
   Button,
   MenuItem,
   MenuList,
@@ -143,8 +144,12 @@ const DynamicGroupManagement: React.FC = () => {
           {
             id: 'fields',
             label: 'Fields',
-            render: (fields: string[]) => (
-              <Typography variant="body2">{fields.join(', ')}</Typography>
+            render: (value: string[]) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((field: string) => (
+                  <Chip key={field} label={field} size="small" variant="outlined" />
+                ))}
+              </Box>
             ),
           },
           {

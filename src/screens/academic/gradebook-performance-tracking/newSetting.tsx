@@ -16,6 +16,7 @@ import GradeSubmission from './settingsScreen/gradeSubmission';
 import PermissionAccess from './settingsScreen/permissionAccess';
 import NotificationAlert from './settingsScreen/notificationAlert';
 import DynamicGroupManagement from './settingsScreen/dynamicGroup';
+import ActivityManagement from './settingsScreen/activityManagement';
 import WeightingAdjustment from './settingsScreen/weightingAdjustment';
 
 const TABS = [
@@ -47,6 +48,11 @@ const TABS = [
     label: 'Dynamic Group',
     component: () => <DynamicGroupManagement />,
     // component: (props: TabComponentType) => <StudentGroup {...props} />,
+  },
+  {
+    value: 'activityManagement',
+    label: 'Activity Management',
+    component: () => <ActivityManagement />,
   },
   {
     value: 'studentGroup',

@@ -142,7 +142,6 @@ const Reports = (props: TabComponentType) => {
                               value: 'individual student report',
                               label: 'Individual Student Report',
                             },
-                            { value: 'student progress report', label: 'Student Progress Report' },
                             { value: 'gradebook audit report', label: 'Gradebook Audit Report' },
                           ]}
                           formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
