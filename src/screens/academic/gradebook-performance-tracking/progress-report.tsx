@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Search } from '@mui/icons-material';
@@ -24,7 +26,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 // import { EcommerceYearlySales } from 'src/components/studentProfile/academicDashboard';
 
 const ProgressReport = (props: TabComponentType) => (
