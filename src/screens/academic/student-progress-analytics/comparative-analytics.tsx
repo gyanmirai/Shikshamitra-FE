@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Search } from '@mui/icons-material';
@@ -20,7 +22,7 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
-const ComparativeAnalytics = () => {
+const ComparativeAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>

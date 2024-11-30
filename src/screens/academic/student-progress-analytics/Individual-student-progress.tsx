@@ -1,7 +1,9 @@
-import React from 'react';
+import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useState, useEffect } from 'react';
 
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
-import { Search, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import {
   Box,
@@ -10,13 +12,16 @@ import {
   Paper,
   styled,
   Avatar,
+  Tooltip,
   useTheme,
-  TextField,
   Typography,
   CardContent,
-  InputAdornment,
 } from '@mui/material';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -78,45 +83,99 @@ const dummyStudent = {
   },
 };
 
-const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
+const IndividualStudentProgress = (props: TabComponentType, { student = dummyStudent }: any) => {
   const theme = useTheme(); // Get the current theme
-
-  // Conditional card background color based on the theme mode (light/dark)
+  const { searchParams, setSearchParams } = props;
+  const classes = searchParams?.classId ? searchParams?.classId : '';
+  const [division, setDivision] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
   const cardBgColor =
     theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100];
   const textColor =
     theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary;
+
+  useEffect(() => {
+    if (classData?.items?.length) {
+      if (classes) {
+        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+        setDivisionOptions(selectedClass?.divisions || []);
+        // Set first division if available
+        if (selectedClass?.divisions?.length) {
+          setDivision(selectedClass.divisions[0].id);
+        }
+      } else {
+        const firstClass = classData.items[0];
+        setSearchParams?.({
+          classId: firstClass.id,
+        });
+        setDivisionOptions(firstClass?.divisions || []);
+        // Set first division if available
+        if (firstClass?.divisions?.length) {
+          setDivision(firstClass.divisions[0].id);
+        }
+      }
+    }
+  }, [classData, classes, setSearchParams]);
+  // Conditional card background color based on the theme mode (light/dark)
+
   return (
     <StyledPaper>
       <Grid container spacing={3} justifyContent="center" alignItems="center">
         <Grid item xs={12}>
-          <TextField
-            variant="outlined"
-            placeholder="search for individual students by name"
-            label="Student"
-            size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ maxWidth: '350px', width: '100%' }}
-          />
-          &nbsp;
           <CustomSelect
-            label="class"
+            label="Class"
+            options={classData?.items || []}
+            labelKey="name"
+            valueKey="id"
+            onChange={(val) => {
+              const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+              // formik.setFieldValue('class', selectedClass?.name || '');
+              setSearchParams?.({
+                classId: val as string,
+              });
+              setDivisionOptions(selectedClass?.divisions || []);
+            }}
+            value={classes}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '200px' },
+            }}
+          />{' '}
+          <CustomSelect
+            label="Division"
+            disabled={!classes}
+            labelKey="name"
+            valueKey="id"
+            options={divisionOptions}
+            value={division}
+            onChange={(val) => {
+              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
+              // formik.setFieldValue('division', selectedDivision?.name || '');
+              setDivision(val as string);
+            }}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '200px' },
+            }}
+          />{' '}
+          <CustomSelect
+            label="Select Students"
             options={[
-              { value: '1', label: 'Class 1' },
-              { value: '2', label: 'Class 2' },
-              { value: '3', label: 'Class 3' },
-              { value: '4', label: 'Class 4' },
-              { value: '5', label: 'Class 5' },
+              { value: 'student1', label: 'Student 1' },
+              { value: 'student2', label: 'Student 2' },
+              { value: 'student3', label: 'Student 3' },
             ]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            value={selectedStudent}
+            isSearch
+            onChange={(val) => {
+              setSelectedStudent(val as string);
+            }}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '200px' },
+            }}
           />
         </Grid>
         <Grid item xs={12} textAlign="center">
@@ -157,7 +216,7 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
           </StatItem>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+          <Card sx={{ height: '400px', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Performance by Subject</Typography>
             </Box>
@@ -172,7 +231,7 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+          <Card sx={{ height: '400px', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Progress Over Time</Typography>
             </Box>
@@ -181,11 +240,24 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
               //   title="Performance Over Time"
               //   subheader="(+43%) than last year"
               chart={{
-                categories: ['Day', 'Week', 'Month', 'Year'],
+                categories: [
+                  'Jan',
+                  'Feb',
+                  'March',
+                  'Apr',
+                  'May',
+                  'June',
+                  'July',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ],
                 series: [
                   {
                     name: '',
-                    data: [10, 41, 35, 51],
+                    data: [5, 8, 15, 20, 23, 30, 35, 41, 48, 60, 65, 71],
                   },
                 ],
               }}
@@ -194,48 +266,17 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              backgroundColor: cardBgColor,
-
-              boxShadow: theme.shadows[2],
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: textColor }}>
-                Assignments List
-              </Typography>
-              <Typography style={{ color: textColor }}>Assignment Name: XYZ</Typography>
-              <Typography style={{ color: textColor }}>Status: Completed</Typography>
-              <Typography style={{ color: textColor }}>Teacher Feedback: Excellence</Typography>
-            </CardContent>
-          </Card>
+          <AssignmentsList />
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              backgroundColor: cardBgColor,
-
-              boxShadow: theme.shadows[2],
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: textColor }}>
-                Exams List
-              </Typography>
-              <Typography style={{ color: textColor }}>Exam Name: XYZ</Typography>
-              <Typography style={{ color: textColor }}>Status: Completed</Typography>
-              <Typography style={{ color: textColor }}>Teacher Feedback: Excellence</Typography>
-            </CardContent>
-          </Card>
+          <ExamsList />
         </Grid>
 
         {/* Analytics & Insights */}
-        <Grid item xs={12} md={4}>
+        {/* <Grid item xs={12} md={4}>
           <Card
             sx={{
               backgroundColor: cardBgColor,
-
               boxShadow: theme.shadows[2],
             }}
           >
@@ -255,7 +296,6 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
           <Card
             sx={{
               backgroundColor: cardBgColor,
-
               boxShadow: theme.shadows[2],
             }}
           >
@@ -276,7 +316,6 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
           <Card
             sx={{
               backgroundColor: cardBgColor,
-
               boxShadow: theme.shadows[2],
             }}
           >
@@ -294,11 +333,10 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
         </Grid>
 
         {/* Teacher Feedback & Parent-Teacher Interaction */}
-        <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={6}>
           <Card
             sx={{
               backgroundColor: cardBgColor,
-
               boxShadow: theme.shadows[2],
             }}
           >
@@ -322,7 +360,6 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
           <Card
             sx={{
               backgroundColor: cardBgColor,
-
               boxShadow: theme.shadows[2],
             }}
           >
@@ -342,10 +379,319 @@ const IndividualStudentProgress = ({ student = dummyStudent }: any) => {
               />
             </CardContent>
           </Card>
-        </Grid>
+        </Grid>  */}
       </Grid>
     </StyledPaper>
   );
 };
 
 export default IndividualStudentProgress;
+
+type AssignmentStatus = 'pending' | 'submitted' | 'overdue' | 'in-progress';
+
+interface Assignment {
+  name: string;
+  subject: string;
+  status: AssignmentStatus;
+  dueDate: string;
+}
+
+const subjects = [
+  {
+    name: 'Mathematics',
+    assignments: [
+      {
+        name: 'Algebra Worksheet',
+        subject: 'Mathematics',
+        status: 'pending',
+        dueDate: '2024-02-15',
+      },
+      {
+        name: 'Geometry Problem Set',
+        subject: 'Mathematics',
+        status: 'submitted',
+        dueDate: '2024-02-10',
+      },
+    ],
+  },
+  {
+    name: 'Science',
+    assignments: [
+      {
+        name: 'Biology Lab Report',
+        subject: 'Science',
+        status: 'in-progress',
+        dueDate: '2024-02-20',
+      },
+      {
+        name: 'Chemistry Experiment',
+        subject: 'Science',
+        status: 'overdue',
+        dueDate: '2024-02-05',
+      },
+    ],
+  },
+  {
+    name: 'English',
+    assignments: [
+      { name: 'Essay Writing', subject: 'English', status: 'submitted', dueDate: '2024-02-12' },
+    ],
+  },
+];
+
+// Helper function to get status color
+const getAssignmentColor = (status: string) => {
+  const statusColors = {
+    pending: '#FFA500', // orange
+    submitted: '#2E8B57', // green
+    overdue: '#DC143C', // red
+    'in-progress': '#4169E1', // royal blue
+  };
+  return statusColors[status];
+};
+
+const AssignmentsList = () => {
+  const [hoveredAssignment, setHoveredAssignment] = useState<Assignment | null>(null);
+  const theme = useTheme();
+
+  return (
+    <Card
+      sx={{
+        borderRadius: 2,
+        backgroundColor:
+          theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+        height: '100%',
+      }}
+    >
+      <CardContent>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography variant="subtitle1">Assignments List</Typography>
+        </Box>
+        <Box>
+          <Scrollbar sx={{ height: '200px' }}>
+            {subjects.map((subject, subjectIndex) => (
+              <Box key={subjectIndex} mb={2}>
+                <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
+                  {subject.name}
+                </Typography>
+                {subject.assignments.map((assignment, assignmentIndex) => (
+                  <Tooltip
+                    key={assignmentIndex}
+                    title={
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: getAssignmentColor(assignment.status),
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          Status: {assignment.status.toUpperCase()}
+                        </Typography>
+                        <Typography variant="body2">Due Date: {assignment.dueDate}</Typography>
+                      </Box>
+                    }
+                    placement="right"
+                    arrow
+                  >
+                    <Card
+                      sx={{
+                        mb: 1,
+                        cursor: 'pointer',
+                        borderLeft: `4px solid ${getAssignmentColor(assignment.status)}`,
+                        '&:hover': {
+                          boxShadow: theme.shadows[3],
+                        },
+                      }}
+                    >
+                      <CardContent
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: theme.spacing(1.5, 2),
+                        }}
+                      >
+                        <Typography variant="body2">{assignment.name}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Tooltip>
+                ))}
+              </Box>
+            ))}
+          </Scrollbar>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+type ExamStatus = 'Completed' | 'Upcoming' | 'In Progress';
+
+interface Exam {
+  name: string;
+  status: ExamStatus;
+  date: string;
+  subject: string;
+  teacherFeedback?: string;
+}
+
+// Sample exam data
+const examsData: Exam[] = [
+  {
+    name: 'Midterm Mathematics',
+    status: 'Completed',
+    date: '2024-02-15',
+    subject: 'Mathematics',
+    teacherFeedback: 'Excellent performance',
+  },
+  {
+    name: 'Science Practical',
+    status: 'In Progress',
+    date: '2024-02-20',
+    subject: 'Science',
+  },
+  {
+    name: 'English Literature Quiz',
+    status: 'Upcoming',
+    date: '2024-03-01',
+    subject: 'English',
+  },
+];
+
+// Helper function to get status color
+const getExamColor = (status: string) => {
+  const statusColors = {
+    Completed: '#2E8B57', // green
+    Upcoming: '#FFA500', // orange
+    'In Progress': '#4169E1', // royal blue
+  };
+  return statusColors[status];
+};
+
+const ExamsList = () => {
+  const theme = useTheme();
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+
+  return (
+    <Card
+      sx={{
+        borderRadius: 2,
+        backgroundColor:
+          theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+        height: '100%',
+      }}
+    >
+      <CardContent>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography variant="subtitle1" gutterBottom>
+            Exams List
+          </Typography>
+        </Box>
+        <Box>
+          <Scrollbar sx={{ height: '200px' }}>
+            {examsData.map((exam, index) => (
+              <Tooltip
+                key={index}
+                title={
+                  <Box>
+                    <Typography variant="body2">
+                      <strong>Date:</strong> {exam.date}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: getExamColor(exam.status),
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Status: {exam.status}
+                    </Typography>
+                    {exam.teacherFeedback && (
+                      <Typography variant="body2">
+                        <strong>Teacher Feedback:</strong> {exam.teacherFeedback}
+                      </Typography>
+                    )}
+                  </Box>
+                }
+                placement="right"
+                arrow
+              >
+                <Card
+                  sx={{
+                    mb: 1,
+                    cursor: 'pointer',
+                    borderLeft: `4px solid ${getExamColor(exam.status)}`,
+                    '&:hover': {
+                      boxShadow: theme.shadows[3],
+                    },
+                  }}
+                  onClick={() => setSelectedExam(exam)}
+                >
+                  <CardContent
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: theme.spacing(1.5, 2),
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body2">{exam.name}</Typography>
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: getExamColor(exam.status),
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {exam.status}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Tooltip>
+            ))}
+          </Scrollbar>
+        </Box>
+
+        {/* Optional: Detailed View Modal or Card */}
+        {selectedExam && (
+          <Card
+            sx={{
+              mt: 2,
+              backgroundColor: theme.palette.background.paper,
+              boxShadow: theme.shadows[2],
+            }}
+          >
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                {selectedExam.name} Details
+              </Typography>
+              <Typography variant="body1">
+                <strong>Subject:</strong> {selectedExam.subject}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Date:</strong> {selectedExam.date}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: getExamColor(selectedExam.status),
+                  fontWeight: 'bold',
+                }}
+              >
+                Status: {selectedExam.status}
+              </Typography>
+              {selectedExam.teacherFeedback && (
+                <Typography variant="body1" sx={{ mt: 1 }}>
+                  <strong>Teacher Feedback:</strong> {selectedExam.teacherFeedback}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </CardContent>
+    </Card>
+  );
+};

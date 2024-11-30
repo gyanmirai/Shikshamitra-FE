@@ -288,10 +288,19 @@ const Gradebook = (props: TabComponentType) => {
         </Button>
         <Button
           variant="contained"
+          startIcon={<Iconify icon="mdi:pencil" />}
           disabled={selectedStudents.length === 0}
           onClick={bulkGradeDialog.onTrue}
         >
           Bulk Grade ({selectedStudents.length} selected)
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="material-symbols:upload" />}
+          disabled={selectedStudents.length === 0}
+          onClick={() => {}}
+        >
+          Upload Grade to Students
         </Button>
       </Box>
       {showTable && (
@@ -356,13 +365,23 @@ const Gradebook = (props: TabComponentType) => {
                   <ThreeDotsActions
                     actions={() => (
                       <MenuList>
-                        <MenuItem>
-                          <Iconify
-                            icon="mingcute:notification-fill"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Send Reminder
-                        </MenuItem>
+                        {row.grade === 'Assign Grade' ? (
+                          <MenuItem>
+                            <Iconify
+                              icon="mingcute:notification-fill"
+                              sx={{ height: '16px', width: '16px' }}
+                            />
+                            Remind To Teacher
+                          </MenuItem>
+                        ) : (
+                          <MenuItem>
+                            <Iconify
+                              icon="material-symbols:upload"
+                              sx={{ height: '16px', width: '16px' }}
+                            />
+                            Upload to Student
+                          </MenuItem>
+                        )}
                         <MenuItem
                           onClick={() => {
                             viewResultDialog.onTrue();

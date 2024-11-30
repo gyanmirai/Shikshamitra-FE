@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -25,7 +27,7 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
-const Dashboard = () => {
+const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box sx={{ flexGrow: 1 }}>
