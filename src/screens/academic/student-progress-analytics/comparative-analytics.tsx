@@ -221,121 +221,10 @@ const ComparativeAnalytics = (props: TabComponentType) => {
           </Box>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1">Student Comparison</Typography>
-            </Box>
-            <PerformanceOverTime
-              id="demo__4"
-              //   title="Performance Over Time"
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: ['Math', 'Science', 'History', 'Eng', 'May'],
-                series: [
-                  {
-                    name: 'Student Performance',
-                    data: [10, 41, 35, 51],
-                  },
-                  {
-                    name: 'Class Average',
-                    data: [49, 51, 35, 10],
-                  },
-                ],
-                options: {
-                  legend: {
-                    show: true,
-                    position: 'top',
-                  },
-                },
-              }}
-              sx={{ height: '100%', boxShadow: 'none' }}
-            />
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              // Dark background color
-              padding: 2,
-              height: '100%',
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              Performance Deviation
-            </Typography>
-            <Box display="flex" alignItems="center" mb={2}>
-              <Box position="relative" display="inline-flex" mr={2}>
-                <CircularProgress
-                  variant="determinate"
-                  value={73.9}
-                  size={60}
-                  thickness={4}
-                  color="success"
-                />
-                <Box
-                  top={0}
-                  left={0}
-                  bottom={0}
-                  right={0}
-                  position="absolute"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Typography variant="caption" component="div">
-                    73.9%
-                  </Typography>
-                </Box>
-              </Box>
-              <Typography>+10% above class average in Math</Typography>
-            </Box>
-
-            <Box display="flex" alignItems="center">
-              <Box position="relative" display="inline-flex" mr={2}>
-                <CircularProgress
-                  variant="determinate"
-                  value={73.9}
-                  size={60}
-                  thickness={4}
-                  color="error"
-                />
-                <Box
-                  top={0}
-                  left={0}
-                  bottom={0}
-                  right={0}
-                  position="absolute"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Typography variant="caption" component="div">
-                    73.9%
-                  </Typography>
-                </Box>
-              </Box>
-              <Typography>+10% below class average in English</Typography>
-            </Box>
-          </Card>
-        </Grid>
+        <StudentPerformance />
         <Grid item xs={12}>
           <Typography variant="h6">Subject Comparison</Typography>
-          <CustomizableTable
-            columns={[
-              { id: 'subject', label: 'Subject' },
-              { id: 'studentGrade', label: 'Student Grade' },
-              { id: 'classAverage', label: 'Class Average' },
-            ]}
-            data={[
-              { subject: 'Math', studentGrade: 'A', classAverage: 'B+' },
-              { subject: 'Science', studentGrade: 'B', classAverage: 'B' },
-              { subject: 'English', studentGrade: 'B+', classAverage: 'A-' },
-              { subject: 'History', studentGrade: 'A-', classAverage: 'B' },
-              { subject: 'Physics', studentGrade: 'B+', classAverage: 'B+' },
-            ]}
-          />
+          <StudentSubjectPerformace />
         </Grid>
       </Grid>
     </Box>
@@ -343,3 +232,123 @@ const ComparativeAnalytics = (props: TabComponentType) => {
 };
 
 export default ComparativeAnalytics;
+
+export const StudentPerformance = () => (
+  <>
+    <Grid item xs={12} md={6}>
+      <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="subtitle1">Student Comparison</Typography>
+        </Box>
+        <PerformanceOverTime
+          id="demo__4"
+          //   title="Performance Over Time"
+          //   subheader="(+43%) than last year"
+          chart={{
+            categories: ['Math', 'Science', 'History', 'Eng', 'May'],
+            series: [
+              {
+                name: 'Student Performance',
+                data: [10, 41, 35, 51],
+              },
+              {
+                name: 'Class Average',
+                data: [49, 51, 35, 10],
+              },
+            ],
+            options: {
+              legend: {
+                show: true,
+                position: 'top',
+              },
+            },
+          }}
+          sx={{ height: '100%', boxShadow: 'none' }}
+        />
+      </Card>
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <Card
+        sx={{
+          // Dark background color
+          padding: 2,
+          height: '100%',
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
+          Performance Deviation
+        </Typography>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Box position="relative" display="inline-flex" mr={2}>
+            <CircularProgress
+              variant="determinate"
+              value={73.9}
+              size={45}
+              thickness={2}
+              color="success"
+            />
+            <Box
+              top={0}
+              left={0}
+              bottom={0}
+              right={0}
+              position="absolute"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Typography variant="caption" component="div">
+                73.9%
+              </Typography>
+            </Box>
+          </Box>
+          <Typography>+10% above class average in Math</Typography>
+        </Box>
+
+        <Box display="flex" alignItems="center">
+          <Box position="relative" display="inline-flex" mr={2}>
+            <CircularProgress
+              variant="determinate"
+              value={73.9}
+              size={45}
+              thickness={2}
+              color="error"
+            />
+            <Box
+              top={0}
+              left={0}
+              bottom={0}
+              right={0}
+              position="absolute"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Typography variant="caption" component="div">
+                73.9%
+              </Typography>
+            </Box>
+          </Box>
+          <Typography>+10% below class average in English</Typography>
+        </Box>
+      </Card>
+    </Grid>
+  </>
+);
+
+export const StudentSubjectPerformace = () => (
+  <CustomizableTable
+    columns={[
+      { id: 'subject', label: 'Subject' },
+      { id: 'studentGrade', label: 'Student Grade' },
+      { id: 'classAverage', label: 'Class Average' },
+    ]}
+    data={[
+      { subject: 'Math', studentGrade: 'A', classAverage: 'B+' },
+      { subject: 'Science', studentGrade: 'B', classAverage: 'B' },
+      { subject: 'English', studentGrade: 'B+', classAverage: 'A-' },
+      { subject: 'History', studentGrade: 'A-', classAverage: 'B' },
+      { subject: 'Physics', studentGrade: 'B+', classAverage: 'B+' },
+    ]}
+  />
+);
