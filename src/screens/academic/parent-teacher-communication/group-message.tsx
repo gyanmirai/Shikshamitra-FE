@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -20,7 +22,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const GroupMessage = () => {
+const GroupMessage = (props: TabComponentType) => {
   const [group, setGroup] = React.useState('entireSchool');
   const handleGroupChange = (ev: any) => {
     setGroup(ev.target.value);

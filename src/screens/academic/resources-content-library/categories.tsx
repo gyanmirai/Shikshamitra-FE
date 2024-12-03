@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useState } from 'react';
 
 import { RemoveRedEye } from '@mui/icons-material';
@@ -22,7 +24,7 @@ import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 
-const Categories = () => {
+const Categories = (props: TabComponentType) => {
   const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
   return (
     <Box>

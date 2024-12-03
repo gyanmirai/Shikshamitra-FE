@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import {
@@ -12,7 +14,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-const Settings = () => {
+const Settings = (props: TabComponentType) => {
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [meetingTool, setMeetingTool] = React.useState('');
