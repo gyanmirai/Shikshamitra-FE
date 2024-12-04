@@ -466,7 +466,7 @@ const Finance = (props: StudentTabsComponentType) => {
           </AccordionSummary>
 
           <AccordionDetails>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', overflow: "auto" }}>
               <thead>
                 <tr>
                   <th
