@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
@@ -5,7 +7,6 @@ import { Box, MenuItem, MenuList } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { TabComponentType } from 'src/screens/hr/leave-request';
 
 const SharedWithMe = (props: TabComponentType) => (
   <Box>
