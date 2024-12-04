@@ -89,7 +89,7 @@ const FinanceDashboardScreen = () => {
           />
         </Grid>
         <Grid container spacing={2} sx={{ pt: "20px" }}>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <EcommerceSaleByGender
               title="Fee Collection Status"
               total={9990}
@@ -102,7 +102,7 @@ const FinanceDashboardScreen = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <EcommerceSaleByGender
               title="Payment Modes Analysis"
               total={9990}

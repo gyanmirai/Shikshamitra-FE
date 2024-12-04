@@ -54,7 +54,7 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
 
   return (
     <Box pt="15px">
-      <Typography variant="h6" sx={{ mb: '15px' }}>
+      <Typography sx={{ mb: '15px', fontSize: "16px" }}>
         Detailed Fee View
       </Typography>
       <Card>
