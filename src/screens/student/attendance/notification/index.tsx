@@ -1,44 +1,14 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Box, MenuList, MenuItem } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const StudentAttendanceNotificationScreen = () => {
-  const actions = useCallback(
-    ({ popover }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            // modal.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-        {/* {children && (
-              <MenuItem
-                onClick={() => {
-                  childModal.onTrue();
-                  popover.onClose();
-                }}
-              >
-                <Iconify icon="ic:baseline-add" sx={{ height: '16px', width: '16px' }} />
-                Create {childEditData?.name}
-              </MenuItem>
-            )} */}
-      </MenuList>
-    ),
-    []
-  );
-
   const dummyData = [
     {
       id: 1,
@@ -47,6 +17,7 @@ const StudentAttendanceNotificationScreen = () => {
       recipient: 'Parent',
       notificationType: 'Absence',
       status: 'Delivered',
+      notificationMethod: 'SMS',
     },
     {
       id: 2,
@@ -55,6 +26,7 @@ const StudentAttendanceNotificationScreen = () => {
       recipient: 'Student',
       notificationType: 'Late Arrival',
       status: 'Pending',
+      notificationMethod: 'Email',
     },
     {
       id: 3,
@@ -63,6 +35,7 @@ const StudentAttendanceNotificationScreen = () => {
       recipient: 'Teacher',
       notificationType: 'Early Departure',
       status: 'Delivered',
+      notificationMethod: 'SMS',
     },
   ];
 
@@ -79,18 +52,12 @@ const StudentAttendanceNotificationScreen = () => {
           { id: 'date', label: 'Date' },
           { id: 'recipient', label: 'Recipient' },
           { id: 'notificationType', label: 'Notification Type' },
+          { id: 'notificationMethod', label: 'Notification Method' },
           {
             id: 'status',
             label: 'Status',
             render(value, row) {
               return <Label color={value === 'Delivered' ? 'success' : 'warning'}>{value}</Label>;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row) {
-              return <ThreeDotsActions actions={actions} />;
             },
           },
         ]}

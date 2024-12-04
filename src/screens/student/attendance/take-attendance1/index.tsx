@@ -2,7 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -13,31 +13,35 @@ import { Save, Search, RestartAlt, CancelOutlined, CheckCircleOutlined } from '@
 import {
   Box,
   Chip,
+  Grid,
   Paper,
+  Stack,
+  Avatar,
+  Switch,
+  Button,
   Divider,
   Tooltip,
   TextField,
   Typography,
   IconButton,
+  ButtonGroup,
   InputAdornment,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
-
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const TakeAttendanceScreen = () => {
+  const [view, setView] = React.useState('list');
   // State to control the dialog visibility
   const dialog = useBoolean();
   // State to store all available mediums
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
-  // State to store the selected medium
-  const [medium, setMedium] = useState<string>('');
+
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
@@ -55,46 +59,17 @@ const TakeAttendanceScreen = () => {
   // check if the attendance is saved
   const isSaved = useBoolean();
 
-  // Selector to get the current board from the global state
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  // Custom hook to get board data
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
-  // Effect to fetch board data when the current board changes
   useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setMedium(boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setMedium('');
-    }
-  }, [boardData, currentBoard?.id, getBoard]);
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
 
-  // Effect to update mediums when board data changes
-  useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setMedium(boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData]);
-
-  // Effect to update organizations when medium changes
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums]);
-
-  // Effect to update classes when organization changes
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
     setClass(
@@ -102,7 +77,6 @@ const TakeAttendanceScreen = () => {
     );
   }, [organization, allOrganization]);
 
-  // Effect to update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
@@ -133,17 +107,7 @@ const TakeAttendanceScreen = () => {
           }}
           slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
         />
-        <CustomSelect
-          options={allMediums}
-          label="Medium"
-          value={medium}
-          onChange={(val: string | string[]) => {
-            setMedium(val as string);
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
+
         <CustomSelect
           options={allOrganization}
           label="Organization"
@@ -177,20 +141,24 @@ const TakeAttendanceScreen = () => {
       </Box>
 
       <Divider sx={{ my: 2 }} />
-      <Box>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
+        <ButtonGroup>
+          <Button
+            variant={view === 'list' ? 'outlined' : 'contained'}
+            color="inherit"
+            onClick={() => setView('calender')}
+          >
+            <Iconify icon="material-symbols:grid-view" />
+          </Button>
+          <Button
+            color="inherit"
+            variant={view === 'list' ? 'contained' : 'outlined'}
+            onClick={() => setView('list')}
+          >
+            <Iconify icon="lucide:layout-list" />
+          </Button>
+        </ButtonGroup>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <TextField
-            placeholder="Search..."
-            size="small"
-            sx={{ flexGrow: 1 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-          />
           <Tooltip title="Reset">
             <IconButton>
               <RestartAlt />
@@ -203,6 +171,22 @@ const TakeAttendanceScreen = () => {
           </Tooltip>
         </Box>
       </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <TextField
+          placeholder="Search by name, roll no, gr no"
+          size="small"
+          sx={{ flexGrow: 1 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
       <Box
         sx={{
           display: 'flex',
@@ -222,11 +206,16 @@ const TakeAttendanceScreen = () => {
         <Chip size="small" label="2 - Jasmin" color="error" icon={<CancelOutlined />} />
         <Chip size="small" label="3 - Herbert" color="error" icon={<CancelOutlined />} />
       </Box>
-      <Box display="flex" gap={2} flexWrap="wrap">
-        {dummyStudents.map((student) => (
-          <AttendanceCard key={student.id} student={student} />
-        ))}
-      </Box>
+
+      {view === 'list' ? (
+        <ListView isSaved={isSaved} />
+      ) : (
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          {dummyStudents.map((student) => (
+            <AttendanceCard key={student.id} student={student} />
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 };
@@ -235,50 +224,213 @@ export default TakeAttendanceScreen;
 const AttendanceCard = ({ student }: any) => {
   const a = null;
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        width: '100%',
-        maxWidth: '350px',
-        borderLeft: (theme) =>
-          `4px solid ${student.rollNo === '001' ? theme.palette.error.main : theme.palette.success.main}`,
-        cursor: 'pointer',
-      }}
-    >
-      <Box display="flex" gap={1} p={1.5} alignItems="center">
-        <Box
-          sx={{
-            width: '100px',
-            height: '100px',
-            borderRadius: 2,
-            '& img': { width: '100%', height: '100%', objectFit: 'cover' },
-          }}
-        >
-          <img
-            src="https://images.rawpixel.com/image_png_200/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 200w, https://images.rawpixel.com/image_png_400/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 400w, https://images.rawpixel.com/image_png_600/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 600w, https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 1600w, https://images.rawpixel.com/image_png_1100/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 2400w, https://images.rawpixel.com/image_png_1300/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 3000w"
-            alt="Student"
-          />
+    <Grid item xs={12} sm={6} md={3}>
+      <Paper
+        elevation={3}
+        sx={{
+          width: '100%',
+
+          borderLeft: (theme) =>
+            `4px solid ${student.rollNo === '001' ? theme.palette.error.main : theme.palette.success.main}`,
+          cursor: 'pointer',
+        }}
+      >
+        <Box display="flex" gap={1} p={1.5} alignItems="center">
+          <Box
+            sx={{
+              width: '100px',
+              height: '100px',
+              borderRadius: 2,
+              '& img': { width: '100%', height: '100%', objectFit: 'cover' },
+            }}
+          >
+            <img
+              src="https://images.rawpixel.com/image_png_200/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 200w, https://images.rawpixel.com/image_png_400/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 400w, https://images.rawpixel.com/image_png_600/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 600w, https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 1600w, https://images.rawpixel.com/image_png_1100/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 2400w, https://images.rawpixel.com/image_png_1300/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 3000w"
+              alt="Student"
+            />
+          </Box>
+          <Box flexGrow={1}>
+            <Typography variant="h6">{student.name}</Typography>
+            <Typography variant="body2">
+              <Label color="info">{student.rollNo}</Label>
+            </Typography>
+            <Typography variant="body2">Class: {student.class}</Typography>
+            <Typography variant="body2">Division: {student.division}</Typography>
+          </Box>
+          {/* <Box> */}
+          <IconButton color="success" aria-label="mark present">
+            <CheckCircleOutlined />
+          </IconButton>
+          <IconButton color="error" aria-label="mark absent">
+            <CancelOutlined />
+          </IconButton>
+          {/* </Box> */}
         </Box>
-        <Box flexGrow={1}>
-          <Typography variant="h6">{student.name}</Typography>
-          <Typography variant="body2">
-            <Label color="info">{student.rollNo}</Label>
-          </Typography>
-          <Typography variant="body2">Class: {student.class}</Typography>
-          <Typography variant="body2">Division: {student.division}</Typography>
+        <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
+          <TextField size="small" label="Remarks" fullWidth multiline rows={2} />
         </Box>
-        {/* <Box> */}
-        <IconButton color="success" aria-label="mark present">
-          <CheckCircleOutlined />
-        </IconButton>
-        <IconButton color="error" aria-label="mark absent">
-          <CancelOutlined />
-        </IconButton>
-        {/* </Box> */}
-      </Box>
-      <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
-        <TextField size="small" label="Remarks" fullWidth multiline rows={2} />
-      </Box>
-    </Paper>
+      </Paper>
+    </Grid>
+  );
+};
+
+const ListView = ({ isSaved }: any) => {
+  const dummyData = [
+    {
+      rollNo: '1',
+      name: 'John Doe',
+      grNo: 'GR001',
+      attendance: 'Present',
+      attendancePercentage: '80%',
+      totalPresentDays: '20/25',
+    },
+    {
+      rollNo: '2',
+      name: 'Jane Smith',
+      grNo: 'GR002',
+      attendance: 'Absent',
+      attendancePercentage: '70%',
+      totalPresentDays: '18/25',
+    },
+    {
+      rollNo: '3',
+      name: 'Alice Johnson',
+      grNo: 'GR003',
+      attendance: 'Present',
+      attendancePercentage: '90%',
+      totalPresentDays: '22/25',
+    },
+    {
+      rollNo: '4',
+      name: 'Bob Williams',
+      grNo: 'GR004',
+      attendance: 'Present',
+      attendancePercentage: '85%',
+      totalPresentDays: '21/25',
+    },
+    {
+      rollNo: '5',
+      name: 'Charlie Brown',
+      grNo: 'GR005',
+      attendance: 'Absent',
+      attendancePercentage: '75%',
+      totalPresentDays: '19/25',
+    },
+  ];
+  return (
+    <CustomizableTable
+      isSearch={false}
+      columns={[
+        { id: 'rollNo', label: 'Roll No' },
+        { id: 'grNo', label: 'Gr No' },
+        {
+          id: 'name',
+          label: 'Name',
+          render(value, row) {
+            return (
+              <Box display="flex" alignItems="center" gap={1}>
+                <Avatar sx={{ width: 30, height: 30 }} alt={value} title={value} />
+                {value}
+              </Box>
+            );
+          },
+        },
+        { id: 'totalPresentDays', label: 'Total Present Days' },
+        { id: 'attendancePercentage', label: 'Attendance Percentage' },
+        {
+          id: 'attendance',
+          label: 'Attendance',
+          isSort: false,
+          render(value, row) {
+            return isSaved.value ? (
+              <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>
+            ) : (
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Typography component="small" fontSize="12px">
+                  Absent
+                </Typography>
+                <Switch
+                  size="small"
+                  inputProps={{ 'aria-label': 'controlled' }}
+                  checked={value === 'Present'}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: 'success.main',
+                      '&:hover': {
+                        backgroundColor: 'success.light',
+                      },
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: 'success.main',
+                    },
+                    '& .MuiSwitch-switchBase:not(.Mui-checked)': {
+                      color: 'error.main',
+                      '&:hover': {
+                        backgroundColor: 'error.light',
+                      },
+                    },
+                    '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
+                      backgroundColor: 'error.main',
+                    },
+                  }}
+                />
+                <Typography component="small" fontSize="12px">
+                  Present
+                </Typography>
+              </Stack>
+            );
+          },
+        },
+        // {
+        //   id: 'absentReason',
+        //   label: 'Absent Reason',
+        //   render(value, row) {
+        //     return row.attendance === 'Present' ? (
+        //       '-'
+        //     ) : (
+        //       <CustomSelect
+        //         options={[
+        //           { name: 'Sick', id: 'Sick' },
+        //           { name: 'Family Emergency', id: 'Family Emergency' },
+        //           { name: 'Transportation Issues', id: 'Transportation Issues' },
+        //           { name: 'Medical Appointment', id: 'Medical Appointment' },
+        //           { name: 'Religious Observance', id: 'Religious Observance' },
+        //           { name: 'Other', id: 'Other' },
+        //         ]}
+        //         value={value || 'Sick'}
+        //         onChange={(val: string | string[]) => {
+        //           console.log(val);
+        //         }}
+        //         label=""
+        //         labelKey="name"
+        //         valueKey="id"
+        //         formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+        //       />
+        //     );
+        //   },
+        // },
+        {
+          id: 'remarks',
+          label: 'Remarks',
+          render(value, row) {
+            return row.attendance === 'Present' ? (
+              '-'
+            ) : (
+              <TextField
+                size="small"
+                value={value || ''}
+                onChange={(e) => {
+                  console.log(e.target.value);
+                }}
+                multiline
+                rows={2}
+                sx={{ maxWidth: '200px', width: '100%' }}
+              />
+            );
+          },
+        },
+      ]}
+      data={dummyData}
+    />
   );
 };
