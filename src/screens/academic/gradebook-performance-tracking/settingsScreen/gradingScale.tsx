@@ -21,6 +21,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -30,12 +31,34 @@ interface Grade {
   range: string;
   startRange: number;
   endRange: number;
+  descriptiveScale: string;
 }
 
 const tableGrades: Grade[] = [
-  { id: 1, grade: 'A+', range: '95-100', startRange: 95, endRange: 100 },
-  { id: 2, grade: 'A', range: '90-94', startRange: 90, endRange: 94 },
-  { id: 3, grade: 'B+', range: '85-89', startRange: 85, endRange: 89 },
+  {
+    id: 1,
+    grade: 'A+',
+    range: '95-100',
+    startRange: 95,
+    endRange: 100,
+    descriptiveScale: 'Outstanding',
+  },
+  {
+    id: 2,
+    grade: 'A',
+    range: '90-94',
+    startRange: 90,
+    endRange: 94,
+    descriptiveScale: 'Satisfactory',
+  },
+  {
+    id: 3,
+    grade: 'B+',
+    range: '85-89',
+    startRange: 85,
+    endRange: 89,
+    descriptiveScale: 'Need Improvement',
+  },
 ];
 
 const GradingScale = () => {
@@ -62,8 +85,11 @@ const GradingScale = () => {
   };
 
   const handleSubmit = (values: any) => {
+    console.log('values----', values);
+
     const startRange = Number(values.startRange);
     const endRange = Number(values.endRange);
+    const { descriptiveScale } = values;
 
     if (startRange >= endRange) {
       alert('Start range must be less than end range');
@@ -95,6 +121,7 @@ const GradingScale = () => {
                 range: `${startRange}-${endRange}`,
                 startRange,
                 endRange,
+                descriptiveScale,
               }
             : g
         )
@@ -107,12 +134,13 @@ const GradingScale = () => {
         range: `${startRange}-${endRange}`,
         startRange,
         endRange,
+        descriptiveScale,
       };
       setGrades((prevGrades) => [...prevGrades, newGrade]);
     }
-
     handleCloseDialog();
   };
+
   return (
     <Box>
       {/* <CustomSelect
@@ -148,6 +176,10 @@ const GradingScale = () => {
           {
             id: 'range',
             label: 'Range',
+          },
+          {
+            id: 'descriptiveScale',
+            label: 'Descriptive Scale',
           },
           {
             id: 'action',
@@ -244,6 +276,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
     grade: Yup.string().required('Grade is Required'),
     startRange: Yup.string().required('Start Range is Required'),
     endRange: Yup.string().required('End Range is Required'),
+    descriptiveScale: Yup.string().required('Descriptive Scale is Required'),
   });
 
   const formik = useFormik({
@@ -251,6 +284,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
       grade: data?.grade || '',
       startRange: data?.startRange || '',
       endRange: data?.endRange || '',
+      descriptiveScale: data?.descriptiveScale || '',
     },
     validationSchema,
     onSubmit: (values) => {
@@ -294,6 +328,30 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                 value={formik.values.endRange}
                 onChange={formik.handleChange}
                 error={formik.touched.endRange && Boolean(formik.errors.endRange)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <CustomSelect
+                fullWidth
+                label="Descriptive Scale"
+                name="descriptiveScale"
+                size="small"
+                options={[
+                  { value: 'Outstanding', label: 'Outstanding' },
+                  { value: 'Excellent', label: 'Excellent' },
+                  { value: 'Good', label: 'Good' },
+                  { value: 'Satisfactory', label: 'Satisfactory' },
+                  { value: 'Needs Improvement', label: 'Needs Improvement' },
+                  { value: 'Fail', label: 'Fail' },
+                ]}
+                value={formik.values.descriptiveScale}
+                onChange={(val) => {
+                  formik.setFieldValue('descriptiveScale', val);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', mixWidth: '200px' },
+                }}
+                error={formik.touched.descriptiveScale && Boolean(formik.errors.descriptiveScale)}
               />
             </Grid>
           </Grid>

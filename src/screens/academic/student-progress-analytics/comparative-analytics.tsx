@@ -1,19 +1,12 @@
+import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-import { Search } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  Grid,
-  alpha,
-  useTheme,
-  TextField,
-  Typography,
-  InputAdornment,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Card, Grid, alpha, useTheme, Typography, CircularProgress } from '@mui/material';
+
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -23,7 +16,43 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
 const ComparativeAnalytics = (props: TabComponentType) => {
+  const { searchParams, setSearchParams } = props;
+  const [classes1, setClasses1] = useState('');
+  const [classes2, setClasses2] = useState('');
+  const [classes3, setClasses3] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState('');
+  const [division, setDivision] = useState('');
+  const [subject, setSubject] = useState('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
   const theme = useTheme();
+
+  useEffect(() => {
+    if (classData?.items?.length) {
+      if (classes3) {
+        const selectedClass = classData.items.find((i: Standards) => i.id === classes3);
+        setDivisionOptions(selectedClass?.divisions || []);
+        // Set first division if available
+        if (selectedClass?.divisions?.length) {
+          setDivision(selectedClass.divisions[0].id);
+        }
+      } else {
+        const firstClass = classData.items[0];
+        setClasses1(firstClass?.id);
+        setClasses2(firstClass?.id);
+        setClasses3(firstClass?.id);
+        setDivisionOptions(firstClass?.divisions || []);
+        // Set first division if available
+        if (firstClass?.divisions?.length) {
+          setDivision(firstClass.divisions[0].id);
+        }
+      }
+    }
+  }, [classData, classes1, classes2, classes3]);
+
   return (
     <Box>
       <Grid container spacing={2}>
@@ -32,19 +61,23 @@ const ComparativeAnalytics = (props: TabComponentType) => {
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Class Comparison</Typography>
               <CustomSelect
-                label="Classes"
-                options={[
-                  { value: 'Class A', label: 'Class A' },
-                  { value: 'Class B', label: 'Class B' },
-                  { value: 'Class C', label: 'Class C' },
-                  { value: 'Class D', label: 'Class D' },
-                ]}
-                onChange={() => {}}
-                value=""
+                label="Class"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  // formik.setFieldValue('class', selectedClass?.name || '');
+                  setClasses1(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                value={classes1}
                 formControlProps={{
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
-              />
+              />{' '}
               <CustomSelect
                 label="Subject"
                 options={[
@@ -86,18 +119,22 @@ const ComparativeAnalytics = (props: TabComponentType) => {
               <Typography variant="subtitle1">Subject Performance Comparison</Typography>
               <CustomSelect
                 label="Class"
-                options={[
-                  { value: 'Class A', label: 'Class A' },
-                  { value: 'Class B', label: 'Class B' },
-                  { value: 'Class C', label: 'Class C' },
-                  { value: 'Class D', label: 'Class D' },
-                ]}
-                onChange={() => {}}
-                value=""
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  // formik.setFieldValue('class', selectedClass?.name || '');
+                  setClasses2(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                value={classes2}
                 formControlProps={{
                   sx: { width: '100%', maxWidth: '200px' },
                 }}
-              />
+              />{' '}
             </Box>
             <AnalyticsWebsiteVisits
               title=""
@@ -130,33 +167,56 @@ const ComparativeAnalytics = (props: TabComponentType) => {
             Student vs Class Average
           </Typography>
           <Box display="flex" gap={2}>
-            <TextField
-              variant="outlined"
-              placeholder="search for individual students by name"
-              label="Student"
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ maxWidth: '350px', width: '100%' }}
-            />
-
             <CustomSelect
-              label="class"
+              label="Class"
+              options={classData?.items || []}
+              labelKey="name"
+              valueKey="id"
+              onChange={(val) => {
+                const selectedClass: Standards = classData.items.find(
+                  (i: Standards) => i.id === val
+                );
+                // formik.setFieldValue('class', selectedClass?.name || '');
+                setClasses3(val as string);
+                setDivisionOptions(selectedClass?.divisions || []);
+              }}
+              value={classes1}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '200px' },
+              }}
+            />{' '}
+            <CustomSelect
+              label="Division"
+              disabled={!classes3}
+              labelKey="name"
+              valueKey="id"
+              options={divisionOptions}
+              value={division}
+              onChange={(val) => {
+                // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
+                // formik.setFieldValue('division', selectedDivision?.name || '');
+                setDivision(val as string);
+              }}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '200px' },
+              }}
+            />{' '}
+            <CustomSelect
+              label="Select Student"
               options={[
-                { value: '1', label: 'Class 1' },
-                { value: '2', label: 'Class 2' },
-                { value: '3', label: 'Class 3' },
-                { value: '4', label: 'Class 4' },
-                { value: '5', label: 'Class 5' },
+                { value: 'student1', label: 'Student 1' },
+                { value: 'student2', label: 'Student 2' },
+                { value: 'student3', label: 'Student 3' },
               ]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!classes3 || !division}
+              value={selectedStudent}
+              isSearch
+              onChange={(val) => {
+                setSelectedStudent(val as string);
+              }}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '200px' },
+              }}
             />
           </Box>
         </Grid>
