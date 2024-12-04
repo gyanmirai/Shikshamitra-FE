@@ -1,6 +1,6 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   List,
   alpha,
   Button,
+  Tooltip,
   ListItem,
   useTheme,
   Typography,
@@ -16,6 +17,7 @@ import {
   ListItemText,
 } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -44,6 +46,7 @@ const quickStatsData = [
 ];
 
 const Dashboard = (props: TabComponentType) => {
+  const [hoveredResource, setHoveredResource] = useState<string | null>(null);
   const theme = useTheme();
   return (
     <Box>
@@ -58,7 +61,7 @@ const Dashboard = (props: TabComponentType) => {
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ typography: 'subtitle2' }}>Recent Resources</Box>
+              <Box sx={{ typography: 'subtitle1' }}>Recent Resources</Box>
               <Scrollbar sx={{ mt: 1.5 }}>
                 <Box
                   component="ul"
@@ -71,15 +74,48 @@ const Dashboard = (props: TabComponentType) => {
                 >
                   {resourcesData.map((resource, index) => (
                     <Button
+                      key={index}
                       variant="outlined"
                       fullWidth
                       sx={{
-                        justifyContent: 'start',
+                        justifyContent: 'space-between',
                         position: 'relative',
                         overflow: 'hidden',
+                        mb: 1,
                       }}
+                      onMouseEnter={() => setHoveredResource(resource.title)}
+                      onMouseLeave={() => setHoveredResource(null)}
                     >
-                      {resource.title}
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography>{resource.title}</Typography>
+                        {hoveredResource === resource.title && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              ml: 2,
+                              color: 'text.secondary',
+                            }}
+                          >
+                            Uploaded: {resource.uploadDate}
+                          </Typography>
+                        )}
+                      </Box>
+                      {hoveredResource === resource.title && (
+                        <Tooltip title="Download">
+                          <Iconify
+                            icon="ic:baseline-download"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            sx={{
+                              position: 'absolute',
+                              right: 10,
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                            }}
+                          />
+                        </Tooltip>
+                      )}
                     </Button>
                   ))}
                 </Box>
