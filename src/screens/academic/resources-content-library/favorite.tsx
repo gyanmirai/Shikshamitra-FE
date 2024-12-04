@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
@@ -6,7 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const Favorite = () => (
+const Favorite = (props: TabComponentType) => (
   <Box>
     <CustomizableTable
       columns={[
@@ -25,10 +27,6 @@ const Favorite = () => (
                     <MenuItem>
                       <Iconify icon="mdi:download" />
                       Download
-                    </MenuItem>
-                    <MenuItem>
-                      <Iconify icon="mdi:star" />
-                      Favorite
                     </MenuItem>
                     <MenuItem>
                       <Iconify icon="mdi:eye" />

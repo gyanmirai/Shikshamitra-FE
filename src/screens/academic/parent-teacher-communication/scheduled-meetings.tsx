@@ -8,8 +8,9 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
-const ScheduledMeetings = () => {
+const ScheduledMeetings = (props: TabComponentType) => {
   const dialog = useBoolean();
   return (
     <Box>

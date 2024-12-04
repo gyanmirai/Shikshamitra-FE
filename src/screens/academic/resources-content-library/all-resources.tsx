@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -38,7 +39,7 @@ interface TResource {
   resourceName: string;
   description: string;
   category: string;
-  fileType: string;
+  fileType?: string;
   uploadedBy?: string;
   dateUploaded: Dayjs | null;
   status: string;
@@ -97,7 +98,7 @@ const dummyData: TResource[] = [
   },
 ];
 
-const AllResources = () => {
+const AllResources = (props: TabComponentType) => {
   const [tableData, setTableData] = useState(dummyData);
   const isTableView = useBoolean(true);
   const [selectedResource, setSelectedResource] = useState<any | null>(null);
@@ -271,7 +272,7 @@ interface ResourceFormProps {
 
 const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
-
+  const dialog = useBoolean();
   const formik = useFormik<TResource>({
     initialValues: {
       id: isEdit && data ? data.id : Date.now(),
@@ -321,6 +322,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
                 onChange={formik.handleChange}
                 fullWidth
                 multiline
+                rows={3}
               />
             </Grid>
             <Grid item xs={12}>
@@ -338,7 +340,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <CustomSelect
                 label="File Type"
                 options={[
@@ -352,7 +354,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
-            </Grid>
+            </Grid> */}
             <Grid item xs={12}>
               <UploadBox
                 onDrop={() => {}}

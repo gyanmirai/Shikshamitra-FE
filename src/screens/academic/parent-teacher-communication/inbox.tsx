@@ -1,4 +1,5 @@
 import React from 'react';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { ChatView } from 'src/sections/chat/view';
 
@@ -26,6 +27,6 @@ import { ChatView } from 'src/sections/chat/view';
 //   snippet: string;
 //   time: string;
 // }
-const Inbox = () => <ChatView />;
+const Inbox = (props: TabComponentType) => <ChatView />;
 
 export default Inbox;
