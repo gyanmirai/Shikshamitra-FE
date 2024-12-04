@@ -1,11 +1,11 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
-import { Form, Field, Formik } from 'formik';
+import { Form, Field, Formik, useFormik } from 'formik';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -13,22 +13,23 @@ import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import {
   Box,
   Grid,
+  Stack,
   Button,
   Avatar,
   Checkbox,
   MenuItem,
   TextField,
   IconButton,
+  Autocomplete,
+  DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
-
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -37,6 +38,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility
   const dialog = useBoolean();
+  const confirmRejectDialog = useBoolean();
 
   return (
     <Box>
@@ -72,6 +74,7 @@ const LeaveAndAbsentScreen = () => {
           { id: 'startDate', label: 'Start Date' },
           { id: 'endDate', label: 'End Date' },
           { id: 'description', label: 'Description' },
+          { id: 'remarks', label: 'Remarks' },
           {
             id: 'status',
             label: 'Status',
@@ -96,10 +99,10 @@ const LeaveAndAbsentScreen = () => {
                 <Box display="flex" gap={1}>
                   {row.status === 'Pending' ? (
                     <>
-                      <IconButton size="small" color="success">
+                      <IconButton size="small" color="success" onClick={confirmRejectDialog.onTrue}>
                         <CheckCircleOutline />
                       </IconButton>
-                      <IconButton size="small" color="error">
+                      <IconButton size="small" color="error" onClick={confirmRejectDialog.onTrue}>
                         <Cancel />
                       </IconButton>
                     </>
@@ -161,6 +164,14 @@ const LeaveAndAbsentScreen = () => {
       >
         <LeaveRequestForm />
       </CustomDialog>
+
+      <CustomDialog
+        title="Remarks"
+        open={confirmRejectDialog.value}
+        handleClose={confirmRejectDialog.onFalse}
+      >
+        <LeaveAbsent handleClose={confirmRejectDialog.onFalse} />
+      </CustomDialog>
     </Box>
   );
 };
@@ -174,10 +185,6 @@ const leaveTypes = [
 ];
 
 const LeaveRequestForm = () => {
-  // State to store all available mediums
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
-  // State to store the selected medium
-  const [medium, setMedium] = useState<string>('');
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
@@ -193,45 +200,17 @@ const LeaveRequestForm = () => {
   // State to store the selected student
   const [student, setStudent] = useState('');
   // Selector to get the current board from Redux store
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  // Custom hook to get board data
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
-  // Effect to fetch board data when currentBoard changes
   useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setMedium(boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setMedium('');
-    }
-  }, [boardData, currentBoard?.id, getBoard]);
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
 
-  // Effect to update mediums when boardData changes
-  useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setMedium(boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData]);
-
-  // Effect to update organizations when medium changes
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums]);
-
-  // Effect to update classes when organization changes
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
     setClass(
@@ -239,7 +218,6 @@ const LeaveRequestForm = () => {
     );
   }, [organization, allOrganization]);
 
-  // Effect to update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
@@ -263,17 +241,6 @@ const LeaveRequestForm = () => {
   return (
     <Box p={2}>
       <Box display="flex" my={2} gap={2} flexWrap="wrap">
-        <CustomSelect
-          options={allMediums}
-          label="Medium"
-          value={medium}
-          onChange={(val: string | string[]) => {
-            setMedium(val as string);
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
         <CustomSelect
           options={allOrganization}
           label="Organization"
@@ -304,24 +271,30 @@ const LeaveRequestForm = () => {
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           disabled={!classes}
         />
-        <CustomSelect
-          options={[
-            { name: 'Jon Doe', id: '1' },
-            { name: 'Jane Smith', id: '2' },
-            { name: 'Alice Johnson', id: '3' },
-            { name: 'Bob Williams', id: '4' },
-            { name: 'Emma Brown', id: '5' },
-          ]}
-          isSearch
-          label="Students"
-          value={student}
-          onChange={(val: string | string[]) => {
-            setStudent(val as string);
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!division}
+        <Autocomplete
+          loading={false}
+          noOptionsText="No Student Found"
+          sx={{ maxWidth: '250px', width: '100%' }}
+          // value={props.formik.values.sponsorStudent}
+          // onChange={(e, value: any) => {
+          //   props.formik.setFieldValue('sponsorStudent', value);
+          // }}
+          options={[]}
+          getOptionLabel={(option: any) => option?.firstName || ''}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              size="small"
+              label="Student"
+              placeholder="Search  Student"
+              fullWidth
+            />
+          )}
+          renderOption={(prop: any, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.firstName}
+            </li>
+          )}
         />
       </Box>
 
@@ -425,6 +398,37 @@ const LeaveRequestForm = () => {
           )}
         </Formik>
       )}
+    </Box>
+  );
+};
+
+const LeaveAbsent = ({ handleClose }: any) => {
+  const { values, handleChange, handleSubmit } = useFormik({
+    initialValues: {
+      remarks: '',
+    },
+    onSubmit() {},
+  });
+
+  return (
+    <Box component="form" onSubmit={handleSubmit}>
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+        <Stack spacing={3}>
+          <TextField
+            value={values.remarks}
+            onChange={handleChange}
+            label="Remarks"
+            multiline
+            fullWidth
+            rows={4}
+          />
+        </Stack>
+      </Scrollbar>
+      <DialogActions>
+        <Button variant="outlined" color="inherit" onClick={handleClose}>
+          Cancel
+        </Button>
+      </DialogActions>
     </Box>
   );
 };

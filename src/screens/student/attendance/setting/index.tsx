@@ -1,316 +1,102 @@
 'use client';
 
-import { useFormik } from 'formik';
-import React, { useCallback } from 'react';
+import React, { useMemo } from 'react';
 
-import { Add } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  Grid,
-  Button,
-  Checkbox,
-  MenuItem,
-  MenuList,
-  TextField,
-  Typography,
-  CardContent,
-  DialogActions,
-  InputAdornment,
-  FormControlLabel,
-} from '@mui/material';
+import { Tab, Box } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const StudentAttendanceSettingScreen = () => {
-  const dialog = useBoolean(false);
+import Notification from './notification';
+import AttendanceRule from './attendance-rule';
+import AttendanceType from './attendance-type';
+import NotificationMethod from './notification-method';
 
-  const actions = useCallback(
-    ({ popover }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            // confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
+const TABS = [
+  {
+    value: 'notification',
+    label: 'Notification',
+    icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
+    component: () => <Notification />,
+  },
+  {
+    value: 'method',
+    label: 'Notification Method',
+    icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
+    component: () => <NotificationMethod />,
+  },
+  {
+    value: 'rule',
+    label: 'Attendance Rule',
+    icon: <Iconify icon="carbon:rule-draft" width={20} />,
+    component: () => <AttendanceRule />,
+  },
 
-        <MenuItem
-          onClick={() => {
-            // modal.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-        {/* {children && (
-          <MenuItem
-            onClick={() => {
-              childModal.onTrue();
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="ic:baseline-add" sx={{ height: '16px', width: '16px' }} />
-            Create {childEditData?.name}
-          </MenuItem>
-        )} */}
-      </MenuList>
-    ),
-    []
+  {
+    value: 'attendanceType',
+    label: 'Attendance Type',
+    icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
+    component: () => <AttendanceType />,
+  },
+];
+
+const HrAttendanceSettingScreen = () => {
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
+
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
   );
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
+  });
+  console.log(data, 'data');
+  // const handleClose = () => {
+  //   setEditData(null);
+  //   dialog.onFalse();
+  // };
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
-        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Setting' }]}
+        heading={currentActiveComponent?.label}
+        links={[{ name: 'HR' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
       />
-
-      <Card sx={{ p: 1, my: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Automated Notifications
-        </Typography>
-
-        <Box>
-          <FormControlLabel control={<Checkbox />} label="Absent" />
-          <FormControlLabel control={<Checkbox />} label="Late" />
-          <FormControlLabel control={<Checkbox />} label="Half-day" />
-        </Box>
-      </Card>
-
-      <Card sx={{ p: 1, my: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Method
-        </Typography>
-        <Box>
-          <FormControlLabel control={<Checkbox />} label="Email" />
-          <FormControlLabel control={<Checkbox />} label="SMS" />
-          <FormControlLabel control={<Checkbox />} label="Push Notification" />
-        </Box>
-      </Card>
-
-      <Card sx={{ p: 1, my: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="h6" gutterBottom>
-            Custom Attendance Rules
-          </Typography>
-          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            Add Rule
-          </Button>
-        </Box>
-
-        <CardContent>
-          <CustomizableTable
-            columns={[
-              { label: 'Name', id: 'name' },
-              { label: 'Type', id: 'type' },
-              { label: 'Late Threshold', id: 'lateThreshold' },
-              { label: 'Late Threshold Unit', id: 'lateThresholdUnit' },
-              { label: 'Half Day Threshold', id: 'halfDayThreshold' },
-              { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnit' },
-              {
-                label: 'Enable Notification',
-                id: 'enableNotification',
-                render(value, row) {
-                  return value ? 'Yes' : 'No';
-                },
-              },
-              {
-                label: 'Actions',
-                id: 'action',
-                isSort: false,
-                render(value, row) {
-                  return <ThreeDotsActions actions={actions} />;
-                },
-              },
-            ]}
-            data={[
-              {
-                name: 'Regular School Day',
-                type: 'Default',
-                lateThreshold: '15',
-                lateThresholdUnit: 'minutes',
-                halfDayThreshold: '180',
-                halfDayThresholdUnit: 'minutes',
-                enableNotification: true,
-              },
-              {
-                name: 'Early Dismissal',
-                type: 'Special',
-                lateThreshold: '10',
-                lateThresholdUnit: 'minutes',
-                halfDayThreshold: '120',
-                halfDayThresholdUnit: 'minutes',
-                enableNotification: false,
-              },
-              {
-                name: 'Assembly Day',
-                type: 'Special',
-                lateThreshold: '5',
-                lateThresholdUnit: 'minutes',
-                halfDayThreshold: '150',
-                halfDayThresholdUnit: 'minutes',
-                enableNotification: true,
-              },
-            ]}
+      <CustomTabs
+        value={searchParams.tab}
+        onChange={(e, value) => setSearchParams({ tab: value })}
+        sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+        role="tablist"
+      >
+        {TABS.map((tab) => (
+          <Tab
+            sx={{ fontSize: '12px' }}
+            key={tab.value}
+            value={tab.value}
+            icon={tab.icon}
+            label={tab.label}
+            role="tab"
           />
-        </CardContent>
-      </Card>
-
-      <CustomDialog title="Add Rule" open={dialog.value} handleClose={dialog.onFalse}>
-        <AttendanceRuleForm />
-      </CustomDialog>
+        ))}
+      </CustomTabs>
+      <Scrollbar sx={{ p: 1 }}>
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+          // searchParams={searchParams}
+          // setSearchParams={setSearchParams}
+          />
+        )}
+      </Scrollbar>
     </Box>
   );
 };
 
-export default StudentAttendanceSettingScreen;
-
-const AttendanceRuleForm = () => {
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      type: '',
-      lateThreshold: '',
-      lateThresholdUnit: 'minutes',
-      halfDayThreshold: '',
-      halfDayThresholdUnit: 'minutes',
-      enableNotification: false,
-    },
-    onSubmit: () => {},
-  });
-  return (
-    <Box>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar
-          sx={{
-            p: 3,
-            bgcolor: 'background.neutral',
-          }}
-        >
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                name="name"
-                label="Rule Name"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <CustomSelect
-                options={[
-                  { id: 'half-day', name: 'Half-day' },
-                  { id: 'late', name: 'Late' },
-                ]}
-                label="Attendance Type"
-                labelKey="name"
-                valueKey="id"
-                value={formik.values.type}
-                fullWidth
-                formControlProps={{ fullWidth: true }}
-                onChange={(val: string | string[]) => formik.setFieldValue('type', val as string)}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Late Threshold"
-                name="lateThreshold"
-                value={formik.values.lateThreshold}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
-                sx={{ '& .MuiOutlinedInput-root': { paddingRight: 0 } }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <CustomSelect
-                        options={[
-                          { id: 'minutes', name: 'Min' },
-                          { id: 'hours', name: 'Hrs' },
-                        ]}
-                        label=""
-                        labelKey="name"
-                        valueKey="id"
-                        value={formik.values.lateThresholdUnit}
-                        fullWidth
-                        formControlProps={{ fullWidth: true }}
-                        onChange={(val: string | string[]) =>
-                          formik.setFieldValue('lateThresholdUnit', val as string)
-                        }
-                      />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Half Threshold"
-                name="halfDayThreshold"
-                value={formik.values.halfDayThreshold}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
-                sx={{ '& .MuiOutlinedInput-root': { paddingRight: 0 } }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <CustomSelect
-                        options={[
-                          { id: 'minutes', name: 'Min' },
-                          { id: 'hours', name: 'Hrs' },
-                        ]}
-                        label=""
-                        labelKey="name"
-                        valueKey="id"
-                        value={formik.values.halfDayThresholdUnit}
-                        fullWidth
-                        formControlProps={{ fullWidth: true }}
-                        onChange={(val: string | string[]) =>
-                          formik.setFieldValue('halfDayThresholdUnit', val as string)
-                        }
-                      />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formik.values.enableNotification}
-                    onChange={formik.handleChange}
-                    name="enableNotification"
-                  />
-                }
-                label="Enable notification for parents or students if the rule is violated."
-              />
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button type="submit" variant="contained">
-            Submit
-          </Button>
-        </DialogActions>
-      </form>
-    </Box>
-  );
-};
+export default HrAttendanceSettingScreen;

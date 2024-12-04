@@ -1,24 +1,15 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { ArrowBack } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Card,
-  Paper,
-  Avatar,
-  useTheme,
-  IconButton,
-  Typography,
-  CardHeader,
-  CardContent,
-} from '@mui/material';
+import { Box, Grid, Paper, Avatar, useTheme, IconButton, Typography } from '@mui/material';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import UserHoverProfile from 'src/components/student-popover';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -370,6 +361,9 @@ const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => {
 
 const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [startDate, setStartDate] = useState<null | Dayjs>(dayjs().startOf('month'));
+  const [endDate, setEndDate] = useState<null | Dayjs>(dayjs().endOf('month'));
+
   const theme = useTheme();
   return (
     <>
@@ -393,6 +387,9 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
             >
               <Typography component="span">
                 Class : <Label color="info">{selectedDivision?.class.name}</Label>
+              </Typography>
+              <Typography component="span">
+                <Label color="success">{selectedDivision?.percentage}</Label>
               </Typography>
               <Typography component="span">
                 Division : <Label color="info"> {selectedDivision?.name} </Label>
@@ -435,27 +432,22 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
         <Grid item xs={9} height="100%">
           <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
             <Box display="flex" gap={2}>
-              <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
-              <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
+              <DatePicker
+                value={startDate}
+                onChange={(value) => setStartDate(value)}
+                label="Start Date"
+                slotProps={{ textField: { size: 'small' } }}
+              />
+              <DatePicker
+                value={endDate}
+                onChange={(value) => setEndDate(value)}
+                label="End Date"
+                slotProps={{ textField: { size: 'small' } }}
+              />
             </Box>
             <Scrollbar sx={{ height: 'calc(100% -  60px)', p: 1 }}>
               <Grid container spacing={1}>
-                <Grid item xs={12} md={4}>
-                  <Card>
-                    <CardHeader
-                      title="Total Attendance"
-                      sx={{ color: 'primary.main' }}
-                      avatar={<Iconify icon="mdi:calendar" width={24} height={24} />}
-                    />
-
-                    <CardContent>
-                      <Typography variant="h4" color="primary.main">
-                        85 %
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12}>
                   <CustomizableTable
                     data={[
                       {
