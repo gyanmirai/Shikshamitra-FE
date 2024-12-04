@@ -341,7 +341,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.primary.main} 0%, ${varAlpha(theme.vars.palette.primary.main, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.vars.palette.success.main} 0%, ${varAlpha(theme.vars.palette.success.mainChannel, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -519,7 +519,6 @@ const LibraryDashboard = () => {
             title="Reservation Trends Over Time"
             selectSeries="Standard 1"
             chart={{
-              colors: [theme.palette.info.light, theme.palette.primary.main, theme.palette.warning.main, theme.palette.grey[400]],
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
               series: [
                 {
