@@ -1,3 +1,4 @@
+import type { CardProps } from '@mui/material';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
@@ -12,10 +13,13 @@ import {
   Tooltip,
   ListItem,
   useTheme,
+  CardHeader,
   Typography,
   CardContent,
   ListItemText,
 } from '@mui/material';
+
+import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -124,7 +128,7 @@ const Dashboard = (props: TabComponentType) => {
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <DataCard title="Quick Stats" data={quickStatsData} />
+          <AnalyticsTrafficBySite list={quickStatsData} />
         </Grid>
         <Grid item xs={12}>
           <AnalyticsWebsiteVisits
@@ -171,6 +175,54 @@ function DataCard({ title, data, sx }: any) {
           ))}
         </List>
       </CardContent>
+    </Card>
+  );
+}
+
+type Props = CardProps & {
+  title?: string;
+  subheader?: string;
+  list: { value: number; label: string }[];
+};
+
+const icons: { [key: string]: JSX.Element } = {
+  'Total resources uploaded': <Iconify icon="mdi:resource-description-framework" />,
+  'Shared resources': <Iconify icon="mdi:share-variant" />,
+  Favorites: <Iconify icon="mdi:star" />,
+};
+
+export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Props) {
+  const theme = useTheme();
+
+  return (
+    <Card {...other}>
+      <CardHeader title={title} subheader={subheader} />
+
+      <Box display="grid" gap={2} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
+        {list.map((site) => (
+          <Box
+            key={site.label}
+            sx={{
+              py: 2.5,
+              display: 'flex',
+              borderRadius: 1.5,
+              textAlign: 'center',
+              alignItems: 'center',
+              flexDirection: 'column',
+              border: `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+            }}
+          >
+            {icons[site.label]}
+            <Typography variant="h6" sx={{ mt: 1 }}>
+              {site.value}
+            </Typography>
+
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {site.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
     </Card>
   );
 }

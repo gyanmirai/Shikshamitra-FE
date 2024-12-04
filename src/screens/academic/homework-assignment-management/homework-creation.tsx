@@ -1,14 +1,17 @@
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Chip,
   Radio,
   Button,
   Switch,
@@ -39,7 +42,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 interface Assignment {
   class: string;
-  division: string;
+  division: string[];
+  assignmentType: string;
   assignmentTitle: string;
   subject: string;
   assignmentDesc: string;
@@ -51,7 +55,8 @@ interface Assignment {
 
 const assignmentInitialValues: Assignment = {
   class: '',
-  division: '',
+  division: [],
+  assignmentType: '',
   assignmentTitle: '',
   subject: '',
   assignmentDesc: '',
@@ -61,11 +66,50 @@ const assignmentInitialValues: Assignment = {
   status: 'draft',
 };
 
-const HomeworkCreation = () => {
+const initialData: Assignment[] = [
+  {
+    class: '10',
+    division: ['A'],
+    assignmentType: 'Homework',
+    assignmentTitle: 'Math Homework 1',
+    subject: 'Mathematics',
+    assignmentDesc: 'Solve problems from Chapter 5',
+    dueDate: dayjs('2024-12-10'),
+    time: dayjs('2024-12-10T23:59:00'),
+    submissionType: 'Online',
+    status: 'draft',
+  },
+  {
+    class: '9',
+    division: ['B'],
+    assignmentType: 'Quiz',
+    assignmentTitle: 'Science Project',
+    subject: 'Science',
+    assignmentDesc: 'Prepare a model of the solar system',
+    dueDate: dayjs('2024-12-15'),
+    time: dayjs('2024-12-15T23:59:00'),
+    submissionType: 'In-Person',
+    status: 'publish',
+  },
+  {
+    class: '8',
+    division: ['C'],
+    assignmentType: 'Homework',
+    assignmentTitle: 'History Essay',
+    subject: 'History',
+    assignmentDesc: 'Write an essay on World War II',
+    dueDate: dayjs('2024-12-20'),
+    time: dayjs('2024-12-20T23:59:00'),
+    submissionType: 'Online',
+    status: 'draft',
+  },
+];
+
+const HomeworkCreation = (props: TabComponentType) => {
   // const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
   const dialog = useBoolean();
   const confirmDialog = useBoolean();
-  const [assignmentData, setAssignmentData] = useState<Assignment[]>([]);
+  const [assignmentData, setAssignmentData] = useState<Assignment[]>(initialData);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   console.log('assignemnt data---', assignmentData);
 
@@ -106,30 +150,53 @@ const HomeworkCreation = () => {
   return (
     <Box>
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
-        <Button variant="contained" onClick={dialog.onTrue}>
-          Create New Assignment
+        <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue}>
+          Create Assignment
         </Button>
       </Box>
       <CustomizableTable
         columns={[
           { id: 'class', label: 'Class' },
-          { id: 'division', label: 'Division' },
+          {
+            id: 'division',
+            label: 'Division',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
+          },
           { id: 'assignmentTitle', label: 'Assignment Title' },
           { id: 'subject', label: 'Subject' },
           { id: 'assignmentDesc', label: 'Assignment Description' },
-          { id: 'dueDate', label: 'Due Date' },
-          { id: 'time', label: 'Time' },
+          {
+            id: 'dueDate',
+            label: 'Due Date',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('DD MMM YYYY')}
+              </Typography>
+            ),
+          },
+          {
+            id: 'time',
+            label: 'Time',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('HH:mm')}
+              </Typography>
+            ),
+          },
           { id: 'submissionType', label: 'Submission Type' },
           {
             id: 'status',
-            label: 'Status',
+            label: 'Publish',
             render(value, row) {
               console.log('row ---', row);
               return (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography sx={{ mr: 2 }} fontSize={10}>
-                    Draft
-                  </Typography>
                   <Switch
                     size="small"
                     checked={row.status === 'publish'}
@@ -138,9 +205,6 @@ const HomeworkCreation = () => {
                     }}
                     inputProps={{ 'aria-label': 'Toggle view' }}
                   />
-                  <Typography sx={{ ml: 1 }} fontSize={10}>
-                    Publish
-                  </Typography>
                 </Box>
               );
             },
@@ -171,7 +235,7 @@ const HomeworkCreation = () => {
         title="New Assignment"
         open={dialog.value}
         handleClose={dialog.onFalse}
-        maxWidth="md"
+        maxWidth="sm"
       >
         <HomeWorkCreationForm onsubmit={handleSubmit} />
       </CustomDialog>
@@ -262,17 +326,7 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Assignment Title"
-                size="small"
-                name="assignmentTitle"
-                value={formik.values.assignmentTitle}
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <CustomSelect
                 label="Subject"
                 options={[
@@ -286,13 +340,38 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Assignment Type"
+                options={[
+                  { value: 'homework', label: 'Homework' },
+                  { value: 'quiz', label: 'Quiz' },
+                  { value: 'exam', label: 'Exam' },
+                ]}
+                value={formik.values.assignmentType}
+                onChange={(val) => {
+                  formik.setFieldValue('assignmentType', val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Assignment Title"
+                size="small"
+                name="assignmentTitle"
+                value={formik.values.assignmentTitle}
+                onChange={formik.handleChange}
+                fullWidth
+              />
+            </Grid>
           </Grid>
 
           <TextField
             label="Assignment Description"
             fullWidth
             multiline
-            rows={4}
+            rows={3}
             name="assignmentDesc"
             value={formik.values.assignmentDesc}
             onChange={formik.handleChange}
