@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, CardMedia, Typography, CardContent, } from '@mui/material';
+import { Box, Card, Grid, Typography, } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
@@ -216,7 +216,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.success.main} 0%, ${varAlpha(theme.vars.palette.success.mainChannel, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.vars.palette.info.main} 0%, ${varAlpha(theme.vars.palette.info.mainChannel, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -258,7 +258,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.success.main} 0%, ${varAlpha(theme.vars.palette.success.mainChannel, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.vars.palette.warning.main} 0%, ${varAlpha(theme.vars.palette.warning.mainChannel, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -299,7 +299,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.success.main} 0%, ${varAlpha(theme.vars.palette.warning.mainChannel, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.vars.palette.error.main} 0%, ${varAlpha(theme.vars.palette.error.mainChannel, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -341,7 +341,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.success.main} 0%, ${varAlpha(theme.vars.palette.success.mainChannel, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.vars.palette.primary.main} 0%, ${varAlpha(theme.vars.palette.primary.main, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -558,7 +558,7 @@ const LibraryDashboard = () => {
       </Grid>
       <Box>
         {/* Title and Navigation */}
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        {/* <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h5" sx={{ pb: "15px", pt: "20px", pl: "15px" }}>
             Popular Books
           </Typography>
@@ -596,10 +596,10 @@ const LibraryDashboard = () => {
               <Iconify icon="iconamoon:arrow-right-2-thin" width={24} height={24} />
             </Box>
           </Box>
-        </Box>
+        </Box> */}
 
         {/* Scrollable Grid */}
-        <Box
+        {/* <Box
           ref={scrollContainerRef}
           sx={{
             display: 'flex',
@@ -634,8 +634,8 @@ const LibraryDashboard = () => {
               </CardContent>
             </Card>
           ))}
-        </Box>
-
+        </Box> */}
+        <Box pt="20px" />
         <PopularBooks title="Popular Books" list={popularBooks} />
       </Box>
     </>
@@ -664,268 +664,4 @@ export default LibraryDashboard;
 
 
 
-// 'use client'
 
-// import React, { useState } from 'react';
-
-// import { Box, Grid, Card, Avatar, Typography, CardContent } from '@mui/material';
-// import { Group, Pending, LibraryBooks, LibraryAddCheck } from '@mui/icons-material';
-
-// import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
-
-// import CustomSelect from 'src/components/custom-select';
-
-// import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
-
-// const LibraryDashboard = () => {
-
-//   const [selectedClass, setSelectedClass] = useState<string>('borrowingTrend');
-//   const [selectedCategory, setSelectedCategory] = useState<string>('booksByCategory'); // Dropdown value to select the data type
-
-
-//   const booksOverview = {
-//     totalBooks: 500,
-//     booksIssued: 150,
-//     reservedBooks: 30,
-//     booksDueForReturn: 20,
-//     pendingReturns: 10,
-//   };
-
-//   const studentInsights = {
-//     totalStudents: 400,
-//     activeBorrowers: 200,
-//     studentDemographics: [
-//       { standard: 'Class 1', count: 50 },
-//       { standard: 'Class 2', count: 70 },
-//       { standard: 'Class 3', count: 80 },
-//       { standard: 'Class 4', count: 60 },
-//       { standard: 'Class 5', count: 40 },
-//     ],
-//     studentsWithOverdueBooks: [
-//       { name: 'John Doe', overdueDays: 5 },
-//       { name: 'Jane Smith', overdueDays: 3 },
-//     ],
-//   };
-
-//   // Sample Data for Pie Chart
-//   const bookCategoryData = [
-//     { label: 'Fiction', value: 300 },
-//     { label: 'Non-Fiction', value: 150 },
-//     { label: 'Textbooks', value: 200 },
-//     { label: 'Reference', value: 100 },
-//   ];
-
-//   const booksByAuthorPublisherData = [
-//     { label: 'Author A', value: 250 },
-//     { label: 'Author B', value: 180 },
-//     { label: 'Publisher X', value: 100 },
-//     { label: 'Publisher Y', value: 70 },
-//   ];
-
-//   const booksWithHighDemandData = [
-//     { label: 'Book 1', value: 120 },
-//     { label: 'Book 2', value: 80 },
-//     { label: 'Book 3', value: 50 },
-//     { label: 'Book 4', value: 30 },
-//   ];
-
-//   const booksToBeReplenishedData = [
-//     { label: 'Book 1', value: 40 },
-//     { label: 'Book 2', value: 25 },
-//     { label: 'Book 3', value: 60 },
-//     { label: 'Book 4', value: 20 },
-//   ];
-
-//   // Pie Chart colors
-//   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-//   const handleCategoryChange = (val: string) => {
-//     setSelectedCategory(val);
-//   };
-//   let data: any = [];
-
-//   switch (selectedCategory) {
-//     case 'booksByCategory':
-//       data = bookCategoryData;
-//       break;
-//     case 'booksByAuthorPublisher':
-//       data = booksByAuthorPublisherData;
-//       break;
-//     case 'booksWithHighDemand':
-//       data = booksWithHighDemandData;
-//       break;
-//     case 'booksToBeReplenished':
-//       data = booksToBeReplenishedData;
-//       break;
-//     default:
-//       data = bookCategoryData;
-//   }
-
-
-
-
-//   return (
-//     <>
-//       <CustomSelect
-//         label="Select Type"
-//         options={[
-//           { value: 'borrowingTrend', label: 'Borrowing Trend' },
-//           { value: 'reservationTrend', label: 'Reservation Trend' },
-//         ]}
-//         value={selectedClass}
-//         onChange={(val) => setSelectedClass(val as string)}
-//         formControlProps={{ sx: { minWidth: 120 } }}
-//       />
-
-//       <Grid container spacing={3}>
-//         {/* Books Overview Section */}
-//         <Grid item xs={12} md={3}>
-//           <Card>
-//             <CardContent>
-//               <Avatar sx={{ bgcolor: '#1976d2', width: 56, height: 56 }}>
-//                 <LibraryBooks />
-//               </Avatar>
-//               <Typography variant="h6" sx={{ mt: 2 }}>Books Overview</Typography>
-//               <Box sx={{ mt: 2 }}>
-//                 <Typography>Total Books: {booksOverview.totalBooks}</Typography>
-//                 <Typography>Books Issued: {booksOverview.booksIssued}</Typography>
-//                 <Typography>Reserved Books: {booksOverview.reservedBooks}</Typography>
-//                 <Typography>Books Due for Return: {booksOverview.booksDueForReturn}</Typography>
-//                 <Typography>Pending Returns: {booksOverview.pendingReturns}</Typography>
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-
-//         {/* Student Insights Section */}
-//         <Grid item xs={12} md={3}>
-//           <Card>
-//             <CardContent>
-//               <Avatar sx={{ bgcolor: '#4caf50', width: 56, height: 56 }}>
-//                 <Group />
-//               </Avatar>
-//               <Typography variant="h6" sx={{ mt: 2 }}>Student Insights</Typography>
-//               <Box sx={{ mt: 2 }}>
-//                 <Typography>Total Students: {studentInsights.totalStudents}</Typography>
-//                 <Typography>Active Borrowers: {studentInsights.activeBorrowers}</Typography>
-//                 <Typography>Student Demographics:</Typography>
-//                 {studentInsights.studentDemographics.map((item) => (
-//                   <Typography key={item.standard}>
-//                     {item.standard}: {item.count} students
-//                   </Typography>
-//                 ))}
-//                 <Typography>Students with Overdue Books:</Typography>
-//                 {studentInsights.studentsWithOverdueBooks.map((student, index) => (
-//                   <Typography key={index}>
-//                     {student.name} - {student.overdueDays} days overdue
-//                   </Typography>
-//                 ))}
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-
-//         {/* Pending Returns Section */}
-//         <Grid item xs={12} md={3}>
-//           <Card>
-//             <CardContent>
-//               <Avatar sx={{ bgcolor: '#f44336', width: 56, height: 56 }}>
-//                 <Pending />
-//               </Avatar>
-//               <Typography variant="h6" sx={{ mt: 2 }}>Pending Returns</Typography>
-//               <Box sx={{ mt: 2 }}>
-//                 <Typography>Total Pending Returns: {booksOverview.pendingReturns}</Typography>
-//                 <Typography>Books Due for Return: {booksOverview.booksDueForReturn}</Typography>
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-
-//         {/* Reservations Overview Section */}
-//         <Grid item xs={12} md={3}>
-//           <Card>
-//             <CardContent>
-//               <Avatar sx={{ bgcolor: '#9c27b0', width: 56, height: 56 }}>
-//                 <LibraryAddCheck />
-//               </Avatar>
-//               <Typography variant="h6" sx={{ mt: 2 }}>Reservations Overview</Typography>
-//               <Box sx={{ mt: 2 }}>
-//                 <Typography>Reserved Books: {booksOverview.reservedBooks}</Typography>
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-//         <Grid container spacing={3}>
-//           {/* Dropdown for selecting data */}
-//           <Grid item xs={12} md={6}>
-//             <Card sx={{ alignItems: 'center', p: 3 }}>
-//               <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
-//                 <CustomSelect
-//                   options={[
-//                     { value: 'booksByCategory', label: 'Books by Category' },
-//                     // { value: 'booksByAuthorPublisher', label: 'Books by Author/Publisher' },
-//                     { value: 'booksWithHighDemand', label: 'Books with High Demand' },
-//                     { value: 'booksToBeReplenished', label: 'Books to be Replenished' },
-//                   ]}
-//                   value={selectedCategory}
-//                   onChange={(val) => handleCategoryChange(val as string)}
-//                   label="Select Data Type"
-//                   formControlProps={{ sx: { minWidth: 150 } }}
-//                 />
-//               </Box>
-
-//               {/* Render AnalyticsCurrentVisits component directly */}
-//               <AnalyticsCurrentVisits
-//                 title=''
-//                 // {selectedCategory === 'booksByCategory' ? 'Books by Category' : 'Books by Author/Publisher'}
-//                 chart={{
-//                   series: data,
-//                 }}
-//                 sx={{ boxShadow: 'none' }}
-//               />
-//             </Card>
-//           </Grid>
-//         </Grid>
-//         {/* Chart Section */}
-//         <Grid item xs={12}>
-//           <AppAreaInstalled
-//             title="Category"
-//             selectSeries="Standard 1"
-//             chart={{
-//               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-//               series: [
-//                 {
-//                   name: 'Standard 1',
-//                   data: [
-//                     { name: 'Math', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-//                     { name: 'English', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-//                     { name: 'Gujarati', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-//                   ],
-//                 },
-//                 {
-//                   name: 'Standard 2',
-//                   data: [
-//                     { name: 'Math', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-//                     { name: 'English', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-//                     { name: 'Gujarati', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-//                   ],
-//                 },
-//                 {
-//                   name: 'Standard 3',
-//                   data: [
-//                     { name: 'Math', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-//                     { name: 'English', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-//                     { name: 'Gujarati', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-//                   ],
-//                 },
-//               ],
-//             }}
-//             sx={{ height: '100%' }}
-//           />
-//         </Grid>
-//       </Grid>
-//     </>
-//   );
-// };
-
-// export default LibraryDashboard;

@@ -5,16 +5,14 @@ import Autoplay from 'embla-carousel-autoplay';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
-import { maxLine } from 'src/theme/styles';
+import { varAlpha } from 'src/theme/styles';
 
 import { Image } from 'src/components/image';
-import { Iconify } from 'src/components/iconify';
 import { Label, labelClasses } from 'src/components/label';
 import { Carousel, useCarousel, CarouselArrowBasicButtons } from 'src/components/carousel';
 
@@ -38,7 +36,7 @@ export function PopularBooks({ title, list, ...other }: Props) {
         slidesToShow: { xs: 1, sm: 2, md: 3, lg: '40%', xl: '30%' },
         loop: true,
 
-    }, [Autoplay({ playOnInit: true, delay: 2000 })]);
+    }, [Autoplay({ playOnInit: true, delay: 5000 })]);
 
 
 
@@ -98,8 +96,8 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
         >
 
 
-            <Label startIcon={<Iconify width={12} icon="solar:users-group-rounded-bold" />}>
-                {fShortenNumber(item.borrowCount)}
+            <Label >
+                {`Borrower Time : ${fShortenNumber(item.borrowCount)}`}
             </Label>
         </Box>
     );
@@ -126,22 +124,84 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
     //   );
 
     return (
-        <Card sx={{ width: 1 }} {...other}>
-            {renderImage}
 
-            <Box sx={{ px: 2, py: 2.5 }}>
-                {renderLabels}
+        <Box sx={{
+            width: 1,
+            position: 'relative',
+            borderRadius: '15px',
+            overflow: 'hidden',
+            ...other,
+        }}>
+            <Box
+                sx={{
+                    p: 3,
+                    left: 0,
+                    width: 1,
+                    bottom: 0,
+                    zIndex: 9,
+                    display: 'flex',
+                    position: 'absolute',
+                    color: 'common.white',
+                    flexDirection: 'column',
+                }}
+            >
 
-                <Link
-                    variant="subtitle2"
-                    color="inherit"
-                    underline="none"
-                    sx={{ ...maxLine({ line: 2, persistent: theme.typography.subtitle2 }) }}
-                >
+
+                <Link color="inherit" underline="none" variant="h5" noWrap sx={{ mt: 1, mb: 3 }}>
                     {item.title}
                 </Link>
 
+                <Box
+                    sx={{
+                        gap: 1,
+                        mb: 1.5,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        [`& .${labelClasses.root}`]: {
+                            typography: 'caption',
+                            color: 'white',
+                        },
+                    }}
+                >
+
+
+                    <Label >
+                        {`Borrower Time : ${fShortenNumber(item.borrowCount)}`}
+                    </Label>
+                </Box>
             </Box>
-        </Card>
+
+            <Image
+                alt={item.title} src={item.coverImage}
+                slotProps={{
+                    overlay: {
+                        background: `linear-gradient(to bottom, ${varAlpha(theme.vars.palette.grey['900Channel'], 0)} 0%, ${theme.vars.palette.grey[900]} 75%)`,
+                    },
+                }}
+                sx={{
+                    width: 1,
+                    height: { xs: 308, xl: 340 },
+                    borderRadius: 'inherit',
+                    objectFit: 'cover',
+                }}
+            />
+        </Box>
+        // <Card sx={{ width: 1 }} {...other}>
+        //     {renderImage}
+
+        //     <Box sx={{ px: 2, py: 2.5 }}>
+        //         {renderLabels}
+
+        //         <Link
+        //             variant="subtitle2"
+        //             color="inherit"
+        //             underline="none"
+        //             sx={{ ...maxLine({ line: 2, persistent: theme.typography.subtitle2 }) }}
+        //         >
+        //             {item.title}
+        //         </Link>
+
+        //     </Box>
+        // </Card>
     );
 }
