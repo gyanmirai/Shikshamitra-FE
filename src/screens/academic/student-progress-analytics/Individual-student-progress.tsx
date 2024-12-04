@@ -450,7 +450,7 @@ const getAssignmentColor = (status: string) => {
   return statusColors[status];
 };
 
-const AssignmentsList = () => {
+export const AssignmentsList = () => {
   const [hoveredAssignment, setHoveredAssignment] = useState<Assignment | null>(null);
   const theme = useTheme();
 
@@ -569,7 +569,7 @@ const getExamColor = (status: string) => {
   return statusColors[status];
 };
 
-const ExamsList = () => {
+export const ExamsList = () => {
   const theme = useTheme();
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
 

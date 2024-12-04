@@ -8,6 +8,7 @@ import { Scrollbar } from '../scrollbar';
 import { CustomTabs } from '../custom-tabs';
 import AcademicActivity from './academicActivity';
 import AcademicDashboard from './academicDashboard';
+import AcademicPerformance from './AcademicPerformance';
 
 const TABS = [
   { value: 'dashboard', label: 'Dashboard' },
@@ -34,6 +35,7 @@ const AcademicTabs = () => {
         <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
           {tabs.value === 'dashboard' && <AcademicDashboard />}
           {tabs.value === 'activity' && <AcademicActivity />}
+          {tabs.value === 'performance' && <AcademicPerformance />}
         </Box>
       </Scrollbar>
     </Card>

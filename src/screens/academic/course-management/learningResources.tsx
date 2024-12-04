@@ -338,6 +338,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  
   const formik = useFormik<TResourceData>({
     initialValues: {
       id: isEdit && data ? data.id : Date.now(),

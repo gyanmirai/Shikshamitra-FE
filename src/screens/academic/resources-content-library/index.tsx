@@ -15,7 +15,6 @@ import Dashboard from './dashboard';
 import Categories from './categories';
 import AllResources from './all-resources';
 import SharedWithMe from './shared-with-me';
-import UploadContent from './upload-content';
 
 const TABS = [
   {
@@ -34,11 +33,11 @@ const TABS = [
     component: () => <Categories />,
   },
 
-  {
-    value: 'uploadContent',
-    label: 'Upload Content',
-    component: () => <UploadContent />,
-  },
+  // {
+  //   value: 'uploadContent',
+  //   label: 'Upload Content',
+  //   component: () => <UploadContent />,
+  // },
   {
     value: 'sharedWithMe',
     label: 'Shared with Me',

@@ -2,28 +2,17 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
-import GradeIcon from '@mui/icons-material/Grade';
-import PeopleIcon from '@mui/icons-material/People';
-import WarningIcon from '@mui/icons-material/Warning';
-import { Assessment, TrendingUp } from '@mui/icons-material';
 import {
   Box,
   Card,
   Grid,
-  List,
-  alpha,
   useTheme,
-  ListItem,
   Typography,
-  CardHeader,
-  CardContent,
-  ListItemText,
 } from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select';
+import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import CustomSelect from 'src/components/custom-select';
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
@@ -32,7 +21,7 @@ const Dashboard = (props: TabComponentType) => {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <CustomSelect
             label="Organization"
             options={[
@@ -60,79 +49,56 @@ const Dashboard = (props: TabComponentType) => {
               sx: { width: '100%', maxWidth: '200px' },
             }}
           />
+        </Grid> */}
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
+            title="Total Students"
+            icon="mdi:account-multiple"
+            value={8000}
+            // labels={[
+            //   { name: ' Boys : 5000', color: 'info' },
+            //   { name: 'Girls : 3000', color: 'secondary' },
+            // ]}
+            color="primary.main"
+            // href="/hr/employee"
+          />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card
-            sx={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-
-              bgcolor: '#e3f2fd',
-            }}
-          >
-            <CardContent>
-              <PeopleIcon sx={{ fontSize: 60, color: '#1976d2' }} />
-              <Typography variant="h4" component="div" color="black" sx={{ mt: 2 }}>
-                40
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Total Students
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
+            title="Overall Performance"
+            icon="mdi:star"
+            value="A+"
+            // labels={[
+            //   { name: ' Highest : B', color: 'info' },
+            //   { name: 'Lowest : A', color: 'secondary' },
+            // ]}
+            color="primary.main"
+            // href="/hr/employee"
+          />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card
-            sx={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-
-              bgcolor: '#e8f5e9',
-            }}
-          >
-            <CardContent>
-              <GradeIcon sx={{ fontSize: 60, color: '#4caf50' }} />
-              <Typography variant="h4" component="div" color="black" sx={{ mt: 2 }}>
-                A
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Overall Performance
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card
-            sx={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-
-              bgcolor: '#fff3e0',
-            }}
-          >
-            <CardContent>
-              <WarningIcon sx={{ fontSize: 60, color: '#ff9800' }} />
-              <Typography variant="h4" component="div" color="black" sx={{ mt: 2 }}>
-                15
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                At-Risk Students (40%)
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} sm={6} md={4}>
+          <EmployeeDashboardCard
+            title="Overall Performance"
+            icon="mdi:star"
+            value="A+"
+            // labels={[
+            //   { name: ' Highest : B', color: 'info' },
+            //   { name: 'Lowest : A', color: 'secondary' },
+            // ]}
+            color="primary.main"
+            // href="/hr/employee"
+          />
         </Grid>
         <Grid item xs={12}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Performance Trends</Typography>
               <CustomSelect
-                label="Monthly"
+                label="Yearly"
                 options={[
-                  { value: 'Monthly', label: 'Monthly' },
-                  { value: 'Weekly', label: 'Weekly' },
+                  { value: '2024', label: '2024' },
+                  { value: '2023', label: '2023' },
+                  { value: '2022', label: '2022' },
                 ]}
                 onChange={() => {}}
                 value=""
@@ -165,10 +131,6 @@ const Dashboard = (props: TabComponentType) => {
                     name: 'Positive Metrics',
                     data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
                   },
-                  {
-                    name: 'Negative Metrics',
-                    data: [49, 51, 35, 10, 41, 35, 51, 49, 62, 69, 91, 148],
-                  },
                 ],
                 options: {
                   legend: {
@@ -181,7 +143,7 @@ const Dashboard = (props: TabComponentType) => {
             />
           </Card>
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <CustomSelect
             label="Class"
             options={[
@@ -330,7 +292,7 @@ const Dashboard = (props: TabComponentType) => {
               </Card>
             </Grid>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );

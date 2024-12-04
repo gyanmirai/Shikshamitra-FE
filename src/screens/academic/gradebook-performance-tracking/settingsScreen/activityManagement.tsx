@@ -1,23 +1,24 @@
+import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
   Chip,
   Button,
-  Switch,
   MenuItem,
   MenuList,
   Checkbox,
   TextField,
   Typography,
   DialogActions,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -26,6 +27,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Label } from 'src/components/label';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -41,13 +43,16 @@ enum ActivityCategory {
   CLUB = 'Club',
   VOLUNTEER = 'Volunteer',
 }
+type ActivityStatus = 'Scheduled' | 'Active' | 'Completed';
 
 // Interface for Activity
 interface Activity {
   id: number;
   activityName: string;
   category: ActivityCategory;
-  status: 'Active' | 'Inactive';
+  status: ActivityStatus;
+  startDate: Dayjs | null;
+  endDate: Dayjs | null;
 }
 
 // Initial dummy data
@@ -56,30 +61,57 @@ const initialActivities: Activity[] = [
     id: 1,
     activityName: 'Math Club',
     category: ActivityCategory.ACADEMIC,
-    status: 'Active',
+    status: 'Completed',
+    startDate: dayjs('2024-10-28'),
+    endDate: dayjs('2024-11-04'),
   },
   {
     id: 2,
     activityName: 'Basketball Team',
     category: ActivityCategory.SPORTS,
-    status: 'Inactive',
+    status: 'Active',
+    startDate: dayjs('2024-12-01'),
+    endDate: dayjs('2024-12-03'),
   },
   {
     id: 3,
     activityName: 'Drama Society',
     category: ActivityCategory.CULTURAL,
-    status: 'Active',
+    status: 'Scheduled',
+    startDate: dayjs('2024-12-10'),
+    endDate: dayjs('2024-12-11'),
   },
 ];
 
+const getActivityStatus = (startDate: Dayjs | null, endDate: Dayjs | null) => {
+  const now = dayjs();
+  if (!startDate) return 'Scheduled';
+
+  // If start date is in the future, status is Scheduled
+  if (startDate.isAfter(now)) return 'Scheduled';
+
+  // If end date exists and is in the past, status is Completed
+  if (endDate && endDate.isBefore(now)) return 'Completed';
+
+  // If current date is between start and end dates, status is Active
+  return 'Active';
+};
+
 const ActivityManagement = () => {
-  const [activities, setActivities] = useState<Activity[]>(initialActivities);
+  const [activities, setActivities] = useState<Activity[]>(
+    initialActivities.map((activity) => ({
+      ...activity,
+      status: getActivityStatus(activity.startDate, activity.endDate),
+    }))
+  );
+
   const [isEdit, setIsEdit] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
   const dialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
   const assignStudentDialog = useBoolean();
+  const uploadPictureDialog = useBoolean();
 
   const handleCloseDialog = () => {
     setSelectedActivity(null);
@@ -87,6 +119,7 @@ const ActivityManagement = () => {
     dialog.onFalse();
     deleteConfirmDialog.onFalse();
     assignStudentDialog.onFalse();
+    uploadPictureDialog.onFalse();
   };
 
   const handleDelete = () => {
@@ -98,6 +131,8 @@ const ActivityManagement = () => {
   };
 
   const handleSubmit = (values: any) => {
+    const newStatus = getActivityStatus(values.startDate, values.endDate);
+
     if (isEdit && selectedActivity) {
       // Update existing activity
       setActivities((prevActivities) =>
@@ -107,7 +142,9 @@ const ActivityManagement = () => {
                 ...a,
                 activityName: values.activityName,
                 category: values.category,
-                status: values.status,
+                status: newStatus,
+                startDate: values.startDate,
+                endDate: values.endDate,
               }
             : a
         )
@@ -118,7 +155,9 @@ const ActivityManagement = () => {
         id: Math.max(...activities.map((a) => a.id)) + 1,
         activityName: values.activityName,
         category: values.category,
-        status: values.status,
+        status: newStatus,
+        startDate: values.startDate,
+        endDate: values.endDate,
       };
       setActivities((prevActivities) => [...prevActivities, newActivity]);
     }
@@ -154,10 +193,40 @@ const ActivityManagement = () => {
             label: 'Category',
           },
           {
+            id: 'startDate',
+            label: 'Start Date',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('DD MMM YYYY')}
+              </Typography>
+            ),
+          },
+          {
+            id: 'endDate',
+            label: 'End Date',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('DD MMM YYYY')}
+              </Typography>
+            ),
+          },
+          {
             id: 'status',
             label: 'Status',
             render: (value) => (
-              <Label color={value === 'Active' ? 'primary' : 'error'}>{value}</Label>
+              <Label
+                color={
+                  value === 'Completed'
+                    ? 'error'
+                    : value === 'Active'
+                      ? 'primary'
+                      : value === 'Scheduled'
+                        ? 'warning'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
             ),
           },
           {
@@ -180,7 +249,18 @@ const ActivityManagement = () => {
                       Edit
                     </MenuItem>
 
-                    {row.status === 'Inactive' && (
+                    {row.status === 'Completed' && (
+                      <MenuItem
+                        onClick={() => {
+                          uploadPictureDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="mdi:upload" sx={{ height: '16px', width: '16px' }} />
+                        Upload Pictures
+                      </MenuItem>
+                    )}
+
+                    {row.status === 'Completed' && (
                       <MenuItem
                         onClick={() => {
                           setSelectedActivity(row as Activity);
@@ -272,6 +352,14 @@ const ActivityManagement = () => {
           </DialogActions>
         </Box>
       </CustomDialog>
+
+      <CustomDialog
+        open={uploadPictureDialog.value}
+        handleClose={handleCloseDialog}
+        title="Upload Pictures"
+      >
+        <UploadPictures />
+      </CustomDialog>
     </Box>
   );
 };
@@ -287,14 +375,14 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
   const validationSchema = Yup.object().shape({
     activityName: Yup.string().required('Activity Name is Required'),
     category: Yup.string().required('Category is Required'),
-    status: Yup.string().oneOf(['Active', 'Inactive'], 'Invalid Status'),
   });
 
   const formik = useFormik({
     initialValues: {
       activityName: data?.activityName || '',
       category: data?.category || '',
-      status: data?.status || 'Active',
+      startDate: data?.startDate || dayjs(),
+      endDate: data?.startDate || null,
     },
     validationSchema,
     onSubmit: (values) => {
@@ -339,20 +427,35 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
               />
             </Grid>
             <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.status === 'Active'}
-                    onChange={() => {
-                      formik.setFieldValue(
-                        'status',
-                        formik.values.status === 'Active' ? 'Inactive' : 'Active'
-                      );
-                    }}
-                    color="primary"
-                  />
-                }
-                label={`Status: ${formik.values.status}`}
+              <DateTimePicker
+                label="Start Date"
+                value={formik.values.startDate}
+                onChange={(value) => {
+                  formik.setFieldValue('startDate', value);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                  },
+                }}
+                disablePast
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <DateTimePicker
+                label="End Date"
+                value={formik.values.endDate}
+                onChange={(value) => {
+                  formik.setFieldValue('endDate', value);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                  },
+                }}
+                disablePast
               />
             </Grid>
           </Grid>
@@ -523,6 +626,70 @@ const AssignStudents = () => {
           Confirm Assignment
         </Button>
       </DialogActions>
+    </Box>
+  );
+};
+
+interface FormValues {
+  docs: File[];
+}
+
+const UploadPictures = () => {
+  const formik = useFormik({
+    initialValues: {
+      docs: [],
+    },
+    onSubmit: (values) => {},
+  });
+
+  const uploadProps = {
+    multiple: true,
+    accept: { 'image/*': [] },
+  };
+
+  const handleRemoveFile = useCallback(
+    (
+      inputFile: File | string,
+      values: FormValues,
+      setFieldValue: (field: string, value: any) => void
+    ) => {
+      const filtered = values.docs && values.docs?.filter((file) => file !== inputFile);
+      setFieldValue('docs', filtered);
+    },
+    []
+  );
+
+  const handleRemoveAllFiles = useCallback(
+    (values: FormValues, setFieldValue: (field: string, value: any) => void) => {
+      setFieldValue('docs', []);
+    },
+    []
+  );
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Upload
+                {...uploadProps}
+                thumbnail
+                value={formik.values.docs}
+                onDrop={(acceptedFiles) => {
+                  const value = [...formik.values.docs, ...acceptedFiles];
+
+                  formik.setFieldValue('docs', value);
+                }}
+                onRemove={(file) => handleRemoveFile(file, formik.values, formik.setFieldValue)}
+                onRemoveAll={() => handleRemoveAllFiles(formik.values, formik.setFieldValue)}
+                onUpload={() => console.info('ON UPLOAD')}
+                // disabled={editData}
+              />
+            </Grid>
+          </Grid>
+        </Scrollbar>
+      </form>
     </Box>
   );
 };
