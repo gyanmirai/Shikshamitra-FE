@@ -42,7 +42,6 @@ interface AssignmentWeightage {
   weightage: number;
 }
 
-
 // Initial dummy data
 const initialWeightages: AssignmentWeightage[] = [
   {
