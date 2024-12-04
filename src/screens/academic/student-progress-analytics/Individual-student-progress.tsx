@@ -447,7 +447,7 @@ const getAssignmentColor = (status: string) => {
     overdue: '#DC143C', // red
     'in-progress': '#4169E1', // royal blue
   };
-  return statusColors[status];
+  return statusColors[status as keyof typeof statusColors] || 'inherit';
 };
 
 export const AssignmentsList = () => {
@@ -566,7 +566,7 @@ const getExamColor = (status: string) => {
     Upcoming: '#FFA500', // orange
     'In Progress': '#4169E1', // royal blue
   };
-  return statusColors[status];
+  return statusColors[status as keyof typeof statusColors] || 'inherit';
 };
 
 export const ExamsList = () => {
