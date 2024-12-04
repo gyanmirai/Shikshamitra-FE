@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -27,6 +27,9 @@ const memberDummyData = [
     memberStatus: 'Active',
     class: '10',
     borrowLimit: 1,
+    currentIssue: 5,
+    pendingReturn: 3,
+    overdueReturn: 3,
     issuedBooks: [
       {
         bookId: 'B1',
@@ -51,6 +54,9 @@ const memberDummyData = [
     memberStatus: 'Active',
     class: '9',
     borrowLimit: 1,
+    currentIssue: 0,
+    pendingReturn: 0,
+    overdueReturn: 0,
     issuedBooks: [],
     reservedBooks: [],
   },
@@ -60,6 +66,9 @@ const memberDummyData = [
     role: 'Teacher',
     memberStatus: 'Active',
     borrowLimit: 5,
+    currentIssue: 5,
+    pendingReturn: 3,
+    overdueReturn: 3,
     issuedBooks: [
       {
         bookId: 'B3',
@@ -238,6 +247,15 @@ const LibraryMemberManagementScreen = () => {
           { id: 'memberId', label: 'Member Id' },
           { id: 'role', label: 'Role' },
           { id: 'name', label: 'Name' },
+          { id: 'currentIssue', label: 'Current Issue' , render(value, row) {
+            return <Typography fontSize="12px" textAlign="center">{value}</Typography>
+          },},
+          { id: 'pendingReturn', label: 'Pending Return', render(value, row) {
+            return <Typography fontSize="12px" textAlign="center">{value}</Typography>
+          }, },
+          { id: 'overdueReturn', label: 'Overdue Return', render(value, row) {
+            return <Typography fontSize="12px" textAlign="center">{value}</Typography>
+          }, },
           {
             id: 'memberStatus',
             label: 'Member Status',

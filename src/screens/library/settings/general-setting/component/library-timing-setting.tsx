@@ -1,93 +1,121 @@
+'use client';
+
 import React, { useState } from 'react';
 
-import { Box, TextField } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const LibraryTimingSetting: React.FC = () => {
-  const [globalStartTime, setGlobalStartTime] = useState('');
-  const [globalEndTime, setGlobalEndTime] = useState('');
+  const [globalStartTime, setGlobalStartTime] = useState<string>('');
+  const [globalEndTime, setGlobalEndTime] = useState<string>('');
   const [schedule, setSchedule] = useState([
-    { day: 'Monday', startTime: '', endTime: '', isHoliday: false },
-    { day: 'Tuesday', startTime: '', endTime: '', isHoliday: false },
-    { day: 'Wednesday', startTime: '', endTime: '', isHoliday: false },
-    { day: 'Thursday', startTime: '', endTime: '', isHoliday: false },
-    { day: 'Friday', startTime: '', endTime: '', isHoliday: false },
-    { day: 'Saturday', startTime: '', endTime: '', isHoliday: false },
-    { day: 'Sunday', startTime: '', endTime: '', isHoliday: false },
+    { id: 1, day: 'Monday', startTime: '', endTime: '', isHoliday: false },
+    { id: 2, day: 'Tuesday', startTime: '', endTime: '', isHoliday: false },
+    { id: 3, day: 'Wednesday', startTime: '', endTime: '', isHoliday: false },
+    { id: 4, day: 'Thursday', startTime: '', endTime: '', isHoliday: false },
+    { id: 5, day: 'Friday', startTime: '', endTime: '', isHoliday: false },
   ]);
 
-  const handleGlobalUpdate = (field: string, value: string) => {
+  // Update global start time for all rows
+  const handleGlobalStartTimeChange = (value: string) => {
+    setGlobalStartTime(value);
     const updatedSchedule = schedule.map((row) => ({
       ...row,
-      // [field]: row.isHoliday ? row[field] : value, // Update only if not a holiday
+      startTime: row.isHoliday ? row.startTime : value,
     }));
     setSchedule(updatedSchedule);
-    if (field === 'startTime') setGlobalStartTime(value);
-    if (field === 'endTime') setGlobalEndTime(value);
   };
 
-  const handleRowUpdate = (field: string, value: string) => {
-    const updatedSchedule = [...schedule];
-    // updatedSchedule[index][field] = value;
+  // Update global end time for all rows
+  const handleGlobalEndTimeChange = (value: string) => {
+    setGlobalEndTime(value);
+    const updatedSchedule = schedule.map((row) => ({
+      ...row,
+      endTime: row.isHoliday ? row.endTime : value,
+    }));
+    setSchedule(updatedSchedule);
+  };
+
+  // Update individual row start or end time
+  const handleRowTimeChange = (id: number, field: 'startTime' | 'endTime', value: string) => {
+    const updatedSchedule = schedule.map((row) => {
+      if (row.id === id) {
+        return {
+          ...row,
+          [field]: value,
+        };
+      }
+      return row;
+    });
     setSchedule(updatedSchedule);
   };
 
   return (
     <Box sx={{ padding: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-        <TextField
-          type="time"
-          label="Start Time (Global)"
-          value={globalStartTime}
-          onChange={(e) => handleGlobalUpdate('startTime', e.target.value)}
-          size="small"
-          sx={{ width: '200px' }}
-        />
-        <TextField
-          type="time"
-          label="End Time (Global)"
-          value={globalEndTime}
-          onChange={(e) => handleGlobalUpdate('endTime', e.target.value)}
-          size="small"
-          sx={{ width: '200px' }}
-        />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button variant="outlined">Save</Button>
       </Box>
       <CustomizableTable
-        isFilter={false}
-        isShowedDense={false}
-        isSearch={false}
         columns={[
           { id: 'day', label: 'Day' },
           {
             id: 'startTime',
-            label: 'Start Time',
-            render: (value: string, row: any,) => (
-              <TextField
-                type="time"
-                value={row.startTime}
-                onChange={(e) => handleRowUpdate('startTime', e.target.value)}
-                disabled={row.isHoliday}
-                variant="outlined"
-                size="small"
-                sx={{ width: '120px', margin: '0 auto' }}
-              />
-            ),
+            label: "Start Time",
+            renderColumn() {
+              return (
+                <Box sx={{ width: '120px' }}>
+                  <TextField
+                    type="time"
+                    value={globalStartTime}
+                    onChange={(e) => handleGlobalStartTimeChange(e.target.value)}
+                    size="small"
+                    sx={{ width: '100%' }}
+                  />
+                </Box>
+              );
+            },
+            render(value, row) {
+              return (
+                <TextField
+                  type="time"
+                  value={row.startTime}
+                  onChange={(e) => handleRowTimeChange(row.id, 'startTime', e.target.value)}
+                  size="small"
+                  disabled={row.isHoliday}
+                  sx={{ width: '120px' }}
+                />
+              );
+            },
           },
           {
             id: 'endTime',
-            label: 'End Time',
-            render: (value: string, row: any,) => (
-              <TextField
-                type="time"
-                value={row.endTime}
-                onChange={(e) => handleRowUpdate('endTime', e.target.value)}
-                disabled={row.isHoliday}
-                variant="outlined"
-                size="small"
-                sx={{ width: '120px', margin: '0 auto' }}
-              />
-            ),
+            label: "End Time",
+            renderColumn() {
+              return (
+                <Box sx={{ width: '120px' }}>
+                  <TextField
+                    type="time"
+                    value={globalEndTime}
+                    onChange={(e) => handleGlobalEndTimeChange(e.target.value)}
+                    size="small"
+                    sx={{ width: '100%' }}
+                  />
+                </Box>
+              );
+            },
+            render(value, row) {
+              return (
+                <TextField
+                  type="time"
+                  value={row.endTime}
+                  onChange={(e) => handleRowTimeChange(row.id, 'endTime', e.target.value)}
+                  size="small"
+                  disabled={row.isHoliday}
+                  sx={{ width: '120px' }}
+                />
+              );
+            },
           },
         ]}
         data={schedule}

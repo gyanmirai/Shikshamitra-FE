@@ -11,6 +11,7 @@ import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -194,6 +195,17 @@ const ReturnBookDialog: React.FC<ReturnBookDialogProps> = ({ dialogValue, onSave
                                     disabled
                                 />
                             </Grid>
+                            <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Condition"
+                                    options={[]}
+                                    value={formik.values.condition}
+                                    onChange={(value) => formik.setFieldValue('condition', value)}
+                                    formControlProps={{ fullWidth: true }}
+                                />
+                            </Grid>
+
+
 
 
                             <Grid item xs={12} md={6}>

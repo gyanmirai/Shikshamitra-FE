@@ -3,11 +3,13 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 interface IssueBookDialogProps {
     dialogValue: boolean;
@@ -26,6 +28,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
 }) => {
     const formik = useFormik<any>({
         initialValues: {
+            bookTitle: "",
             bookID: '',
             editionYear: '',
             publisher: '',
@@ -55,12 +58,31 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
     ];
 
     const [grNumber, setGrNumber] = useState<any>('');
+    const [addedBooks, setAddedBooks] = useState<any[]>([]);
     const grOptions = [
         { label: 'Hiral', value: 'Hiral' },
         { label: 'Hiren', value: 'Hiren' },
         { label: 'HirMoise', value: 'HirMoise' },
         { label: 'Vishal', value: 'Vishal' },
     ];
+
+    const handleAddBook = () => {
+        if (!formik.values.bookID || !formik.values.editionYear || !formik.values.publisher || !formik.values.title) {
+            alert('Please fill all the book details before adding.');
+            return;
+        }
+        const newBook = {
+            bookID: formik.values.bookID,
+            editionYear: formik.values.editionYear,
+            publisher: formik.values.publisher,
+            title: formik.values.bookTitle,
+        };
+        setAddedBooks([...addedBooks, newBook]);
+        formik.setFieldValue('bookID', '');
+        formik.setFieldValue('editionYear', '');
+        formik.setFieldValue('publisher', '');
+        formik.setFieldValue('bookTitle', '');
+    };
     return (
         <CustomDialog
             title="Issue Book"
@@ -70,68 +92,10 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
         >
             <Box>
                 <form onSubmit={formik.handleSubmit}>
-                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: "500px" }}>
                         <Grid container spacing={3} pt="10px">
                             {/* Book Selection */}
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    label="Book Id"
 
-                                    value={formik.values.bookID}
-                                    onChange={(value) => formik.setFieldValue('bookID', value)}
-                                    fullWidth
-                                    size="small"
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <CustomSelect
-                                    label="Book Title"
-                                    options={bookData.map((book) => ({
-                                        label: book.title,
-                                        value: book.id,
-                                    }))}
-                                    value={formik.values.bookID}
-                                    onChange={(value) => formik.setFieldValue('bookID', value)}
-                                    formControlProps={{ fullWidth: true }}
-
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <CustomSelect
-                                    label="Edition Year"
-                                    options={
-                                        bookData
-                                            .find((book) => book.id === formik.values.bookID)
-                                            ?.editions.map((edition: any) => ({
-                                                label: edition.year,
-                                                value: edition.year,
-                                            })) || []
-                                    }
-                                    value={formik.values.editionYear}
-                                    onChange={(value) => formik.setFieldValue('editionYear', value)}
-                                    formControlProps={{ fullWidth: true }}
-                                    disabled={!formik.values.bookID}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <CustomSelect
-                                    label="Publisher"
-                                    options={
-                                        bookData
-                                            .find((book) => book.id === formik.values.bookID)
-                                            ?.editions
-                                            .filter((edition: any) => edition.year === formik.values.editionYear)
-                                            .map((edition: any) => ({
-                                                label: edition.publisher,
-                                                value: edition.publisher,
-                                            })) || []
-                                    }
-                                    value={formik.values.publisher}
-                                    onChange={(value) => formik.setFieldValue('publisher', value)}
-                                    formControlProps={{ fullWidth: true }}
-                                    disabled={!formik.values.editionYear}
-                                />
-                            </Grid>
 
                             <Grid item xs={12} md={6}>
                                 <CustomSelect
@@ -235,6 +199,66 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                                 /> */}
                             </Grid>
 
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    label="Book Id"
+
+                                    value={formik.values.bookID}
+                                    onChange={(value) => formik.setFieldValue('bookID', value)}
+                                    fullWidth
+                                    size="small"
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Book Title"
+                                    options={bookData.map((book) => ({
+                                        label: book.title,
+                                        value: book.id,
+                                    }))}
+                                    value={formik.values.bookTitle}
+                                    onChange={(value) => formik.setFieldValue('bookTitle', value)}
+                                    formControlProps={{ fullWidth: true }}
+
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Edition Year"
+                                    options={
+                                        bookData
+                                            .find((book) => book.id === formik.values.bookID)
+                                            ?.editions.map((edition: any) => ({
+                                                label: edition.year,
+                                                value: edition.year,
+                                            })) || []
+                                    }
+                                    value={formik.values.editionYear}
+                                    onChange={(value) => formik.setFieldValue('editionYear', value)}
+                                    formControlProps={{ fullWidth: true }}
+
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Publisher"
+                                    options={
+                                        bookData
+                                            .find((book) => book.id === formik.values.bookID)
+                                            ?.editions
+                                            .filter((edition: any) => edition.year === formik.values.editionYear)
+                                            .map((edition: any) => ({
+                                                label: edition.publisher,
+                                                value: edition.publisher,
+                                            })) || []
+                                    }
+                                    value={formik.values.publisher}
+                                    onChange={(value) => formik.setFieldValue('publisher', value)}
+                                    formControlProps={{ fullWidth: true }}
+
+                                />
+                            </Grid>
+
                             {/* Dates */}
                             <Grid item xs={12} md={6}>
                                 <DatePicker
@@ -259,69 +283,94 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                                     disabled
                                 />
                             </Grid>
-
+                            {/* Added Books */}
+                            {addedBooks.length > 0 && (
+                                <Grid item xs={12}>
+                                    <Typography variant="h6">Books to be Issued:</Typography>
+                                    <CustomizableTable
+                                        isFilter={false}
+                                        isSearch={false}
+                                        isShowedDense={false}
+                                        columns={[
+                                            { id: 'bookID', label: 'Book ID' },
+                                            { id: 'editionYear', label: 'Edition Year' },
+                                            { id: 'publisher', label: 'Publisher' },
+                                            { id: 'bookTilte', label: 'Tilte' },
+                                        ]}
+                                        data={addedBooks}
+                                    />
+                                </Grid>
+                            )}
                             {/* Member Information Table */}
 
-                            {/* <Grid item xs={12}>
-                                    <Box
-                                        sx={{
-                                            p: 2,
-                                            border: '1px solid',
-                                            borderColor: 'grey.300',
-                                            borderRadius: 2,
-                                            bgcolor: 'background.paper',
-                                        }}
-                                    >
-                                        <Typography variant="h6" sx={{ mb: 2 }}>
-                                            Member Information
-                                        </Typography>
-                                        {memberData
-                                            .find((member) => member.id === formik.values.memberID)
-                                            ?.pendingCharges.length > 0 ? (
-                                            <>
-                                                <Typography variant="body1" sx={{ mb: 1 }}>
-                                                    The selected member has pending charges:
-                                                </Typography>
-                                                <CustomizableTable
-                                                    isFilter={false}
-                                                    isSearch={false}
-                                                    isShowedDense={false}
-                                                    columns={[
-                                                        { id: 'type', label: 'Charge Type' },
-                                                        { id: 'amount', label: 'Amount (₹)' },
-                                                        {
-                                                            id: 'status',
-                                                            label: 'Status',
-                                                            render: (value) => (
-                                                                <Label
-                                                                    variant="soft"
-                                                                    color={value === 'Pending' ? 'warning' : 'success'}
-                                                                >
-                                                                    {value}
-                                                                </Label>
-                                                            ),
-                                                        },
-                                                    ]}
-                                                    data={memberData
-                                                        .find((member) => member.id === formik.values.memberID)
-                                                        ?.pendingCharges.map((charge: any) => ({
-                                                            type: charge.type,
-                                                            amount: charge.amount,
-                                                            status: charge.status,
-                                                        })) || []}
-                                                />
-                                            </>
-                                        ) : (
-                                            <Typography variant="body2" color="success.main">
-                                                No pending charges for the selected member.
+                            <Grid item xs={12}>
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        border: '1px solid',
+                                        borderColor: 'grey.300',
+                                        borderRadius: 2,
+                                        bgcolor: 'background.paper',
+                                    }}
+                                >
+                                    <Typography variant="h6" sx={{ mb: 2 }}>
+                                        Member Information
+                                    </Typography>
+                                    {memberData
+                                        .find((member) => member.id === formik.values.memberID)
+                                        ?.pendingCharges.length > 0 ? (
+                                        <>
+                                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                                The selected member has pending charges:
                                             </Typography>
-                                        )}
-                                    </Box>
-                                </Grid> */}
+                                            <CustomizableTable
+                                                isFilter={false}
+                                                isSearch={false}
+                                                isShowedDense={false}
+                                                columns={[
+                                                    { id: 'type', label: 'Charge Type' },
+                                                    { id: 'amount', label: 'Amount (₹)' },
+                                                    {
+                                                        id: 'status',
+                                                        label: 'Status',
+                                                        render: (value) => (
+                                                            <Label
+                                                                variant="soft"
+                                                                color={value === 'Pending' ? 'warning' : 'success'}
+                                                            >
+                                                                {value}
+                                                            </Label>
+                                                        ),
+                                                    },
+                                                ]}
+                                                data={memberData
+                                                    .find((member) => member.id === formik.values.memberID)
+                                                    ?.pendingCharges.map((charge: any) => ({
+                                                        type: charge.type,
+                                                        amount: charge.amount,
+                                                        status: charge.status,
+                                                    })) || []}
+                                            />
+                                        </>
+                                    ) : (
+                                        <Typography variant="body2" color="success.main">
+                                            No pending charges for the selected member.
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Grid>
 
                         </Grid>
                     </Scrollbar>
                     <DialogActions>
+                        <Button
+                            type="button"
+                            variant="outlined"
+                            size="small"
+                            onClick={handleAddBook}
+                        >
+                            Add Book
+                        </Button>
                         <Button type="submit" variant="contained" size="small">
                             {formik.values.editionYear === 2020 || !formik.values.editionYear ? "Issue Book" : "Make Reservation"}
                         </Button>

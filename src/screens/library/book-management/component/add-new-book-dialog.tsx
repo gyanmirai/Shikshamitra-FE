@@ -1,8 +1,10 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -48,10 +50,11 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
             title={`${isEdit ? 'Edit' : 'Create New'} Book Entry`}
             open={dialogValue}
             handleClose={onClose}
+            maxWidth="md"
         >
             <Box>
                 <form onSubmit={formik.handleSubmit}>
-                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+                    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
                         <Grid container spacing={3} pt="10px">
                             {/* Book Details */}
                             <Grid item xs={12} md={6}>
@@ -95,7 +98,7 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
                                     size="small"
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            {/* <Grid item xs={12} md={6}>
                                 <CustomSelect
                                     label="Language"
 
@@ -106,22 +109,21 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
                                     onChange={(value) => formik.setFieldValue('language', value)}
                                     formControlProps={{ fullWidth: true }}
                                 />
-                            </Grid>
+                            </Grid> */}
 
                             {/* Edition Details */}
                             <Grid item xs={12} md={6}>
-                                <CustomSelect
+                                <TextField
                                     label="Year"
-                                    options={[{ value: "2020", lable: '2020' }, { value: "2021", lable: '2021' },
-
-                                    ]}
                                     value={formik.values.year}
                                     onChange={(value) => formik.setFieldValue('year', value)}
-                                    formControlProps={{ fullWidth: true }}
+                                    size="small"
                                     disabled={isEdit}
+                                    fullWidth
+
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            {/* <Grid item xs={12} md={6}>
                                 <TextField
                                     fullWidth
                                     name="totalCopies"
@@ -131,7 +133,7 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
                                     size="small"
                                     type="number"
                                 />
-                            </Grid>
+                            </Grid> */}
                             <Grid item xs={12} md={6}>
                                 <TextField
                                     fullWidth
@@ -141,6 +143,52 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
                                     onChange={formik.handleChange}
                                     size="small"
                                     type="number"
+                                />
+                            </Grid>
+
+
+                            {/* Additional Metadata */}
+                            <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Category"
+                                    options={[]}
+                                    value={formik.values.category}
+                                    onChange={(value) => formik.setFieldValue('category', value)}
+                                    formControlProps={{ fullWidth: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <CustomSelect
+                                    label="Condition"
+                                    options={[]}
+                                    value={formik.values.condition}
+                                    onChange={(value) => formik.setFieldValue('condition', value)}
+                                    formControlProps={{ fullWidth: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={12}>
+                                <UploadBox
+                                    onDrop={() => { }}
+                                    placeholder={
+                                        <Box
+                                            sx={{
+                                                gap: 0.5,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                color: 'text.disabled',
+                                                flexDirection: 'column',
+                                            }}
+                                        >
+                                            <Iconify icon="eva:cloud-upload-fill" width={40} />
+                                            <Typography variant="body2">Drag Your Picture</Typography>
+                                        </Box>
+                                    }
+                                    sx={{
+                                        py: 2.5,
+                                        width: '100%',
+                                        height: 'auto',
+                                        borderRadius: 1.5,
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} md={12}>
@@ -153,26 +201,6 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
                                     size="small"
                                     multiline
                                     rows={3}
-                                />
-                            </Grid>
-
-                            {/* Additional Metadata */}
-                            <Grid item xs={12} md={6}>
-                                <CustomSelect
-                                    label="Category"
-                                    options={[{ value: "Fiction", lable: 'Fiction' }, { value: 'Non-Fiction', lable: 'Non-Fiction' }]}
-                                    value={formik.values.category}
-                                    onChange={(value) => formik.setFieldValue('category', value)}
-                                    formControlProps={{ fullWidth: true }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <CustomSelect
-                                    label="Condition"
-                                    options={[{ value: "Good", lable: "Good" }, { value: "Bad", lable: "Bad" }]}
-                                    value={formik.values.condition}
-                                    onChange={(value) => formik.setFieldValue('condition', value)}
-                                    formControlProps={{ fullWidth: true }}
                                 />
                             </Grid>
                         </Grid>
