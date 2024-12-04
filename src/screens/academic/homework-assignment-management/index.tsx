@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -20,35 +22,42 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: (props: TabComponentType) => <Dashboard {...props} />,
   },
   {
     value: 'homeworkCreation',
-    label: 'Homework Assignment Creation',
-    component: () => <HomeworkCreation />,
+    label: 'Homework/Assignment Creation',
+    component: (props: TabComponentType) => <HomeworkCreation {...props} />,
   },
   {
     value: 'dueDatesAndCalendar',
-    label: 'Due Dates and Calendar',
-    component: () => <DueDateCalendar />,
+    label: 'Due Dates',
+    component: (props: TabComponentType) => <DueDateCalendar {...props} />,
   },
   {
     value: 'studentSubmissions',
     label: 'Student Submissions',
-    component: () => <StudentSubmission />,
+    component: (props: TabComponentType) => <StudentSubmission {...props} />,
   },
   {
     value: 'gradingAndFeedback',
     label: 'Grading And Feedback',
-    component: () => <GradingAndFeedback />,
+    component: (props: TabComponentType) => <GradingAndFeedback {...props} />,
   },
-  { value: 'settings', label: 'Settings', component: () => <Setting /> },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <Setting {...props} />,
+  },
 ];
 
 const HomeworkAndAssignmentScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
@@ -57,6 +66,7 @@ const HomeworkAndAssignmentScreen = () => {
         links={[
           { name: 'Academic And Assessment' },
           { name: 'Homework and Assignment Management' },
+          { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -67,8 +77,8 @@ const HomeworkAndAssignmentScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -78,7 +88,12 @@ const HomeworkAndAssignmentScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

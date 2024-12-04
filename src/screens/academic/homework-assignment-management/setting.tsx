@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -5,7 +7,7 @@ import { Box, Grid, Card, Button, Switch, Checkbox, Typography } from '@mui/mate
 
 import CustomSelect from 'src/components/custom-select';
 
-const Setting = () => (
+const Setting = (props: TabComponentType) => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
     <Card sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
