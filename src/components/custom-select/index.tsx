@@ -64,7 +64,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   };
 
   return (
-    <FormControl error={error} sx={{ maxWidth: '250px', width: '100%' }} {...formControlProps}>
+    <FormControl error={error} sx={{ width: '100%' }} {...formControlProps}>
       <InputLabel size="small">{label}</InputLabel>
       <Select
         multiple={multiple}
@@ -75,20 +75,20 @@ const CustomSelect = <T extends string, J extends boolean>({
         renderValue={
           multiple
             ? (selected: string | string[]) => (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {(Array.isArray(selected) ? selected : [selected]).map((val) => (
-                    <Chip
-                      key={val}
-                      size="small"
-                      label={options.find((option) => option[valueKey] === val)?.[labelKey]}
-                      onDelete={() => handleDelete(val)}
-                      onMouseDown={(event) => {
-                        event.stopPropagation();
-                      }}
-                    />
-                  ))}
-                </div>
-              )
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {(Array.isArray(selected) ? selected : [selected]).map((val) => (
+                  <Chip
+                    key={val}
+                    size="small"
+                    label={options.find((option) => option[valueKey] === val)?.[labelKey]}
+                    onDelete={() => handleDelete(val)}
+                    onMouseDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                  />
+                ))}
+              </div>
+            )
             : undefined
         }
         {...props}

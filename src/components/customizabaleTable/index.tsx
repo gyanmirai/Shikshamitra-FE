@@ -1,9 +1,9 @@
 import type { TableRowProps } from '@mui/material';
 
-import _ from 'lodash';
 import jsPDF from 'jspdf';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as XLSX from 'xlsx';
+import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
 import React, { useMemo, useState, useCallback } from 'react';
 
@@ -95,14 +95,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
-  handleRowClick = () => {},
+  handleRowClick = () => { },
   isLoading = false,
   isPagination = true,
   isFilter = true,
   isSearch = true,
   isScrollbar = true,
   isShowedDense = true,
-  rowProps = () => {},
+  rowProps = () => { },
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -199,6 +199,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     (row: Data) =>
       filters.every((filter) => {
         const value = row[filter.column];
+        const valueAsNumber = !isNumber(Number(value)) ? Number(value) : value;
+        const filterValueAsNumber = !isNumber(Number(filter.value)) ? Number(filter.value) : filter.value;
         switch (filter.type) {
           case 'contains':
             return value.toString().toLowerCase().includes(filter.value.toLowerCase());
@@ -208,6 +210,12 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
             return value.toString().toLowerCase().startsWith(filter.value.toLowerCase());
           case 'endsWith':
             return value.toString().toLowerCase().endsWith(filter.value.toLowerCase());
+          case 'greaterThan':
+
+            return valueAsNumber > filterValueAsNumber;
+          case 'lessThan':
+
+            return valueAsNumber < filterValueAsNumber;
           default:
             return true;
         }
@@ -220,17 +228,17 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       serverSide
         ? data
         : data.filter(
-            (row) =>
-              Object.entries(row).some(
-                ([key, value]) =>
-                  columnVisibility[key] &&
-                  _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                  _.get(row, columns.find((col) => col.id === key)?.id || '')
-                    .toString()
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
-              ) && applyFilter(row)
-          ),
+          (row) =>
+            Object.entries(row).some(
+              ([key, value]) =>
+                columnVisibility[key] &&
+                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+                _.get(row, columns.find((col) => col.id === key)?.id || '')
+                  .toString()
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+            ) && applyFilter(row)
+        ),
     [serverSide, data, columnVisibility, columns, searchTerm, applyFilter]
   );
 
@@ -453,6 +461,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                       <MenuItem value="equals">Equals</MenuItem>
                       <MenuItem value="startsWith">Starts With</MenuItem>
                       <MenuItem value="endsWith">Ends With</MenuItem>
+                      <MenuItem value="greaterThan">Greater than</MenuItem>
+                      <MenuItem value="lessThan">Less than</MenuItem>
                     </Select>
                   </FormControl>
                   <TextField
@@ -583,7 +593,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                   }}
                                 >
                                   {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                  'asc' ? (
+                                    'asc' ? (
                                     <ArrowUpwardIcon fontSize="inherit" />
                                   ) : (
                                     <ArrowDownwardIcon fontSize="inherit" />

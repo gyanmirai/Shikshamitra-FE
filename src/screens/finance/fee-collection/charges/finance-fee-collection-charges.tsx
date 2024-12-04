@@ -85,9 +85,9 @@ const FinanceFeeCollectionCharges = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => {};
+  const handleSave = () => { };
 
-  useEffect(() => {}, [selectedEntry]);
+  useEffect(() => { }, [selectedEntry]);
   return (
     <>
       <Box>{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}</Box>
@@ -113,7 +113,7 @@ const FinanceFeeCollectionCharges = () => {
               return <Typography fontSize="12px">{row.chargesAmount}</Typography>;
             },
           },
-          { id: 'studentName', label: 'Student Name' },
+          // { id: 'studentName', label: 'Student Name' },
           { id: 'feeHead', label: 'Fee Head' },
           {
             id: 'status',

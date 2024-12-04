@@ -48,21 +48,21 @@ const FinanceStudentFeeBreakdownTab = () => {
   const data = [
     {
       id: 1,
-      date: '25-01-2024',
+      date: '25-04-2025',
       type: 'Tuition Fee',
       discount: '2500',
       amount: '50000',
     },
     {
       id: 2,
-      date: '25-05-2024',
+      date: '25-04-2025',
       discount: '500',
       type: 'Sports Fee',
       amount: '5000',
     },
     {
       id: 3,
-      date: '25-09-2024',
+      date: '25-04-2025',
       type: 'Library Fee',
       discount: '0',
       amount: '2500',
@@ -75,7 +75,7 @@ const FinanceStudentFeeBreakdownTab = () => {
         isPagination={false}
         isSearch={false}
         columns={[
-          // { id: 'date', label: 'Date' },
+          { id: 'date', label: 'Date' },
           { id: 'type', label: 'Type' },
           {
             id: 'discount',
