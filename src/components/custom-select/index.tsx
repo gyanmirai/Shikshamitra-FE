@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 
 type CustomSelectProps<T extends string, J extends boolean> = Omit<
-  SelectProps<string | string[]>,
+  SelectProps<J extends true ? string[] : string>,
   'onChange' | 'value'
 > & {
   options: { [K in T]: string | number }[];
@@ -57,8 +57,10 @@ const CustomSelect = <T extends string, J extends boolean>({
   };
 
   const handleDelete = (itemToDelete: string) => {
-    const newValue = (value as string[]).filter((item) => item !== itemToDelete);
-    onChange(newValue as J extends true ? string[] : string);
+    if (multiple) {
+      const newValue = (value as string[]).filter((item) => item !== itemToDelete);
+      onChange(newValue as J extends true ? string[] : string);
+    }
   };
 
   return (

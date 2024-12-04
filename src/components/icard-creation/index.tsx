@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Draggable from 'react-draggable';
 import { MuiColorInput } from 'mui-color-input';
 import React, { useRef, useState } from 'react';
@@ -12,17 +11,26 @@ import {
   Grid,
   Input,
   Paper,
+  Stack,
+  Switch,
   Button,
   Select,
-  Dialog,
+  Slider,
+  Divider,
   MenuItem,
+  Checkbox,
   TextField,
   Typography,
   IconButton,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  FormControlLabel,
 } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { Scrollbar } from '../scrollbar';
+import CustomDialog from '../customDialog';
+import CustomSelect from '../custom-select';
 
 export const DraggableField = ({
   field,
@@ -37,23 +45,36 @@ export const DraggableField = ({
       position="absolute"
       sx={{
         // border: "1px dashed gray",
+        zIndex: 1,
         padding: '0px',
         cursor: 'move',
         ...field.style,
+        ...(field.type === 'text' ? { backgroundColor: 'none' } : {}),
         '&:hover .field-actions': {
           display: isDrag ? 'flex' : 'none',
         },
       }}
     >
       {field.type === 'text' ? (
-        <>
-          <Typography
-            component="span"
-            fontWeight={field?.style?.fontWeight}
-            fontSize={field?.style?.fontSize}
-          >
-            {field.name}
-          </Typography>
+        <Box sx={{ width: `${field.fieldWidth}px` }}>
+          {field.showFieldName && (
+            <>
+              <Typography
+                component="span"
+                fontWeight={field?.filedNameStyle?.fontWeight}
+                fontSize={field?.filedNameStyle?.fontSize}
+              >
+                {icardFields.find((f) => f.key === field.name)?.name}
+              </Typography>
+              <Typography
+                component="span"
+                fontWeight={field?.filedNameStyle?.fontWeight}
+                fontSize={field?.filedNameStyle?.fontSize}
+              >
+                {field.fieldSeparator}
+              </Typography>
+            </>
+          )}
           <Typography
             component="span"
             fontWeight={field?.style?.fontWeight}
@@ -62,13 +83,14 @@ export const DraggableField = ({
             {' '}
             {children}
           </Typography>
-        </>
+        </Box>
       ) : field.type === 'box' ? (
         <Box
           sx={{
             width: field.dimensions.width,
             height: field.dimensions.height,
             backgroundColor: field.style.backgroundColor || '#ffffff',
+            zIndex: 0,
             // border: '1px solid #000',
           }}
         />
@@ -97,7 +119,7 @@ export const DraggableField = ({
         <IconButton size="small" onClick={() => onEdit(field)}>
           <EditIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" onClick={() => onDelete(field.name)}>
+        <IconButton size="small" onClick={() => onDelete(field?.otherFiledName || field.name)}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -105,34 +127,95 @@ export const DraggableField = ({
   </Draggable>
 );
 
+const icardFields = [
+  {
+    name: 'Name',
+    key: 'name',
+  },
+  {
+    name: 'Roll No',
+    key: 'rollNo',
+  },
+  {
+    name: 'Class',
+    key: 'class',
+  },
+  {
+    name: 'Gr. No',
+    key: 'grNo',
+  },
+  {
+    name: 'Contact No',
+    key: 'contactNo',
+  },
+  {
+    name: 'Address',
+    key: 'address',
+  },
+  {
+    name: 'Academic Year',
+    key: 'academicYear',
+  },
+  {
+    name: 'Photo',
+    key: 'photo',
+  },
+  {
+    name: 'Other',
+    key: 'other',
+  },
+];
+
 const StudentIDCardCreator = () => {
+  const isVisibleGrid = useBoolean(true);
   const [cardDimensions, setCardDimensions] = useState({
-    width: 300,
-    height: 200,
+    width: 400,
+    height: 300,
   });
+  const [opacity, setOpacity] = useState(1);
   const [cardBackground, setCardBackground] = useState('');
   const [cardBackgroundColor, setCardBackgroundColor] = useState('#ffffff');
-  const [fields, setFields] = useState([]);
+  const [fields, setFields] = useState<any>([]);
   const [openFieldDialog, setOpenFieldDialog] = useState(false);
-  const [editingField, setEditingField] = useState(null);
-  const [newField, setNewField] = useState({
+  const [editingField, setEditingField] = useState<any>(null);
+  const [newField, setNewField] = useState<any>({
     name: '',
     type: 'text',
     dimensions: { width: 0, height: 0 },
+    fieldSeparator: '',
+    showFieldName: true,
+    otherFiledName: '',
     dummyValue: '',
+    fieldWidth: 200,
     style: {
       fontSize: 14,
       fontWeight: 'normal',
       color: '#000000',
+      backgroundColor: '#ffffff',
+    },
+    filedNameStyle: {
+      fontSize: 14,
+      fontWeight: 'normal',
+      color: '#000000',
+      backgroundColor: '#ffffff',
     },
   });
   const [studentData, setStudentData] = useState({});
-  const [openStudentDataDialog, setOpenStudentDataDialog] = useState(false);
-  const printRef = useRef();
+  const printRef = useRef<HTMLDivElement>(null);
 
   const handleAddField = () => {
     if (editingField) {
-      setFields(fields.map((field) => (field.name === editingField.name ? newField : field)));
+      setFields(
+        fields.map((field: any) =>
+          field?.otherFiledName
+            ? field.otherFiledName === editingField.otherFiledName
+              ? newField
+              : field
+            : field.name === editingField.name
+              ? newField
+              : field
+        )
+      );
       setEditingField(null);
     } else {
       setFields([...fields, { ...newField, position: { x: 0, y: 0 } }]);
@@ -141,50 +224,61 @@ const StudentIDCardCreator = () => {
     setNewField({
       name: '',
       type: 'text',
+      fieldSeparator: '',
       dimensions: { width: 0, height: 0 },
+      showFieldName: true,
+      fieldWidth: 200,
+      otherFiledName: '',
       dummyValue: '',
       style: {
         fontSize: 14,
         fontWeight: 'normal',
         color: '#000000',
+        backgroundColor: '#ffffff',
+      },
+      filedNameStyle: {
+        fontSize: 14,
+        fontWeight: 'normal',
+        color: '#000000',
+        backgroundColor: '#ffffff',
       },
     });
   };
 
-  const handleFieldDrag = (fieldName, newPosition) => {
+  const handleFieldDrag = (fieldName: any, newPosition: any) => {
     setFields(
-      fields.map((field) =>
+      fields.map((field: any) =>
         field.name === fieldName ? { ...field, position: newPosition } : field
       )
     );
   };
 
-  const handleEditField = (field) => {
+  const handleEditField = (field: any) => {
     setEditingField(field);
     setNewField(field);
     setOpenFieldDialog(true);
   };
 
-  const handleDeleteField = (fieldName) => {
-    setFields(fields.filter((field) => field.name !== fieldName));
+  const handleDeleteField = (fieldName: any) => {
+    setFields(fields.filter((field: any) => field.name !== fieldName));
   };
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = (event: any) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setNewField({ ...newField, dummyValue: e.target.result });
+      reader.onload = (e: any) => {
+        setNewField({ ...newField, dummyValue: e.target.result as any });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleBackgroundImageUpload = (event) => {
+  const handleBackgroundImageUpload = (event: any) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = (e: any) => {
         setCardBackground(e.target.result);
       };
       reader.readAsDataURL(file);
@@ -203,43 +297,39 @@ const StudentIDCardCreator = () => {
     alert('Configuration saved successfully!');
   };
 
-  const handleLoadConfiguration = () => {
-    const savedConfiguration = localStorage.getItem('idCardConfiguration');
-    if (savedConfiguration) {
-      const {
-        cardDimensions: savedDimensions,
-        fields: savedFields,
-        cardBackground: savedBackground,
-        cardBackgroundColor: savedColor,
-      } = JSON.parse(savedConfiguration);
-      setCardDimensions(savedDimensions);
-      setFields(savedFields);
-      setCardBackground(savedBackground);
-      setCardBackgroundColor(savedColor);
-      alert('Configuration loaded successfully!');
-    } else {
-      alert('No saved configuration found.');
-    }
-  };
+  // const handleLoadConfiguration = () => {
+  //   const savedConfiguration = localStorage.getItem('idCardConfiguration');
+  //   if (savedConfiguration) {
+  //     const {
+  //       cardDimensions: savedDimensions,
+  //       fields: savedFields,
+  //       cardBackground: savedBackground,
+  //       cardBackgroundColor: savedColor,
+  //     } = JSON.parse(savedConfiguration);
+  //     setCardDimensions(savedDimensions);
+  //     setFields(savedFields);
+  //     setCardBackground(savedBackground);
+  //     setCardBackgroundColor(savedColor);
+  //     alert('Configuration loaded successfully!');
+  //   } else {
+  //     alert('No saved configuration found.');
+  //   }
+  // };
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
   });
 
-  const handleAddStudentData = () => {
-    setOpenStudentDataDialog(true);
-  };
+  // const handleStudentDataChange = (event:any) => {
+  //   setStudentData({
+  //     ...studentData,
+  //     [event.target.name]: event.target.value,
+  //   });
+  // };
 
-  const handleStudentDataChange = (event) => {
-    setStudentData({
-      ...studentData,
-      [event.target.name]: event.target.value,
-    });
-  };
-
-  const handleStudentDataSubmit = () => {
-    setOpenStudentDataDialog(false);
-  };
+  // const handleStudentDataSubmit = () => {
+  //   setOpenStudentDataDialog(false);
+  // };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -251,15 +341,15 @@ const StudentIDCardCreator = () => {
           Save
         </Button>
 
-        <Button color="warning" variant="contained" onClick={handlePrint}>
+        <Button color="warning" variant="contained" onClick={(e: any) => handlePrint(e)}>
           Print ID Card
         </Button>
       </Box>
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         <Grid item xs={4}>
           <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
-              label="Card Width"
+              label="Card Width(Px)"
               type="number"
               size="small"
               fullWidth
@@ -272,7 +362,7 @@ const StudentIDCardCreator = () => {
               }
             />
             <TextField
-              label="Card Height"
+              label="Card Height(Px)"
               type="number"
               value={cardDimensions.height}
               size="small"
@@ -293,6 +383,19 @@ const StudentIDCardCreator = () => {
               label="Background Color"
               size="small"
             />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isVisibleGrid.value}
+                  onChange={(e) => {
+                    isVisibleGrid.onToggle();
+                  }}
+                  name="showGridlines"
+                />
+              }
+              label="Show Gridlines"
+            />
+
             <Input
               type="file"
               onChange={handleBackgroundImageUpload}
@@ -300,10 +403,23 @@ const StudentIDCardCreator = () => {
               inputProps={{ accept: 'image/*' }}
               fullWidth
             />
+            <Box sx={{ width: '100%', mt: 2 }}>
+              <Typography gutterBottom>Background Opacity</Typography>
+              <Slider
+                value={opacity}
+                onChange={(_, newValue) => setOpacity(newValue as number)}
+                min={0}
+                max={1}
+                step={0.05}
+                valueLabelDisplay="auto"
+                size="small"
+              />
+            </Box>
+
             <Button
               startIcon={<Cancel />}
               variant="outlined"
-              onClick={() => setCardBackground(null)}
+              onClick={() => setCardBackground('')}
               disabled={!cardBackground}
             >
               Remove Background Image
@@ -319,12 +435,44 @@ const StudentIDCardCreator = () => {
               ...cardDimensions,
               mt: 2,
               backgroundColor: cardBackgroundColor,
-              backgroundImage: cardBackground ? `url(${cardBackground})` : 'none',
+
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              border: '1px solid #ccc',
+              overflow: 'hidden',
+              '&::before': {
+                content: "''",
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundImage: cardBackground ? `url(${cardBackground})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity,
+              },
             }}
           >
-            {fields.map((field) => (
+            {isVisibleGrid.value && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  pointerEvents: 'none',
+                  zIndex: 99,
+                  backgroundImage: `
+                  linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
+                `,
+                  backgroundSize: '20px 20px',
+                }}
+              />
+            )}
+            {fields.map((field: any) => (
               <DraggableField
                 key={field.name}
                 field={field}
@@ -332,186 +480,293 @@ const StudentIDCardCreator = () => {
                 onEdit={handleEditField}
                 onDelete={handleDeleteField}
               >
-                {studentData[field.name] || field.dummyValue}
+                {field.dummyValue}
               </DraggableField>
             ))}
           </Paper>
         </Grid>
       </Grid>
 
-      <Dialog
+      <CustomDialog
+        title={editingField ? 'Edit Field' : 'Add New Field'}
         open={openFieldDialog}
-        onClose={() => {
+        handleClose={() => {
           setOpenFieldDialog(false);
           setEditingField(null);
           setNewField({
             name: '',
             type: 'text',
             dimensions: { width: 0, height: 0 },
+            fieldSeparator: '',
             dummyValue: '',
+            otherFiledName: '',
+            fieldWidth: 200,
             style: {
               fontSize: 14,
               fontWeight: 'normal',
               color: '#000000',
+              backgroundColor: '#ffffff',
+            },
+            filedNameStyle: {
+              fontSize: 14,
+              fontWeight: 'normal',
+              color: '#000000',
+              backgroundColor: '#ffffff',
             },
           });
         }}
       >
-        <DialogTitle>{editingField ? 'Edit Field' : 'Add New Field'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Field Name"
-            value={newField.name}
-            onChange={(e) => setNewField({ ...newField, name: e.target.value })}
-            fullWidth
-            margin="normal"
-          />
-          <Select
-            value={newField.type}
-            onChange={(e) => setNewField({ ...newField, type: e.target.value })}
-            fullWidth
-            margin="normal"
-          >
-            <MenuItem value="text">Text</MenuItem>
-            <MenuItem value="image">Image</MenuItem>
-            <MenuItem value="box">Box</MenuItem>
-          </Select>
-          {newField.type === 'text' ? (
+        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+          <Stack spacing={2}>
+            <CustomSelect
+              label="Field Name"
+              options={icardFields}
+              value={newField.name}
+              labelKey="name"
+              valueKey="key"
+              onChange={(val) => setNewField({ ...newField, name: val as string })}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={newField.showFieldName}
+                  onChange={(e) => setNewField({ ...newField, showFieldName: e.target.checked })}
+                  size="small"
+                />
+              }
+              label="Show Field Name in Card"
+            />
+
+            {newField.name === 'other' && (
+              <TextField
+                label="Other Field Name"
+                value={newField.otherFiledName}
+                onChange={(e) => setNewField({ ...newField, otherFiledName: e.target.value })}
+                fullWidth
+                size="small"
+              />
+            )}
             <TextField
-              label="Dummy Text"
-              value={newField.dummyValue}
-              onChange={(e) => setNewField({ ...newField, dummyValue: e.target.value })}
+              label="Field width"
+              type="number"
+              value={newField.fieldWidth}
+              onChange={(e) => setNewField({ ...newField, fieldWidth: e.target.value })}
+              fullWidth
+              size="small"
+            />
+
+            <CustomSelect
+              label="Field Separator"
+              options={[
+                { name: 'none', key: '' },
+                { name: '-', key: '-' },
+                { name: ':-', key: ':-' },
+                { name: 'Space', key: ' ' },
+              ]}
+              value={newField.fieldSeparator}
+              labelKey="name"
+              valueKey="key"
+              onChange={(val) => setNewField({ ...newField, fieldSeparator: val as string })}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            />
+
+            <Select
+              value={newField.type}
+              onChange={(e) => setNewField({ ...newField, type: e.target.value })}
+              fullWidth
+              size="small"
+            >
+              <MenuItem value="text">Text</MenuItem>
+              <MenuItem value="image">Image</MenuItem>
+              <MenuItem value="box">Box</MenuItem>
+            </Select>
+            {newField.type === 'text' ? (
+              <TextField
+                label="Dummy Text"
+                value={newField.dummyValue}
+                onChange={(e) => setNewField({ ...newField, dummyValue: e.target.value })}
+                fullWidth
+                size="small"
+              />
+            ) : (
+              <Input type="file" onChange={handleImageUpload} fullWidth size="small" />
+            )}
+            {newField.type === 'image' && (
+              <Box>
+                <TextField
+                  label="Image Width"
+                  type="number"
+                  value={newField.dimensions.width}
+                  onChange={(e) =>
+                    setNewField({
+                      ...newField,
+                      dimensions: {
+                        ...newField.dimensions,
+                        width: Number(e.target.value),
+                      },
+                    })
+                  }
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+                <TextField
+                  label="Image Height"
+                  type="number"
+                  value={newField.dimensions.height}
+                  onChange={(e) =>
+                    setNewField({
+                      ...newField,
+                      dimensions: {
+                        ...newField.dimensions,
+                        height: Number(e.target.value),
+                      },
+                    })
+                  }
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+              </Box>
+            )}
+            {newField.type === 'box' && (
+              <Box>
+                <TextField
+                  label="Box Width"
+                  type="number"
+                  value={newField.dimensions.width}
+                  onChange={(e) =>
+                    setNewField({
+                      ...newField,
+                      dimensions: {
+                        ...newField.dimensions,
+                        width: Number(e.target.value),
+                      },
+                    })
+                  }
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+                <TextField
+                  label="Box Height"
+                  type="number"
+                  value={newField.dimensions.height}
+                  onChange={(e) =>
+                    setNewField({
+                      ...newField,
+                      dimensions: {
+                        ...newField.dimensions,
+                        height: Number(e.target.value),
+                      },
+                    })
+                  }
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+                <MuiColorInput
+                  label="Box Background Color"
+                  format="hex"
+                  fullWidth
+                  size="small"
+                  value={newField.style.backgroundColor || '#ffffff'}
+                  onChange={(color) => {
+                    setNewField({
+                      ...newField,
+                      style: { ...newField.style, backgroundColor: color },
+                    });
+                  }}
+                />
+              </Box>
+            )}
+            <Divider />
+            <Typography variant="h6">Field value Style</Typography>
+            <TextField
+              label="Font Size"
+              type="number"
+              value={newField.style.fontSize}
+              onChange={(e) =>
+                setNewField({
+                  ...newField,
+                  style: { ...newField.style, fontSize: Number(e.target.value) },
+                })
+              }
               fullWidth
               margin="normal"
+              size="small"
             />
-          ) : (
-            <Input type="file" onChange={handleImageUpload} fullWidth margin="normal" />
-          )}
-          {newField.type === 'image' && (
-            <Box sx={{ mt: 2 }}>
-              <TextField
-                label="Image Width"
-                type="number"
-                value={newField.dimensions.width}
-                onChange={(e) =>
-                  setNewField({
-                    ...newField,
-                    dimensions: {
-                      ...newField.dimensions,
-                      width: Number(e.target.value),
-                    },
-                  })
-                }
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="Image Height"
-                type="number"
-                value={newField.dimensions.height}
-                onChange={(e) =>
-                  setNewField({
-                    ...newField,
-                    dimensions: {
-                      ...newField.dimensions,
-                      height: Number(e.target.value),
-                    },
-                  })
-                }
-                fullWidth
-                margin="normal"
-              />
-            </Box>
-          )}
-          {newField.type === 'box' && (
-            <Box sx={{ mt: 2 }}>
-              <TextField
-                label="Box Width"
-                type="number"
-                value={newField.dimensions.width}
-                onChange={(e) =>
-                  setNewField({
-                    ...newField,
-                    dimensions: {
-                      ...newField.dimensions,
-                      width: Number(e.target.value),
-                    },
-                  })
-                }
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="Box Height"
-                type="number"
-                value={newField.dimensions.height}
-                onChange={(e) =>
-                  setNewField({
-                    ...newField,
-                    dimensions: {
-                      ...newField.dimensions,
-                      height: Number(e.target.value),
-                    },
-                  })
-                }
-                fullWidth
-                margin="normal"
-              />
-              <MuiColorInput
-                label="Box Background Color"
-                format="hex"
-                fullWidth
-                value={newField.style.backgroundColor || '#ffffff'}
-                onChange={(color) => {
-                  setNewField({
-                    ...newField,
-                    style: { ...newField.style, backgroundColor: color },
-                  });
-                }}
-              />
-            </Box>
-          )}
-          <Typography variant="h6" gutterBottom>
-            Field Style
-          </Typography>
-          <TextField
-            label="Font Size"
-            type="number"
-            value={newField.style.fontSize}
-            onChange={(e) =>
-              setNewField({
-                ...newField,
-                style: { ...newField.style, fontSize: Number(e.target.value) },
-              })
-            }
-            fullWidth
-            margin="normal"
-          />
-          <Select
-            value={newField.style.fontWeight}
-            onChange={(e) =>
-              setNewField({
-                ...newField,
-                style: { ...newField.style, fontWeight: e.target.value },
-              })
-            }
-            fullWidth
-            margin="normal"
-          >
-            <MenuItem value="normal">Normal</MenuItem>
-            <MenuItem value="bold">Bold</MenuItem>
-          </Select>
-          <MuiColorInput
-            format="hex"
-            value={newField.style.color}
-            onChange={(color) => {
-              setNewField({
-                ...newField,
-                style: { ...newField.style, color },
-              });
-            }}
-          />
-        </DialogContent>
+            <Select
+              value={newField.style.fontWeight}
+              onChange={(e) =>
+                setNewField({
+                  ...newField,
+                  style: { ...newField.style, fontWeight: e.target.value },
+                })
+              }
+              fullWidth
+              size="small"
+            >
+              <MenuItem value="normal">Normal</MenuItem>
+              <MenuItem value="bold">Bold</MenuItem>
+            </Select>
+            <MuiColorInput
+              format="hex"
+              size="small"
+              value={newField.style.color}
+              onChange={(color) => {
+                setNewField({
+                  ...newField,
+                  style: { ...newField.style, color },
+                });
+              }}
+            />
+            <Divider />
+            <Typography variant="h6" gutterBottom>
+              Field name Style
+            </Typography>
+            <TextField
+              label="Font Size"
+              type="number"
+              value={newField?.filedNameStyle?.fontSize}
+              onChange={(e) =>
+                setNewField({
+                  ...newField,
+                  filedNameStyle: { ...newField.filedNameStyle, fontSize: Number(e.target.value) },
+                })
+              }
+              fullWidth
+              margin="normal"
+              size="small"
+            />
+            <Select
+              value={newField?.filedNameStyle?.fontWeight}
+              onChange={(e) =>
+                setNewField({
+                  ...newField,
+                  filedNameStyle: { ...newField.filedNameStyle, fontWeight: e.target.value },
+                })
+              }
+              fullWidth
+              size="small"
+            >
+              <MenuItem value="normal">Normal</MenuItem>
+              <MenuItem value="bold">Bold</MenuItem>
+            </Select>
+            <MuiColorInput
+              format="hex"
+              size="small"
+              value={newField?.filedNameStyle?.color}
+              onChange={(color) => {
+                setNewField({
+                  ...newField,
+                  filedNameStyle: { ...newField.filedNameStyle, color },
+                });
+              }}
+            />
+          </Stack>
+        </Scrollbar>
         <DialogActions>
           <Button onClick={handleAddField}>{editingField ? 'Update' : 'Add'}</Button>
           <Button
@@ -522,11 +777,15 @@ const StudentIDCardCreator = () => {
                 name: '',
                 type: 'text',
                 dimensions: { width: 0, height: 0 },
+                fieldSeparator: '',
+                showFieldName: true,
+                fieldWidth: 200,
                 dummyValue: '',
                 style: {
                   fontSize: 14,
                   fontWeight: 'normal',
                   color: '#000000',
+                  backgroundColor: '#ffffff',
                 },
               });
             }}
@@ -534,28 +793,7 @@ const StudentIDCardCreator = () => {
             Cancel
           </Button>
         </DialogActions>
-      </Dialog>
-
-      <Dialog open={openStudentDataDialog} onClose={() => setOpenStudentDataDialog(false)}>
-        <DialogTitle>Add Student Data</DialogTitle>
-        <DialogContent>
-          {fields.map((field) => (
-            <TextField
-              key={field.name}
-              label={field.name}
-              name={field.name}
-              value={studentData[field.name] || ''}
-              onChange={handleStudentDataChange}
-              fullWidth
-              margin="normal"
-            />
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleStudentDataSubmit}>Submit</Button>
-          <Button onClick={() => setOpenStudentDataDialog(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+      </CustomDialog>
     </Box>
   );
 };

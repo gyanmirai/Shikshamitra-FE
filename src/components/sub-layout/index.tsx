@@ -47,6 +47,7 @@ const SubLayout = ({ children }: any) => {
             width: '18%',
             boxShadow: 'var(--shadows-3)',
             bgcolor: (theme) => theme.palette.background.paper,
+            borderRadius: 1,
           }}
         >
           <NavSectionVertical
@@ -63,10 +64,16 @@ const SubLayout = ({ children }: any) => {
           // mx: 'auto',
           height: '100%',
           overflow: 'auto',
-          p: 2,
+
           boxShadow: 'var(--shadows-3)',
           '& .simplebar-content': { height: '100%' },
-          bgcolor: (theme) => theme.palette.background.paper,
+          p: 2,
+          bgcolor: (theme) => theme.palette.background.default,
+          border: (theme) =>
+            currentData?.length ? `4px solid ${theme.palette.background.paper}` : 'none',
+          borderRadius: 1,
+          borderBottom: 'none',
+          borderRight: 'none',
         }}
       >
         {(yearLoading || boardLoading) && removeLastSlash !== '/setting/academic-setup' ? (
@@ -78,6 +85,8 @@ const SubLayout = ({ children }: any) => {
               width: '100%',
               mx: 'auto',
               height: '100%',
+              // p: 1,
+              // bgcolor: (theme) => theme.palette.background.default,
             }}
           >
             {children}

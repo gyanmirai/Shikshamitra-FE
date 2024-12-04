@@ -95,8 +95,8 @@ const StudentIcardScreen = () => {
           { class: 'Class 5', status: 'Pending' },
         ]}
       />
-      <CustomDialog maxWidth="lg" title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
-        <Scrollbar sx={{ p: 2 }}>
+      <CustomDialog fullScreen title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
           <StudentICardForm handleClose={dialog.onFalse} />
         </Scrollbar>
       </CustomDialog>
