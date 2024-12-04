@@ -1,8 +1,10 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Card, Paper, Button, TextField, Typography, CardContent } from '@mui/material';
 
-function SentMessage() {
+function SentMessage(props: TabComponentType) {
   // const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
 
   const handleResend = (messageId: string) => {

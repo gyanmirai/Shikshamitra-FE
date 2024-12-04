@@ -83,12 +83,19 @@ const dummyData = [
 ];
 
 const Gradebook = (props: TabComponentType) => {
-  const [classes, setClasses] = useState('');
+  const { searchParams, setSearchParams } = props;
+
+  const classes = searchParams?.classId ? searchParams?.classId : '';
+
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const [subject, setSubject] = useState('');
-  const [assignmentType, setAssignmentType] = useState('');
-  const [assignmentTitle, setAssignmentTitle] = useState('');
+  const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
+  const [assignmentType, setAssignmentType] = useState(
+    searchParams?.assignmentType ? searchParams?.assignmentType : ''
+  );
+  const [assignmentTitle, setAssignmentTitle] = useState(
+    searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
+  );
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
   const [showTable, setShowTable] = useState(false);
@@ -106,9 +113,18 @@ const Gradebook = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!classes) {
+      if (classes) {
+        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+        setDivisionOptions(selectedClass?.divisions || []);
+        // Set first division if available
+        if (selectedClass?.divisions?.length) {
+          setDivision(selectedClass.divisions[0].id);
+        }
+      } else {
         const firstClass = classData.items[0];
-        setClasses(firstClass?.id);
+        setSearchParams?.({
+          classId: firstClass.id,
+        });
         setDivisionOptions(firstClass?.divisions || []);
         // Set first division if available
         if (firstClass?.divisions?.length) {
@@ -116,7 +132,23 @@ const Gradebook = (props: TabComponentType) => {
         }
       }
     }
-  }, [classData, classes]);
+    if (
+      searchParams?.classId &&
+      searchParams?.subject &&
+      searchParams?.assignmentType &&
+      searchParams?.assigngmentTitle
+    ) {
+      setShowTable(true);
+    }
+  }, [
+    classData,
+    classes,
+    searchParams?.assigngmentTitle,
+    searchParams?.assignmentType,
+    searchParams?.classId,
+    searchParams?.subject,
+    setSearchParams,
+  ]);
 
   const handleCloseDialog = () => {
     viewResultDialog.onFalse();
@@ -163,7 +195,10 @@ const Gradebook = (props: TabComponentType) => {
           onChange={(val) => {
             const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
             // formik.setFieldValue('class', selectedClass?.name || '');
-            setClasses(val as string);
+            setSearchParams?.({
+              classId: val as string,
+            });
+
             setDivisionOptions(selectedClass?.divisions || []);
           }}
           value={classes}
@@ -226,6 +261,10 @@ const Gradebook = (props: TabComponentType) => {
             { value: 'Chapter 1 Quiz', label: 'Chapter 1 Quiz' },
             { value: 'Chapter 2 Quiz', label: 'Chapter 2 Quiz' },
             { value: 'Chapter 3 Quiz', label: 'Chapter 3 Quiz' },
+            { value: 'Assignment 1', label: 'Assignment 1' },
+            { value: 'Assignment 2', label: 'Assignment 2' },
+            { value: 'Quiz 3', label: 'Quiz 3' },
+            { value: 'Lab Report', label: 'Lab Report' },
           ]}
           onChange={(val) => {
             setAssignmentTitle(val as string);
@@ -249,10 +288,19 @@ const Gradebook = (props: TabComponentType) => {
         </Button>
         <Button
           variant="contained"
+          startIcon={<Iconify icon="mdi:pencil" />}
           disabled={selectedStudents.length === 0}
           onClick={bulkGradeDialog.onTrue}
         >
           Bulk Grade ({selectedStudents.length} selected)
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="material-symbols:upload" />}
+          disabled={selectedStudents.length === 0}
+          onClick={() => {}}
+        >
+          Upload Grade to Students
         </Button>
       </Box>
       {showTable && (
@@ -317,13 +365,23 @@ const Gradebook = (props: TabComponentType) => {
                   <ThreeDotsActions
                     actions={() => (
                       <MenuList>
-                        <MenuItem>
-                          <Iconify
-                            icon="mingcute:notification-fill"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Send Reminder
-                        </MenuItem>
+                        {row.grade === 'Assign Grade' ? (
+                          <MenuItem>
+                            <Iconify
+                              icon="mingcute:notification-fill"
+                              sx={{ height: '16px', width: '16px' }}
+                            />
+                            Remind To Teacher
+                          </MenuItem>
+                        ) : (
+                          <MenuItem>
+                            <Iconify
+                              icon="material-symbols:upload"
+                              sx={{ height: '16px', width: '16px' }}
+                            />
+                            Upload to Student
+                          </MenuItem>
+                        )}
                         <MenuItem
                           onClick={() => {
                             viewResultDialog.onTrue();

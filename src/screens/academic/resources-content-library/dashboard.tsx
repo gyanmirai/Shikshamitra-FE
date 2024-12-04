@@ -1,12 +1,14 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
-import { InsertDriveFile } from '@mui/icons-material';
 import {
   Box,
   Card,
   Grid,
   List,
   alpha,
+  Button,
   ListItem,
   useTheme,
   Typography,
@@ -14,68 +16,76 @@ import {
   ListItemText,
 } from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const recentUploadsData = [
-  { label: 'Thumbnail', value: 'PDF', icon: InsertDriveFile },
-  { label: 'File Name', value: 'Book' },
-  { label: 'Upload Date', value: '01-01-2024' },
-  { label: 'File Type', value: 'PDF' },
+const resourcesData = [
+  {
+    title: 'cricket player list',
+    uploadDate: '01-01-2024',
+    fileType: 'PDF',
+    size: '2.5 MB',
+    downloadLink: '/path/to/student-record.pdf',
+  },
+  {
+    title: 'chess competition winner',
+    uploadDate: '15-01-2024',
+    fileType: 'XLSX',
+    size: '1.2 MB',
+    downloadLink: '/path/to/attendance-record.xlsx',
+  },
 ];
+
 const quickStatsData = [
   { label: 'Total resources uploaded', value: 30 },
   { label: 'Shared resources', value: 10 },
   { label: 'Favorites', value: 3 },
-  {
-    label: 'Most downloaded',
-    value: 'Book PDF, XYZ PDF, ABC BOOK',
-  },
 ];
 
-const Dashboard = () => {
+const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>
-      <Box display="flex" gap={2} mb={2}>
-        <CustomSelect
-          label="Organization"
-          options={[
-            { value: 'org1', label: 'Organization 1' },
-            { value: 'org2', label: 'Organization 2' },
-            { value: 'org3', label: 'Organization 3' },
-          ]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
-        <CustomSelect
-          label="Class"
-          options={[
-            { value: 'class1', label: 'Class A' },
-            { value: 'class2', label: 'Class B' },
-            { value: 'class3', label: 'Class C' },
-          ]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />{' '}
-        <CustomSelect
-          label="Sort by"
-          options={[
-            { value: 'uploadDate', label: 'Upload date' },
-            { value: 'fileType', label: 'File type' },
-            { value: 'popularity', label: 'Popularity' },
-          ]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />{' '}
-      </Box>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <DataCard title="Recent Uploads" data={recentUploadsData} />
+          <Card
+            sx={{
+              display: 'flex',
+              p: 1,
+              width: '100%',
+              height: '100%',
+            }}
+          >
+            <Box sx={{ flexGrow: 1 }}>
+              <Box sx={{ typography: 'subtitle2' }}>Recent Resources</Box>
+              <Scrollbar sx={{ mt: 1.5 }}>
+                <Box
+                  component="ul"
+                  sx={{
+                    listStyle: 'none',
+                    padding: 0,
+                    height: '150px',
+                    m: 0.5,
+                  }}
+                >
+                  {resourcesData.map((resource, index) => (
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      sx={{
+                        justifyContent: 'start',
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {resource.title}
+                    </Button>
+                  ))}
+                </Box>
+              </Scrollbar>
+            </Box>{' '}
+          </Card>
         </Grid>
         <Grid item xs={12} md={6}>
           <DataCard title="Quick Stats" data={quickStatsData} />

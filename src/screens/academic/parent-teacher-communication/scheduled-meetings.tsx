@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Card, Button, Typography, CardContent } from '@mui/material';
@@ -9,7 +11,7 @@ import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
-const ScheduledMeetings = () => {
+const ScheduledMeetings = (props: TabComponentType) => {
   const dialog = useBoolean();
   return (
     <Box>

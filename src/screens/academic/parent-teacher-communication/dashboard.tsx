@@ -1,8 +1,10 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Card, List, Button, ListItem, Typography, ListItemText } from '@mui/material';
 
-const Dashboard = () => (
+const Dashboard = (props: TabComponentType) => (
   <Box
     sx={{
       display: 'flex',

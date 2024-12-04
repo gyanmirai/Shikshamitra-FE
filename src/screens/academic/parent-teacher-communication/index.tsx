@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -20,43 +22,54 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: (props: TabComponentType) => <Dashboard {...props} />,
   },
   {
     value: 'inbox',
     label: 'Inbox',
-    component: () => <Inbox />,
+    component: (props: TabComponentType) => <Inbox {...props} />,
   },
   {
     value: 'scheduledMeetings',
     label: 'Scheduled Meetings',
-    component: () => <ScheduledMeetings />,
+    component: (props: TabComponentType) => <ScheduledMeetings {...props} />,
   },
 
   {
     value: 'sentMessage',
     label: 'Sent Message',
-    component: () => <SentMessage />,
+    component: (props: TabComponentType) => <SentMessage {...props} />,
   },
   {
     value: 'groupMessages',
     label: 'Group Messages',
-    component: () => <GroupMessage />,
+    component: (props: TabComponentType) => <GroupMessage {...props} />,
   },
 
-  { value: 'settings', label: 'Settings', component: () => <Settings /> },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <Settings {...props} />,
+  },
 ];
 
 const ParentTeacherCommunicationScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Parent Teacher Communication"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Parent Teacher Communication' }]}
+        links={[
+          { name: 'Academic And Assessment' },
+          { name: 'Parent Teacher Communication' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
 
@@ -66,8 +79,8 @@ const ParentTeacherCommunicationScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -77,7 +90,12 @@ const ParentTeacherCommunicationScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );
