@@ -640,6 +640,11 @@ const academicModule = {
           path: '/academic/homework-assignment-management',
           _action: 'homework-assignment-management',
         },
+        {
+          title: 'Activity Management',
+          path: '/academic/activityManagement',
+          _action: 'activity-management',
+        },
       ],
     },
   ],
