@@ -2,13 +2,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 
-import {
-  Box,
-  Card,
-  Grid,
-  useTheme,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Grid, useTheme, Typography } from '@mui/material';
 
 import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 
