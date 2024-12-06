@@ -36,7 +36,7 @@ export function PopularBooks({ title, list, ...other }: Props) {
         slidesToShow: { xs: 1, sm: 2, md: 3, lg: '40%', xl: '30%' },
         loop: true,
 
-    }, [Autoplay({ playOnInit: true, delay: 5000 })]);
+    }, [Autoplay({ playOnInit: true, delay: 3000 })]);
 
 
 

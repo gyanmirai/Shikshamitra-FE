@@ -16,6 +16,7 @@ import FinanceFeeCollectionCharges from '../charges/finance-fee-collection-charg
 import FinanceFeeCollectionPaymentHistoryComponent from '../collectFees/component/finance-fee-collection-payment-history-component';
 
 const TABS = [
+
   {
     value: 'fee-breakdown',
     label: 'Fee Breakdown',

@@ -597,7 +597,7 @@ const FinanceStudentFeeManagement = () => {
                         View Details
                       </MenuItem>
 
-                      <MenuItem
+                      {/* <MenuItem
                         onClick={() => {
                           setSelectedStudent(row);
                           dialog.onTrue();
@@ -606,7 +606,7 @@ const FinanceStudentFeeManagement = () => {
                       >
                         <Iconify icon="solar:pen-bold" />
                         Edit
-                      </MenuItem>
+                      </MenuItem> */}
                     </MenuList>
                   )}
                 />

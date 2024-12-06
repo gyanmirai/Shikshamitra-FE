@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
+import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -206,7 +207,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       handleClose={onClose}
     >
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
           <Box>
             <FormControlLabel
               control={
@@ -250,10 +251,10 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                     formik.touched.multipleApplicableGrade &&
                     Boolean(formik.errors.multipleApplicableGrade)
                   }
-                  // helperText={
-                  //   formik.touched.multipleApplicableGrade &&
-                  //   formik.errors.multipleApplicableGrade
-                  // }
+                // helperText={
+                //   formik.touched.multipleApplicableGrade &&
+                //   formik.errors.multipleApplicableGrade
+                // }
                 />
               ) : (
                 <CustomSelect
@@ -268,7 +269,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                   formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                   disabled={isEdit}
                   error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-                  // helperText={formik.touched.applicableGrade && formik.errors.applicableGrade}
+                // helperText={formik.touched.applicableGrade && formik.errors.applicableGrade}
                 />
               )}
             </Box>
@@ -291,7 +292,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 }}
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                 error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-                // helperText={formik.touched.feeHead && formik.errors.feeHead}
+              // helperText={formik.touched.feeHead && formik.errors.feeHead}
               />
 
               {isEdit ? (
@@ -314,7 +315,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 />
               ) : (
                 <FormattedAmountInput
-                  label="Fee Amount"
+                  label="Gross Fee"
                   value={feeAmountState}
                   onChange={handleFeeAmountChange}
                   sx={{ flex: 1 }}
@@ -338,7 +339,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 }}
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                 error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-                // helperText={formik.touched.feeHead && formik.errors.feeHead}
+              // helperText={formik.touched.feeHead && formik.errors.feeHead}
               />
 
               <FormattedAmountInput
@@ -352,7 +353,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             <Box py="13px" display="flex" flexDirection="row" gap={4}>
               <TextField
                 name="finalAmount"
-                label="Final Amount"
+                label="Payable Fee"
                 value={formik.values.finalFee}
                 size="small"
                 fullWidth
@@ -370,11 +371,11 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 onChange={(e) => formik.setFieldValue('paymentMethod', e)}
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                 error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
+              // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
               />
             </Box>
 
-            <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            <Grid2 xs={12} md={6}>
               <DatePicker
                 minDate={dayjs()}
                 label="Total Fees Due Date"
@@ -382,15 +383,17 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
                 format="DD-MM-YYYY"
                 slotProps={{ textField: { size: 'small' } }}
-                sx={{ flex: 1 }}
+                sx={{ width: "48%" }}
               />
-              <FormattedAmountInput
+            </Grid2>
+
+            {/* <FormattedAmountInput
                 label="Fixed Reduction"
                 value={fixedReductionAmountState}
                 onChange={handlefixedReductionAmountChange}
                 sx={{ flex: 1 }}
-              />
-            </Box>
+              /> */}
+
 
             <Box>
               {showExistingEntryMessage && (

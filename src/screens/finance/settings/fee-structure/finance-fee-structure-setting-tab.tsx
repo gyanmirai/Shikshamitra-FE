@@ -15,6 +15,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
+import FinanceEditFeeStructureSettingDialog from './component/finance-edit-fee-structure-setting-dialog';
 
 interface FeeSubCategoryList {
   id: number;
@@ -44,12 +45,16 @@ interface Data {
   feeSubCategoryList: FeeSubCategoryList[];
   paymentDueDate?: any;
   totalAmount: string;
+  totaldiscountAmount: number;
+  grossFee: number;
 }
 
 const initialData: Data[] = [
   {
     id: 1,
     totalAmount: '75000',
+    totaldiscountAmount: 2000,
+    grossFee: 77000,
     applicableGrade: '2',
     bookRecipt: 'CBSE',
     paymentDueDate: '20-12-2024',
@@ -92,6 +97,7 @@ const initialData: Data[] = [
 
 const FinanceFeeStructureSettingTab = () => {
   const dialog = useBoolean();
+  const financeEditFeeStructureDialog = useBoolean();
 
   const [selectedEntry, setSelectedEntry] = useState<Data[]>(initialData);
   const [isEdit, setIsEdit] = useState(false);
@@ -211,7 +217,7 @@ const FinanceFeeStructureSettingTab = () => {
       });
     } else {
       // Single fee structure case
-      const newFeeStructure: Data = {
+      const newFeeStructure: any = {
         id: Math.floor(Math.random() * 10000),
         totalAmount,
         applicableGrade,
@@ -258,6 +264,10 @@ const FinanceFeeStructureSettingTab = () => {
     const updatedData = tableData.filter((val) => val.id !== rowData.id);
     setTableData(updatedData);
   };
+  const [data, setData] = useState(initialData);
+
+
+
 
   return (
     <>
@@ -279,6 +289,9 @@ const FinanceFeeStructureSettingTab = () => {
           Fee Categories Overview
         </Typography> */}
       </Box>
+
+
+
       <CustomizableTable
         columns={[
           {
@@ -326,9 +339,30 @@ const FinanceFeeStructureSettingTab = () => {
             },
           },
           { id: 'applicableGrade', label: 'Applicable Grade' },
+
+          {
+            id: 'grossFee',
+            label: 'Gross Fees', render(value, row) {
+              return (
+                <Typography sx={{ fontSize: '12px' }}>
+                  {formatNumber(value, 'INR')}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'totaldiscountAmount',
+            label: 'General Discount', render(value, row) {
+              return (
+                <Typography sx={{ fontSize: '12px' }}>
+                  {formatNumber(value, 'INR')}
+                </Typography>
+              );
+            },
+          },
           {
             id: 'amount',
-            label: 'Amount',
+            label: 'Payable Fees',
             render(value, row) {
               const totalAmount = row.feeSubCategoryList.reduce(
                 (total: any, val: any, index: any) =>
@@ -348,6 +382,7 @@ const FinanceFeeStructureSettingTab = () => {
               );
             },
           },
+
           {
             id: 'paymentDueDate',
             label: 'Payment Due Date',
@@ -370,8 +405,8 @@ const FinanceFeeStructureSettingTab = () => {
                       <MenuItem
                         onClick={() => {
                           setSelectedEntry(row);
-                          setIsEdit(true);
-                          dialog.onTrue();
+                          dialog.onFalse()
+                          financeEditFeeStructureDialog.onTrue();
                         }}
                       >
                         <Iconify icon="solar:pen-bold" />
@@ -394,6 +429,12 @@ const FinanceFeeStructureSettingTab = () => {
         ]}
         data={tableData}
       />
+      {financeEditFeeStructureDialog.value &&
+        <FinanceEditFeeStructureSettingDialog
+          data={selectedEntry}
+          dialogValue={financeEditFeeStructureDialog.value}
+          onClose={() => { financeEditFeeStructureDialog.onFalse() }}
+        />}
       {dialog.value && selectedEntry && (
         <FinanceAddFeeCategorySettingDialog
           onSave={handleSave}
@@ -404,6 +445,8 @@ const FinanceFeeStructureSettingTab = () => {
           allData={tableData}
         />
       )}
+
+
     </>
   );
 };

@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 
-import { Box, Paper, Switch, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import { Iconify } from 'src/components/iconify';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceCreateFeeStructureComponent from './finance-create-fee-structure';
+import FinanceDetailFeeStructureView from './finance-detail-fee-structure-view';
 
 import type CreateNewFeeStructure from '../data/createNewFeeStructure';
 import type FeeStructureOverView from '../data/FeeStructure-interface';
@@ -20,11 +23,15 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
   data,
 }) => {
   const dialog = useBoolean();
+  const detaiFeeStructure = useBoolean();
   const [feeStructureOverViewData, setFeeOverViewData] = useState(data);
   const [selectedEntry, setSelectedEntry] = useState<FeeStructureOverView | null>(null);
 
   const handleClose = () => {
     dialog.onFalse();
+  };
+  const handleCloseForDetailFeeStructure = () => {
+    detaiFeeStructure.onFalse();
   };
 
   const handleSave = (values: CreateNewFeeStructure) => {
@@ -63,9 +70,12 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
     {
       id: 1,
       amount: 3000,
+      discountAmount: 2000,
+      grossFee: 5000,
       applicableGrade: '2',
       bookRecipt: 'CBSE',
       paymentDueDate: '20-12-2024',
+
       feeSubCategoryList: [
         {
           id: 1,
@@ -74,6 +84,8 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           isCounted: true,
           value: 'tuitionFee',
           paymentMethod: 'Cash',
+          discountAmount: 0,
+          discountCategory: '-'
         },
         {
           id: 2,
@@ -82,6 +94,8 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           isCounted: false,
           value: 'sportsFee',
           paymentMethod: 'Cash',
+          discountAmount: 0,
+          discountCategory: '-'
         },
         {
           id: 3,
@@ -90,6 +104,8 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           isCounted: true,
           value: 'transportFee',
           paymentMethod: 'Check',
+          discountAmount: 0,
+          discountCategory: '-'
         },
       ],
       statusToggle: true,
@@ -210,63 +226,109 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
             {
               id: 'bookRecipt',
               label: 'Book Recipt',
-              children(row) {
-                // const switchState = switchStates[row.id] || [];
-                return (
-                  <>
-                    {row.feeSubCategoryList.length > 0 ? (
-                      <Box display="flex" gap={2} alignItems="center">
-                        {row.feeSubCategoryList.map((val: any, index: any) => (
-                          <React.Fragment key={index}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Paper elevation={4} sx={{ p: 2, width: '100%' }}>
-                                <Box
-                                  display="flex"
-                                  alignItems="center"
-                                  justifyContent="space-between"
-                                  sx={{ mb: 1 }}
-                                >
-                                  <Typography sx={{ pr: 1 }} fontSize="12px" fontWeight="bold">
-                                    {val.name}:
-                                  </Typography>
-                                  <Typography fontSize="12px">
-                                    {formatNumber(val.amount, 'INR')}
-                                  </Typography>
-                                  <Switch checked onChange={() => {}} />
-                                </Box>
+              // children(row) {
+              //   // const switchState = switchStates[row.id] || [];
+              //   return (
+              //     <>
+              //       {row.feeSubCategoryList.length > 0 ? (
+              //         <Box display="flex" gap={2} alignItems="center">
+              //           {row.feeSubCategoryList.map((val: any, index: any) => (
+              //             <React.Fragment key={index}>
+              //               <Box display="flex" alignItems="center" gap={1}>
+              //                 <Paper elevation={4} sx={{ p: 2, width: '100%' }}>
+              //                   <Box
+              //                     display="flex"
+              //                     alignItems="center"
+              //                     justifyContent="space-between"
+              //                     sx={{ mb: 1 }}
+              //                   >
+              //                     <Typography sx={{ pr: 1 }} fontSize="12px" fontWeight="bold">
+              //                       {val.name}:
+              //                     </Typography>
+              //                     <Typography fontSize="12px">
+              //                       {formatNumber(val.amount, 'INR')}
+              //                     </Typography>
+              //                     <Switch checked onChange={() => { }} />
+              //                   </Box>
 
-                                <Box display="flex" flexDirection="column" gap={1}>
-                                  <Typography fontSize="12px">
-                                    Monthly: {formatNumber(val.amount / 12, 'INR')}
-                                  </Typography>
-                                  <Typography fontSize="12px">
-                                    Quarterly: {formatNumber(val.amount / 4, 'INR')}
-                                  </Typography>
-                                  <Typography fontSize="12px">
-                                    Bi-annual: {formatNumber(val.amount / 2, 'INR')}
-                                  </Typography>
-                                  <Typography fontSize="12px">
-                                    Yearly: {formatNumber(val.amount, 'INR')}
-                                  </Typography>
-                                </Box>
-                              </Paper>
-                            </Box>
-                          </React.Fragment>
-                        ))}
-                      </Box>
-                    ) : (
-                      <Box>
-                        <Typography>No data</Typography>
-                      </Box>
-                    )}
-                  </>
-                );
-              },
+              //                   <Box display="flex" flexDirection="column" gap={1}>
+              //                     <Typography fontSize="12px">
+              //                       Monthly: {formatNumber(val.amount / 12, 'INR')}
+              //                     </Typography>
+              //                     <Typography fontSize="12px">
+              //                       Quarterly: {formatNumber(val.amount / 4, 'INR')}
+              //                     </Typography>
+              //                     <Typography fontSize="12px">
+              //                       Bi-annual: {formatNumber(val.amount / 2, 'INR')}
+              //                     </Typography>
+              //                     <Typography fontSize="12px">
+              //                       Yearly: {formatNumber(val.amount, 'INR')}
+              //                     </Typography>
+              //                   </Box>
+              //                 </Paper>
+              //               </Box>
+              //             </React.Fragment>
+              //           ))}
+              //         </Box>
+              //       ) : (
+              //         <Box>
+              //           <Typography>No data</Typography>
+              //         </Box>
+              //       )}
+              //     </>
+              //   );
+              // },
             },
             { id: 'applicableGrade', label: 'Standard' },
             {
+              id: 'grossFee',
+              label: 'Gross Fees',
+              render(value, row) {
+                // const totalAmount = row.feeSubCategoryList.reduce(
+                //   (total: any, val: any, index: any) =>
+                //     switchStates[row.id] && switchStates[row.id][index]
+                //       ? total + Number(val.amount)
+                //       : total,
+                //   0
+                // );
+
+                // console.log('Row data:', row);
+                // console.log('Total amount:', totalAmount);
+
+                return (
+                  <Typography sx={{ fontSize: '12px' }}>
+                    {formatNumber(Number(row.grossFee), 'INR')}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'discountAmount',
+              label: 'General Discount',
+              render(value, row) {
+                // const totalAmount = row.feeSubCategoryList.reduce(
+                //   (total: any, val: any, index: any) =>
+                //     switchStates[row.id] && switchStates[row.id][index]
+                //       ? total + Number(val.amount)
+                //       : total,
+                //   0
+                // );
+
+                // console.log('Row data:', row);
+                // console.log('Total amount:', totalAmount);
+
+                return (
+                  <Typography sx={{ fontSize: '12px' }}>
+                    {formatNumber(Number(row.discountAmount), 'INR')}
+                  </Typography>
+                );
+              },
+            },
+
+
+            {
               id: 'amount',
-              label: 'Amount',
+              label: 'Payable Fees',
               render(value, row) {
                 // const totalAmount = row.feeSubCategoryList.reduce(
                 //   (total: any, val: any, index: any) =>
@@ -286,6 +348,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
                 );
               },
             },
+
             {
               id: 'paymentDueDate',
               label: 'Payment Due Date',
@@ -297,42 +360,47 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
             //     return <Switch checked value={statusToggle} />;
             //   },
             // },
-            // {
-            //   id: 'action',
-            //   label: 'Action',
-            //   render(value, row: any) {
-            //     return (
-            //       <ThreeDotsActions
-            //         actions={({ popover }) => (
-            //           <MenuList>
-            //             <MenuItem
-            //               onClick={() => {
-            //                 setSelectedEntry(row);
-            //                 setIsEdit(true);
-            //                 dialog.onTrue();
-            //               }}
-            //             >
-            //               <Iconify icon="solar:pen-bold" />
-            //               Edit
-            //             </MenuItem>
-            //             <MenuItem
-            //               onClick={() => {
-            //                 handleDelete(row);
-            //               }}
-            //             >
-            //               <Iconify icon="solar:trash-bin-trash-bold" />
-            //               Delete
-            //             </MenuItem>
-            //           </MenuList>
-            //         )}
-            //       />
-            //     );
-            //   },
-            // },
+            {
+              id: 'action',
+              label: 'Action',
+              render(value, row: any) {
+                return (
+                  <ThreeDotsActions
+                    placement='right-top'
+                    actions={({ popover }) => (
+                      <MenuList>
+                        <MenuItem
+                          onClick={() => {
+                            setSelectedEntry(row);
+                            detaiFeeStructure.onTrue()
+
+                          }}
+                        >
+                          <Iconify icon="mdi:eye" />
+                          View Details
+                        </MenuItem>
+
+                      </MenuList>
+                    )}
+                  />
+                );
+              },
+            },
           ]}
           data={tableData}
         />
       </Box>
+      {detaiFeeStructure.value && (
+        <FinanceDetailFeeStructureView
+          data={selectedEntry}
+
+          onClose={handleCloseForDetailFeeStructure}
+          dialogValue={detaiFeeStructure.value}
+
+        />
+
+      )}
+
       {dialog.value && (
         <FinanceCreateFeeStructureComponent
           selectedEntry={selectedEntry}

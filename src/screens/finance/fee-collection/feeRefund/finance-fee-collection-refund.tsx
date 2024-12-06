@@ -230,7 +230,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
   };
 
   return (
-    <CustomDialog maxWidth="md" title="Fee Refund" open={dialogValue} handleClose={onClose}>
+    <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <CustomizableTable
           isFilter={false}

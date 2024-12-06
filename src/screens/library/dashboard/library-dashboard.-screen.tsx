@@ -124,7 +124,7 @@ const LibraryDashboard = () => {
   return (
     <>
       {/* Dropdowns for selecting class and data type */}
-      <Grid container spacing={3} sx={{ marginBottom: 3, padding: 5 }}>
+      <Grid container spacing={3} sx={{ marginBottom: 1, padding: 3 }}>
 
         <Box
           sx={{
@@ -366,7 +366,7 @@ const LibraryDashboard = () => {
           <AppAreaInstalled
             isShowChartLegendValue={false}
             height={400}
-            title="Books Due/Reserved/Issued"
+            title="Books by Status"
             selectSeries="Standard 1"
             chart={{
               colors: [theme.palette.info.main, theme.palette.primary.main, theme.palette.warning.main,],
