@@ -202,7 +202,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   return (
     <CustomDialog
       maxWidth="md"
-      title="Add/Edit Fee Structure"
+      title="Add Fee Structure"
       open={dialogValue}
       handleClose={onClose}
     >
@@ -324,7 +324,16 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             </Box>
 
             <Box py="13px" display="flex" flexDirection="row" gap={4}>
-              <CustomSelect
+              <TextField
+                name="Discount"
+                label="Discount Category"
+                value={formik.values.finalFee}
+                size="small"
+                fullWidth
+                sx={{ flex: 1 }}
+                disabled
+              />
+              {/* <CustomSelect
                 label="Discount Category"
                 options={availableFeeHeadList}
                 value={formik.values.feeHead}
@@ -340,7 +349,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                 error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
               // helperText={formik.touched.feeHead && formik.errors.feeHead}
-              />
+              /> */}
 
               <FormattedAmountInput
                 label="Discount Amount"

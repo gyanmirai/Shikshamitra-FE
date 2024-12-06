@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Button, Switch, Typography, DialogActions } from '@mui/material';
+import { Button, Switch, TextField, Typography, DialogActions } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -153,7 +153,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
                 />
 
                 {/* Editable table */}
-                {/* <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+                <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
                     Editable Table
                 </Typography>
                 <CustomizableTable
@@ -241,7 +241,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
                         }
                     ]}
                     data={Object.values(editableData)}
-                /> */}
+                />
             </Scrollbar>
 
             <DialogActions sx={{ flexShrink: 0 }}>

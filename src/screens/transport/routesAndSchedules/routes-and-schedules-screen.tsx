@@ -130,7 +130,7 @@ const RoutesAndSchedulesScreen = () => {
           <ThreeDotsActions
             actions={({ popover }: any) => (
               <MenuList>
-                <MenuItem
+                {/* <MenuItem
                   onClick={() => {
                     // setIsEdit(true);
                     // setSelectedExpense(row);
@@ -139,7 +139,7 @@ const RoutesAndSchedulesScreen = () => {
                 >
                   <Iconify icon="solar:pen-bold" />
                   Edit Route
-                </MenuItem>
+                </MenuItem> */}
                 {/* <MenuItem
                   onClick={() => {
                     // handleDelete(row)
@@ -156,14 +156,14 @@ const RoutesAndSchedulesScreen = () => {
                   <Iconify icon="solar:eye-bold" />
                   View on Map
                 </MenuItem>
-                <MenuItem
+                {/* <MenuItem
                   onClick={() => {
                     // handleDelete(row)
                   }}
                 >
                   <Iconify icon="mingcute:notification-fill" />
                   Notify
-                </MenuItem>
+                </MenuItem> */}
               </MenuList>
             )}
           />
@@ -200,7 +200,7 @@ const RoutesAndSchedulesScreen = () => {
     setMapData(null);
   };
 
-  useEffect(() => {}, [selectedExpense, isEdit, mapDialogOpen]);
+  useEffect(() => { }, [selectedExpense, isEdit, mapDialogOpen]);
 
   const handleSave = (item: any) => {
     console.log('from the save', item);
