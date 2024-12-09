@@ -128,148 +128,148 @@ const Setting = (props: TabComponentType) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Card sx={{ p: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <Card sx={{ p: 2, height: '100%' }}>
-              <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    padding: 0,
-                  }}
-                >
-                  {homeworkTypeData.map((category) => (
-                    <Box
-                      key={category.id}
-                      component="li"
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        p: 1,
-                        m: 0.5,
-                        borderRadius: '15px',
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" fontWeight="bold">
-                          {category.name}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Iconify
-                          icon="solar:pen-bold"
-                          sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
-                          onClick={() => {
-                            setSelectedHomeworkType(category);
-                            setIsEdit(true);
-                            homeworkDialog.onTrue();
-                          }}
-                        />
-                        <Iconify
-                          icon="mdi:delete"
-                          sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
-                          onClick={() => {
-                            setSelectedHomeworkType(category);
-                            deleteConfirmDialog.onTrue();
-                          }}
-                        />
-                      </Box>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Box sx={{ typography: 'subtitle1' }}>Homework Types</Box>
+            <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
+              <Box
+                component="ul"
+                sx={{
+                  listStyle: 'none',
+                  padding: 0,
+                }}
+              >
+                {homeworkTypeData.map((category) => (
+                  <Box
+                    key={category.id}
+                    component="li"
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      p: 1,
+                      m: 0.5,
+                      borderRadius: '15px',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        {category.name}
+                      </Typography>
                     </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                <Button
-                  startIcon={<Add />}
-                  variant="contained"
-                  onClick={() => {
-                    homeworkDialog.onTrue();
-                    setIsEdit(false);
-                    setSelectedHomeworkType(null);
-                  }}
-                >
-                  Add Homework Type
-                </Button>
-              </Box>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ p: 2, height: '100%' }}>
-              <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    padding: 0,
-                  }}
-                >
-                  {assignmentTypeData.map((category) => (
-                    <Box
-                      key={category.id}
-                      component="li"
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        p: 1,
-                        m: 0.5,
-                        borderRadius: '15px',
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" fontWeight="bold">
-                          {category.name}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Iconify
-                          icon="solar:pen-bold"
-                          sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
-                          onClick={() => {
-                            setSelectedAssignmentType(category);
-                            setIsEdit(true);
-                            assignmentDialog.onTrue();
-                          }}
-                        />
-                        <Iconify
-                          icon="mdi:delete"
-                          sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
-                          onClick={() => {
-                            setSelectedAssignmentType(category);
-                            deleteConfirmDialog.onTrue();
-                          }}
-                        />
-                      </Box>
+                    <Box>
+                      <Iconify
+                        icon="solar:pen-bold"
+                        sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
+                        onClick={() => {
+                          setSelectedHomeworkType(category);
+                          setIsEdit(true);
+                          homeworkDialog.onTrue();
+                        }}
+                      />
+                      <Iconify
+                        icon="mdi:delete"
+                        sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
+                        onClick={() => {
+                          setSelectedHomeworkType(category);
+                          deleteConfirmDialog.onTrue();
+                        }}
+                      />
                     </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                <Button
-                  startIcon={<Add />}
-                  variant="contained"
-                  onClick={() => {
-                    assignmentDialog.onTrue();
-                    setIsEdit(false);
-                    setSelectedAssignmentType(null);
-                  }}
-                >
-                  Add Assignment Type
-                </Button>
+                  </Box>
+                ))}
               </Box>
-            </Card>
-          </Grid>
+            </Scrollbar>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+              <Button
+                startIcon={<Add />}
+                variant="contained"
+                onClick={() => {
+                  homeworkDialog.onTrue();
+                  setIsEdit(false);
+                  setSelectedHomeworkType(null);
+                }}
+              >
+                Add Homework Type
+              </Button>
+            </Box>
+          </Card>
         </Grid>
-      </Card>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Box sx={{ typography: 'subtitle1' }}>Assignment Types</Box>
+            <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
+              <Box
+                component="ul"
+                sx={{
+                  listStyle: 'none',
+                  padding: 0,
+                }}
+              >
+                {assignmentTypeData.map((category) => (
+                  <Box
+                    key={category.id}
+                    component="li"
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      p: 1,
+                      m: 0.5,
+                      borderRadius: '15px',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        {category.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Iconify
+                        icon="solar:pen-bold"
+                        sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
+                        onClick={() => {
+                          setSelectedAssignmentType(category);
+                          setIsEdit(true);
+                          assignmentDialog.onTrue();
+                        }}
+                      />
+                      <Iconify
+                        icon="mdi:delete"
+                        sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
+                        onClick={() => {
+                          setSelectedAssignmentType(category);
+                          deleteConfirmDialog.onTrue();
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Scrollbar>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+              <Button
+                startIcon={<Add />}
+                variant="contained"
+                onClick={() => {
+                  assignmentDialog.onTrue();
+                  setIsEdit(false);
+                  setSelectedAssignmentType(null);
+                }}
+              >
+                Add Assignment Type
+              </Button>
+            </Box>
+          </Card>
+        </Grid>
+      </Grid>
       <Card sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h6" gutterBottom>
           Assignment Preferences
         </Typography>
         <Grid container spacing={2} alignItems="center">
@@ -298,7 +298,7 @@ const Setting = (props: TabComponentType) => {
           </CustomDialog>
 
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom>
               Default Deadlines
             </Typography>
             <DatePicker
@@ -308,26 +308,9 @@ const Setting = (props: TabComponentType) => {
               slotProps={{ textField: { size: 'small' } }}
             />
           </Grid>
+
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" gutterBottom>
-              Grading Scales
-            </Typography>
-            <CustomSelect
-              label="Common Grading Scales"
-              options={[
-                { value: 'A', label: 'A' },
-                { value: 'B', label: 'B' },
-                { value: 'C', label: 'C' },
-                { value: 'D', label: 'D' },
-                { value: 'E', label: 'E' },
-                { value: 'F', label: 'F' },
-              ]}
-              value=""
-              onChange={() => {}}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom>
               Reminder Schedules
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -340,12 +323,12 @@ const Setting = (props: TabComponentType) => {
         </Grid>
       </Card>
       <Card sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h6" gutterBottom>
           Custom Notifications
         </Typography>
         <Grid container spacing={2} alignItems="flex-start">
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom>
               Choose Notifications
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -364,7 +347,7 @@ const Setting = (props: TabComponentType) => {
             </Box>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom>
               Notification Frequency
             </Typography>
             <CustomSelect
