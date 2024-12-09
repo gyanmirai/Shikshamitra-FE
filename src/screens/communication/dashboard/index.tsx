@@ -24,6 +24,9 @@ import { varAlpha } from 'src/theme/styles';
 import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
+import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
+import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
