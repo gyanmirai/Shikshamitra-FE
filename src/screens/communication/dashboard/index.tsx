@@ -2,11 +2,21 @@
 
 import type { CardProps } from '@mui/material';
 
-import React from 'react';
 import Link from 'next/link';
+import React, { useState, useCallback } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  Grid,
+  alpha,
+  Button,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
@@ -16,13 +26,30 @@ import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+
+import SchoolWiseAnnounsement from '../announcement/schoolWiseAnnounsement';
+import ClassWiseAnnounsement from '../announcement/classSpecificAnnouncement';
 
 const CommunicationDashboard = () => {
+  const [view, setView] = useState('schoolwise');
+
   const theme = useTheme();
+
+  const handleChangeView = useCallback(
+    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+      if (newView !== null) {
+        setView(newView);
+      }
+    },
+    []
+  );
+
   return (
-    <Box>
+    <Box mb={1}>
       <Grid container spacing={2} mt={1}>
         <Grid item xs={12} md={3}>
           <EmployeeDashboardCard
@@ -76,10 +103,90 @@ const CommunicationDashboard = () => {
           />
         </Grid>
       </Grid>
-      <Typography variant="h6" sx={{ mt: 2 }}>
-        Event Calendar
-      </Typography>
+
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: -2,
+          mt: 2,
+        }}
+      >
+        <ToggleButtonGroup
+          size="small"
+          value={view}
+          exclusive
+          onChange={handleChangeView}
+          sx={{
+            '& .Mui-selected': {
+              backgroundColor: 'black',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'black',
+              },
+            },
+          }}
+        >
+          <ToggleButton value="schoolwise">
+            <Typography variant="subtitle2">School Wise</Typography>
+          </ToggleButton>
+          <ToggleButton value="classwise">
+            <Typography variant="subtitle2">Class Wise</Typography>
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      {view === 'schoolwise' ? <SchoolWiseAnnounsement /> : <ClassWiseAnnounsement />}
+
+      <Box display="flex" justifyContent="space-between" alignItems="space-between">
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Event Calendar
+        </Typography>
+        <Button variant="contained" startIcon={<Add />}>
+          Create New Event
+        </Button>
+      </Box>
+
       <CalendarView />
+
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
+              <CustomSelect
+                label="Year"
+                options={[
+                  { value: '2024', label: '2024' },
+                  { value: '2023', label: '2023' },
+                  { value: '2022', label: '2022' },
+                ]}
+                onChange={() => {}}
+                value=""
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+            </Box>
+            <AnalyticsWebsiteVisits
+              title="Organized Events"
+              //   subheader="(+43%) than last year"
+              chart={{
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                series: [{ name: 'Class 10-A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
+                colors: [alpha(theme.palette.primary.dark, 0.8)],
+              }}
+              sx={{ height: '100%', boxShadow: 'none' }}
+            />
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
+        <Button variant="contained" startIcon={<Add />}>
+          Create New Survey
+        </Button>
+      </Box>
       <Grid container spacing={2} mt={1}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>

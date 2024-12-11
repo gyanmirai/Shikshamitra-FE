@@ -7,17 +7,22 @@ import { CheckBox } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Grid,
   Button,
   MenuList,
   MenuItem,
   TextField,
   DialogContent,
   DialogActions,
+  FormHelperText,
   FormControlLabel,
   DialogContentText,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -141,7 +146,7 @@ const ScheduleExam = () => {
         handleClose={dialog.onFalse}
         title="New Timetable"
       >
-        <TimetableForm />
+        <NewExamForm />
       </CustomDialog>
     </Box>
   );
@@ -149,24 +154,178 @@ const ScheduleExam = () => {
 
 export default ScheduleExam;
 
-const SelectClassAndSubject = () => (
-  <Box display="flex" gap={2}>
-    <CustomSelect
-      options={[]}
-      label="Select Class"
-      name="class"
-      value=""
-      onChange={() => {}}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
-    <CustomSelect
-      options={[]}
-      label="Select Subject"
-      name="subject"
-      value=""
-      onChange={() => {}}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
+const SelectExam = ({ formik }: any) => {
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
+  const [isAllClassesSelected, setIsAllClassesSelected] = useState(
+    formik.values?.className?.length === classData?.items?.length
+  );
+
+  const handleClass = (selectedValues: string[]) => {
+    const allClassesValues = classData?.items?.map((org: any) => org.name);
+    if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
+      if (isAllClassesSelected) {
+        formik.setFieldValue('className', []);
+      } else {
+        formik.setFieldValue('className', allClassesValues);
+      }
+      setIsAllClassesSelected(!isAllClassesSelected);
+    } else {
+      formik.setFieldValue('className', selectedValues);
+      setIsAllClassesSelected(selectedValues.length === allClassesValues.length);
+    }
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <CustomSelect
+            options={[
+              { value: 'Mid', label: 'Mid' },
+              { value: 'Practical', label: 'Practical' },
+              { value: 'Final', label: 'Final' },
+            ]}
+            value={formik.values.examType}
+            onChange={(val) => {
+              formik.setFieldValue('examType', val);
+            }}
+            label="Exam Type"
+            isLoading={isLoading}
+            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+          />
+          {formik.touched.examType && formik.errors.examType && (
+            <FormHelperText error>{formik.errors.examType}</FormHelperText>
+          )}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <CustomSelect
+            options={[
+              {
+                id: isAllClassesSelected ? 'deselectAll' : 'all',
+                name: isAllClassesSelected ? 'Deselect All' : 'All',
+              },
+              ...(classData?.items || []),
+            ]}
+            value={formik.values.className}
+            onChange={(val) => {
+              handleClass(val as string[]);
+            }}
+            label="Class"
+            isLoading={isLoading}
+            multiple
+            labelKey="name"
+            valueKey="name"
+            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+          />
+          {formik.touched.className && formik.errors.className && (
+            <FormHelperText error>{formik.errors.className}</FormHelperText>
+          )}
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <CustomSelect
+            options={[
+              { value: 'Math', label: 'Math' },
+              { value: 'English', label: 'English' },
+              { value: 'Science', label: 'Science' },
+            ]}
+            value={formik.values.subject}
+            onChange={(val) => {
+              formik.setFieldValue('subject', val);
+            }}
+            label="Subject"
+            isLoading={isLoading}
+            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+          />
+          {formik.touched.subject && formik.errors.subject && (
+            <FormHelperText error>{formik.errors.subject}</FormHelperText>
+          )}
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+const ExamDetails = ({ formik }: any) => (
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={6}>
+        <DatePicker
+          label="Exam Date"
+          name="examDate"
+          value={formik.values.examDate}
+          format="DD/MM/YYYY"
+          onChange={(newValue) => formik.setFieldValue('examDate', newValue)}
+          slotProps={{
+            textField: {
+              size: 'small',
+              helperText: formik.touched.examDate && (formik.errors.examDate as string),
+              error: formik.touched.examDate && Boolean(formik.errors.examDate),
+            },
+          }}
+        />
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <DatePicker
+          label="Exam Time"
+          name="examTime"
+          value={formik.values.examTime}
+          format="HH:mm"
+          onChange={(newValue) => formik.setFieldValue('examTime', newValue)}
+          slotProps={{
+            textField: {
+              size: 'small',
+              helperText: formik.touched.examTime && (formik.errors.examTime as string),
+              error: formik.touched.examTime && Boolean(formik.errors.examTime),
+            },
+          }}
+        />
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Exam Duration"
+          name="surveyTitle"
+          value={formik.values.surveyTitle}
+          onChange={formik.handleChange}
+          error={formik.touched.surveyTitle && Boolean(formik.errors.surveyTitle)}
+          helperText={formik.touched.surveyTitle && formik.errors.surveyTitle}
+          size="small"
+        />
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Total Marks"
+          name="totalMarks"
+          value={formik.values.totalMarks}
+          onChange={formik.handleChange}
+          error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+          helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+          size="small"
+        />
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Exam Description"
+          name="description"
+          value={formik.values.description}
+          onChange={formik.handleChange}
+          error={formik.touched.description && Boolean(formik.errors.description)}
+          helperText={formik.touched.description && formik.errors.description}
+          size="small"
+        />
+      </Grid>
+    </Grid>
   </Box>
 );
 
@@ -302,26 +461,32 @@ const Exams = [
   { subject: 'Physics', date: '15-10-2024', time: '14:00' },
 ];
 
-const TimetableForm = () => {
+const NewExamForm = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [scheduledExams, setScheduledExams] = useState(Exams);
 
   const allTimetableSteps = [
-    SelectClassAndSubject,
-    () => <SelectDateAndTime scheduledExams={scheduledExams} />,
+    SelectExam,
+    ExamDetails,
+    // () => <SelectDateAndTime scheduledExams={scheduledExams} />,
     AssignInvigilators,
     InputEvaluationCriteria,
   ];
 
   return (
     <CustomStepperWithFormik
-      initialValues={{}}
-      steps={[
-        'Select Class & Subject',
-        'Select Date & Time',
-        'Assign Invigilators',
-        'Input Evaluation Criteria',
-      ]}
+      initialValues={{
+        examType: '',
+        className: [],
+        subject: '',
+        examDate: null,
+        examTime: null,
+        examDuration: 0,
+        totalMarks: 0,
+        passingMarks: 0,
+        description: '',
+      }}
+      steps={['Select Exam Type', 'Exam Details', 'Evaluation Criteria', 'Assign Teacher & Review']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
@@ -336,7 +501,7 @@ const TimetableForm = () => {
         const StepComponent = allTimetableSteps[step];
         return (
           <Box p={2}>
-            <StepComponent />
+            <StepComponent formik={formik} />
           </Box>
         );
       }}

@@ -146,7 +146,7 @@ const ClassWiseAnnouncementInitialData: Announcement[] = [
   },
 ];
 
-const SchoolWiseAnnounsement = (props: TabComponentType) => {
+const ClassWiseAnnounsement = (props: TabComponentType) => {
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -554,7 +554,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   );
 };
 
-export default SchoolWiseAnnounsement;
+export default ClassWiseAnnounsement;
 
 interface AnnouncementFormValues {
   title: string;

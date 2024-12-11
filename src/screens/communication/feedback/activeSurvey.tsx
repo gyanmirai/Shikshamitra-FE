@@ -167,7 +167,7 @@ const ActiveSurvey = (props: TabComponentType) => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">Active Survey</Typography>
-        <Button
+        {/* <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           onClick={() => {
@@ -175,7 +175,7 @@ const ActiveSurvey = (props: TabComponentType) => {
           }}
         >
           Add New Survey
-        </Button>
+        </Button> */}
       </Box>
 
       <CustomizableTable

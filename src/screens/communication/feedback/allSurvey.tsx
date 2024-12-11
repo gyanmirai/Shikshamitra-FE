@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import React, { useState } from 'react';
 import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -15,6 +16,7 @@ import {
   Table,
   Paper,
   Button,
+  Switch,
   Divider,
   MenuItem,
   MenuList,
@@ -27,6 +29,7 @@ import {
   IconButton,
   FormHelperText,
   TableContainer,
+  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -837,7 +840,7 @@ const SurveyDetails = ({ formik }: any) => {
   );
 };
 
-const QuestionList = ({ questions, onDragEnd }: any) => {
+const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
   if (!questions?.length) {
     return (
       <Box
@@ -868,6 +871,8 @@ const QuestionList = ({ questions, onDragEnd }: any) => {
               <TableCell sx={{ width: '50px' }} />
               <TableCell sx={{ width: '40%', fontWeight: 'bold' }}>Question</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Type</TableCell>
+              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
+              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete Question</TableCell>
             </TableRow>
           </TableHead>
           <Droppable droppableId="questions">
@@ -904,6 +909,24 @@ const QuestionList = ({ questions, onDragEnd }: any) => {
                             sx={{ textTransform: 'capitalize' }}
                           />
                         </TableCell>
+                        <TableCell>
+                          <Typography variant="body1">{question.isRequired}</Typography>
+                          {question.isRequired ? (
+                            <Iconify icon="mdi:tick" />
+                          ) : (
+                            <Iconify icon="mdi:cross-circle-outline" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() => onDeleteQuestion(index)}
+                            sx={{ ml: 1 }}
+                          >
+                            <Iconify icon="mdi:delete" />
+                          </IconButton>
+                        </TableCell>
                       </TableRow>
                     )}
                   </Draggable>
@@ -936,11 +959,18 @@ const QuestionBuilder = ({ formik }: any) => {
     formik.setFieldValue('questions', items);
   };
 
+  const handleDeleteQuestion = (indexToDelete: number) => {
+    formik.setFieldValue(
+      'questions',
+      formik.values.questions.filter((_: any, index: number) => index !== indexToDelete)
+    );
+  };
+
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">{formik.values.surveyTitle}</Typography>{' '}
-        <Button variant="contained" onClick={() => addQuestionDialog.onTrue()}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => addQuestionDialog.onTrue()}>
           Add Question
         </Button>
       </Box>
@@ -949,12 +979,16 @@ const QuestionBuilder = ({ formik }: any) => {
         maxWidth="sm"
         open={addQuestionDialog.value}
         handleClose={addQuestionDialog.onFalse}
-        title="New Survey"
+        title="New Question"
       >
         <AddNewQuestion onSave={handleAddQuestion} />
       </CustomDialog>
 
-      <QuestionList questions={formik.values.questions} onDragEnd={handleDragEnd} />
+      <QuestionList
+        questions={formik.values.questions}
+        onDragEnd={handleDragEnd}
+        onDeleteQuestion={handleDeleteQuestion}
+      />
     </Box>
   );
 };
@@ -963,6 +997,7 @@ const AddNewQuestion = ({ onSave }: any) => {
   const [question, setQuestion] = useState('');
   const [questionType, setQuestionType] = useState('');
   const [options, setOptions] = useState(['']);
+  const [isRequired, setIsRequired] = useState(false);
   const [errors, setErrors] = useState({
     question: '',
     questionType: '',
@@ -1029,6 +1064,7 @@ const AddNewQuestion = ({ onSave }: any) => {
         question,
         questionType,
         options,
+        isRequired,
       };
       onSave(newQuestion);
     }
@@ -1107,6 +1143,17 @@ const AddNewQuestion = ({ onSave }: any) => {
           <Divider />
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isRequired}
+                  onChange={(e) => {
+                    setIsRequired(e.target.checked);
+                  }}
+                />
+              }
+              label="Required"
+            />
             <Button variant="contained" onClick={handleSaveQuestion}>
               Save Question
             </Button>

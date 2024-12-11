@@ -1,5 +1,7 @@
 'use client';
 
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useMemo } from 'react';
 
 import { Tab, Box, Card } from '@mui/material';
@@ -9,12 +11,14 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import AllMeetings from './AllMeetings';
+
 const TABS = [
-  // {
-  //   value: 'allMeetings',
-  //   label: 'All Meetings',
-  //   component: (props: TabComponentType) => <AllMeetings {...props} />,
-  // },
+  {
+    value: 'allMeetings',
+    label: 'All Meetings',
+    component: (props: TabComponentType) => <AllMeetings {...props} />,
+  },
   //   {
   //     value: 'upcomingEvents',
   //     label: 'Upcoming Events',
@@ -28,7 +32,7 @@ const TABS = [
 ];
 
 const Meetings = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'allEvents' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'allMeetings' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

@@ -610,6 +610,11 @@ const communicationModule = {
           _action: 'feedbackAndSurvey',
         },
         {
+          title: 'Meetings',
+          path: '/communication/meetings',
+          _action: 'meetings',
+        },
+        {
           title: 'Settings',
           path: '/communication/settings',
           _action: 'settings',
