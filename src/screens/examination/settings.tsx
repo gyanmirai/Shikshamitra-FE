@@ -3,8 +3,9 @@ import React from 'react';
 import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import { TabComponentType } from '../hr/leave-request';
 
-const Settings = () => (
+const Settings = (props: TabComponentType) => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
     <Card sx={{ p: 3 }}>
       <Grid container spacing={1}>

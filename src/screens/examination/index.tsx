@@ -1,65 +1,81 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Tab, Box, Card, Button } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Settings from './settings';
-import ExamOverview from './exam-overview';
+import GradeEntry from './gradeEntry';
 import ScheduleExam from './schedule-exam';
-import ResultReport from './result-report';
 import GradingAndAnalytics from './gradingAndAnalytics';
 import AssessmentManagement from './assessment-management';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
+
+import type { TabComponentType } from '../hr/leave-request';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <ExaminationDashboardTab />,
+    component: (props: TabComponentType) => <ExaminationDashboardTab {...props} />,
   },
-  {
-    value: 'examOverview',
-    label: 'Exam Overview',
-    component: () => <ExamOverview />,
-  },
+  // {
+  //   value: 'examOverview',
+  //   label: 'Exam Overview',
+  //   component: (props: TabComponentType) => <ExamOverview {...props} />,
+  // },
   {
     value: 'scheduleExam',
     label: 'Schedule Exam',
-    component: () => <ScheduleExam />,
+    component: (props: TabComponentType) => <ScheduleExam {...props} />,
   },
 
   {
     value: 'assessmentManagement',
     label: 'Assessment Management',
-    component: () => <AssessmentManagement />,
+    component: (props: TabComponentType) => <AssessmentManagement {...props} />,
   },
-  { value: 'resultAndReport', label: 'Result And Report', component: () => <ResultReport /> },
+  {
+    value: 'gradeEntry',
+    label: 'Grade Entry',
+    component: (props: TabComponentType) => <GradeEntry {...props} />,
+  },
 
   {
-    value: 'gradingAndAnalytics',
-    label: 'Grading And Analytics',
-    component: () => <GradingAndAnalytics />,
+    value: 'studentPerformanceAndAnalytics',
+    label: 'Student Performace Analytics',
+    component: (props: TabComponentType) => <GradingAndAnalytics {...props} />,
   },
-  { value: 'settings', label: 'Settings', component: () => <Settings /> },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <Settings {...props} />,
+  },
 ];
 
 const ExaminationPageScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Examination"
-        links={[{ name: 'Examination' }]}
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box
@@ -94,8 +110,8 @@ const ExaminationPageScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -105,7 +121,12 @@ const ExaminationPageScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );
