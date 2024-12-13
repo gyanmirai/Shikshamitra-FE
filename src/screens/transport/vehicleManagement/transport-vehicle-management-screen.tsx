@@ -2,14 +2,13 @@
 
 import React, { useState } from 'react';
 
-import { Box, Paper, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import TransportAddNewVehicleDialog from './component/add-new-vehicle-dialog';
 import TransportVehicleDetailView from './component/transport-vehicle-detail-view';
@@ -158,42 +157,47 @@ const TransportVehicleManagementScreen = () => {
     { id: 'model', label: 'Model' },
     { id: 'assignedRoutes', label: 'Assigned Routes' },
     { id: 'driver', label: 'Driver' },
-    {
-      id: 'action',
-      label: 'Action',
-      render(value: any, row: any) {
-        return (
-          <ThreeDotsActions
-            actions={({ popover }: any) => (
-              <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    setIsEdit(true);
-                    setSelectedVehicle(row);
-                    dialog.onTrue();
-                  }}
-                >
-                  <Iconify icon="solar:pen-bold" />
-                  Edit
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    handleDelete(row);
-                  }}
-                >
-                  <Iconify icon="solar:trash-bin-trash-bold" />
-                  Delete
-                </MenuItem>
-              </MenuList>
-            )}
-          />
-        );
-      },
-    },
+    // {
+    //   id: 'action',
+    //   label: 'Action',
+    //   render(value: any, row: any) {
+    //     return (
+    //       <ThreeDotsActions
+    //         actions={({ popover }: any) => (
+    //           <MenuList>
+    //             <MenuItem
+    //               onClick={() => {
+    //                 setIsEdit(true);
+    //                 setSelectedVehicle(row);
+    //                 dialog.onTrue();
+    //               }}
+    //             >
+    //               <Iconify icon="solar:pen-bold" />
+    //               Edit
+    //             </MenuItem>
+    //             <MenuItem
+    //               onClick={() => {
+    //                 handleDelete(row);
+    //               }}
+    //             >
+    //               <Iconify icon="solar:trash-bin-trash-bold" />
+    //               Delete
+    //             </MenuItem>
+    //           </MenuList>
+    //         )}
+    //       />
+    //     );
+    //   },
+    // },
   ];
   return (
     <>
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+      <CustomBreadcrumbs
+        heading="Vehicle Management"
+        links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      {/* <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
           onClick={() => {
             dialog.onTrue();
@@ -203,12 +207,12 @@ const TransportVehicleManagementScreen = () => {
         >
           Add new vehicle
         </Button>
-      </Box>
-      <Box>
+      </Box> */}
+      {/* <Box>
         <Typography component="span" variant="h6" gutterBottom>
           Vehicle Overview
         </Typography>
-      </Box>
+      </Box> */}
       <CustomizableTable data={tableData} columns={columnTable} />
       <CustomDialog
         title="Vehicle Details Modal"

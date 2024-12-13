@@ -7,31 +7,34 @@ import { Box, Tab, Card } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
+import { Iconify } from 'src/components/iconify/iconify';
 
 import VehicleLogBook from './vehicle-log-book';
-import VehicleInformation from './vehicle-information';
-import VehicleRouteHistory from './vehilce-route-history';
 import VehicleMaintenanceRecords from './vehilcle-maintenance-records';
+import ViewVehicleDetailsDialog from '../../newVehicleManagement/vehicle/vehicle-details-view-dialog';
 
 const TABS = [
   {
     value: 'vehicle-information',
     label: 'Vehicle Information',
-    component: VehicleInformation,
+    icon: <Iconify icon="tdesign:vehicle" width={20} />,
+    component: ViewVehicleDetailsDialog,
   },
   {
     value: 'maintenance-records',
     label: 'Maintenance Records',
+    icon: <Iconify icon="carbon:license-maintenance" width={20} />,
     component: VehicleMaintenanceRecords,
   },
-  {
-    value: 'route-history',
-    label: 'Route History',
-    component: VehicleRouteHistory,
-  },
+  // {
+  //   value: 'route-history',
+  //   label: 'Route History',
+  //   component: VehicleRouteHistory,
+  // },
   {
     value: 'log-book',
     label: 'Log Book',
+    icon: <Iconify icon="solar:book-outline" width={20} />,
     component: VehicleLogBook,
   },
 ];
@@ -54,15 +57,15 @@ const TransportVehicleDetailView: React.FC<TransportVehicleDetailViewProps> = ({
           value={tabs.value}
           onChange={tabs.onChange}
           variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent && <CurrentComponent vehicleData={vehicleNumber} />}
+        {CurrentComponent && <CurrentComponent vehicle={vehicleNumber} />}
       </Box>
     </Box>
   );

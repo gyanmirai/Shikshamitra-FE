@@ -93,7 +93,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
                 icon: 'material-symbols-light:call-outline',
                 value: '9876542347',
               },
-              { label: 'Total Fees', icon: 'arcticons:mymoney-pro', value: '₹ 60,000' },
+              { label: 'Payable Fees', icon: 'arcticons:mymoney-pro', value: '₹ 60,000' },
               { label: 'Total Charges', icon: 'arcticons:mymoney-pro', value: '₹ 0' },
             ].map(({ label, icon, value }) => (
               <Box key={label} sx={{ textAlign: 'center' }}>

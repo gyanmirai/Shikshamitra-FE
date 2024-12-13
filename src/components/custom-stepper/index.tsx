@@ -39,6 +39,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({ steps, activeStep }) => (
 export default CustomStepper;
 
 interface CustomStepperWithFormikProps {
+  scrollbarHeight?: string;
   activeStep: number;
   initialValues: any;
   steps: string[];
@@ -95,6 +96,7 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
 }));
 
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
+  scrollbarHeight = '40vh',
   activeStep,
   initialValues,
   steps,
@@ -102,7 +104,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   handleBack,
   validationSchema,
   renderItem,
-  onStepClick = () => {},
+  onStepClick = () => { },
   errors = [],
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
@@ -118,7 +120,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   });
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
+    <Box sx={{ width: '100%', p: 2, }}>
       <Stepper activeStep={activeStep} alternativeLabel connector={<QontoConnector />}>
         {steps.map((label: string, index: number) => (
           <Step
@@ -146,7 +148,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         }}
         onSubmit={formik.handleSubmit}
       >
-        <Scrollbar sx={{ height: '40vh' }}>
+        <Scrollbar sx={{ height: scrollbarHeight }}>
           {' '}
           {/* <FormSlider step={activeStep} steps={steps}> */}
           {formik && renderItem({ formik, activeStep, isBackClick })}
@@ -169,7 +171,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             color="primary"
             type="submit"
             size="small"
-            // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
+          // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
           </Button>

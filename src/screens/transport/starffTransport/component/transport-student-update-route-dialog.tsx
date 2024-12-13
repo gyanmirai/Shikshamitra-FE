@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Button, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -124,74 +124,95 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   const students = selectedGradeObj ? selectedGradeObj.availableStudents : [];
 
   return (
-    <CustomDialog title="Assigned Route" open={dialogValue} handleClose={onClose}>
-      <Box px="20px">
+    <CustomDialog maxWidth="md" title="Assigned Route" open={dialogValue} handleClose={onClose}>
+      <Box>
         {showExistingEntryMessage && (
           <Typography component="span" fontSize="14" color="red">
             This Entry Already Exists
           </Typography>
         )}
       </Box>
-      <Scrollbar>
-        <Box px="15px">
-          <form onSubmit={formik.handleSubmit}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: "400px" }}>
+
+        <form onSubmit={formik.handleSubmit}>
+          <Grid container spacing={2}>
+            {/* Row 1 */}
+            <Grid item xs={6}>
               <CustomSelect
                 disabled={isEdit}
-                label="Grade"
+                label="Standard"
                 options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
                 value={formik.values.grade}
                 onChange={handleGradeChange}
-                formControlProps={{ sx: { minWidth: 120 } }}
+                formControlProps={{ fullWidth: true }}
               />
+            </Grid>
+            <Grid item xs={6}>
               <CustomSelect
                 disabled={isEdit}
-                label="Name"
-                options={students.map((student) => ({ label: student, value: student }))}
-                value={formik.values.name}
-                onChange={(e: any) => formik.setFieldValue('name', e)}
-                formControlProps={{ sx: { minWidth: 120 } }}
+                label="Division"
+                options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
+                value={formik.values.grade}
+                onChange={handleGradeChange}
+                formControlProps={{ fullWidth: true }}
               />
-              {/* <TextField
-                                name="position"
-                                label="Position"
-                                value={formik.values.position}
-                                onChange={formik.handleChange}
-                                size="small"
-                            /> */}
+            </Grid>
+
+            {/* Row 2 */}
+            <Grid item xs={6}>
+              <Autocomplete
+                loading={false}
+                noOptionsText="No Student Found"
+                fullWidth
+                options={[]}
+                getOptionLabel={(option: any) => option?.firstName || ''}
+                renderInput={(params: any) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    label="Gr Number"
+                    placeholder="Search Gr Number"
+                    fullWidth
+                  />
+                )}
+                renderOption={(prop: any, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.firstName}
+                  </li>
+                )}
+              />
+            </Grid>
+            <Grid item xs={6}>
               <CustomSelect
                 label="Assigned Route"
                 options={assignedRoutesList}
                 value={formik.values.assignedRoute}
                 onChange={(e: any) => formik.setFieldValue('assignedRoute', e)}
-                formControlProps={{ sx: { minWidth: 120 } }}
+                formControlProps={{ fullWidth: true }}
               />
+            </Grid>
+
+            {/* Row 3 */}
+            <Grid item xs={12}>
               <CustomSelect
-                label="Pickup Point"
+                label="Pickup/Dropoff Point"
                 options={pickupPointsList}
                 value={formik.values.pickupPoint}
                 onChange={(e: any) => formik.setFieldValue('pickupPoint', e)}
-                formControlProps={{ sx: { minWidth: 120 } }}
+                formControlProps={{ fullWidth: true }}
               />
-              <CustomSelect
-                label="Dropoff Point"
-                options={dropoffPointsList}
-                value={formik.values.dropoffPoint}
-                onChange={(e: any) => formik.setFieldValue('dropoffPoint', e)}
-                formControlProps={{ sx: { minWidth: 120 } }}
-              />
-            </Box>
-            <DialogActions>
-              <Button onClick={onClose} variant="contained" size="small">
-                Cancel
-              </Button>
-              <Button type="submit" variant="contained" size="small">
-                Save
-              </Button>
-            </DialogActions>
-          </form>
-        </Box>
+            </Grid>
+          </Grid>
+        </form>
+
+
       </Scrollbar>
+      <DialogActions>
+
+        <Button type="submit" variant="contained" size="small">
+          Save
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 };

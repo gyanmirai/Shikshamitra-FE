@@ -1,7 +1,7 @@
 import React from 'react';
 
-import TransportVehicleManagementScreen from 'src/screens/transport/vehicleManagement/transport-vehicle-management-screen';
+import TransportVehicleSettingScreen from 'src/screens/transport/newVehicleManagement/vehicle/transport-vehicle-management-screen';
 
-const TransportVehicleManagement = () => <TransportVehicleManagementScreen />;
+const TransportVehicleManagement = () => <TransportVehicleSettingScreen />;
 
 export default TransportVehicleManagement;

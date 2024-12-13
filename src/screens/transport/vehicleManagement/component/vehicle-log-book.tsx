@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -93,10 +91,10 @@ const columnData = [
 ];
 
 interface VehicleLogBookProps {
-  vehicleData: any;
+  vehicle: any;
 }
 
-const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicleData }) => {
+const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicle }) => {
   const dialog = useBoolean();
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(vehicleLogBook);
@@ -106,7 +104,7 @@ const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicleData }) => {
     setIsEdit(false);
     dialog.onFalse();
   };
-  const handleSave = () => {};
+  const handleSave = () => { };
 
   // const handleDelete = (data: MaintenanceRecord) => {
   //   const updatedEntries = tableData.filter((val) => val.id !== data.id);
@@ -114,7 +112,7 @@ const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicleData }) => {
   // };
   return (
     <>
-      <Box py="20px" display="flex" flexDirection="row" justifyContent="flex-end">
+      {/* <Box py="20px" display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
           variant="contained"
           size="small"
@@ -126,7 +124,7 @@ const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicleData }) => {
         >
           Daily Vehicle Inspection
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable data={tableData} columns={columnData} />
       {dialog.value && (
         <TransportDailyVehicleDialog
