@@ -93,10 +93,10 @@ const ManageStopsWithRiders = () => {
                         <TableHead>
                             <TableRow>
                                 <TableCell sx={{ width: '50px' }} />
-                                <TableCell sx={{ width: '25%', fontWeight: 'bold' }}>Stop Name</TableCell>
+                                <TableCell sx={{ width: '55%', fontWeight: 'bold' }}>Stop Name</TableCell>
                                 <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Pickup Time</TableCell>
                                 <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Dropoff Time</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Assigned Riders</TableCell>
+                                {/* <TableCell sx={{ fontWeight: 'bold' }}>Assigned Riders</TableCell> */}
                             </TableRow>
                         </TableHead>
                         <Droppable droppableId="stops">
@@ -161,13 +161,9 @@ const ManageStopsWithRiders = () => {
                                                     </TableCell>
 
                                                     {/* Assigned Riders */}
-                                                    <TableCell>
+                                                    {/* <TableCell>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                                            {/* {stop.riders.map((rider) => (
-                                                                <Chip key={rider} label={rider} size="small" onDelete={() => {
-                                                                    handleAssignRiders(stop.id, stop.riders.filter(r => r !== rider))
-                                                                }} />
-                                                            ))} */}
+                                                           
                                                             <CustomSelect
                                                                 multiple
                                                                 options={studentList}
@@ -178,7 +174,7 @@ const ManageStopsWithRiders = () => {
                                                                 formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
                                                             />
                                                         </Box>
-                                                    </TableCell>
+                                                    </TableCell> */}
                                                 </TableRow>
                                             )}
                                         </Draggable>
