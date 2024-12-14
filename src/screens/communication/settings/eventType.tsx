@@ -11,20 +11,20 @@ import {
   MenuItem,
   MenuList,
   TextField,
+  Typography,
   DialogActions,
   DialogContent,
   DialogContentText,
-  Typography,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { UploadBox } from 'src/components/upload';
 
 interface TEvent {
   id: number;
@@ -73,7 +73,7 @@ const EventType = (props: TabComponentType) => {
   const confirmDeleteDialog = useBoolean();
 
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<TEvent | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
@@ -107,7 +107,7 @@ const EventType = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: TEvent) => {
     if (isEdit && selectedEvent) {
       setEventTypeData(eventTypeData.map((event) => (event.id === values.id ? values : event)));
     } else {

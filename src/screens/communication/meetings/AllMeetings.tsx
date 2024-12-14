@@ -54,6 +54,7 @@ interface Meeting {
   meetingType: string;
   classRoom: string;
   isRecurring: boolean;
+  day?: string;
   repeatFrequency?: 'Daily' | 'Weekly' | 'Monthly' | 'Custom';
   repeatUntil?: Dayjs | number;
 }
@@ -146,6 +147,7 @@ const meetings: Meeting[] = [
     classRoom: 'Room 202',
     isRecurring: true,
     repeatFrequency: 'Weekly',
+    day: 'Tuesday',
     repeatUntil: dayjs('2025-03-14'),
   },
 ];
@@ -410,6 +412,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
       meetingType: initialValues?.meetingType || '',
       classRoom: initialValues?.classRoom || '',
       isRecurring: initialValues?.isRecurring || false,
+      day: initialValues?.day || '',
       repeatFrequency: initialValues?.repeatFrequency || '',
       repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues?.repeatUntil) : null,
     },
@@ -449,6 +452,159 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
     } else {
       formik.setFieldValue('organization', selectedValues);
       setIsAllOrgSelected(selectedValues.length === allOrganizations.length);
+    }
+  };
+
+  const renderRecurringFields = () => {
+    switch (formik.values.repeatFrequency) {
+      case 'Daily':
+        return (
+          <>
+            <Grid item xs={12} md={6}>
+              <TimePicker
+                label="Meeting Time"
+                format="HH:mm"
+                name="meetingTime"
+                value={formik.values.meetingTime}
+                onChange={(newValue) => {
+                  formik.setFieldValue('meetingTime', newValue);
+                }}
+                views={['hours', 'minutes']}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
+                    helperText: formik.touched.meetingTime && formik.errors.meetingTime,
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Last Date"
+                name="repeatUntil"
+                value={formik.values.repeatUntil}
+                onChange={(newValue) => {
+                  formik.setFieldValue('repeatUntil', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
+                    helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
+                  },
+                }}
+              />
+            </Grid>
+          </>
+        );
+      case 'Weekly':
+        return (
+          <>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Select Day"
+                options={[
+                  { value: 'Monday', label: 'Monday' },
+                  { value: 'Tuesday', label: 'Tuesday' },
+                  { value: 'Wednesday', label: 'Wednesday' },
+                  { value: 'Thursday', label: 'Thursday' },
+                  { value: 'Friday', label: 'Friday' },
+                  { value: 'Saturday', label: 'Saturday' },
+                  { value: 'Sunday', label: 'Sunday' },
+                ]}
+                value={formik.values.day}
+                onChange={(val) => {
+                  formik.setFieldValue('day', val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                error={formik.touched.day && Boolean(formik.errors.day)}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TimePicker
+                label="Meeting Time"
+                format="HH:mm"
+                name="meetingTime"
+                value={formik.values.meetingTime}
+                onChange={(newValue) => {
+                  formik.setFieldValue('meetingTime', newValue);
+                }}
+                views={['hours', 'minutes']}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
+                    helperText: formik.touched.meetingTime && formik.errors.meetingTime,
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Last Date"
+                name="repeatUntil"
+                value={formik.values.repeatUntil}
+                onChange={(newValue) => {
+                  formik.setFieldValue('repeatUntil', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
+                    helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
+                  },
+                }}
+              />
+            </Grid>
+          </>
+        );
+      case 'Monthly':
+        return (
+          <>
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Meeting Date"
+                name="meetingDate"
+                value={formik.values.meetingDate}
+                onChange={(newValue) => {
+                  formik.setFieldValue('meetingDate', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.meetingDate && Boolean(formik.errors.meetingDate),
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Last Date"
+                name="repeatUntil"
+                value={formik.values.repeatUntil}
+                onChange={(newValue) => {
+                  formik.setFieldValue('repeatUntil', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
+                    helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
+                  },
+                }}
+              />
+            </Grid>
+          </>
+        );
+      default:
+        return null;
     }
   };
 
@@ -589,35 +745,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
                 </Grid>
               </>
             )}
-            <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Meeting Date"
-                name="meetingDate"
-                value={formik.values.meetingDate}
-                onChange={(newValue) => {
-                  formik.setFieldValue('meetingDate', newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TimePicker
-                label="Meeting Time"
-                format="HH:mm"
-                name="meetingTime"
-                value={formik.values.meetingTime}
-                onChange={(newValue) => {
-                  formik.setFieldValue('meetingTime', newValue);
-                }}
-                views={['hours', 'minutes']}
-                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-              />
-            </Grid>
+
             <Grid item xs={12} md={6}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Meeting Mode</FormLabel>
@@ -672,6 +800,11 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
                     checked={formik.values.isRecurring}
                     onChange={(e) => {
                       formik.setFieldValue('isRecurring', e.target.checked);
+                      if (!e.target.checked) {
+                        formik.setFieldValue('repeatFrequency', '');
+                        formik.setFieldValue('repeatUntil', null);
+                        formik.setFieldValue('day', '');
+                      }
                     }}
                   />
                 }
@@ -691,17 +824,28 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
                     value={formik.values.repeatFrequency}
                     onChange={(val) => {
                       formik.setFieldValue('repeatFrequency', val);
+                      // Reset specific fields when changing frequency
+                      formik.setFieldValue('day', '');
+                      formik.setFieldValue('meetingDate', dayjs());
+                      formik.setFieldValue('meetingTime', null);
                     }}
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                    error={formik.touched.repeatFrequency && Boolean(formik.errors.repeatFrequency)}
                   />
                 </Grid>
+
+                {renderRecurringFields()}
+              </>
+            )}
+            {!formik.values.isRecurring && (
+              <>
                 <Grid item xs={12} md={6}>
                   <DatePicker
-                    label="Last Date"
-                    name="repeatUntil"
-                    value={formik.values.repeatUntil}
+                    label="Meeting Date"
+                    name="meetingDate"
+                    value={formik.values.meetingDate}
                     onChange={(newValue) => {
-                      formik.setFieldValue('repeatUntil', newValue);
+                      formik.setFieldValue('meetingDate', newValue);
                     }}
                     slotProps={{
                       textField: {
@@ -709,6 +853,19 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
                         size: 'small',
                       },
                     }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TimePicker
+                    label="Meeting Time"
+                    format="HH:mm"
+                    name="meetingTime"
+                    value={formik.values.meetingTime}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('meetingTime', newValue);
+                    }}
+                    views={['hours', 'minutes']}
+                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                   />
                 </Grid>
               </>
