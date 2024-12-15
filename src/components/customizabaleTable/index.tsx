@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
@@ -141,6 +141,10 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const clearAllFilters = () => {
     setFilters([]);
   };
+
+  useEffect(() => {
+    setColumnVisibility(columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}));
+  }, [columns]);
 
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -533,7 +537,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
         />
       )}
       <Box px="2px">
-        <ComponentBlock>
+        <ComponentBlock sx={{ px: 0, py: 0 }}>
           <Scrollbar sx={{ overflow: isScrollbar ? 'auto' : 'hidden', maxHeight: '70vh' }}>
             <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
               <TableHead>

@@ -6,9 +6,9 @@ import { cookies } from 'next/headers';
 import path from 'path';
 
 export async function POST(req: Request) {
+  let session = await getIronSession<SessionData>(cookies(), sessionOptions);
   try {
     const client = await getClient();
-    let session = await getIronSession<SessionData>(cookies(), sessionOptions);
     const body = await req.json();
     const tokenSet = await client.refresh(body.token!);
     let file;
@@ -30,6 +30,8 @@ export async function POST(req: Request) {
     return Response.json(tokenSet);
   } catch (error) {
     console.log(error, '===========');
-    return Response.redirect('/login');
+    session.destroy();
+    cookies().delete('next_js_session');
+    return null;
   }
 }

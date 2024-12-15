@@ -208,7 +208,7 @@ const Reports = (props: TabComponentType) => {
                             value={division}
                             onChange={(val) => {
                               const selectedDivision = divisionOptions.find((i: Division) =>
-                                val.includes(i.id)
+                                (val as string).includes(i.id)
                               );
                               setFieldValue('division', selectedDivision?.name || '');
                               setDivision(val as string);

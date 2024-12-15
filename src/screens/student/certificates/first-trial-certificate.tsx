@@ -108,7 +108,7 @@ const FirstTrialForm = () => {
               options={allOrganization}
               label="Organization"
               value={organization}
-              onChange={(val: string | string[]) => setFieldValue('organization', val as string)}
+              onChange={(val) => setFieldValue('organization', val as string)}
               labelKey="name"
               valueKey="id"
               formControlProps={{
@@ -122,7 +122,7 @@ const FirstTrialForm = () => {
               options={allClass}
               label="Class"
               value={classes}
-              onChange={(val: string | string[]) => setFieldValue('classes', val as string)}
+              onChange={(val) => setFieldValue('classes', val as string)}
               labelKey="name"
               valueKey="id"
               formControlProps={{
@@ -136,7 +136,7 @@ const FirstTrialForm = () => {
               options={allDivision}
               label="Division"
               value={values.division}
-              onChange={(val: string | string[]) => setFieldValue('division', val as string)}
+              onChange={(val) => setFieldValue('division', val as string)}
               labelKey="name"
               valueKey="id"
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}

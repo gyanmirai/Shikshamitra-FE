@@ -174,7 +174,7 @@ const TakeAttendanceScreen = () => {
           options={allMediums}
           label="Medium"
           value={medium}
-          onChange={(val: string | string[]) => {
+          onChange={(val) => {
             setMedium(val as string);
           }}
           labelKey="name"
@@ -185,7 +185,7 @@ const TakeAttendanceScreen = () => {
           options={allOrganization}
           label="Organization"
           value={organization}
-          onChange={(val: string | string[]) => setOrganization(val as string)}
+          onChange={(val) => setOrganization(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -195,7 +195,7 @@ const TakeAttendanceScreen = () => {
           options={allClass}
           label="Class"
           value={classes}
-          onChange={(val: string | string[]) => setClass(val as string)}
+          onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -205,7 +205,7 @@ const TakeAttendanceScreen = () => {
           options={allDivision}
           label="Division"
           value={division}
-          onChange={(val: string | string[]) => setDivision(val as string)}
+          onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -307,7 +307,7 @@ const TakeAttendanceScreen = () => {
                       { name: 'Other', id: 'Other' },
                     ]}
                     value={value || 'Sick'}
-                    onChange={(val: string | string[]) => {
+                    onChange={(val) => {
                       console.log(val);
                     }}
                     label=""

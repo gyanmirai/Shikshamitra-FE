@@ -2,22 +2,20 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useEffect } from 'react';
 
-import { Tab, Box, Card, Tabs, Typography, ListItemText } from '@mui/material';
+import { Tab, Box, Card, Tabs, Paper, Avatar, Button } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-
-import { convertBase64Format } from 'src/utils/base64Formate';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import EmployeeHistory from './employee-history';
 import { EmployeeInformation } from './information';
-import { EmployeeProfileCover } from './employee-profile-cover';
 import QualificationAndCertification from './qualification-certification';
 
 const TABS = [
@@ -29,22 +27,26 @@ const TABS = [
   //   },
   {
     value: 'personalInformation',
-    label: 'Personal Information',
+    label: 'Information',
     icon: <Iconify icon="solar:user-id-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <EmployeeInformation />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <EmployeeInformation editData={props.employee} />
+    ),
   },
   {
     value: 'qualificationsCertifications',
     label: 'Qualifications and Certifications',
     icon: <Iconify icon="healthicons:i-exam-qualification" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <QualificationAndCertification />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <QualificationAndCertification employee={props.employee} />
+    ),
   },
-  {
-    value: 'employmentHistory',
-    label: 'Employment History',
-    icon: <Iconify icon="mdi:clipboard-text-history" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <EmployeeHistory />,
-  },
+  // {
+  //   value: 'employmentHistory',
+  //   label: 'Employment History',
+  //   icon: <Iconify icon="mdi:clipboard-text-history" width={20} />,
+  //   component: (props: { tabs: UseTabsReturn }) => <EmployeeHistory />,
+  // },
   {
     value: 'payrollSummary',
     label: 'Payroll Summary',
@@ -68,7 +70,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
-  const [getEmployById, { data: employee }] = useQueryAndMutation({
+  const [getEmployById, { data: employee, isLoading, isError }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeByIdQuery,
   });
@@ -79,90 +81,120 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
     }
   }, [getEmployById, searchParams?.employee]);
 
-  return (
+  return isLoading ? (
+    <LoadingScreen />
+  ) : isError ? (
+    <EmptyContent title="Employee not found" />
+  ) : (
     <>
       <CustomBreadcrumbs
         heading="Employee"
         links={[{ name: 'HR' }, { name: 'Employee Profile' }, { name: 'Employee' }]}
         sx={{ px: 1, pb: 1 }}
+        action={
+          searchParams?.employee && (
+            <Button
+              size="small"
+              variant="soft"
+              onClick={() => setSearchParams({ employee: '' })}
+              startIcon={<Iconify icon="mingcute:back-2-fill" />}
+            >
+              Back To Employee list
+            </Button>
+          )
+        }
       />
-      <Card sx={{ mb: 3, height: 290 }}>
-        <EmployeeProfileCover
-          name={`${employee?.firstName} ${employee?.lastName}`}
-          avatarUrl={employee?.profilePicture && convertBase64Format(employee?.profilePicture)}
-          setSearchParams={setSearchParams}
-          extraContent={
-            <Box sx={{ mt: 3, ml: { md: 3 }, textAlign: { xs: 'center', md: 'unset' } }}>
-              <ListItemText
-                sx={{ textAlign: { xs: 'center', md: 'unset' } }}
-                primary={`${employee?.firstName} ${employee?.lastName}`}
-                secondary=""
-                primaryTypographyProps={{ typography: 'h4' }}
-                secondaryTypographyProps={{
-                  mt: 0.5,
-                  color: 'inherit',
-                  component: 'span',
-                  typography: 'body2',
-                  sx: { opacity: 0.48 },
-                }}
-              />
-              <Box display="flex" flexDirection="column" gap={1}>
-                <Typography variant="caption" fontWeight="bold" mt={1}>
-                  <Label variant="soft" color="success">
-                    Role: {employee?.role || 'Teacher'}
-                  </Label>
-                </Typography>
-                <Typography variant="caption" fontWeight="bold">
-                  <Label variant="soft" color="info">
-                    Board: GSEB
-                  </Label>
-                  &nbsp;
-                  <Label variant="soft" color="info">
-                    ENG-Primary
-                  </Label>
-                </Typography>
-                <Typography variant="caption" fontWeight="bold">
-                  <Label variant="soft" color="warning">
-                    Subject: English
-                  </Label>
-                </Typography>
-              </Box>
-            </Box>
-          }
-        />
-
-        <Box
-          display="flex"
+      <Card
+        sx={{
+          mb: 3,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          boxShadow: 'var(--shadows-4)',
+        }}
+      >
+        <Paper
           sx={{
-            width: 1,
-            bottom: 0,
-            zIndex: 9,
-            px: { md: 3 },
-            position: 'absolute',
-            bgcolor: 'background.paper',
+            p: 1,
+            borderBottom: '1px dashed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
+            borderRadius: 1,
           }}
         >
-          <Tabs
-            value={tabs.value}
-            onChange={tabs.onChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-            role="tablist"
-          >
-            {TABS.map((tab) => (
-              <Tab
-                sx={{ fontSize: '12px' }}
-                key={tab.value}
-                value={tab.value}
-                icon={tab.icon}
-                label={tab.label}
-                role="tab"
-              />
-            ))}
-          </Tabs>
-        </Box>
+          <Box display="flex" gap={2} alignItems="center">
+            <Avatar
+              src="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
+              sx={{ width: 64, height: 64 }}
+            />
+            <Label variant="filled" color="primary" sx={{ fontSize: '12px' }}>
+              {employee?.employeeName}
+            </Label>
+            <Label variant="filled" color="info" sx={{ fontSize: '12px' }}>
+              EMP001
+            </Label>
+            <Label variant="filled" color="secondary" sx={{ fontSize: '12px' }}>
+              Principle
+            </Label>
+            <Label variant="filled" color="warning" sx={{ fontSize: '12px' }}>
+              Primary
+            </Label>
+          </Box>
+          <Box display="flex" gap={2} alignItems="center">
+            <Button size="small" variant="outlined">
+              View I-card
+            </Button>
+            {/* <CustomTooltip
+              arrow
+              title={
+                <Box p={1}>
+                  <Label variant="soft" color="success">
+                    Volunteer
+                  </Label>
+                  <Label variant="soft" color="warning" sx={{ ml: 1 }}>
+                    New
+                  </Label>
+                  <Label variant="soft" color="info" sx={{ ml: 1 }}>
+                    VIP
+                  </Label>
+                  <Label variant="soft" color="error" sx={{ ml: 1 }}>
+                    Good Listener
+                  </Label>
+                </Box>
+              }
+            >
+              <IconButton sx={{ color: 'primary.main' }}>
+                <Iconify
+                  icon="iconamoon:certificate-badge-fill"
+                  sx={{ height: '24px', width: '24px' }}
+                />
+              </IconButton>
+            </CustomTooltip> */}
+          </Box>
+        </Paper>
+        <Tabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+              role="tab"
+            />
+          ))}
+        </Tabs>
       </Card>
-      {/* <Scrollbar sx={{ height: '100%', overflowY: 'auto' }}> */}
-      {currentActiveComponent?.component && <currentActiveComponent.component tabs={tabs} />}
+      {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
+      {currentActiveComponent?.component && (
+        <currentActiveComponent.component tabs={tabs} employee={employee} />
+      )}
       {/* </Scrollbar> */}
     </>
   );

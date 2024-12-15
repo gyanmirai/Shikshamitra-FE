@@ -1,13 +1,14 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
-import { axiosBaseQuery } from 'src/services/httpService';
+import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
 export const employeeApi = createApi({
   reducerPath: 'employeeApi',
+  keepUnusedDataFor: 0,
   baseQuery: axiosBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   }),
-  tagTypes: ['Employee', 'Attendance', 'AttendanceRule'],
+  tagTypes: ['Employee', 'Attendance', 'AttendanceRule', 'EmployeeDocument'],
   endpoints: (builder) => ({
     getEmployee: builder.query({
       query: () => ({ url: '/app/employee', redirect: 'follow' }),
@@ -59,7 +60,7 @@ export const employeeApi = createApi({
     }),
     updateEmployee: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/employee/${id}`,
+        url: `/app/employee/basic-info/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -161,6 +162,42 @@ export const employeeApi = createApi({
       }),
       providesTags: ['Employee'],
     }),
+    uploadDocuments: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/employee/${id}/documents`,
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        data: body,
+      }),
+
+      invalidatesTags: ['EmployeeDocument'],
+    }),
+    employeeUpdateDocument: builder.mutation({
+      query: ({ employeeId, documentId, body }) => ({
+        url: `/employee/${employeeId}/documents/${documentId}`,
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        data: body,
+      }),
+
+      invalidatesTags: ['EmployeeDocument'],
+    }),
+    getEmployeeDocuments: builder.query({
+      query: (id) => ({
+        url: `/employee/${id}/documents`,
+      }),
+      providesTags: ['EmployeeDocument'],
+    }),
+    getEmployeeDocumentById: builder.query({
+      query: ({ employeeId, documentId }) => ({
+        url: `/employee/${employeeId}/documents/${documentId}`,
+      }),
+      providesTags: ['EmployeeDocument'],
+    }),
   }),
 });
 
@@ -191,4 +228,9 @@ export const {
   useUpdateExperienceInformationMutation,
   useUpdateFamilyInformationMutation,
   useAddBasicInformationMutation,
+  useUploadDocumentsMutation,
+  useGetEmployeeDocumentsQuery,
+  useGetEmployeeDocumentByIdQuery,
+  useLazyGetEmployeeDocumentByIdQuery,
+  useEmployeeUpdateDocumentMutation,
 } = employeeApi;

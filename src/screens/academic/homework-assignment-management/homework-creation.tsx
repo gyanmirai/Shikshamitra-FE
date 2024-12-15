@@ -254,7 +254,7 @@ const HomeWorkCreationForm: React.FC<HomeWorkCreationFormProps> = ({ onsubmit })
                 value={division}
                 onChange={(val) => {
                   const selectedDivision = divisionOptions.find((i: Division) =>
-                    val.includes(i.id)
+                    (val as string[]).includes(i.id)
                   );
                   formik.setFieldValue('division', selectedDivision?.name || '');
                   setDivision(val);

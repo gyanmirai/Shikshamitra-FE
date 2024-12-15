@@ -1,108 +1,221 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useFormik } from 'formik';
+import React, { useState } from 'react';
 
-import { Tab, Box } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
+import {
+  Box,
+  Stack,
+  Button,
+  MenuItem,
+  MenuList,
+  TextField,
+  DialogActions,
+  createFilterOptions,
+} from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
+import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
+import {
+  useGetDocumentsQuery,
+  useAddDocumentMutation,
+  useDeleteDocumentMutation,
+  useUpdateDocumentMutation,
+} from 'src/redux/document/documentApi';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import LeavePolicy from './leave-policy';
-import Notification from './notification';
-import AttendanceRule from './attendance-rule';
-import AttendanceType from './attendance-type';
-import NotificationMethod from './notification-method';
+const HrSetting = () => {
+  const dialog = useBoolean();
+  const confirm = useBoolean();
+  const [deleteInformation, setDeleteInformation] = useState<any>(null);
+  const [editData, setEditData] = useState<any>(null);
 
-const TABS = [
-  {
-    value: 'notification',
-    label: 'Notification',
-    icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
-    component: () => <Notification />,
-  },
-  {
-    value: 'method',
-    label: 'Notification Method',
-    icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
-    component: () => <NotificationMethod />,
-  },
-  {
-    value: 'rule',
-    label: 'Attendance Rule',
-    icon: <Iconify icon="carbon:rule-draft" width={20} />,
-    component: () => <AttendanceRule />,
-  },
-  {
-    value: 'leavePolicy',
-    label: 'Leave Policy',
-    icon: <Iconify icon="iconoir:privacy-policy" width={20} />,
-    component: () => <LeavePolicy />,
-  },
-  {
-    value: 'attendanceType',
-    label: 'Attendance Type',
-    icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
-    component: () => <AttendanceType />,
-  },
-];
-
-const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
-
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
-  const { data, isLoading } = useQueryAndMutation({
+  const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
+    currentQueryAndMutation: useGetDocumentsQuery,
   });
-  console.log(data, 'data');
-  // const handleClose = () => {
-  //   setEditData(null);
-  //   dialog.onFalse();
-  // };
+
+  const [deleteDocument] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteDocumentMutation,
+  });
   return (
     <Box>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={async () => {
+              await deleteDocument(deleteInformation?.id);
+              confirm.onFalse();
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Setting"
         links={[{ name: 'HR' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <CustomTabs
-        value={searchParams.tab}
-        onChange={(e, value) => setSearchParams({ tab: value })}
-        sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-        role="tablist"
-      >
-        {TABS.map((tab) => (
-          <Tab
-            sx={{ fontSize: '12px' }}
-            key={tab.value}
-            value={tab.value}
-            icon={tab.icon}
-            label={tab.label}
-            role="tab"
-          />
-        ))}
-      </CustomTabs>
-      <Scrollbar sx={{ p: 1 }}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-          // searchParams={searchParams}
-          // setSearchParams={setSearchParams}
-          />
-        )}
-      </Scrollbar>
+      <Box display="flex" justifyContent="flex-end">
+        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          Add New document
+        </Button>
+      </Box>
+      <CustomizableTable
+        isLoading={isLoading}
+        columns={[
+          { id: 'documentName', label: 'Documents Name' },
+          {
+            id: 'documentTypes',
+            label: 'Document Type',
+            isSort: false,
+            render(value, row) {
+              return value.map((item: number) => DocumentType[item]).join(', ');
+            },
+          },
+          {
+            label: 'Action',
+            id: 'action',
+            render: (value, data) => (
+              <ThreeDotsActions
+                actions={({ popover }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        setDeleteInformation(data);
+                        confirm.onTrue();
+                        popover.onClose();
+                      }}
+                      sx={{ color: 'error.main' }}
+                    >
+                      <Iconify
+                        icon="solar:trash-bin-trash-bold"
+                        sx={{ height: '16px', width: '16px' }}
+                      />
+                      Delete
+                    </MenuItem>
+
+                    <MenuItem
+                      onClick={() => {
+                        setEditData(data);
+                        dialog.onTrue();
+                        popover.onClose();
+                      }}
+                    >
+                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                      Edit
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={documents?.items || []}
+      />
+      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Document">
+        <DocumentForm handleClose={dialog.onFalse} editData={editData} />
+      </CustomDialog>
     </Box>
   );
 };
 
-export default HrAttendanceSettingScreen;
+export default HrSetting;
+
+const filter = createFilterOptions<{ title: string; inputValue?: string }>();
+
+const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; editData?: any }) => {
+  const [addDocument, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddDocumentMutation,
+  });
+  const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateDocumentMutation,
+  });
+
+  const { values, setFieldValue, handleSubmit } = useFormik<{
+    title: string;
+    documentType: string[];
+  }>({
+    initialValues: {
+      title: editData?.documentName || '',
+      documentType: editData?.documentTypes || [],
+    },
+    // validationSchema: Yup.object({
+    //   documentType: Yup.string().required('Document type is required'),
+    // }),
+    onSubmit: async (formikValues) => {
+      if (editData) {
+        await updateDocument({
+          id: editData.id,
+          body: {
+            documentName: formikValues.title,
+            documentTypes: formikValues.documentType,
+          },
+        });
+        handleClose?.();
+        return;
+      }
+      await addDocument({
+        documentName: formikValues.title,
+        documentTypes: formikValues.documentType,
+      });
+      handleClose?.();
+    },
+  });
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+        <Stack spacing={2}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Document Name"
+            name="document.title"
+            value={values.title}
+            onChange={(e) => setFieldValue('title', e.target.value)}
+          />
+
+          <CustomSelect
+            options={DocumentTypeArray}
+            value={values.documentType}
+            multiple
+            label="Select document Type"
+            onChange={(value) => setFieldValue('documentType', value)}
+            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          />
+        </Stack>
+      </Scrollbar>
+      <DialogActions>
+        <Button variant="outlined" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton loading={isLoading || isUpdateLoading} variant="contained" type="submit">
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </form>
+  );
+};
