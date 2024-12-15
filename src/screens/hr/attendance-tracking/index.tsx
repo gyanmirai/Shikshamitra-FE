@@ -12,6 +12,8 @@ import { Box, Tab, Card, Tabs, Paper, Divider, Typography } from '@mui/material'
 import { useTabs } from 'src/hooks/use-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
 import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
@@ -95,11 +97,22 @@ const DateWise = ({
 
   useEffect(() => {
     if (searchParams.date) {
-      getAttendance(dayjs(searchParams.date, 'DD-MM-YYYY')?.format('YYYY-MM-DD'));
+      const dateTimeOffset = dateConvertor(
+        dayjs(searchParams.date, 'DD-MM-YYYY').format(dateFormat),
+        true
+      );
+      getAttendance(dateTimeOffset);
     } else {
-      getAttendance(dayjs().format('YYYY-MM-DD'));
+      getAttendance(dateConvertor(dayjs().format(dateFormat), true));
     }
   }, [searchParams.date, getAttendance]);
+
+  useEffect(
+    () => () => {
+      setSearchParams({ date: '' });
+    },
+    [setSearchParams]
+  );
 
   const counts = useMemo(
     () => ({

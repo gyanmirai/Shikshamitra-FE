@@ -123,7 +123,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string[] | string>([]);
+  const [classes, setClass] = useState<string[]>([]);
 
   const isCustom = useBoolean();
 
@@ -166,7 +166,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
             options={[{ name: 'All', id: 'all' }, ...allOrganization]}
             label="Organization"
             value={organization}
-            onChange={(val: string | string[]) => setOrganization(val as string)}
+            onChange={(val) => setOrganization(val as string)}
             labelKey="name"
             valueKey="id"
             formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -179,7 +179,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
               // @ts-ignore
               value={classes}
               multiple
-              onChange={(val: string | string[]) => setClass(val)}
+              onChange={(val) => setClass(val as string[])}
               labelKey="name"
               valueKey="id"
               formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}

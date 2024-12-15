@@ -5,7 +5,6 @@ import {
   settingPath,
   securityPath,
   academicPath,
-  dashboardPath,
   transportPath,
   examinationPath,
   communicationPath,
@@ -60,81 +59,6 @@ const ICONS = {
 };
 
 // ----------------------------------------------------------------------
-
-export const navData = [
-  /**
-   * Overview
-   */
-  {
-    subheader: 'Management',
-    items: [
-      { title: 'Dashboard', path: dashboardPath, icon: ICONS.dashboard, _action: 'dashboard' },
-      {
-        title: 'Student',
-        path: '/student/enrollment/dashboard',
-        icon: ICONS.student,
-        _action: 'student',
-      },
-      {
-        title: 'Academic & Assignment',
-        path: '/academic/dashboard',
-        icon: ICONS.dashboard,
-        _action: 'academic',
-      },
-      {
-        title: 'Examination & Assessment',
-        path: '/examination',
-        icon: ICONS.dashboard,
-        _action: 'examination',
-      },
-      { title: 'HR/Staff', path: '/hr/dashboard', icon: ICONS.hr, _action: 'hr' },
-      { title: 'Finance', path: '/finance/dashboard', icon: ICONS.finance, _action: 'finance' },
-      {
-        title: 'Communication',
-        path: '/communication/dashboard',
-        icon: ICONS.communication,
-        _action: 'communication',
-      },
-      { title: 'Library', path: financePath, icon: ICONS.library, _action: 'library' },
-      {
-        title: 'Transport',
-        path: '/transport/dashboard',
-        icon: ICONS.transport,
-        _action: 'transport',
-      },
-      { title: 'Hostel', path: '/hostel/dashboard', icon: ICONS.hostel, _action: 'transport' },
-      { title: 'Security', path: '/security/role', icon: ICONS.security, _action: 'security' },
-      // {
-      //   title: 'Setting',
-      //   path: hrPath,
-      //   icon: ICONS.dashboard,
-      //   _action: 'setting',
-      //   style: {
-      //     height: '100%',
-      //     justifyContent: 'end',
-      //   },
-      // },
-    ],
-  },
-  /**
-   * Management
-   */
-  // {
-  //   subheader: 'Management',
-  //   items: [
-  //     {
-  //       title: 'Group',
-  //       path: paths.dashboard.group.root,
-  //       icon: ICONS.user,
-  //       children: [
-  //         { title: 'Four', path: paths.dashboard.group.root },
-  //         { title: 'Five', path: paths.dashboard.group.five },
-  //         { title: 'Six', path: paths.dashboard.group.six },
-  //       ],
-  //     },
-  //   ],
-  // },
-];
 
 export const settingMenu = {
   title: 'Institute Setup',
@@ -554,7 +478,7 @@ const hrModule = {
             },
             {
               title: 'Setting',
-              path: '/hr/setting',
+              path: '/hr/attendance-setting',
               _action: 'setting',
             },
           ],
@@ -573,6 +497,11 @@ const hrModule = {
           title: 'Events & Holidays',
           path: '/hr/events-holidays',
           _action: 'events-holidays',
+        },
+        {
+          title: 'Setting',
+          path: '/hr/setting',
+          _action: 'hr-setting',
         },
       ],
     },
@@ -852,6 +781,85 @@ const transportModule = {
     },
   ],
 };
+
+export const navData = [
+  {
+    subheader: 'Management',
+    items: [
+      { title: 'Dashboard', path: '/dashboard', icon: ICONS.dashboard, _action: 'dashboard' },
+      {
+        title: 'Student',
+        path: '/student/enrollment/dashboard',
+        icon: ICONS.student,
+        _action: 'student',
+        submodule: studentModule[studentPath].flatMap((list) => list.items),
+      },
+      {
+        title: 'Academic & Assignment',
+        path: '/academic/dashboard',
+        icon: ICONS.dashboard,
+        _action: 'academic',
+        submodule: academicModule[academicPath].flatMap((list) => list.items),
+      },
+      {
+        title: 'Examination & Assessment',
+        path: '/examination',
+        icon: ICONS.dashboard,
+        _action: 'examination',
+        submodule: examinationModule[examinationPath].flatMap((list) => list.items),
+      },
+      {
+        title: 'HR/Staff',
+        path: '/hr/dashboard',
+        icon: ICONS.hr,
+        _action: 'hr',
+        submodule: hrModule[hrPath].flatMap((list) => list.items),
+      },
+      {
+        title: 'Finance',
+        path: '/finance/dashboard',
+        icon: ICONS.finance,
+        _action: 'finance',
+        submodule: financeModule[financePath].flatMap((list) => list.items),
+      },
+      {
+        title: 'Communication',
+        path: '/communication/dashboard',
+        icon: ICONS.communication,
+        _action: 'communication',
+        submodule: communicationModule[communicationPath].flatMap((list) => list.items),
+      },
+      {
+        title: 'Library',
+        path: financePath,
+        icon: ICONS.library,
+        _action: 'library',
+        submodule: [],
+      },
+      {
+        title: 'Transport',
+        path: '/transport/dashboard',
+        icon: ICONS.transport,
+        _action: 'transport',
+        submodule: transportModule[transportPath].flatMap((list) => list.items),
+      },
+      {
+        title: 'Hostel',
+        path: '/hostel/dashboard',
+        icon: ICONS.hostel,
+        _action: 'hostel',
+        submodule: [],
+      },
+      {
+        title: 'Security',
+        path: '/security/role',
+        icon: ICONS.security,
+        _action: 'security',
+        submodule: [],
+      },
+    ],
+  },
+];
 export const navSubData = {
   ...studentModule,
   ...securityModule,

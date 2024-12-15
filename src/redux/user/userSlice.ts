@@ -66,6 +66,12 @@ const userSlice = createSlice({
       state.isLoggedIn = false;
       state.userInfo = null;
     },
+    updateToken: (state, action) => {
+      state.userInfo = {
+        ...state.userInfo,
+        ...action.payload,
+      };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -83,5 +89,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, updateToken } = userSlice.actions;
 export default userSlice.reducer;

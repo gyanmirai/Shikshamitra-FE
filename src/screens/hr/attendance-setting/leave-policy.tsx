@@ -1,4 +1,5 @@
 import { useFormik } from 'formik';
+import { MuiColorInput } from 'mui-color-input';
 import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
@@ -87,6 +88,22 @@ const LeavePolicy = () => {
             label: 'Accrual Rate',
           },
           {
+            id: 'color',
+            label: 'Color',
+            render(value, row) {
+              return (
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    backgroundColor: value,
+                  }}
+                />
+              );
+            },
+          },
+          {
             id: 'action',
             label: 'Action',
             render(value, row) {
@@ -100,24 +117,28 @@ const LeavePolicy = () => {
             leaveDays: 20,
             carryForward: true,
             accrualRate: 'monthly',
+            color: '#4CAF50',
           },
           {
             leaveType: 'Sick Leave',
             leaveDays: 10,
             carryForward: false,
             accrualRate: 'quarterly',
+            color: '#F44336',
           },
           {
             leaveType: 'Maternity Leave',
             leaveDays: 90,
             carryForward: false,
             accrualRate: 'monthly',
+            color: '#E91E63',
           },
           {
             leaveType: 'Casual Leave',
             leaveDays: 5,
             carryForward: true,
             accrualRate: 'quarterly',
+            color: '#FF9800',
           },
         ]}
       />
@@ -138,6 +159,7 @@ const LeavePolicyForm = ({ handleClose, editData }: any) => {
       leaveDays: editData?.leaveDays || '',
       carryForward: editData?.carryForward || false,
       accrualRate: editData?.accrualRate || 'monthly',
+      color: editData?.color || 'white',
     },
     onSubmit: () => {},
   });
@@ -196,6 +218,17 @@ const LeavePolicyForm = ({ handleClose, editData }: any) => {
                 />
               }
               label="Enable Carry Forward"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <MuiColorInput
+              format="hex"
+              value={formik.values.color}
+              onChange={(color) => formik.setFieldValue('color', color)}
+              fullWidth
+              placeholder="color"
+              label="Color"
+              size="small"
             />
           </Grid>
         </Grid>

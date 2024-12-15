@@ -17,9 +17,9 @@ export function ComponentBlock({ title, sx, children, ...other }: ComponentBlock
   return (
     <Stack
       sx={{
-        // p: 2,
-        overflow: 'hidden',
-        gap: 0,
+        px: 3,
+        py: 6,
+        gap: 2,
         width: 1,
         flexWrap: 'wrap',
         borderRadius: 1.5,
@@ -27,7 +27,7 @@ export function ComponentBlock({ title, sx, children, ...other }: ComponentBlock
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        // bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
         boxShadow: (theme) => `0 0 0 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
         ...sx,
       }}

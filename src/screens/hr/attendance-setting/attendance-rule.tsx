@@ -260,7 +260,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                 value={formik.values.type}
                 fullWidth
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                onChange={(val: string | string[]) => formik.setFieldValue('type', val as string)}
+                onChange={(val) => formik.setFieldValue('type', val)}
               />
             </Grid>
             <Grid item xs={6}>
@@ -286,9 +286,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                         value={formik.values.lateThresholdUnit}
                         fullWidth
                         formControlProps={{ fullWidth: true }}
-                        onChange={(val: string | string[]) =>
-                          formik.setFieldValue('lateThresholdUnit', val as string)
-                        }
+                        onChange={(val) => formik.setFieldValue('lateThresholdUnit', val)}
                       />
                     </InputAdornment>
                   ),
@@ -318,9 +316,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                         value={formik.values.halfDayThresholdUnit}
                         fullWidth
                         formControlProps={{ fullWidth: true }}
-                        onChange={(val: string | string[]) =>
-                          formik.setFieldValue('halfDayThresholdUnit', val as string)
-                        }
+                        onChange={(val) => formik.setFieldValue('halfDayThresholdUnit', val)}
                       />
                     </InputAdornment>
                   ),

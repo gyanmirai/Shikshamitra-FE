@@ -41,7 +41,7 @@ const ChangeDivisionScreen = ({ allDivision }: any) => {
                   <TableDivisionDropDown
                     allDivision={allDivision}
                     division={columDivision}
-                    onChange={(val: string | string[]) => {
+                    onChange={(val) => {
                       setColumnDivision(val as string);
                       const newData = tableData.map((item) => ({
                         ...item,
@@ -59,7 +59,7 @@ const ChangeDivisionScreen = ({ allDivision }: any) => {
                 <TableDivisionDropDown
                   allDivision={allDivision}
                   division={value}
-                  onChange={(val: string | string[]) => {
+                  onChange={(val) => {
                     const newData = tableData.map((item) => {
                       if (item.id === row.id) {
                         return {
@@ -89,7 +89,7 @@ interface TableDivisionDropDownProps {
   allDivision: Division[];
   division: string;
 
-  onChange: (val: string | string[]) => void;
+  onChange: (val: string | string[] | number | number[]) => void;
 }
 
 const TableDivisionDropDown = ({
