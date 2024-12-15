@@ -867,8 +867,6 @@ const FinanceStudentFeeManagement = () => {
             </div>
           </Scrollbar>
         </CustomDialog>
-
-
       )}
       {dialog.value && selectedStudent && (
         <FinanceEditFeeStructureForStudent

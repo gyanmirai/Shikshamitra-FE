@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
 import type { UsePopoverReturn } from 'src/components/custom-popover';
+import type { PayrollStructureType } from 'src/enums/payroll-structure-tyep';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -27,6 +28,15 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
+import {
+  useGetPayrollStructuresQuery,
+  useAddPayrollStructureMutation,
+  useDeletePayrollStructureMutation,
+  useUpdatePayrollStructureMutation,
+} from 'src/redux/payrollStructure/payrollStructureApi';
+
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -48,18 +58,6 @@ const EmployeeSalaryStructureScreen = () => {
     setOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium]);
 
-  const earningData = [
-    { type: 'Basic Salary', amount: 50000 },
-    { type: 'House Rent', amount: 10000 },
-    { type: 'Medical Allowance', amount: 5000 },
-  ];
-
-  const deductionData = [
-    { type: 'Income Tax', amount: 5000 },
-    { type: 'Provident Fund', amount: 2000 },
-    { type: 'Insurance', amount: 1000 },
-  ];
-
   return (
     <Box>
       <CustomBreadcrumbs
@@ -72,7 +70,7 @@ const EmployeeSalaryStructureScreen = () => {
           options={allOrganization}
           label="Organization"
           value={organization}
-          onChange={(val: string | string[]) => setOrganization(val as string)}
+          onChange={(val) => setOrganization(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -84,10 +82,10 @@ const EmployeeSalaryStructureScreen = () => {
       </Box>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-          <Sections title="Earning" data={earningData} />
+          <Sections title="Earning" type={0} organization={organization} />
         </Grid>
         <Grid item xs={12} md={6}>
-          <Sections title="Deduction" data={deductionData} />
+          <Sections title="Deduction" type={1} organization={organization} />
         </Grid>
         {/* <Grid item xs={12} md={6}>
             
@@ -98,10 +96,31 @@ const EmployeeSalaryStructureScreen = () => {
 };
 export default EmployeeSalaryStructureScreen;
 
-export const Sections = ({ title, data }: { title?: string; data?: any }) => {
+export const Sections = ({
+  title,
+  data,
+  type,
+  organization,
+}: {
+  title?: string;
+  data?: any;
+  type: PayrollStructureType;
+  organization?: string;
+}) => {
   const dialog = useBoolean();
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
+  const [deleteInformation, setDeleteInformation] = useState<any>(null);
+
+  const [deletePayrollStructure, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useDeletePayrollStructureMutation,
+  });
+
+  const { data: payrollStructure } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetPayrollStructuresQuery,
+  });
 
   const actions = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
@@ -109,6 +128,7 @@ export const Sections = ({ title, data }: { title?: string; data?: any }) => {
       <MenuList>
         <MenuItem
           onClick={() => {
+            setDeleteInformation(row);
             confirm.onTrue();
             popover.onClose();
           }}
@@ -132,6 +152,11 @@ export const Sections = ({ title, data }: { title?: string; data?: any }) => {
     ),
     [confirm, dialog]
   );
+  const handleClose = () => {
+    setEditData(null);
+    dialog.onFalse();
+  };
+
   return (
     <Paper elevation={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
@@ -156,7 +181,7 @@ export const Sections = ({ title, data }: { title?: string; data?: any }) => {
           isSearch={false}
           isShowedDense={false}
           columns={[
-            { id: 'type', label: 'Type' },
+            { id: 'payElement.name', label: 'Type' },
             {
               id: 'amount',
               label: 'Amount',
@@ -174,7 +199,7 @@ export const Sections = ({ title, data }: { title?: string; data?: any }) => {
               },
             },
           ]}
-          data={data}
+          data={payrollStructure?.items?.filter((i: any) => i.payrollStructureType === type) || []}
         />
       </Box>
       <ConfirmDialog
@@ -188,66 +213,103 @@ export const Sections = ({ title, data }: { title?: string; data?: any }) => {
         action={
           <LoadingButton
             variant="contained"
-            loading={false}
+            loading={isDeleteLoading}
             color="error"
             onClick={async () => {
-              //   await deleteOrganization(editData?.id || '');
-              //   await getData(id);
+              await deletePayrollStructure(deleteInformation?.id || '');
               confirm.onFalse();
               setEditData(null);
-              // isInitial.current = true;
+              setDeleteInformation(null);
             }}
           >
             Delete
           </LoadingButton>
         }
       />
-      <CustomDialog title="Add Structure" open={dialog.value} handleClose={dialog.onFalse}>
-        <SectionForm handleClose={dialog.onFalse} />
+      <CustomDialog title="Add Structure" open={dialog.value} handleClose={handleClose}>
+        <SectionForm
+          handleClose={handleClose}
+          type={type}
+          organization={organization}
+          editData={editData}
+        />
       </CustomDialog>
     </Paper>
   );
 };
 
-export const SectionForm = ({ handleClose }: any) => {
-  const { values, handleChange, handleSubmit } = useFormik({
+export const SectionForm = ({ handleClose, type, organization, editData }: any) => {
+  const [addStructure, { isLoading }] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useAddPayrollStructureMutation,
+  });
+
+  const [updateStructure, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useUpdatePayrollStructureMutation,
+  });
+
+  const { data: payElements } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetPayElementsQuery,
+  });
+  const { values, handleChange, handleSubmit, setFieldValue } = useFormik({
     initialValues: {
-      type: '',
-      amount: '',
+      type: editData?.payElementId || '',
+      amount: editData?.amount || '',
     },
-    onSubmit: () => {},
+    onSubmit: async (val) => {
+      if (editData) {
+        await updateStructure({
+          id: editData?.id || '',
+          body: {
+            educationMediumStageId: organization,
+            payElementId: val.type,
+            payrollStructureType: type,
+            amount: val.amount,
+          },
+        });
+      } else {
+        await addStructure({
+          educationMediumStageId: organization,
+          payElementId: val.type,
+          payrollStructureType: type,
+          amount: val.amount,
+        });
+      }
+      handleClose();
+    },
   });
 
   return (
-    <>
-      <Box component="form" onSubmit={handleSubmit} sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2} direction="column">
-          <TextField
-            size="small"
-            fullWidth
-            label="Type"
-            name="type"
-            value={values?.type}
-            onChange={handleChange}
-          />
-          <TextField
-            size="small"
-            fullWidth
-            label="Amount"
-            name="amount"
-            value={values?.amount}
-            onChange={handleChange}
-          />
-        </Stack>
-      </Box>
+    <Box component="form" onSubmit={handleSubmit} sx={{ bgcolor: 'background.neutral', p: 2 }}>
+      <Stack spacing={2} direction="column" sx={{ bgcolor: 'background.neutral' }}>
+        <CustomSelect
+          label="Select Type"
+          options={payElements?.items || []}
+          labelKey="name"
+          valueKey="id"
+          value={values?.type}
+          onChange={(val) => setFieldValue('type', val)}
+          formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+        />
+        <TextField
+          size="small"
+          fullWidth
+          label="Amount"
+          name="amount"
+          value={values?.amount}
+          onChange={handleChange}
+        />
+      </Stack>
       <DialogActions>
         <Button variant="outlined" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="contained" type="submit">
+        <LoadingButton loading={isUpdateLoading || isLoading} variant="contained" type="submit">
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
-    </>
+    </Box>
   );
 };

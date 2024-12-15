@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, CardMedia, Typography, CardContent, } from '@mui/material';
+import { Box, Card, Grid, CardMedia, Typography, CardContent } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
@@ -17,7 +17,6 @@ import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytic
 import { PopularBooks } from './popular-books-carousel';
 
 const LibraryDashboard = () => {
-
   const [selectedClass, setSelectedClass] = useState<string>('borrowingTrend');
   const [selectedCategory, setSelectedCategory] = useState<string>('booksByCategory');
 
@@ -97,18 +96,44 @@ const LibraryDashboard = () => {
   ];
 
   const popularBooks = [
-    { bookId: 'B2', title: 'JavaScript The Good Parts', borrowCount: 90, coverImage: 'https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png' },
-    { bookId: 'B3', title: 'Advanced Mathematics', borrowCount: 85, coverImage: 'https://cdn01.sapnaonline.com/product_media/9789360532703/md_9789360532703_030920241419332.jpg' },
-    { bookId: 'B1', title: 'Indian Politics', borrowCount: 120, coverImage: 'https://rukminim2.flixcart.com/image/850/1000/jwtkk280/regionalbooks/h/z/y/indian-polity-original-imaf7fzkrdhdhwgv.jpeg?q=90&crop=false' },
-    { bookId: 'B2', title: 'Database', borrowCount: 90, coverImage: 'https://media.springernature.com/full/springer-static/cover-hires/book/978-3-030-32587-9' },
-    { bookId: 'B1', title: 'Introduction to Algorithms', borrowCount: 120, coverImage: 'https://lh4.googleusercontent.com/9t8B0-Mphz6OK8JI9-Nsh_JzWKd56QleeqRyUyCDoWunX0QTNXd2YDmVWCfmaus-Bb-U341ZQOzMl8IesJg5WWggAfplZ1cd1Qr9to3jlwCMjcLlKX8SET7fgcvtCcnCHk3ueApe=s0' },
-
+    {
+      bookId: 'B2',
+      title: 'JavaScript The Good Parts',
+      borrowCount: 90,
+      coverImage: 'https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png',
+    },
+    {
+      bookId: 'B3',
+      title: 'Advanced Mathematics',
+      borrowCount: 85,
+      coverImage:
+        'https://cdn01.sapnaonline.com/product_media/9789360532703/md_9789360532703_030920241419332.jpg',
+    },
+    {
+      bookId: 'B1',
+      title: 'Indian Politics',
+      borrowCount: 120,
+      coverImage:
+        'https://rukminim2.flixcart.com/image/850/1000/jwtkk280/regionalbooks/h/z/y/indian-polity-original-imaf7fzkrdhdhwgv.jpeg?q=90&crop=false',
+    },
+    {
+      bookId: 'B2',
+      title: 'Database',
+      borrowCount: 90,
+      coverImage:
+        'https://media.springernature.com/full/springer-static/cover-hires/book/978-3-030-32587-9',
+    },
+    {
+      bookId: 'B1',
+      title: 'Introduction to Algorithms',
+      borrowCount: 120,
+      coverImage:
+        'https://lh4.googleusercontent.com/9t8B0-Mphz6OK8JI9-Nsh_JzWKd56QleeqRyUyCDoWunX0QTNXd2YDmVWCfmaus-Bb-U341ZQOzMl8IesJg5WWggAfplZ1cd1Qr9to3jlwCMjcLlKX8SET7fgcvtCcnCHk3ueApe=s0',
+    },
   ];
 
   const theme = useTheme();
   const scrollContainerRef = useRef<any>(null);
-
-
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -125,7 +150,6 @@ const LibraryDashboard = () => {
     <>
       {/* Dropdowns for selecting class and data type */}
       <Grid container spacing={3} sx={{ marginBottom: 3, padding: 5 }}>
-
         <Box
           sx={{
             gap: 3,
@@ -134,33 +158,42 @@ const LibraryDashboard = () => {
             width: '100%',
           }}
         >
-
-
-          <Box component={Link} href="/library/book-management/" sx={{
-            cursor: 'pointer',
-            '&:hover': {
-              boxShadow: 6,
-              transform: 'scale(1.02)',
-              transition: '0.3s ease-in-out',
-            },
-          }}
-            onClick={() => { }}
+          <Box
+            component={Link}
+            href="/library/book-management/"
+            sx={{
+              cursor: 'pointer',
+              '&:hover': {
+                boxShadow: 6,
+                transform: 'scale(1.02)',
+                transition: '0.3s ease-in-out',
+              },
+            }}
+            onClick={() => {}}
           >
-            <Card sx={{ py: 3, pl: 3, pr: 2.5, }} >
+            <Card sx={{ py: 3, pl: 3, pr: 2.5 }}>
               <Box sx={{ flexGrow: 1 }}>
                 <Box sx={{ typography: 'h3' }}>{2500}</Box>
-                <Typography noWrap variant="subtitle2" component="div" sx={{ color: 'text.secondary' }}>
+                <Typography
+                  noWrap
+                  variant="subtitle2"
+                  component="div"
+                  sx={{ color: 'text.secondary' }}
+                >
                   Total Books
                 </Typography>
               </Box>
 
-              <Iconify icon="ix:library" sx={{
-                top: 24,
-                right: 10,
-                width: 36,
-                height: 36,
-                position: 'absolute',
-              }} />
+              <Iconify
+                icon="ix:library"
+                sx={{
+                  top: 24,
+                  right: 10,
+                  width: 36,
+                  height: 36,
+                  position: 'absolute',
+                }}
+              />
 
               <Box
                 sx={{
@@ -178,7 +211,9 @@ const LibraryDashboard = () => {
               />
             </Card>
           </Box>
-          <Box component={Link} href='/library/member-management/'
+          <Box
+            component={Link}
+            href="/library/member-management/"
             sx={{
               cursor: 'pointer',
               '&:hover': {
@@ -188,22 +223,29 @@ const LibraryDashboard = () => {
               },
             }}
           >
-
-            <Card sx={{ py: 3, pl: 3, pr: 2.5, }} >
+            <Card sx={{ py: 3, pl: 3, pr: 2.5 }}>
               <Box sx={{ flexGrow: 1 }}>
                 <Box sx={{ typography: 'h3' }}>{500}</Box>
-                <Typography noWrap variant="subtitle2" component="div" sx={{ color: 'text.secondary' }}>
+                <Typography
+                  noWrap
+                  variant="subtitle2"
+                  component="div"
+                  sx={{ color: 'text.secondary' }}
+                >
                   Books Issued
                 </Typography>
               </Box>
 
-              <Iconify icon="map:library" sx={{
-                top: 24,
-                right: 10,
-                width: 36,
-                height: 36,
-                position: 'absolute',
-              }} />
+              <Iconify
+                icon="map:library"
+                sx={{
+                  top: 24,
+                  right: 10,
+                  width: 36,
+                  height: 36,
+                  position: 'absolute',
+                }}
+              />
 
               <Box
                 sx={{
@@ -222,7 +264,9 @@ const LibraryDashboard = () => {
             </Card>
           </Box>
 
-          <Box component={Link} href='/library/circulation/?tab=reservations-Management'
+          <Box
+            component={Link}
+            href="/library/circulation/?tab=reservations-Management"
             sx={{
               cursor: 'pointer',
               '&:hover': {
@@ -230,22 +274,31 @@ const LibraryDashboard = () => {
                 transform: 'scale(1.02)',
                 transition: '0.3s ease-in-out',
               },
-            }}>
-            <Card sx={{ py: 3, pl: 3, pr: 2.5, }} >
+            }}
+          >
+            <Card sx={{ py: 3, pl: 3, pr: 2.5 }}>
               <Box sx={{ flexGrow: 1 }}>
                 <Box sx={{ typography: 'h3' }}>{100}</Box>
-                <Typography noWrap variant="subtitle2" component="div" sx={{ color: 'text.secondary' }}>
+                <Typography
+                  noWrap
+                  variant="subtitle2"
+                  component="div"
+                  sx={{ color: 'text.secondary' }}
+                >
                   Reserved Books
                 </Typography>
               </Box>
 
-              <Iconify icon="material-symbols-light:slide-library-sharp" sx={{
-                top: 24,
-                right: 10,
-                width: 36,
-                height: 36,
-                position: 'absolute',
-              }} />
+              <Iconify
+                icon="material-symbols-light:slide-library-sharp"
+                sx={{
+                  top: 24,
+                  right: 10,
+                  width: 36,
+                  height: 36,
+                  position: 'absolute',
+                }}
+              />
 
               <Box
                 sx={{
@@ -263,7 +316,9 @@ const LibraryDashboard = () => {
               />
             </Card>
           </Box>
-          <Box component={Link} href='/library/member-management/'
+          <Box
+            component={Link}
+            href="/library/member-management/"
             sx={{
               cursor: 'pointer',
               '&:hover': {
@@ -271,22 +326,31 @@ const LibraryDashboard = () => {
                 transform: 'scale(1.02)',
                 transition: '0.3s ease-in-out',
               },
-            }}>
-            <Card sx={{ py: 3, pl: 3, pr: 2.5, }} >
+            }}
+          >
+            <Card sx={{ py: 3, pl: 3, pr: 2.5 }}>
               <Box sx={{ flexGrow: 1 }}>
                 <Box sx={{ typography: 'h3' }}>{50}</Box>
-                <Typography noWrap variant="subtitle2" component="div" sx={{ color: 'text.secondary' }}>
+                <Typography
+                  noWrap
+                  variant="subtitle2"
+                  component="div"
+                  sx={{ color: 'text.secondary' }}
+                >
                   Books Due for Return
                 </Typography>
               </Box>
 
-              <Iconify icon="tabler:calendar-due" sx={{
-                top: 24,
-                right: 10,
-                width: 36,
-                height: 36,
-                position: 'absolute',
-              }} />
+              <Iconify
+                icon="tabler:calendar-due"
+                sx={{
+                  top: 24,
+                  right: 10,
+                  width: 36,
+                  height: 36,
+                  position: 'absolute',
+                }}
+              />
 
               <Box
                 sx={{
@@ -304,7 +368,9 @@ const LibraryDashboard = () => {
               />
             </Card>
           </Box>
-          <Box component={Link} href='/library/member-management/'
+          <Box
+            component={Link}
+            href="/library/member-management/"
             sx={{
               cursor: 'pointer',
               '&:hover': {
@@ -312,23 +378,31 @@ const LibraryDashboard = () => {
                 transform: 'scale(1.02)',
                 transition: '0.3s ease-in-out',
               },
-            }}>
-            <Card sx={{ py: 3, pl: 3, pr: 2.5, }} >
+            }}
+          >
+            <Card sx={{ py: 3, pl: 3, pr: 2.5 }}>
               <Box sx={{ flexGrow: 1 }}>
                 <Box sx={{ typography: 'h3' }}>{500}</Box>
-                <Typography noWrap variant="subtitle2" component="div" sx={{ color: 'text.secondary' }}>
+                <Typography
+                  noWrap
+                  variant="subtitle2"
+                  component="div"
+                  sx={{ color: 'text.secondary' }}
+                >
                   Active Borrowers
-
                 </Typography>
               </Box>
 
-              <Iconify icon="heroicons:user-group" sx={{
-                top: 24,
-                right: 10,
-                width: 36,
-                height: 36,
-                position: 'absolute',
-              }} />
+              <Iconify
+                icon="heroicons:user-group"
+                sx={{
+                  top: 24,
+                  right: 10,
+                  width: 36,
+                  height: 36,
+                  position: 'absolute',
+                }}
+              />
 
               <Box
                 sx={{
@@ -346,38 +420,34 @@ const LibraryDashboard = () => {
               />
             </Card>
           </Box>
-
         </Box>
       </Grid>
 
       {/* Main Dashboard Content */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-
-          <AnalyticsCurrentVisits
-            title="Books by Category"
-            chart={{ series: data }}
-
-          />
-
+          <AnalyticsCurrentVisits title="Books by Category" chart={{ series: data }} />
         </Grid>
         <Grid item xs={12} md={6}>
-
           <AppAreaInstalled
             isShowChartLegendValue={false}
             height={400}
             title="Books Due/Reserved/Issued"
             selectSeries="Standard 1"
             chart={{
-              colors: [theme.palette.info.main, theme.palette.primary.main, theme.palette.warning.main,],
-              categories: ['Fiction', 'Non-fiction', "TextBook", "Refrences"],
+              colors: [
+                theme.palette.info.main,
+                theme.palette.primary.main,
+                theme.palette.warning.main,
+              ],
+              categories: ['Fiction', 'Non-fiction', 'TextBook', 'Refrences'],
               series: [
                 {
                   name: 'Standard 1',
                   data: [
-                    { name: 'Issued', data: [12, 10, 18, 22,] },
+                    { name: 'Issued', data: [12, 10, 18, 22] },
                     { name: 'Reserved', data: [12, 10, 18, 0] },
-                    { name: 'Due', data: [12, 20, 14, 15,] },
+                    { name: 'Due', data: [12, 20, 14, 15] },
                   ],
                 },
                 {
@@ -392,17 +462,14 @@ const LibraryDashboard = () => {
                   name: 'Standard 3',
                   data: [
                     { name: 'Issued', data: [12, 17, 18, 10] },
-                    { name: 'Reserved', data: [6, 20, 15, 18,] },
-                    { name: 'Due', data: [6, 10, 12, 17,] },
+                    { name: 'Reserved', data: [6, 20, 15, 18] },
+                    { name: 'Due', data: [6, 10, 12, 17] },
                   ],
                 },
               ],
             }}
-
           />
-
         </Grid>
-
       </Grid>
 
       {/* Analytics Section */}
@@ -454,15 +521,18 @@ const LibraryDashboard = () => {
       <Grid>
         {/* <Typography variant='h6' >Borrowing & Reservation Trends</Typography>;
         <Typography fontSize="12px">Gain insights into borrowing patterns and popular books over time</Typography>; */}
-        <Grid item xs={12} md={6} >
-
-
+        <Grid item xs={12} md={6}>
           <EcommerceYearlySales
             isShowChartLegend={false}
             title="Monthly Borrowing Trends"
             subheader=""
             chart={{
-              colors: [theme.palette.primary.main, theme.palette.warning.main, theme.palette.secondary.main, theme.palette.error.main],
+              colors: [
+                theme.palette.primary.main,
+                theme.palette.warning.main,
+                theme.palette.secondary.main,
+                theme.palette.error.main,
+              ],
               categories: [
                 'Jan',
                 'Feb',
@@ -499,28 +569,40 @@ const LibraryDashboard = () => {
                     },
                   ],
                 },
-
               ],
             }}
           />
-
         </Grid>
-
-
-
       </Grid>
 
       {/* Replenishment Chart */}
       <Grid container spacing={3} sx={{ marginTop: 3 }}>
         <Grid item xs={12}>
-
           <AppAreaInstalled
             isShowChartLegendValue={false}
             title="Reservation Trends Over Time"
             selectSeries="Standard 1"
             chart={{
-              colors: [theme.palette.info.light, theme.palette.primary.main, theme.palette.warning.main, theme.palette.grey[400]],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+              colors: [
+                theme.palette.info.light,
+                theme.palette.primary.main,
+                theme.palette.warning.main,
+                theme.palette.grey[400],
+              ],
+              categories: [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+              ],
               series: [
                 {
                   name: 'Standard 1',
@@ -551,18 +633,16 @@ const LibraryDashboard = () => {
                 },
               ],
             }}
-
           />
-
         </Grid>
       </Grid>
       <Box>
         {/* Title and Navigation */}
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" sx={{ pb: "15px", pt: "20px", pl: "15px" }}>
+          <Typography variant="h5" sx={{ pb: '15px', pt: '20px', pl: '15px' }}>
             Popular Books
           </Typography>
-          <Box display="flex" flexDirection="row" gap={2} sx={{ pr: "15px" }}>
+          <Box display="flex" flexDirection="row" gap={2} sx={{ pr: '15px' }}>
             <Box
               onClick={scrollLeft}
               sx={{
@@ -606,10 +686,10 @@ const LibraryDashboard = () => {
             gap: 2,
             overflowX: 'auto',
             scrollBehavior: 'smooth',
-            pt: "20px",
-            pb: "20px",
-            px: "15px",
-            "&::-webkit-scrollbar": {
+            pt: '20px',
+            pb: '20px',
+            px: '15px',
+            '&::-webkit-scrollbar': {
               display: 'none',
             },
           }}
@@ -622,12 +702,7 @@ const LibraryDashboard = () => {
                 width: '300px',
               }}
             >
-              <CardMedia
-                component="img"
-                height="230"
-                image={book.coverImage}
-                alt={book.title}
-              />
+              <CardMedia component="img" height="230" image={book.coverImage} alt={book.title} />
               <CardContent>
                 <Typography variant="h6">{book.title}</Typography>
                 <Typography variant="body2">Borrowed: {book.borrowCount} times</Typography>
@@ -640,29 +715,9 @@ const LibraryDashboard = () => {
       </Box>
     </>
   );
-}
+};
 
 export default LibraryDashboard;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 'use client'
 
@@ -681,7 +736,6 @@ export default LibraryDashboard;
 
 //   const [selectedClass, setSelectedClass] = useState<string>('borrowingTrend');
 //   const [selectedCategory, setSelectedCategory] = useState<string>('booksByCategory'); // Dropdown value to select the data type
-
 
 //   const booksOverview = {
 //     totalBooks: 500,
@@ -760,9 +814,6 @@ export default LibraryDashboard;
 //     default:
 //       data = bookCategoryData;
 //   }
-
-
-
 
 //   return (
 //     <>

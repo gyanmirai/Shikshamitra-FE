@@ -15,14 +15,14 @@ import {
 } from '@mui/material';
 
 type CustomSelectProps<T extends string, J extends boolean> = Omit<
-  SelectProps<J extends true ? string[] : string>,
+  SelectProps<J extends true ? string[] | number[] : string | number>,
   'onChange' | 'value'
 > & {
   options: { [K in T]: string | number }[];
   label: string;
   multiple?: J;
-  value: J extends true ? string[] : string;
-  onChange: (value: J extends true ? string[] : string) => void;
+  value: J extends true ? string[] | number[] : string | number;
+  onChange: (value: J extends true ? string[] | number[] : string | number) => void;
   error?: boolean;
   helperText?: string;
   isLoading?: boolean;
@@ -52,14 +52,15 @@ const CustomSelect = <T extends string, J extends boolean>({
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
   const handleChange = (event: any) => {
-    const selectedValue: J extends true ? string[] : string = event.target.value;
+    const selectedValue: J extends true ? string[] | number[] : string | number =
+      event.target.value;
     onChange(selectedValue);
   };
 
-  const handleDelete = (itemToDelete: string) => {
+  const handleDelete = (itemToDelete: string | number) => {
     if (multiple) {
       const newValue = (value as string[]).filter((item) => item !== itemToDelete);
-      onChange(newValue as J extends true ? string[] : string);
+      onChange(newValue as J extends true ? string[] | number[] : string | number);
     }
   };
 
@@ -74,21 +75,21 @@ const CustomSelect = <T extends string, J extends boolean>({
         label={label}
         renderValue={
           multiple
-            ? (selected: string | string[]) => (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {(Array.isArray(selected) ? selected : [selected]).map((val) => (
-                  <Chip
-                    key={val}
-                    size="small"
-                    label={options.find((option) => option[valueKey] === val)?.[labelKey]}
-                    onDelete={() => handleDelete(val)}
-                    onMouseDown={(event) => {
-                      event.stopPropagation();
-                    }}
-                  />
-                ))}
-              </div>
-            )
+            ? (selected: string | string[] | number | number[]) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {(Array.isArray(selected) ? selected : [selected]).map((val) => (
+                    <Chip
+                      key={val}
+                      size="small"
+                      label={options.find((option) => option[valueKey] === val)?.[labelKey]}
+                      onDelete={() => handleDelete(val)}
+                      onMouseDown={(event) => {
+                        event.stopPropagation();
+                      }}
+                    />
+                  ))}
+                </div>
+              )
             : undefined
         }
         {...props}

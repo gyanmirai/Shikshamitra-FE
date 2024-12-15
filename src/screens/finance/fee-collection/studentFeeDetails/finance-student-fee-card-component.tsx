@@ -356,7 +356,9 @@ interface FinanceStudentFeeCardComponentProps {
   studentId: string;
 }
 
-const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentProps> = ({ studentId }) => {
+const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentProps> = ({
+  studentId,
+}) => {
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
 
@@ -370,7 +372,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
   const feeRefundCloseDialog = () => {
     feeRefundDialog.onFalse();
   };
-  const handleSave = () => { };
+  const handleSave = () => {};
   return (
     <>
       <Box display="flex" flexDirection="row" justifyContent="space-between">
@@ -379,14 +381,14 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             label="Standard"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -394,7 +396,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             variant="outlined"
             size="small"
             value=""
-            onChange={(e) => { }}
+            onChange={(e) => {}}
           />
         </Box>
         <Box display="flex" justifyContent="flex-end" alignItems="center">

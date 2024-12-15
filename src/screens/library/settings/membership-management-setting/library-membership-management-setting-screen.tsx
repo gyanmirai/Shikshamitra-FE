@@ -1,10 +1,8 @@
-import React from 'react'
+import React from 'react';
 
 const LibraryMembershipManagementSettingScreen = () => {
-    const data = [];
-  return (
-    <div>LibraryMembershipManagementSettingScreen</div>
-  )
-}
+  const data = [];
+  return <div>LibraryMembershipManagementSettingScreen</div>;
+};
 
-export default LibraryMembershipManagementSettingScreen
+export default LibraryMembershipManagementSettingScreen;

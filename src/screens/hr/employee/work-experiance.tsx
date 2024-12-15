@@ -6,7 +6,7 @@ import { Add, RemoveCircle } from '@mui/icons-material';
 import { Box, Button, Divider, TextField, IconButton } from '@mui/material';
 
 const WorkExperiences = (props: any) => {
-  const { formik } = props;
+  const { formik, disabled } = props;
   const { values, setFieldValue } = formik;
 
   return (
@@ -17,6 +17,7 @@ const WorkExperiences = (props: any) => {
           color="primary"
           size="small"
           startIcon={<Add />}
+          disabled={!!disabled}
           onClick={() => {
             setFieldValue('experiences', [
               ...values.experiences,
@@ -49,6 +50,7 @@ const WorkExperiences = (props: any) => {
               onChange={(event) => {
                 setFieldValue(`experiences.${index}.organizationName`, event.target.value);
               }}
+              disabled={!!disabled}
             />
           </Grid>
           <Grid xs={1.4375}>
@@ -62,6 +64,7 @@ const WorkExperiences = (props: any) => {
               onChange={(event) => {
                 setFieldValue(`experiences.${index}.organizationAddress`, event.target.value);
               }}
+              disabled={!!disabled}
             />
           </Grid>
           <Grid xs={1.4375}>
@@ -72,6 +75,7 @@ const WorkExperiences = (props: any) => {
               onChange={(date) => {
                 setFieldValue(`experiences.${index}.fromDate`, date);
               }}
+              disabled={!!disabled}
               slotProps={{
                 textField: {
                   size: 'small',
@@ -89,6 +93,7 @@ const WorkExperiences = (props: any) => {
               onChange={(date) => {
                 setFieldValue(`experiences.${index}.toDate`, date);
               }}
+              disabled={!!disabled}
               slotProps={{
                 textField: {
                   size: 'small',
@@ -106,6 +111,7 @@ const WorkExperiences = (props: any) => {
               label="Department"
               margin="normal"
               value={experience.department}
+              disabled={!!disabled}
               onChange={(event) => {
                 setFieldValue(`experiences.${index}.department`, event.target.value);
               }}
@@ -119,6 +125,7 @@ const WorkExperiences = (props: any) => {
               label="Designation"
               margin="normal"
               value={experience.designation}
+              disabled={!!disabled}
               onChange={(event) => {
                 setFieldValue(`experiences.${index}.designation`, event.target.value);
               }}
@@ -132,6 +139,7 @@ const WorkExperiences = (props: any) => {
               size="small"
               margin="normal"
               value={experience.responsibilities}
+              disabled={!!disabled}
               onChange={(event) => {
                 setFieldValue(`experiences.${index}.responsibilities`, event.target.value);
               }}
@@ -145,6 +153,7 @@ const WorkExperiences = (props: any) => {
               margin="normal"
               size="small"
               value={experience.references}
+              disabled={!!disabled}
               onChange={(event) => {
                 setFieldValue(`experiences.${index}.references`, event.target.value);
               }}
@@ -152,6 +161,7 @@ const WorkExperiences = (props: any) => {
           </Grid>
           <Grid xs={0.5} display="flex" alignItems="center">
             <IconButton
+              disabled={!!disabled}
               onClick={() => {
                 setFieldValue(
                   'experiences',

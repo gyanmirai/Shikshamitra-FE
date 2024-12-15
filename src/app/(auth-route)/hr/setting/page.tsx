@@ -1,7 +1,7 @@
 import React from 'react';
 
-import HrAttendanceSettingScreen from 'src/screens/hr/setting';
+import HrSetting from 'src/screens/hr/setting';
 
-const HrAttendanceSetting = () => <HrAttendanceSettingScreen />;
+const Setting = () => <HrSetting />;
 
-export default HrAttendanceSetting;
+export default Setting;

@@ -84,7 +84,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                 value={division1}
                 onChange={(val) => {
                   const selectedDivision = divisionOptions.find((i: Division) =>
-                    val.includes(i.id)
+                    (val as string).includes(i.id)
                   );
                   setDivision1(val as string);
                 }}
@@ -323,7 +323,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                 value={division4}
                 onChange={(val) => {
                   const selectedDivision = divisionOptions.find((i: Division) =>
-                    val.includes(i.id)
+                    (val as string).includes(i.id)
                   );
                   setDivision4(val as string);
                 }}

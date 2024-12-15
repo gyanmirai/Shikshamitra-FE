@@ -19,7 +19,6 @@ import AddNewBookDialog from '../book-management/component/add-new-book-dialog';
 import AddNewMemberDialog from '../member-management/component/add-new-member-dialog';
 import LibraryReservationManagement from './reservation-management/library-reservation-management';
 
-
 const TABS = [
   {
     value: 'reservations-Management',
@@ -37,50 +36,61 @@ const TABS = [
 
 const memberData = [
   {
-    id: "S001",
-    name: "Alice",
-    role: "Student",
+    id: 'S001',
+    name: 'Alice',
+    role: 'Student',
   },
   {
-    id: "S002",
-    name: "Bob",
-    role: "Student",
+    id: 'S002',
+    name: 'Bob',
+    role: 'Student',
   },
   {
-    id: "T001",
-    name: "Charlie",
-    role: "Teacher",
+    id: 'T001',
+    name: 'Charlie',
+    role: 'Teacher',
   },
   {
-    id: "T002",
-    name: "Dana",
-    role: "Teacher",
+    id: 'T002',
+    name: 'Dana',
+    role: 'Teacher',
   },
   {
-    id: "S003",
-    name: "Eve",
-    role: "Student",
+    id: 'S003',
+    name: 'Eve',
+    role: 'Student',
   },
 ];
 
-
 const books = [
   {
-    id: "B001",
-    title: "Introduction to Programming",
-    author: "John Doe",
-    publisher: "TechPress",
+    id: 'B001',
+    title: 'Introduction to Programming',
+    author: 'John Doe',
+    publisher: 'TechPress',
     editions: [
       {
         year: 2020,
         totalCopies: 5,
         availableCopies: 2,
         currentIssuers: [
-          { userId: "S005", name: "Alice", role: "Student", issueDate: "2024-11-10", dueDate: "2024-12-01" },
-          { userId: "S006", name: "Bob", role: "Student", issueDate: "2024-11-12", dueDate: "2024-12-02" },
+          {
+            userId: 'S005',
+            name: 'Alice',
+            role: 'Student',
+            issueDate: '2024-11-10',
+            dueDate: '2024-12-01',
+          },
+          {
+            userId: 'S006',
+            name: 'Bob',
+            role: 'Student',
+            issueDate: '2024-11-12',
+            dueDate: '2024-12-02',
+          },
         ],
         reservedList: [
-          { userId: "S007", name: "Charlie", role: "Teacher", reservationDate: "2024-11-15" },
+          { userId: 'S007', name: 'Charlie', role: 'Teacher', reservationDate: '2024-11-15' },
         ],
       },
       {
@@ -88,30 +98,54 @@ const books = [
         totalCopies: 3,
         availableCopies: 1,
         currentIssuers: [
-          { userId: "S008", name: "Dana", role: "Student", issueDate: "2024-11-15", dueDate: "2024-12-05" },
+          {
+            userId: 'S008',
+            name: 'Dana',
+            role: 'Student',
+            issueDate: '2024-11-15',
+            dueDate: '2024-12-05',
+          },
         ],
         reservedList: [],
       },
     ],
   },
   {
-    id: "B002",
-    title: "Data Structures and Algorithms",
-    author: "Jane Smith",
-    publisher: "CodeWorks",
+    id: 'B002',
+    title: 'Data Structures and Algorithms',
+    author: 'Jane Smith',
+    publisher: 'CodeWorks',
     editions: [
       {
         year: 2019,
         totalCopies: 6,
         availableCopies: 0,
         currentIssuers: [
-          { userId: "S009", name: "Eve", role: "Teacher", issueDate: "2024-11-01", dueDate: "2024-11-20" },
-          { userId: "S010", name: "Frank", role: "Student", issueDate: "2024-11-05", dueDate: "2024-11-25" },
-          { userId: "S011", name: "Grace", role: "Student", issueDate: "2024-11-08", dueDate: "2024-11-28" },
+          {
+            userId: 'S009',
+            name: 'Eve',
+            role: 'Teacher',
+            issueDate: '2024-11-01',
+            dueDate: '2024-11-20',
+          },
+          {
+            userId: 'S010',
+            name: 'Frank',
+            role: 'Student',
+            issueDate: '2024-11-05',
+            dueDate: '2024-11-25',
+          },
+          {
+            userId: 'S011',
+            name: 'Grace',
+            role: 'Student',
+            issueDate: '2024-11-08',
+            dueDate: '2024-11-28',
+          },
         ],
         reservedList: [
-          { userId: "S012", name: "Hannah", role: "Teacher", reservationDate: "2024-11-18" },
-          { userId: "S013", name: "Ivy", role: "Student", reservationDate: "2024-11-20" },
+          { userId: 'S012', name: 'Hannah', role: 'Teacher', reservationDate: '2024-11-18' },
+          { userId: 'S013', name: 'Ivy', role: 'Student', reservationDate: '2024-11-20' },
         ],
       },
       {
@@ -119,55 +153,85 @@ const books = [
         totalCopies: 4,
         availableCopies: 1,
         currentIssuers: [
-          { userId: "S014", name: "Jack", role: "Student", issueDate: "2024-11-12", dueDate: "2024-12-01" },
+          {
+            userId: 'S014',
+            name: 'Jack',
+            role: 'Student',
+            issueDate: '2024-11-12',
+            dueDate: '2024-12-01',
+          },
         ],
         reservedList: [],
       },
     ],
   },
   {
-    id: "B003",
-    title: "Modern Physics",
-    author: "Albert Newton",
-    publisher: "SciPub",
+    id: 'B003',
+    title: 'Modern Physics',
+    author: 'Albert Newton',
+    publisher: 'SciPub',
     editions: [
       {
         year: 2018,
         totalCopies: 2,
         availableCopies: 0,
         currentIssuers: [
-          { userId: "S015", name: "Kim", role: "Student", issueDate: "2024-11-05", dueDate: "2024-11-25" },
-          { userId: "S016", name: "Liam", role: "Teacher", issueDate: "2024-11-07", dueDate: "2024-11-27" },
+          {
+            userId: 'S015',
+            name: 'Kim',
+            role: 'Student',
+            issueDate: '2024-11-05',
+            dueDate: '2024-11-25',
+          },
+          {
+            userId: 'S016',
+            name: 'Liam',
+            role: 'Teacher',
+            issueDate: '2024-11-07',
+            dueDate: '2024-11-27',
+          },
         ],
         reservedList: [
-          { userId: "S017", name: "Mia", role: "Student", reservationDate: "2024-11-20" },
+          { userId: 'S017', name: 'Mia', role: 'Student', reservationDate: '2024-11-20' },
         ],
       },
     ],
   },
   {
-    id: "B004",
-    title: "History of Civilizations",
-    author: "Diana Prince",
-    publisher: "HeritagePress",
+    id: 'B004',
+    title: 'History of Civilizations',
+    author: 'Diana Prince',
+    publisher: 'HeritagePress',
     editions: [
       {
         year: 2017,
         totalCopies: 8,
         availableCopies: 5,
         currentIssuers: [
-          { userId: "S018", name: "Noah", role: "Teacher", issueDate: "2024-11-15", dueDate: "2024-12-05" },
-          { userId: "S019", name: "Olivia", role: "Student", issueDate: "2024-11-16", dueDate: "2024-12-06" },
+          {
+            userId: 'S018',
+            name: 'Noah',
+            role: 'Teacher',
+            issueDate: '2024-11-15',
+            dueDate: '2024-12-05',
+          },
+          {
+            userId: 'S019',
+            name: 'Olivia',
+            role: 'Student',
+            issueDate: '2024-11-16',
+            dueDate: '2024-12-06',
+          },
         ],
         reservedList: [],
       },
     ],
   },
   {
-    id: "B005",
-    title: "Artificial Intelligence: Basics",
-    author: "Sophia Robotics",
-    publisher: "FutureTech",
+    id: 'B005',
+    title: 'Artificial Intelligence: Basics',
+    author: 'Sophia Robotics',
+    publisher: 'FutureTech',
     editions: [
       {
         year: 2023,
@@ -180,63 +244,62 @@ const books = [
   },
 ];
 
-
 const bookData = [
   {
-    id: "B001",
-    title: "Introduction to Programming",
-    author: "John Doe",
-    publisher: "TechPress",
+    id: 'B001',
+    title: 'Introduction to Programming',
+    author: 'John Doe',
+    publisher: 'TechPress',
     editions: [
       {
         year: 2020,
-        publisher: "TechPress",
+        publisher: 'TechPress',
         totalCopies: 5,
         availableCopies: 2,
       },
       {
         year: 2021,
-        publisher: "TechPress",
+        publisher: 'TechPress',
         totalCopies: 3,
         availableCopies: 1,
       },
     ],
   },
   {
-    id: "B002",
-    title: "Advanced Programming Techniques",
-    author: "Jane Smith",
-    publisher: "CodePub",
+    id: 'B002',
+    title: 'Advanced Programming Techniques',
+    author: 'Jane Smith',
+    publisher: 'CodePub',
     editions: [
       {
         year: 2021,
-        publisher: "CodePub",
+        publisher: 'CodePub',
         totalCopies: 4,
         availableCopies: 2,
       },
       {
         year: 2022,
-        publisher: "CodePub",
+        publisher: 'CodePub',
         totalCopies: 6,
         availableCopies: 4,
       },
     ],
   },
   {
-    id: "B003",
-    title: "Data Structures and Algorithms",
-    author: "Michael Brown",
-    publisher: "AlgoBooks",
+    id: 'B003',
+    title: 'Data Structures and Algorithms',
+    author: 'Michael Brown',
+    publisher: 'AlgoBooks',
     editions: [
       {
         year: 2019,
-        publisher: "AlgoBooks",
+        publisher: 'AlgoBooks',
         totalCopies: 3,
         availableCopies: 0, // No copies available
       },
       {
         year: 2020,
-        publisher: "AlgoBooks",
+        publisher: 'AlgoBooks',
         totalCopies: 5,
         availableCopies: 5, // Available for issue
       },
@@ -259,21 +322,13 @@ const LibraryCirculationScreen = () => {
   const returnBookDialog = useBoolean();
 
   const openDialog = (dialog: any, entry: any = null, editMode = false, renew = false) => {
-
-
     dialog.onTrue();
   };
 
-
   const closeDialog = (dialog: any) => {
-
-
     dialog.onFalse();
   };
-  const saveHandler = () => {
-
-
-  };
+  const saveHandler = () => {};
 
   return (
     <Box>
@@ -330,7 +385,7 @@ const LibraryCirculationScreen = () => {
           />
         )}
       </Box>
-      {addMemberDialog &&
+      {addMemberDialog && (
         <AddNewMemberDialog
           dialogValue={addMemberDialog.value}
           data={[]}
@@ -338,9 +393,8 @@ const LibraryCirculationScreen = () => {
           onClose={() => closeDialog(addMemberDialog)}
           isEdit={false}
           isRenewMembership={false}
-
         />
-      }
+      )}
       {/* Add/Edit Book Dialog */}
       {addNewBookDialog.value && (
         <AddNewBookDialog
@@ -374,7 +428,7 @@ const LibraryCirculationScreen = () => {
         />
       )}
     </Box>
-  )
-}
+  );
+};
 
-export default LibraryCirculationScreen
+export default LibraryCirculationScreen;

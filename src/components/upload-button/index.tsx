@@ -8,13 +8,13 @@ type UploadButtonProps = ButtonProps & {
   onChange?: (e: any) => void;
   multiple?: boolean;
   accept?: string;
+  fileInputProps?: React.InputHTMLAttributes<HTMLInputElement>;
 };
-
 const UploadButton = ({
   onClick = () => {},
   onChange = () => {},
   multiple = false,
-  accept = 'image/*',
+  fileInputProps,
   ...props
 }: UploadButtonProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -22,11 +22,11 @@ const UploadButton = ({
     <>
       <input
         ref={inputRef}
-        accept="image/*"
         multiple={multiple}
         onChange={onChange}
         type="file"
         style={{ display: 'none' }}
+        {...fileInputProps}
       />
       <Button
         onClick={(e) => {

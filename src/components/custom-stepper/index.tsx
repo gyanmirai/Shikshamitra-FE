@@ -3,6 +3,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Step,
@@ -42,7 +43,12 @@ interface CustomStepperWithFormikProps {
   activeStep: number;
   initialValues: any;
   steps: string[];
-  handleNext: (isLastStep: boolean, value: any, formik: any) => void;
+  handleNext: (
+    isLastStep: boolean,
+    value: any,
+    formik: any,
+    setIsLoading: (val: boolean) => void
+  ) => void;
   handleBack: () => void;
   validationSchema: any;
   renderItem: ({
@@ -106,6 +112,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   errors = [],
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const formik = useFormik({
     initialValues,
     validationSchema,
@@ -113,7 +120,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     validateOnMount: true,
     onSubmit: (values) => {
       setIsBackClick(false);
-      handleNext(activeStep === steps.length - 1, values, formik);
+      handleNext(activeStep === steps.length - 1, values, formik, setIsLoading);
     },
   });
 
@@ -143,6 +150,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           '& input': { fontSize: '12px' },
           '& textarea': { fontSize: '12px' },
           '& label': { fontSize: '12px' },
+          '& .MuiSelect-select': { fontSize: '12px' },
         }}
         onSubmit={formik.handleSubmit}
       >
@@ -164,15 +172,16 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           >
             Back
           </Button>
-          <Button
+          <LoadingButton
             variant="contained"
             color="primary"
             type="submit"
             size="small"
+            loading={isLoading}
             // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-          </Button>
+          </LoadingButton>
         </Box>
       </Box>
     </Box>

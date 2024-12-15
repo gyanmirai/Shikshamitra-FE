@@ -44,7 +44,7 @@ const SubLayout = ({ children }: any) => {
           fillContent
           sx={{
             height: '100%',
-            width: '18%',
+            width: '300px',
             boxShadow: 'var(--shadows-3)',
             bgcolor: (theme) => theme.palette.background.paper,
             borderRadius: 1,
@@ -57,17 +57,17 @@ const SubLayout = ({ children }: any) => {
           />
         </Scrollbar>
       )}
-      <Scrollbar
+      <Box
         sx={{
           // maxWidth: '1440px',
-          width: currentData?.length ? '82%' : '100%',
+          width: '100%',
           // mx: 'auto',
           height: '100%',
-          overflow: 'auto',
+          overflow: 'hidden',
 
           boxShadow: 'var(--shadows-3)',
           '& .simplebar-content': { height: '100%' },
-          p: 2,
+
           bgcolor: (theme) => theme.palette.background.default,
           border: (theme) =>
             currentData?.length ? `4px solid ${theme.palette.background.paper}` : 'none',
@@ -79,20 +79,21 @@ const SubLayout = ({ children }: any) => {
         {(yearLoading || boardLoading) && removeLastSlash !== '/setting/academic-setup' ? (
           <LoadingScreen />
         ) : (
-          <Box
+          <Scrollbar
             sx={{
               maxWidth: '1440px',
               width: '100%',
               mx: 'auto',
               height: '100%',
+              p: 2,
               // p: 1,
               // bgcolor: (theme) => theme.palette.background.default,
             }}
           >
             {children}
-          </Box>
+          </Scrollbar>
         )}
-      </Scrollbar>
+      </Box>
     </Box>
   );
 };

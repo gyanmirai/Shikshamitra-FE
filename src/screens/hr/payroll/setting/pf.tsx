@@ -1,25 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import Add from '@mui/icons-material/Add';
 import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const PF = () => {
-  const [employee, setEmployee] = useState<string[] | undefined>([]);
-
   const dialog = useBoolean();
-  const { data: employees, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
-  });
+  // const [employee, setEmployee] = useState<string[] | undefined>([]);
+
+  // const { data: employees, isLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetEmployeeQuery,
+  // });
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end" alignItems="center">

@@ -3,14 +3,21 @@
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Paper, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
+import { Box, Grid, Paper, Button, Avatar, MenuList, MenuItem, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { convertBase64Format } from 'src/utils/base64Formate';
+
+import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-status-type';
+import {
+  EmployeeStatusType,
+  EmployeeStatusTypeArray,
+  EmployeeStatusTypeColor,
+} from 'src/enums/employee-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -83,7 +90,12 @@ const HrEmployee = () => {
     [payrollDialog, setSearchParams, statusDialog]
   );
 
-  const { data: employee } = useQueryAndMutation({
+  const handleClose = () => {
+    setOpen(false);
+    setEditData(null);
+  };
+
+  const { data: employee, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });
@@ -109,20 +121,57 @@ const HrEmployee = () => {
           />
           <Paper sx={{ px: 1, py: 2 }}>
             <CustomizableTable
+              isLoading={isLoading}
               columns={[
-                // { id: 'organizationName', label: 'Organization' },
-                { id: 'Code', label: 'Code' },
-                // { id: 'Name', label: 'Name' },
-                { id: 'firstName', label: 'First Name' },
-                { id: 'middleName', label: 'Middle Name' },
-                { id: 'role', label: 'Role' },
+                { id: 'employeeCode', label: 'Employee Code' },
                 {
-                  id: 'employeeCode',
-                  label: 'Status',
+                  id: 'employeeName',
+                  label: 'Full Name',
                   render(value, row) {
                     return (
-                      <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar
+                          alt={value}
+                          src={convertBase64Format(row.profilePicture)}
+                          sx={{ height: 32, width: 32 }}
+                        />{' '}
                         {value}
+                      </Box>
+                    );
+                  },
+                },
+
+                { id: 'dateOfBirth', label: 'DOB', minWidth: 100 },
+                {
+                  id: 'genderType',
+                  label: 'Gender',
+                  render(value, row) {
+                    return GenderType[value] || '-';
+                  },
+                },
+                { id: 'dateOfJoining', label: 'Date Of Joining', minWidth: 150 },
+                { id: 'email', label: 'Email' },
+                { id: 'mobileNo', label: 'Mobile No', minWidth: 150 },
+                {
+                  id: 'role.name',
+                  label: 'Role',
+                  render(value, row) {
+                    return <Label variant="soft">{value || 'Not-assigned'}</Label>;
+                  },
+                },
+                {
+                  id: 'employeeStatusType',
+                  label: 'Status',
+                  render(value, row) {
+                    const status = EmployeeStatusType[value];
+                    return (
+                      <Label
+                        variant="soft"
+                        color={
+                          EmployeeStatusTypeColor[status as keyof typeof EmployeeStatusTypeColor]
+                        }
+                      >
+                        {status || '-'}
                       </Label>
                     );
                   },
@@ -177,13 +226,8 @@ const HrEmployee = () => {
                 </Button>
               </DialogActions>
             </CustomDialog>
-            <CustomDialog
-              maxWidth="xl"
-              open={open}
-              handleClose={() => setOpen(false)}
-              title="Add Employee"
-            >
-              <EmployeeFrom editData={editData} />
+            <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee">
+              <EmployeeFrom editData={editData} handleClose={handleClose} />
             </CustomDialog>
             <CustomDialog
               maxWidth="lg"
@@ -199,24 +243,10 @@ const HrEmployee = () => {
               <Box bgcolor="background.neutral" p={2}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
-                    <Sections
-                      title="Earning"
-                      data={[
-                        { type: 'Basic Salary', amount: 50000 },
-                        { type: 'House Rent', amount: 10000 },
-                        { type: 'Medical Allowance', amount: 5000 },
-                      ]}
-                    />
+                    <Sections title="Earning" data={[]} type={0} />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Sections
-                      title="Deduction"
-                      data={[
-                        { type: 'Income Tax', amount: 5000 },
-                        { type: 'Provident Fund', amount: 2000 },
-                        { type: 'Insurance', amount: 1000 },
-                      ]}
-                    />
+                    <Sections title="Deduction" data={[]} type={1} />
                   </Grid>
                 </Grid>
               </Box>
