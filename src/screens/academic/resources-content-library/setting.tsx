@@ -195,7 +195,6 @@ const Setting = (props: TabComponentType) => {
         </Grid>
       </Grid>
       <CustomDialog
-        maxWidth="sm"
         open={dialog.value}
         handleClose={handleCloseDialog}
         title={isEdit ? 'Update Category' : 'Add Category'}
@@ -306,7 +305,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ onSubmit, data, isEdit }) => 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField

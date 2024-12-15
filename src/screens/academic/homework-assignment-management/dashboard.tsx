@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { red, blue, grey, green, yellow } from '@mui/material/colors';
@@ -18,7 +20,7 @@ import {
 
 import CustomSelect from 'src/components/custom-select';
 
-const Dashboard = () => {
+const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
 
   return (

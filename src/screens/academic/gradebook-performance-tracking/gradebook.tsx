@@ -12,6 +12,7 @@ import {
   Checkbox,
   MenuItem,
   MenuList,
+  TextField,
   Typography,
   DialogActions,
 } from '@mui/material';
@@ -36,6 +37,7 @@ interface StudentGrade {
   assignments: string;
   subject: string;
   grade: string;
+  feedback: string;
   weightedAverage: string;
 }
 
@@ -46,6 +48,7 @@ const dummyData = [
     assignments: 'Math Quiz 1',
     subject: 'Mathematics',
     grade: 'B',
+    feedback: 'Good',
     weightedAverage: '85%',
   },
   {
@@ -54,6 +57,7 @@ const dummyData = [
     assignments: 'Science Project',
     subject: 'Science',
     grade: 'A',
+    feedback: 'Excellent',
     weightedAverage: '92%',
   },
   {
@@ -62,6 +66,7 @@ const dummyData = [
     assignments: 'English Essay',
     subject: 'English',
     grade: 'C',
+    feedback: 'Need Improvement',
     weightedAverage: '75%',
   },
   {
@@ -70,6 +75,7 @@ const dummyData = [
     assignments: 'Math Homework',
     subject: 'Mathematics',
     grade: '',
+    feedback: '',
     weightedAverage: '88%',
   },
   {
@@ -78,6 +84,7 @@ const dummyData = [
     assignments: 'Science Quiz',
     subject: 'Science',
     grade: 'B+',
+    feedback: 'Average',
     weightedAverage: '87%',
   },
 ];
@@ -174,10 +181,12 @@ const Gradebook = (props: TabComponentType) => {
     setSelectedStudents([]);
   };
 
-  const handleSingleGradeAssignment = (values: { grade: string }) => {
+  const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
-        student.id === selectedStudent?.id ? { ...student, grade: values.grade } : student
+        student.id === selectedStudent?.id
+          ? { ...student, grade: values.grade, feedback: values.feedback }
+          : student
       )
     );
     dialog.onFalse();
@@ -356,6 +365,20 @@ const Gradebook = (props: TabComponentType) => {
                 );
               },
             },
+            {
+              id: 'feedback',
+              label: 'Feedback',
+              render: (value, row) =>
+                value === '' ? (
+                  <Typography variant="subtitle2" color="textSecondary">
+                    -
+                  </Typography>
+                ) : (
+                  <Typography variant="caption" gutterBottom>
+                    {value}
+                  </Typography>
+                ),
+            },
             { id: 'weightedAverage', label: 'Weighted Average' },
             {
               id: 'action',
@@ -462,13 +485,14 @@ export default Gradebook;
 
 interface AssignGradeProps {
   data?: any;
-  onSubmit: (values: { grade: string }) => void;
+  onSubmit: (values: { grade: string; feedback: string }) => void;
 }
 
 const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
   const formik = useFormik({
     initialValues: {
       grade: data?.grade || '',
+      feedback: data?.feedback || '',
     },
     onSubmit(values) {
       onSubmit(values);
@@ -478,7 +502,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <CustomSelect
@@ -503,6 +527,15 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
                 }}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                 error={formik.touched.grade && Boolean(formik.errors.grade)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                placeholder="Detailed Feedback"
+                multiline
+                rows={3}
+                fullWidth
+                onChange={formik.handleChange}
               />
             </Grid>
           </Grid>

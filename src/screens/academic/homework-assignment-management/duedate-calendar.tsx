@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -11,15 +13,10 @@ import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
-const DueDateCalendar = () => {
+const DueDateCalendar = (props: TabComponentType) => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
-        <Button variant="contained" onClick={dialog.onTrue}>
-          Add Assignment
-        </Button>
-      </Box>
       <CalendarView />
       <CustomDialog title="New Assignment" open={dialog.value} handleClose={dialog.onFalse}>
         <Box>
