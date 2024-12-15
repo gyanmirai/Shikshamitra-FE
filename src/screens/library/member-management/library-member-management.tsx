@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
 
@@ -18,7 +18,7 @@ import MemberDetailsDialog from './component/member-details-dialog';
 import IssueBookDialog from '../book-management/component/issue-book-dialog';
 import ReturnBookDialog from '../book-management/component/return-book-dialog';
 import AddNewBookDialog from '../book-management/component/add-new-book-dialog';
- 
+
 const memberDummyData = [
   {
     memberId: 'A9i878',
@@ -228,10 +228,7 @@ const LibraryMemberManagementScreen = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <CustomBreadcrumbs
           heading="Member Management"
-          links={[
-            { name: 'Library' },
-            { name: 'Member Management' },
-          ]}
+          links={[{ name: 'Library' }, { name: 'Member Management' }]}
           sx={{ px: 1, mb: 2 }}
         />
         <CommonCtaComponent
@@ -247,24 +244,45 @@ const LibraryMemberManagementScreen = () => {
           { id: 'memberId', label: 'Member Id' },
           { id: 'role', label: 'Role' },
           { id: 'name', label: 'Name' },
-          { id: 'currentIssue', label: 'Current Issue' , render(value, row) {
-            return <Typography fontSize="12px" textAlign="center">{value}</Typography>
-          },},
-          { id: 'pendingReturn', label: 'Pending Return', render(value, row) {
-            return <Typography fontSize="12px" textAlign="center">{value}</Typography>
-          }, },
-          { id: 'overdueReturn', label: 'Overdue Return', render(value, row) {
-            return <Typography fontSize="12px" textAlign="center">{value}</Typography>
-          }, },
+          {
+            id: 'currentIssue',
+            label: 'Current Issue',
+            render(value, row) {
+              return (
+                <Typography fontSize="12px" textAlign="center">
+                  {value}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'pendingReturn',
+            label: 'Pending Return',
+            render(value, row) {
+              return (
+                <Typography fontSize="12px" textAlign="center">
+                  {value}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'overdueReturn',
+            label: 'Overdue Return',
+            render(value, row) {
+              return (
+                <Typography fontSize="12px" textAlign="center">
+                  {value}
+                </Typography>
+              );
+            },
+          },
           {
             id: 'memberStatus',
             label: 'Member Status',
             render(value) {
               return (
-                <Label
-                  variant="soft"
-                  color={value === 'Active' ? 'success' : 'error'}
-                >
+                <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
                   {value}
                 </Label>
               );
@@ -330,9 +348,6 @@ const LibraryMemberManagementScreen = () => {
 
 export default LibraryMemberManagementScreen;
 
-
-
-
 // 'use client'
 
 // import React, { useState, useEffect } from 'react'
@@ -352,8 +367,6 @@ export default LibraryMemberManagementScreen;
 // import IssueBookDialog from '../book-management/component/issue-book-dialog';
 // import ReturnBookDialog from '../book-management/component/return-book-dialog';
 // import AddNewBookDialog from '../book-management/component/add-new-book-dialog';
-
-
 
 // const memberDummyData = [
 //     {
@@ -408,9 +421,6 @@ export default LibraryMemberManagementScreen;
 //       reservedBooks: [],
 //     },
 //   ];
-  
-
-
 
 // const bookData = [
 //     {
@@ -505,7 +515,6 @@ export default LibraryMemberManagementScreen;
 //         dialog.onTrue();
 //     };
 
-
 //     const closeDialog = (dialog: any) => {
 //         setSelectedEntry(null);
 //         setIsEdit(false);
@@ -516,7 +525,6 @@ export default LibraryMemberManagementScreen;
 //         console.log('Saved data:', data);
 
 //     };
-
 
 //     useEffect(() => { }, [isRenewMembership, isEdit])
 //     const renderTableActions = (row: any) => (

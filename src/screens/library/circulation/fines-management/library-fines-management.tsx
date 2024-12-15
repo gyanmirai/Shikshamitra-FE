@@ -14,184 +14,155 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import CollectFinesDialog from './component/collect-fines-dialog';
 
 const LibraryFineManagement = () => {
-    const dummyData = [
-        // Grouped by memberId
+  const dummyData = [
+    // Grouped by memberId
+    {
+      memberId: 'B1019JH8',
+      memberName: 'John Doe',
+      totalFineAmount: 50,
+      status: 'Overdue',
+      role: 'Student',
+      fines: [
         {
-            memberId: 'B1019JH8',
-            memberName: 'John Doe',
-            totalFineAmount: 50,
-            status: 'Overdue',
-            role:"Student",
-            fines: [
-                {
-                    bookId: 'B101',
-                    title: 'Introduction to Mathematics',
-                    issueDate: '01-11-2024',
-                    dueDate: '08-11-2024',
-                    returnDate: '12-11-2024',
-                    status: 'Overdue',
-                    fineAmount: 50,
-                    receivedAmount: 0,
-                    fineReason:"Late Return",
-                },
-            ],
+          bookId: 'B101',
+          title: 'Introduction to Mathematics',
+          issueDate: '01-11-2024',
+          dueDate: '08-11-2024',
+          returnDate: '12-11-2024',
+          status: 'Overdue',
+          fineAmount: 50,
+          receivedAmount: 0,
+          fineReason: 'Late Return',
+        },
+      ],
+    },
+    {
+      memberId: 'B10879JH8',
+      memberName: 'Jane Smith',
+      totalFineAmount: 50,
+      status: 'Overdue',
+      role: 'Student',
+      fines: [
+        {
+          bookId: 'B102',
+          title: 'Physics Fundamentals',
+          issueDate: '05-11-2024',
+          dueDate: '12-11-2024',
+          returnDate: null,
+          status: 'Pending',
+          fineAmount: 50,
+          receivedAmount: 0,
+          fineReason: 'Late Return',
+        },
+      ],
+    },
+    {
+      memberId: 'D10879J68',
+      memberName: 'Sam Wilson',
+      totalFineAmount: 250,
+      status: 'Overdue',
+      role: 'Student',
+      fines: [
+        {
+          bookId: 'B103',
+          title: 'Chemistry Basics',
+          issueDate: '08-11-2024',
+          dueDate: '15-11-2024',
+          returnDate: '18-11-2024',
+          status: 'Paid',
+          fineAmount: 150,
+          receivedAmount: 150,
+          fineReason: 'Late Return',
         },
         {
-            memberId: 'B10879JH8',
-            memberName: 'Jane Smith',
-            totalFineAmount: 50,
-            status: 'Overdue',
-            role:"Student",
-            fines: [
-                {
-                    bookId: 'B102',
-                    title: 'Physics Fundamentals',
-                    issueDate: '05-11-2024',
-                    dueDate: '12-11-2024',
-                    returnDate: null,
-                    status: 'Pending',
-                    fineAmount: 50,
-                    receivedAmount: 0,
-                    fineReason:"Late Return",
-                },
-            ],
+          bookId: 'B104',
+          title: 'Biology Essentials',
+          issueDate: '10-11-2024',
+          dueDate: '17-11-2024',
+          returnDate: '20-11-2024',
+          status: 'Overdue',
+          fineAmount: 100,
+          receivedAmount: 0,
+          fineReason: 'Late Return',
         },
-        {
-            memberId: 'D10879J68',
-            memberName: 'Sam Wilson',
-            totalFineAmount: 250,
-            status: 'Overdue',
-            role:"Student",
-            fines: [
-                {
-                    bookId: 'B103',
-                    title: 'Chemistry Basics',
-                    issueDate: '08-11-2024',
-                    dueDate: '15-11-2024',
-                    returnDate: '18-11-2024',
-                    status: 'Paid',
-                    fineAmount: 150,
-                    receivedAmount: 150,
-                    fineReason:"Late Return",
-                },
-                {
-                    bookId: 'B104',
-                    title: 'Biology Essentials',
-                    issueDate: '10-11-2024',
-                    dueDate: '17-11-2024',
-                    returnDate: '20-11-2024',
-                    status: 'Overdue',
-                    fineAmount: 100,
-                    receivedAmount: 0,
-                    fineReason:"Late Return",
-                },
-            ],
-        },
-    ];
+      ],
+    },
+  ];
 
-    const collectFineDialog = useBoolean();
-    const [selectedMember, setSelectedMember] = useState<any>(null);
+  const collectFineDialog = useBoolean();
+  const [selectedMember, setSelectedMember] = useState<any>(null);
 
-    const renderTableActions = (row: any) => (
-        <ThreeDotsActions
-            placement="right-top"
-            actions={({ popover }: any) => (
-                <MenuList>
-                    <MenuItem
-                        onClick={() => {
-                            setSelectedMember(row); // Set selected student data
-                            collectFineDialog.onTrue(); // Open dialog
-                            popover.close(); // Close popover
-                        }}
-                    >
-                        <Iconify icon="mingcute:pig-money-line" />
-                        Collect Fine
-                    </MenuItem>
-                </MenuList>
-            )}
+  const renderTableActions = (row: any) => (
+    <ThreeDotsActions
+      placement="right-top"
+      actions={({ popover }: any) => (
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setSelectedMember(row); // Set selected student data
+              collectFineDialog.onTrue(); // Open dialog
+              popover.close(); // Close popover
+            }}
+          >
+            <Iconify icon="mingcute:pig-money-line" />
+            Collect Fine
+          </MenuItem>
+        </MenuList>
+      )}
+    />
+  );
+
+  const collectFineHandler = (values: any) => {
+    console.log('Collected Fine Data:', values);
+    collectFineDialog.onFalse(); // Close dialog
+  };
+
+  return (
+    <>
+      <CustomizableTable
+        columns={[
+          { id: 'memberId', label: 'Gr No' },
+          { id: 'memberName', label: 'Name' },
+          { id: 'role', label: 'Role' },
+          {
+            id: 'totalFineAmount',
+            label: 'Total Fine Amount',
+            render(value) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+            },
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={value === 'Paid' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+          { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
+        ]}
+        data={dummyData}
+      />
+
+      {collectFineDialog.value && (
+        <CollectFinesDialog
+          dialogValue={collectFineDialog.value}
+          data={selectedMember}
+          onSave={collectFineHandler}
+          onClose={collectFineDialog.onFalse}
         />
-    );
-
-    const collectFineHandler = (values: any) => {
-        console.log('Collected Fine Data:', values);
-        collectFineDialog.onFalse(); // Close dialog
-    };
-
-    return (
-        <>
-            <CustomizableTable
-                columns={[
-                    { id: 'memberId', label: 'Gr No' },
-                    { id: 'memberName', label: 'Name' },
-                    { id: 'role', label: 'Role' },
-                    {
-                        id: 'totalFineAmount',
-                        label: 'Total Fine Amount',
-                        render(value) {
-                            return (
-                                <Typography fontSize="12px">
-                                    {formatNumber(value, 'INR')}
-                                </Typography>
-                            );
-                        },
-                    },
-                    {
-                        id: 'status', label: 'Status', render(value, row) {
-                            return (
-                                <Label
-                                    variant="soft"
-                                    color={
-                                        value === "Paid"
-                                            ? 'success'
-                                            : value === "Pending"
-                                                ? 'warning'
-                                                : 'error'
-                                    }
-                                >
-                                    {value}
-                                </Label>
-                            );
-                        },
-                    },
-                    { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-                ]}
-                data={dummyData}
-            />
-
-            {collectFineDialog.value && (
-                <CollectFinesDialog
-                    dialogValue={collectFineDialog.value}
-                    data={selectedMember} 
-                    onSave={collectFineHandler}
-                    onClose={collectFineDialog.onFalse}
-                />
-            )}
-        </>
-    );
+      )}
+    </>
+  );
 };
 
 export default LibraryFineManagement;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState } from 'react';
 
@@ -218,7 +189,7 @@ export default LibraryFineManagement;
 //             requestedDate: '12-11-2024',
 //             status: 'Overdue',
 //             fineAmount: 50,
-            
+
 //         },
 //         {
 //             bookId: 'B102',

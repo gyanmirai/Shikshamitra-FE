@@ -85,9 +85,9 @@ const FinanceFeeCollectionCharges = () => {
     dialog.onFalse();
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
-  useEffect(() => { }, [selectedEntry]);
+  useEffect(() => {}, [selectedEntry]);
   return (
     <>
       <Box>{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}</Box>

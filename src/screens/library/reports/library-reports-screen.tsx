@@ -92,11 +92,9 @@ const LibraryReportsScreen = () => {
                   </Field>
                 </Grid>
 
-
                 <Grid item xs={12} sm={6} md={4}>
                   <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                     <DatePicker
-
                       label="Start Date"
                       value={values.startDate}
                       onChange={(date) => setFieldValue('startDate', date)}
@@ -120,7 +118,6 @@ const LibraryReportsScreen = () => {
                   </Field>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-
                   <CustomSelect
                     label="Standard"
                     name="category"
@@ -128,10 +125,8 @@ const LibraryReportsScreen = () => {
                     value={values.category}
                     onChange={(value) => setFieldValue('category', value)}
                   />
-
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-
                   <CustomSelect
                     label="Division"
                     name="category"
@@ -139,10 +134,8 @@ const LibraryReportsScreen = () => {
                     value={values.category}
                     onChange={(value) => setFieldValue('category', value)}
                   />
-
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-
                   <CustomSelect
                     label="Name"
                     name="category"
@@ -150,7 +143,6 @@ const LibraryReportsScreen = () => {
                     value={values.category}
                     onChange={(value) => setFieldValue('category', value)}
                   />
-
                 </Grid>
 
                 {(values.report === 'inventory' || values.report === 'circulation') && (
@@ -188,12 +180,10 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) =>
-                        varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -205,12 +195,10 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="warning"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.warning.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
                     color: 'warning.main',
                     '&:hover': {
-                      backgroundColor: (theme) =>
-                        varAlpha(theme.palette.warning.mainChannel, 0.1),
+                      backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -221,8 +209,7 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="secondary"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
                     color: 'secondary.main',
                     '&:hover': {
                       backgroundColor: (theme) =>
@@ -234,8 +221,6 @@ const LibraryReportsScreen = () => {
                 </Button>
               </Grid>
             </Card>
-
-
           </Form>
         )}
       </Formik>

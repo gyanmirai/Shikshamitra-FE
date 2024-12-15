@@ -33,7 +33,15 @@ type Props = CardProps & {
   isShowChartLegendValue?: boolean;
 };
 
-export function AppAreaInstalled({ title, subheader, chart, selectSeries, height = 320, isShowChartLegendValue = true, ...other }: Props) {
+export function AppAreaInstalled({
+  title,
+  subheader,
+  chart,
+  selectSeries,
+  height = 320,
+  isShowChartLegendValue = true,
+  ...other
+}: Props) {
   const theme = useTheme();
 
   const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
@@ -76,24 +84,26 @@ export function AppAreaInstalled({ title, subheader, chart, selectSeries, height
         }
         sx={{ mb: 3 }}
       />
-      {isShowChartLegendValue ? (<ChartLegends
-        colors={chartOptions?.colors}
-        labels={chart.series[0].data.map((item) => item.name)}
-        values={[fShortenNumber(1234), fShortenNumber(6789), fShortenNumber(1012)]}
-        sx={{
-          px: 3,
-          gap: 3,
-        }}
-      />) : (<ChartLegends
-        colors={chartOptions?.colors}
-        labels={chart.series[0].data.map((item) => item.name)}
-
-        sx={{
-          px: 3,
-          gap: 3,
-        }}
-      />)}
-
+      {isShowChartLegendValue ? (
+        <ChartLegends
+          colors={chartOptions?.colors}
+          labels={chart.series[0].data.map((item) => item.name)}
+          values={[fShortenNumber(1234), fShortenNumber(6789), fShortenNumber(1012)]}
+          sx={{
+            px: 3,
+            gap: 3,
+          }}
+        />
+      ) : (
+        <ChartLegends
+          colors={chartOptions?.colors}
+          labels={chart.series[0].data.map((item) => item.name)}
+          sx={{
+            px: 3,
+            gap: 3,
+          }}
+        />
+      )}
 
       <Chart
         key={selectedSeries}

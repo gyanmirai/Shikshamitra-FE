@@ -16,21 +16,23 @@ const FinanceDashboardScreen = () => {
       {/* Top Section: Key Metrics */}
       <Grid container spacing={2} mb={3}>
         {[
-          { title: "Total Income", value: 120000, percent: 12 },
-          { title: "Total Expenses", value: 80000, percent: 5 },
-          { title: "Profit", value: 40000, percent: 20 },
-          { title: "Outstanding Fees", value: 30000, percent: 15 },
+          { title: 'Total Income', value: 120000, percent: 12 },
+          { title: 'Total Expenses', value: 80000, percent: 5 },
+          { title: 'Profit', value: 40000, percent: 20 },
+          { title: 'Outstanding Fees', value: 30000, percent: 15 },
         ].map((metric, idx) => (
           <Grid item xs={6} sm={3} key={idx}>
             <AppWidgetSummary
               title={metric.title}
               total={metric.value}
-              percent={metric.percent} chart={{
+              percent={metric.percent}
+              chart={{
                 colors: undefined,
                 categories: [],
                 series: [],
-                options: undefined
-              }} />
+                options: undefined,
+              }}
+            />
           </Grid>
         ))}
       </Grid>
@@ -88,16 +90,16 @@ const FinanceDashboardScreen = () => {
             }}
           />
         </Grid>
-        <Grid container spacing={2} sx={{ pt: "20px" }}>
+        <Grid container spacing={2} sx={{ pt: '20px' }}>
           <Grid item xs={12} md={4}>
             <EcommerceSaleByGender
               title="Fee Collection Status"
               total={9990}
               chart={{
                 series: [
-                  { label: "Collected", value: 75 },
-                  { label: "Pending", value: 15 },
-                  { label: "Overdue", value: 10 },
+                  { label: 'Collected', value: 75 },
+                  { label: 'Pending', value: 15 },
+                  { label: 'Overdue', value: 10 },
                 ],
               }}
             />
@@ -108,15 +110,13 @@ const FinanceDashboardScreen = () => {
               total={9990}
               chart={{
                 series: [
-                  { label: "Online", value: 45 },
-                  { label: "Cash", value: 35 },
-                  { label: "Card", value: 20 },
+                  { label: 'Online', value: 45 },
+                  { label: 'Cash', value: 35 },
+                  { label: 'Card', value: 20 },
                 ],
               }}
             />
           </Grid>
-
-
         </Grid>
         {/* <Grid item xs={12} md={4}>
           <Card sx={{ p: 2 }}>
@@ -137,7 +137,6 @@ const FinanceDashboardScreen = () => {
             ))}
           </Card>
         </Grid> */}
-
       </Grid>
 
       {/* Bottom Section: Key Reports */}

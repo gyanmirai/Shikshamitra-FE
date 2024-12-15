@@ -1,10 +1,11 @@
-
 'use client';
 
 import React, { useState } from 'react';
 
 import {
-  Box, Table, Paper,
+  Box,
+  Table,
+  Paper,
   MenuItem,
   MenuList,
   TableRow,
@@ -35,60 +36,60 @@ import AddNewMemberDialog from '../member-management/component/add-new-member-di
 
 const bookData = [
   {
-    id: "B001",
-    title: "Introduction to Programming",
-    author: "John Doe",
-    publisher: "TechPress",
+    id: 'B001',
+    title: 'Introduction to Programming',
+    author: 'John Doe',
+    publisher: 'TechPress',
     editions: [
       {
         year: 2020,
-        publisher: "TechPress",
+        publisher: 'TechPress',
         totalCopies: 5,
         availableCopies: 2,
       },
       {
         year: 2021,
-        publisher: "TechPress",
+        publisher: 'TechPress',
         totalCopies: 3,
         availableCopies: 1,
       },
     ],
   },
   {
-    id: "B002",
-    title: "Advanced Programming Techniques",
-    author: "Jane Smith",
-    publisher: "CodePub",
+    id: 'B002',
+    title: 'Advanced Programming Techniques',
+    author: 'Jane Smith',
+    publisher: 'CodePub',
     editions: [
       {
         year: 2021,
-        publisher: "CodePub",
+        publisher: 'CodePub',
         totalCopies: 4,
         availableCopies: 2,
       },
       {
         year: 2022,
-        publisher: "CodePub",
+        publisher: 'CodePub',
         totalCopies: 6,
         availableCopies: 4,
       },
     ],
   },
   {
-    id: "B003",
-    title: "Data Structures and Algorithms",
-    author: "Michael Brown",
-    publisher: "AlgoBooks",
+    id: 'B003',
+    title: 'Data Structures and Algorithms',
+    author: 'Michael Brown',
+    publisher: 'AlgoBooks',
     editions: [
       {
         year: 2019,
-        publisher: "AlgoBooks",
+        publisher: 'AlgoBooks',
         totalCopies: 3,
         availableCopies: 0, // No copies available
       },
       {
         year: 2020,
-        publisher: "AlgoBooks",
+        publisher: 'AlgoBooks',
         totalCopies: 5,
         availableCopies: 5, // Available for issue
       },
@@ -96,61 +97,68 @@ const bookData = [
   },
 ];
 
-
 const memberData = [
   {
-    id: "S001",
-    name: "Alice",
-    role: "Student",
+    id: 'S001',
+    name: 'Alice',
+    role: 'Student',
     pendingCharges: [
       { type: 'Damage Fee', amount: 100, status: 'Pending' },
       { type: 'Late Return Fee', amount: 30, status: 'Pending' },
     ],
   },
   {
-    id: "S002",
-    name: "Bob",
-    role: "Student",
-    pendingCharges: [
-      { type: 'Overdue Fee', amount: 20, status: 'Pending' },
-    ],
+    id: 'S002',
+    name: 'Bob',
+    role: 'Student',
+    pendingCharges: [{ type: 'Overdue Fee', amount: 20, status: 'Pending' }],
   },
   {
-    id: "T001",
-    name: "Charlie",
-    role: "Teacher",
+    id: 'T001',
+    name: 'Charlie',
+    role: 'Teacher',
     pendingCharges: [],
   },
   {
-    id: "T002",
-    name: "Dana",
-    role: "Teacher",
+    id: 'T002',
+    name: 'Dana',
+    role: 'Teacher',
     pendingCharges: [
       { type: 'Damage Fee', amount: 100, status: 'Pending' },
       { type: 'Late Return Fee', amount: 30, status: 'Pending' },
     ],
   },
-
 ];
-
 
 const books = [
   {
-    id: "B001",
-    title: "Introduction to Programming",
-    author: "John Doe",
-    publisher: "TechPress",
+    id: 'B001',
+    title: 'Introduction to Programming',
+    author: 'John Doe',
+    publisher: 'TechPress',
     editions: [
       {
         year: 2020,
         totalCopies: 5,
         availableCopies: 2,
         currentIssuers: [
-          { userId: "S005", name: "Alice", role: "Student", issueDate: "2024-11-10", dueDate: "2024-12-01" },
-          { userId: "S006", name: "Bob", role: "Student", issueDate: "2024-11-12", dueDate: "2024-12-02" },
+          {
+            userId: 'S005',
+            name: 'Alice',
+            role: 'Student',
+            issueDate: '2024-11-10',
+            dueDate: '2024-12-01',
+          },
+          {
+            userId: 'S006',
+            name: 'Bob',
+            role: 'Student',
+            issueDate: '2024-11-12',
+            dueDate: '2024-12-02',
+          },
         ],
         reservedList: [
-          { userId: "S007", name: "Charlie", role: "Teacher", reservationDate: "2024-11-15" },
+          { userId: 'S007', name: 'Charlie', role: 'Teacher', reservationDate: '2024-11-15' },
         ],
       },
       {
@@ -158,30 +166,54 @@ const books = [
         totalCopies: 3,
         availableCopies: 1,
         currentIssuers: [
-          { userId: "S008", name: "Dana", role: "Student", issueDate: "2024-11-15", dueDate: "2024-12-05" },
+          {
+            userId: 'S008',
+            name: 'Dana',
+            role: 'Student',
+            issueDate: '2024-11-15',
+            dueDate: '2024-12-05',
+          },
         ],
         reservedList: [],
       },
     ],
   },
   {
-    id: "B002",
-    title: "Data Structures and Algorithms",
-    author: "Jane Smith",
-    publisher: "CodeWorks",
+    id: 'B002',
+    title: 'Data Structures and Algorithms',
+    author: 'Jane Smith',
+    publisher: 'CodeWorks',
     editions: [
       {
         year: 2019,
         totalCopies: 6,
         availableCopies: 0,
         currentIssuers: [
-          { userId: "S009", name: "Eve", role: "Teacher", issueDate: "2024-11-01", dueDate: "2024-11-20" },
-          { userId: "S010", name: "Frank", role: "Student", issueDate: "2024-11-05", dueDate: "2024-11-25" },
-          { userId: "S011", name: "Grace", role: "Student", issueDate: "2024-11-08", dueDate: "2024-11-28" },
+          {
+            userId: 'S009',
+            name: 'Eve',
+            role: 'Teacher',
+            issueDate: '2024-11-01',
+            dueDate: '2024-11-20',
+          },
+          {
+            userId: 'S010',
+            name: 'Frank',
+            role: 'Student',
+            issueDate: '2024-11-05',
+            dueDate: '2024-11-25',
+          },
+          {
+            userId: 'S011',
+            name: 'Grace',
+            role: 'Student',
+            issueDate: '2024-11-08',
+            dueDate: '2024-11-28',
+          },
         ],
         reservedList: [
-          { userId: "S012", name: "Hannah", role: "Teacher", reservationDate: "2024-11-18" },
-          { userId: "S013", name: "Ivy", role: "Student", reservationDate: "2024-11-20" },
+          { userId: 'S012', name: 'Hannah', role: 'Teacher', reservationDate: '2024-11-18' },
+          { userId: 'S013', name: 'Ivy', role: 'Student', reservationDate: '2024-11-20' },
         ],
       },
       {
@@ -189,55 +221,85 @@ const books = [
         totalCopies: 4,
         availableCopies: 1,
         currentIssuers: [
-          { userId: "S014", name: "Jack", role: "Student", issueDate: "2024-11-12", dueDate: "2024-12-01" },
+          {
+            userId: 'S014',
+            name: 'Jack',
+            role: 'Student',
+            issueDate: '2024-11-12',
+            dueDate: '2024-12-01',
+          },
         ],
         reservedList: [],
       },
     ],
   },
   {
-    id: "B003",
-    title: "Modern Physics",
-    author: "Albert Newton",
-    publisher: "SciPub",
+    id: 'B003',
+    title: 'Modern Physics',
+    author: 'Albert Newton',
+    publisher: 'SciPub',
     editions: [
       {
         year: 2018,
         totalCopies: 2,
         availableCopies: 0,
         currentIssuers: [
-          { userId: "S015", name: "Kim", role: "Student", issueDate: "2024-11-05", dueDate: "2024-11-25" },
-          { userId: "S016", name: "Liam", role: "Teacher", issueDate: "2024-11-07", dueDate: "2024-11-27" },
+          {
+            userId: 'S015',
+            name: 'Kim',
+            role: 'Student',
+            issueDate: '2024-11-05',
+            dueDate: '2024-11-25',
+          },
+          {
+            userId: 'S016',
+            name: 'Liam',
+            role: 'Teacher',
+            issueDate: '2024-11-07',
+            dueDate: '2024-11-27',
+          },
         ],
         reservedList: [
-          { userId: "S017", name: "Mia", role: "Student", reservationDate: "2024-11-20" },
+          { userId: 'S017', name: 'Mia', role: 'Student', reservationDate: '2024-11-20' },
         ],
       },
     ],
   },
   {
-    id: "B004",
-    title: "History of Civilizations",
-    author: "Diana Prince",
-    publisher: "HeritagePress",
+    id: 'B004',
+    title: 'History of Civilizations',
+    author: 'Diana Prince',
+    publisher: 'HeritagePress',
     editions: [
       {
         year: 2017,
         totalCopies: 8,
         availableCopies: 5,
         currentIssuers: [
-          { userId: "S018", name: "Noah", role: "Teacher", issueDate: "2024-11-15", dueDate: "2024-12-05" },
-          { userId: "S019", name: "Olivia", role: "Student", issueDate: "2024-11-16", dueDate: "2024-12-06" },
+          {
+            userId: 'S018',
+            name: 'Noah',
+            role: 'Teacher',
+            issueDate: '2024-11-15',
+            dueDate: '2024-12-05',
+          },
+          {
+            userId: 'S019',
+            name: 'Olivia',
+            role: 'Student',
+            issueDate: '2024-11-16',
+            dueDate: '2024-12-06',
+          },
         ],
         reservedList: [],
       },
     ],
   },
   {
-    id: "B005",
-    title: "Artificial Intelligence: Basics",
-    author: "Sophia Robotics",
-    publisher: "FutureTech",
+    id: 'B005',
+    title: 'Artificial Intelligence: Basics',
+    author: 'Sophia Robotics',
+    publisher: 'FutureTech',
     editions: [
       {
         year: 2023,
@@ -250,12 +312,9 @@ const books = [
   },
 ];
 
-
 const LibraryBookManagementScreen = () => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [isEdit, setIsEdit] = useState(false);
-
-
 
   const [selectedBook, setSelectedBook] = useState<any>(null);
 
@@ -266,7 +325,6 @@ const LibraryBookManagementScreen = () => {
   const handleCloseDialog = () => {
     setSelectedBook(null);
   };
-
 
   // Dialog state handlers
   const addMemberDialog = useBoolean();
@@ -301,7 +359,6 @@ const LibraryBookManagementScreen = () => {
 
   const saveHandler = () => {
     console.log('Saved data:', data);
-
   };
 
   // Actions for the table rows
@@ -313,7 +370,7 @@ const LibraryBookManagementScreen = () => {
           <MenuItem
             onClick={() => {
               openDialog(addNewBookDialog, row, true);
-              popover.onClose()
+              popover.onClose();
             }}
           >
             <Iconify icon="mdi:eye" />
@@ -322,7 +379,7 @@ const LibraryBookManagementScreen = () => {
           <MenuItem
             onClick={() => {
               openDialog(issueBookDialog, row);
-              popover.onClose()
+              popover.onClose();
             }}
           >
             <Iconify icon="solar:pen-bold" />
@@ -349,9 +406,8 @@ const LibraryBookManagementScreen = () => {
     top: 0,
     background: '#f4f6f8',
     zIndex: 1,
-    width: "100px",
+    width: '100px',
   };
-
 
   const cellStyle: React.CSSProperties = {
     // border: '1px solid #ccc',
@@ -365,14 +421,16 @@ const LibraryBookManagementScreen = () => {
     <>
       <CustomBreadcrumbs
         heading="Book Management"
-        links={[
-          { name: 'Library' },
-          { name: 'Book Management' },
-
-        ]}
+        links={[{ name: 'Library' }, { name: 'Book Management' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box pb="20px" display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+      <Box
+        pb="20px"
+        display="flex"
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center"
+      >
         <TextField
           // fullWidth
           placeholder="Search by book name , category , status"
@@ -387,9 +445,9 @@ const LibraryBookManagementScreen = () => {
             ),
           }}
           size="small"
-          value=''
-          onChange={() => { }}
-          sx={{ '& input': { fontSize: '12px' }, width: "400px" }}
+          value=""
+          onChange={() => {}}
+          sx={{ '& input': { fontSize: '12px' }, width: '400px' }}
         />
         <CommonCtaComponent
           bookHandler={() => openDialog(addNewBookDialog)}
@@ -443,7 +501,7 @@ const LibraryBookManagementScreen = () => {
           onClose={() => closeDialog(returnBookDialog)}
         />
       )}
-      {addMemberDialog &&
+      {addMemberDialog && (
         <AddNewMemberDialog
           dialogValue={addMemberDialog.value}
           data={selectedEntry}
@@ -452,27 +510,25 @@ const LibraryBookManagementScreen = () => {
           isEdit={isEdit}
           isRenewMembership={false}
         />
-      }
+      )}
 
       <div>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-
-                <TableCell sx={{ ...headerCellStyle, width: "30px" }}>ISBN</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: "330px" }}>Name</TableCell>
+                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>ISBN</TableCell>
+                <TableCell sx={{ ...headerCellStyle, width: '330px' }}>Name</TableCell>
                 {/* <TableCell sx={headerCellStyle}>Role</TableCell> */}
-                <TableCell sx={{ ...headerCellStyle, width: "30px" }}>Borrowed</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: "30px" }}>Overdue</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: "30px" }}>Reserved</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: "30px" }}>Action</TableCell>
+                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Borrowed</TableCell>
+                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Overdue</TableCell>
+                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Reserved</TableCell>
+                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {books.map((book) => (
                 <TableRow key={book.id}>
-
                   <TableCell sx={cellStyle}>{book.id}</TableCell>
                   <TableCell sx={cellStyle}>{book.title}</TableCell>
                   {/* <TableCell sx={cellStyle}>Author</TableCell> */}
@@ -501,7 +557,7 @@ const LibraryBookManagementScreen = () => {
                           <MenuItem
                             onClick={() => {
                               // handleDelete(book);
-                              handleViewDetails(book)
+                              handleViewDetails(book);
                             }}
                           >
                             <Iconify icon="mdi:eye" />
@@ -542,7 +598,6 @@ const LibraryBookManagementScreen = () => {
                 </TableRow>
               ))}
             </TableBody>
-
           </Table>
         </TableContainer>
 
@@ -554,10 +609,10 @@ const LibraryBookManagementScreen = () => {
             handleClose={handleCloseDialog}
             maxWidth="xl"
           >
-            <Scrollbar sx={{ overflow: "auto", maxHeight: "550px" }}>
+            <Scrollbar sx={{ overflow: 'auto', maxHeight: '550px' }}>
               <DialogContent>
                 {/* Current Issuers Table */}
-                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
                   Current Issuers
                 </Typography>
                 <TableContainer>
@@ -593,7 +648,7 @@ const LibraryBookManagementScreen = () => {
                         )
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} sx={{ textAlign: "center", padding: "16px" }}>
+                          <TableCell colSpan={6} sx={{ textAlign: 'center', padding: '16px' }}>
                             No current issuers available
                           </TableCell>
                         </TableRow>
@@ -603,7 +658,7 @@ const LibraryBookManagementScreen = () => {
                 </TableContainer>
 
                 {/* Reserved List Table */}
-                <Typography variant="h6" sx={{ fontWeight: "bold", mt: 4, mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 4, mb: 2 }}>
                   Reserved List
                 </Typography>
                 <TableContainer>
@@ -656,7 +711,7 @@ const LibraryBookManagementScreen = () => {
                         )
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} sx={{ textAlign: "center", padding: "16px" }}>
+                          <TableCell colSpan={6} sx={{ textAlign: 'center', padding: '16px' }}>
                             No reservations made yet
                           </TableCell>
                         </TableRow>
@@ -669,14 +724,14 @@ const LibraryBookManagementScreen = () => {
             {/* <DialogActions>
               <Button onClick={handleCloseDialog}>Close</Button>
             </DialogActions> */}
-          </CustomDialog>)}
+          </CustomDialog>
+        )}
       </div>
     </>
   );
 };
 
 export default LibraryBookManagementScreen;
-
 
 // {selectedBook && (
 //   <CustomDialog
@@ -771,7 +826,6 @@ export default LibraryBookManagementScreen;
 //                                   Delete
 //                                 </MenuItem>
 
-
 //                               </MenuList>
 //                             )}
 //                           />
@@ -794,13 +848,6 @@ export default LibraryBookManagementScreen;
 //     </Scrollbar>
 //   </CustomDialog>
 // )}
-
-
-
-
-
-
-
 
 // 'use client'
 
@@ -840,7 +887,6 @@ export default LibraryBookManagementScreen;
 
 //   const issueBookDialogValue = useBoolean();
 //   const returnBookDialogValue = useBoolean();
-
 
 //   const closeDialogHandler = () => {
 //     setIsEdit(false)
@@ -959,7 +1005,6 @@ export default LibraryBookManagementScreen;
 //           onClose={closeReturnBookDialog} />
 //       }
 //     </>
-
 
 //   )
 // }

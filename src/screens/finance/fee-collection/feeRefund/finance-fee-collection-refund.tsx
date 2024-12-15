@@ -195,7 +195,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
     status: '',
   };
 
-  const handleSave = () => { };
+  const handleSave = () => {};
 
   const closeDialog = () => {
     dialog.onFalse();
@@ -295,7 +295,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
                   <FormattedAmountInput
                     label="Total Refund"
                     value={formatNumber(totalFeeRefundAmount.toString())}
-                    onChange={() => { }}
+                    onChange={() => {}}
                   />
                 );
               },

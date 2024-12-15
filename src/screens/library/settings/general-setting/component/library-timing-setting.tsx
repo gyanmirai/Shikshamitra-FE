@@ -61,7 +61,7 @@ const LibraryTimingSetting: React.FC = () => {
           { id: 'day', label: 'Day' },
           {
             id: 'startTime',
-            label: "Start Time",
+            label: 'Start Time',
             renderColumn() {
               return (
                 <Box sx={{ width: '120px' }}>
@@ -90,7 +90,7 @@ const LibraryTimingSetting: React.FC = () => {
           },
           {
             id: 'endTime',
-            label: "End Time",
+            label: 'End Time',
             renderColumn() {
               return (
                 <Box sx={{ width: '120px' }}>
