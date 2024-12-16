@@ -1,8 +1,10 @@
+import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Card, Grid, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Card, Grid, MenuList, MenuItem, Typography, CircularProgress } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -15,10 +17,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { AppWidget } from './courseManagement';
 
 interface CourseDetail {
-  studentName: string;
-  unitsCompleted: string;
-  pendingAssessments: number;
-  averageGrade: string;
+  chapterName: string;
+  teacherName: string;
+  progress: number;
+  pending: number;
+  timeLine: Dayjs | null;
 }
 
 interface Course {
@@ -35,22 +38,18 @@ const courses: Course[] = [
     progress: 75,
     details: [
       {
-        studentName: 'John Doe',
-        unitsCompleted: '5/8 Units',
-        pendingAssessments: 2,
-        averageGrade: 'B+',
+        chapterName: 'Algebra Basics',
+        teacherName: 'John Doe',
+        progress: 60,
+        pending: 40,
+        timeLine: dayjs('2024-10-28'),
       },
       {
-        studentName: 'Jane Smith',
-        unitsCompleted: '6/8 Units',
-        pendingAssessments: 1,
-        averageGrade: 'A-',
-      },
-      {
-        studentName: 'Mike Johnson',
-        unitsCompleted: '4/8 Units',
-        pendingAssessments: 3,
-        averageGrade: 'B',
+        chapterName: 'Geometry Foundations',
+        teacherName: 'Jane Smith',
+        progress: 80,
+        pending: 20,
+        timeLine: dayjs('2024-11-05'),
       },
     ],
   },
@@ -60,22 +59,18 @@ const courses: Course[] = [
     progress: 86.6,
     details: [
       {
-        studentName: 'Emily Brown',
-        unitsCompleted: '7/8 Units',
-        pendingAssessments: 1,
-        averageGrade: 'A',
+        chapterName: 'Physics Introduction',
+        teacherName: 'Emily Brown',
+        progress: 70,
+        pending: 30,
+        timeLine: dayjs('2024-11-10'),
       },
       {
-        studentName: 'David Lee',
-        unitsCompleted: '6/8 Units',
-        pendingAssessments: 2,
-        averageGrade: 'B+',
-      },
-      {
-        studentName: 'Sarah Wilson',
-        unitsCompleted: '5/8 Units',
-        pendingAssessments: 2,
-        averageGrade: 'B',
+        chapterName: 'Chemistry Basics',
+        teacherName: 'David Lee',
+        progress: 90,
+        pending: 10,
+        timeLine: dayjs('2024-11-15'),
       },
     ],
   },
@@ -85,22 +80,18 @@ const courses: Course[] = [
     progress: 75,
     details: [
       {
-        studentName: 'Tom Harris',
-        unitsCompleted: '5/8 Units',
-        pendingAssessments: 2,
-        averageGrade: 'B+',
+        chapterName: 'Grammar Essentials',
+        teacherName: 'Tom Harris',
+        progress: 55,
+        pending: 45,
+        timeLine: dayjs('2024-10-20'),
       },
       {
-        studentName: 'Lisa Chen',
-        unitsCompleted: '6/8 Units',
-        pendingAssessments: 1,
-        averageGrade: 'A-',
-      },
-      {
-        studentName: 'Alex Taylor',
-        unitsCompleted: '4/8 Units',
-        pendingAssessments: 3,
-        averageGrade: 'B-',
+        chapterName: 'Writing Skills',
+        teacherName: 'Lisa Chen',
+        progress: 75,
+        pending: 25,
+        timeLine: dayjs('2024-10-30'),
       },
     ],
   },
@@ -110,22 +101,18 @@ const courses: Course[] = [
     progress: 86.6,
     details: [
       {
-        studentName: 'Raj Patel',
-        unitsCompleted: '7/8 Units',
-        pendingAssessments: 1,
-        averageGrade: 'A',
+        chapterName: 'Alphabet and Basics',
+        teacherName: 'Raj Patel',
+        progress: 88,
+        pending: 12,
+        timeLine: dayjs('2024-11-01'),
       },
       {
-        studentName: 'Priya Shah',
-        unitsCompleted: '6/8 Units',
-        pendingAssessments: 2,
-        averageGrade: 'B+',
-      },
-      {
-        studentName: 'Amit Desai',
-        unitsCompleted: '5/8 Units',
-        pendingAssessments: 2,
-        averageGrade: 'B',
+        chapterName: 'Reading Comprehension',
+        teacherName: 'Priya Shah',
+        progress: 85,
+        pending: 15,
+        timeLine: dayjs('2024-11-10'),
       },
     ],
   },
@@ -210,10 +197,79 @@ const CourseProgress = (props: TabComponentType) => {
             </Typography>
             <CustomizableTable
               columns={[
-                { id: 'studentName', label: 'Student Name' },
-                { id: 'unitsCompleted', label: 'Units Completed' },
-                { id: 'pendingAssessments', label: 'Pending Assessments' },
-                { id: 'averageGrade', label: 'Average Grade' },
+                { id: 'chapterName', label: 'Chapter Name' },
+                { id: 'teacherName', label: 'Teacher Name' },
+                {
+                  id: 'progress',
+                  label: 'Progress',
+                  render(value, row) {
+                    return (
+                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                        <CircularProgress variant="determinate" value={value} />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {value}%
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  },
+                },
+                {
+                  id: 'pending',
+                  label: 'Pending',
+                  render(value, row) {
+                    return (
+                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                        <CircularProgress color="error" variant="determinate" value={value} />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {value}%
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  },
+                },
+                {
+                  id: 'timeLine',
+                  label: 'Timeline',
+                  render: (value, row) => (
+                    <Typography fontSize="12px" gutterBottom>
+                      {dayjs(value).format('DD MMM YYYY')}
+                    </Typography>
+                  ),
+                },
                 {
                   id: 'action',
                   label: 'Action',

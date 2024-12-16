@@ -559,11 +559,11 @@ const academicModule = {
           path: '/academic/resources-content-library',
           _action: 'resources-content-library',
         },
-        {
-          title: 'Parent-Teacher Communication',
-          path: '/academic/parent-teacher-communication',
-          _action: 'parent-teacher-communication',
-        },
+        // {
+        //   title: 'Parent-Teacher Communication',
+        //   path: '/academic/parent-teacher-communication',
+        //   _action: 'parent-teacher-communication',
+        // },
         {
           title: 'Homework & Assignment Management',
           path: '/academic/homework-assignment-management',

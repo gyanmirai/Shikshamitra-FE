@@ -278,7 +278,7 @@ const ActivityManagement = (props: TabComponentType) => {
                       </MenuItem>
                     )}
 
-                    {row.status === 'Active' && (
+                    {row.status === 'Completed' && (
                       <MenuItem
                         onClick={() => {
                           assignStudentDialog.onTrue();

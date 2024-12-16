@@ -13,7 +13,6 @@ import {
   Tooltip,
   ListItem,
   useTheme,
-  CardHeader,
   Typography,
   CardContent,
   ListItemText,
@@ -196,8 +195,6 @@ export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Pro
 
   return (
     <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
-
       <Box display="grid" gap={2} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
         {list.map((site) => (
           <Box
