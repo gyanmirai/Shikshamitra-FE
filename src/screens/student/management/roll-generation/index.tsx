@@ -30,7 +30,7 @@ const RollNoGenerationScreen = () => {
           ]}
           label="Arrangement Type"
           value={arrangementType}
-          onChange={(val: string | string[]) => setArrangementType(val as string)}
+          onChange={(val) => setArrangementType(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -44,7 +44,7 @@ const RollNoGenerationScreen = () => {
           ]}
           label="Arrangement By"
           value={arrangeBy}
-          onChange={(val: string | string[]) => setArrangeBy(val as string)}
+          onChange={(val) => setArrangeBy(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}

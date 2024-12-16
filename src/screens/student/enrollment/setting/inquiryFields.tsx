@@ -64,7 +64,7 @@ const InquiryFields = () => {
             ]}
             value={field}
             label="select Field"
-            onChange={(val: string | string[]) => {
+            onChange={(val) => {
               setField(val as string);
             }}
             formControlProps={{ fullWidth: true }}

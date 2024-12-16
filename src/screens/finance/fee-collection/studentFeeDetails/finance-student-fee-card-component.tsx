@@ -357,7 +357,9 @@ interface FinanceStudentFeeCardComponentProps {
   studentId: string;
 }
 
-const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentProps> = ({ studentId }) => {
+const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentProps> = ({
+  studentId,
+}) => {
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
   const financeStudentAdditionalDiscountDialog = useBoolean();

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React from 'react';
 
@@ -9,10 +9,8 @@ import FinanceStudentFeeTab from 'src/screens/finance/fee-collection/finance-stu
 // import FinanceFeeCollectionScreen from 'src/screens/finance/fee-collection/finance-fee-collection-screen';
 
 const FinanceFeeCollection = () => {
-
-
-    const [searchParams, setSearchParams] = useSearchParam({ studentId: "" })
-    return (<FinanceStudentFeeTab studentId="" />)
+  const [searchParams, setSearchParams] = useSearchParam({ studentId: '' });
+  return <FinanceStudentFeeTab studentId="" />;
 };
 
 export default FinanceFeeCollection;

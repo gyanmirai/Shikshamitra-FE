@@ -12,10 +12,13 @@ import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
+import { documentApi } from './document/documentApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
+import { payElementApi } from './payElement/payElementApi';
 import { organizationApi } from './oraganization/oraganization';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
+import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 
 const persistConfig = {
   key: 'root',
@@ -38,6 +41,9 @@ const reducers = combineReducers({
   [yearApi.reducerPath]: yearApi.reducer,
   [tenantApi.reducerPath]: tenantApi.reducer,
   [employeeApi.reducerPath]: employeeApi.reducer,
+  [documentApi.reducerPath]: documentApi.reducer,
+  [payElementApi.reducerPath]: payElementApi.reducer,
+  [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
 });
 
 const store = configureStore({
@@ -54,7 +60,10 @@ const store = configureStore({
       .concat(divisionApi.middleware)
       .concat(yearApi.middleware)
       .concat(tenantApi.middleware)
-      .concat(employeeApi.middleware),
+      .concat(employeeApi.middleware)
+      .concat(documentApi.middleware)
+      .concat(payElementApi.middleware)
+      .concat(payrollStructureApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

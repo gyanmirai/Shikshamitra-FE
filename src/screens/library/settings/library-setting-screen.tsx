@@ -1,10 +1,8 @@
-import React from 'react'
+import React from 'react';
 
 const LibrarySettingScreen = () => {
-    const data = [];
-  return (
-    <div>Library-SettingScreen</div>
-  )
-}
+  const data = [];
+  return <div>Library-SettingScreen</div>;
+};
 
 export default LibrarySettingScreen;

@@ -51,11 +51,7 @@ const LibraryNotificationSettingScreen = () => {
     <>
       <CustomBreadcrumbs
         heading="Notification Setting"
-        links={[
-          { name: 'Library' },
-          { name: 'Setting' },
-          { name: 'Notification Setting' },
-        ]}
+        links={[{ name: 'Library' }, { name: 'Setting' }, { name: 'Notification Setting' }]}
         sx={{ px: 1, mb: 5 }}
       />
 
@@ -110,17 +106,17 @@ const LibraryNotificationSettingScreen = () => {
           Communication Preferences Section
         </Typography>
 
-
-
         {/* Customizable Table for Communication Preferences */}
         <CustomizableTable
           isFilter={false}
           isShowedDense={false}
           isSearch={false}
           columns={[
-            { id: "group", label: "User Group" },
+            { id: 'group', label: 'User Group' },
             {
-              id: "sms", label: "SMS", render: (value, row) => (
+              id: 'sms',
+              label: 'SMS',
+              render: (value, row) => (
                 <Checkbox
                   checked={row.sms}
                   onChange={(e) => handleGroupChange(row.group, 'sms', e.target.checked)}
@@ -128,7 +124,9 @@ const LibraryNotificationSettingScreen = () => {
               ),
             },
             {
-              id: "email", label: "Email", render: (value, row) => (
+              id: 'email',
+              label: 'Email',
+              render: (value, row) => (
                 <Checkbox
                   checked={row.email}
                   onChange={(e) => handleGroupChange(row.group, 'email', e.target.checked)}
@@ -136,7 +134,9 @@ const LibraryNotificationSettingScreen = () => {
               ),
             },
             {
-              id: "whatsapp", label: "WhatsApp", render: (value, row) => (
+              id: 'whatsapp',
+              label: 'WhatsApp',
+              render: (value, row) => (
                 <Checkbox
                   checked={row.whatsapp}
                   onChange={(e) => handleGroupChange(row.group, 'whatsapp', e.target.checked)}
@@ -152,12 +152,6 @@ const LibraryNotificationSettingScreen = () => {
 };
 
 export default LibraryNotificationSettingScreen;
-
-
-
-
-
-
 
 // 'use client';
 

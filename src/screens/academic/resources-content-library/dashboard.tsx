@@ -1,6 +1,7 @@
+import type { CardProps } from '@mui/material';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   Box,
@@ -9,13 +10,18 @@ import {
   List,
   alpha,
   Button,
+  Tooltip,
   ListItem,
   useTheme,
+  CardHeader,
   Typography,
   CardContent,
   ListItemText,
 } from '@mui/material';
 
+import { varAlpha } from 'src/theme/styles';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -44,6 +50,7 @@ const quickStatsData = [
 ];
 
 const Dashboard = (props: TabComponentType) => {
+  const [hoveredResource, setHoveredResource] = useState<string | null>(null);
   const theme = useTheme();
   return (
     <Box>
@@ -58,7 +65,7 @@ const Dashboard = (props: TabComponentType) => {
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ typography: 'subtitle2' }}>Recent Resources</Box>
+              <Box sx={{ typography: 'subtitle1' }}>Recent Resources</Box>
               <Scrollbar sx={{ mt: 1.5 }}>
                 <Box
                   component="ul"
@@ -71,15 +78,48 @@ const Dashboard = (props: TabComponentType) => {
                 >
                   {resourcesData.map((resource, index) => (
                     <Button
+                      key={index}
                       variant="outlined"
                       fullWidth
                       sx={{
-                        justifyContent: 'start',
+                        justifyContent: 'space-between',
                         position: 'relative',
                         overflow: 'hidden',
+                        mb: 1,
                       }}
+                      onMouseEnter={() => setHoveredResource(resource.title)}
+                      onMouseLeave={() => setHoveredResource(null)}
                     >
-                      {resource.title}
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography>{resource.title}</Typography>
+                        {hoveredResource === resource.title && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              ml: 2,
+                              color: 'text.secondary',
+                            }}
+                          >
+                            Uploaded: {resource.uploadDate}
+                          </Typography>
+                        )}
+                      </Box>
+                      {hoveredResource === resource.title && (
+                        <Tooltip title="Download">
+                          <Iconify
+                            icon="ic:baseline-download"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            sx={{
+                              position: 'absolute',
+                              right: 10,
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                            }}
+                          />
+                        </Tooltip>
+                      )}
                     </Button>
                   ))}
                 </Box>
@@ -88,7 +128,7 @@ const Dashboard = (props: TabComponentType) => {
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <DataCard title="Quick Stats" data={quickStatsData} />
+          <AnalyticsTrafficBySite list={quickStatsData} />
         </Grid>
         <Grid item xs={12}>
           <AnalyticsWebsiteVisits
@@ -135,6 +175,54 @@ function DataCard({ title, data, sx }: any) {
           ))}
         </List>
       </CardContent>
+    </Card>
+  );
+}
+
+type Props = CardProps & {
+  title?: string;
+  subheader?: string;
+  list: { value: number; label: string }[];
+};
+
+const icons: { [key: string]: JSX.Element } = {
+  'Total resources uploaded': <Iconify icon="mdi:resource-description-framework" />,
+  'Shared resources': <Iconify icon="mdi:share-variant" />,
+  Favorites: <Iconify icon="mdi:star" />,
+};
+
+export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Props) {
+  const theme = useTheme();
+
+  return (
+    <Card {...other}>
+      <CardHeader title={title} subheader={subheader} />
+
+      <Box display="grid" gap={2} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
+        {list.map((site) => (
+          <Box
+            key={site.label}
+            sx={{
+              py: 2.5,
+              display: 'flex',
+              borderRadius: 1.5,
+              textAlign: 'center',
+              alignItems: 'center',
+              flexDirection: 'column',
+              border: `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+            }}
+          >
+            {icons[site.label]}
+            <Typography variant="h6" sx={{ mt: 1 }}>
+              {site.value}
+            </Typography>
+
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {site.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
     </Card>
   );
 }

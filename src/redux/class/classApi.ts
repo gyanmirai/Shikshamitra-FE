@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
-import { axiosBaseQuery } from 'src/services/httpService';
+import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
 export const classApi = createApi({
   reducerPath: 'classApi',

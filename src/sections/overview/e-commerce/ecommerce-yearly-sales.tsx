@@ -27,17 +27,22 @@ type Props = CardProps & {
       }[];
     }[];
     options?: ChartOptions;
-
   };
   isShowChartLegend?: boolean;
 };
 
-export function EcommerceYearlySales({ title, subheader, chart, isShowChartLegend = true, ...other }: Props) {
+export function EcommerceYearlySales({
+  title,
+  subheader,
+  chart,
+  isShowChartLegend = true,
+  ...other
+}: Props) {
   const theme = useTheme();
 
   const [selectedSeries, setSelectedSeries] = useState(chart.series[0].name);
 
-  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main,];
+  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
 
   const chartOptions = useChart({
     colors: chartColors,
@@ -66,17 +71,20 @@ export function EcommerceYearlySales({ title, subheader, chart, isShowChartLegen
         sx={{ mb: 3 }}
       />
 
-      {isShowChartLegend ? (<ChartLegends
-        colors={chartOptions?.colors}
-        labels={chart.series[0].data.map((item) => item.name)}
-        values={[fShortenNumber(1234), fShortenNumber(6789)]}
-        sx={{ px: 3, gap: 3 }}
-      />) : (<ChartLegends
-        colors={chartOptions?.colors}
-        labels={chart.series[0].data.map((item) => item.name)}
-
-        sx={{ px: 3, gap: 3 }}
-      />)}
+      {isShowChartLegend ? (
+        <ChartLegends
+          colors={chartOptions?.colors}
+          labels={chart.series[0].data.map((item) => item.name)}
+          values={[fShortenNumber(1234), fShortenNumber(6789)]}
+          sx={{ px: 3, gap: 3 }}
+        />
+      ) : (
+        <ChartLegends
+          colors={chartOptions?.colors}
+          labels={chart.series[0].data.map((item) => item.name)}
+          sx={{ px: 3, gap: 3 }}
+        />
+      )}
 
       <Chart
         type="area"

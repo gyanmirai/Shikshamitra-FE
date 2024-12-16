@@ -27,7 +27,7 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { allFields } from './employee-form-fields';
 
-const personalInformationInitialValues = (editData: any) => ({
+export const personalInformationInitialValues = (editData: any) => ({
   photo: editData
     ? editData.profilePicture
       ? convertBase64Format(editData.profilePicture)
@@ -38,11 +38,11 @@ const personalInformationInitialValues = (editData: any) => ({
   firstName: editData ? editData.firstName : '',
   middleName: editData ? editData.middleName : '',
   shortName: editData ? editData.shortName : '',
-  status: editData ? editData?.employeeStatusType : EmployeeStatusType.Active,
-  subject: editData ? editData.subject : [],
+  employeeStatusType: editData ? editData?.employeeStatusType : EmployeeStatusType.Active,
+  subject: editData ? editData.subject || [] : [],
   dob: editData ? dayjs(editData.dateOfBirth, 'YYYY-MM-DD') : null,
   familyCast: editData ? editData.familyCast : '',
-  castCategory: editData ? editData.castCategory : '',
+  castType: editData ? editData.castType : '',
   gender: editData ? editData.gender : '',
   religion: editData ? editData.religion : '',
   maritalStatus: editData ? editData.maritalStatus : '',
@@ -56,33 +56,42 @@ const personalInformationInitialValues = (editData: any) => ({
   qualification: editData ? editData.qualification : '',
   role: editData ? editData.role : '',
   identificationMark1: editData ? editData.identificationMark1 : '',
-  identificationMark2: editData ? editData.identificationMark2 : '',
-  identificationMark3: editData ? editData.identificationMark3 : '',
+
   address: editData ? editData.address : '',
   state: editData ? editData?.state : '',
   city: editData ? editData?.city : '',
   pinCode: editData ? editData?.pinCode : '',
+  employeeId: editData ? editData.id : '',
 });
 
-const familyInformationInitialValues = (editData: any) => ({
+export const familyInformationInitialValues = (editData: any) => ({
   sameAsFatherAddressForMother: false,
   sameAsFatherAddressForSpouse: false,
   fatherName: editData ? editData.fatherDetails.name : '',
   fatherOccupation: editData ? editData.fatherDetails.occupation : '',
   fatherContactNo: editData ? editData.fatherDetails.contactNo : '',
   fatherAddress: editData ? editData.fatherDetails.address : '',
+  fatherState: editData ? editData?.fatherDetails?.state : '',
+  fatherCity: editData ? editData?.fatherDetails?.city : '',
+  fatherPinCode: editData ? editData?.fatherDetails?.pinCode : '',
   motherName: editData ? editData.motherDetails.name : '',
   motherOccupation: editData ? editData.motherDetails.occupation : '',
   motherContactNo: editData ? editData.motherDetails.contactNo : '',
   motherAddress: editData ? editData.motherDetails.address : '',
+  motherState: editData ? editData?.motherDetails?.state : '',
+  motherCity: editData ? editData?.motherDetails?.city : '',
+  motherPinCode: editData ? editData?.motherDetails?.pinCode : '',
   spouseName: editData ? editData.spouseDetails.name : '',
   spouseOccupation: editData ? editData.spouseDetails.occupation : '',
   spouseContactNo: editData ? editData.spouseDetails.contactNo : '',
   spouseAddress: editData ? editData.spouseDetails.address : '',
+  spouseState: editData ? editData?.spouseDetails?.state : '',
+  spouseCity: editData ? editData?.spouseDetails?.city : '',
+  spousePinCode: editData ? editData?.spouseDetails?.pinCode : '',
 });
-const documentsInitialValues = () => ({ documents: [] });
+export const documentsInitialValues = () => ({ documents: new FormData() });
 
-const workExperienceInitialValues = (editData: any) => ({
+export const workExperienceInitialValues = (editData: any) => ({
   experiences: editData
     ? editData.workExperiences.map((i: any) => ({
         ...i,
@@ -92,7 +101,7 @@ const workExperienceInitialValues = (editData: any) => ({
     : [],
 });
 
-const payrollInitialValues = (editData: any) => ({
+export const payrollInitialValues = (editData: any) => ({
   bankName: editData ? editData.bankDetails.bankName : '',
   branchName: editData ? editData.bankDetails.branchName : '',
   accountHolderName: editData ? editData.bankDetails.accountHolderName : '',
@@ -115,7 +124,7 @@ const steps = [
   // 'Performance and Development',
 ];
 
-const EmployeeFrom = ({ editData }: any) => {
+const EmployeeFrom = ({ editData, handleClose }: any) => {
   const [activeStep, setActiveStep] = useState(0);
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -168,24 +177,23 @@ const EmployeeFrom = ({ editData }: any) => {
           roleNames: [],
           password: 'Test@123',
         });
-        formik.setFieldValue('employeeId', res.data.id);
-        await addEmployee({
+        const resp = await addEmployee({
           userId: res.data.id,
           profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          employeeCode: values.code,
+          // employeeCode: values.code,
           lastName: values.lastName,
           firstName: values.firstName,
           middleName: values.middleName,
           shortName: values.shortName,
 
-          employeeStatusType: values.status,
+          employeeStatusType: values.employeeStatusType,
 
           dateOfBirth: values.dob.format('YYYY-MM-DD'),
           familyCast: values.familyCast,
-          castType: 0,
-          gender: 0,
+          castType: values.castType,
+          gender: values.gender,
           religion: values.religion,
-          maritalStatus: 0,
+          maritalStatus: values.maritalStatus,
           bloodGroup: values.bloodGroup,
           mobileNo: values.mobileNo,
           email: values.email,
@@ -198,49 +206,13 @@ const EmployeeFrom = ({ editData }: any) => {
           qualification: values.qualification,
           roleId: values.role,
           identificationMark1: values.identificationMark1,
-          identificationMark2: values.identificationMark2,
-          identificationMark3: values.identificationMark3,
+
           address: values.address,
         });
-      } else {
-        updateEmployee({
-          id: values.employeeId,
-          body: {
-            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-            employeeCode: values.code,
-            lastName: values.lastName,
-            firstName: values.firstName,
-            middleName: values.middleName,
-            shortName: values.shortName,
-
-            employeeStatusType: values.status,
-
-            dateOfBirth: values.dob.format('YYYY-MM-DD'),
-            familyCast: values.familyCast,
-            castType: 0,
-            gender: 0,
-            religion: values.religion,
-            maritalStatus: 0,
-            bloodGroup: values.bloodGroup,
-            mobileNo: values.mobileNo,
-            email: values.email,
-
-            department: values.department,
-            designation: values.designation,
-            dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
-
-            employeeGroup: values.employeeGroup,
-            qualification: values.qualification,
-            roleId: values.role,
-            identificationMark1: values.identificationMark1,
-            identificationMark2: values.identificationMark2,
-            identificationMark3: values.identificationMark3,
-            address: values.address,
-          },
-        });
+        formik.setFieldValue('employeeId', resp.data.id);
       }
     },
-    [addEmployee, addUser, updateEmployee]
+    [addEmployee, addUser]
   );
   const handleFamilyInformation = useCallback(
     async (values: any, formik: any) => {
@@ -252,18 +224,27 @@ const EmployeeFrom = ({ editData }: any) => {
             occupation: values.fatherOccupation,
             contactNo: values.fatherContactNo,
             address: values.fatherAddress,
+            state: values.fatherState,
+            city: values.fatherCity,
+            pincode: values.fatherPincode,
           },
           motherDetails: {
             name: values.motherName,
             occupation: values.motherOccupation,
             contactNo: values.motherContactNo,
             address: values.motherAddress,
+            state: values.motherState,
+            city: values.motherCity,
+            pincode: values.motherPincode,
           },
           spouseDetails: {
             name: values.spouseName,
             occupation: values.spouseOccupation,
             contactNo: values.spouseContactNo,
             address: values.spouseAddress,
+            state: values.spouseState,
+            city: values.spouseCity,
+            pincode: values.spousePincode,
           },
         },
       });
@@ -299,6 +280,58 @@ const EmployeeFrom = ({ editData }: any) => {
     [updateBankDetails]
   );
 
+  const handelUpdateEmployee = useCallback(
+    async (values: any, formik: any, id: any) => {
+      await updateEmployee({
+        id,
+        body: {
+          // userId: res.data.id,
+          profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+          // employeeCode: values.code,
+          lastName: values.lastName,
+          firstName: values.firstName,
+          middleName: values.middleName,
+          shortName: values.shortName,
+
+          employeeStatusType: values.employeeStatusType,
+
+          dateOfBirth: values.dob.format('YYYY-MM-DD'),
+          familyCast: values.familyCast,
+          castType: values.castType,
+          gender: values.gender,
+          religion: values.religion,
+          maritalStatus: values.maritalStatus,
+          bloodGroup: values.bloodGroup,
+          mobileNo: values.mobileNo,
+          email: values.email,
+
+          department: values.department,
+          designation: values.designation,
+          dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+
+          employeeGroup: values.employeeGroup,
+          qualification: values.qualification,
+          roleId: values.role,
+          identificationMark1: values.identificationMark1,
+
+          address: values.address,
+        },
+      });
+    },
+    [updateEmployee]
+  );
+
+  // const handleUpload = useCallback(
+  //   async (values: any, formik: any) => {
+  //     try {
+  //       await uploadDocument({ id: values.employeeId, body: '' });
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   },
+  //   [uploadDocument]
+  // );
+
   return (
     <CustomStepperWithFormik
       initialValues={initialValues}
@@ -310,46 +343,22 @@ const EmployeeFrom = ({ editData }: any) => {
       validationSchema={Yup.object({
         name: Yup.string(),
       })}
-      handleNext={async (isLastStep, values, formik) => {
+      onStepClick={(step) => {
+        if (editData) {
+          setActiveStep(step);
+        }
+      }}
+      handleNext={async (isLastStep, values, formik, setIsLoading) => {
         try {
+          setIsLoading(true);
           if (editData && activeStep === 0) {
-            await updateEmployee({
-              id: editData.id,
-              body: {
-                profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-                employeeCode: values.code,
-                lastName: values.lastName,
-                firstName: values.firstName,
-                middleName: values.middleName,
-                shortName: values.shortName,
-
-                employeeStatusType: values.status,
-
-                dateOfBirth: values.dob.format('YYYY-MM-DD'),
-                familyCast: values.familyCast,
-                castType: 0,
-                gender: 0,
-                religion: values.religion,
-                maritalStatus: 0,
-                bloodGroup: values.bloodGroup,
-                mobileNo: values.mobileNo,
-                email: values.email,
-
-                department: values.department,
-                designation: values.designation,
-                dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
-
-                employeeGroup: values.employeeGroup,
-                qualification: values.qualification,
-                roleId: values.role,
-                identificationMark1: values.identificationMark1,
-                identificationMark2: values.identificationMark2,
-                identificationMark3: values.identificationMark3,
-                address: values.address,
-              },
-            });
+            await handelUpdateEmployee(values, formik, editData.id);
           } else if (activeStep === 0) {
-            await handleBasicInformation(values, formik);
+            if (values.employeeId) {
+              await handelUpdateEmployee(values, formik, values.employeeId);
+            } else {
+              await handleBasicInformation(values, formik);
+            }
           } else if (activeStep === 1) {
             await handleFamilyInformation(values, formik);
           } else if (activeStep === 3) {
@@ -357,15 +366,20 @@ const EmployeeFrom = ({ editData }: any) => {
           } else if (activeStep === 4) {
             await handleBankDetailsInformation(values, formik);
           }
+          setActiveStep(activeStep + 1);
         } catch (error) {
           console.log(error);
         }
-        setActiveStep(activeStep + 1);
+        setIsLoading(false);
+        if (isLastStep) {
+          handleClose();
+        }
       }}
       renderItem={({ activeStep: step, formik }: any) => (
-        <FormikDetectChanges values={formik.values} initialValues={initialValues}>
-          <FormSlider step={step} formik={formik} />
-        </FormikDetectChanges>
+        // <FormikDetectChanges values={formik.values} initialValues={initialValues}>
+
+        <FormSlider step={step} formik={formik} />
+        // </FormikDetectChanges>
       )}
     />
   );

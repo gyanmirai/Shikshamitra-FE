@@ -122,7 +122,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
                 <TableClassDropDown
                   allClass={allClass}
                   classes={columClass}
-                  onChange={(val: string | string[]) => {
+                  onChange={(val) => {
                     setColumnClass(val as string);
                     const newData = tableData.map((item) => ({
                       ...item,
@@ -139,7 +139,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
                 <TableClassDropDown
                   allClass={allClass}
                   classes={value}
-                  onChange={(val: string | string[]) => {
+                  onChange={(val) => {
                     const newData = tableData.map((item) => {
                       if (item.id === row.id) {
                         return {
@@ -169,7 +169,7 @@ interface TableClassDropDownProps {
   allClass: Standards[];
   classes: string;
 
-  onChange: (val: string | string[]) => void;
+  onChange: (val: string | string[] | number | number[]) => void;
 }
 
 const TableClassDropDown = ({ allClass, classes, onChange }: TableClassDropDownProps) => (

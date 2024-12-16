@@ -3,7 +3,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
 import {
@@ -21,7 +21,9 @@ import {
   CardContent,
   CardActions,
   ListItemText,
+  ToggleButton,
   DialogActions,
+  ToggleButtonGroup,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -40,6 +42,7 @@ interface TResource {
   description: string;
   category: string;
   fileType?: string;
+  favourite?: boolean;
   uploadedBy?: string;
   dateUploaded: Dayjs | null;
   status: string;
@@ -52,6 +55,7 @@ const dummyData: TResource[] = [
     category: 'Worksheet',
     description: 'desc',
     fileType: 'PDF',
+    favourite: true,
     uploadedBy: 'John Doe',
     dateUploaded: dayjs('2024-10-28'),
     status: 'Publish',
@@ -62,6 +66,7 @@ const dummyData: TResource[] = [
     category: 'Video',
     description: 'desc',
     fileType: 'MP4',
+    favourite: false,
     uploadedBy: 'Jane Smith',
     dateUploaded: dayjs('2024-10-28'),
     status: 'Unpublish',
@@ -72,6 +77,7 @@ const dummyData: TResource[] = [
     category: 'Presentation',
     description: 'desc',
     fileType: 'PPT',
+    favourite: true,
     uploadedBy: 'Michael Brown',
     dateUploaded: dayjs('2024-10-28'),
     status: 'Publish',
@@ -82,6 +88,7 @@ const dummyData: TResource[] = [
     category: 'Assignment',
     description: 'desc',
     fileType: 'PDF',
+    favourite: false,
     uploadedBy: 'Emily White',
     dateUploaded: dayjs('2024-10-28'),
     status: 'Publish',
@@ -92,6 +99,7 @@ const dummyData: TResource[] = [
     category: 'Guide',
     description: 'desc',
     fileType: 'DOC',
+    favourite: true,
     uploadedBy: 'Chris Green',
     dateUploaded: dayjs('2024-10-28'),
     status: 'Unpublish',
@@ -100,7 +108,7 @@ const dummyData: TResource[] = [
 
 const AllResources = (props: TabComponentType) => {
   const [tableData, setTableData] = useState(dummyData);
-  const isTableView = useBoolean(true);
+  const [view, setView] = useState('list');
   const [selectedResource, setSelectedResource] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const dialog = useBoolean();
@@ -114,22 +122,40 @@ const AllResources = (props: TabComponentType) => {
     console.log('handle submit');
   };
 
+  const handleChangeView = useCallback(
+    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+      if (newView !== null) {
+        setView(newView);
+      }
+    },
+    []
+  );
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Box display="flex" alignItems="center" mt={2}>
-          <Typography variant="body2" sx={{ ml: 1 }}>
-            Grid View
-          </Typography>
-          <Switch
-            checked={isTableView.value}
-            onChange={(e) => isTableView.onToggle()}
-            inputProps={{ 'aria-label': 'controlled' }}
-          />
-          <Typography variant="body2" sx={{ ml: 1 }}>
-            Table View
-          </Typography>
-        </Box>
+        <ToggleButtonGroup
+          size="small"
+          value={view}
+          exclusive
+          onChange={handleChangeView}
+          sx={{
+            '& .Mui-selected': {
+              backgroundColor: 'black',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'black',
+              },
+            },
+          }}
+        >
+          <ToggleButton value="grid">
+            <Iconify icon="mdi:view-grid" />
+          </ToggleButton>
+          <ToggleButton value="list">
+            <Iconify icon="lucide:layout-list" />
+          </ToggleButton>
+        </ToggleButtonGroup>
         <Button
           startIcon={<Add />}
           variant="contained"
@@ -143,13 +169,24 @@ const AllResources = (props: TabComponentType) => {
         </Button>
       </Box>
 
-      {isTableView.value ? (
+      {view === 'list' ? (
         <CustomizableTable
           columns={[
             { id: 'resourceName', label: 'Resource Name' },
             { id: 'category', label: 'Category' },
             { id: 'fileType', label: 'File Type' },
             { id: 'uploadedBy', label: 'Uploaded By' },
+            {
+              id: 'favourite',
+              label: 'Favourite',
+              render(value, row) {
+                return value === true ? (
+                  <Iconify icon="mdi:star" />
+                ) : (
+                  <Iconify icon="mdi:star-outline" />
+                );
+              },
+            },
             {
               id: 'dateUploaded',
               label: 'Date Uploaded',
@@ -194,13 +231,20 @@ const AllResources = (props: TabComponentType) => {
                         </MenuItem>
                         <MenuItem>
                           <Iconify icon="mdi:share" />
-
                           <ListItemText>Share</ListItemText>
                         </MenuItem>
                         <MenuItem>
-                          <Iconify icon="mdi:star" />
-
-                          <ListItemText>Favorite</ListItemText>
+                          {row.favourite === false ? (
+                            <>
+                              <Iconify icon="mdi:star" />
+                              <ListItemText>Add in Favourite</ListItemText>
+                            </>
+                          ) : (
+                            <>
+                              <Iconify icon="mdi:star" />
+                              <ListItemText>Remove from Favourite</ListItemText>
+                            </>
+                          )}
                         </MenuItem>
                         <MenuItem>
                           <Iconify icon="mdi:eye" />

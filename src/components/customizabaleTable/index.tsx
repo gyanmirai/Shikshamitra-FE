@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
@@ -95,14 +95,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
-  handleRowClick = () => { },
+  handleRowClick = () => {},
   isLoading = false,
   isPagination = true,
   isFilter = true,
   isSearch = true,
   isScrollbar = true,
   isShowedDense = true,
-  rowProps = () => { },
+  rowProps = () => {},
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -141,6 +141,10 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const clearAllFilters = () => {
     setFilters([]);
   };
+
+  useEffect(() => {
+    setColumnVisibility(columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}));
+  }, [columns]);
 
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,7 +204,9 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       filters.every((filter) => {
         const value = row[filter.column];
         const valueAsNumber = !isNumber(Number(value)) ? Number(value) : value;
-        const filterValueAsNumber = !isNumber(Number(filter.value)) ? Number(filter.value) : filter.value;
+        const filterValueAsNumber = !isNumber(Number(filter.value))
+          ? Number(filter.value)
+          : filter.value;
         switch (filter.type) {
           case 'contains':
             return value.toString().toLowerCase().includes(filter.value.toLowerCase());
@@ -211,10 +217,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           case 'endsWith':
             return value.toString().toLowerCase().endsWith(filter.value.toLowerCase());
           case 'greaterThan':
-
             return valueAsNumber > filterValueAsNumber;
           case 'lessThan':
-
             return valueAsNumber < filterValueAsNumber;
           default:
             return true;
@@ -228,17 +232,17 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       serverSide
         ? data
         : data.filter(
-          (row) =>
-            Object.entries(row).some(
-              ([key, value]) =>
-                columnVisibility[key] &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '')
-                  .toString()
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
-            ) && applyFilter(row)
-        ),
+            (row) =>
+              Object.entries(row).some(
+                ([key, value]) =>
+                  columnVisibility[key] &&
+                  _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+                  _.get(row, columns.find((col) => col.id === key)?.id || '')
+                    .toString()
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+              ) && applyFilter(row)
+          ),
     [serverSide, data, columnVisibility, columns, searchTerm, applyFilter]
   );
 
@@ -533,7 +537,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
         />
       )}
       <Box px="2px">
-        <ComponentBlock>
+        <ComponentBlock sx={{ px: 0, py: 0 }}>
           <Scrollbar sx={{ overflow: isScrollbar ? 'auto' : 'hidden', maxHeight: '70vh' }}>
             <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
               <TableHead>
@@ -593,7 +597,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                   }}
                                 >
                                   {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                    'asc' ? (
+                                  'asc' ? (
                                     <ArrowUpwardIcon fontSize="inherit" />
                                   ) : (
                                     <ArrowDownwardIcon fontSize="inherit" />

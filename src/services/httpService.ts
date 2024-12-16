@@ -10,7 +10,7 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
     // timeout: 10000,
     headers: {
       'Content-Type': 'application/json;charset=utf8 ',
-      accept: 'application/json',
+      accept: '*/*',
     },
   });
 
@@ -27,17 +27,30 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
               const newTokenSet = await axios.post(`/auth/refresh-token`, {
                 token: refreshToken,
               });
-              localStorage.setItem('access_token', newTokenSet.data.access_token);
-              localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);
+              if (newTokenSet?.data) {
+                localStorage.setItem('access_token', newTokenSet.data.access_token);
+                localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);
+              } else {
+                document.cookie.split(';').forEach((c) => {
+                  document.cookie = c
+                    .replace(/^ +/, '')
+                    .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+                });
+                sessionStorage.clear();
+                window.location.href = '/auth/login';
+              }
+
               config.headers = config.headers || {};
               config.headers.Authorization = `Bearer ${newTokenSet.data.access_token}`;
             } catch (error) {
+              console.log(error, '=========error========');
               // Clear cookies
               document.cookie.split(';').forEach((c) => {
                 document.cookie = c
                   .replace(/^ +/, '')
                   .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
               });
+              sessionStorage.clear();
 
               window.location.href = '/auth/login';
             }
@@ -87,29 +100,6 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
   return instance;
 };
 
-export const apiClient = createAxiosInstance(process.env.NEXT_PUBLIC_API_URL || '');
+export default createAxiosInstance;
 
-export const axiosBaseQuery =
-  ({ baseUrl } = { baseUrl: '' }) =>
-  async ({ url, method = 'get', data, params, headers, ...props }: any) => {
-    try {
-      const result = await apiClient({
-        url: baseUrl + url,
-        method,
-        data,
-        params,
-        headers,
-        redirect: 'follow',
-        ...props,
-      });
-      return { data: result.data };
-    } catch (axiosError) {
-      const err = axiosError as any;
-      return {
-        error: {
-          status: err.response?.status,
-          data: err.response?.data || err.message,
-        },
-      };
-    }
-  };
+export const apiClient = createAxiosInstance(process.env.NEXT_PUBLIC_API_URL || '');

@@ -95,7 +95,7 @@ const PaySlipGenerationScreen = () => {
           options={allOrganization}
           label="Organization"
           value={organization}
-          onChange={(val: string | string[]) => setOrganization(val as string)}
+          onChange={(val) => setOrganization(val as string)}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}

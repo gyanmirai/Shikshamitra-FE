@@ -160,7 +160,7 @@ const StudentReportsScreen = () => {
                   options={allMediums}
                   label="Medium"
                   value={medium}
-                  onChange={(val: string | string[]) => {
+                  onChange={(val) => {
                     setFieldValue('medium', val);
                   }}
                   labelKey="name"
@@ -173,7 +173,7 @@ const StudentReportsScreen = () => {
                   options={allOrganization}
                   label="Organization"
                   value={organization}
-                  onChange={(val: string | string[]) => setFieldValue('organization', val)}
+                  onChange={(val) => setFieldValue('organization', val)}
                   labelKey="name"
                   valueKey="id"
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
@@ -185,7 +185,7 @@ const StudentReportsScreen = () => {
                   options={allClass}
                   label="Class"
                   value={classes}
-                  onChange={(val: string | string[]) => setFieldValue('classes', val)}
+                  onChange={(val) => setFieldValue('classes', val)}
                   labelKey="name"
                   valueKey="id"
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
@@ -197,7 +197,7 @@ const StudentReportsScreen = () => {
                   options={allDivision}
                   label="Division"
                   value={division}
-                  onChange={(val: string | string[]) => setFieldValue('division', val)}
+                  onChange={(val) => setFieldValue('division', val)}
                   labelKey="name"
                   valueKey="id"
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}

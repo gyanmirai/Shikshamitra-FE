@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 
 import {
-  Box, Card, Stack, Divider, Accordion,
+  Box,
+  Card,
+  Stack,
+  Divider,
+  Accordion,
   Typography,
   AccordionSummary,
   AccordionDetails,
@@ -229,12 +233,9 @@ const students = [
       },
     ],
   },
-
 ];
 
-
 const Finance = (props: StudentTabsComponentType) => {
-
   const [selectedStudent, setSelectedStudent] = useState<any>(students[0]);
   const headerCellStyle = {
     border: '1px solid #ccc',
@@ -403,7 +404,6 @@ const Finance = (props: StudentTabsComponentType) => {
 
       <Divider sx={{ mt: 2 }} />
 
-
       {selectedStudent.fees.map((feeHead: any) => (
         <Accordion key={feeHead.feeHeadId}>
           <AccordionSummary
@@ -437,8 +437,7 @@ const Finance = (props: StudentTabsComponentType) => {
                     <strong>Payable Fee:</strong> {formatNumber(feeHead.finalFees, 'INR')}
                   </Typography>
                   <Typography variant="body2" component="span">
-                    <strong>General Discount:</strong>{' '}
-                    {formatNumber(feeHead.totalDiscount, 'INR')}
+                    <strong>General Discount:</strong> {formatNumber(feeHead.totalDiscount, 'INR')}
                   </Typography>
                   <Typography variant="body2" component="span">
                     <strong>Additional Discount:</strong> {formatNumber(0, 'INR')}
@@ -645,7 +644,6 @@ const Finance = (props: StudentTabsComponentType) => {
 
       {/* <FinanceStudentDetailedFeeComponent studentId="12" /> */}
     </Box>
-
   );
 };
 

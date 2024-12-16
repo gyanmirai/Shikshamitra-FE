@@ -12,7 +12,6 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
-import Favorite from './favorite';
 import Dashboard from './dashboard';
 import AllResources from './all-resources';
 import SharedWithMe from './shared-with-me';
@@ -44,11 +43,11 @@ const TABS = [
     label: 'Shared with Me',
     component: (props: TabComponentType) => <SharedWithMe {...props} />,
   },
-  {
-    value: 'favorites',
-    label: 'Favorites',
-    component: (props: TabComponentType) => <Favorite {...props} />,
-  },
+  // {
+  //   value: 'favorites',
+  //   label: 'Favorites',
+  //   component: (props: TabComponentType) => <Favorite {...props} />,
+  // },
 
   {
     value: 'settings',

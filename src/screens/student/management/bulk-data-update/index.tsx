@@ -104,7 +104,7 @@ const BulkDataUpdateScreen = () => {
           options={allCategory}
           label="Category"
           value={category}
-          onChange={(val: string | string[]) => {
+          onChange={(val) => {
             setAllSubCategory(allCategory.find((cat: any) => cat.id === val)?.subCategory || []);
             setSubCategory('');
             setCategory(val as string);
@@ -118,7 +118,7 @@ const BulkDataUpdateScreen = () => {
           options={allSubCategory}
           label="Sub Category"
           value={subCategory}
-          onChange={(val: string | string[]) => {
+          onChange={(val) => {
             setSubCategory(val as string);
           }}
           labelKey="name"

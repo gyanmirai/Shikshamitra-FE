@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useMemo } from 'react';
 
@@ -36,8 +36,6 @@ const TABS = [
 ];
 
 const LibraryGeneralSettingScreen = () => {
-
-
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'library-timings' });
 
   const currentActiveComponent = useMemo(
@@ -49,12 +47,7 @@ const LibraryGeneralSettingScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="General Setting"
-        links={[
-          { name: 'Library' },
-          { name: 'Setting' },
-          { name: 'General Setting' },
-
-        ]}
+        links={[{ name: 'Library' }, { name: 'Setting' }, { name: 'General Setting' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <Card>
