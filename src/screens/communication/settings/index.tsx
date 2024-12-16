@@ -11,8 +11,10 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import EventType from './eventType';
 import UserPreferences from './userPreferences';
 import NotificationSetting from './notificationSetting';
+import SettingAnnouncement from './announcementCategory';
 
 const TABS = [
   {
@@ -24,6 +26,16 @@ const TABS = [
     value: 'userPreferences',
     label: 'User Preferences',
     component: (props: TabComponentType) => <UserPreferences {...props} />,
+  },
+  {
+    value: 'announcement',
+    label: 'Announcement',
+    component: (props: TabComponentType) => <SettingAnnouncement {...props} />,
+  },
+  {
+    value: 'eventType',
+    label: 'Event Type',
+    component: (props: TabComponentType) => <EventType {...props} />,
   },
 ];
 

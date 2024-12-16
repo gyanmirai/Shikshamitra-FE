@@ -7,8 +7,9 @@ import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { TabComponentType } from 'src/screens/hr/leave-request';
 
-const ExamninationDashboardReportComponent = () => (
+const ExamninationDashboardReportComponent = (props: TabComponentType) => (
   <Box>
     <Typography component="span" variant="h6" gutterBottom paddingTop="10px">
       Reports Section

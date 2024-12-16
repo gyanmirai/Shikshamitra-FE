@@ -88,9 +88,9 @@ const PastSurvey = (props: TabComponentType) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">Past Feedback</Typography>
+        <Typography variant="h6">Past Survey</Typography>
       </Box>
       <CustomizableTable
         columns={[
@@ -101,13 +101,7 @@ const PastSurvey = (props: TabComponentType) => {
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((audience: string) => (
-                  <Chip
-                    key={audience}
-                    label={audience}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
                 ))}
               </Box>
             ),
@@ -217,12 +211,15 @@ const ViewSummary = () => (
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Survey Metadata</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-              <TextField label="Parent Satisfaction Survey - 2023" value="" />
-              <TextField label="Audience" value="" />
-              <TextField label="Term" value="" />
-              <TextField label="Response Rate" />
+              <TextField size="small" label="Parent Satisfaction Survey - 2023" value="" />
+              <TextField size="small" label="Audience" value="" />
+              <TextField size="small" label="Term" value="" />
+              <TextField size="small" label="Response Rate" />
             </Box>
-            <Button variant="contained" sx={{ justifySelf: 'flex-end', alignSelf: 'flex-end' }}>
+            <Button
+              variant="contained"
+              sx={{ justifySelf: 'flex-end', alignSelf: 'flex-end', mt: 1 }}
+            >
               Download Report
             </Button>
           </Card>

@@ -10,6 +10,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
 import AllMeetings from './AllMeetings';
 
 const TABS = [
@@ -18,20 +19,20 @@ const TABS = [
     label: 'All Meetings',
     component: (props: TabComponentType) => <AllMeetings {...props} />,
   },
-//   {
-//     value: 'upcomingEvents',
-//     label: 'Upcoming Events',
-//     component: (props: TabComponentType) => <UpcomingEvents {...props} />,
-//   },
-//   {
-//     value: 'eventArchieves',
-//     label: 'Event Archieves',
-//     component: (props: TabComponentType) => <EventsArchieves {...props} />,
-//   },
+  //   {
+  //     value: 'upcomingEvents',
+  //     label: 'Upcoming Events',
+  //     component: (props: TabComponentType) => <UpcomingEvents {...props} />,
+  //   },
+  //   {
+  //     value: 'eventArchieves',
+  //     label: 'Event Archieves',
+  //     component: (props: TabComponentType) => <EventsArchieves {...props} />,
+  //   },
 ];
 
-const Events = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'allEvents' });
+const Meetings = () => {
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'allMeetings' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
@@ -77,4 +78,4 @@ const Events = () => {
   );
 };
 
-export default Events;
+export default Meetings;

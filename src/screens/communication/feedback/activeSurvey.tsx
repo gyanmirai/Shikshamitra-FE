@@ -164,10 +164,10 @@ const ActiveSurvey = (props: TabComponentType) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">Active Survey</Typography>
-        <Button
+        {/* <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           onClick={() => {
@@ -175,13 +175,51 @@ const ActiveSurvey = (props: TabComponentType) => {
           }}
         >
           Add New Survey
-        </Button>
+        </Button> */}
       </Box>
 
       <CustomizableTable
         columns={[
           { id: 'surveyTitle', label: 'Survey Title' },
-          { id: 'audience', label: 'Audience' },
+          {
+            id: 'audience',
+            label: 'Audience',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
+          },
+          {
+            id: 'organization',
+            label: 'Organizations',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((org: string) => (
+                  <Chip key={org} label={org} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
+          },
+          {
+            id: 'classes',
+            label: 'Class',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((className: string) => (
+                  <Chip
+                    key={className}
+                    label={className}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            ),
+          },
           {
             id: 'startDate',
             label: 'Start Date',
@@ -243,7 +281,7 @@ const ActiveSurvey = (props: TabComponentType) => {
           },
           {
             id: 'status',
-            label: 'Status',
+            label: 'Response Status',
             render: (value, row) =>
               value === 'Pending' ? (
                 <Label
@@ -286,15 +324,26 @@ const ActiveSurvey = (props: TabComponentType) => {
                     </MenuItem>
 
                     {row.status === 'Pending' && (
-                      <MenuItem
-                        onClick={() => {
-                          //   addAnounsmentDialog.onTrue();
-                          //   setEditingAnnouncement(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
+                      <>
+                        <MenuItem
+                          onClick={() => {
+                            //   addAnounsmentDialog.onTrue();
+                            //   setEditingAnnouncement(row);
+                          }}
+                        >
+                          <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
+                          Edit
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            //   addAnounsmentDialog.onTrue();
+                            //   setEditingAnnouncement(row);
+                          }}
+                        >
+                          <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
+                          Send Reminder
+                        </MenuItem>
+                      </>
                     )}
                     {row.status === 'Active' && (
                       <MenuItem
@@ -316,7 +365,7 @@ const ActiveSurvey = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        maxWidth="lg"
+        maxWidth="md"
         open={addNewSurveyDialog.value}
         handleClose={addNewSurveyDialog.onFalse}
         title="New Survey"
@@ -939,9 +988,7 @@ const AddNewQuestion = ({ onSave }: any) => {
   };
 
   const handleRemoveOption = (index: number) => {
-    const newOptions = [...options];
-    newOptions.splice(index, 1);
-    setOptions(newOptions);
+    setOptions((prevOptions) => prevOptions.filter((_, i) => i !== index));
   };
 
   const validateFields = () => {
@@ -1033,8 +1080,7 @@ const AddNewQuestion = ({ onSave }: any) => {
                     <IconButton
                       onClick={() => handleRemoveOption(index)}
                       size="small"
-                      color="error"
-                      disabled={options.length <= 2} // At least two options should remain
+                      color="error" // At least two options should remain
                     >
                       <Iconify icon="mdi:trash" />
                     </IconButton>

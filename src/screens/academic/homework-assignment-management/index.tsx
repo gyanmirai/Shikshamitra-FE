@@ -13,7 +13,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
 import Dashboard from './dashboard';
-import DueDateCalendar from './duedate-calendar';
 import HomeworkCreation from './homework-creation';
 import StudentSubmission from './student-submission';
 import GradingAndFeedback from './gradingAndFeedback';
@@ -28,11 +27,6 @@ const TABS = [
     value: 'homeworkCreation',
     label: 'Homework/Assignment Creation',
     component: (props: TabComponentType) => <HomeworkCreation {...props} />,
-  },
-  {
-    value: 'dueDatesAndCalendar',
-    label: 'Due Dates',
-    component: (props: TabComponentType) => <DueDateCalendar {...props} />,
   },
   {
     value: 'studentSubmissions',

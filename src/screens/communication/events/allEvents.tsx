@@ -4,14 +4,13 @@ import React, { useState } from 'react';
 
 import { Search as SearchIcon } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, IconButton, Typography } from '@mui/material';
+import { Box, Grid, TextField, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -22,10 +21,10 @@ const AllEvents = (props: TabComponentType) => {
   const [selectedEvent, setSelectedEvent] = useState('');
   const addEventDialog = useBoolean();
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">Events and Calendar</Typography>
-        <Button
+        {/* <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           onClick={() => {
@@ -33,9 +32,22 @@ const AllEvents = (props: TabComponentType) => {
           }}
         >
           Add New Event
-        </Button>
+        </Button> */}
       </Box>{' '}
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+        <CustomSelect
+          options={[
+            { value: 'schoolWise', label: 'School Wise' },
+            { value: 'classWise', label: 'Class Wise' },
+            { value: 'extraCurricular', label: 'Extra Curricular' },
+          ]}
+          value={selectedEvent}
+          onChange={(val) => {
+            setSelectedEvent(val as string);
+          }}
+          label="Filter Event"
+          formControlProps={{ sx: { minWidth: 200 } }}
+        />
         <TextField
           label="Search Event"
           variant="outlined"
@@ -49,19 +61,6 @@ const AllEvents = (props: TabComponentType) => {
               </IconButton>
             ),
           }}
-        />
-        <CustomSelect
-          options={[
-            { value: 'schoolWise', label: 'School Wise' },
-            { value: 'classWise', label: 'Class Wise' },
-            { value: 'extraCurricular', label: 'Extra Curricular' },
-          ]}
-          value={selectedEvent}
-          onChange={(val) => {
-            setSelectedEvent(val as string);
-          }}
-          label="Filter Event"
-          formControlProps={{ sx: { minWidth: 200 } }}
         />
       </Box>
       <CalendarView />
@@ -160,7 +159,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit }) => {
                 label="Event Date"
                 slotProps={{
                   textField: {
-                    sx: { width: '100%', maxWidth: '200px' },
+                    fullWidth: true,
                     size: 'small',
                   },
                 }}
@@ -172,7 +171,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit }) => {
                 format="HH:mm"
                 onChange={() => {}}
                 views={['hours', 'minutes']}
-                slotProps={{ textField: { size: 'small' } }}
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
