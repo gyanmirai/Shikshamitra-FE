@@ -4,8 +4,8 @@ import type { ChartOptions } from 'src/components/chart';
 import { useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
-import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 import { fNumber, fShortenNumber } from 'src/utils/format-number';
 
@@ -31,25 +31,19 @@ type Props = CardProps & {
   selectSeries?: string;
   height?: number;
   isShowChartLegendValue?: boolean;
+  sendToParent?: (data: any) => void;
 };
 
-export function AppAreaInstalled({
-  title,
-  subheader,
-  chart,
-  selectSeries,
-  height = 320,
-  isShowChartLegendValue = true,
-  ...other
-}: Props) {
+export function AppAreaInstalled({ sendToParent, title, subheader, chart, selectSeries, height = 320, isShowChartLegendValue = true, ...other }: Props) {
   const theme = useTheme();
 
   const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
+    theme.palette.primary.main,
+    theme.palette.error.main,
     theme.palette.warning.main,
-    theme.palette.info.main,
+    hexAlpha(theme.palette.grey[500], 0.48),
   ];
 
   const chartOptions = useChart({
@@ -64,7 +58,11 @@ export function AppAreaInstalled({
 
   const handleChangeSeries = useCallback((newValue: string) => {
     setSelectedSeries(newValue);
-  }, []);
+    if (sendToParent) {
+      sendToParent(newValue);
+    }
+  }, [sendToParent]);
+
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 

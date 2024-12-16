@@ -1,7 +1,8 @@
 import React from 'react';
 
-import RoutesAndSchedulesScreen from 'src/screens/transport/routesAndSchedules/routes-and-schedules-screen';
+import NewCreateRouteScreen from 'src/screens/transport/newCreateRouteScreen/new-create-route-flow';
 
-const TransportRoutesAndSchedulesScreen = () => <RoutesAndSchedulesScreen />;
+
+const TransportRoutesAndSchedulesScreen = () => <NewCreateRouteScreen />;
 
 export default TransportRoutesAndSchedulesScreen;

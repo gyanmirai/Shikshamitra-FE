@@ -7,6 +7,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 
 import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
+import FinanceStudentAdditionalDiscountDialog from './component/student-additional-discount';
 import FinanceStudentInfoCardComponent from './component/finance-student-info-card-component';
 import FinanceNewCollectFeeDialog from '../collectFees/component/finance-new-fee-collect-dialog';
 
@@ -361,6 +362,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
 }) => {
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
+  const financeStudentAdditionalDiscountDialog = useBoolean();
 
   const [tableData, setTableData] = useState(dummyUser);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -372,7 +374,11 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
   const feeRefundCloseDialog = () => {
     feeRefundDialog.onFalse();
   };
-  const handleSave = () => {};
+
+  const additionalDiscountCloseDialog = () => {
+    financeStudentAdditionalDiscountDialog.onFalse();
+  }
+  const handleSave = () => { };
   return (
     <>
       <Box display="flex" flexDirection="row" justifyContent="space-between">
@@ -381,14 +387,14 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             label="Standard"
             options={[]}
             value=""
-            onChange={() => {}}
+            onChange={() => { }}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => {}}
+            onChange={() => { }}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -396,7 +402,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             variant="outlined"
             size="small"
             value=""
-            onChange={(e) => {}}
+            onChange={(e) => { }}
           />
         </Box>
         <Box display="flex" justifyContent="flex-end" alignItems="center">
@@ -405,6 +411,21 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
               variant="contained"
               size="small"
               onClick={() => {
+                feeRefundDialog.onFalse();
+                dialog.onFalse();
+                setSelectedStudent(students[0]);
+                // setIsEdit(true);
+                financeStudentAdditionalDiscountDialog.onTrue();
+              }}
+            >
+              Additional Discount
+            </Button>
+
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                financeStudentAdditionalDiscountDialog.onFalse()
                 feeRefundDialog.onFalse();
                 setSelectedStudent(students[0]);
                 // setIsEdit(true);
@@ -417,6 +438,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
               variant="contained"
               size="small"
               onClick={() => {
+                financeStudentAdditionalDiscountDialog.onFalse()
                 dialog.onFalse();
                 setSelectedStudent(students[0]);
                 // setIsEdit(true);
@@ -429,6 +451,12 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
         </Box>
       </Box>
       <FinanceStudentInfoCardComponent user={dummyUser} />
+      {financeStudentAdditionalDiscountDialog.value &&
+        <FinanceStudentAdditionalDiscountDialog
+          dialogValue={financeStudentAdditionalDiscountDialog.value}
+          onClose={additionalDiscountCloseDialog}
+          selectedData={selectedStudent} />}
+
       {feeRefundDialog.value && (
         <FinanceFeeCollectionRefundTab
           dialogValue={feeRefundDialog.value}

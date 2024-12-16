@@ -517,7 +517,7 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                         name="bankNameForAccount"
                         value={formik.values.bankNameForAccount}
                         onChange={(val) => formik.setFieldValue('bankNameForAccount', val)}
-                        formControlProps={{ sx: { minWidth: 410 } }}
+                        formControlProps={{ fullWidth: true }}
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>

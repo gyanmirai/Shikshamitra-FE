@@ -2,7 +2,6 @@ import React from 'react';
 
 import { Box } from '@mui/material';
 
-import FinanceFeeTrackingComponent from './component/finance-fee-tracking';
 import FinanceFeeStructureOverviewComponent from './component/finance-fee-structure-overview-component';
 
 import type FeeStructureOverView from './data/FeeStructure-interface';
@@ -35,7 +34,7 @@ const FinanceFeeStructureOverview = () => {
         sx={{ px: 1, mb: 2 }}
         
       /> */}
-      <FinanceFeeTrackingComponent />
+      {/* <FinanceFeeTrackingComponent /> */}
       <FinanceFeeStructureOverviewComponent data={data} />
 
       {/* <FinanceFeeListOverviewComponent /> */}

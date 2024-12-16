@@ -1,10 +1,8 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Grid,
   Radio,
   Table,
   Button,
@@ -189,226 +187,13 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
 
   return (
     <CustomDialog maxWidth="lg" title="Daily Inspection" open={dialogValue} handleClose={onClose}>
-      {/* <Box px="20px">
-        {showExistingEntryMessage ? (
-          <Typography component="span" fontSize="14" color="red">
-            This Vehicle Already Exists
-          </Typography>
-        ) : (
-          <Box height="25px" />
-        )}
-      </Box> */}
+
       <Scrollbar>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
-            <Grid container spacing={2}>
-              <Grid item md={6}>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="division"
-                    label="Division"
-                    value={formik.values.division}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="fleet"
-                    label="Fleet#"
-                    value={formik.values.fleet}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Box mb={2}>
-                  <DatePicker
-                    label="MVI Date"
-                    slotProps={{
-                      textField: {
-                        sx: { width: '100%', maxWidth: '200px' },
-                        size: 'small',
-                      },
-                    }}
-                  />
-                </Box>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="vehicleDriver"
-                    label="Vehicle Driver"
-                    value={formik.values.vehicleDriver}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="vehicleCrew"
-                    label="Vehicle Crew"
-                    value={formik.values.vehicleCrew}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Box mb={2}>
-                  <DatePicker
-                    label="Date Inspected"
-                    slotProps={{
-                      textField: {
-                        sx: { width: '100%', maxWidth: '200px' },
-                        size: 'small',
-                      },
-                    }}
-                  />
-                </Box>
-                <Box mb={2}>
-                  <DatePicker
-                    label="Insurance Renewal Date"
-                    slotProps={{
-                      textField: {
-                        sx: { width: '100%', maxWidth: '200px' },
-                        size: 'small',
-                      },
-                    }}
-                  />
-                </Box>
-                <Box mb={2}>
-                  <DatePicker
-                    label="Last Date Oil Changed"
-                    slotProps={{
-                      textField: {
-                        sx: { width: '100%', maxWidth: '200px' },
-                        size: 'small',
-                      },
-                    }}
-                  />
-                </Box>
-              </Grid>
-              {/* <Grid item md={4}/> */}
-              <Grid item md={6}>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="vehiclePlateNumber"
-                    label="Vehicle Plate #"
-                    value={formik.values.vehiclePlateNumber}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="mileage"
-                    label="Mileage"
-                    value={formik.values.mileage}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Box mb={2}>
-                  <TextField
-                    disabled={isEdit}
-                    name="vehicleMakeAndModel"
-                    label="Vehicle Make and Model"
-                    value={formik.values.vehicleMakeAndModel}
-                    onChange={formik.handleChange}
-                    size="small"
-                    fullWidth
-                  />
-                </Box>
-                <Typography>Inspected by</Typography>
-                <Grid item md={12}>
-                  <Grid container spacing={2}>
-                    {' '}
-                    {/* Use a container for proper spacing */}
-                    <Grid item md={6}>
-                      <Box mb={2}>
-                        <TextField
-                          disabled={isEdit}
-                          name="firstName"
-                          label="First Name"
-                          value={formik.values.firstName}
-                          onChange={formik.handleChange}
-                          size="small"
-                          fullWidth
-                        />
-                      </Box>
-                    </Grid>
-                    <Grid item md={6}>
-                      <Box mb={2}>
-                        <TextField
-                          disabled={isEdit}
-                          name="lastName"
-                          label="Last Name"
-                          value={formik.values.lastName}
-                          onChange={formik.handleChange}
-                          size="small"
-                          fullWidth
-                        />
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Grid>
 
-                <Typography>Division Manager</Typography>
-                <Grid item md={12}>
-                  <Grid container spacing={2}>
-                    {' '}
-                    {/* Use a container for proper spacing */}
-                    <Grid item md={6}>
-                      <Box mb={2}>
-                        <TextField
-                          disabled={isEdit}
-                          name="firstNameOfDivisionManager"
-                          label="First Name"
-                          value={formik.values.firstNameOfDivisionManager}
-                          onChange={formik.handleChange}
-                          size="small"
-                          fullWidth
-                        />
-                      </Box>
-                    </Grid>
-                    <Grid item md={6}>
-                      <Box mb={2}>
-                        <TextField
-                          disabled={isEdit}
-                          name="lastNameOfDivisionManager"
-                          label="Last Name"
-                          value={formik.values.lastNameOfDivisionManager}
-                          onChange={formik.handleChange}
-                          size="small"
-                          fullWidth
-                        />
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Grid>
 
-                <DatePicker
-                  label="Registration Renewal Date"
-                  slotProps={{
-                    textField: {
-                      sx: { width: '100%', maxWidth: '200px' },
-                      size: 'small',
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-            <Typography sx={{ pb: '12px' }} variant="h6">
-              Item Checklist
-            </Typography>
+
             <Table>
               <TableHead>
                 <TableRow>
@@ -437,7 +222,7 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
                             item.actionRequired = ''; // reset action required if checked
                           }}
                         >
-                          <FormControlLabel value="checked" control={<Radio />} label="Is Check" />
+                          <FormControlLabel value="checked" control={<Radio />} label="" />
                         </RadioGroup>
                       </FormControl>
                     </TableCell>
@@ -457,7 +242,7 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
                           <FormControlLabel
                             value="unchecked"
                             control={<Radio />}
-                            label="Is Not Check"
+                            label=""
                           />
                         </RadioGroup>
                       </FormControl>
@@ -497,20 +282,7 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
                 ))}
               </TableBody>
             </Table>
-            <Typography sx={{ pb: '12px' }} variant="h6">
-              Other
-            </Typography>
-            <TextField
-              multiline
-              rows={4}
-              label="Type here...."
-              variant="outlined"
-              size="small"
-              fullWidth
-              value=""
-              onChange={(e) => {}}
-            />
-            {/* <ImageUploadAndMarker /> */}
+
             <Typography sx={{ pt: '15px', pb: '12px' }} variant="h6">
               Notes
             </Typography>
@@ -522,20 +294,19 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
               size="small"
               fullWidth
               value=""
-              onChange={(e) => {}}
+              onChange={(e) => { }}
             />
 
-            <DialogActions>
-              <Button onClick={onClose} variant="contained" size="small">
-                Cancel
-              </Button>
-              <Button type="submit" variant="contained" size="small">
-                Save
-              </Button>
-            </DialogActions>
+
           </form>
         </Box>
       </Scrollbar>
+      <DialogActions>
+
+        <Button type="submit" variant="contained" size="small">
+          Save
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 };

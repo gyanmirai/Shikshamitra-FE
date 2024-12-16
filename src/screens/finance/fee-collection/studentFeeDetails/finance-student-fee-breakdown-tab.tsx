@@ -52,6 +52,8 @@ const FinanceStudentFeeBreakdownTab = () => {
       type: 'Tuition Fee',
       discount: '2500',
       amount: '50000',
+      additionalDiscount: 0,
+      grossFee: 52500,
     },
     {
       id: 2,
@@ -59,6 +61,8 @@ const FinanceStudentFeeBreakdownTab = () => {
       discount: '500',
       type: 'Sports Fee',
       amount: '5000',
+      additionalDiscount: 0,
+      grossFee: 5500,
     },
     {
       id: 3,
@@ -66,33 +70,84 @@ const FinanceStudentFeeBreakdownTab = () => {
       type: 'Library Fee',
       discount: '0',
       amount: '2500',
+      additionalDiscount: 0,
+      grossFee: 2500,
     },
   ];
+
+  const totals = {
+    grossFee: data.reduce((sum, row) => sum + row.grossFee, 0),
+    discount: data.reduce((sum, row) => sum + parseFloat(row.discount), 0),
+    additionalDiscount: data.reduce((sum, row) => sum + row.additionalDiscount, 0),
+    amount: data.reduce((sum, row) => sum + parseFloat(row.amount), 0),
+  };
   return (
     <>
       <CustomizableTable
+
         isFilter={false}
         isPagination={false}
         isSearch={false}
         columns={[
-          { id: 'date', label: 'Date' },
+          { id: 'date', label: 'Due Date' },
           { id: 'type', label: 'Type' },
           {
-            id: 'discount',
-            label: 'Discount',
-            render(value, row) {
-              return <Typography fontSize="12px">{formatNumber(row.discount, 'INR')}</Typography>;
+            id: 'grossFee', label: "Gross Fee", render(value, row) {
+              return <Typography sx={{
+                fontSize: '12px',
+                ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+              }}>{formatNumber(value, 'INR')}</Typography>;
             },
           },
+          {
+            id: 'discount',
+            label: 'General Discount',
+            render(value, row) {
+              return <Typography sx={{
+                fontSize: '12px',
+                ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+              }}>{formatNumber(row.discount, 'INR')}</Typography>;
+            },
+          },
+          {
+            id: 'additionalDiscount',
+            label: 'Additional Discount',
+            render(value, row) {
+              return <Typography sx={{
+                fontSize: '12px',
+                ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+              }}>{formatNumber(row.additionalDiscount, 'INR')}</Typography>;
+            },
+          },
+
           {
             id: 'amount',
             label: 'Payable Fee',
             render(value, row) {
-              return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
+              return <Typography
+                sx={{
+                  fontSize: '12px',
+                  ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+                }}
+              >
+                {formatNumber(row.amount, 'INR')}
+              </Typography>
             },
           },
         ]}
-        data={data}
+        data={[
+          ...data,
+          {
+            id: 'total',
+            date: '',
+            type: 'Total',
+            grossFee: totals.grossFee,
+            discount: totals.discount,
+            additionalDiscount: totals.additionalDiscount,
+            amount: totals.amount,
+          },
+        ]}
+
       />
       <Box pb="20px" />
     </>

@@ -25,6 +25,7 @@ import FinanceFeeStructureSettingTab from './fee-structure/finance-fee-structure
 // eslint-disable-next-line import/no-named-as-default
 import FinancePaymentMethodSettingTab from './payment-method/finance-payment-method-setting-tab';
 import FinanceSettingFeeCollectionTab from './fee-collection/finance-setting-fee-collection-tab';
+import FinanceDiscountCategorySettingScreen from './discount-category/finance-discount-category-screen';
 
 const TABS = [
   {
@@ -39,6 +40,12 @@ const TABS = [
     label: 'Fee Structure',
     icon: <Iconify icon="fluent:document-fs-16-regular" width={20} />,
     component: () => <FinanceFeeStructureSettingTab />,
+  },
+  {
+    value: 'discount category',
+    label: 'Discount Category',
+    icon: <Iconify icon="basil:notification-on-outline" width={20} />,
+    component: () => <FinanceDiscountCategorySettingScreen />,
   },
   {
     value: 'receiptBook',
@@ -58,6 +65,7 @@ const TABS = [
     icon: <Iconify icon="arcticons:expense-manager" width={20} />,
     component: () => <FinanceExpenseSettingTab />,
   },
+
   {
     value: 'incomecategory',
     label: 'Income Category',

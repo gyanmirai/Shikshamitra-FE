@@ -32,10 +32,13 @@ const FinanceStudentPendingFeeTab = () => {
   ];
   return (
     <>
-      <Typography variant="h6" sx={{ pt: '10px' }}>
+      <Typography sx={{ mt: '14px', fontSize: "14px", fontWeight: "bold" }}>
         Overdue Payments List
       </Typography>
       <CustomizableTable
+        isShowedDense={false}
+        isFilter={false}
+        isSearch={false}
         columns={[
           { id: 'feeName', label: 'Fee Name' },
           // { id: 'statusId', label: 'Status Id' },
@@ -72,10 +75,13 @@ const FinanceStudentPendingFeeTab = () => {
         data={overDuePaymentList}
       />
 
-      <Typography variant="h6" sx={{ mt: '10px' }}>
+      <Typography sx={{ mt: '14px', fontSize: "14px", fontWeight: "bold" }}>
         Upcoming Payments List
       </Typography>
       <CustomizableTable
+        isShowedDense={false}
+        isFilter={false}
+        isSearch={false}
         columns={[
           { id: 'feeName', label: 'Fee Name' },
           // { id: 'statusId', label: 'Status Id' },

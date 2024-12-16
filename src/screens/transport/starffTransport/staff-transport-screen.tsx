@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -63,13 +62,13 @@ const handleSaveNotify = (e: any) => {
 const StaffTransportScreen = () => {
   const columnData = [
     { id: 'name', label: 'Name' },
-    { id: 'grade', label: 'Grade' },
+    // { id: 'grade', label: 'Standard' },
     // {id:"gradeAndPosition", label:"Grade And Position", render(value:any, row:any){
     //     return <Typography sx={{fontSize:"12PX"}}>{`Grade ${row.grade}, ${row.position}`}</Typography>
     // }},
     { id: 'assignedRoute', label: 'Assigned Route' },
-    { id: 'pickupPoint', label: 'Pickup Point' },
-    { id: 'dropoffPoint', label: 'Drop-Off Point' },
+    { id: 'dropoffPoint', label: 'Pickup/DropOff Point' },
+
     {
       id: 'action',
       label: 'Action',
@@ -172,40 +171,13 @@ const StaffTransportScreen = () => {
           Bulk Assign
         </Button>
         <Button onClick={dialog.onTrue} variant="contained" size="small">
-          Add Assign Route
+          Assign Route
         </Button>
       </Box>
-      <Box py="15px">
-        <Typography component="span" variant="h6" gutterBottom>
-          Student Assignment List
-        </Typography>
-      </Box>
-      <Box display="flex" alignItems="center" gap={3}>
-        {/* <CustomSelect
-          isSearch
-            label="Route"
-            options={[]}
-            value=""
-            onChange={handleChange}
-            formControlProps={{ sx: { minWidth: 120 } }}
-          /> */}
-        <CustomSelect
-          label="Class"
-          options={[]}
-          value=""
-          onChange={handleChange}
-          formControlProps={{ sx: { minWidth: 120 } }}
-        />
-        <CustomSelect
-          label="Division"
-          options={[]}
-          value=""
-          onChange={handleChange}
-          formControlProps={{ sx: { minWidth: 120 } }}
-        />
-      </Box>
+
+
       <CustomizableTable data={tableData} columns={columnData} />
-      {dialog.value && selectedEntry && (
+      {dialog.value && (
         <TransportStudentAndStaffUpdateInfoDialog
           onSave={handleSave}
           dialogValue={dialog.value}
@@ -216,7 +188,7 @@ const StaffTransportScreen = () => {
           isStaff
         />
       )}
-      {dialogForBulkEdit.value && selectedEntry && (
+      {dialogForBulkEdit.value && (
         <TransportBulkRouteDialog
           onSave={handleSaveForBulk}
           dialogValue={dialogForBulkEdit.value}
@@ -226,7 +198,7 @@ const StaffTransportScreen = () => {
           allData={tableData}
         />
       )}
-      {dialogNotify.value && selectedEntry && (
+      {dialogNotify.value && (
         <TransportNotifyParentsDialog
           onSave={handleSaveNotify}
           dialogValue={dialogNotify.value}

@@ -58,10 +58,10 @@ const initialMaintenanceRecords: MaintenanceRecord[] = [
 ];
 
 interface VehicleMaintenanceRecordsProps {
-  vehicleData: any;
+  vehicle: any;
 }
 
-const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ vehicleData }) => {
+const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ vehicle }) => {
   const dialog = useBoolean();
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState<MaintenanceRecord[]>(initialMaintenanceRecords);
@@ -93,11 +93,11 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
         const updatedData = tableData.map((val, index) =>
           index === existingIndex
             ? {
-                ...val,
-                maintenanceDate: formattedMaintenanceDate,
-                nextScheduledMaintenance: formattednextScheduledMaintenance,
-                serviceDetails,
-              }
+              ...val,
+              maintenanceDate: formattedMaintenanceDate,
+              nextScheduledMaintenance: formattednextScheduledMaintenance,
+              serviceDetails,
+            }
             : val
         );
         setTableData(updatedData);

@@ -176,7 +176,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
 
   return (
     <>
-      <CustomDialog maxWidth="md" title="Fee Collection" open={dialogValue} handleClose={onClose}>
+      <CustomDialog maxWidth="xl" title="Fee Collection" open={dialogValue} handleClose={onClose}>
         <Box px="20px">
           {showExistingEntryMessage && (
             <Typography component="span" fontSize="14" color="red">
@@ -475,7 +475,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
           </Button> */}
             <Button
               disabled={formik.values.receivedPayment < 1}
-              onClick={() => {}}
+              onClick={() => { }}
               variant="contained"
               size="small"
             >

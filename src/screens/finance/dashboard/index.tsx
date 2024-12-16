@@ -1,20 +1,42 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Box, Grid, useTheme } from '@mui/material';
 
-import { AppWidgetSummary } from 'src/screens/hr/dashboard/app-widget-summary';
+import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
 
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
-import { EcommerceSaleByGender } from 'src/sections/overview/e-commerce/ecommerce-sale-by-gender';
+import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
+
+import FinanceFeeTrackingComponent from '../fee-management/Tabs/finance-fee-structure-overview/component/finance-fee-tracking';
 
 const FinanceDashboardScreen = () => {
+  const paymentData = [
+    { label: 'Cash', value: 1000000 },
+    { label: 'Online', value: 100000 },
+    { label: 'Cheque', value: 500000 },
+
+  ]
   const theme = useTheme();
+  const [selectedSeries, setSelectedSeries] = useState<any>('Income');
+  const handleSelectedSeries = (d: any) => {
+    setSelectedSeries(d)
+
+  };
+
+  const dynamicColors = selectedSeries === "Income"
+    ? [-12000, 10000, 5000].map(value =>
+      value > 0 ? theme.palette.success.main : theme.palette.error.main
+    )
+    : [5000, -21000, 0].map(value =>
+      value > 0 ? theme.palette.success.main : theme.palette.error.main
+    );
   return (
     <Box sx={{ p: 3 }}>
       {/* Top Section: Key Metrics */}
-      <Grid container spacing={2} mb={3}>
+      <FinanceFeeTrackingComponent />
+      {/* <Grid container spacing={2} mb={3}>
         {[
           { title: 'Total Income', value: 120000, percent: 12 },
           { title: 'Total Expenses', value: 80000, percent: 5 },
@@ -35,7 +57,7 @@ const FinanceDashboardScreen = () => {
             />
           </Grid>
         ))}
-      </Grid>
+      </Grid> */}
 
       {/* Middle Section: Charts */}
       <Grid container spacing={2}>
@@ -90,32 +112,144 @@ const FinanceDashboardScreen = () => {
             }}
           />
         </Grid>
-        <Grid container spacing={2} sx={{ pt: '20px' }}>
-          <Grid item xs={12} md={4}>
-            <EcommerceSaleByGender
-              title="Fee Collection Status"
-              total={9990}
+        <Grid container spacing={2} sx={{ pt: "20px" }}>
+          {/* <Grid item xs={12} md={6}>
+            <AnalyticsCurrentVisits
+              title="Payment Modes Analysis"
+              chart={{ series: paymentData }}
+
+            />
+          </Grid> */}
+
+
+          <Grid item xs={12} md={12}>
+
+            <AppAreaInstalled
+              isShowChartLegendValue={false}
+              height={400}
+              title="Budget vs Actual Performance"
+              selectSeries={selectedSeries}
+              sendToParent={handleSelectedSeries}
               chart={{
+                colors: [theme.palette.info.main, theme.palette.warning.main, theme.palette.error.main,],
+                categories: selectedSeries === "Income"
+                  ? ['Tuition', 'Donation', "Grant"]
+                  : ['Salaries', 'Maintenance', 'Stationary'],
+
                 series: [
-                  { label: 'Collected', value: 75 },
-                  { label: 'Pending', value: 15 },
-                  { label: 'Overdue', value: 10 },
+                  {
+                    name: 'Income',
+                    data: [
+                      { name: 'Budgeted', data: [50000, 20000, 15000] },
+                      { name: 'Actual', data: [38000, 30000, 20000] },
+                      {
+                        name: 'Variance',
+                        data: [-12000, 10000, 5000],
+
+                      },
+                    ],
+                  },
+                  {
+                    name: 'Expense',
+                    data: [
+                      { name: 'Budgeted', data: [60000, 25000, 18000] },
+                      { name: 'Actual', data: [55000, 46000, 18000] },
+                      {
+                        name: 'Variance',
+                        data: [5000, -21000, 0],
+
+                      },
+                    ],
+                  },
+
                 ],
               }}
             />
           </Grid>
-          <Grid item xs={12} md={4}>
-            <EcommerceSaleByGender
-              title="Payment Modes Analysis"
-              total={9990}
+
+
+        </Grid>
+
+        <Grid container spacing={2} sx={{ pt: "20px" }}>
+          <Grid item xs={12} md={6}>
+            <BankingBalanceStatistics
+              title="Expense statistics"
+              // subheader="Statistics on balance over time"
+
               chart={{
                 series: [
-                  { label: 'Online', value: 45 },
-                  { label: 'Cash', value: 35 },
-                  { label: 'Card', value: 20 },
+                  {
+                    name: 'Weekly',
+                    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+                    data: [
+                      { name: 'Salaries', data: [24, 41, 35, 151, 49] },
+                      { name: 'Maintenance', data: [24, 56, 77, 88, 99] },
+                      // { name: 'Investment', data: [40, 34, 77, 88, 99] },
+                    ],
+                  },
+                  {
+                    name: 'Monthly',
+                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                    data: [
+                      { name: 'Salaries', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
+                      { name: 'Maintenance', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
+                      // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
+                    ],
+                  },
+                  {
+                    name: 'Yearly',
+                    categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                    data: [
+                      { name: 'Salaries', data: [76, 42, 29, 41, 27, 96] },
+                      { name: 'Maintenance', data: [46, 44, 24, 43, 44, 43] },
+                      // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
+                    ],
+                  },
                 ],
               }}
             />
+
+
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <BankingBalanceStatistics
+              title="Income statistics"
+              // subheader="Statistics on balance over time"
+
+              chart={{
+                series: [
+                  {
+                    name: 'Weekly',
+                    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+                    data: [
+                      { name: 'Fee', data: [24, 41, 35, 151, 49] },
+                      { name: 'Donation', data: [24, 56, 77, 88, 99] },
+                      // { name: 'Investment', data: [40, 34, 77, 88, 99] },
+                    ],
+                  },
+                  {
+                    name: 'Monthly',
+                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                    data: [
+                      { name: 'Fee', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
+                      { name: 'Donation', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
+                      // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
+                    ],
+                  },
+                  {
+                    name: 'Yearly',
+                    categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                    data: [
+                      { name: 'Fee', data: [76, 42, 29, 41, 27, 96] },
+                      { name: 'Donation', data: [46, 44, 24, 43, 44, 43] },
+                      // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
+                    ],
+                  },
+                ],
+              }}
+            />
+
           </Grid>
         </Grid>
         {/* <Grid item xs={12} md={4}>

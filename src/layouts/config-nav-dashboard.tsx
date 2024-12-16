@@ -706,6 +706,11 @@ const financeModule = {
               _action: 'fee-structure-setting',
             },
             // {
+            //   title: 'Discount Category',
+            //   path: '/finance/settings/discount-category',
+            //   _action: 'discount-category-setting',
+            // },
+            // {
             //   title: 'Expenense',
             //   path: '/finance/settings/expense-category',
             //   _action: 'expenense-category-setting',
@@ -837,8 +842,8 @@ const transportModule = {
           _action: 'vehicle-management',
         },
         {
-          title: 'Staff Transport',
-          path: '/transport/staff-transport',
+          title: 'Assigned Route',
+          path: '/transport/member-transport',
           _action: 'staff-transport',
         },
         {
