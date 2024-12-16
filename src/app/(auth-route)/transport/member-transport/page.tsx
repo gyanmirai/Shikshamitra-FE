@@ -1,7 +1,7 @@
 import React from 'react';
 
-import MemberTransportScreen from 'src/screens/transport/memberTransport/member-transport-screen';
+import AssignedRouteScreen from 'src/screens/transport/memberTransport/assigned-route-screen';
 
-const TransportStaffAndStudent = () => <MemberTransportScreen />;
+const TransportStaffAndStudent = () => <AssignedRouteScreen />;
 
 export default TransportStaffAndStudent;

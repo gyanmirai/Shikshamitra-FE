@@ -909,7 +909,7 @@ const transportModule = {
           _action: 'vehicle-management',
         },
         {
-          title: 'Member Transport Management',
+          title: 'Assigned Route',
           path: '/transport/member-transport',
           _action: 'staff-transport',
         },

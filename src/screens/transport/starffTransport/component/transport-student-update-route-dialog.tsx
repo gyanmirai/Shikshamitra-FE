@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Grid, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
+import { Box, Grid, Radio, Button, TextField, Typography, RadioGroup, FormControl, Autocomplete, DialogActions, FormControlLabel } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -15,6 +15,7 @@ interface TransportStudentAndStaffUpdateInfoDialogProps {
   isEdit: boolean;
   allData: any;
   isStaff: boolean;
+  clickFromTable: boolean;
 }
 
 interface FormikValue {
@@ -83,7 +84,7 @@ const grades = availableGrades.map((g) => g.grade);
 
 const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   TransportStudentAndStaffUpdateInfoDialogProps
-> = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff }) => {
+> = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff, clickFromTable }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
   const formik = useFormik<FormikValue>({
@@ -123,6 +124,7 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   const selectedGradeObj = availableGrades.find((g) => g.grade === formik.values.grade);
   const students = selectedGradeObj ? selectedGradeObj.availableStudents : [];
 
+  const [userType, setUserType] = useState<any>('student');
   return (
     <CustomDialog maxWidth="md" title="Assigned Route" open={dialogValue} handleClose={onClose}>
       <Box>
@@ -133,11 +135,25 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
         )}
       </Box>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: "400px" }}>
+        {!clickFromTable && <FormControl>
+          {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
+          <RadioGroup
+            row
+            aria-labelledby="user-type-label"
+            name="userType"
+            value={userType}
+            onChange={(e) => setUserType(e.target.value)}
+          >
+            <FormControlLabel value="staff" control={<Radio />} label="Employee" />
+            <FormControlLabel value="student" control={<Radio />} label="Student" />
+          </RadioGroup>
+        </FormControl>}
 
         <form onSubmit={formik.handleSubmit}>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ mt: "5px" }}>
+
             {/* Row 1 */}
-            <Grid item xs={6}>
+            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
               <CustomSelect
                 disabled={isEdit}
                 label="Standard"
@@ -146,8 +162,8 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
                 onChange={handleGradeChange}
                 formControlProps={{ fullWidth: true }}
               />
-            </Grid>
-            <Grid item xs={6}>
+            </Grid>}
+            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
               <CustomSelect
                 disabled={isEdit}
                 label="Division"
@@ -156,10 +172,33 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
                 onChange={handleGradeChange}
                 formControlProps={{ fullWidth: true }}
               />
-            </Grid>
+            </Grid>}
 
             {/* Row 2 */}
-            <Grid item xs={6}>
+            {(userType === 'staff' || isStaff) && <Grid item xs={6}>
+              <Autocomplete
+                loading={false}
+                noOptionsText="No Employee Found"
+                fullWidth
+                options={[]}
+                getOptionLabel={(option: any) => option?.firstName || ''}
+                renderInput={(params: any) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    label="Employee Number"
+                    placeholder="Search Employee Number"
+                    fullWidth
+                  />
+                )}
+                renderOption={(prop: any, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.firstName}
+                  </li>
+                )}
+              />
+            </Grid>}
+            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
               <Autocomplete
                 loading={false}
                 noOptionsText="No Student Found"
@@ -181,7 +220,7 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
                   </li>
                 )}
               />
-            </Grid>
+            </Grid>}
             <Grid item xs={6}>
               <CustomSelect
                 label="Assigned Route"
