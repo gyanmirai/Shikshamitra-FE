@@ -177,13 +177,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Pending Assignment Submissions</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >
@@ -252,13 +252,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Pending Homeworks</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >
@@ -327,13 +327,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Pending Grade Assign</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >
@@ -464,7 +464,7 @@ const Dashboard = (props: TabComponentType) => {
             </Box>{' '}
           </Card>
         </Grid> */}
-      <Typography variant="h4" gutterBottom color="text.primary">
+      <Typography variant="h6" gutterBottom color="text.primary" sx={{ mt: 2 }}>
         Welcome, [John Doe]
       </Typography>
       <Grid container spacing={2} mt={1}>
@@ -480,13 +480,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Pending Assignments</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >
@@ -537,13 +537,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Completed Assignments</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >
@@ -608,13 +608,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Pending Homeowrk</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >
@@ -665,13 +665,13 @@ const Dashboard = (props: TabComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle1' }}>Completed Homeworks</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     padding: 0,
-                    height: '150px',
+                    height: '300px',
                     m: 0.5,
                   }}
                 >

@@ -70,7 +70,11 @@ const EventsArchieves = (props: TabComponentType) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h6">Archieves Events</Typography>
+      </Box>
+
       <CustomizableTable
         columns={[
           { id: 'eventTitle', label: 'Event Title' },

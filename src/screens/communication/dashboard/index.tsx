@@ -11,48 +11,139 @@ import { Box, Card, Grid, Typography } from '@mui/material';
 import { fShortenNumber } from 'src/utils/format-number';
 
 import { varAlpha } from 'src/theme/styles';
+import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
+import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { Iconify } from 'src/components/iconify';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
-const CommunicationDashboard = () => (
-  <Box>
-    <Grid container spacing={2} mt={1}>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary
-          title="Total Announcement"
-          percent={2.6}
-          total={75}
-          icon="mdi:announcement"
-        />
+const CommunicationDashboard = () => {
+  const theme = useTheme();
+  return (
+    <Box>
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Total Announcement"
+            icon="mdi:announcement"
+            value={35}
+            labels={[
+              { name: 'School Wise : 10', color: 'info' },
+              { name: 'Class Wise : 25', color: 'secondary' },
+            ]}
+            color="primary.main"
+            // href="/hr/employee"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Unread Messages"
+            icon="mdi:message-text"
+            value={5}
+            labels={[]}
+            color="error.main"
+            // href="/hr/employee"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Total Events"
+            icon="mdi:event"
+            value={55}
+            labels={[
+              { name: 'Active : 25', color: 'info' },
+              { name: 'Upcoming : 20', color: 'warning' },
+              { name: 'Completed : 10', color: 'secondary' },
+            ]}
+            color="secondary.main"
+            // href="/hr/employee"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Total Survey"
+            icon="ri:survey-line"
+            value={47}
+            labels={[
+              { name: 'Active : 25', color: 'info' },
+              { name: 'Upcoming : 12', color: 'warning' },
+              { name: 'Completed : 10', color: 'secondary' },
+            ]}
+            color="warning.main"
+            // href="/hr/employee"
+          />
+        </Grid>
       </Grid>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary
-          title="Unread Messages"
-          percent={2.6}
-          total={3}
-          icon="ic:baseline-message"
-        />
+      <Typography variant="h6" sx={{ mt: 2 }}>
+        Event Calendar
+      </Typography>
+      <CalendarView />
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <AnalyticsCurrentVisits
+              title="Survey Overview"
+              chart={{
+                series: [
+                  { label: 'Survey 1', value: 50 },
+                  { label: 'Survey 2', value: 20 },
+                  { label: 'Survey 3', value: 30 },
+                  { label: 'Survey 4', value: 5 },
+                  { label: 'Survey 5', value: 5 },
+                ],
+              }}
+              sx={{ boxShadow: 'none', height: '100%' }}
+            />
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <PerformanceOverTime
+              id="demo__4"
+              title="Response Overview"
+              //   subheader="(+43%) than last year"
+              chart={{
+                categories: [
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ],
+                series: [
+                  {
+                    name: 'Positive',
+                    data: [5, 10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
+                  },
+                  {
+                    name: 'Negative',
+                    data: [40, 60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
+                  },
+                ],
+                options: {
+                  legend: {
+                    show: true,
+                    position: 'top',
+                  },
+                },
+              }}
+              sx={{ height: '100%', boxShadow: 'none' }}
+            />
+          </Card>
+        </Grid>
       </Grid>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary
-          title="Upcoming Event"
-          percent={2.6}
-          total={4}
-          icon="material-symbols:event"
-        />
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary title="Active Survey" percent={2.6} total={4} icon="ri:survey-fill" />
-      </Grid>
-    </Grid>
-    <Typography variant="h6" sx={{ mt: 1 }}>
-      Event Calendar
-    </Typography>
-    <CalendarView />
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default CommunicationDashboard;
 

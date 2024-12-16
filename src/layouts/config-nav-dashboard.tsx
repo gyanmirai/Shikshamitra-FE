@@ -534,6 +534,11 @@ const academicModule = {
           path: '/academic/timetable-schedule-management',
           _action: 'timetable-schedule-management',
         },
+        {
+          title: 'Activity Management',
+          path: '/academic/activityManagement',
+          _action: 'activity-management',
+        },
         // {
         //   title: 'Examination & Assessment Management',
         //   path: '/academic/examination-assessment-management',
@@ -568,11 +573,6 @@ const academicModule = {
           title: 'Homework & Assignment Management',
           path: '/academic/homework-assignment-management',
           _action: 'homework-assignment-management',
-        },
-        {
-          title: 'Activity Management',
-          path: '/academic/activityManagement',
-          _action: 'activity-management',
         },
       ],
     },

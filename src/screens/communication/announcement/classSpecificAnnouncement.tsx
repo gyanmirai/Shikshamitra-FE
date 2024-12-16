@@ -308,13 +308,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((className: string) => (
-                  <Chip
-                    key={className}
-                    label={className}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
+                  <Chip key={className} label={className} size="small" variant="outlined" />
                 ))}
               </Box>
             ),
@@ -837,7 +831,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
               )}
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <FormControlLabel
                 control={
                   <Switch
