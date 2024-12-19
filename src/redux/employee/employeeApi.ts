@@ -66,6 +66,13 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    updateEmployeeStatus: builder.mutation({
+      query: ({ id, employeeStatusType }) => ({
+        url: `/app/employee/employee-status/${id}?employeeStatusType=${employeeStatusType}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Employee'],
+    }),
     deleteEmployee: builder.mutation({
       query: (id) => ({
         url: `/app/employee/${id}`,
@@ -233,4 +240,5 @@ export const {
   useGetEmployeeDocumentByIdQuery,
   useLazyGetEmployeeDocumentByIdQuery,
   useEmployeeUpdateDocumentMutation,
+  useUpdateEmployeeStatusMutation,
 } = employeeApi;

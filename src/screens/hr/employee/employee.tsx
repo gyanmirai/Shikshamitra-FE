@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Paper, Button, Avatar, MenuList, MenuItem, DialogActions } from '@mui/material';
+import { Box, Grid, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -13,17 +13,11 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-import {
-  EmployeeStatusType,
-  EmployeeStatusTypeArray,
-  EmployeeStatusTypeColor,
-} from 'src/enums/employee-status-type';
+import { EmployeeStatusType, EmployeeStatusTypeColor } from 'src/enums/employee-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -31,6 +25,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
 import { Sections } from '../payroll/structure';
+import ChangeStatusForm from './chnage-status-form';
 
 const HrEmployee = () => {
   const statusDialog = useBoolean();
@@ -58,6 +53,7 @@ const HrEmployee = () => {
             onClick={() => {
               setOpen(true);
               pop.onClose();
+              setEditData(row);
             }}
           >
             <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
@@ -79,6 +75,7 @@ const HrEmployee = () => {
             onClick={() => {
               pop.onClose();
               statusDialog.onTrue();
+              setEditData(row);
             }}
           >
             <Iconify icon="mdi:form-dropdown" sx={{ height: '16px', width: '16px' }} />
@@ -92,6 +89,10 @@ const HrEmployee = () => {
 
   const handleClose = () => {
     setOpen(false);
+    setEditData(null);
+  };
+  const handleCloseStatus = () => {
+    statusDialog.onFalse();
     setEditData(null);
   };
 
@@ -183,9 +184,6 @@ const HrEmployee = () => {
                   render(value, row) {
                     return (
                       <ThreeDotsActions
-                        onClickThreeDots={() => {
-                          setEditData(row);
-                        }}
                         actions={(props) => actions({ ...props, row })}
                         placement="right-top"
                       />
@@ -197,34 +195,14 @@ const HrEmployee = () => {
             />
             <CustomDialog
               open={statusDialog.value}
-              handleClose={statusDialog.onFalse}
+              handleClose={handleCloseStatus}
               title="Change Status"
             >
-              <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-                <CustomSelect
-                  options={EmployeeStatusTypeArray.map((item, index) => ({
-                    label: EmployeeStatusType[index],
-                    value: index,
-                  }))}
-                  value=""
-                  onChange={() => {}}
-                  label="Change Status"
-                  formControlProps={{
-                    fullWidth: true,
-                    sx: {
-                      maxWidth: 'unset',
-                    },
-                  }}
-                />
-              </Scrollbar>
-              <DialogActions>
-                <Button variant="outlined" onClick={statusDialog.onFalse}>
-                  Cancel
-                </Button>
-                <Button variant="contained" onClick={statusDialog.onFalse}>
-                  Change Status
-                </Button>
-              </DialogActions>
+              <ChangeStatusForm
+                handleClose={handleCloseStatus}
+                employeeId={editData?.id}
+                status={editData?.employeeStatusType}
+              />
             </CustomDialog>
             <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee">
               <EmployeeFrom editData={editData} handleClose={handleClose} />
