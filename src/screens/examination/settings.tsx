@@ -3,7 +3,8 @@ import React from 'react';
 import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
-import { TabComponentType } from '../hr/leave-request';
+
+import type { TabComponentType } from '../hr/leave-request';
 
 const Settings = (props: TabComponentType) => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

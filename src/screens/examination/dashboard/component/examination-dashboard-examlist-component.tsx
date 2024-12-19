@@ -1,13 +1,13 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+
 import { useBoolean } from 'src/hooks/use-boolean';
-import { TabComponentType } from 'src/screens/hr/leave-request';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+
 import { CalendarView } from 'src/sections/calendar/view';
+
 import ScheduleExam from '../../schedule-exam';
 
 const ExaminationDashboardExamlistComponent = (props: TabComponentType) => {
