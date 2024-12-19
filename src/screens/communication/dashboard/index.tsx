@@ -36,7 +36,6 @@ import ClassWiseAnnounsement from '../announcement/classSpecificAnnouncement';
 
 const CommunicationDashboard = () => {
   const [view, setView] = useState('schoolwise');
-
   const theme = useTheme();
 
   const handleChangeView = useCallback(

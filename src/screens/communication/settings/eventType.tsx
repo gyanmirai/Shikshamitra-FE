@@ -257,7 +257,7 @@ interface EventFormProps {
 
 // eslint-disable-next-line react/prop-types
 const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
+  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'UnPublish'));
 
   const formik = useFormik({
     initialValues: {
@@ -268,7 +268,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
       onSubmit({
         ...values,
         id: data?.id || Date.now(),
-        status: isDraft ? 'Unpublish' : 'Publish',
+        status: isDraft ? 'UnPublish' : 'Publish',
       });
     },
   });

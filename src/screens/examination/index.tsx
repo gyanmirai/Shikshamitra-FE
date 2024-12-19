@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { Tab, Box, Card, Button } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -12,10 +13,9 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Settings from './settings';
+import Setting from './setting';
 import GradeEntry from './gradeEntry';
 import ScheduleExam from './schedule-exam';
-import RubricManagement from './rubricManagement';
 import GradingAndAnalytics from './gradingAndAnalytics';
 // eslint-disable-next-line import/no-named-as-default
 import AssessmentManagement from './assessment-management';
@@ -49,11 +49,11 @@ const TABS = [
     label: 'Assessment Management',
     component: (props: TabComponentType) => <AssessmentManagement {...props} />,
   },
-  {
-    value: 'rubricManagement',
-    label: 'Rubric Management',
-    component: (props: TabComponentType) => <RubricManagement {...props} />,
-  },
+  // {
+  //   value: 'rubricManagement',
+  //   label: 'Rubric Management',
+  //   component: (props: TabComponentType) => <RubricManagement {...props} />,
+  // },
   {
     value: 'studentPerformanceAndAnalytics',
     label: 'Student Performace Analytics',
@@ -62,7 +62,7 @@ const TABS = [
   {
     value: 'settings',
     label: 'Settings',
-    component: (props: TabComponentType) => <Settings {...props} />,
+    component: (props: TabComponentType) => <Setting {...props} />,
   },
 ];
 
@@ -98,6 +98,11 @@ const ExaminationPageScreen = () => {
             },
           }}
           variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'scheduleExam',
+            });
+          }}
         >
           Schedule Exam
         </Button>
@@ -111,12 +116,17 @@ const ExaminationPageScreen = () => {
             },
           }}
           variant="contained"
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'gradeEntry',
+            });
+          }}
         >
           Upload Mark
         </Button>
 
         <Button
-          startIcon={<Iconify icon="mdi:file-document-outline" />}
+          startIcon={<Add />}
           sx={{
             backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
             color: 'error.main',
@@ -125,22 +135,13 @@ const ExaminationPageScreen = () => {
             },
           }}
           variant="contained"
-        >
-          Generate Report
-        </Button>
-
-        <Button
-          startIcon={<Iconify icon="mingcute:notification-fill" />}
-          variant="contained"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            color: 'warning.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            },
+          onClick={() => {
+            setSearchParams?.({
+              tab: 'assessmentManagement',
+            });
           }}
         >
-          send notification
+          Create Assessment
         </Button>
       </Box>
       <Card

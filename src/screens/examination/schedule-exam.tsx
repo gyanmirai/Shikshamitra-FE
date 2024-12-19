@@ -8,10 +8,14 @@ import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Radio,
   Button,
+  Tooltip,
   MenuList,
   MenuItem,
   TextField,
+  RadioGroup,
+  Typography,
   DialogContent,
   DialogActions,
   FormHelperText,
@@ -39,9 +43,15 @@ const ScheduleExam = (props: TabComponentType) => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="contained" onClick={dialog.onTrue}>
-          New Exam
-        </Button>
+        <Tooltip title="Schedule Exam">
+          <Iconify
+            cursor="pointer"
+            icon="mdi:add-circle"
+            onClick={dialog.onTrue}
+            height={40}
+            width={40}
+          />
+        </Tooltip>
       </Box>
       <CustomizableTable
         columns={[
@@ -63,6 +73,7 @@ const ScheduleExam = (props: TabComponentType) => {
             render(value, row) {
               return (
                 <ThreeDotsActions
+                  placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem
@@ -162,22 +173,29 @@ const SelectExam = ({ formik }: any) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  const [isAllClassesSelected, setIsAllClassesSelected] = useState(
-    formik.values?.className?.length === classData?.items?.length
+  const divisionOption = [
+    { value: 'A', label: 'A' },
+    { value: 'B', label: 'B' },
+    { value: 'C', label: 'C' },
+    { value: 'D', label: 'D' },
+  ];
+
+  const [isAllSelected, setIsAllSelected] = useState(
+    formik.initialValues?.division?.length === divisionOption.length
   );
 
-  const handleClass = (selectedValues: string[]) => {
-    const allClassesValues = classData?.items?.map((org: any) => org.name);
+  const handleDivisionChange = (selectedValues: string[]) => {
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
-      if (isAllClassesSelected) {
-        formik.setFieldValue('className', []);
+      const allDivision = divisionOption.map((org) => org.value);
+      if (isAllSelected) {
+        formik.setFieldValue('division', []);
       } else {
-        formik.setFieldValue('className', allClassesValues);
+        formik.setFieldValue('division', allDivision);
       }
-      setIsAllClassesSelected(!isAllClassesSelected);
+      setIsAllSelected(!isAllSelected);
     } else {
-      formik.setFieldValue('className', selectedValues);
-      setIsAllClassesSelected(selectedValues.length === allClassesValues.length);
+      formik.setFieldValue('division', selectedValues);
+      setIsAllSelected(selectedValues.length === divisionOption.length);
     }
   };
 
@@ -203,28 +221,56 @@ const SelectExam = ({ formik }: any) => {
             <FormHelperText error>{formik.errors.examType}</FormHelperText>
           )}
         </Grid>
+
         <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label="Exam Name"
+            name="examName"
+            value={formik.values.examName}
+            onChange={formik.handleChange}
+            error={formik.touched.examName && Boolean(formik.errors.examName)}
+            helperText={formik.touched.examName && formik.errors.examName}
+            size="small"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
           <CustomSelect
-            options={[
-              {
-                id: isAllClassesSelected ? 'deselectAll' : 'all',
-                name: isAllClassesSelected ? 'Deselect All' : 'All',
-              },
-              ...(classData?.items || []),
-            ]}
+            options={classData?.items || []}
             value={formik.values.className}
             onChange={(val) => {
-              handleClass(val as string[]);
+              formik.setFieldValue('className', val);
             }}
             label="Class"
             isLoading={isLoading}
-            multiple
             labelKey="name"
             valueKey="name"
             formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
           />
           {formik.touched.className && formik.errors.className && (
             <FormHelperText error>{formik.errors.className}</FormHelperText>
+          )}
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <CustomSelect
+            label="Select Divisions"
+            options={[
+              {
+                value: isAllSelected ? 'deselectAll' : 'all',
+                label: isAllSelected ? 'Deselect All' : 'All',
+              },
+              ...divisionOption,
+            ]}
+            value={formik.values.division || []}
+            onChange={(val) => {
+              handleDivisionChange(val as string[]);
+            }}
+            multiple
+            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+          />
+          {formik.touched.division && formik.errors.division && (
+            <FormHelperText error>{String(formik.errors.division)}</FormHelperText>
           )}
         </Grid>
 
@@ -311,6 +357,19 @@ const ExamDetails = ({ formik }: any) => (
           onChange={formik.handleChange}
           error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
           helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+          size="small"
+        />
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Passing Marks"
+          name="passingMarks"
+          value={formik.values.passingMarks}
+          onChange={formik.handleChange}
+          error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
+          helperText={formik.touched.passingMarks && formik.errors.passingMarks}
           size="small"
         />
       </Grid>
@@ -458,6 +517,117 @@ const InputEvaluationCriteria = () => (
   </Box>
 );
 
+const AssignTeachers = ({ formik }: any) => (
+  <Box display="flex" flexDirection="column" gap={2}>
+    <CustomizableTable
+      isShowedDense={false}
+      isSearch={false}
+      isFilter={false}
+      columns={[
+        {
+          id: 'division',
+          label: 'Division',
+        },
+        {
+          id: 'gradingTeacher',
+          label: 'Grading Teacher',
+          render: (value: string) => (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <CustomSelect
+                options={[
+                  { value: 'abc', label: 'ABC' },
+                  { value: 'pqr', label: 'PQR' },
+                  { value: 'xyz', label: 'XYZ' },
+                ]}
+                value=""
+                onChange={(val) => {}}
+                label="Grading Teacher"
+                formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
+              />
+            </Box>
+          ),
+        },
+        {
+          id: 'invigilationTeacher',
+          label: 'Invigilation Teacher',
+          render: (value: string) => (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <CustomSelect
+                options={[
+                  { value: 'abv', label: 'ABC' },
+                  { value: 'pqr', label: 'PQR' },
+                  { value: 'xyz', label: 'XYZ' },
+                ]}
+                value=""
+                onChange={(val) => {}}
+                label="Invigilation Teacher"
+                formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
+              />
+            </Box>
+          ),
+        },
+        {
+          id: 'classRoom',
+          label: 'ClassRoom',
+          render: (value: string) => (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <CustomSelect
+                options={[
+                  { value: 'A101', label: 'A101' },
+                  { value: 'B102', label: 'B102' },
+                  { value: 'B103', label: 'B103' },
+                ]}
+                value=""
+                onChange={(val) => {}}
+                label="Classroom"
+                formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
+              />
+            </Box>
+          ),
+        },
+      ]}
+      data={[
+        {
+          division: 'A',
+          gradingTeacher: '',
+          invigilationTeacher: '',
+          classRoom: '',
+        },
+        {
+          division: 'B',
+          gradingTeacher: '',
+          invigilationTeacher: '',
+          classRoom: '',
+        },
+        {
+          division: 'C',
+          gradingTeacher: '',
+          invigilationTeacher: '',
+          classRoom: '',
+        },
+        {
+          division: 'D',
+          gradingTeacher: '',
+          invigilationTeacher: '',
+          classRoom: '',
+        },
+        {
+          division: 'E',
+          gradingTeacher: '',
+          invigilationTeacher: '',
+          classRoom: '',
+        },
+        {
+          division: 'F',
+          gradingTeacher: '',
+          invigilationTeacher: '',
+          classRoom: '',
+        },
+      ]}
+    />
+  </Box>
+);
+
 const Exams = [
   { subject: 'Mathematics', date: '15-10-2024', time: '10:00' },
   { subject: 'Physics', date: '15-10-2024', time: '14:00' },
@@ -479,7 +649,9 @@ const NewExamForm = () => {
     <CustomStepperWithFormik
       initialValues={{
         examType: '',
-        className: [],
+        examName: '',
+        className: '',
+        division: [],
         subject: '',
         examDate: null,
         examTime: null,

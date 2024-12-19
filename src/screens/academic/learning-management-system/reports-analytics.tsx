@@ -1,3 +1,5 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -10,7 +12,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const ReportsAnalytics = () => {
+const ReportsAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box sx={{ p: 1 }}>

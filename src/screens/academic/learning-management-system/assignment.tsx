@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useState } from 'react';
 import { useFormik } from 'formik';
@@ -35,7 +36,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
-const Assignment = () => {
+const Assignment = (props: TabComponentType) => {
   const isCalendarView = useBoolean(true);
   const dialog = useBoolean();
   const handleSubmit = () => {

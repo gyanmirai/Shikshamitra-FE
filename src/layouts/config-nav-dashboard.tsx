@@ -634,11 +634,6 @@ const examinationModule = {
           path: '/examination',
           _action: 'examination',
         },
-        {
-          title: 'Assessment',
-          path: '/examination/assessment',
-          _action: 'assessment',
-        },
       ],
     },
   ],

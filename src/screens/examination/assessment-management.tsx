@@ -13,6 +13,7 @@ import {
   Grid,
   Button,
   Switch,
+  Tooltip,
   MenuList,
   MenuItem,
   Checkbox,
@@ -257,18 +258,15 @@ const AssessmentManagement = (props: TabComponentType) => {
             }}
           />
         </Box>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          onClick={() => {
-            newAssesmentDialog.onTrue();
-          }}
-          sx={{
-            mt: { xs: 2, sm: 0 }, // Adds margin-top for small screens when wrapped
-          }}
-        >
-          Create Assessment
-        </Button>
+        <Tooltip title="Create Assessment">
+          <Iconify
+            cursor="pointer"
+            icon="mdi:add-circle"
+            onClick={newAssesmentDialog.onTrue}
+            height={40}
+            width={40}
+          />
+        </Tooltip>
       </Box>
 
       <CustomizableTable

@@ -161,7 +161,7 @@ const CourseProgress = (props: TabComponentType) => {
       />
       <Grid container spacing={2} marginTop={2}>
         {courses.map((course) => (
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
             <Card
               sx={{
                 p: 2,

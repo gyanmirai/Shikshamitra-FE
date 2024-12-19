@@ -1,25 +1,26 @@
-import { DatePicker } from '@mui/x-date-pickers';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import { useState } from 'react';
+
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Quiz, School, Assignment, PendingActions, AssignmentTurnedIn } from '@mui/icons-material';
+import { School, AssignmentTurnedIn } from '@mui/icons-material';
 import {
   Box,
   Tab,
   Card,
+  Grid,
+  alpha,
   Avatar,
   MenuList,
   MenuItem,
-  TextField,
+  useTheme,
   Typography,
-  ListItemText,
-  InputAdornment,
   LinearProgress,
-  CircularProgress,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 
 import { Label } from 'src/components/label';
@@ -32,19 +33,21 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const StudentProgressTracking = () => {
+const StudentProgressTracking = (props: TabComponentType) => {
   const dialog = useBoolean();
+  const theme = useTheme();
+
   const handleRowClick = () => {
     dialog.onTrue();
   };
   return (
     <Box>
-      <Typography variant="h4">Progress Dashboard</Typography>
+      <Typography variant="h6">Progress Dashboard</Typography>
       <Box display="flex" gap={2} mt={2}>
         <CustomSelect
           options={[]}
           value=""
-          label="Select Class"
+          label="Class"
           onChange={() => {}}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           size="small"
@@ -52,12 +55,20 @@ const StudentProgressTracking = () => {
         <CustomSelect
           options={[]}
           value=""
-          label="Select SUbject"
+          label="Division"
           onChange={() => {}}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           size="small"
         />
-        <DatePicker
+        <CustomSelect
+          options={[]}
+          value=""
+          label="Student"
+          onChange={() => {}}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          size="small"
+        />
+        {/* <DatePicker
           label="Start Date"
           format="DD-MM-YYYY"
           slotProps={{
@@ -74,9 +85,9 @@ const StudentProgressTracking = () => {
               size: 'small',
             },
           }}
-        />
+        /> */}
       </Box>
-      <Box sx={{ mt: 2 }}>
+      {/* <Box sx={{ mt: 2 }}>
         <TextField
           placeholder="Search student..."
           InputProps={{
@@ -88,306 +99,120 @@ const StudentProgressTracking = () => {
           }}
           fullWidth
         />
-      </Box>
+      </Box> */}
 
-      <Grid2 container spacing={2} mt={2}>
-        <Grid2 xs={12} sm={6} md={4}>
+      <Grid container spacing={2} mt={2}>
+        <Grid item xs={12} sm={6}>
           <AppCurrentDownload
-            title="Completion Rates"
+            title="Attendance Overview"
             chart={{
               series: [
-                { label: 'Assignments', value: 12244 },
-                { label: 'Videos', value: 53345 },
-                { label: 'Quizzes', value: 44313 },
+                { label: 'Present', value: 50 },
+                { label: 'Absent', value: 30 },
               ],
             }}
           />
-        </Grid2>
-        <Grid2 xs={12} sm={6} md={4}>
-          <AppAreaInstalled
-            title="Performance Distribution"
-            subheader="(+43%) than last year"
-            selectSeries="class1"
-            chart={{
-              categories: [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ],
-              series: [
-                {
-                  name: 'class1',
-                  data: [
-                    { name: 'quiz scores', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                    { name: 'other scores', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                  ],
-                },
-                {
-                  name: 'class2',
-                  data: [
-                    { name: 'quiz scores', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                    { name: 'other scores', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                  ],
-                },
-                {
-                  name: 'Class3',
-                  data: [
-                    { name: 'quiz scores', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                    { name: 'other scores', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                  ],
-                },
-              ],
-            }}
-          />
-        </Grid2>
-        <Grid2 xs={12} sm={6} md={4}>
+        </Grid>
+        <Grid item xs={12} sm={6}>
           <AnalyticsWebsiteVisits
-            title="Engagement Levels"
+            title="Student Performance Levels"
+            //   subheader="(+43%) than last year"
             chart={{
-              categories: ['assignments', 'videos', 'quizzes'],
-              series: [{ name: '', data: [43, 33, 22] }],
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              series: [
+                { name: 'Exam', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
+                { name: 'Quiz', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
+              ],
+              colors: [
+                alpha(theme.palette.primary.dark, 0.8),
+                alpha(theme.palette.warning.main, 0.8),
+              ],
             }}
-            sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
+            sx={{ height: '100%' }}
           />
-        </Grid2>
-        <Grid2 xs={12}>
-          <Typography variant="h4">Quick Stats</Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-            <Card
-              sx={{
-                width: '30%',
-                p: 3,
-                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#1a2027' : '#e6f7ff'),
-                borderRadius: '12px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                transition: 'all 0.3s ease',
-                '&:hover': { transform: 'scale(1.05)' },
-              }}
+        </Grid>
+      </Grid>
+      <Grid container spacing={2} mt={2}>
+        <Grid item xs={12} md={4}>
+          <Card
+            sx={{
+              height: '100%',
+              p: 3,
+              backgroundColor: (them) => (them.palette.mode === 'dark' ? '#1a2027' : '#e6f7ff'),
+              borderRadius: '12px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': { transform: 'scale(1.05)' },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+              <Iconify icon="ph:exam" height={27} width={27} />
+              <Typography variant="h6">Completed Exams</Typography>
+            </Box>
+            <Typography
+              variant="h3"
+              sx={{ mt: 1, textAlign: 'center', color: '#1976d2', fontWeight: 'bold' }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Assignment sx={{ mr: 1, color: '#1976d2' }} />
-                <Typography variant="h6">Total Assignments Completed</Typography>
-              </Box>
-              <Typography
-                variant="h3"
-                sx={{ mt: 1, textAlign: 'center', color: '#1976d2', fontWeight: 'bold' }}
-              >
-                25
-              </Typography>
-            </Card>
-
-            <Card
-              sx={{
-                width: '30%',
-                p: 3,
-                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#1a2027' : '#e6ffe6'),
-                borderRadius: '12px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                transition: 'all 0.3s ease',
-                '&:hover': { transform: 'scale(1.05)' },
-              }}
+              25
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card
+            sx={{
+              height: '100%',
+              p: 3,
+              backgroundColor: (them) => (them.palette.mode === 'dark' ? '#1a2027' : '#e6ffe6'),
+              borderRadius: '12px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': { transform: 'scale(1.05)' },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+              <Iconify icon="fluent:quiz-new-20-regular" height={27} width={27} />
+              <Typography variant="h6">Completed Quiz</Typography>
+            </Box>
+            <Typography
+              variant="h3"
+              sx={{ mt: 1, textAlign: 'center', color: '#1976d2', fontWeight: 'bold' }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Quiz sx={{ mr: 1, color: '#2e7d32' }} />
-                <Typography variant="h6">Average Quiz Score</Typography>
-              </Box>
-              <Typography
-                variant="h3"
-                sx={{ mt: 1, textAlign: 'center', color: '#2e7d32', fontWeight: 'bold' }}
-              >
-                85%
-              </Typography>
-              <Box sx={{ mt: 2, backgroundColor: '#c8e6c9', borderRadius: '10px', height: '10px' }}>
-                <Box
-                  sx={{
-                    width: '85%',
-                    height: '100%',
-                    backgroundColor: '#4caf50',
-                    borderRadius: '10px',
-                  }}
-                />
-              </Box>
-            </Card>
-
-            <Card
-              sx={{
-                width: '30%',
-                p: 3,
-                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#1a2027' : '#fff0f0'),
-                borderRadius: '12px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                transition: 'all 0.3s ease',
-                '&:hover': { transform: 'scale(1.05)' },
-              }}
+              14
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card
+            sx={{
+              height: '100%',
+              p: 3,
+              backgroundColor: (them) => (them.palette.mode === 'dark' ? '#1a2027' : '#fff0f0'),
+              borderRadius: '12px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': { transform: 'scale(1.05)' },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+              <Iconify icon="mdi:assignment" height={27} width={27} />
+              <Typography variant="h6">Completed Assignments</Typography>
+            </Box>
+            <Typography
+              variant="h3"
+              sx={{ mt: 1, textAlign: 'center', color: '#d32f2f', fontWeight: 'bold' }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <PendingActions sx={{ mr: 1, color: '#d32f2f' }} />
-                <Typography variant="h6">Pending Assignments</Typography>
-              </Box>
-              <Typography
-                variant="h3"
-                sx={{ mt: 1, textAlign: 'center', color: '#d32f2f', fontWeight: 'bold' }}
-              >
-                92
-              </Typography>
-            </Card>
-          </Box>
-        </Grid2>
-        <Grid2 xs={12}>
-          <Typography variant="h4">Class Overview</Typography>
-          <CustomizableTable
-            columns={[
-              { id: 'studentName', label: 'Student Name' },
-              {
-                id: 'overallProgress',
-                label: 'Overall Progress',
-                render(value, row) {
-                  return (
-                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                      <CircularProgress variant="determinate" value={value} />
-                      <Box
-                        sx={{
-                          top: 0,
-                          left: 0,
-                          bottom: 0,
-                          right: 0,
-                          position: 'absolute',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          component="div"
-                          sx={{ color: 'text.secondary' }}
-                        >
-                          {value}%
-                        </Typography>
-                      </Box>
-                    </Box>
-                  );
-                },
-              },
-              { id: 'quizScores', label: 'Quiz Scores' },
-              {
-                id: 'averageGrade',
-                label: 'Average Grade',
-                render(value, row) {
-                  return (
-                    <Label
-                      color={
-                        value === 'A+'
-                          ? 'success'
-                          : value === 'B'
-                            ? 'success'
-                            : value === 'C'
-                              ? 'warning'
-                              : 'error'
-                      }
-                    >
-                      {value}
-                    </Label>
-                  );
-                },
-              },
-              {
-                id: 'assignmentStatus',
-                label: 'Assignment Status',
-                render(value, row) {
-                  return (
-                    <Label
-                      color={
-                        value === 'Submitted'
-                          ? 'success'
-                          : value === 'Pending'
-                            ? 'warning'
-                            : 'error'
-                      }
-                    >
-                      {value}
-                    </Label>
-                  );
-                },
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      actions={() => (
-                        <MenuList>
-                          <MenuItem>
-                            <ListItemText>Send Reminder</ListItemText>
-                          </MenuItem>
-                          <MenuItem>
-                            <Iconify icon="mdi:eye" />
-                            <ListItemText>View Details</ListItemText>
-                          </MenuItem>
-                        </MenuList>
-                      )}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={[
-              {
-                studentName: 'John Doe',
-                overallProgress: '75',
-                quizScores: '82%',
-                averageGrade: 'B+',
-                assignmentStatus: 'Pending',
-              },
-              {
-                studentName: 'Jane Smith',
-                overallProgress: '88',
-                quizScores: '90%',
-                averageGrade: 'A-',
-                assignmentStatus: 'Completed',
-              },
-              {
-                studentName: 'Mike Johnson',
-                overallProgress: '62',
-                quizScores: '71%',
-                averageGrade: 'C',
-                assignmentStatus: 'Pending',
-              },
-              {
-                studentName: 'Emily Brown',
-                overallProgress: '95',
-                quizScores: '98%',
-                averageGrade: 'A+',
-                assignmentStatus: 'Completed',
-              },
-              {
-                studentName: 'Alex Wilson',
-                overallProgress: '80',
-                quizScores: '85%',
-                averageGrade: 'B',
-                assignmentStatus: 'Pending',
-              },
-            ]}
-            handleRowClick={handleRowClick}
-          />
-        </Grid2>
-        <Grid2 xs={12}>
-          <Box sx={{ maxWidth: '90%', width: '100%', margin: 'auto' }}>
+              92
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
+      <Grid container mt={2}>
+        <Grid item xs={12}>
+          <Box sx={{ width: '100%', margin: 'auto' }}>
             <RenderTabs />
           </Box>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Detailed Student View">
         <DetailedStudentView />
@@ -510,16 +335,20 @@ const TABS = [
     component: () => <LearningMaterial />,
   },
   {
-    value: 'quizzesAndAssessments',
-    label: 'Quizzes & Assessments',
-    component: () => <QuizzesAndAssessments />,
+    value: 'quizzes',
+    label: 'Quizzes ',
+    component: () => <Quizzes />,
   },
-
   {
-    value: 'overallGrades',
-    label: 'Overall Grades',
-    component: () => <OverallGrades />,
+    value: 'Assessments',
+    label: 'Assessments',
+    component: () => <Assessments />,
   },
+  // {
+  //   value: 'overallGrades',
+  //   label: 'Overall Grades',
+  //   component: () => <OverallGrades />,
+  // },
 ];
 
 const RenderTabs = () => {
@@ -551,124 +380,401 @@ const RenderTabs = () => {
   );
 };
 
-const Assignments = () => (
-  <CustomizableTable
-    columns={[
-      { id: 'assignmentName', label: 'Assignment Name' },
-      { id: 'completionDate', label: 'Completion Date' },
-      {
-        id: 'gradeFeedback',
-        label: 'Grade & Feedback',
-        render(value, row) {
-          return (
-            <>
-              <Label
-                color={
-                  value?.grade === 'A'
-                    ? 'success'
-                    : value?.grade === 'B'
-                      ? 'success'
-                      : value?.grade === 'C'
-                        ? 'warning'
-                        : 'error'
-                }
-              >
-                {value?.grade}
-              </Label>
-              <Typography variant="subtitle2" sx={{ opacity: 0.84 }}>
-                {value?.feedback}
-              </Typography>
-            </>
-          );
-        },
-      },
-      {
-        id: 'submissionStatus',
-        label: 'Submission Status',
-        render(value, row) {
-          return (
-            <Label
-              color={value === 'Submitted' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
-            >
-              {value}
-            </Label>
-          );
-        },
-      },
-      {
-        id: 'action',
-        label: 'Action',
-      },
-    ]}
-    data={[
-      {
-        assignmentName: 'XYZ',
-        completionDate: '01-01-2024',
-        gradeFeedback: {
-          grade: 'A',
-          feedback: 'Excellent',
-        },
-        submissionStatus: 'Submitted',
-      },
-      {
-        assignmentName: 'XYZ',
-        completionDate: '01-01-2024',
-        gradeFeedback: {
-          grade: 'B',
-          feedback: 'Excellent',
-        },
-        submissionStatus: 'Pending',
-      },
-      {
-        assignmentName: 'XYZ',
-        completionDate: '01-01-2024',
-        gradeFeedback: {
-          grade: 'D',
-          feedback: 'Excellent',
-        },
-        submissionStatus: 'Overdue',
-      },
-      {
-        assignmentName: 'XYZ',
-        completionDate: '01-01-2024',
-        gradeFeedback: {
-          grade: 'A',
-          feedback: 'Excellent',
-        },
-        submissionStatus: 'Submitted',
-      },
-    ]}
-  />
-);
-
-const LearningMaterial = () => (
-  <Grid2 container spacing={3}>
-    <Grid2 xs={12} md={6}>
-      <AnalyticsWebsiteVisits
-        title="Time spent on different learning materials"
-        chart={{
-          categories: ['videos', 'PDFs', 'interactive content'],
-          series: [{ name: '', data: [43, 33, 22] }],
+const Assignments = () => {
+  const uploadAssignmentDialog = useBoolean();
+  const [subject, setSubject] = useState('');
+  return (
+    <Box>
+      <CustomSelect
+        label="Course/Subject"
+        options={[
+          {
+            value: 'Math',
+            label: 'Math',
+          },
+          {
+            value: 'English',
+            label: 'English',
+          },
+        ]}
+        value={subject}
+        onChange={(val) => {
+          setSubject(val as string);
         }}
-        sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
+        formControlProps={{ sx: { minWidth: 200 } }}
       />
-    </Grid2>
-    <Grid2 xs={12} md={6}>
-      <AppCurrentDownload
-        title="percentage of each material within the course"
-        chart={{
-          series: [
-            { label: 'Assignments', value: 12244 },
-            { label: 'Videos', value: 53345 },
-            { label: 'Quizzes', value: 44313 },
-          ],
-        }}
+      <CustomizableTable
+        columns={[
+          { id: 'subjectName', label: 'Subject Name' },
+          { id: 'assignmentType', label: 'Assignment Type' },
+          { id: 'assignmentName', label: 'Assignment Name' },
+          { id: 'assignedTeacher', label: 'Assigned Teacher' },
+          { id: 'dueDate', label: 'Due Date' },
+          { id: 'completionDate', label: 'Completion Date' },
+          {
+            id: 'gradeFeedback',
+            label: 'Grade & Feedback',
+            render(value, row) {
+              return (
+                <>
+                  {value.grade && value.feedback ? (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Label
+                        color={
+                          value?.grade === 'A'
+                            ? 'success'
+                            : value?.grade === 'B'
+                              ? 'success'
+                              : value?.grade === 'C'
+                                ? 'warning'
+                                : 'error'
+                        }
+                      >
+                        {value?.grade}
+                      </Label>
+                      <Typography variant="caption" sx={{ opacity: 0.84 }}>
+                        {value?.feedback}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    '-'
+                  )}
+                </>
+              );
+            },
+          },
+          {
+            id: 'submissionStatus',
+            label: 'Submission Status',
+            render(value, row) {
+              return (
+                <Label
+                  color={
+                    value === 'Submitted' ? 'success' : value === 'Pending' ? 'warning' : 'error'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                actions={({ popover: pop }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        uploadAssignmentDialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" />
+                      Upload Assignment
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={[
+          {
+            subjectName: 'Math',
+            assignmentType: 'Homework',
+            assignmentName: 'Algebra Basics',
+            assignedTeacher: 'Mr. Smith',
+            dueDate: '01-01-2024',
+            completionDate: '01-01-2024',
+            gradeFeedback: {
+              grade: 'A',
+              feedback: 'Excellent',
+            },
+            submissionStatus: 'Submitted',
+          },
+          {
+            subjectName: 'Science',
+            assignmentType: 'Lab Report',
+            assignmentName: 'Chemical Reactions',
+            assignedTeacher: 'Dr. Johnson',
+            dueDate: '01-01-2024',
+            gradeFeedback: {
+              grade: '',
+              feedback: '',
+            },
+            submissionStatus: 'Pending',
+          },
+          {
+            subjectName: 'English',
+            assignmentType: 'Essay',
+            assignmentName: 'Shakespeare Analysis',
+            assignedTeacher: 'Ms. Williams',
+            dueDate: '01-01-2024',
+            gradeFeedback: {
+              grade: '',
+              feedback: '',
+            },
+            submissionStatus: 'Overdue',
+          },
+          {
+            subjectName: 'Math',
+            assignmentType: 'Project',
+            assignmentName: 'Geometry Tutorials',
+            assignedTeacher: 'Mr. Smith',
+            dueDate: '01-01-2024',
+            completionDate: '01-01-2024',
+            gradeFeedback: {
+              grade: 'A',
+              feedback: 'Excellent',
+            },
+            submissionStatus: 'Submitted',
+          },
+        ]}
       />
-    </Grid2>
-  </Grid2>
-);
+    </Box>
+  );
+};
 
-const QuizzesAndAssessments = () => (
+const Assessments = () => {
+  const uploadAssessmentDialog = useBoolean();
+  const [subject, setSubject] = useState('');
+  return (
+    <Box>
+      <CustomSelect
+        label="Course/Subject"
+        options={[
+          {
+            value: 'Math',
+            label: 'Math',
+          },
+          {
+            value: 'English',
+            label: 'English',
+          },
+        ]}
+        value={subject}
+        onChange={(val) => {
+          setSubject(val as string);
+        }}
+        formControlProps={{ sx: { minWidth: 200 } }}
+      />
+      <CustomizableTable
+        columns={[
+          { id: 'subjectName', label: 'Subject Name' },
+          { id: 'assessmentType', label: 'Assessment Type' },
+          { id: 'assessmentName', label: 'Assessment Name' },
+          { id: 'assignedTeacher', label: 'Assigned Teacher' },
+          { id: 'dueDate', label: 'Due Date' },
+          { id: 'completionDate', label: 'Completion Date' },
+          {
+            id: 'gradeFeedback',
+            label: 'Grade & Feedback',
+            render(value, row) {
+              return (
+                <>
+                  {value.grade && value.feedback ? (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Label
+                        color={
+                          value?.grade === 'A'
+                            ? 'success'
+                            : value?.grade === 'B'
+                              ? 'success'
+                              : value?.grade === 'C'
+                                ? 'warning'
+                                : 'error'
+                        }
+                      >
+                        {value?.grade}
+                      </Label>
+                      <Typography variant="caption" sx={{ opacity: 0.84 }}>
+                        {value?.feedback}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    '-'
+                  )}
+                </>
+              );
+            },
+          },
+          {
+            id: 'submissionStatus',
+            label: 'Submission Status',
+            render(value, row) {
+              return (
+                <Label
+                  color={
+                    value === 'Submitted' ? 'success' : value === 'Pending' ? 'warning' : 'error'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                actions={({ popover: pop }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        uploadAssessmentDialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" />
+                      Upload Assessment
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={[
+          {
+            subjectName: 'Math',
+            assessmentType: 'Homework',
+            assessmentName: 'Algebra Basics',
+            assignedTeacher: 'Mr. Smith',
+            dueDate: '01-01-2024',
+            completionDate: '01-01-2024',
+            gradeFeedback: {
+              grade: 'A',
+              feedback: 'Excellent',
+            },
+            submissionStatus: 'Submitted',
+          },
+          {
+            subjectName: 'Science',
+            assessmentType: 'Lab Report',
+            assessmentName: 'Chemical Reactions',
+            assignedTeacher: 'Dr. Johnson',
+            dueDate: '01-01-2024',
+            gradeFeedback: {
+              grade: '',
+              feedback: '',
+            },
+            submissionStatus: 'Pending',
+          },
+          {
+            subjectName: 'English',
+            assessmentType: 'Essay',
+            assessmentName: 'Shakespeare Analysis',
+            assignedTeacher: 'Ms. Williams',
+            dueDate: '01-01-2024',
+            gradeFeedback: {
+              grade: '',
+              feedback: '',
+            },
+            submissionStatus: 'Overdue',
+          },
+          {
+            subjectName: 'Math',
+            assessmentType: 'Project',
+            assessmentName: 'Geometry Tutorials',
+            assignedTeacher: 'Mr. Smith',
+            dueDate: '01-01-2024',
+            completionDate: '01-01-2024',
+            gradeFeedback: {
+              grade: 'A',
+              feedback: 'Excellent',
+            },
+            submissionStatus: 'Submitted',
+          },
+        ]}
+      />
+    </Box>
+  );
+};
+
+const LearningMaterial = () => {
+  const [subject, setSubject] = useState('');
+  const viewLearningMaterial = useBoolean();
+  return (
+    <Box>
+      <CustomSelect
+        label="Course/Subject"
+        options={[
+          {
+            value: 'Math',
+            label: 'Math',
+          },
+          {
+            value: 'English',
+            label: 'English',
+          },
+        ]}
+        value={subject}
+        onChange={(val) => {
+          setSubject(val as string);
+        }}
+        formControlProps={{ sx: { minWidth: 200 } }}
+      />
+      <CustomizableTable
+        columns={[
+          { id: 'resourceName', label: 'Resource Name' },
+          { id: 'resourceType', label: 'Resource Type' },
+          { id: 'uploadedDate', label: 'Uploaded Date' },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                actions={({ popover: pop }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        viewLearningMaterial.onTrue();
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" />
+                      View
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={[
+          {
+            resourceName: 'Algebra Basics',
+            resourceType: 'PDF',
+            uploadedDate: '2024-01-10',
+          },
+          {
+            resourceName: 'Science Experiments',
+            resourceType: 'Video',
+            uploadedDate: '2024-01-11',
+          },
+          {
+            resourceName: 'Shakespeare Analysis',
+            resourceType: 'Document',
+            uploadedDate: '2024-01-12',
+          },
+          {
+            resourceName: 'Geometry Tutorials',
+            resourceType: 'Image',
+            uploadedDate: '2024-01-13',
+          },
+        ]}
+      />
+    </Box>
+  );
+};
+
+const Quizzes = () => (
   <CustomizableTable
     columns={[
       { id: 'quizName', label: 'Quiz Name' },
@@ -679,6 +785,8 @@ const QuizzesAndAssessments = () => (
     data={[]}
   />
 );
+
+const Assessmentts = () => {};
 
 const OverallGrades = () => (
   <Grid2 container spacing={3}>

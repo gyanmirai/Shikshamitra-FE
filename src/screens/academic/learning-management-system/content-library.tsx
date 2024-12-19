@@ -1,34 +1,81 @@
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Add, PictureAsPdf, VideoLibrary } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  Stack,
-  Avatar,
-  Button,
-  Switch,
-  Divider,
-  TextField,
-  Typography,
-  DialogActions,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Stack, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Upload } from 'src/components/upload';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
-const ContentLibrary = () => {
-  const dialog = useBoolean();
+const ContentLibrary = (props: TabComponentType) => {
+  const viewLearningMaterial = useBoolean();
   return (
-    <Box sx={{ padding: '24px' }}>
-      <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
+    <Box>
+      <CustomizableTable
+        columns={[
+          { id: 'resourceName', label: 'Resource Name' },
+          { id: 'category', label: 'Category' },
+          { id: 'fileType', label: 'File Type' },
+          { id: 'uploadedBy', label: 'Uploaded By' },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                actions={({ popover: pop }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        viewLearningMaterial.onTrue();
+                      }}
+                    >
+                      <Iconify icon="mdi:eye" />
+                      View
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={[
+          {
+            resourceName: 'Algebra Basics',
+            category: 'Mathematics',
+            fileType: 'PDF',
+            uploadedBy: 'Mr. Smith',
+          },
+          {
+            resourceName: 'Science Experiments',
+            category: 'Science',
+            fileType: 'Video',
+            uploadedBy: 'Dr. Johnson',
+          },
+          {
+            resourceName: 'Shakespeare Analysis',
+            category: 'Literature',
+            fileType: 'Document',
+            uploadedBy: 'Ms. Williams',
+          },
+          {
+            resourceName: 'Geometry Tutorials',
+            category: 'Mathematics',
+            fileType: 'Image',
+            uploadedBy: 'Mr. Brown',
+          },
+        ]}
+      />
+
+      {/* <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
         Section Breakdown
       </Typography>
       <Divider sx={{ mb: 3 }} />
@@ -218,7 +265,7 @@ const ContentLibrary = () => {
       </Grid2>
       <CustomDialog title="Add Content" open={dialog.value} handleClose={dialog.onFalse}>
         <AddContent />
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };
