@@ -162,7 +162,7 @@ const EventType = (props: TabComponentType) => {
                       <MenuItem
                         onClick={() => {
                           dialog.onTrue();
-                          setSelectedEvent(row);
+                          setSelectedEvent(row as TEvent);
                           setIsEdit(true);
                           popover.onClose();
                         }}
@@ -175,7 +175,7 @@ const EventType = (props: TabComponentType) => {
                     <MenuItem
                       onClick={() => {
                         confirmDeleteDialog.onTrue();
-                        setSelectedEvent(row);
+                        setSelectedEvent(row as TEvent);
                         popover.onClose();
                       }}
                     >
@@ -255,7 +255,8 @@ interface EventFormProps {
   isEdit?: boolean;
 }
 
-const EventForm: React.FC<EventFormProps> = ({ onSubmit, data, isEdit }) => {
+// eslint-disable-next-line react/prop-types
+const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
 
   const formik = useFormik({
