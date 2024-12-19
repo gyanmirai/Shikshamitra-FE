@@ -45,7 +45,7 @@ interface Survey {
   status: string;
 }
 
-const surveyData: Survey[] = [
+export const surveyData: Survey[] = [
   {
     id: 1,
     surveyTitle: 'Student Feedback Survey',
