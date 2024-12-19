@@ -8,6 +8,8 @@ import { Box, Tab, Card, Button } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { varAlpha } from 'src/theme/styles';
+
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -68,7 +70,7 @@ const LearningManagementSystemScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Homework and Assignment Management"
+        heading="Learning Management System"
         links={[
           { name: 'Academic And Assignment' },
           { name: 'Learning Management System' },
@@ -81,24 +83,56 @@ const LearningManagementSystemScreen = () => {
       >
         <Button
           startIcon={<Iconify icon="mdi:account-plus" />}
-          color="secondary"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            color: 'secondary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            },
+          }}
         >
           Create New Course
         </Button>
-        <Button startIcon={<Iconify icon="mdi:plus" />} color="primary" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:plus" />}
+          variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            },
+          }}
+        >
           Upload Content
         </Button>
 
         <Button
           startIcon={<Iconify icon="mdi:file-document-outline" />}
-          color="error"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            },
+          }}
         >
           Generate Report
         </Button>
 
-        <Button startIcon={<Iconify icon="mdi:pencil" />} color="warning" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:pencil" />}
+          variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
+        >
           Add Assignment
         </Button>
       </Box>
