@@ -3,8 +3,7 @@ import type { Division, Standards } from 'src/types/school';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Grid, Button } from '@mui/material';
+import { Box, Grid, Button, Card } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -13,10 +12,13 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 import { TopPerformer } from '../student/enrollment/entrance-exam/dashboard';
 
-const GradingAndAnalytics = () => {
+import type { TabComponentType } from '../hr/leave-request';
+
+const GradingAndAnalytics = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
   const [division, setDivision] = useState<any>([]);
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
@@ -67,17 +69,35 @@ const GradingAndAnalytics = () => {
           slotProps={{ textField: { size: 'small' } }}
         />
       </Box>
-      <Grid2 xs={12} marginBottom={4}>
-        <AnalyticsWebsiteVisits
-          title="Visual Performance Overview"
-          chart={{
-            categories: ['Math', 'Science', 'English', 'Gujarati', 'Hindi'],
-            series: [{ name: '', data: [68, 43, 58, 75, 60] }],
-          }}
-          sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
-        />
-      </Grid2>
-      <Box sx={{ display: 'flex' }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <AnalyticsWebsiteVisits
+            title="Visual Performance Overview"
+            chart={{
+              categories: ['Math', 'Science', 'English', 'Gujarati', 'Hindi'],
+              series: [{ name: '', data: [68, 43, 58, 75, 60] }],
+            }}
+            sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2 }}>
+            <AnalyticsCurrentVisits
+              title="Analysis Chart"
+              chart={{
+                series: [
+                  { label: 'High Performance', value: 35 },
+                  { label: 'Average', value: 25 },
+                  { label: 'Low Performance', value: 15 },
+                ],
+              }}
+              sx={{ boxShadow: 'none' }}
+            />
+          </Card>
+        </Grid>
+      </Grid>
+      <Box sx={{ display: 'flex', mt: 2 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <TopPerformer
@@ -133,7 +153,7 @@ const GradingAndAnalytics = () => {
           </Grid>
         </Grid>
       </Box>
-      <Box display="flex" gap={2} mt={2} justifyContent="end" mb={20}>
+      {/* <Box display="flex" gap={2} mt={2} justifyContent="end" mb={20}>
         <Button
           startIcon={<Iconify icon="mingcute:notification-fill" />}
           color="warning"
@@ -144,7 +164,7 @@ const GradingAndAnalytics = () => {
         <Button startIcon={<Iconify icon="uis:calender" />} variant="contained" color="secondary">
           Schedule Remedial Classes
         </Button>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

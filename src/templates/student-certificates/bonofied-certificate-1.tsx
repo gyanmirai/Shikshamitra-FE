@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
 });
 
 // Create Document Component
-const CertificateDocument = () => (
+export const CertificateDocument = () => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.border}>

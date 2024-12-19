@@ -1,80 +1,129 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Tab, Box, Card, Button } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
+
+import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Settings from './settings';
-import ExamOverview from './exam-overview';
+import GradeEntry from './gradeEntry';
 import ScheduleExam from './schedule-exam';
-import ResultReport from './result-report';
+import RubricManagement from './rubricManagement';
 import GradingAndAnalytics from './gradingAndAnalytics';
+// eslint-disable-next-line import/no-named-as-default
 import AssessmentManagement from './assessment-management';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
+
+import type { TabComponentType } from '../hr/leave-request';
 
 const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <ExaminationDashboardTab />,
+    component: (props: TabComponentType) => <ExaminationDashboardTab {...props} />,
   },
-  {
-    value: 'examOverview',
-    label: 'Exam Overview',
-    component: () => <ExamOverview />,
-  },
+  // {
+  //   value: 'examOverview',
+  //   label: 'Exam Overview',
+  //   component: (props: TabComponentType) => <ExamOverview {...props} />,
+  // },
   {
     value: 'scheduleExam',
     label: 'Schedule Exam',
-    component: () => <ScheduleExam />,
+    component: (props: TabComponentType) => <ScheduleExam {...props} />,
   },
-
+  {
+    value: 'gradeEntry',
+    label: 'Grade Entry',
+    component: (props: TabComponentType) => <GradeEntry {...props} />,
+  },
   {
     value: 'assessmentManagement',
     label: 'Assessment Management',
-    component: () => <AssessmentManagement />,
+    component: (props: TabComponentType) => <AssessmentManagement {...props} />,
   },
-  { value: 'resultAndReport', label: 'Result And Report', component: () => <ResultReport /> },
-
   {
-    value: 'gradingAndAnalytics',
-    label: 'Grading And Analytics',
-    component: () => <GradingAndAnalytics />,
+    value: 'rubricManagement',
+    label: 'Rubric Management',
+    component: (props: TabComponentType) => <RubricManagement {...props} />,
   },
-  { value: 'settings', label: 'Settings', component: () => <Settings /> },
+  {
+    value: 'studentPerformanceAndAnalytics',
+    label: 'Student Performace Analytics',
+    component: (props: TabComponentType) => <GradingAndAnalytics {...props} />,
+  },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <Settings {...props} />,
+  },
 ];
 
 const ExaminationPageScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Examination"
-        links={[{ name: 'Examination' }]}
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
-        <Button startIcon={<Iconify icon="mdi:calendar" />} color="secondary" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:calendar" />}
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            color: 'secondary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            },
+          }}
+          variant="contained"
+        >
           Schedule Exam
         </Button>
-        <Button startIcon={<Iconify icon="mdi:upload" />} color="primary" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:upload" />}
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            },
+          }}
+          variant="contained"
+        >
           Upload Mark
         </Button>
 
         <Button
           startIcon={<Iconify icon="mdi:file-document-outline" />}
-          color="error"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            },
+          }}
           variant="contained"
         >
           Generate Report
@@ -82,8 +131,14 @@ const ExaminationPageScreen = () => {
 
         <Button
           startIcon={<Iconify icon="mingcute:notification-fill" />}
-          color="warning"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
         >
           send notification
         </Button>
@@ -94,8 +149,8 @@ const ExaminationPageScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -105,7 +160,12 @@ const ExaminationPageScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

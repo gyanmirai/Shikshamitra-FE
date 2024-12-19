@@ -17,7 +17,7 @@ import ClassSpecificAnnouncement from './classSpecificAnnouncement';
 const TABS = [
   {
     value: 'schoolWiseAnnounsement',
-    label: 'School Wise Announsement',
+    label: 'School Specific Announsement',
     component: (props: TabComponentType) => <SchoolWiseAnnounsement {...props} />,
   },
   {

@@ -23,7 +23,7 @@
     "ts": "tsc --noEmit --incremental",
     "ts:watch": "yarn ts --watch",
     "start:out": "npx serve@latest out -p 8083",
-    "prepare": "husky",
+    "prepare": "husky install",
     "prepush-check": "npm run build && npm run lint:fix && npm run fm:fix"
   },
   "lint-staged": {

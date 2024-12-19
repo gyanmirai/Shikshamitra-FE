@@ -3,28 +3,16 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
 
-import {
-  Box,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+
+import { StudentSubmissions } from './homework-creation';
 
 const StudentSubmission = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -45,44 +33,6 @@ const StudentSubmission = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-
-  const dummyData = [
-    {
-      id: 1,
-      studentName: 'John Doe',
-      assignmentTitle: 'Math Homework 1',
-      grade: 'A',
-      submissionStatus: 'Submitted',
-    },
-    {
-      id: 2,
-      studentName: 'Jane Smith',
-      assignmentTitle: 'English Essay',
-      grade: 'B+',
-      submissionStatus: 'Graded',
-    },
-    {
-      id: 3,
-      studentName: 'Mike Johnson',
-      assignmentTitle: 'Science Project',
-      grade: 'Pending',
-      submissionStatus: 'Submitted',
-    },
-    {
-      id: 4,
-      studentName: 'Emily Brown',
-      assignmentTitle: 'History Report',
-      grade: 'C',
-      submissionStatus: 'Late Submission',
-    },
-    {
-      id: 5,
-      studentName: 'Alex Wilson',
-      assignmentTitle: 'Programming Assignment',
-      grade: 'A-',
-      submissionStatus: 'Graded',
-    },
-  ];
 
   useEffect(() => {
     if (classData?.items?.length) {
@@ -198,7 +148,8 @@ const StudentSubmission = (props: TabComponentType) => {
           }}
         />
       </Box>
-      <CustomizableTable
+      <StudentSubmissions />
+      {/* <CustomizableTable
         columns={[
           { id: 'studentName', label: 'Student Name' },
           { id: 'assignmentTitle', label: 'Assignment Title' },
@@ -275,7 +226,7 @@ const StudentSubmission = (props: TabComponentType) => {
             </Button>
           </DialogActions>
         </Box>
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };

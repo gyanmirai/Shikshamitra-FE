@@ -31,7 +31,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface StudentGrade {
+export interface StudentGrade {
   id: string;
   studentName: string;
   assignments: string;
@@ -39,35 +39,39 @@ interface StudentGrade {
   grade: string;
   feedback: string;
   weightedAverage: string;
+  status : string;
 }
 
-const dummyData = [
+export const dummyData = [
   {
     id: '1',
     studentName: 'John Smith',
     assignments: 'Math Quiz 1',
     subject: 'Mathematics',
-    grade: 'B',
-    feedback: 'Good',
+    grade: '',
+    feedback: '',
     weightedAverage: '85%',
+    status : 'Submitted'
   },
   {
     id: '2',
     studentName: 'Emma Wilson',
     assignments: 'Science Project',
     subject: 'Science',
-    grade: 'A',
-    feedback: 'Excellent',
+    grade: '',
+    feedback: '',
     weightedAverage: '92%',
+    status : 'Pending'
   },
   {
     id: '3',
     studentName: 'Michael Brown',
     assignments: 'English Essay',
     subject: 'English',
-    grade: 'C',
-    feedback: 'Need Improvement',
+    grade: '',
+    feedback: '',
     weightedAverage: '75%',
+    status :'Overdue',
   },
   {
     id: '4',
@@ -77,15 +81,17 @@ const dummyData = [
     grade: '',
     feedback: '',
     weightedAverage: '88%',
+    status : 'Submitted'
   },
   {
     id: '5',
     studentName: 'James Johnson',
     assignments: 'Science Quiz',
     subject: 'Science',
-    grade: 'B+',
-    feedback: 'Average',
+    grade: '',
+    feedback: '',
     weightedAverage: '87%',
+    status : 'Submitted'
   },
 ];
 

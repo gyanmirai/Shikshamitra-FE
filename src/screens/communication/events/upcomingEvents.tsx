@@ -168,7 +168,7 @@ const UpcomingEvents = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Upcoming Events</Typography>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
@@ -183,6 +183,7 @@ const UpcomingEvents = (props: TabComponentType) => {
       <CustomizableTable
         columns={[
           { id: 'eventTitle', label: 'Event Title' },
+          { id: 'eventVenue', label: 'Event Venue' },
           { id: 'eventType', label: 'Event Type' },
           {
             id: 'eventDate',
@@ -191,6 +192,32 @@ const UpcomingEvents = (props: TabComponentType) => {
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
               </Typography>
+            ),
+          },
+          {
+            id: 'eventTime',
+            label: 'Time',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('HH:mm')}
+              </Typography>
+            ),
+          },
+          {
+            id: 'audience',
+            label: 'Audience',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip
+                    key={audience}
+                    label={audience}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
             ),
           },
           {
@@ -236,6 +263,8 @@ const UpcomingEvents = (props: TabComponentType) => {
               );
             },
           },
+          { id: 'eventOrganizer', label: 'Event Organizer' },
+          { id: 'eventBudget', label: 'Event Budget' },
           {
             id: 'action',
             label: 'Action',
@@ -529,7 +558,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
                 }}
                 slotProps={{
                   textField: {
-                    sx: { width: '100%', maxWidth: '200px' },
+                    fullWidth: true,
                     size: 'small',
                   },
                 }}
@@ -546,7 +575,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
                   formik.setFieldValue('eventTime', newValue);
                 }}
                 views={['hours', 'minutes']}
-                slotProps={{ textField: { size: 'small' } }}
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
               />
             </Grid>
 
