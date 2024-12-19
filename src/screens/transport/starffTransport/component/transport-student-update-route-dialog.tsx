@@ -1,7 +1,19 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Grid, Radio, Button, TextField, Typography, RadioGroup, FormControl, Autocomplete, DialogActions, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Radio,
+  Button,
+  TextField,
+  Typography,
+  RadioGroup,
+  FormControl,
+  Autocomplete,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -15,7 +27,7 @@ interface TransportStudentAndStaffUpdateInfoDialogProps {
   isEdit: boolean;
   allData: any;
   isStaff: boolean;
-  clickFromTable: boolean;
+  clickFromTable?: boolean;
 }
 
 interface FormikValue {
@@ -134,93 +146,102 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
           </Typography>
         )}
       </Box>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: "400px" }}>
-        {!clickFromTable && <FormControl>
-          {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
-          <RadioGroup
-            row
-            aria-labelledby="user-type-label"
-            name="userType"
-            value={userType}
-            onChange={(e) => setUserType(e.target.value)}
-          >
-            <FormControlLabel value="staff" control={<Radio />} label="Employee" />
-            <FormControlLabel value="student" control={<Radio />} label="Student" />
-          </RadioGroup>
-        </FormControl>}
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
+        {!clickFromTable && (
+          <FormControl>
+            {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
+            <RadioGroup
+              row
+              aria-labelledby="user-type-label"
+              name="userType"
+              value={userType}
+              onChange={(e) => setUserType(e.target.value)}
+            >
+              <FormControlLabel value="staff" control={<Radio />} label="Employee" />
+              <FormControlLabel value="student" control={<Radio />} label="Student" />
+            </RadioGroup>
+          </FormControl>
+        )}
 
         <form onSubmit={formik.handleSubmit}>
-          <Grid container spacing={2} sx={{ mt: "5px" }}>
-
+          <Grid container spacing={2} sx={{ mt: '5px' }}>
             {/* Row 1 */}
-            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
-              <CustomSelect
-                disabled={isEdit}
-                label="Standard"
-                options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
-                value={formik.values.grade}
-                onChange={handleGradeChange}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>}
-            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
-              <CustomSelect
-                disabled={isEdit}
-                label="Division"
-                options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
-                value={formik.values.grade}
-                onChange={handleGradeChange}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>}
+            {userType === 'student' && isStaff === false && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  disabled={isEdit}
+                  label="Standard"
+                  options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
+                  value={formik.values.grade}
+                  onChange={handleGradeChange}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {userType === 'student' && isStaff === false && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  disabled={isEdit}
+                  label="Division"
+                  options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
+                  value={formik.values.grade}
+                  onChange={handleGradeChange}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
 
             {/* Row 2 */}
-            {(userType === 'staff' || isStaff) && <Grid item xs={6}>
-              <Autocomplete
-                loading={false}
-                noOptionsText="No Employee Found"
-                fullWidth
-                options={[]}
-                getOptionLabel={(option: any) => option?.firstName || ''}
-                renderInput={(params: any) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Employee Number"
-                    placeholder="Search Employee Number"
-                    fullWidth
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.firstName}
-                  </li>
-                )}
-              />
-            </Grid>}
-            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
-              <Autocomplete
-                loading={false}
-                noOptionsText="No Student Found"
-                fullWidth
-                options={[]}
-                getOptionLabel={(option: any) => option?.firstName || ''}
-                renderInput={(params: any) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Gr Number"
-                    placeholder="Search Gr Number"
-                    fullWidth
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.firstName}
-                  </li>
-                )}
-              />
-            </Grid>}
+            {(userType === 'staff' || isStaff) && (
+              <Grid item xs={6}>
+                <Autocomplete
+                  loading={false}
+                  noOptionsText="No Employee Found"
+                  fullWidth
+                  options={[]}
+                  getOptionLabel={(option: any) => option?.firstName || ''}
+                  renderInput={(params: any) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      label="Employee Number"
+                      placeholder="Search Employee Number"
+                      fullWidth
+                    />
+                  )}
+                  renderOption={(prop: any, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.firstName}
+                    </li>
+                  )}
+                />
+              </Grid>
+            )}
+            {userType === 'student' && isStaff === false && (
+              <Grid item xs={6}>
+                <Autocomplete
+                  loading={false}
+                  noOptionsText="No Student Found"
+                  fullWidth
+                  options={[]}
+                  getOptionLabel={(option: any) => option?.firstName || ''}
+                  renderInput={(params: any) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      label="Gr Number"
+                      placeholder="Search Gr Number"
+                      fullWidth
+                    />
+                  )}
+                  renderOption={(prop: any, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.firstName}
+                    </li>
+                  )}
+                />
+              </Grid>
+            )}
             <Grid item xs={6}>
               <CustomSelect
                 label="Assigned Route"
@@ -243,11 +264,8 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
             </Grid>
           </Grid>
         </form>
-
-
       </Scrollbar>
       <DialogActions>
-
         <Button type="submit" variant="contained" size="small">
           Save
         </Button>
