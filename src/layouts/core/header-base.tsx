@@ -127,15 +127,22 @@ export function HeaderBase({
   const { currentYear, currentBoard, currentMedium } = useSelector(
     (state: RootState) => state.globalState
   );
+  const { userInfo } = useSelector((state: RootState) => state.user);
 
   const { data: yearData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
+    options: {
+      skip: !userInfo?.access_token,
+    },
   });
 
   const { data: boardsData, isLoading: isBoardsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
+    options: {
+      skip: !userInfo?.access_token,
+    },
   });
   const [boards, setBoards] = useState([]);
 

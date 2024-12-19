@@ -65,14 +65,17 @@ const CustomSelect = <T extends string, J extends boolean>({
   };
 
   return (
-    <FormControl error={error} sx={{ width: '100%' }} {...formControlProps}>
-      <InputLabel size="small">{label}</InputLabel>
+    <FormControl size="small" error={error} sx={{ width: '100%' }} {...formControlProps}>
+      <InputLabel size="small" sx={{ fontSize: '12px' }}>
+        {label}
+      </InputLabel>
       <Select
         multiple={multiple}
         value={value}
         onChange={handleChange}
         size="small"
         label={label}
+        sx={{ fontSize: '12px' }}
         renderValue={
           multiple
             ? (selected: string | string[] | number | number[]) => (
