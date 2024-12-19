@@ -113,7 +113,7 @@ const MemberTransportScreen = () => {
 
 
         { id: 'assignedRoute', label: 'Assigned Route' },
-        { id: 'dropoffPoint', label: 'Pickup/DropOff Point' },
+        { id: 'dropoffPoint', label: 'Stop' },
 
         {
             id: 'action',
@@ -134,7 +134,7 @@ const MemberTransportScreen = () => {
                                     }}
                                 >
                                     <Iconify icon="solar:pen-bold" />
-                                    Assign/Change Route
+                                    Change Route
                                 </MenuItem>
 
                                 <MenuItem

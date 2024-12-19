@@ -8,9 +8,11 @@ import L from 'leaflet';
 import React, { useState, useEffect } from 'react';
 import { Popup, Marker, Polyline, TileLayer, MapContainer } from 'react-leaflet';
 
-import { Box } from '@mui/material';
+import { Box, List, ListItem, ListItemText } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
+
+import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 
 interface TransportMapProps {
   start: [number, number];
@@ -56,18 +58,39 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
   }, [start, end, waypoints]);
 
   const iconUrl = `${CONFIG.site.basePath}/assets/images/location/placeholder.png`;
+  const iconUrlForWayPoints = `${CONFIG.site.basePath}/assets/images/location/bus-stop.png`;
   const icon = L.icon({
     iconUrl,
-    iconSize: [25, 41],
+    iconSize: [30, 40],
+    iconAnchor: [12, 41],
+  });
+
+  const iconForWayPoint = L.icon({
+    iconUrl: iconUrlForWayPoints,
+    iconSize: [40, 50],
     iconAnchor: [12, 41],
   });
   console.log('start', start);
+
+  const students = [
+    { id: 1, name: 'John Doe' },
+    { id: 2, name: 'Jane Smith' },
+    { id: 3, name: 'Alice Johnson' },
+    { id: 4, name: 'Bob Brown' },
+    { id: 5, name: 'Charlie Davis' },
+    { id: 1, name: 'John Doe' },
+    { id: 2, name: 'Jane Smith' },
+    { id: 3, name: 'Alice Johnson' },
+    { id: 4, name: 'Bob Brown' },
+    { id: 5, name: 'Charlie Davis' },
+
+  ];
   return (
     <Box height="100vh" width="100vw">
       <MapContainer
         style={{ height: '100%', width: '100%' }}
         center={start}
-        zoom={12}
+        zoom={10}
         scrollWheelZoom={false}
       >
         <TileLayer
@@ -81,8 +104,25 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
           <Popup>End Point</Popup>
         </Marker>
         {waypoints.map((point, index) => (
-          <Marker key={index} position={point} icon={icon}>
-            <Popup>Waypoint {index + 1}</Popup>
+          <Marker key={index} position={point} icon={iconForWayPoint}>
+            <Popup>
+              <div>
+                <h4>Waypoint {index + 1}</h4>
+                <List >
+                  <Scrollbar sx={{ height: "200px", width: "200px", overflow: 'auto' }}>
+                    {students.length > 0 ? (
+                      students.map((student, i) => (
+                        <ListItem key={student.id}>
+                          <ListItemText primary={`${i + 1}. ${student.name}`} />
+                        </ListItem>
+                      ))
+                    ) : (
+                      <ListItem>No students assigned</ListItem>
+                    )}
+                  </Scrollbar>
+                </List>
+              </div>
+            </Popup>
           </Marker>
         ))}
         {/* Only render polyline if there are coordinates */}

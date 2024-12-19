@@ -47,6 +47,7 @@ const AssignVehicleAndDriver = () => {
                         label="Assign Vehicle"
                         name="vehicle"
                         value={selectedVehicle}
+                        // @ts-ignore
                         onChange={(value) => handleChange(value, 'vehicle')}
                     // formControlProps={{ fullWidth: true, sx: { height: "300px" } }}
                     // sx={{ height: "300px" }}
@@ -66,6 +67,7 @@ const AssignVehicleAndDriver = () => {
                     label="Assign Driver"
                     name="driver"
                     value={selectedDriver}
+                    // @ts-ignore
                     onChange={(value) => handleChange(value, 'driver')}
                     formControlProps={{ fullWidth: true }}
                 />

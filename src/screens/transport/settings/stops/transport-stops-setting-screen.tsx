@@ -1,3 +1,4 @@
+import * as yup from 'yup';
 import React, { useState } from 'react'
 
 import { Box, Button, MenuItem, MenuList } from '@mui/material';
@@ -7,7 +8,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
+import StopsChargesAndName from './stops-charges-and-name';
 import ViewStopDetailDialog from './view-stop-details-dialog';
 import TransportAddingStopDialog from './transport-adding-stop-dialog';
 
@@ -98,6 +101,16 @@ const TransportStopsSettingScreen = () => {
 
             ]} />
 
+            {/* <CustomDialog
+
+                maxWidth="xl"
+                open={addingStopDialog.value}
+                handleClose={addingStopDialog.onFalse}
+                title="Adding Stop"
+
+            >
+                <CreateRoutesForm onClose={addingStopDialog.onFalse} />
+            </CustomDialog> */}
             <Box>
                 {addingStopDialog && <TransportAddingStopDialog dialogValue={addingStopDialog.value} onClose={() => { addingStopDialog.onFalse() }} />}
             </Box>
@@ -114,3 +127,71 @@ const TransportStopsSettingScreen = () => {
 }
 
 export default TransportStopsSettingScreen;
+
+
+interface CreateRoutesProps {
+    onClose: () => void;
+    // addNewRouteHandle: (route: Route) => void;
+}
+
+const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, }) => {
+    const [activeStep, setActiveStep] = useState<number>(0);
+    const [stopList, setStopList] = useState<any>();
+
+    const getDataFromChild = (data: any) => {
+        setStopList(data)
+        console.log("data from child", data)
+    }
+
+    const allRouteSteps = [
+
+        // <TransportAddingStopDialog sendToParent={getDataFromChild} />,
+        <StopsChargesAndName stopList={stopList} />
+
+
+    ];
+
+
+    const handleBack = () => {
+        if (activeStep > 0) {
+            setActiveStep(activeStep - 1);
+        }
+    };
+
+    const handleNext = (isLastStep: boolean) => {
+        if (isLastStep) {
+            handleSubmit();
+            return;
+        }
+        setActiveStep(activeStep + 1);
+    };
+
+    const handleSubmit = () => {
+        if (true) {
+            console.warn('No scheduled data available');
+            onClose();
+
+        }
+    }
+
+
+    return (
+
+
+        <CustomStepperWithFormik
+            scrollbarHeight='60vh'
+            initialValues={{}}
+            steps={['Adding Stop', 'Setting Charges and Name',]}
+            activeStep={activeStep}
+            handleBack={handleBack}
+            validationSchema={yup.object()}
+            // validationSchema={yup.object()}
+            // validationSchema={validationSchemas[activeStep]}
+            handleNext={handleNext}
+            renderItem={({ formik, activeStep: step }: any) => <Box p={2}>{allRouteSteps[step]}</Box>}
+        />
+
+
+    );
+
+}

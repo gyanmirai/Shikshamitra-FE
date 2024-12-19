@@ -14,6 +14,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import IconEnum from 'src/utils/common-icon';
+
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -24,6 +26,7 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import ManageStopsWithRiders from './component/stop-details';
 import ViewRouteDetailsDialog from './view-route-details-dialog';
 import AssignVehicleAndDriver from './component/assign-vehicle-and-driver';
+import TransportMap from '../routesAndSchedules/component/view-on-map-dialog';
 
 
 
@@ -37,6 +40,12 @@ const NewCreateRouteScreen = () => {
       driver: "Rajesh Kumar",
       totalStops: 4,
       totalRiders: 16,
+      startPointLatAndLong: [21.233659274910956, 72.862602819098],
+      endPointLatAndLong: [21.14843573826047, 72.88572990744605],
+      wayPointLatAndLong: [
+        [21.200659, 72.870602],
+        [21.180435, 72.880729],
+      ],
       stops: [
         {
           stopName: "MG Road Metro Station",
@@ -96,6 +105,12 @@ const NewCreateRouteScreen = () => {
       driver: "Anita Verma",
       totalStops: 4,
       totalRiders: 16,
+      startPointLatAndLong: [21.14856834029464, 72.88578355767018],
+      endPointLatAndLong: [21.212188582367023, 72.89996326440937],
+      wayPointLatAndLong: [
+        [21.200659, 72.870602],
+        [21.180435, 72.880729],
+      ],
       stops: [
         {
           stopName: "Huda City Centre",
@@ -128,6 +143,12 @@ const NewCreateRouteScreen = () => {
       driver: "Vikram Singh",
       totalStops: 4,
       totalRiders: 5,
+      startPointLatAndLong: [21.233659274910956, 72.862602819098],
+      endPointLatAndLong: [21.14843573826047, 72.88572990744605],
+      wayPointLatAndLong: [
+        [21.200659, 72.870602],
+        [21.180435, 72.880729],
+      ],
       stops: [
         {
           stopName: "Rajiv Chowk",
@@ -183,11 +204,24 @@ const NewCreateRouteScreen = () => {
   const ViewRouteDetailsdialog = useBoolean();
 
   const [selectedRoute, setSelectedRoute] = useState<any>();
-  // const [isEdit, setIsEdit] = useState(false);
-  // const [tableData, setTableData] = useState<any>();
-  // const [mapDialogOpen, setMapDialogOpen] = useState(false);
-  // const [mapData, setMapData] = useState<any>(null);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [mapData, setMapData] = useState<any>(null);
+  const handleViewOnMap = (data: any) => {
+    const { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong } = data;
 
+    setMapData({ startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
+    console.log('Map data being set:', {
+      startPointLatAndLong,
+      endPointLatAndLong,
+      wayPointLatAndLong,
+    });
+    setMapDialogOpen(true);
+  };
+
+  const mapDialogClose = () => {
+    setMapDialogOpen(false);
+    setMapData(null);
+  };
   return (
     <>
       <CustomBreadcrumbs
@@ -213,9 +247,10 @@ const NewCreateRouteScreen = () => {
               placement="right-top"
               actions={({ popover }) => (
                 <MenuList>
-                  <MenuItem
+                  {/* <MenuItem
                     onClick={() => {
                       setSelectedRoute(row)
+
                       ViewRouteDetailsdialog.onTrue()
                       // viewEventSummaryDialog.onTrue();
                       // setEvent(row);
@@ -223,6 +258,17 @@ const NewCreateRouteScreen = () => {
                   >
                     <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
                     View
+                  </MenuItem> */}
+                  <MenuItem
+                    onClick={() => {
+
+                      handleViewOnMap(row);
+
+
+                    }}
+                  >
+                    <Iconify icon={IconEnum.VIEW} sx={{ mr: 1 }} />
+                    View on Map
                   </MenuItem>
                 </MenuList>
               )}
@@ -247,6 +293,16 @@ const NewCreateRouteScreen = () => {
           dialogValue={ViewRouteDetailsdialog.value}
           data={selectedRoute}
         />}
+
+      {mapDialogOpen && (
+        <CustomDialog fullScreen title="R102" open={mapDialogOpen} handleClose={mapDialogClose}>
+          <TransportMap
+            start={mapData?.startPointLatAndLong}
+            end={mapData?.endPointLatAndLong}
+            waypoints={mapData?.wayPointLatAndLong}
+          />
+        </CustomDialog>
+      )}
     </>
   )
 }

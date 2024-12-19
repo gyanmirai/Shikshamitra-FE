@@ -56,34 +56,7 @@ interface Route {
 }
 
 const routesData: Route[] = [
-  // {
-  //   routeNumber: 'R101',
-  //   startPoint: 'Main Campus',
-  //   endPoint: 'Downtown Station',
-  //   totalStops: 3,
-  //   assignedDrivers: "Jane Smith",
-  //   assignedVehicles: "Bus A",
-  //   dropLocations: [
-  //     {
-  //       busStop: "Central Park",
 
-  //       pickupTime: "08:00 AM",
-  //       dropoffTime: "08:30 AM"
-  //     },
-  //     {
-  //       busStop: "River Valley",
-
-  //       pickupTime: "08:35 AM",
-  //       dropoffTime: "09:00 AM"
-  //     },
-  //     {
-  //       busStop: "City Mall",
-
-  //       pickupTime: "09:05 AM",
-  //       dropoffTime: "09:30 AM"
-  //     }
-  //   ]
-  // },
   {
     routeNumber: 'R102',
     startPoint: 'North Park',
