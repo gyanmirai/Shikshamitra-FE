@@ -1,7 +1,9 @@
 'use client';
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React, { useMemo } from 'react';
+
 import { Tab, Box, Card } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
