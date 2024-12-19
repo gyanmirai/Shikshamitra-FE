@@ -29,44 +29,228 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const CommunicationDashboard = () => (
-  <Box>
-    <Grid container spacing={2} mt={1}>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary
-          title="Total Announcement"
-          percent={2.6}
-          total={75}
-          icon="mdi:announcement"
-        />
+import SchoolWiseAnnounsement from '../announcement/schoolWiseAnnounsement';
+import ClassWiseAnnounsement from '../announcement/classSpecificAnnouncement';
+
+const CommunicationDashboard = () => {
+  const [view, setView] = useState('schoolwise');
+
+  const theme = useTheme();
+
+  const handleChangeView = useCallback(
+    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+      if (newView !== null) {
+        setView(newView);
+      }
+    },
+    []
+  );
+
+  return (
+    <Box mb={1}>
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Total Announcement"
+            icon="mdi:announcement"
+            value={35}
+            labels={[
+              { name: 'School Wise : 10', color: 'info' },
+              { name: 'Class Wise : 25', color: 'secondary' },
+            ]}
+            color="primary.main"
+            // href="/hr/employee"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Unread Messages"
+            icon="mdi:message-text"
+            value={5}
+            labels={[]}
+            color="error.main"
+            // href="/hr/employee"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Total Events"
+            icon="mdi:event"
+            value={55}
+            labels={[
+              { name: 'Active : 25', color: 'info' },
+              { name: 'Upcoming : 20', color: 'warning' },
+              { name: 'Completed : 10', color: 'secondary' },
+            ]}
+            color="secondary.main"
+            // href="/hr/employee"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <EmployeeDashboardCard
+            title="Total Survey"
+            icon="ri:survey-line"
+            value={47}
+            labels={[
+              { name: 'Active : 25', color: 'info' },
+              { name: 'Upcoming : 12', color: 'warning' },
+              { name: 'Completed : 10', color: 'secondary' },
+            ]}
+            color="warning.main"
+            // href="/hr/employee"
+          />
+        </Grid>
       </Grid>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary
-          title="Unread Messages"
-          percent={2.6}
-          total={3}
-          icon="ic:baseline-message"
-        />
+
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: -2,
+          mt: 2,
+        }}
+      >
+        <ToggleButtonGroup
+          size="small"
+          value={view}
+          exclusive
+          onChange={handleChangeView}
+          sx={{
+            '& .Mui-selected': {
+              backgroundColor: 'black',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'black',
+              },
+            },
+          }}
+        >
+          <ToggleButton value="schoolwise">
+            <Typography variant="subtitle2">School Wise</Typography>
+          </ToggleButton>
+          <ToggleButton value="classwise">
+            <Typography variant="subtitle2">Class Wise</Typography>
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      {view === 'schoolwise' ? <SchoolWiseAnnounsement /> : <ClassWiseAnnounsement />}
+
+      <Box display="flex" justifyContent="space-between" alignItems="space-between">
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Event Calendar
+        </Typography>
+        <Button variant="contained" startIcon={<Add />}>
+          Create New Event
+        </Button>
+      </Box>
+
+      <CalendarView />
+
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
+              <CustomSelect
+                label="Year"
+                options={[
+                  { value: '2024', label: '2024' },
+                  { value: '2023', label: '2023' },
+                  { value: '2022', label: '2022' },
+                ]}
+                onChange={() => {}}
+                value=""
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+            </Box>
+            <AnalyticsWebsiteVisits
+              title="Organized Events"
+              //   subheader="(+43%) than last year"
+              chart={{
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                series: [{ name: 'Class 10-A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
+                colors: [alpha(theme.palette.primary.dark, 0.8)],
+              }}
+              sx={{ height: '100%', boxShadow: 'none' }}
+            />
+          </Card>
+        </Grid>
       </Grid>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary
-          title="Upcoming Event"
-          percent={2.6}
-          total={4}
-          icon="material-symbols:event"
-        />
+
+      <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
+        <Button variant="contained" startIcon={<Add />}>
+          Create New Survey
+        </Button>
+      </Box>
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <AnalyticsCurrentVisits
+              title="Survey Overview"
+              chart={{
+                series: [
+                  { label: 'Survey 1', value: 50 },
+                  { label: 'Survey 2', value: 20 },
+                  { label: 'Survey 3', value: 30 },
+                  { label: 'Survey 4', value: 5 },
+                  { label: 'Survey 5', value: 5 },
+                ],
+              }}
+              sx={{ boxShadow: 'none', height: '100%' }}
+            />
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <PerformanceOverTime
+              id="demo__4"
+              title="Response Overview"
+              //   subheader="(+43%) than last year"
+              chart={{
+                categories: [
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ],
+                series: [
+                  {
+                    name: 'Positive',
+                    data: [5, 10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
+                  },
+                  {
+                    name: 'Negative',
+                    data: [40, 60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
+                  },
+                ],
+                options: {
+                  legend: {
+                    show: true,
+                    position: 'top',
+                  },
+                },
+              }}
+              sx={{ height: '100%', boxShadow: 'none' }}
+            />
+          </Card>
+        </Grid>
       </Grid>
-      <Grid item xs={12} md={3}>
-        <BookingWidgetSummary title="Active Survey" percent={2.6} total={4} icon="ri:survey-fill" />
-      </Grid>
-    </Grid>
-    <Typography variant="h6" sx={{ mt: 1 }}>
-      Event Calendar
-    </Typography>
-    <CalendarView />
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default CommunicationDashboard;
 
