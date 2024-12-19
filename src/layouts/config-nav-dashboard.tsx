@@ -916,10 +916,10 @@ export const navData = [
       },
       {
         title: 'Library',
-        path: financePath,
+        path: "/library/dashboard",
         icon: ICONS.library,
         _action: 'library',
-        submodule: [],
+        submodule: libraryModule[libraryPath].flatMap((list) => list.items),
       },
       {
         title: 'Transport',
