@@ -872,6 +872,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
               <TableCell sx={{ width: '40%', fontWeight: 'bold' }}>Question</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Type</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
+              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Options</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete Question</TableCell>
             </TableRow>
           </TableHead>
@@ -916,6 +917,20 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
                           ) : (
                             <Iconify icon="mdi:cross-circle-outline" />
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {question.options.length
+                              ? question.options.map((audience: string) => (
+                                  <Chip
+                                    key={audience}
+                                    label={audience}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                ))
+                              : '-'}
+                          </Box>
                         </TableCell>
                         <TableCell>
                           <IconButton

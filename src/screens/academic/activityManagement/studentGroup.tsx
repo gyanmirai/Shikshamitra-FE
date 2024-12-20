@@ -464,9 +464,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 options={divisionOptions}
                 value={division}
                 onChange={(val) => {
-                  const selectedDivision = divisionOptions.find((i: Division) =>
-                    val.includes(i.id)
-                  );
+                  const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
                   formik.setFieldValue('division', selectedDivision?.name || '');
                   setDivision(val);
                 }}

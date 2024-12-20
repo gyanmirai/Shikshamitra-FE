@@ -25,6 +25,7 @@ import Finance from './finance';
 import Academic from './academic';
 import Document from './document';
 import Attendance from './attendance';
+import Communication from './communication';
 import StudentDashboard from './studentDashboard';
 import { StudentInformation } from './information';
 
@@ -142,6 +143,7 @@ const TABS = [
     value: 'communications',
     label: 'Communications',
     icon: <Iconify icon="maki:communications-tower" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Communication {...props} />,
   },
   {
     value: 'Transportation',

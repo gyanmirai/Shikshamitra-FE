@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { Division } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
@@ -556,7 +557,7 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
   const [assignmentType, setAssignmentType] = useState<'homework' | 'assignment'>('homework');
   const [classes, setClasses] = useState<string>('');
   const [division, setDivision] = useState<any[]>([]);
-  const [divisionOptions, setDivisionOptions] = useState<any[]>([]);
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
 
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -620,9 +621,9 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                 multiple
                 options={divisionOptions}
                 value={division}
-                onChange={(val) => {
+                onChange={(val: any[]) => {
                   const selectedDivisions = divisionOptions
-                    .filter((i: any) => val.includes(i.id))
+                    .filter((i) => val.includes(i.id))
                     .map((div) => div.name);
                   formik.setFieldValue('division', selectedDivisions);
                   setDivision(val);

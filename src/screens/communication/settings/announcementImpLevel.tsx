@@ -1,12 +1,14 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
+
 import { Box, Button } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 
-interface TImportant {
-    
-}
+import { Iconify } from 'src/components/iconify';
+
+interface TImportant {}
 
 const AnnouncementImpLevel = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -25,8 +27,6 @@ const AnnouncementImpLevel = (props: TabComponentType) => {
           </Button>
         </Box>
       </Box>
-
-
     </Box>
   );
 };

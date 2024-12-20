@@ -1,10 +1,14 @@
 'use client';
 
-import React from 'react';
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card, Button } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
+
+import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -12,7 +16,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Course from './course';
 import Dashboard from './dashboard';
-import Assignment from './assignment';
 import SettingScreen from './setting';
 import ContentLibrary from './content-library';
 import ReportsAnalytics from './reports-analytics';
@@ -22,44 +25,57 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    component: () => <Dashboard />,
+    component: (props: TabComponentType) => <Dashboard {...props} />,
   },
   {
     value: 'course',
     label: 'Course',
-    component: () => <Course />,
+    component: (props: TabComponentType) => <Course {...props} />,
   },
-  {
-    value: 'assignment',
-    label: 'Assignment',
-    component: () => <Assignment />,
-  },
-
+  // {
+  //   value: 'assignment',
+  //   label: 'Assignment',
+  //   component: (props: TabComponentType) => <Assignment {...props} />,
+  // },
   {
     value: 'studentProgressTracking',
     label: 'Student Progress Tracking',
-    component: () => <StudentProgressTracking />,
+    component: (props: TabComponentType) => <StudentProgressTracking {...props} />,
   },
-  { value: 'contentLibrary', label: 'Content Library', component: () => <ContentLibrary /> },
+  {
+    value: 'contentLibrary',
+    label: 'Content Library',
+    component: (props: TabComponentType) => <ContentLibrary {...props} />,
+  },
   {
     value: 'reportsAndAnalytics',
     label: 'Reports And Analytics',
-    component: () => <ReportsAnalytics />,
+    component: (props: TabComponentType) => <ReportsAnalytics {...props} />,
   },
-
-  { value: 'settings', label: 'Settings', component: () => <SettingScreen /> },
+  {
+    value: 'settings',
+    label: 'Settings',
+    component: (props: TabComponentType) => <SettingScreen {...props} />,
+  },
 ];
 
 const LearningManagementSystemScreen = () => {
-  const tabs = useTabs('dashboard');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Learning Management System"
-        links={[{ name: 'Academic And Assessment' }, { name: 'Learning Management System' }]}
+        links={[
+          { name: 'Academic And Assignment' },
+          { name: 'Learning Management System' },
+          { name: currentActiveComponent?.label },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box
@@ -67,24 +83,56 @@ const LearningManagementSystemScreen = () => {
       >
         <Button
           startIcon={<Iconify icon="mdi:account-plus" />}
-          color="secondary"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            color: 'secondary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            },
+          }}
         >
           Create New Course
         </Button>
-        <Button startIcon={<Iconify icon="mdi:plus" />} color="primary" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:plus" />}
+          variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            },
+          }}
+        >
           Upload Content
         </Button>
 
         <Button
           startIcon={<Iconify icon="mdi:file-document-outline" />}
-          color="error"
           variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            color: 'error.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            },
+          }}
         >
           Generate Report
         </Button>
 
-        <Button startIcon={<Iconify icon="mdi:pencil" />} color="warning" variant="contained">
+        <Button
+          startIcon={<Iconify icon="mdi:pencil" />}
+          variant="contained"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
+        >
           Add Assignment
         </Button>
       </Box>
@@ -94,10 +142,10 @@ const LearningManagementSystemScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
+          sx={{ fontSize: '12px' }}
           variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />
@@ -105,7 +153,12 @@ const LearningManagementSystemScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

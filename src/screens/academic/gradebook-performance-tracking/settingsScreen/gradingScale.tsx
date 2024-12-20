@@ -143,17 +143,6 @@ const GradingScale = () => {
 
   return (
     <Box>
-      {/* <CustomSelect
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
-          options={[
-            { value: 'standard', label: 'Standard' },
-            { value: 'advanced', label: 'Advanced' },
-            { value: 'custom', label: 'Custom' },
-          ]}
-          value="standard"
-          onChange={() => {}}
-          label="Grading System Selection"
-        /> */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" my={1}>
           Grading Scales
