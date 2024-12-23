@@ -96,6 +96,11 @@ const studentModule = {
               _action: 'student-enrollment-inquiry',
             },
             {
+              title: 'Registration Form',
+              path: '/student/enrollment/registration-form',
+              _action: 'student-enrollment-registration-form',
+            },
+            {
               title: 'Registration',
               path: '/student/enrollment/registration',
               _action: 'student-enrollment-registration',
@@ -121,11 +126,11 @@ const studentModule = {
               _action: 'student-enrollment-admission-fees',
             },
 
-            {
-              title: 'Enrollment',
-              path: '/student/enrollment/enroll',
-              _action: 'student-enrollment-enroll',
-            },
+            // {
+            //   title: 'Enrollment',
+            //   path: '/student/enrollment/enroll',
+            //   _action: 'student-enrollment-enroll',
+            // },
             {
               title: 'Reports',
               path: '/student/enrollment/reports',
@@ -634,11 +639,6 @@ const examinationModule = {
           path: '/examination',
           _action: 'examination',
         },
-        {
-          title: 'Assessment',
-          path: '/examination/assessment',
-          _action: 'assessment',
-        },
       ],
     },
   ],
@@ -921,7 +921,7 @@ export const navData = [
       },
       {
         title: 'Library',
-        path: "/library/dashboard",
+        path: '/library/dashboard',
         icon: ICONS.library,
         _action: 'library',
         submodule: libraryModule[libraryPath].flatMap((list) => list.items),

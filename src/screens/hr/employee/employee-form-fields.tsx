@@ -1,6 +1,7 @@
 import type { SxProps } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 
+import { toast } from 'sonner';
 import { useMemo, useState } from 'react';
 
 import {
@@ -17,6 +18,7 @@ import {
   InputLabel,
   Typography,
   FormControl,
+  FormHelperText,
   FormControlLabel,
   CircularProgress,
 } from '@mui/material';
@@ -31,6 +33,7 @@ import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetDocumentsQuery } from 'src/redux/document/documentApi';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-status-type';
 import {
@@ -57,7 +60,11 @@ const RenderRole = (props: any) => {
   });
   const { formik, disabled } = props;
   return (
-    <FormControl fullWidth disabled={!!disabled}>
+    <FormControl
+      fullWidth
+      disabled={!!disabled}
+      error={!!formik.errors.role && formik.touched.role}
+    >
       <InputLabel id="Roles-select-label" size="small">
         Roles
       </InputLabel>
@@ -87,6 +94,9 @@ const RenderRole = (props: any) => {
           </MenuItem>
         )}
       </Select>
+      {formik.touched.role && formik.errors.role && (
+        <FormHelperText>{formik.errors.role}</FormHelperText>
+      )}
     </FormControl>
   );
 };
@@ -162,20 +172,25 @@ export const RenderDocuments = (props: any) => {
                 <UploadButton
                   onChange={async (e) => {
                     const file = e.target.files[0];
-
                     const myNewFile = new File([file], row.documentName, { type: file.type });
                     const formData = new FormData();
                     formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
 
-                    if (row.uploadDocument) {
-                      await updateDocument({
-                        documentId: row.uploadDocument.id,
-                        employeeId,
-                        body: formData,
-                      });
-                    } else {
-                      await uploadDocument({ id: employeeId, body: formData });
-                    }
+                    toast.promise(
+                      row.uploadDocument
+                        ? updateDocument({
+                            documentId: row.uploadDocument.id,
+                            employeeId,
+                            body: formData,
+                          })
+                        : uploadDocument({ id: employeeId, body: formData }),
+                      {
+                        loading: `Uploading Document ${row.documentName} `,
+                        success: () => `Upload Successfully!`,
+                        error: 'Error',
+                        closeButton: false,
+                      }
+                    );
                   }}
                 >
                   <Iconify icon="ri:file-upload-fill" />
@@ -207,7 +222,7 @@ export const RenderDocuments = (props: any) => {
         title="Preview Document"
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
-        maxWidth="md"
+        maxWidth="lg"
       >
         <Box p={2}>
           <ViewDocuments employeeId={employeeId} docId={docId} />
@@ -229,7 +244,11 @@ const ViewDocuments = ({ employeeId, docId }: { employeeId: string; docId: strin
       {isLoading ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        <iframe src={convertBase64Format(documents.content)} title="Employee Document" />
+        <iframe
+          src={convertBase64Format(documents.content)}
+          style={{ width: '100%', height: 500 }}
+          title="Employee Document"
+        />
       )}
     </Box>
   );
@@ -352,7 +371,11 @@ export const InformationFields: FieldsType[] = [
     name: 'castCategory',
     placeholder: 'Enter Cast Category',
     renderComp: (props) => (
-      <FormControl fullWidth disabled={!!props.disabled}>
+      <FormControl
+        fullWidth
+        disabled={!!props.disabled}
+        error={!!props.formik.errors.castType && props.formik.touched.castType}
+      >
         <InputLabel id="dropdown-label" size="small" sx={{ fontSize: '12px' }}>
           Cast Category
         </InputLabel>
@@ -372,6 +395,9 @@ export const InformationFields: FieldsType[] = [
             </MenuItem>
           ))}
         </Select>
+        {props.formik.touched.castType && props.formik.errors.castType && (
+          <FormHelperText>{props.formik.errors.castType}</FormHelperText>
+        )}
       </FormControl>
     ),
   },
@@ -381,7 +407,11 @@ export const InformationFields: FieldsType[] = [
     name: 'gender',
     placeholder: 'Select Gender',
     renderComp: (props) => (
-      <FormControl fullWidth disabled={!!props.disabled}>
+      <FormControl
+        fullWidth
+        disabled={!!props.disabled}
+        error={!!props.formik.errors.gender && props.formik.touched.gender}
+      >
         <InputLabel id="dropdown-label" size="small" sx={{ fontSize: '12px' }}>
           Gender
         </InputLabel>
@@ -401,6 +431,9 @@ export const InformationFields: FieldsType[] = [
             </MenuItem>
           ))}
         </Select>
+        {props.formik.touched.gender && props.formik.errors.gender && (
+          <FormHelperText>{props.formik.errors.gender}</FormHelperText>
+        )}
       </FormControl>
     ),
   },
@@ -416,7 +449,11 @@ export const InformationFields: FieldsType[] = [
     name: 'maritalStatus',
     placeholder: 'Enter Marital Status',
     renderComp: (props) => (
-      <FormControl fullWidth disabled={!!props.disabled}>
+      <FormControl
+        fullWidth
+        disabled={!!props.disabled}
+        error={!!props.formik.errors.maritalStatus && props.formik.touched.maritalStatus}
+      >
         <InputLabel id="dropdown-label" size="small" sx={{ fontSize: '12px' }}>
           Marital Status
         </InputLabel>
@@ -436,6 +473,9 @@ export const InformationFields: FieldsType[] = [
             </MenuItem>
           ))}
         </Select>
+        {props.formik.touched.maritalStatus && props.formik.errors.maritalStatus && (
+          <FormHelperText>{props.formik.errors.maritalStatus}</FormHelperText>
+        )}
       </FormControl>
     ),
   },
@@ -458,12 +498,12 @@ export const InformationFields: FieldsType[] = [
           name="mobileNo"
           value={formik.values.mobileNo}
           onChange={(value) => {
-            console.log(value, 'value====>');
             formik.setFieldValue('mobileNo', value);
           }}
           placeholder="Enter Mobile No."
           error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
           disabled={!!props.disabled}
+          helperText={formik.touched.mobileNo && formik.errors.mobileNo}
         />
       );
     },
@@ -510,7 +550,13 @@ export const InformationFields: FieldsType[] = [
     name: 'employeeGroup',
     placeholder: 'Select Employee Group',
     renderComp: (props) => (
-      <FormControl fullWidth sx={{ fontSize: '12px' }} disabled={!!props.disabled}>
+      <FormControl
+        fullWidth
+        sx={{ fontSize: '12px' }}
+        disabled={!!props.disabled}
+        error={!!props.formik.errors.employeeGroup && props.formik.touched.employeeGroup}
+        size="small"
+      >
         <InputLabel id="dropdown-label" size="small" sx={{ fontSize: '12px' }}>
           Employee Group
         </InputLabel>
@@ -524,9 +570,15 @@ export const InformationFields: FieldsType[] = [
           size="small"
           sx={{ fontSize: '12px' }}
         >
-          <MenuItem value="teaching">Teaching</MenuItem>
-          <MenuItem value="nonTeaching">Non Teaching</MenuItem>
+          {EmployeeGroupTypeArray.map((i, index) => (
+            <MenuItem key={i} value={index}>
+              {EmployeeGroupType[index]}
+            </MenuItem>
+          ))}
         </Select>
+        {props.formik.touched.employeeGroup && props.formik.errors.employeeGroup && (
+          <FormHelperText>{props.formik.errors.employeeGroup}</FormHelperText>
+        )}
       </FormControl>
     ),
   },
@@ -564,13 +616,10 @@ export const InformationFields: FieldsType[] = [
     placeholder: 'Enter District',
   },
   {
-    type: 'text',
+    type: 'number',
     label: 'Pincode',
     name: 'pincode',
     placeholder: 'Enter Pincode',
-    otherProps: {
-      type: 'number',
-    },
   },
 
   {
@@ -798,12 +847,12 @@ function RenderFamilyInformation(props: any) {
                 disabled={!!disabled}
               />
               <TextField
-                name="fatherPincode"
+                name="fatherPinCode"
                 label="Pincode"
-                value={formik.values.fatherPincode}
+                value={formik.values.fatherPinCode}
                 onChange={formik.handleChange}
-                error={formik.touched.fatherPincode && Boolean(formik.errors.fatherPincode)}
-                helperText={formik.touched.fatherPincode && formik.errors.fatherPincode}
+                error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
+                helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
                 fullWidth
                 size="small"
                 disabled={!!disabled}
@@ -883,34 +932,34 @@ function RenderFamilyInformation(props: any) {
                 label="Same as Father Address"
               />
               <TextField
-                name="state"
+                name="motherState"
                 label="State"
-                value={formik.values.state}
+                value={formik.values.motherState}
                 onChange={formik.handleChange}
-                error={formik.touched.state && Boolean(formik.errors.state)}
-                helperText={formik.touched.state && formik.errors.state}
+                error={formik.touched.motherState && Boolean(formik.errors.motherState)}
+                helperText={formik.touched.motherState && formik.errors.motherState}
                 fullWidth
                 size="small"
                 disabled={formik.values.sameAsFatherAddressForMother || !!disabled}
               />
               <TextField
-                name="city"
+                name="motherCity"
                 label="City"
-                value={formik.values.city}
+                value={formik.values.motherCity}
                 onChange={formik.handleChange}
-                error={formik.touched.city && Boolean(formik.errors.city)}
-                helperText={formik.touched.city && formik.errors.city}
+                error={formik.touched.motherCity && Boolean(formik.errors.motherCity)}
+                helperText={formik.touched.motherCity && formik.errors.motherCity}
                 fullWidth
                 size="small"
                 disabled={formik.values.sameAsFatherAddressForMother || !!disabled}
               />
               <TextField
-                name="pincode"
-                label="Pincode"
-                value={formik.values.pincode}
+                name="motherPinCode"
+                label="PinCode"
+                value={formik.values.motherPinCode}
                 onChange={formik.handleChange}
-                error={formik.touched.pincode && Boolean(formik.errors.pincode)}
-                helperText={formik.touched.pincode && formik.errors.pincode}
+                error={formik.touched.motherPinCode && Boolean(formik.errors.motherPinCode)}
+                helperText={formik.touched.motherPinCode && formik.errors.motherPinCode}
                 fullWidth
                 size="small"
                 disabled={formik.values.sameAsFatherAddressForMother || !!disabled}
@@ -1012,12 +1061,12 @@ function RenderFamilyInformation(props: any) {
                 disabled={formik.values.sameAsFatherAddressForSpouse || !!disabled}
               />
               <TextField
-                name="spousePincode"
+                name="spousePinCode"
                 label="Pincode"
-                value={formik.values.spousePincode}
+                value={formik.values.spousePinCode}
                 onChange={formik.handleChange}
-                error={formik.touched.spousePincode && Boolean(formik.errors.spousePincode)}
-                helperText={formik.touched.spousePincode && formik.errors.spousePincode}
+                error={formik.touched.spousePinCode && Boolean(formik.errors.spousePinCode)}
+                helperText={formik.touched.spousePinCode && formik.errors.spousePinCode}
                 fullWidth
                 size="small"
                 disabled={formik.values.sameAsFatherAddressForSpouse || !!disabled}

@@ -3,18 +3,22 @@ import type { IKanbanTask } from 'src/types/kanban';
 import type { StackProps } from '@mui/material/Stack';
 import type { DraggableSyntheticListeners } from '@dnd-kit/core';
 
+import { useFormik } from 'formik';
 import { memo, useState, useEffect, forwardRef } from 'react';
 
 import Stack from '@mui/material/Stack';
 import ListItem from '@mui/material/ListItem';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
+import { Box, Avatar, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { varAlpha, stylesMode } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import { kanbanClasses } from 'src/sections/kanban/classes';
@@ -76,6 +80,7 @@ type ItemBaseProps = StackProps & {
 
 const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
   ({ task, stateProps, sx, ...other }, ref) => {
+    const divisionDialog = useBoolean();
     const [open, setOpen] = useState(false);
     useEffect(() => {
       if (!stateProps?.dragOverlay) {
@@ -128,23 +133,49 @@ const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
             {...stateProps?.listeners}
             {...other}
           >
+            {task.status === 'approved' && (
+              <Box
+                sx={{
+                  color: 'warning.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  p: 0.5,
+                  fontSize: 12,
+                }}
+              >
+                <Iconify
+                  icon="material-symbols:warning-outline-rounded"
+                  sx={{ height: '20px', width: '20px', color: 'warning.main', mr: 1 }}
+                />
+                Please assign division
+              </Box>
+            )}
+            <ThreeDotsActions
+              sx={{ position: 'absolute', right: 0, top: 1 }}
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      setOpen(true);
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                    Edit
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      divisionDialog.onTrue();
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
+                    Assign Division
+                  </MenuItem>
+                </MenuList>
+              )}
+            />
             <Stack spacing={2} direction="row" sx={{ px: 2, py: 2.5, position: 'relative' }}>
-              <ThreeDotsActions
-                sx={{ position: 'absolute', right: 0, top: 1 }}
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setOpen(true);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
               <Avatar />
               <Box>
                 <Typography variant="subtitle2">{task.name}</Typography>
@@ -166,9 +197,44 @@ const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
         >
           <RegisterForm />
         </CustomDialog>
+        <CustomDialog
+          open={divisionDialog.value}
+          handleClose={divisionDialog.onFalse}
+          title="Assign Division"
+        >
+          <AssignDivisionForm handleClose={divisionDialog.onFalse} />
+        </CustomDialog>
       </>
     );
   }
 );
 
 export default memo(AdmissionItem);
+
+const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
+  const formik = useFormik({
+    initialValues: {
+      division: '',
+    },
+    onSubmit: () => {},
+  });
+  return (
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
+        <CustomSelect
+          options={[]}
+          value=""
+          onChange={() => {}}
+          label="Division"
+          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+        />
+      </Box>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button type="submit" variant="contained">
+          Assign
+        </Button>
+      </DialogActions>
+    </Box>
+  );
+};

@@ -85,6 +85,7 @@ const SubLayout = ({ children }: any) => {
               width: '100%',
               mx: 'auto',
               height: '100%',
+              overflow: 'auto',
               p: 2,
               // p: 1,
               // bgcolor: (theme) => theme.palette.background.default,

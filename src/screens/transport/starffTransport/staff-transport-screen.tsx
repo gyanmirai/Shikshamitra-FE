@@ -175,7 +175,6 @@ const StaffTransportScreen = () => {
         </Button>
       </Box>
 
-
       <CustomizableTable data={tableData} columns={columnData} />
       {dialog.value && (
         <TransportStudentAndStaffUpdateInfoDialog

@@ -520,14 +520,14 @@ const Subjects = (props: TabComponentType) => {
 
 export default Subjects;
 
-interface Document {
+export interface Document {
   id: string;
   name: string;
   url: string;
   file?: File;
 }
 
-interface ChapterFormValues {
+export interface ChapterFormValues {
   chapterName: string;
   assignedTeacher: string;
   content: string;
@@ -552,7 +552,7 @@ interface AddNewChapterProps {
   } | null;
 }
 
-const AddNewChapter: React.FC<AddNewChapterProps> = ({
+export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   onSubmit,
   selectedSubject,
   isEdit = false,

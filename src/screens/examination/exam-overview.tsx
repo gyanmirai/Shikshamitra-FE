@@ -5,7 +5,8 @@ import { Box, Switch, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
-import { TabComponentType } from '../hr/leave-request';
+
+import type { TabComponentType } from '../hr/leave-request';
 
 const ExamOverview = (props: TabComponentType) => (
   <Box>

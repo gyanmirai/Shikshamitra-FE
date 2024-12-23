@@ -128,7 +128,6 @@ const Dashboard = (props: TabComponentType) => {
               options={divisionOptions}
               value={division1}
               onChange={(val) => {
-                const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
                 setDivision1(val as string);
               }}
               formControlProps={{

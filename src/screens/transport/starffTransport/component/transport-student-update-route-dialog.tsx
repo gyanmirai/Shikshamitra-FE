@@ -1,7 +1,20 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Grid, Radio, Button, TextField, Typography, RadioGroup, FormControl, Autocomplete, DialogActions, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Radio,
+  Button,
+  Switch,
+  TextField,
+  Typography,
+  RadioGroup,
+  FormControl,
+  Autocomplete,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -86,6 +99,7 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   TransportStudentAndStaffUpdateInfoDialogProps
 > = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff, clickFromTable }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const [dropoffPoint, setDifferentDropOffPoint] = useState<boolean>(true);
 
   const formik = useFormik<FormikValue>({
     initialValues: {
@@ -134,93 +148,116 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
           </Typography>
         )}
       </Box>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: "450px" }}>
-        {!clickFromTable && <FormControl>
-          {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
-          <RadioGroup
-            row
-            aria-labelledby="user-type-label"
-            name="userType"
-            value={userType}
-            onChange={(e) => setUserType(e.target.value)}
-          >
-            <FormControlLabel value="staff" control={<Radio />} label="Employee" />
-            <FormControlLabel value="student" control={<Radio />} label="Student" />
-          </RadioGroup>
-        </FormControl>}
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '450px' }}>
+        <Box display="flex" alignItems="center">
+          {!clickFromTable && (
+            <FormControl>
+              {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
+              <RadioGroup
+                row
+                aria-labelledby="user-type-label"
+                name="userType"
+                value={userType}
+                onChange={(e) => setUserType(e.target.value)}
+              >
+                <FormControlLabel value="staff" control={<Radio />} label="Employee" />
+                <FormControlLabel value="student" control={<Radio />} label="Student" />
+              </RadioGroup>
+            </FormControl>
+          )}
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={dropoffPoint}
+                onChange={() => {
+                  setDifferentDropOffPoint(!dropoffPoint);
+                }}
+              />
+            }
+            label="Different Dropoff Point"
+          />
+        </Box>
 
         <form onSubmit={formik.handleSubmit}>
-          <Grid container spacing={2} sx={{ mt: "5px" }}>
-
+          <Grid container spacing={2} sx={{ mt: '5px' }}>
             {/* Row 1 */}
-            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
-              <CustomSelect
-                disabled={isEdit}
-                label="Standard"
-                options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
-                value={formik.values.grade}
-                onChange={handleGradeChange}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>}
-            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
-              <CustomSelect
-                disabled={isEdit}
-                label="Division"
-                options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
-                value={formik.values.grade}
-                onChange={handleGradeChange}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>}
+            {userType === 'student' && isStaff === false && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  disabled={isEdit}
+                  label="Standard"
+                  options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
+                  value={formik.values.grade}
+                  onChange={handleGradeChange}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {userType === 'student' && isStaff === false && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  disabled={isEdit}
+                  label="Division"
+                  options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
+                  value={formik.values.grade}
+                  onChange={handleGradeChange}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
 
             {/* Row 2 */}
-            {(userType === 'staff' || isStaff) && <Grid item xs={6}>
-              <Autocomplete
-                loading={false}
-                noOptionsText="No Employee Found"
-                fullWidth
-                options={[]}
-                getOptionLabel={(option: any) => option?.firstName || ''}
-                renderInput={(params: any) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Employee Number"
-                    placeholder="Search Employee Number"
-                    fullWidth
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.firstName}
-                  </li>
-                )}
-              />
-            </Grid>}
-            {(userType === 'student' && isStaff === false) && <Grid item xs={6}>
-              <Autocomplete
-                loading={false}
-                noOptionsText="No Student Found"
-                fullWidth
-                options={[]}
-                getOptionLabel={(option: any) => option?.firstName || ''}
-                renderInput={(params: any) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Gr Number"
-                    placeholder="Search Gr Number"
-                    fullWidth
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.firstName}
-                  </li>
-                )}
-              />
-            </Grid>}
+            {(userType === 'staff' || isStaff) && (
+              <Grid item xs={6}>
+                <Autocomplete
+                  loading={false}
+                  noOptionsText="No Employee Found"
+                  fullWidth
+                  options={[]}
+                  getOptionLabel={(option: any) => option?.firstName || ''}
+                  renderInput={(params: any) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      label="Employee Number"
+                      placeholder="Search Employee Number"
+                      fullWidth
+                    />
+                  )}
+                  renderOption={(prop: any, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.firstName}
+                    </li>
+                  )}
+                />
+              </Grid>
+            )}
+            {userType === 'student' && isStaff === false && (
+              <Grid item xs={6}>
+                <Autocomplete
+                  loading={false}
+                  noOptionsText="No Student Found"
+                  fullWidth
+                  options={[]}
+                  getOptionLabel={(option: any) => option?.firstName || ''}
+                  renderInput={(params: any) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      label="Gr Number"
+                      placeholder="Search Gr Number"
+                      fullWidth
+                    />
+                  )}
+                  renderOption={(prop: any, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.firstName}
+                    </li>
+                  )}
+                />
+              </Grid>
+            )}
 
             {/* <Grid item xs={12} md={6}>
               <TextField
@@ -237,29 +274,76 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
 
             {/* Row 3 */}
 
+            {!dropoffPoint && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="Prefrable Pickup/Dropoff Point"
+                  label="Prefrable Pickup/Dropoff Point"
+                  value=""
+                  onChange={() => {}}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            )}
 
-
-
-            <Grid item xs={12} md={6}>
-              <TextField
-
-                name="Prefrable Pickup/Dropoff Point"
-                label="Prefrable Pickup/Dropoff Point"
-                value=''
-                onChange={() => { }}
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Assigned Pickup/Dropoff Point"
-                options={pickupPointsList}
-                value={formik.values.pickupPoint}
-                onChange={(e: any) => formik.setFieldValue('pickupPoint', e)}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>
+            {dropoffPoint && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="Prefrable Pickup Point"
+                  label="Prefrable Pickup Point"
+                  value=""
+                  onChange={() => {}}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            )}
+            {dropoffPoint && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="Prefrable Dropoff Point"
+                  label="Prefrable Dropoff Point"
+                  value=""
+                  onChange={() => {}}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            )}
+            {dropoffPoint && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  label="Assigned Pickup"
+                  options={pickupPointsList}
+                  value={formik.values.pickupPoint}
+                  onChange={(e) => formik.setFieldValue('pickupPoint', e)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {dropoffPoint && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  label="Assigned DropOff"
+                  options={pickupPointsList}
+                  value={formik.values.pickupPoint}
+                  onChange={(e) => formik.setFieldValue('pickupPoint', e)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {!dropoffPoint && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  label="Assigned Pickup/Dropoff Point"
+                  options={pickupPointsList}
+                  value={formik.values.pickupPoint}
+                  onChange={(e) => formik.setFieldValue('pickupPoint', e)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
 
             <Grid item xs={6}>
               <CustomSelect
@@ -281,7 +365,6 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
               />
             </Grid>
 
-
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Select Reason"
@@ -289,59 +372,43 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
                   { name: 'Route Not in Service', key: 'route_not_in_service' },
                   { name: 'Vehicle at Full Capacity', key: 'vehicle_full_capacity' },
                   { name: 'Stop Not in Service', key: 'stop_not_in_service' },
-
                 ]}
-
-                value=''
+                value=""
                 labelKey="name"
                 valueKey="key"
-                onChange={(val) => console.log("val", val)}
-                formControlProps={{ fullWidth: true, }}
-
-
+                onChange={(val) => console.log('val', val)}
+                formControlProps={{ fullWidth: true }}
               />
             </Grid>
-
-
-
-
 
             <Grid item xs={12} md={12}>
               <TextField
                 multiline
-
-                rows={3} name="notes"
+                rows={3}
+                name="notes"
                 label="Others"
-                value=''
-                onChange={() => { }}
+                value=""
+                onChange={() => {}}
                 size="small"
                 fullWidth
               />
-
-
             </Grid>
             <Grid item xs={12} md={12}>
               <TextField
                 multiline
-
-                rows={3} name="notified message"
+                rows={3}
+                name="notified message"
                 label="Message Sent to Student"
-                value=''
-                onChange={() => { }}
+                value=""
+                onChange={() => {}}
                 size="small"
                 fullWidth
               />
-
-
             </Grid>
-
           </Grid>
         </form>
-
-
       </Scrollbar>
       <DialogActions>
-
         <Button type="submit" variant="contained" size="small">
           Assigned / Declined
         </Button>

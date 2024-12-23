@@ -1,5 +1,7 @@
 'use client';
 
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import {
@@ -24,7 +26,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { CalendarView } from 'src/sections/calendar/view/calendar-view';
 
-const Dashboard = () => (
+const Dashboard = (props: TabComponentType) => (
   <Box sx={{ flexGrow: 1 }}>
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>

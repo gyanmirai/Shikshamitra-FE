@@ -1,7 +1,7 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import Card from '@mui/material/Card';
+import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
 import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
@@ -52,7 +52,7 @@ export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Pr
   });
 
   return (
-    <Card {...other}>
+    <Box>
       <CardHeader title={title} subheader={subheader} />
 
       <Chart
@@ -63,6 +63,6 @@ export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Pr
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ py: 2.5, pl: 1, pr: 2.5 }}
       />
-    </Card>
+    </Box>
   );
 }

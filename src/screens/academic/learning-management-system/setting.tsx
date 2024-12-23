@@ -1,5 +1,7 @@
 'use client';
 
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
@@ -39,7 +41,7 @@ const TABS = [
   { value: 'integrations', label: 'Integrations', component: () => <Integrations /> },
 ];
 
-const SettingScreen = () => {
+const SettingScreen = (props: TabComponentType) => {
   const tabs = useTabs('generalSetting');
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 

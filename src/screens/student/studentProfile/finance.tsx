@@ -13,8 +13,9 @@ import {
 
 import { formatNumber } from 'src/utils/formate_number';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Label } from 'src/components/label/label';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import type { StudentTabsComponentType } from '.';
 
@@ -253,7 +254,8 @@ const Finance = (props: StudentTabsComponentType) => {
     textAlign: 'right',
   };
   return (
-    <Box>
+    // <Box sx={{ overflowY: 'auto', overflowX: "hidden", minHeight: 384 }}>
+    <Scrollbar sx={{ overflowY: 'auto', overflowX: 'hidden', height: 384 }}>
       <Stack direction="row" spacing={2} alignItems="center">
         <Card
           elevation={3}
@@ -465,7 +467,7 @@ const Finance = (props: StudentTabsComponentType) => {
           </AccordionSummary>
 
           <AccordionDetails>
-            <table style={{ width: '100%', borderCollapse: 'collapse', overflow: "auto" }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   <th
@@ -641,9 +643,9 @@ const Finance = (props: StudentTabsComponentType) => {
         </Accordion>
       ))}
       <Box />
+    </Scrollbar>
 
-      {/* <FinanceStudentDetailedFeeComponent studentId="12" /> */}
-    </Box>
+    // </Box>
   );
 };
 
