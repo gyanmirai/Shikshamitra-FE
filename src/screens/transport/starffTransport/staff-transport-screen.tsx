@@ -185,6 +185,7 @@ const StaffTransportScreen = () => {
           isEdit={isEdit}
           allData={tableData}
           isStaff
+          clickFromTable
         />
       )}
       {dialogForBulkEdit.value && (

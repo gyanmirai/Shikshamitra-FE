@@ -28,7 +28,7 @@ interface TransportStudentAndStaffUpdateInfoDialogProps {
   isEdit: boolean;
   allData: any;
   isStaff: boolean;
-  clickFromTable: boolean;
+  clickFromTable?: boolean;
 }
 
 interface FormikValue {
@@ -97,7 +97,7 @@ const grades = availableGrades.map((g) => g.grade);
 
 const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   TransportStudentAndStaffUpdateInfoDialogProps
-> = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff, clickFromTable }) => {
+> = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff, clickFromTable = false }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
   const [dropoffPoint, setDifferentDropOffPoint] = useState<boolean>(true);
 
