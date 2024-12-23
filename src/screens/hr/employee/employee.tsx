@@ -116,7 +116,7 @@ const HrEmployee = () => {
                 startIcon={<Add />}
                 onClick={() => setOpen(true)}
               >
-                Add Employee
+                Employee
               </Button>
             }
           />

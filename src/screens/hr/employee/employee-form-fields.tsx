@@ -183,7 +183,7 @@ export const RenderDocuments = (props: any) => {
                             employeeId,
                             body: formData,
                           })
-                        : await uploadDocument({ id: employeeId, body: formData }),
+                        : uploadDocument({ id: employeeId, body: formData }),
                       {
                         loading: `Uploading Document ${row.documentName} `,
                         success: () => `Upload Successfully!`,
