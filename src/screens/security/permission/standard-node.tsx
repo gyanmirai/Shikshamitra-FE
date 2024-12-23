@@ -25,11 +25,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
-import Modules from './modules';
-
-function StandardNode({ name, avatarUrl, role, sx, count }: any) {
+function StandardNode({ name, avatarUrl, role, sx, count, assignDialog }: any) {
   const dialog = useBoolean();
-  const assignDialog = useBoolean();
   return (
     <Card
       sx={{
@@ -84,14 +81,14 @@ function StandardNode({ name, avatarUrl, role, sx, count }: any) {
       <CustomDialog title="Assign user" open={dialog.value} handleClose={dialog.onFalse}>
         <AssignUserForm />
       </CustomDialog>
-      <CustomDialog
+      {/* <CustomDialog
         title="Assign Module"
         open={assignDialog.value}
         handleClose={assignDialog.onFalse}
         fullScreen
       >
         <Modules />
-      </CustomDialog>
+      </CustomDialog> */}
     </Card>
   );
 }

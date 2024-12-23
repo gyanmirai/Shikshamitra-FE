@@ -4,10 +4,14 @@ import axios from 'axios';
 
 import { isTokenExpired } from 'src/utils/client';
 
+import store from 'src/redux/store';
+
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
 const createAxiosInstance = (baseURL: string): AxiosInstance => {
   const instance = axios.create({
     baseURL,
-    // timeout: 10000,
     headers: {
       'Content-Type': 'application/json;charset=utf8 ',
       accept: '*/*',
@@ -17,57 +21,64 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
   // Request interceptor
   instance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-      // Client-side specific logic
       if (typeof window !== 'undefined') {
+        const reduxStore = store.getState();
+        const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
+        const cookieHeader = `currentYear=${currentYear?.id};currentBoard=${currentBoard.id};currentMedium=${currentMedium.id}`;
+        document.cookie = cookieHeader;
+        // Add values to cookie
+
         const token = localStorage.getItem('access_token');
         if (token) {
           if (isTokenExpired(token)) {
-            try {
+            // If the token is expired, handle refresh token logic
+            if (!isRefreshing) {
+              isRefreshing = true;
               const refreshToken = localStorage.getItem('refresh_token');
-              const newTokenSet = await axios.post(`/auth/refresh-token`, {
-                token: refreshToken,
-              });
-              if (newTokenSet?.data) {
-                localStorage.setItem('access_token', newTokenSet.data.access_token);
-                localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);
-              } else {
-                document.cookie.split(';').forEach((c) => {
-                  document.cookie = c
-                    .replace(/^ +/, '')
-                    .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+              try {
+                const newTokenSet = await axios.post(`/auth/refresh-token`, {
+                  token: refreshToken,
                 });
-                sessionStorage.clear();
-                window.location.href = '/auth/login';
+
+                if (newTokenSet?.data) {
+                  localStorage.setItem('access_token', newTokenSet.data.access_token);
+                  localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);
+
+                  // Notify all waiting requests that the new token is available
+                  refreshSubscribers.forEach((callback) => callback(newTokenSet.data.access_token));
+                  refreshSubscribers = []; // Clear the queue after processing
+
+                  config.headers = config.headers || {};
+                  config.headers.Authorization = `Bearer ${newTokenSet.data.access_token}`;
+                  config.headers.Cookie = cookieHeader;
+                } else {
+                  handleLogout();
+                }
+              } catch (error) {
+                console.log(error, '=========error========');
+                handleLogout();
+              } finally {
+                isRefreshing = false;
               }
-
-              config.headers = config.headers || {};
-              config.headers.Authorization = `Bearer ${newTokenSet.data.access_token}`;
-            } catch (error) {
-              console.log(error, '=========error========');
-              // Clear cookies
-              document.cookie.split(';').forEach((c) => {
-                document.cookie = c
-                  .replace(/^ +/, '')
-                  .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+            } else {
+              // Wait for the refresh to complete and retry the original request
+              await new Promise<void>((resolve) => {
+                refreshSubscribers.push((tokens: string) => {
+                  config.headers = config.headers || {};
+                  config.headers.Authorization = `Bearer ${tokens}`;
+                  config.headers.Cookie = document.cookie;
+                  resolve();
+                });
               });
-              sessionStorage.clear();
-
-              window.location.href = '/auth/login';
             }
           } else {
+            // Token is valid, attach to the request
             config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
+            config.headers.Cookie = document.cookie;
           }
         }
       }
-
-      // // Server-side specific logic
-      // if (typeof window === 'undefined') {
-      //   const session = await getSession();
-      //   config.headers = config.headers || {};
-      //   config.headers.Authorization = `Bearer ${session.access_token}`;
-      //   // Add any server-side specific headers or modifications here
-      // }
 
       return config;
     },
@@ -79,17 +90,14 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
     (response: AxiosResponse) => response,
     (error) => {
       if (error.response) {
-        // Handle specific error status codes
         switch (error.response.status) {
           case 401:
-            // Handle unauthorized access
+            // Handle unauthorized access here, if needed
             break;
           case 404:
             // Handle not found
             break;
-          // Add more cases as needed
           default:
-            // Handle any other error status codes
             break;
         }
       }
@@ -99,6 +107,17 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
 
   return instance;
 };
+
+function handleLogout() {
+  // Handle logout functionality (clear cookies, session storage, etc.)
+  document.cookie.split(';').forEach((c) => {
+    document.cookie = c
+      .replace(/^ +/, '')
+      .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+  });
+  sessionStorage.clear();
+  window.location.href = '/auth/login';
+}
 
 export default createAxiosInstance;
 

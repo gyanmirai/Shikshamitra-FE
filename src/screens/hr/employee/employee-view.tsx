@@ -16,6 +16,8 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { EmployeeInformation } from './information';
+import { convertBase64Format } from '../../../utils/base64Formate';
+import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
 
 const TABS = [
@@ -60,10 +62,12 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn }) => <></>,
   },
 ];
+
 interface EmployeeViewProps {
   setSearchParams: any;
   searchParams: any;
 }
+
 const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   const tabs = useTabs('personalInformation');
   const currentActiveComponent = useMemo(
@@ -119,23 +123,30 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
+            borderLeft: (theme) =>
+              employee?.employeeStatusType === EmployeeStatusType.Active
+                ? `4px solid ${theme.palette.success.main}`
+                : `4px solid ${theme.palette.error.main}`,
             borderRadius: 1,
           }}
         >
           <Box display="flex" gap={2} alignItems="center">
             <Avatar
-              src="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
+              src={
+                employee?.profilePicture
+                  ? convertBase64Format(employee?.profilePicture)
+                  : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
+              }
               sx={{ width: 64, height: 64 }}
             />
             <Label variant="filled" color="primary" sx={{ fontSize: '12px' }}>
               {employee?.employeeName}
             </Label>
             <Label variant="filled" color="info" sx={{ fontSize: '12px' }}>
-              EMP001
+              {employee?.employeeCode}
             </Label>
             <Label variant="filled" color="secondary" sx={{ fontSize: '12px' }}>
-              Principle
+              {employee?.role?.name}
             </Label>
             <Label variant="filled" color="warning" sx={{ fontSize: '12px' }}>
               Primary

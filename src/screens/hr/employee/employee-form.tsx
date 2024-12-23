@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { isEqual } from 'lodash';
 import { useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -9,6 +8,7 @@ import { Box, Grid, Slide, TextField } from '@mui/material';
 
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { ConvertRtkResponse } from 'src/utils/convrtRtkResponse';
 
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -26,6 +26,7 @@ import { UploadAvatar } from 'src/components/upload';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { allFields } from './employee-form-fields';
+import { validations } from './employee-form-validation';
 
 export const personalInformationInitialValues = (editData: any) => ({
   photo: editData
@@ -43,7 +44,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   dob: editData ? dayjs(editData.dateOfBirth, 'YYYY-MM-DD') : null,
   familyCast: editData ? editData.familyCast : '',
   castType: editData ? editData.castType : '',
-  gender: editData ? editData.gender : '',
+  gender: editData ? editData.genderType : '',
   religion: editData ? editData.religion : '',
   maritalStatus: editData ? editData.maritalStatus : '',
   bloodGroup: editData ? editData.bloodGroup : '',
@@ -54,13 +55,13 @@ export const personalInformationInitialValues = (editData: any) => ({
   dateOfJoining: editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : null,
   employeeGroup: editData ? editData.employeeGroup : '',
   qualification: editData ? editData.qualification : '',
-  role: editData ? editData.role : '',
+  role: editData ? editData?.role?.id : '',
   identificationMark1: editData ? editData.identificationMark1 : '',
 
   address: editData ? editData.address : '',
   state: editData ? editData?.state : '',
   city: editData ? editData?.city : '',
-  pinCode: editData ? editData?.pinCode : '',
+  pincode: editData ? editData?.pinCode : '',
   employeeId: editData ? editData.id : '',
 });
 
@@ -126,6 +127,7 @@ const steps = [
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
   const [activeStep, setActiveStep] = useState(0);
+
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddBasicInformationMutation,
@@ -160,55 +162,69 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
     }),
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+  console.log(
+    '🚀 ~ file: employee-form.tsx:165 ~ EmployeeFrom ~ familyInformationInitialValues(editData):',
+    familyInformationInitialValues(editData)
+  );
+
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
-        const res = await addUser({
-          userName: `${values.firstName}${values.lastName}`,
-          name: values.firstName,
-          surname: values.lastName,
-          email: values.email,
-          phoneNumber: values.mobileNo,
-          isActive: true,
-          lockoutEnabled: true,
-          roleNames: [],
-          password: 'Test@123',
-        });
-        const resp = await addEmployee({
-          userId: res.data.id,
-          profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          // employeeCode: values.code,
-          lastName: values.lastName,
-          firstName: values.firstName,
-          middleName: values.middleName,
-          shortName: values.shortName,
+        const res = ConvertRtkResponse(
+          await addUser({
+            userName: `${values.firstName}${values.lastName}`,
+            name: values.firstName,
+            surname: values.lastName,
+            email: values.email,
+            phoneNumber: values.mobileNo,
+            isActive: true,
+            lockoutEnabled: true,
+            roleNames: [],
+            password: 'Test@123',
+          })
+        );
 
-          employeeStatusType: values.employeeStatusType,
+        const resp = ConvertRtkResponse(
+          await addEmployee({
+            userId: res.data.id,
+            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+            // employeeCode: values.code,
+            lastName: values.lastName,
+            firstName: values.firstName,
+            middleName: values.middleName,
+            shortName: values.shortName,
 
-          dateOfBirth: values.dob.format('YYYY-MM-DD'),
-          familyCast: values.familyCast,
-          castType: values.castType,
-          gender: values.gender,
-          religion: values.religion,
-          maritalStatus: values.maritalStatus,
-          bloodGroup: values.bloodGroup,
-          mobileNo: values.mobileNo,
-          email: values.email,
+            employeeStatusType: values.employeeStatusType,
 
-          department: values.department,
-          designation: values.designation,
-          dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+            dateOfBirth: values.dob.format('YYYY-MM-DD'),
+            familyCast: values.familyCast,
+            castType: values.castType,
+            genderType: values.gender,
+            religion: values.religion,
+            maritalStatus: values.maritalStatus,
+            bloodGroup: values.bloodGroup,
+            mobileNo: values.mobileNo,
+            email: values.email,
 
-          employeeGroup: values.employeeGroup,
-          qualification: values.qualification,
-          roleId: values.role,
-          identificationMark1: values.identificationMark1,
+            department: values.department,
+            designation: values.designation,
+            dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
 
-          address: values.address,
-        });
+            employeeGroup: values.employeeGroup,
+            qualification: values.qualification,
+            roleId: values.role,
+            identificationMark1: values.identificationMark1,
+
+            address: values.address,
+            city: values.city,
+            state: values.state,
+            pincode: `${values.pincode}`,
+          })
+        );
         formik.setFieldValue('employeeId', resp.data.id);
       }
     },
@@ -216,7 +232,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   );
   const handleFamilyInformation = useCallback(
     async (values: any, formik: any) => {
-      await updateFamilyInfo({
+      const res = await updateFamilyInfo({
         employeeId: values.employeeId,
         body: {
           fatherDetails: {
@@ -226,7 +242,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address: values.fatherAddress,
             state: values.fatherState,
             city: values.fatherCity,
-            pincode: values.fatherPincode,
+            pincode: values.fatherPinCode,
           },
           motherDetails: {
             name: values.motherName,
@@ -235,7 +251,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address: values.motherAddress,
             state: values.motherState,
             city: values.motherCity,
-            pincode: values.motherPincode,
+            pincode: values.motherPinCode,
           },
           spouseDetails: {
             name: values.spouseName,
@@ -244,29 +260,31 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address: values.spouseAddress,
             state: values.spouseState,
             city: values.spouseCity,
-            pincode: values.spousePincode,
+            pincode: values.spousePinCode,
           },
         },
       });
+      return ConvertRtkResponse(res);
     },
     [updateFamilyInfo]
   );
   const handleWorkExperience = useCallback(
     async (values: any, formik: any) => {
-      await updateExperienceInfo({
+      const res = await updateExperienceInfo({
         employeeId: values.employeeId,
         body: values.experiences.map((i: any) => ({
           ...i,
-          fromDate: i.fromDate.format('YYYY-MM-DD'),
-          toDate: i.toDate.format('YYYY-MM-DD'),
+          fromDate: i.fromDate ? i.fromDate.format('YYYY-MM-DD') : null,
+          toDate: i.toDate ? i.toDate.format('YYYY-MM-DD') : null,
         })),
       });
+      return ConvertRtkResponse(res);
     },
     [updateExperienceInfo]
   );
   const handleBankDetailsInformation = useCallback(
     async (values: any, formik: any) => {
-      await updateBankDetails({
+      const res = updateBankDetails({
         employeeId: values.employeeId,
         body: {
           bankName: values.bankName,
@@ -276,61 +294,60 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           ifscCode: values.ifscCode,
         },
       });
+      return ConvertRtkResponse(res);
     },
     [updateBankDetails]
   );
 
   const handelUpdateEmployee = useCallback(
     async (values: any, formik: any, id: any) => {
-      await updateEmployee({
-        id,
-        body: {
-          // userId: res.data.id,
-          profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          // employeeCode: values.code,
-          lastName: values.lastName,
-          firstName: values.firstName,
-          middleName: values.middleName,
-          shortName: values.shortName,
+      try {
+        const res = await updateEmployee({
+          id,
+          body: {
+            // userId: res.data.id,
+            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+            // employeeCode: values.code,
+            lastName: values.lastName,
+            firstName: values.firstName,
+            middleName: values.middleName,
+            shortName: values.shortName,
 
-          employeeStatusType: values.employeeStatusType,
+            employeeStatusType: values.employeeStatusType,
 
-          dateOfBirth: values.dob.format('YYYY-MM-DD'),
-          familyCast: values.familyCast,
-          castType: values.castType,
-          gender: values.gender,
-          religion: values.religion,
-          maritalStatus: values.maritalStatus,
-          bloodGroup: values.bloodGroup,
-          mobileNo: values.mobileNo,
-          email: values.email,
+            dateOfBirth: values.dob.format('YYYY-MM-DD'),
+            familyCast: values.familyCast,
+            castType: values.castType,
+            genderType: values.gender,
+            religion: values.religion,
+            maritalStatus: values.maritalStatus,
+            bloodGroup: values.bloodGroup,
+            mobileNo: values.mobileNo,
+            email: values.email,
 
-          department: values.department,
-          designation: values.designation,
-          dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+            department: values.department,
+            designation: values.designation,
+            dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
 
-          employeeGroup: values.employeeGroup,
-          qualification: values.qualification,
-          roleId: values.role,
-          identificationMark1: values.identificationMark1,
+            employeeGroup: values.employeeGroup,
+            qualification: values.qualification,
+            roleId: values.role,
+            identificationMark1: values.identificationMark1,
 
-          address: values.address,
-        },
-      });
+            address: values.address,
+            city: values.city,
+            state: values.state,
+            pincode: `${values.pincode}`,
+          },
+        });
+
+        return ConvertRtkResponse(res);
+      } catch (error) {
+        throw new Error(error);
+      }
     },
     [updateEmployee]
   );
-
-  // const handleUpload = useCallback(
-  //   async (values: any, formik: any) => {
-  //     try {
-  //       await uploadDocument({ id: values.employeeId, body: '' });
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   },
-  //   [uploadDocument]
-  // );
 
   return (
     <CustomStepperWithFormik
@@ -340,21 +357,27 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
-      validationSchema={Yup.object({
-        name: Yup.string(),
-      })}
+      validationSchema={validations[activeStep]}
       onStepClick={(step) => {
         if (editData) {
           setActiveStep(step);
         }
       }}
       handleNext={async (isLastStep, values, formik, setIsLoading) => {
+        const isChanged = isEqual(values, initialValues);
+
+        if (isChanged) {
+          setActiveStep(activeStep + 1);
+          return;
+        }
         try {
           setIsLoading(true);
           if (editData && activeStep === 0) {
+            console.log(values.employeeId, '====editData && activeStep === 0========');
             await handelUpdateEmployee(values, formik, editData.id);
           } else if (activeStep === 0) {
             if (values.employeeId) {
+              console.log(values.employeeId, '===values.employeeId=========');
               await handelUpdateEmployee(values, formik, values.employeeId);
             } else {
               await handleBasicInformation(values, formik);
@@ -368,7 +391,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           }
           setActiveStep(activeStep + 1);
         } catch (error) {
-          console.log(error);
+          console.log(error, '============================');
         }
         setIsLoading(false);
         if (isLastStep) {
@@ -389,6 +412,7 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
+
   return (
     <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
       {steps.map(
@@ -423,7 +447,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                   gap={2}
                   width="100%"
                 >
-                  <Grid container spacing={2}>
+                  <Grid container spacing={3}>
                     {' '}
                     {allFields[step].map((field) => (
                       <Grid

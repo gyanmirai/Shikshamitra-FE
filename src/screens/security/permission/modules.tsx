@@ -1,98 +1,140 @@
-// @ts-nocheck
-import dynamic from 'next/dynamic';
-import React, { cloneElement } from 'react';
+//
 
-import { Box, useTheme } from '@mui/material';
+import React, { useRef, useState } from 'react';
 
-import { flattenArray } from 'src/utils/helper';
+import {
+  Box,
+  Grid,
+  Fade,
+  Paper,
+  Stack,
+  Checkbox,
+  IconButton,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { varAlpha } from 'src/theme/styles';
 import { navData } from 'src/layouts/config-nav-dashboard';
 
-import ZoomAndDrag from 'src/components/zoom-drag';
-import { ComponentBlock } from 'src/components/component-block';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 
-import ModuleNode from './module-node';
-
-import type { OrgChartSubListProps } from './page';
-
-const Tree = dynamic(() => import('react-organizational-chart').then((mod) => mod.Tree), {
-  ssr: false,
-});
-
-const TreeNode = dynamic(() => import('react-organizational-chart').then((mod) => mod.TreeNode), {
-  ssr: false,
-});
-
-// navData
-const Modules = () => {
-  const theme = useTheme();
-
-  const data = navData.flatMap((list) => list.items);
-  console.log('🚀 ~ file: modules.tsx:26 ~ Modules ~ data:', data);
+const AssignModule = () => {
+  const data = navData.flatMap((item) => item.items);
+  const stackRef = useRef<any>();
+  const [selectSubModule, setSelectSubModule] = useState<any>(null);
 
   return (
-    <Box sx={{ height: '100%', p: 2 }}>
-      <ComponentBlock title="Role Assignments" sx={{ height: '100%' }}>
-        <ZoomAndDrag>
-          <Box
+    <Box p={2} height="100%">
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="center"
+        flexWrap="wrap"
+        ref={stackRef}
+        p={1}
+      >
+        {data.map((item) => (
+          <Paper
+            elevation={8}
+            onClick={() => setSelectSubModule(item)}
             sx={{
+              p: 2,
+              cursor: 'pointer',
               display: 'flex',
-              justifyContent: ' flex-start',
-              flexDirection: 'column',
-              transform: 'rotate(90deg)',
-              '& > *': {
-                transform: 'rotate(-90deg)',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              backgroundColor: (theme) =>
+                selectSubModule?._action === item._action
+                  ? varAlpha(theme.palette.primary.mainChannel, 0.1)
+                  : 'background.paper',
+              color: (theme) =>
+                selectSubModule?._action === item._action ? 'primary.main' : 'text.primary',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                scale: 1.05,
               },
             }}
           >
-            <Tree
-              lineWidth="1.5px"
-              nodePadding="4px"
-              lineBorderRadius="24px"
-              lineColor={theme.vars.palette.divider}
-              label={<></>}
-            >
-              {data.map((list, index) => (
-                <TreeList key={index} depth={1} data={list} nodeItem={ModuleNode} />
-              ))}
-            </Tree>
-          </Box>
-        </ZoomAndDrag>
-      </ComponentBlock>
+            {item.icon}
+            <Typography variant="caption" fontWeight={600}>
+              {item.title}
+            </Typography>
+          </Paper>
+        ))}
+      </Stack>
+      <Scrollbar
+        sx={{
+          height: `calc(100% - ${stackRef?.current?.offsetHeight || 0}px - 60px)`,
+          py: 2,
+          mt: 2,
+        }}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }}>
+              <Tree data={selectSubModule?.submodule || []} />
+            </Box>
+          </Grid>
+        </Grid>
+      </Scrollbar>
     </Box>
   );
 };
 
-export default Modules;
+export default AssignModule;
 
-export type OrgChartListProps<T> = {
-  data: any;
-  depth: number;
-  nodeItem: (props: T) => React.ReactElement;
+const Tree = ({ data, depth = 0 }: any) =>
+  data?.map((item: any) => <TreeSubList1 item={item} depth={depth} />);
+
+const TreeSubList1 = ({ item, depth }: any) => {
+  const open = useBoolean();
+  return (
+    <Stack key={item.id} spacing={1} pl={depth * 4} width="350px">
+      <Paper
+        elevation={4}
+        sx={{
+          p: 1,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={600}>
+            {item.title}
+          </Typography>
+          {item?.children?.length && (
+            <IconButton onClick={open.onToggle}>
+              <Iconify icon="eva:arrow-ios-downward-fill" />
+            </IconButton>
+          )}
+        </Box>
+        <Stack direction="row" spacing={0.2}>
+          <FormControlLabel control={<Checkbox size="small" />} label="View" />
+          <FormControlLabel control={<Checkbox size="small" />} label="Add" />
+          <FormControlLabel control={<Checkbox size="small" />} label="Edit" />
+          <FormControlLabel control={<Checkbox size="small" />} label="Delete" />
+        </Stack>
+      </Paper>
+      {open.value && item?.children?.length && (
+        <Fade timeout={700} in={open.value} easing={{ exit: '500' }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, flexDirection: 'column' }}>
+            <TreeSubList item={item} depth={depth} />
+          </Box>
+        </Fade>
+      )}
+    </Stack>
+  );
 };
 
-export function TreeList<T>({ data, depth, nodeItem }: OrgChartListProps<T>) {
-  const childs = (data as any)?.submodule || data?.children || data?.items || [];
-
-  const cloneNode = (props: T) => cloneElement(nodeItem(props));
-
-  const totalChildren = childs ? flattenArray(childs)?.length : 0;
-
-  const label = cloneNode({ ...data, depth, totalChildren } as T);
-
-  return (
-    <TreeNode label={label}>
-      {childs && <TreeSubList data={childs} depth={depth} nodeItem={nodeItem} />}
-    </TreeNode>
-  );
-}
-
-function TreeSubList<T>({ data, depth, nodeItem }: OrgChartSubListProps<T>) {
-  return (
-    <>
-      {data.map((list: any, index: number) => (
-        <TreeList key={index} data={list} depth={depth + 1} nodeItem={nodeItem} />
-      ))}
-    </>
-  );
-}
+const TreeSubList = ({ item, depth }: any) =>
+  item?.children?.length > 0 ? <Tree data={item.children} depth={depth + 1} /> : null;

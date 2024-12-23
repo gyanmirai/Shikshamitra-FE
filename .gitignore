@@ -33,7 +33,9 @@ build
 .vercel
 .netlify
 .vscode
+.idea
 .eslintcache
+.env
 .unimportedrc.json
 tsconfig.tsbuildinfo
 
