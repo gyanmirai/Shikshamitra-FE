@@ -187,13 +187,9 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
 
   return (
     <CustomDialog maxWidth="lg" title="Daily Inspection" open={dialogValue} handleClose={onClose}>
-
       <Scrollbar>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
-
-
-
             <Table>
               <TableHead>
                 <TableRow>
@@ -239,11 +235,7 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
                             item.actionRequired = ''; // reset action required if unchecked
                           }}
                         >
-                          <FormControlLabel
-                            value="unchecked"
-                            control={<Radio />}
-                            label=""
-                          />
+                          <FormControlLabel value="unchecked" control={<Radio />} label="" />
                         </RadioGroup>
                       </FormControl>
                     </TableCell>
@@ -294,15 +286,12 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
               size="small"
               fullWidth
               value=""
-              onChange={(e) => { }}
+              onChange={(e) => {}}
             />
-
-
           </form>
         </Box>
       </Scrollbar>
       <DialogActions>
-
         <Button type="submit" variant="contained" size="small">
           Save
         </Button>

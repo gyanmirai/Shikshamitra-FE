@@ -71,7 +71,6 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
       maxWidth="md"
     >
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral', height: '500px' }}>
-
         <form onSubmit={formik.handleSubmit}>
           <Box pt="10px" display="flex" flexDirection="column" gap={3}>
             <Grid container spacing={2}>
@@ -111,7 +110,7 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
               fullWidth
             />
             <UploadBox
-              onDrop={() => { }}
+              onDrop={() => {}}
               placeholder={
                 <Box
                   sx={{
@@ -134,9 +133,7 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
               }}
             />
           </Box>
-
         </form>
-
       </Scrollbar>
       <DialogActions>
         {/* <Button onClick={onClose} variant="contained" size="small">

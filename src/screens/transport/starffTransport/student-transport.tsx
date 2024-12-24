@@ -270,7 +270,6 @@ const StudentTransportScreen = () => {
           isEdit={isEdit}
           allData={tableData}
           isStaff={false}
-          clickFromTable
         />
       )}
       {dialogForBulkEdit.value && selectedEntry && (

@@ -56,7 +56,6 @@ interface Route {
 }
 
 const routesData: Route[] = [
-
   {
     routeNumber: 'R102',
     startPoint: 'North Park',
@@ -173,7 +172,7 @@ const RoutesAndSchedulesScreen = () => {
     setMapData(null);
   };
 
-  useEffect(() => { }, [selectedExpense, isEdit, mapDialogOpen]);
+  useEffect(() => {}, [selectedExpense, isEdit, mapDialogOpen]);
 
   const handleSave = (item: any) => {
     console.log('from the save', item);

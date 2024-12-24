@@ -85,7 +85,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           value: 'tuitionFee',
           paymentMethod: 'Cash',
           discountAmount: 0,
-          discountCategory: '-'
+          discountCategory: '-',
         },
         {
           id: 2,
@@ -95,7 +95,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           value: 'sportsFee',
           paymentMethod: 'Cash',
           discountAmount: 0,
-          discountCategory: '-'
+          discountCategory: '-',
         },
         {
           id: 3,
@@ -105,7 +105,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           value: 'transportFee',
           paymentMethod: 'Check',
           discountAmount: 0,
-          discountCategory: '-'
+          discountCategory: '-',
         },
       ],
       statusToggle: true,
@@ -325,7 +325,6 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
               },
             },
 
-
             {
               id: 'amount',
               label: 'Payable Fees',
@@ -366,20 +365,18 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
               render(value, row: any) {
                 return (
                   <ThreeDotsActions
-                    placement='right-top'
+                    placement="right-top"
                     actions={({ popover }) => (
                       <MenuList>
                         <MenuItem
                           onClick={() => {
                             setSelectedEntry(row);
-                            detaiFeeStructure.onTrue()
-
+                            detaiFeeStructure.onTrue();
                           }}
                         >
                           <Iconify icon="mdi:eye" />
                           View Details
                         </MenuItem>
-
                       </MenuList>
                     )}
                   />
@@ -393,12 +390,9 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
       {detaiFeeStructure.value && (
         <FinanceDetailFeeStructureView
           data={selectedEntry}
-
           onClose={handleCloseForDetailFeeStructure}
           dialogValue={detaiFeeStructure.value}
-
         />
-
       )}
 
       {dialog.value && (

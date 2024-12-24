@@ -104,7 +104,7 @@ const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicle }) => {
     setIsEdit(false);
     dialog.onFalse();
   };
-  const handleSave = () => { };
+  const handleSave = () => {};
 
   // const handleDelete = (data: MaintenanceRecord) => {
   //   const updatedEntries = tableData.filter((val) => val.id !== data.id);

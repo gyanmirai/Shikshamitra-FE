@@ -1,28 +1,30 @@
-import React from 'react'
+import React from 'react';
 
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 
-
 interface RouteAvailableNotifyDialogProps {
-    dialogValue: boolean;
-    onClose: () => void;
-    selectedEntry: any;
+  dialogValue: boolean;
+  onClose: () => void;
+  selectedEntry: any;
 }
 
-const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({ dialogValue, onClose, selectedEntry }) => {
-    const data = [];
-    return (
-        <CustomDialog maxWidth="sm" title="Notify" open={dialogValue} handleClose={onClose}>
-            <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
-
-                {/* <Typography variant='body1' sx={{ pb: "15px" }}>
+const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
+  dialogValue,
+  onClose,
+  selectedEntry,
+}) => {
+  const data = [];
+  return (
+    <CustomDialog maxWidth="sm" title="Notify" open={dialogValue} handleClose={onClose}>
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
+        {/* <Typography variant='body1' sx={{ pb: "15px" }}>
                     Are You Sure Want to Declined ?
                 </Typography> */}
-                <Grid container spacing={2} >
-                    {/* <Grid item xs={12} md={12}>
+        <Grid container spacing={2}>
+          {/* <Grid item xs={12} md={12}>
                         <CustomSelect
                             label="Select Reason"
                             options={[
@@ -56,38 +58,27 @@ const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
 
 
                     </Grid> */}
-                    <Grid item xs={12} md={12}>
-                        <TextField
-                            multiline
+          <Grid item xs={12} md={12}>
+            <TextField
+              multiline
+              rows={3}
+              name="notified message"
+              label="Message Sent to Student"
+              value=""
+              onChange={() => {}}
+              size="small"
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+      </Scrollbar>
+      <DialogActions>
+        <Button size="small" variant="contained" type="submit">
+          Send
+        </Button>
+      </DialogActions>
+    </CustomDialog>
+  );
+};
 
-                            rows={3} name="notified message"
-                            label="Message Sent to Student"
-                            value=''
-                            onChange={() => { }}
-                            size="small"
-                            fullWidth
-                        />
-
-
-                    </Grid>
-
-
-
-
-                </Grid>
-
-
-
-            </Scrollbar>
-            <DialogActions>
-                <Button size="small" variant="contained" type="submit">
-                    Send
-                </Button>
-            </DialogActions>
-
-
-        </CustomDialog>
-    )
-}
-
-export default RouteAvailableNotifyDialog
+export default RouteAvailableNotifyDialog;

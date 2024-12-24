@@ -311,7 +311,7 @@ const TransportDashboardScreen = () => {
                     series: [
                       { name: 'Kilometers Run', data: [6000, 1500, 1400, 1300, 1250] },
                       // { name: 'Fuel Used (L)', data: [300, 75, 70, 65, 62] },
-                      { name: 'Fuel Cost (₹)', data: [30000, 7500, 7000, 6500, 6200] },
+                      // { name: 'Fuel Cost (₹)', data: [30000, 7500, 7000, 6500, 6200] },
                     ],
                   },
                   {
@@ -323,10 +323,10 @@ const TransportDashboardScreen = () => {
                         data: [500, 600, 550, 650, 620, 700, 680, 720, 690],
                       },
                       // { name: 'Fuel Used (L)', data: [40, 48, 44, 52, 50, 56, 54, 58, 55] },
-                      {
-                        name: 'Fuel Cost (₹)',
-                        data: [200, 240, 220, 260, 250, 280, 270, 290, 275],
-                      },
+                      // {
+                      //   name: 'Fuel Cost (₹)',
+                      //   data: [200, 240, 220, 260, 250, 280, 270, 290, 275],
+                      // },
                     ],
                   },
                   {
@@ -335,7 +335,7 @@ const TransportDashboardScreen = () => {
                     series: [
                       { name: 'Kilometers Run', data: [6000, 7200, 6800, 7500, 7400, 7700] },
                       // { name: 'Fuel Used (L)', data: [480, 576, 544, 600, 592, 616] },
-                      { name: 'Fuel Cost (₹)', data: [2400, 2880, 2720, 3000, 2960, 3080] },
+                      // { name: 'Fuel Cost (₹)', data: [2400, 2880, 2720, 3000, 2960, 3080] },
                     ],
                   },
                 ],
@@ -343,13 +343,22 @@ const TransportDashboardScreen = () => {
               {
                 vehicleName: 'Vehicle 2',
                 durations: [
+                  // {
+                  //   name: 'Day',
+                  //   categories: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+                  //   series: [
+                  //     { name: 'Kilometers Run', data: [110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115] },
+                  //     // { name: 'Fuel Used (L)', data: [9, 11, 10, 9, 8] },
+                  //     // { name: 'Fuel Cost (₹)', data: [45, 55, 50, 45, 40] },
+                  //   ],
+                  // },
                   {
                     name: 'Weekly',
                     categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
                     series: [
                       { name: 'Kilometers Run', data: [110, 140, 130, 120, 115] },
                       // { name: 'Fuel Used (L)', data: [9, 11, 10, 9, 8] },
-                      { name: 'Fuel Cost (₹)', data: [45, 55, 50, 45, 40] },
+                      // { name: 'Fuel Cost (₹)', data: [45, 55, 50, 45, 40] },
                     ],
                   },
                   {
@@ -361,10 +370,10 @@ const TransportDashboardScreen = () => {
                         data: [480, 570, 520, 620, 600, 680, 660, 700, 670],
                       },
                       // { name: 'Fuel Used (L)', data: [38, 46, 40, 50, 48, 54, 52, 56, 53] },
-                      {
-                        name: 'Fuel Cost (₹)',
-                        data: [190, 230, 200, 250, 240, 270, 260, 280, 265],
-                      },
+                      // {
+                      //   name: 'Fuel Cost (₹)',
+                      //   data: [190, 230, 200, 250, 240, 270, 260, 280, 265],
+                      // },
                     ],
                   },
                   {
@@ -373,7 +382,7 @@ const TransportDashboardScreen = () => {
                     series: [
                       { name: 'Kilometers Run', data: [5800, 7000, 6600, 7300, 7200, 7500] },
                       // { name: 'Fuel Used (L)', data: [460, 560, 520, 580, 570, 600] },
-                      { name: 'Fuel Cost (₹)', data: [2300, 2800, 2600, 2900, 2850, 3000] },
+                      // { name: 'Fuel Cost (₹)', data: [2300, 2800, 2600, 2900, 2850, 3000] },
                     ],
                   },
                 ],

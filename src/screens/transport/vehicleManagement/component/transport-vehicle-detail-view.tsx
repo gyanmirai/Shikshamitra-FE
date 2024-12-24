@@ -53,14 +53,15 @@ const TransportVehicleDetailView: React.FC<TransportVehicleDetailViewProps> = ({
   return (
     <Box>
       <Card>
-        <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-
-        >
+        <CustomTabs value={tabs.value} onChange={tabs.onChange} variant="fullWidth">
           {TABS.map((tab) => (
-            <Tab sx={{ fontSize: '12px' }} icon={tab.icon} key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              icon={tab.icon}
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>

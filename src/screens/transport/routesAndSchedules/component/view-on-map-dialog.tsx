@@ -83,7 +83,6 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
     { id: 3, name: 'Alice Johnson' },
     { id: 4, name: 'Bob Brown' },
     { id: 5, name: 'Charlie Davis' },
-
   ];
   return (
     <Box height="100vh" width="100vw">
@@ -108,8 +107,8 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
             <Popup>
               <div>
                 <h4>Waypoint {index + 1}</h4>
-                <List >
-                  <Scrollbar sx={{ height: "200px", width: "200px", overflow: 'auto' }}>
+                <List>
+                  <Scrollbar sx={{ height: '200px', width: '200px', overflow: 'auto' }}>
                     {students.length > 0 ? (
                       students.map((student, i) => (
                         <ListItem key={student.id}>

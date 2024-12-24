@@ -377,8 +377,8 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
 
   const additionalDiscountCloseDialog = () => {
     financeStudentAdditionalDiscountDialog.onFalse();
-  }
-  const handleSave = () => { };
+  };
+  const handleSave = () => {};
   return (
     <>
       <Box display="flex" flexDirection="row" justifyContent="space-between">
@@ -387,14 +387,14 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             label="Standard"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <CustomSelect
             label="Division"
             options={[]}
             value=""
-            onChange={() => { }}
+            onChange={() => {}}
             formControlProps={{ sx: { minWidth: 140 } }}
           />
           <TextField
@@ -402,7 +402,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             variant="outlined"
             size="small"
             value=""
-            onChange={(e) => { }}
+            onChange={(e) => {}}
           />
         </Box>
         <Box display="flex" justifyContent="flex-end" alignItems="center">
@@ -425,7 +425,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
               variant="contained"
               size="small"
               onClick={() => {
-                financeStudentAdditionalDiscountDialog.onFalse()
+                financeStudentAdditionalDiscountDialog.onFalse();
                 feeRefundDialog.onFalse();
                 setSelectedStudent(students[0]);
                 // setIsEdit(true);
@@ -438,7 +438,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
               variant="contained"
               size="small"
               onClick={() => {
-                financeStudentAdditionalDiscountDialog.onFalse()
+                financeStudentAdditionalDiscountDialog.onFalse();
                 dialog.onFalse();
                 setSelectedStudent(students[0]);
                 // setIsEdit(true);
@@ -451,11 +451,13 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
         </Box>
       </Box>
       <FinanceStudentInfoCardComponent user={dummyUser} />
-      {financeStudentAdditionalDiscountDialog.value &&
+      {financeStudentAdditionalDiscountDialog.value && (
         <FinanceStudentAdditionalDiscountDialog
           dialogValue={financeStudentAdditionalDiscountDialog.value}
           onClose={additionalDiscountCloseDialog}
-          selectedData={selectedStudent} />}
+          selectedData={selectedStudent}
+        />
+      )}
 
       {feeRefundDialog.value && (
         <FinanceFeeCollectionRefundTab

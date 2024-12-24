@@ -5,7 +5,24 @@ import * as Yup from 'yup';
 import { Form, Field, Formik, useFormik } from 'formik';
 
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Stack, Radio, Button, Switch, FormLabel, TextField, RadioGroup, Typography, FormControl, Autocomplete, DialogActions, FormHelperText, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Stack,
+  Radio,
+  Button,
+  Switch,
+  FormLabel,
+  TextField,
+  RadioGroup,
+  Typography,
+  FormControl,
+  Autocomplete,
+  DialogActions,
+  FormHelperText,
+  FormControlLabel,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -96,11 +113,9 @@ const LibraryReportsScreen = () => {
                   </Field>
                 </Grid>
 
-
                 <Grid item xs={12} sm={6} md={4}>
                   <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                     <DatePicker
-
                       label="Start Date"
                       value={values.startDate}
                       onChange={(date) => setFieldValue('startDate', date)}
@@ -124,7 +139,6 @@ const LibraryReportsScreen = () => {
                   </Field>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-
                   <CustomSelect
                     label="Standard"
                     name="category"
@@ -132,10 +146,8 @@ const LibraryReportsScreen = () => {
                     value={values.category}
                     onChange={(value) => setFieldValue('category', value)}
                   />
-
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-
                   <CustomSelect
                     label="Division"
                     name="category"
@@ -143,16 +155,14 @@ const LibraryReportsScreen = () => {
                     value={values.category}
                     onChange={(value) => setFieldValue('category', value)}
                   />
-
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <Autocomplete
                     loading={false}
                     noOptionsText="No Student Found"
                     fullWidth
-
                     onChange={(e, value: any) => {
-                      console.log("e");
+                      console.log('e');
                     }}
                     options={[]}
                     getOptionLabel={(option: any) => `${option.name} (${option.role})`} // Use the formatted label
@@ -172,8 +182,6 @@ const LibraryReportsScreen = () => {
                       </li>
                     )}
                   />
-
-
                 </Grid>
 
                 {(values.report === 'inventory' || values.report === 'circulation') && (
@@ -211,12 +219,10 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) =>
-                        varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -228,12 +234,10 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="warning"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.warning.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
                     color: 'warning.main',
                     '&:hover': {
-                      backgroundColor: (theme) =>
-                        varAlpha(theme.palette.warning.mainChannel, 0.1),
+                      backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -244,8 +248,7 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="secondary"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
                     color: 'secondary.main',
                     '&:hover': {
                       backgroundColor: (theme) =>
@@ -261,12 +264,10 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) =>
-                      varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) =>
-                        varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -274,10 +275,7 @@ const LibraryReportsScreen = () => {
                 </Button>
               </Grid>
             </Card>
-
-
           </Form>
-
         )}
       </Formik>
       <CustomDialog title="Schedule Report" open={dialog.value} handleClose={dialog.onFalse}>

@@ -1,170 +1,149 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import LocationOnIcon from "@mui/icons-material/LocationOn";
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import {
-    Box,
-    List,
-    Stack,
-    Dialog,
-    Button,
-    Avatar,
-    ListItem,
-    Typography,
-    DialogTitle,
-    ListItemText,
-    DialogContent,
-} from "@mui/material";
+  Box,
+  List,
+  Stack,
+  Dialog,
+  Button,
+  Avatar,
+  ListItem,
+  Typography,
+  DialogTitle,
+  ListItemText,
+  DialogContent,
+} from '@mui/material';
 
 interface Stop {
-    id: string;
-    name: string;
-    details: string;
-    students: Array<{ id: string; name: string }>;
+  id: string;
+  name: string;
+  details: string;
+  students: Array<{ id: string; name: string }>;
 }
 
 interface RouteProps {
-    vehicleName: string;
-    stops: Stop[];
+  vehicleName: string;
+  stops: Stop[];
 }
 
 const RouteWithStops: React.FC<RouteProps> = ({ vehicleName, stops }) => {
-    const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-    const handleMarkerClick = (stop: Stop) => {
-        setSelectedStop(stop);
-        setDialogOpen(true);
-    };
+  const handleMarkerClick = (stop: Stop) => {
+    setSelectedStop(stop);
+    setDialogOpen(true);
+  };
 
-    const handleClose = () => {
-        setDialogOpen(false);
-        setSelectedStop(null);
-    };
+  const handleClose = () => {
+    setDialogOpen(false);
+    setSelectedStop(null);
+  };
 
-    const calculateWavePath = (stopCount: number): string => {
-        const segmentWidth = 1000 / (stopCount - 1);
-        let path = `M 50 150`;
-        // eslint-disable-next-line no-plusplus
-        for (let i = 1; i < stopCount; i++) {
-            const controlY = i % 2 === 0 ? 250 : 50;
-            const endX = 50 + segmentWidth * i;
-            path += ` Q ${50 + segmentWidth * (i - 0.5)} ${controlY}, ${endX} 150`;
-        }
-        return path;
-    };
+  const calculateWavePath = (stopCount: number): string => {
+    const segmentWidth = 1000 / (stopCount - 1);
+    let path = `M 50 150`;
+    // eslint-disable-next-line no-plusplus
+    for (let i = 1; i < stopCount; i++) {
+      const controlY = i % 2 === 0 ? 250 : 50;
+      const endX = 50 + segmentWidth * i;
+      path += ` Q ${50 + segmentWidth * (i - 0.5)} ${controlY}, ${endX} 150`;
+    }
+    return path;
+  };
 
-    const getStopCoordinates = (stopCount: number, index: number): { x: number; y: number } => {
-        const segmentWidth = 1000 / (stopCount - 1);
-        const x = 50 + segmentWidth * index;
-        const y = 150 + (index % 2 === 0 ? -50 : 50); // Alternating wave points
-        return { x, y };
-    };
+  const getStopCoordinates = (stopCount: number, index: number): { x: number; y: number } => {
+    const segmentWidth = 1000 / (stopCount - 1);
+    const x = 50 + segmentWidth * index;
+    const y = 150 + (index % 2 === 0 ? -50 : 50); // Alternating wave points
+    return { x, y };
+  };
 
-    return (
-        <Box >
-            {/* <Typography variant="h5" gutterBottom>
+  return (
+    <Box>
+      {/* <Typography variant="h5" gutterBottom>
                 Vehicle Route: {vehicleName}
             </Typography> */}
-            <Box
-                sx={{
-                    position: "relative",
-                    width: "100%",
-                    height: "300px",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                {/* SVG Wave Line */}
-                <svg
-                    width="100%"
-                    height="300px"
-                    viewBox="0 0 1050 300"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        d={calculateWavePath(stops.length)}
-                        fill="none"
-                        stroke="#1976d2"
-                        strokeWidth="3"
-                    />
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          height: '300px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        {/* SVG Wave Line */}
+        <svg width="100%" height="300px" viewBox="0 0 1050 300" xmlns="http://www.w3.org/2000/svg">
+          <path d={calculateWavePath(stops.length)} fill="none" stroke="#1976d2" strokeWidth="3" />
 
-                    {/* Stop Markers */}
-                    {stops.map((stop, index) => {
-                        const { x, y } = getStopCoordinates(stops.length, index);
-                        return (
-                            <g key={stop.id} onClick={() => handleMarkerClick(stop)}>
-                                <circle
-                                    cx={x}
-                                    cy={y}
-                                    r="8"
-                                    fill="#1976d2"
-                                    stroke="#fff"
-                                    strokeWidth="2"
-                                    style={{ cursor: "pointer" }}
-                                />
-                                <text
-                                    x={x}
-                                    y={y - 15}
-                                    textAnchor="middle"
-                                    fontSize="12"
-                                    fill="#555"
-                                >
-                                    {stop.name}
-                                </text>
-                            </g>
-                        );
-                    })}
-                </svg>
-            </Box>
+          {/* Stop Markers */}
+          {stops.map((stop, index) => {
+            const { x, y } = getStopCoordinates(stops.length, index);
+            return (
+              <g key={stop.id} onClick={() => handleMarkerClick(stop)}>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="8"
+                  fill="#1976d2"
+                  stroke="#fff"
+                  strokeWidth="2"
+                  style={{ cursor: 'pointer' }}
+                />
+                <text x={x} y={y - 15} textAnchor="middle" fontSize="12" fill="#555">
+                  {stop.name}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </Box>
 
-            {/* Dialog for Stop Details */}
-            <Dialog open={dialogOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <Avatar>
-                            <LocationOnIcon />
-                        </Avatar>
-                        <Typography variant="h6">{selectedStop?.name}</Typography>
-                    </Stack>
-                </DialogTitle>
-                <DialogContent>
-                    {selectedStop ? (
-                        <>
-                            <Typography variant="body1" gutterBottom>
-                                {selectedStop.details}
-                            </Typography>
-                            <Typography variant="subtitle1">Assigned Students</Typography>
-                            {selectedStop.students.length > 0 ? (
-                                <List>
-                                    {selectedStop.students.map((student) => (
-                                        <ListItem key={student.id}>
-                                            <ListItemText
-                                                primary={student.name}
-                                                secondary={`ID: ${student.id}`}
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            ) : (
-                                <Typography>No students assigned to this stop.</Typography>
-                            )}
-                        </>
-                    ) : (
-                        <Typography>No details available for this stop.</Typography>
-                    )}
-                </DialogContent>
-                <Button onClick={handleClose} sx={{ m: 2 }} variant="contained">
-                    Close
-                </Button>
-            </Dialog>
-        </Box>
-    );
+      {/* Dialog for Stop Details */}
+      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar>
+              <LocationOnIcon />
+            </Avatar>
+            <Typography variant="h6">{selectedStop?.name}</Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          {selectedStop ? (
+            <>
+              <Typography variant="body1" gutterBottom>
+                {selectedStop.details}
+              </Typography>
+              <Typography variant="subtitle1">Assigned Students</Typography>
+              {selectedStop.students.length > 0 ? (
+                <List>
+                  {selectedStop.students.map((student) => (
+                    <ListItem key={student.id}>
+                      <ListItemText primary={student.name} secondary={`ID: ${student.id}`} />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Typography>No students assigned to this stop.</Typography>
+              )}
+            </>
+          ) : (
+            <Typography>No details available for this stop.</Typography>
+          )}
+        </DialogContent>
+        <Button onClick={handleClose} sx={{ m: 2 }} variant="contained">
+          Close
+        </Button>
+      </Dialog>
+    </Box>
+  );
 };
 
 export default RouteWithStops;
-
-
 
 // import React, { useState } from "react";
 
@@ -323,8 +302,6 @@ export default RouteWithStops;
 
 // export default RouteWave;
 
-
-
 // import React, { useState } from "react";
 
 // import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -468,8 +445,6 @@ export default RouteWithStops;
 // };
 
 // export default RouteUI;
-
-
 
 // import React, { useState } from "react";
 

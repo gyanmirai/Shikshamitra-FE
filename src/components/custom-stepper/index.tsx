@@ -110,7 +110,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   handleBack,
   validationSchema,
   renderItem,
-  onStepClick = () => { },
+  onStepClick = () => {},
   errors = [],
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
@@ -127,7 +127,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   });
 
   return (
-    <Box sx={{ width: '100%', p: 2, }}>
+    <Box sx={{ width: '100%', p: 2 }}>
       <Stepper activeStep={activeStep} alternativeLabel connector={<QontoConnector />}>
         {steps.map((label: string, index: number) => (
           <Step
@@ -180,7 +180,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             type="submit"
             size="small"
             loading={isLoading}
-          // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
+            // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
           </LoadingButton>

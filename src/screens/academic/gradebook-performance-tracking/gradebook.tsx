@@ -39,7 +39,7 @@ export interface StudentGrade {
   grade: string;
   feedback: string;
   weightedAverage: string;
-  status : string;
+  status: string;
 }
 
 export const dummyData = [
@@ -51,7 +51,7 @@ export const dummyData = [
     grade: '',
     feedback: '',
     weightedAverage: '85%',
-    status : 'Submitted'
+    status: 'Submitted',
   },
   {
     id: '2',
@@ -61,7 +61,7 @@ export const dummyData = [
     grade: '',
     feedback: '',
     weightedAverage: '92%',
-    status : 'Pending'
+    status: 'Pending',
   },
   {
     id: '3',
@@ -71,7 +71,7 @@ export const dummyData = [
     grade: '',
     feedback: '',
     weightedAverage: '75%',
-    status :'Overdue',
+    status: 'Overdue',
   },
   {
     id: '4',
@@ -81,7 +81,7 @@ export const dummyData = [
     grade: '',
     feedback: '',
     weightedAverage: '88%',
-    status : 'Submitted'
+    status: 'Submitted',
   },
   {
     id: '5',
@@ -91,7 +91,7 @@ export const dummyData = [
     grade: '',
     feedback: '',
     weightedAverage: '87%',
-    status : 'Submitted'
+    status: 'Submitted',
   },
 ];
 
