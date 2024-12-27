@@ -1,26 +1,39 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Stack,
+  Grid,
+  Card,
+  Switch,
   Button,
-  MenuList,
-  MenuItem,
+  useTheme,
   TextField,
   ButtonGroup,
   DialogActions,
+  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  useGetEventHolidayQuery,
+  useAddEventHolidayMutation,
+  useDeleteEventHolidayMutation,
+  useUpdateEventHolidayMutation,
+} from 'src/redux/eventHoliday/eventHolidayApi';
 
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
@@ -31,39 +44,83 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+interface IEventHoliday {
+  id: string;
+  creationTime: string;
+  creatorId: string;
+  lastModificationTime: string;
+  lastModifierId: string;
+  tenantId: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
 const HrEventsAndHolidaysScreen = () => {
   const dialog = useBoolean();
+  const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
+
   const confirm = useBoolean(false);
   const [view, setView] = React.useState('list');
   const [date, setDate] = React.useState<Dayjs | null>(dayjs);
-  const actions = useCallback(
-    ({ popover }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
+  const [editData, setEditData] = useState<null | IEventHoliday>(null);
+  const theme = useTheme();
+  const { data: eventHolidayData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEventHolidayQuery,
+  });
+  const [deleteEventHoliday, { isLoading: isEventHolidayDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEventHolidayMutation,
+  });
 
-        <MenuItem
-          onClick={() => {
-            dialog.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-      </MenuList>
-    ),
-    [confirm, dialog]
+  const handelClose = () => {
+    setEditData(null);
+    dialog.onFalse();
+  };
+
+  const calendarData = useMemo(
+    () =>
+      eventHolidayData?.items.map((i: any) => ({
+        ...i,
+        start: i.startDate,
+        color: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        end: i.endDate,
+        allDay: false,
+        textColor: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        title: i.isHoliday ? 'Holiday' : 'Event',
+        description: i.reason,
+      })) || [],
+    [eventHolidayData?.items, theme.palette.error.main, theme.palette.success.main]
   );
-  return (
+
+  const selectCalenderData = useMemo(() => {
+    if (currentDateClick) {
+      return calendarData.find((i: any) => i.id === currentDateClick.event.id);
+    }
+    return null;
+  }, [calendarData, currentDateClick]);
+
+  return dialog.value ? (
+    <>
+      <CustomBreadcrumbs
+        heading="Events & Holidays"
+        links={[{ name: 'HR' }, { name: 'Events & Holidays' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            onClick={handelClose}
+            startIcon={<Iconify icon="eva:arrow-back-fill" />}
+            variant="contained"
+          >
+            Back
+          </Button>
+        }
+      />
+      <Card>
+        <HrEventsAndHolidaysForm handleClose={handelClose} editData={editData} />
+      </Card>
+    </>
+  ) : (
     <Box>
       <CustomBreadcrumbs
         heading="Events & Holidays"
@@ -112,74 +169,63 @@ const HrEventsAndHolidaysScreen = () => {
       </Box>
       {view === 'list' ? (
         <CustomizableTable
+          isLoading={isLoading}
           columns={[
-            { id: 'startDate', label: 'Start Date' },
-            { id: 'endDate', label: 'End Date' },
+            { id: 'sDate', label: 'Start Date' },
+            { id: 'eDate', label: 'End Date' },
             { id: 'reason', label: 'Reason' },
             {
               id: 'actions',
               label: 'Actions',
               isSort: false,
               render(value, row) {
-                return <ThreeDotsActions actions={actions} />;
+                return (
+                  <ThreeDotsActions
+                    showEditIcon
+                    showDeleteIcon
+                    showThreeDots={false}
+                    handleDeleteClick={() => {
+                      confirm.onTrue();
+                      setEditData(row as IEventHoliday);
+                    }}
+                    handleEditClick={() => {
+                      dialog.onTrue();
+                      setEditData(row as IEventHoliday);
+                    }}
+                  />
+                );
               },
             },
           ]}
-          data={[
-            { startDate: '2024-01-01', endDate: '2024-01-01', reason: 'New Year', isHoliday: true },
-            {
-              startDate: '2024-01-26',
-              endDate: '2024-01-26',
-              reason: 'Republic Day',
-              isHoliday: true,
-            },
-            { startDate: '2024-03-25', endDate: '2024-03-25', reason: 'Holi', isHoliday: true },
-            {
-              startDate: '2024-04-15',
-              endDate: '2024-04-15',
-              reason: 'School Anniversary',
-              isHoliday: false,
-            },
-            {
-              startDate: '2024-05-01',
-              endDate: '2024-05-01',
-              reason: 'Labor Day',
-              isHoliday: true,
-            },
-            {
-              startDate: '2024-08-15',
-              endDate: '2024-08-15',
-              reason: 'Sports Day',
-              isHoliday: false,
-            },
-            {
-              startDate: '2024-10-02',
-              endDate: '2024-10-02',
-              reason: 'Gandhi Jayanti',
-              isHoliday: true,
-            },
-            {
-              startDate: '2024-12-25',
-              endDate: '2024-12-25',
-              reason: 'Christmas',
-              isHoliday: true,
-            },
-          ]}
+          data={
+            eventHolidayData?.items?.map((item: IEventHoliday) => ({
+              ...item,
+              sDate: dayjs(item.startDate).format('DD-MM-YYYY'),
+              eDate: dayjs(item.endDate).format('DD-MM-YYYY'),
+            })) || []
+          }
           rowProps={(row) => ({
             sx: {
-              borderLeft: (theme) => `3px solid ${row.isHoliday ? 'red' : 'green'}`,
+              borderLeft: `3px solid ${row.isHoliday ? 'red' : 'green'}`,
             },
           })}
         />
       ) : (
         <Box sx={{ p: 2 }}>
-          <CommonCalender data={[]} showCalendarToolbar={false} />
+          <CommonCalender
+            data={calendarData}
+            showCalendarToolbar={false}
+            onDateClick={(e) => {
+              console.log(e);
+              setCurrentDateClick(e);
+            }}
+          />
         </Box>
       )}
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
-          //   setEditData(null);
+          setEditData(null);
           confirm.onFalse();
         }}
         title="Delete"
@@ -187,22 +233,33 @@ const HrEventsAndHolidaysScreen = () => {
         action={
           <LoadingButton
             variant="contained"
-            loading={false}
+            loading={isEventHolidayDeleteLoading}
             color="error"
             onClick={async () => {
-              //   await deleteOrganization(editData?.id || '');
-              //   await getData(id);
+              await deleteEventHoliday(editData?.id || '');
+
               confirm.onFalse();
-              //   setEditData(null);
-              // isInitial.current = true;
+              setEditData(null);
             }}
           >
             Delete
           </LoadingButton>
         }
       />
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Events And Holidays">
-        <HrEventsAndHolidaysForm handleClose={dialog.onFalse} />
+      <CustomDialog
+        open={!!selectCalenderData}
+        handleClose={() => {
+          setCurrentDateClick(null);
+        }}
+        title="Preview"
+      >
+        <HrEventsAndHolidaysForm
+          handleClose={() => {
+            setCurrentDateClick(null);
+          }}
+          editData={selectCalenderData}
+          isCalenderPreview
+        />
       </CustomDialog>
     </Box>
   );
@@ -210,64 +267,143 @@ const HrEventsAndHolidaysScreen = () => {
 
 export default HrEventsAndHolidaysScreen;
 
-const HrEventsAndHolidaysForm = ({ handleClose }: { handleClose: () => void }) => {
+const HrEventsAndHolidaysForm = ({
+  handleClose,
+  editData,
+  isCalenderPreview = false,
+}: {
+  handleClose: () => void;
+  editData: IEventHoliday | null;
+  isCalenderPreview?: boolean;
+}) => {
+  const [addHoliday, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEventHolidayMutation,
+    isThrowError: true,
+    popupConfig: {
+      success: true,
+      successMessage: 'Event created successfully',
+    },
+  });
+  const [updateHoliday, { isLoading: isUpdatePFLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEventHolidayMutation,
+    isThrowError: true,
+    popupConfig: {
+      success: true,
+      successMessage: 'Event updated successfully',
+    },
+  });
   const { values, handleChange, handleSubmit, setFieldValue } = useFormik({
     initialValues: {
-      startDate: null,
-      endDate: null,
-      reason: '',
+      startDate: editData ? dayjs(editData?.startDate) : null,
+      endDate: editData ? dayjs(editData?.endDate) : null,
+      reason: editData?.reason || '',
       isHoliday: false,
     },
-    onSubmit: () => {},
+    onSubmit: async (value) => {
+      try {
+        if (editData) {
+          await updateHoliday({
+            id: editData.id,
+            body: {
+              startDate:
+                dateConvertor(dayjs(value.startDate, 'DD-MM-YYYY').format(dateFormat)) || '',
+              endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
+              reason: value.reason,
+              isHoliday: value.isHoliday,
+            },
+          });
+        } else {
+          await addHoliday({
+            startDate: dateConvertor(dayjs(value.startDate, 'DD-MM-YYYY').format(dateFormat)) || '',
+            endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
+            reason: value.reason,
+            isHoliday: value.isHoliday,
+          });
+        }
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <Stack spacing={2}>
-          <DatePicker
-            format="DD-MM-YYYY"
-            label="Start Date"
-            value={values.startDate}
-            onChange={(value) => setFieldValue('startDate', value)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-              },
-            }}
-          />
-          <DatePicker
-            format="DD-MM-YYYY"
-            label="End Date"
-            value={values.endDate}
-            onChange={(value) => setFieldValue('endDate', value)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-              },
-            }}
-          />
-          <TextField
-            label="Reason"
-            value={values.reason}
-            size="small"
-            name="reason"
-            fullWidth
-            rows={3}
-            multiline
-            onChange={handleChange}
-          />
-        </Stack>
+      <Scrollbar sx={{ p: 2 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <DatePicker
+              format="DD-MM-YYYY"
+              label="Start Date"
+              value={values.startDate}
+              onChange={(value) => setFieldValue('startDate', value)}
+              disabled={isCalenderPreview}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  size: 'small',
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <DatePicker
+              format="DD-MM-YYYY"
+              label="End Date"
+              value={values.endDate}
+              onChange={(value) => setFieldValue('endDate', value)}
+              disabled={isCalenderPreview}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  size: 'small',
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Reason"
+              value={values.reason}
+              size="small"
+              name="reason"
+              fullWidth
+              rows={3}
+              multiline
+              disabled={isCalenderPreview}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              disabled={isCalenderPreview}
+              control={
+                <Switch
+                  disabled={isCalenderPreview}
+                  checked={values.isHoliday}
+                  onChange={(e) => setFieldValue('isHoliday', e.target.checked)}
+                  name="isHoliday"
+                />
+              }
+              label="Is Holiday"
+            />
+          </Grid>
+        </Grid>
       </Scrollbar>
       <DialogActions>
         <Button variant="outlined" color="inherit" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="contained" type="submit">
+        <LoadingButton
+          disabled={isCalenderPreview}
+          loading={isUpdatePFLoading || isLoading}
+          variant="contained"
+          type="submit"
+        >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

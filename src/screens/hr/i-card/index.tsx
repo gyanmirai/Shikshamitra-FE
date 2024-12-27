@@ -7,11 +7,9 @@ import { useSelector } from 'react-redux';
 import React, { useRef, useState, useEffect } from 'react';
 
 import { Add, ArrowBack } from '@mui/icons-material';
-import { Box, Paper, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
+import { Box, Card, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import IcardTemplate from 'src/templates/icard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -36,67 +34,87 @@ const StudentIcardScreen = () => {
   const [cardBackground, setCardBackground] = useState();
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="I-Card"
-        links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
-            Create I-card
-          </Button>
-        }
-      />
-      <CustomizableTable
-        columns={[
-          { label: 'Organization', id: 'organization' },
-          {
-            label: 'Status',
-            id: 'status',
-            render(value, row) {
-              return <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>;
-            },
-          },
-          {
-            label: 'Action',
-            id: 'action',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={() => (
-                    <MenuList>
-                      <MenuItem onClick={previewDialog.onTrue}>
-                        <Iconify icon="mdi:eye" />
-                        Preview
-                      </MenuItem>
-                      <MenuItem onClick={dialog.onTrue}>
-                        <Iconify icon="mdi:pencil" />
-                        Edit
-                      </MenuItem>
-                      <MenuItem>
-                        <Iconify icon="mdi:content-copy" />
-                        Copy Template
-                      </MenuItem>
-                      <MenuItem>
-                        <Iconify icon="mdi:content-paste" />
-                        Paste Template
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
-            },
-          },
-        ]}
-        data={[
-          { organization: 'Primary', status: 'Pending' },
-          { organization: 'Pre Primary', status: 'Completed' },
-        ]}
-      />
-      <CustomDialog fullScreen title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
+      {dialog.value ? (
+        <>
+          <CustomBreadcrumbs
+            heading="I-Card"
+            links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                onClick={dialog.onFalse}
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                variant="contained"
+              >
+                Back
+              </Button>
+            }
+          />
+          <Card>
+            <StudentICardForm handleClose={dialog.onFalse} />
+          </Card>
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="I-Card"
+            links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
+                Create I-card
+              </Button>
+            }
+          />
+          <CustomizableTable
+            columns={[
+              { label: 'Organization', id: 'organization' },
+              {
+                label: 'Status',
+                id: 'status',
+                render(value, row) {
+                  return <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>;
+                },
+              },
+              {
+                label: 'Action',
+                id: 'action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      showViewIcon
+                      showEditIcon
+                      handleEditClick={dialog.onTrue}
+                      handleViewClick={previewDialog.onTrue}
+                      actions={() => (
+                        <MenuList>
+                          <MenuItem>
+                            <Iconify icon="mdi:content-copy" />
+                            Copy Template
+                          </MenuItem>
+                          <MenuItem>
+                            <Iconify icon="mdi:content-paste" />
+                            Paste Template
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={[
+              { organization: 'Primary', status: 'Pending' },
+              { organization: 'Pre Primary', status: 'Completed' },
+            ]}
+          />
+        </>
+      )}
+      {/* <CustomDialog fullScreen title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
         <Scrollbar sx={{ p: 2 }}>
           <StudentICardForm handleClose={dialog.onFalse} />
         </Scrollbar>
-      </CustomDialog>
+      </CustomDialog> */}
       <CustomDialog
         maxWidth="lg"
         title="Preview"
@@ -154,7 +172,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
       sx={{
         height: '100%',
         p: 2,
-        bgcolor: 'background.neutral',
+        // bgcolor: 'background.neutral',
         '& .simplebar-content': { height: '100%' },
       }}
     >
@@ -186,7 +204,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
           <Typography variant="h6" mb={2}>
             Choose Template
           </Typography>
-          <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
+          {/* <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
             {Object.values(IcardTemplate).map((CurrentTemplate, index) => {
               const Comp = CurrentTemplate.default;
               return (
@@ -204,7 +222,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
                 </Paper>
               );
             })}
-          </Box>
+          </Box> */}
         </>
       ) : (
         <>

@@ -93,7 +93,7 @@ const AddPayElement = () => {
       />
       <Box display="flex" justifyContent="flex-end" alignItems="center">
         <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          New Pay Element
+          Pay Element
         </Button>
       </Box>
       <CustomizableTable

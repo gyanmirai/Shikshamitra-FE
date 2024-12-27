@@ -61,16 +61,16 @@ export function EmployeeInformation({ editData }: { editData: any }) {
 
   return (
     <Box
-      sx={{
-        '& input': { fontSize: '12px' },
-        '& label': { fontSize: '12px' },
-      }}
+    // sx={{
+    //   '& input': { fontSize: '12px' },
+    //   '& label': { fontSize: '12px' },
+    // }}
     >
       <form onSubmit={formik.handleSubmit}>
         <Card
           sx={{
             px: 1,
-            '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+            // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
           }}
         >
           <CustomTabs

@@ -184,7 +184,7 @@ const ClassSetup = ({ organizationId }: ClassSetupProps) => {
               >
                 {currentTabs.map((tab: IClassSetup) => (
                   <Tab
-                    sx={{ fontSize: '12px' }}
+                    // sx={{ fontSize: '12px' }}
                     key={tab.id}
                     label={
                       <Box display="flex" justifyContent="center" gap={1} alignItems="center">

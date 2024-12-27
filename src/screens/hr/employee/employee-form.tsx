@@ -63,6 +63,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   city: editData ? editData?.city : '',
   pincode: editData ? editData?.pinCode : '',
   employeeId: editData ? editData.id : '',
+  organization: editData ? editData?.educationMediumStageId : '',
 });
 
 export const familyInformationInitialValues = (editData: any) => ({
@@ -131,27 +132,33 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddBasicInformationMutation,
+    isThrowError: true,
   });
   const [addUser] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddUserMutation,
+    isThrowError: true,
   });
   const [updateFamilyInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFamilyInformationMutation,
+    isThrowError: true,
   });
   const [updateExperienceInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExperienceInformationMutation,
+    isThrowError: true,
   });
   const [updateBankDetails] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateBankDetailsMutation,
+    isThrowError: true,
   });
 
   const [updateEmployee] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeMutation,
+    isThrowError: true,
   });
 
   const initialValues = useMemo(
@@ -188,43 +195,42 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           })
         );
 
-        const resp = ConvertRtkResponse(
-          await addEmployee({
-            userId: res.data.id,
-            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-            // employeeCode: values.code,
-            lastName: values.lastName,
-            firstName: values.firstName,
-            middleName: values.middleName,
-            shortName: values.shortName,
+        const resp = await addEmployee({
+          userId: res.data.id,
+          profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+          // employeeCode: values.code,
+          lastName: values.lastName,
+          firstName: values.firstName,
+          middleName: values.middleName,
+          shortName: values.shortName,
 
-            employeeStatusType: values.employeeStatusType,
+          employeeStatusType: values.employeeStatusType,
 
-            dateOfBirth: values.dob.format('YYYY-MM-DD'),
-            familyCast: values.familyCast,
-            castType: values.castType,
-            genderType: values.gender,
-            religion: values.religion,
-            maritalStatus: values.maritalStatus,
-            bloodGroup: values.bloodGroup,
-            mobileNo: values.mobileNo,
-            email: values.email,
+          dateOfBirth: values.dob.format('YYYY-MM-DD'),
+          familyCast: values.familyCast,
+          castType: values.castType,
+          genderType: values.gender,
+          religion: values.religion,
+          maritalStatus: values.maritalStatus,
+          bloodGroup: values.bloodGroup,
+          mobileNo: values.mobileNo,
+          email: values.email,
 
-            department: values.department,
-            designation: values.designation,
-            dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
+          department: values.department,
+          designation: values.designation,
+          dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
 
-            employeeGroup: values.employeeGroup,
-            qualification: values.qualification,
-            roleId: values.role,
-            identificationMark1: values.identificationMark1,
+          employeeGroup: values.employeeGroup,
+          qualification: values.qualification,
+          roleId: values.role,
+          identificationMark1: values.identificationMark1,
 
-            address: values.address,
-            city: values.city,
-            state: values.state,
-            pincode: `${values.pincode}`,
-          })
-        );
+          address: values.address,
+          city: values.city,
+          state: values.state,
+          pincode: `${values.pincode}`,
+          educationMediumStageId: values.organization,
+        });
         formik.setFieldValue('employeeId', resp.data.id);
       }
     },
@@ -264,7 +270,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           },
         },
       });
-      return ConvertRtkResponse(res);
+      return res;
     },
     [updateFamilyInfo]
   );
@@ -278,7 +284,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           toDate: i.toDate ? i.toDate.format('YYYY-MM-DD') : null,
         })),
       });
-      return ConvertRtkResponse(res);
+      return res;
     },
     [updateExperienceInfo]
   );
@@ -294,7 +300,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           ifscCode: values.ifscCode,
         },
       });
-      return ConvertRtkResponse(res);
+      return res;
     },
     [updateBankDetails]
   );
@@ -338,10 +344,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             city: values.city,
             state: values.state,
             pincode: `${values.pincode}`,
+            educationMediumStageId: values.organization,
           },
         });
 
-        return ConvertRtkResponse(res);
+        return res;
       } catch (error) {
         throw new Error(error);
       }
@@ -373,11 +380,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         try {
           setIsLoading(true);
           if (editData && activeStep === 0) {
-            console.log(values.employeeId, '====editData && activeStep === 0========');
             await handelUpdateEmployee(values, formik, editData.id);
           } else if (activeStep === 0) {
             if (values.employeeId) {
-              console.log(values.employeeId, '===values.employeeId=========');
               await handelUpdateEmployee(values, formik, values.employeeId);
             } else {
               await handleBasicInformation(values, formik);
@@ -414,7 +419,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
 
   return (
-    <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
+    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
       {steps.map(
         (_, index) =>
           index === step && (

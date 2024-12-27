@@ -41,7 +41,6 @@ import {
   FormControl,
   TablePagination,
   FormControlLabel,
-  CircularProgress,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -550,7 +549,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           key={column.id}
                           align={column.align || 'center'}
                           sx={{
-                            fontSize: '12px',
+                            fontSize: '14px',
                             width: column.minWidth,
                             position: column.sticky ? 'sticky' : 'static',
                             left: column.sticky ? 0 : 'auto',
@@ -567,22 +566,24 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                               cursor: column.isSort !== false ? 'pointer' : 'default',
                               userSelect: 'none',
                               fontWeight: 'bold',
+                              width: 'inherit',
                             }}
                             onClick={() => column.isSort !== false && handleSort(column.id)}
                           >
                             <Box
-                              fontSize="12px"
-                              display="flex"
-                              alignItems="center"
-                              flexDirection="column"
+                              fontSize="14px"
+                              display="block"
+                              textAlign={column.align}
                               gap={1}
+                              width="inherit"
+                              component="span"
                             >
                               {column.label}
 
                               {column?.renderColumn?.(column)}
                             </Box>
                             {column.isSort !== false && (
-                              <>
+                              <Box width="50px">
                                 {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
                                   <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
                                     {sorts.findIndex((sort) => sort.column === column.id) + 1}
@@ -603,7 +604,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                     <ArrowDownwardIcon fontSize="inherit" />
                                   )}
                                 </IconButton>
-                              </>
+                              </Box>
                             )}
                           </Box>
                         </TableCell>
@@ -614,8 +615,20 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell rowSpan={3} colSpan={columns.length + 1}>
-                      <CircularProgress color="primary" size={24} />
+                    <TableCell rowSpan={columns.length + 1} colSpan={columns.length + 1}>
+                      {/* <CircularProgress color="primary" size={24} /> */}
+                      <Box
+                        sx={{
+                          width: '100%',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          // height: '300px',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {/* <LoadingScreen /> */}
+                        <div className="loader" />
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ) : paginatedData.length > 0 ? (
@@ -628,7 +641,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                         {...rowProps(row, index)}
                       >
                         {columns.some((column) => column.children) && (
-                          <TableCell sx={{ fontSize: '12px' }}>
+                          <TableCell sx={{ fontSize: '13px' }}>
                             <IconButton size="small" onClick={() => handleExpandRow(index)}>
                               {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                             </IconButton>
@@ -642,7 +655,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 align={column.align}
                                 sx={{
                                   alignItems: 'center',
-                                  fontSize: '12px',
+                                  fontSize: '13px',
                                   position: column.sticky ? 'sticky' : 'static',
                                   left: column.sticky ? 0 : 'auto',
                                   zIndex: column.sticky ? 2 : 'auto',

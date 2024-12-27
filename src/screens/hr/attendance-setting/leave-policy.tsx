@@ -1,15 +1,14 @@
 import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
-import React, { useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
   TextField,
   DialogActions,
   FormControlLabel,
@@ -17,56 +16,97 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { AccurateRateType, AccurateRateTypeArray } from 'src/enums/accurate-rate';
+import {
+  useGetEmployeeLeavePolicyQuery,
+  useAddEmployeeLeavePolicyMutation,
+  useUpdateEmployeeLeavePolicyMutation,
+  useDeleteEmployeeLeavePolicyMutation,
+} from 'src/redux/employee/employeeApi';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+interface ILeavePolicy {
+  id: string;
+  creationTime: string;
+  creatorId: string;
+  lastModificationTime: string;
+  lastModifierId: string;
+  leaveType: string;
+  leaveDays: number;
+  carryForward: boolean;
+  accrualRate: number;
+  color: string;
+}
+
 const LeavePolicy = () => {
   const dialog = useBoolean(false);
+  const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
-  const actions = useCallback(
-    ({ popover }: any, row: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            // confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
+  console.log('🚀 ~ file: leave-policy.tsx:55 ~ LeavePolicy ~ editData:', editData);
 
-        <MenuItem
-          onClick={() => {
-            setEditData(row);
-            dialog.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-      </MenuList>
-    ),
-    [dialog]
-  );
+  const { data: leavePolicyData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+  });
+
+  const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
+  });
+
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
   };
+  const tableData = useMemo(
+    () =>
+      leavePolicyData?.items.map((item: ILeavePolicy) => ({
+        ...item,
+        leaveDays: item.leaveDays.toString(),
+        isCarryForward: item.carryForward ? 'Yes' : 'No',
+        accrualRateString: AccurateRateType[item.accrualRate],
+        color: item.color,
+      })) || [],
+    [leavePolicyData?.items]
+  );
   return (
     <Box>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={() => {
+          setEditData(null);
+          confirm.onFalse();
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isDeleteLoading}
+            color="error"
+            onClick={async () => {
+              await deleteLeavePolicy(editData?.id);
+              confirm.onFalse();
+            }}
+          >
+            Delete
+          </LoadingButton>
+        }
+      />
       <Box display="flex" justifyContent="flex-end" alignItems="center">
         <Button startIcon={<Add />} onClick={dialog.onTrue} variant="contained">
-          Create Leave Policy
+          Leave Policy
         </Button>
       </Box>
       <CustomizableTable
+        isLoading={isLoading}
         columns={[
           {
             id: 'leaveType',
@@ -77,19 +117,17 @@ const LeavePolicy = () => {
             label: 'Leave Days',
           },
           {
-            id: 'carryForward',
+            id: 'isCarryForward',
             label: 'Carry Forward',
-            render(value, row) {
-              return value ? 'Yes' : 'No';
-            },
           },
           {
-            id: 'accrualRate',
+            id: 'accrualRateString',
             label: 'Accrual Rate',
           },
           {
             id: 'color',
             label: 'Color',
+            isSort: false,
             render(value, row) {
               return (
                 <Box
@@ -107,40 +145,25 @@ const LeavePolicy = () => {
             id: 'action',
             label: 'Action',
             render(value, row) {
-              return <ThreeDotsActions actions={(props) => actions(props, row)} />;
+              return (
+                <ThreeDotsActions
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleDeleteClick={() => {
+                    setEditData(row);
+                    confirm.onTrue();
+                  }}
+                  handleEditClick={() => {
+                    setEditData(row);
+                    dialog.onTrue();
+                  }}
+                />
+              );
             },
           },
         ]}
-        data={[
-          {
-            leaveType: 'Annual Leave',
-            leaveDays: 20,
-            carryForward: true,
-            accrualRate: 'monthly',
-            color: '#4CAF50',
-          },
-          {
-            leaveType: 'Sick Leave',
-            leaveDays: 10,
-            carryForward: false,
-            accrualRate: 'quarterly',
-            color: '#F44336',
-          },
-          {
-            leaveType: 'Maternity Leave',
-            leaveDays: 90,
-            carryForward: false,
-            accrualRate: 'monthly',
-            color: '#E91E63',
-          },
-          {
-            leaveType: 'Casual Leave',
-            leaveDays: 5,
-            carryForward: true,
-            accrualRate: 'quarterly',
-            color: '#FF9800',
-          },
-        ]}
+        data={tableData}
       />
 
       <CustomDialog title="Leave Policy" open={dialog.value} handleClose={handleClose}>
@@ -153,15 +176,54 @@ const LeavePolicy = () => {
 export default LeavePolicy;
 
 const LeavePolicyForm = ({ handleClose, editData }: any) => {
+  const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
+    popupConfig: {
+      successMessage: 'Leave Policy created successfully',
+      success: true,
+    },
+  });
+  const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEmployeeLeavePolicyMutation,
+  });
   const formik = useFormik({
     initialValues: {
       leaveType: editData?.leaveType || '',
-      leaveDays: editData?.leaveDays || '',
+      leaveDays: editData?.leaveDays || 0,
       carryForward: editData?.carryForward || false,
-      accrualRate: editData?.accrualRate || 'monthly',
+      accrualRate: editData?.accrualRate ?? AccurateRateType.Monthly,
       color: editData?.color || 'white',
     },
-    onSubmit: () => {},
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          await updateLeavePolicy({
+            id: editData.id,
+            body: {
+              leaveType: values.leaveType,
+              leaveDays: values.leaveDays,
+              carryForward: values.carryForward,
+              accrualRate: values.accrualRate,
+              color: values.color,
+            },
+          });
+        } else {
+          await addLeavePolicy({
+            leaveType: values.leaveType,
+            leaveDays: values.leaveDays,
+            carryForward: values.carryForward,
+            accrualRate: values.accrualRate,
+            color: values.color,
+          });
+        }
+        handleClose();
+        formik.resetForm();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
 
   return (
@@ -190,18 +252,14 @@ const LeavePolicyForm = ({ handleClose, editData }: any) => {
               value={formik.values.leaveDays}
               onChange={formik.handleChange}
               size="small"
+              type="number"
               fullWidth
             />
           </Grid>
           <Grid item xs={12}>
             <CustomSelect
-              options={[
-                { id: 'monthly', name: 'monthly' },
-                { id: 'quarterly', name: 'Quarterly' },
-              ]}
+              options={AccurateRateTypeArray}
               label="Accrual Rate"
-              labelKey="name"
-              valueKey="id"
               fullWidth
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               value={formik.values.accrualRate}
@@ -237,9 +295,9 @@ const LeavePolicyForm = ({ handleClose, editData }: any) => {
         <Button onClick={handleClose} variant="outlined">
           Cancel
         </Button>
-        <Button onClick={handleClose} variant="contained">
+        <LoadingButton loading={isUpdateLoading || isLoading} type="submit" variant="contained">
           Save
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </form>
   );

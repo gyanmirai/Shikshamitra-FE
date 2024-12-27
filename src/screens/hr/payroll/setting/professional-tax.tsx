@@ -20,7 +20,7 @@ const ProfessionalTax = () => {
     <Box>
       <Box display="flex" justifyContent="flex-end" alignItems="center">
         <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Add New Tax Range
+          Tax Range
         </Button>
       </Box>
       <CustomizableTable
