@@ -76,7 +76,17 @@ const AttendanceType = () => {
           {
             id: 'action',
             label: 'Action',
-            render: (value, row) => <ThreeDotsActions actions={(prop) => actions(prop, row)} />,
+            render: (value, row) => (
+              <ThreeDotsActions
+                showEditIcon
+                showDeleteIcon
+                showThreeDots={false}
+                handleDeleteClick={confirm.onTrue}
+                handleEditClick={() => {
+                  dialog.onTrue();
+                }}
+              />
+            ),
           },
         ]}
         data={[

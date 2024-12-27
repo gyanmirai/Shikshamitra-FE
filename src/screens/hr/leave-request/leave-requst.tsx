@@ -5,24 +5,28 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
+import React, { useCallback } from 'react';
 import { Form, Field, Formik } from 'formik';
-import React, { useMemo, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, Button, MenuItem, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { Grid, Button, Checkbox, TextField, FormControlLabel } from '@mui/material';
+
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   useAddEmployeeLeaveMutation,
+  useGetEmployeeLeavePolicyQuery,
   useEmployeeLeaveRequestStatusMutation,
 } from 'src/redux/employee/employeeApi';
 
 import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
 
 import type { TabComponentType } from '.';
 
@@ -65,13 +69,13 @@ interface FormValues {
   description: string;
   status?: number;
   rejectionReason: string;
-  color: string;
-  docs: File[];
+
+  docs: string;
 }
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const { editData, handleClose } = props;
-  console.log(editData);
+
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
@@ -87,29 +91,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       successMessage: 'Leave request added successfully',
     },
   });
-
-  const validationSchema = useMemo(
-    () =>
-      Yup.object().shape({
-        leaveType: Yup.string().required('Leave type is required'),
-        isHalfDay: Yup.boolean(),
-        startDate: Yup.date().required('Start date is required'),
-        endDate: Yup.date()
-          .nullable()
-          .when('isHalfDay', {
-            is: false,
-            then: (schema) => schema.required('End date is required'),
-          }),
-        description: Yup.string().required('Description is required'),
-        status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
-        rejectionReason: Yup.string().when('status', {
-          is: 'rejected',
-          then: (schema) => schema.required('Rejection reason is required'),
-        }),
-        color: Yup.string().required('Color is required'),
-      }),
-    [editData]
-  );
+  const { data: leavePolicyData, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+  });
 
   const uploadProps = {
     multiple: true,
@@ -122,21 +107,22 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       values: FormValues,
       setFieldValue: (field: string, value: any) => void
     ) => {
-      const filtered = values.docs && values.docs?.filter((file) => file !== inputFile);
-      setFieldValue('docs', filtered);
+      setFieldValue('docs', '');
     },
     []
   );
 
   const handleRemoveAllFiles = useCallback(
     (values: FormValues, setFieldValue: (field: string, value: any) => void) => {
-      setFieldValue('docs', []);
+      setFieldValue('docs', '');
     },
     []
   );
 
   return (
     <Formik
+      enableReinitialize
+      validateOnChange
       initialValues={{
         leaveType: editData?.leaveType || '',
         description: editData?.description || '',
@@ -145,10 +131,38 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         isHalfDay: editData?.halfDay || false,
         rejectionReason: editData?.rejectionReason || '',
         status: editData?.status || 0,
-        color: editData?.color || '',
-        docs: [],
+
+        docs: '',
       }}
-      validationSchema={validationSchema}
+      validationSchema={Yup.object().shape({
+        leaveType: Yup.string().required('Leave type is required'),
+        isHalfDay: Yup.boolean(),
+        startDate: Yup.date().required('Start date is required'),
+        endDate: Yup.string()
+          .nullable()
+          .test('endDate', '', function (value) {
+            const { isHalfDay } = this.parent;
+            const { startDate } = this.parent;
+            if (isHalfDay) return true;
+            if (startDate && value) {
+              const fullStartDate = dayjs(startDate, 'DD-MM-YYYY HH:mm:ss');
+              const endDate = dayjs(value, 'DD-MM-YYYY HH:mm:ss');
+              const isAfter = endDate.isAfter(fullStartDate);
+              return isAfter || this.createError({ message: 'End date must be after start date' });
+            }
+            if (!value && !isHalfDay) {
+              return this.createError({ message: 'End date is required' });
+            }
+            return true;
+          }),
+        description: Yup.string().required('Description is required'),
+        status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
+        rejectionReason: Yup.string().when('status', {
+          is: 'rejected',
+          then: (schema) => schema.required('Rejection reason is required'),
+        }),
+        // color: Yup.string().required('Color is required'),
+      })}
       onSubmit={async (values: FormValues, { setSubmitting, resetForm }) => {
         try {
           if (editData) {
@@ -161,14 +175,23 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             });
           } else {
             await addLeave({
-              userId: userInfo.sub,
+              // userId: userInfo.sub,
               employeeId: userInfo.employee.id,
-              leaveType: values.leaveType,
-              color: values.color,
+              leaveTypeId: values.leaveType,
+
               halfDay: values.isHalfDay,
-              startDate: values.startDate?.format('YYYY-MM-DDTHH:mm:ss'),
-              endDate: values.endDate?.format('YYYY-MM-DDTHH:mm:ss'),
+              startDate: dateConvertor(
+                dayjs(values.startDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
+              ),
+              ...(!values.isHalfDay
+                ? {
+                    endDate: dateConvertor(
+                      dayjs(values.endDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
+                    ),
+                  }
+                : {}),
               description: values.description,
+              attachment: values.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
             });
             resetForm();
           }
@@ -183,23 +206,20 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           <Scrollbar sx={{ p: 2, height: '70vh' }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <Field
-                  name="leaveType"
-                  as={TextField}
-                  select
-                  fullWidth
+                <CustomSelect
+                  isLoading={isLeavePolicyLoading}
+                  options={leavePolicyData?.items || []}
                   label="Leave Type"
-                  size="small"
-                  error={touched.leaveType && errors.leaveType}
-                  helperText={touched.leaveType && errors.leaveType}
-                  disabled={editData}
-                >
-                  {leaveTypes.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Field>
+                  value={values.leaveType}
+                  name="leaveType"
+                  valueKey="id"
+                  labelKey="leaveType"
+                  error={!!touched.leaveType && !!errors.leaveType}
+                  helperText={(touched.leaveType && errors.leaveType) || ''}
+                  onChange={(value) => {
+                    setFieldValue('leaveType', value);
+                  }}
+                />
               </Grid>
               <Grid item xs={4}>
                 <FormControlLabel
@@ -277,13 +297,21 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   thumbnail
                   value={values.docs}
                   onDrop={(acceptedFiles) => {
-                    const value = [...values.docs, ...acceptedFiles];
-
-                    setFieldValue('docs', value);
+                    console.log(
+                      '🚀 ~ file: leave-requst.tsx:318 ~ AddLeaveRequest ~ acceptedFiles:',
+                      acceptedFiles
+                    );
+                    const file = acceptedFiles[0];
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                      const base64String = reader.result;
+                      setFieldValue('docs', base64String);
+                    };
                   }}
+                  multiple={false}
                   onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
                   onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
-                  onUpload={() => console.info('ON UPLOAD')}
                   disabled={editData}
                 />
               </Grid>

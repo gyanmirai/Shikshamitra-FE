@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMemo, useState, useEffect, useCallback, createContext } from 'react';
 
@@ -33,17 +34,19 @@ export function SettingsProvider({
 
   const values = caches === 'cookie' ? cookies : customLocalstorage;
 
+  const pathname = usePathname();
+
   const [openDrawer, setOpenDrawer] = useState(false);
 
   const dispatch = useDispatch();
-  const { userInfo } = useSelector((state: RootState) => state.user);
+  const { userInfo, lastAction } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
-    if (userInfo === null && !userInfo?.sub) {
+    if (userInfo === null && !userInfo?.sub && !['/login'].includes(pathname.replace(/\/$/, ''))) {
+      console.log('dispatching getUser');
       dispatch(getUser() as any);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch, lastAction, pathname, userInfo]);
 
   const onToggleDrawer = useCallback(() => {
     setOpenDrawer((prev) => !prev);

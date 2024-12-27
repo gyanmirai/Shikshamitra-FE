@@ -81,10 +81,12 @@ export function StudentInformation(props: StudentTabsComponentType) {
 
   return (
     <Box
-      sx={{
-        '& input': { fontSize: '12px' },
-        '& label': { fontSize: '12px' },
-      }}
+      sx={
+        {
+          // '& input': { fontSize: '12px' },
+          // '& label': { fontSize: '12px' },
+        }
+      }
     >
       <Box component="form" onSubmit={formik.handleSubmit}>
         <Card
@@ -97,7 +99,13 @@ export function StudentInformation(props: StudentTabsComponentType) {
             value={tabs.value}
             onChange={tabs.onChange}
             variant="fullWidth"
-            slotProps={{ tab: { px: 0, fontSize: '12px' } }}
+            slotProps={{
+              tab: {
+                px: 0,
+
+                // fontSize: '12px'
+              },
+            }}
           >
             {TABS.map((tab) => (
               <Tab key={tab.value} value={tab.value} label={tab.label} />

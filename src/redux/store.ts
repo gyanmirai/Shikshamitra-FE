@@ -2,6 +2,7 @@ import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 
+import { PFApi } from './PF/PFApi';
 import { userApi } from './user/userApi';
 import { roleApi } from './role/roleApi';
 import { yearApi } from './year/yearApi';
@@ -17,6 +18,7 @@ import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { organizationApi } from './oraganization/oraganization';
+import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 
@@ -44,6 +46,8 @@ const reducers = combineReducers({
   [documentApi.reducerPath]: documentApi.reducer,
   [payElementApi.reducerPath]: payElementApi.reducer,
   [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
+  [PFApi.reducerPath]: PFApi.reducer,
+  [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
 
 const store = configureStore({
@@ -63,7 +67,9 @@ const store = configureStore({
       .concat(employeeApi.middleware)
       .concat(documentApi.middleware)
       .concat(payElementApi.middleware)
-      .concat(payrollStructureApi.middleware),
+      .concat(payrollStructureApi.middleware)
+      .concat(PFApi.middleware)
+      .concat(EventHolidayApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

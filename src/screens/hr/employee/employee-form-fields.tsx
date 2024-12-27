@@ -32,6 +32,7 @@ import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetDocumentsQuery } from 'src/redux/document/documentApi';
+import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
@@ -59,6 +60,8 @@ const RenderRole = (props: any) => {
     currentQueryAndMutation: useGetRolesQuery,
   });
   const { formik, disabled } = props;
+  console.log('🚀 ~ file: employee-form-fields.tsx:63 ~ RenderRole ~ disabled:', disabled);
+
   return (
     <FormControl
       fullWidth
@@ -73,7 +76,7 @@ const RenderRole = (props: any) => {
         id="Roles-select"
         value={formik.values.role}
         label="Roles"
-        disabled={isLoading}
+        disabled={isLoading || !!disabled}
         name="role"
         size="small"
         onChange={formik.handleChange}
@@ -96,6 +99,53 @@ const RenderRole = (props: any) => {
       </Select>
       {formik.touched.role && formik.errors.role && (
         <FormHelperText>{formik.errors.role}</FormHelperText>
+      )}
+    </FormControl>
+  );
+};
+const RenderOrganization = (props: any) => {
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetOrganizationQuery,
+  });
+  const { formik, disabled } = props;
+  return (
+    <FormControl
+      fullWidth
+      disabled={!!disabled}
+      error={!!formik.errors.organization && formik.touched.organization}
+    >
+      <InputLabel id="Roles-select-label" size="small">
+        Organization
+      </InputLabel>
+      <Select
+        labelId="Roles-select-label"
+        id="Roles-select"
+        value={formik.values.organization}
+        label="Roles"
+        disabled={isLoading || !!disabled}
+        name="organization"
+        size="small"
+        onChange={formik.handleChange}
+      >
+        {isLoading ? (
+          <MenuItem value="">
+            <CircularProgress size={24} />
+          </MenuItem>
+        ) : data?.items?.length ? (
+          data?.items?.map((org: any) => (
+            <MenuItem key={org.id} value={org.id}>
+              {org.name}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem value="">
+            <em>No Organization Found</em>
+          </MenuItem>
+        )}
+      </Select>
+      {formik.touched.organization && formik.errors.organization && (
+        <FormHelperText>{formik.errors.organization}</FormHelperText>
       )}
     </FormControl>
   );
@@ -598,6 +648,13 @@ export const InformationFields: FieldsType[] = [
   },
   {
     type: 'text',
+    label: 'Role',
+    name: 'role',
+    placeholder: 'Enter Role',
+    renderComp: (props) => <RenderOrganization {...props} />,
+  },
+  {
+    type: 'text',
     label: 'Identification Mark 1',
     name: 'identificationMark1',
     placeholder: 'Enter Identification Mark 1',
@@ -788,7 +845,7 @@ function RenderFamilyInformation(props: any) {
       <Grid container spacing={2}>
         <Grid item xs={4}>
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom mb={2}>
               Father Details
             </Typography>
             <Stack spacing={2}>
@@ -876,7 +933,7 @@ function RenderFamilyInformation(props: any) {
         </Grid>
         <Grid item xs={4}>
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom mb={2}>
               Mother Details
             </Typography>
             <Stack spacing={2}>
@@ -983,7 +1040,7 @@ function RenderFamilyInformation(props: any) {
         </Grid>
         <Grid item xs={4}>
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom mb={2}>
               Spouse Details
             </Typography>
             <Stack spacing={2}>

@@ -21,7 +21,7 @@ const DashBoardQuickAction = ({ actions }: DashboardQuickActionProps) => {
   return (
     <CustomTooltip
       arrow
-      placement="top-start"
+      placement="left-start"
       title={
         <Card
           sx={{
@@ -37,7 +37,7 @@ const DashBoardQuickAction = ({ actions }: DashboardQuickActionProps) => {
             <Button
               key={action.label}
               startIcon={<Iconify icon={action.icon} sx={{ width: 16, height: 16 }} />}
-              variant="contained"
+              variant="soft"
               size="small"
               sx={{ width: '100%' }}
               color={action.color || 'primary'}

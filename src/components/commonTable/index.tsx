@@ -140,7 +140,7 @@ function DataTable<T>({
             <TableRow>
               {columns.map((column) => (
                 <TableCell
-                  sx={{ fontSize: '12px' }}
+                  // sx={{ fontSize: '14px' }}
                   key={String(column.key)}
                   align="left"
                   style={{ width: column.width }}
@@ -171,7 +171,7 @@ function DataTable<T>({
                       // padding="none"
                       key={String(column.key)}
                       align={column.numeric ? 'right' : 'left'}
-                      sx={{ fontSize: '12px' }}
+                      // sx={{ fontSize: '12px' }}
                     >
                       {column?.render ? column.render({ ...row, index }) : String(row[column.key])}
                     </TableCell>

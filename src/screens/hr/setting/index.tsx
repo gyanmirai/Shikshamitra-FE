@@ -5,16 +5,7 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import {
-  Box,
-  Stack,
-  Button,
-  MenuItem,
-  MenuList,
-  TextField,
-  DialogActions,
-  createFilterOptions,
-} from '@mui/material';
+import { Box, Stack, Button, TextField, DialogActions, createFilterOptions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -27,7 +18,6 @@ import {
   useUpdateDocumentMutation,
 } from 'src/redux/document/documentApi';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -78,7 +68,7 @@ const HrSetting = () => {
       />
       <Box display="flex" justifyContent="flex-end">
         <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Add New document
+          Document
         </Button>
       </Box>
       <CustomizableTable
@@ -98,35 +88,17 @@ const HrSetting = () => {
             id: 'action',
             render: (value, data) => (
               <ThreeDotsActions
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setDeleteInformation(data);
-                        confirm.onTrue();
-                        popover.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Delete
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        setEditData(data);
-                        dialog.onTrue();
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-                  </MenuList>
-                )}
+                showEditIcon
+                showDeleteIcon
+                showThreeDots={false}
+                handleDeleteClick={() => {
+                  setDeleteInformation(data);
+                  confirm.onTrue();
+                }}
+                handleEditClick={() => {
+                  setEditData(data);
+                  dialog.onTrue();
+                }}
               />
             ),
           },
