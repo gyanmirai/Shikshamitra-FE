@@ -25,20 +25,19 @@ type Props = BoxProps & {
     title: string;
     borrowCount: number;
     coverImage: string;
-
   }[];
 };
 
 export function PopularBooks({ title, list, ...other }: Props) {
-  const carousel = useCarousel({
-    align: 'start',
-    slideSpacing: '24px',
-    slidesToShow: { xs: 1, sm: 2, md: 3, lg: '40%', xl: '30%' },
-    loop: true,
-
-  }, [Autoplay({ playOnInit: true, delay: 3000 })]);
-
-
+  const carousel = useCarousel(
+    {
+      align: 'start',
+      slideSpacing: '24px',
+      slidesToShow: { xs: 1, sm: 2, md: 3, lg: '40%', xl: '30%' },
+      loop: true,
+    },
+    [Autoplay({ playOnInit: true, delay: 3000 })]
+  );
 
   return (
     <Box {...other}>
@@ -51,7 +50,6 @@ export function PopularBooks({ title, list, ...other }: Props) {
       </Box>
 
       <Carousel
-
         carousel={carousel}
         slotProps={{
           slide: { py: 3 },
@@ -94,11 +92,7 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
         },
       }}
     >
-
-
-      <Label >
-        {`Borrower Time : ${fShortenNumber(item.borrowCount)}`}
-      </Label>
+      <Label>{`Borrower Time : ${fShortenNumber(item.borrowCount)}`}</Label>
     </Box>
   );
 
@@ -124,14 +118,15 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
   //   );
 
   return (
-
-    <Box sx={{
-      width: 1,
-      position: 'relative',
-      borderRadius: '15px',
-      overflow: 'hidden',
-      ...other,
-    }}>
+    <Box
+      sx={{
+        width: 1,
+        position: 'relative',
+        borderRadius: '15px',
+        overflow: 'hidden',
+        ...other,
+      }}
+    >
       <Box
         sx={{
           p: 3,
@@ -145,8 +140,6 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
           flexDirection: 'column',
         }}
       >
-
-
         <Link color="inherit" underline="none" variant="h5" noWrap sx={{ mt: 1, mb: 3 }}>
           {item.title}
         </Link>
@@ -163,16 +156,13 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
             },
           }}
         >
-
-
-          <Label >
-            {`Borrower Time : ${fShortenNumber(item.borrowCount)}`}
-          </Label>
+          <Label>{`Borrower Time : ${fShortenNumber(item.borrowCount)}`}</Label>
         </Box>
       </Box>
 
       <Image
-        alt={item.title} src={item.coverImage}
+        alt={item.title}
+        src={item.coverImage}
         slotProps={{
           overlay: {
             background: `linear-gradient(to bottom, ${varAlpha(theme.vars.palette.grey['900Channel'], 0)} 0%, ${theme.vars.palette.grey[900]} 75%)`,

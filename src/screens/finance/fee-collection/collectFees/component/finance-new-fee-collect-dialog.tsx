@@ -475,7 +475,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
           </Button> */}
             <Button
               disabled={formik.values.receivedPayment < 1}
-              onClick={() => { }}
+              onClick={() => {}}
               variant="contained"
               size="small"
             >

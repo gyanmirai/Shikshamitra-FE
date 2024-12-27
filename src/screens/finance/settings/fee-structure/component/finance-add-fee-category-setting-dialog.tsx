@@ -200,12 +200,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     }, 0);
 
   return (
-    <CustomDialog
-      maxWidth="md"
-      title="Add Fee Structure"
-      open={dialogValue}
-      handleClose={onClose}
-    >
+    <CustomDialog maxWidth="md" title="Add Fee Structure" open={dialogValue} handleClose={onClose}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
           <Box>
@@ -251,10 +246,10 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                     formik.touched.multipleApplicableGrade &&
                     Boolean(formik.errors.multipleApplicableGrade)
                   }
-                // helperText={
-                //   formik.touched.multipleApplicableGrade &&
-                //   formik.errors.multipleApplicableGrade
-                // }
+                  // helperText={
+                  //   formik.touched.multipleApplicableGrade &&
+                  //   formik.errors.multipleApplicableGrade
+                  // }
                 />
               ) : (
                 <CustomSelect
@@ -269,7 +264,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                   formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                   disabled={isEdit}
                   error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-                // helperText={formik.touched.applicableGrade && formik.errors.applicableGrade}
+                  // helperText={formik.touched.applicableGrade && formik.errors.applicableGrade}
                 />
               )}
             </Box>
@@ -292,7 +287,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 }}
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                 error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-              // helperText={formik.touched.feeHead && formik.errors.feeHead}
+                // helperText={formik.touched.feeHead && formik.errors.feeHead}
               />
 
               {isEdit ? (
@@ -380,7 +375,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 onChange={(e) => formik.setFieldValue('paymentMethod', e)}
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
                 error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-              // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
+                // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
               />
             </Box>
 
@@ -392,7 +387,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
                 format="DD-MM-YYYY"
                 slotProps={{ textField: { size: 'small' } }}
-                sx={{ width: "48%" }}
+                sx={{ width: '48%' }}
               />
             </Grid2>
 
@@ -402,7 +397,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 onChange={handlefixedReductionAmountChange}
                 sx={{ flex: 1 }}
               /> */}
-
 
             <Box>
               {showExistingEntryMessage && (

@@ -16,7 +16,6 @@ import FinanceFeeCollectionCharges from '../charges/finance-fee-collection-charg
 import FinanceFeeCollectionPaymentHistoryComponent from '../collectFees/component/finance-fee-collection-payment-history-component';
 
 const TABS = [
-
   {
     value: 'fee-breakdown',
     label: 'Fee Breakdown',
@@ -56,9 +55,7 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
 
   return (
     <Box pt="15px">
-      <Typography sx={{ mb: '15px', fontSize: "16px" }}>
-        Detailed Fee View
-      </Typography>
+      <Typography sx={{ mb: '15px', fontSize: '16px' }}>Detailed Fee View</Typography>
       <Card>
         <CustomTabs value={tabs.value} onChange={tabs.onChange} variant="fullWidth">
           {TABS.map((tab) => (

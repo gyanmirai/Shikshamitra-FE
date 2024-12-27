@@ -31,10 +31,10 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
 
   const openfeeDetailViewDialog = () => {
     feeDetailViewDialog.onTrue();
-  }
+  };
   const closefeeDetailViewDialog = () => {
     feeDetailViewDialog.onFalse();
-  }
+  };
   return (
     <>
       <Card
@@ -116,7 +116,16 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
                   {label}
                 </Typography>
                 <Typography
-                  sx={{ color: index === 0 ? 'success.main' : index === 1 ? 'warning.main' : index === 2 ? 'error.main' : "black" }}
+                  sx={{
+                    color:
+                      index === 0
+                        ? 'success.main'
+                        : index === 1
+                          ? 'warning.main'
+                          : index === 2
+                            ? 'error.main'
+                            : 'black',
+                  }}
                 >
                   {index === 0
                     ? '₹ 10,000'
@@ -132,14 +141,13 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
         </Box>
       </Card>
 
-      {feeDetailViewDialog.value &&
+      {feeDetailViewDialog.value && (
         <FinanceFeeOverviewTab
           onClose={closefeeDetailViewDialog}
           dialogValue={feeDetailViewDialog.value}
         />
-      }
+      )}
     </>
-
   );
 };
 

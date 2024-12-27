@@ -84,7 +84,6 @@ const FinanceStudentFeeBreakdownTab = () => {
   return (
     <>
       <CustomizableTable
-
         isFilter={false}
         isPagination={false}
         isSearch={false}
@@ -92,31 +91,51 @@ const FinanceStudentFeeBreakdownTab = () => {
           { id: 'date', label: 'Due Date' },
           { id: 'type', label: 'Type' },
           {
-            id: 'grossFee', label: "Gross Fee", render(value, row) {
-              return <Typography sx={{
-                fontSize: '12px',
-                ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
-              }}>{formatNumber(value, 'INR')}</Typography>;
+            id: 'grossFee',
+            label: 'Gross Fee',
+            render(value, row) {
+              return (
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+                  }}
+                >
+                  {formatNumber(value, 'INR')}
+                </Typography>
+              );
             },
           },
           {
             id: 'discount',
             label: 'General Discount',
             render(value, row) {
-              return <Typography sx={{
-                fontSize: '12px',
-                ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
-              }}>{formatNumber(row.discount, 'INR')}</Typography>;
+              return (
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+                  }}
+                >
+                  {formatNumber(row.discount, 'INR')}
+                </Typography>
+              );
             },
           },
           {
             id: 'additionalDiscount',
             label: 'Additional Discount',
             render(value, row) {
-              return <Typography sx={{
-                fontSize: '12px',
-                ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
-              }}>{formatNumber(row.additionalDiscount, 'INR')}</Typography>;
+              return (
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+                  }}
+                >
+                  {formatNumber(row.additionalDiscount, 'INR')}
+                </Typography>
+              );
             },
           },
 
@@ -124,14 +143,16 @@ const FinanceStudentFeeBreakdownTab = () => {
             id: 'amount',
             label: 'Payable Fee',
             render(value, row) {
-              return <Typography
-                sx={{
-                  fontSize: '12px',
-                  ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
-                }}
-              >
-                {formatNumber(row.amount, 'INR')}
-              </Typography>
+              return (
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+                  }}
+                >
+                  {formatNumber(row.amount, 'INR')}
+                </Typography>
+              );
             },
           },
         ]}
@@ -147,7 +168,6 @@ const FinanceStudentFeeBreakdownTab = () => {
             amount: totals.amount,
           },
         ]}
-
       />
       <Box pb="20px" />
     </>

@@ -16,22 +16,21 @@ const FinanceDashboardScreen = () => {
     { label: 'Cash', value: 1000000 },
     { label: 'Online', value: 100000 },
     { label: 'Cheque', value: 500000 },
-
-  ]
+  ];
   const theme = useTheme();
   const [selectedSeries, setSelectedSeries] = useState<any>('Income');
   const handleSelectedSeries = (d: any) => {
-    setSelectedSeries(d)
-
+    setSelectedSeries(d);
   };
 
-  const dynamicColors = selectedSeries === "Income"
-    ? [-12000, 10000, 5000].map(value =>
-      value > 0 ? theme.palette.success.main : theme.palette.error.main
-    )
-    : [5000, -21000, 0].map(value =>
-      value > 0 ? theme.palette.success.main : theme.palette.error.main
-    );
+  const dynamicColors =
+    selectedSeries === 'Income'
+      ? [-12000, 10000, 5000].map((value) =>
+          value > 0 ? theme.palette.success.main : theme.palette.error.main
+        )
+      : [5000, -21000, 0].map((value) =>
+          value > 0 ? theme.palette.success.main : theme.palette.error.main
+        );
   return (
     <Box sx={{ p: 3 }}>
       {/* Top Section: Key Metrics */}
@@ -112,7 +111,7 @@ const FinanceDashboardScreen = () => {
             }}
           />
         </Grid>
-        <Grid container spacing={2} sx={{ pt: "20px" }}>
+        <Grid container spacing={2} sx={{ pt: '20px' }}>
           {/* <Grid item xs={12} md={6}>
             <AnalyticsCurrentVisits
               title="Payment Modes Analysis"
@@ -121,9 +120,7 @@ const FinanceDashboardScreen = () => {
             />
           </Grid> */}
 
-
           <Grid item xs={12} md={12}>
-
             <AppAreaInstalled
               isShowChartLegendValue={false}
               height={400}
@@ -131,10 +128,15 @@ const FinanceDashboardScreen = () => {
               selectSeries={selectedSeries}
               sendToParent={handleSelectedSeries}
               chart={{
-                colors: [theme.palette.info.main, theme.palette.warning.main, theme.palette.error.main,],
-                categories: selectedSeries === "Income"
-                  ? ['Tuition', 'Donation', "Grant"]
-                  : ['Salaries', 'Maintenance', 'Stationary'],
+                colors: [
+                  theme.palette.info.main,
+                  theme.palette.warning.main,
+                  theme.palette.error.main,
+                ],
+                categories:
+                  selectedSeries === 'Income'
+                    ? ['Tuition', 'Donation', 'Grant']
+                    : ['Salaries', 'Maintenance', 'Stationary'],
 
                 series: [
                   {
@@ -145,7 +147,6 @@ const FinanceDashboardScreen = () => {
                       {
                         name: 'Variance',
                         data: [-12000, 10000, 5000],
-
                       },
                     ],
                   },
@@ -157,20 +158,16 @@ const FinanceDashboardScreen = () => {
                       {
                         name: 'Variance',
                         data: [5000, -21000, 0],
-
                       },
                     ],
                   },
-
                 ],
               }}
             />
           </Grid>
-
-
         </Grid>
 
-        <Grid container spacing={2} sx={{ pt: "20px" }}>
+        <Grid container spacing={2} sx={{ pt: '20px' }}>
           <Grid item xs={12} md={6}>
             <BankingBalanceStatistics
               title="Expense statistics"
@@ -208,8 +205,6 @@ const FinanceDashboardScreen = () => {
                 ],
               }}
             />
-
-
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -249,7 +244,6 @@ const FinanceDashboardScreen = () => {
                 ],
               }}
             />
-
           </Grid>
         </Grid>
         {/* <Grid item xs={12} md={4}>

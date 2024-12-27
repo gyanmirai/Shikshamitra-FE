@@ -93,11 +93,11 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
         const updatedData = tableData.map((val, index) =>
           index === existingIndex
             ? {
-              ...val,
-              maintenanceDate: formattedMaintenanceDate,
-              nextScheduledMaintenance: formattednextScheduledMaintenance,
-              serviceDetails,
-            }
+                ...val,
+                maintenanceDate: formattedMaintenanceDate,
+                nextScheduledMaintenance: formattednextScheduledMaintenance,
+                serviceDetails,
+              }
             : val
         );
         setTableData(updatedData);
