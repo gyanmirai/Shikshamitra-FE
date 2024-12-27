@@ -8,6 +8,7 @@ import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 
+import { Scrollbar } from '../scrollbar';
 import { usePopover, CustomPopover } from '../custom-popover';
 
 // ----------------------------------------------------------------------
@@ -50,20 +51,29 @@ export function ChartSelect({ options, value, onChange, slotProps, ...other }: P
       </ButtonBase>
 
       <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
-        <MenuList sx={slotProps?.popover}>
-          {options.map((option) => (
-            <MenuItem
-              key={option}
-              selected={option === value}
-              onClick={() => {
-                popover.onClose();
-                onChange(option);
-              }}
-            >
-              {option}
-            </MenuItem>
-          ))}
-        </MenuList>
+        <Scrollbar
+          sx={{
+            maxHeight: 200, // Set a fixed height or max-height to make it scrollable
+            overflowY: 'auto', // Enable vertical scrolling
+            overflowX: 'hidden',
+            width: 150,
+          }}
+        >
+          <MenuList sx={slotProps?.popover}>
+            {options.map((option) => (
+              <MenuItem
+                key={option}
+                selected={option === value}
+                onClick={() => {
+                  popover.onClose();
+                  onChange(option);
+                }}
+              >
+                {option}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Scrollbar>
       </CustomPopover>
     </>
   );

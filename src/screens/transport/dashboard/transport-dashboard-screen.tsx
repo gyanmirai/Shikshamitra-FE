@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Grid, useTheme } from '@mui/material';
 
@@ -68,6 +68,42 @@ const routeTableData = [
 
 const TransportDashboardScreen = () => {
   const theme = useTheme();
+  const [selectedMonth, setSelectedMonth] = useState<{
+    monthName: string;
+    days: number;
+  }>({ monthName: 'January', days: 31 });
+
+  const generateDailyData = (year: number, month: string) => {
+    // Helper to determine leap year
+    const isLeapYear = () => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+
+    // Days in each month
+    const monthsWithDays = [
+      { month: 'January', days: 31 },
+      { month: 'February', days: isLeapYear() ? 29 : 28 },
+      { month: 'March', days: 31 },
+      { month: 'April', days: 30 },
+      { month: 'May', days: 31 },
+      { month: 'June', days: 30 },
+      { month: 'July', days: 31 },
+      { month: 'August', days: 31 },
+      { month: 'September', days: 30 },
+      { month: 'October', days: 31 },
+      { month: 'November', days: 30 },
+      { month: 'December', days: 31 },
+    ];
+
+    // Find the days for the selected month
+    const monthDetails = monthsWithDays.find((m) => m.month === month);
+
+    if (!monthDetails) {
+      throw new Error(`Invalid month: ${month}`);
+    }
+
+    // Generate categories (days of the month)
+    const categories = Array.from({ length: monthDetails.days }, (_, i) => (i + 1).toString());
+    return { name: `Daily Metrics for ${month}`, categories };
+  };
 
   return (
     <>
@@ -115,20 +151,6 @@ const TransportDashboardScreen = () => {
           />
         </Grid>
 
-        {/* <Grid item xs={12} sm={6} md={4}>
-          <EmployeeDashboardCard
-            title="Total Waiting"
-            icon="medical-icon:waiting-area"
-            value={9}
-            labels={[
-              { name: 'Employee: 0', color: 'success' },
-              { name: 'Student: 9', color: 'secondary' },
-            ]}
-            color="primary.main"
-            href="/transport/member-transport/?tab=assignedRoute"
-          />
-        </Grid> */}
-
         <Grid item xs={12} sm={6} md={3}>
           <EmployeeDashboardCard
             title="Total Driver"
@@ -145,222 +167,125 @@ const TransportDashboardScreen = () => {
         </Grid>
       </Grid>
 
-      {/* <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <AnalyticsCurrentVisits title="Vehicle By Condition" chart={{
-            series: [{ label: 'Operational', value: 5 },
-            { label: 'Maintenance Required', value: 25 },
-            { label: 'Available', value: 15 },
-
-            ]
-          }} />
-        </Grid>
-      </Grid> */}
-      {/* <CustomizableTable columns={[
-
-        { id: "status", label: "Status" },
-        { id: "driver", label: "Driver" },
-        { id: "vehicle", label: "Vehicle" },
-        { id: "tripsToday", label: "Trips Today" },
-
-
-      ]} data={routeTableData} /> */}
-
-      {/* <Grid2 container spacing={3} py="14px">
-        <Grid2 xs={12} md={6}>
-          <Card sx={{ p: 3, height: '100%' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
-              <Typography variant="subtitle1" sx={{ pt: 2 }}>
-                Route Efficiency
-              </Typography>
-              <Box display="flex" flexDirection="row" gap={1}>
-                <CustomSelect
-                  label="Organization"
-                  options={[]}
-                  value=""
-                  onChange={() => { }}
-                  formControlProps={{ sx: { minWidth: 125 } }}
-                />
-                <CustomSelect
-                  label="Class"
-                  options={[]}
-                  value=""
-                  onChange={() => { }}
-                  formControlProps={{ sx: { minWidth: 125 } }}
-                />
-              </Box>
-              <PerformanceOverTime
-                id="demo__4"
-                chart={{
-                  categories: [
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec',
-                  ],
-                  series: [
-                    {
-                      name: 'Fee Collection Progress',
-                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                    },
-                  ],
-                }}
-                sx={{ height: '100%', boxShadow: 'none' }}
-              />
-            </Box>
-          </Card>
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <Card sx={{ p: 3, height: '100%' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
-              <Typography variant="subtitle1" sx={{ pt: 2 }}>
-                Average Trip Durations
-              </Typography>
-              <Box display="flex" flexDirection="row" gap={1}>
-                <CustomSelect
-                  label="Organization"
-                  options={[]}
-                  value=""
-                  onChange={() => { }}
-                  formControlProps={{ sx: { minWidth: 125 } }}
-                />
-                <CustomSelect
-                  label="2023"
-                  options={[]}
-                  value=""
-                  onChange={() => { }}
-                  formControlProps={{ sx: { minWidth: 125 } }}
-                />
-              </Box>
-              <PerformanceOverTime
-                id="demo__4"
-                chart={{
-                  categories: [
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec',
-                  ],
-                  series: [
-                    {
-                      name: 'Trip Durations',
-                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                    },
-                  ],
-                }}
-                sx={{ height: '100%', boxShadow: 'none' }}
-              />
-            </Box>
-          </Card>
-        </Grid2>
-      </Grid2> */}
-
-      {/* <Grid item xl={12} sx={{ pt: '15px' }}>
-        <Card sx={{ p: 3, height: '100%' }}>
-          <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="subtitle1" sx={{ pt: 2 }}>
-              Vehicle Usage By Trips
-            </Typography>
-            <CustomSelect
-              label="Select Vehicle"
-              options={[]} // Add appropriate options here
-              value=""
-              onChange={() => { }}
-              formControlProps={{ sx: { minWidth: 200 } }} // Adjust the width as needed
-            />
-          </Box>
-          <AnalyticsWebsiteVisits
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-              series: [{ name: 'Total trips', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
-              colors: [theme.palette.primary.dark, theme.palette.warning.main],
-            }}
-            sx={{ height: '100%' }}
-          />
-        </Card>
-      </Grid> */}
-
-      <Grid item xs={12} md={6}>
+      <Grid item xs={6} md={6} pt="20px">
         <ChartWithTwoDropDown
-          title="Vehicle Fuel Statistics"
-          subheader="Statistics Of Vehicle Expense Over Time"
+          annotationPoint={Array.from({ length: selectedMonth.days }, (_, i) =>
+            i % 2 === 0 ? 'late' : 'onTime'
+          )}
+          // annotationPointForMonth={[
+          //   { name: "January", late: 5, onTime: 20 },
+          //   { name: "February", late: 7, onTime: 18 },
+          //   { name: "March", late: 2, onTime: 15 },
+          //   { name: "April", late: 4, onTime: 17 },
+          //   { name: "May", late: 6, onTime: 22 },
+          //   { name: "June", late: 3, onTime: 19 },
+          //   { name: "July", late: 8, onTime: 16 },
+          //   { name: "August", late: 9, onTime: 14 },
+          //   { name: "September", late: 5, onTime: 21 },
+          //   { name: "October", late: 10, onTime: 12 },
+          //   { name: "November", late: 3, onTime: 18 },
+          //   { name: "December", late: 4, onTime: 20 }
+          // ]}
+          monthFromComponent={(data) => {
+            setSelectedMonth(data);
+          }}
+          title="Vehicle Runing Statistics"
+          subheader="Statistics Of Vehicle Runing Over Time"
           chart={{
             series: [
               {
                 vehicleName: 'Vehicle 1',
                 durations: [
                   {
-                    name: 'Weekly',
-                    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                    series: [
-                      { name: 'Kilometers Run', data: [6000, 1500, 1400, 1300, 1250] },
-                      // { name: 'Fuel Used (L)', data: [300, 75, 70, 65, 62] },
-                      // { name: 'Fuel Cost (₹)', data: [30000, 7500, 7000, 6500, 6200] },
-                    ],
-                  },
-                  {
-                    name: 'Monthly',
-                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                    name: 'Daily',
+                    categories: Array.from({ length: selectedMonth.days }, (_, i) =>
+                      (i + 1).toString()
+                    ),
                     series: [
                       {
                         name: 'Kilometers Run',
-                        data: [500, 600, 550, 650, 620, 700, 680, 720, 690],
+                        data: Array.from(
+                          { length: selectedMonth.days },
+                          () => Math.floor(Math.random() * 100) + 50
+                        ),
                       },
-                      // { name: 'Fuel Used (L)', data: [40, 48, 44, 52, 50, 56, 54, 58, 55] },
-                      // {
-                      //   name: 'Fuel Cost (₹)',
-                      //   data: [200, 240, 220, 260, 250, 280, 270, 290, 275],
-                      // },
+                      {
+                        name: 'Fuel Used (L)',
+                        data: Array.from(
+                          { length: selectedMonth.days },
+                          () => Math.floor(Math.random() * 10) + 50
+                        ),
+                      },
                     ],
                   },
+
                   {
-                    name: 'Yearly',
-                    categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                    name: 'Monthly',
+                    categories: [
+                      'Jan',
+                      'Feb',
+                      'Mar',
+                      'Apr',
+                      'May',
+                      'Jun',
+                      'Jul',
+                      'Aug',
+                      'Sep',
+                      'Oct',
+                      'Nov',
+                      'Dec',
+                    ],
                     series: [
-                      { name: 'Kilometers Run', data: [6000, 7200, 6800, 7500, 7400, 7700] },
-                      // { name: 'Fuel Used (L)', data: [480, 576, 544, 600, 592, 616] },
-                      // { name: 'Fuel Cost (₹)', data: [2400, 2880, 2720, 3000, 2960, 3080] },
+                      {
+                        name: 'Kilometers Run',
+                        data: [
+                          6000, 4000, 2000, 1000, 1800, 2000, 2000, 4000, 2000, 1000, 1800, 2000,
+                        ],
+                      },
+                      {
+                        name: 'Fuel Used (L)',
+                        data: [200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200],
+                      },
                     ],
                   },
+                  // {
+                  //   name: 'Yearly',
+                  //   categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                  //   series: [
+                  //     { name: 'Kilometers Run', data: [6000, 7200, 6800, 7500, 7400, 7700] },
+                  //     // { name: 'Fuel Used (L)', data: [480, 576, 544, 600, 592, 616] },
+                  //     // { name: 'Fuel Cost (₹)', data: [2400, 2880, 2720, 3000, 2960, 3080] },
+                  //   ],
+                  // },
                 ],
               },
               {
                 vehicleName: 'Vehicle 2',
                 durations: [
+                  {
+                    name: 'Daily',
+                    categories: Array.from({ length: selectedMonth.days }, (_, i) =>
+                      (i + 1).toString()
+                    ),
+                    series: [
+                      {
+                        name: 'Kilometers Run',
+                        data: Array.from(
+                          { length: selectedMonth.days },
+                          () => Math.floor(Math.random() * 100) + 50
+                        ),
+                      },
+                    ],
+                  },
                   // {
-                  //   name: 'Day',
-                  //   categories: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+                  //   name: 'Weekly',
+                  //   categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
                   //   series: [
-                  //     { name: 'Kilometers Run', data: [110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115, 110, 140, 130, 120, 115] },
+                  //     { name: 'Kilometers Run', data: [110, 140, 130, 120, 115] },
                   //     // { name: 'Fuel Used (L)', data: [9, 11, 10, 9, 8] },
                   //     // { name: 'Fuel Cost (₹)', data: [45, 55, 50, 45, 40] },
                   //   ],
                   // },
-                  {
-                    name: 'Weekly',
-                    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                    series: [
-                      { name: 'Kilometers Run', data: [110, 140, 130, 120, 115] },
-                      // { name: 'Fuel Used (L)', data: [9, 11, 10, 9, 8] },
-                      // { name: 'Fuel Cost (₹)', data: [45, 55, 50, 45, 40] },
-                    ],
-                  },
                   {
                     name: 'Monthly',
                     categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
@@ -376,102 +301,15 @@ const TransportDashboardScreen = () => {
                       // },
                     ],
                   },
-                  {
-                    name: 'Yearly',
-                    categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                    series: [
-                      { name: 'Kilometers Run', data: [5800, 7000, 6600, 7300, 7200, 7500] },
-                      // { name: 'Fuel Used (L)', data: [460, 560, 520, 580, 570, 600] },
-                      // { name: 'Fuel Cost (₹)', data: [2300, 2800, 2600, 2900, 2850, 3000] },
-                    ],
-                  },
-                ],
-              },
-            ],
-          }}
-        />
-      </Grid>
-
-      <Grid item xs={12} md={6}>
-        <ChartWithTwoDropDown
-          title="Vehicle Statistics"
-          subheader="Statistics Of Vehicle Expense Over Time"
-          chart={{
-            series: [
-              {
-                vehicleName: 'Vehicle 1',
-                durations: [
-                  {
-                    name: 'Weekly',
-                    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                    series: [
-                      { name: 'Kilometers Run', data: [6000, 1500, 1400, 1300, 1250] },
-                      { name: 'Fuel Used (L)', data: [300, 75, 70, 65, 62] },
-                      { name: 'Fuel Cost (₹)', data: [30000, 7500, 7000, 6500, 6200] },
-                    ],
-                  },
-                  {
-                    name: 'Monthly',
-                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-                    series: [
-                      {
-                        name: 'Kilometers Run',
-                        data: [500, 600, 550, 650, 620, 700, 680, 720, 690],
-                      },
-                      { name: 'Fuel Used (L)', data: [40, 48, 44, 52, 50, 56, 54, 58, 55] },
-                      {
-                        name: 'Fuel Cost (₹)',
-                        data: [200, 240, 220, 260, 250, 280, 270, 290, 275],
-                      },
-                    ],
-                  },
-                  {
-                    name: 'Yearly',
-                    categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                    series: [
-                      { name: 'Kilometers Run', data: [6000, 7200, 6800, 7500, 7400, 7700] },
-                      { name: 'Fuel Used (L)', data: [480, 576, 544, 600, 592, 616] },
-                      { name: 'Fuel Cost (₹)', data: [2400, 2880, 2720, 3000, 2960, 3080] },
-                    ],
-                  },
-                ],
-              },
-              {
-                vehicleName: 'Vehicle 2',
-                durations: [
-                  {
-                    name: 'Weekly',
-                    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                    series: [
-                      { name: 'Kilometers Run', data: [110, 140, 130, 120, 115] },
-                      { name: 'Fuel Used (L)', data: [9, 11, 10, 9, 8] },
-                      { name: 'Fuel Cost (₹)', data: [45, 55, 50, 45, 40] },
-                    ],
-                  },
-                  {
-                    name: 'Monthly',
-                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-                    series: [
-                      {
-                        name: 'Kilometers Run',
-                        data: [480, 570, 520, 620, 600, 680, 660, 700, 670],
-                      },
-                      { name: 'Fuel Used (L)', data: [38, 46, 40, 50, 48, 54, 52, 56, 53] },
-                      {
-                        name: 'Fuel Cost (₹)',
-                        data: [190, 230, 200, 250, 240, 270, 260, 280, 265],
-                      },
-                    ],
-                  },
-                  {
-                    name: 'Yearly',
-                    categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                    series: [
-                      { name: 'Kilometers Run', data: [5800, 7000, 6600, 7300, 7200, 7500] },
-                      { name: 'Fuel Used (L)', data: [460, 560, 520, 580, 570, 600] },
-                      { name: 'Fuel Cost (₹)', data: [2300, 2800, 2600, 2900, 2850, 3000] },
-                    ],
-                  },
+                  // {
+                  //   name: 'Yearly',
+                  //   categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                  //   series: [
+                  //     { name: 'Kilometers Run', data: [5800, 7000, 6600, 7300, 7200, 7500] },
+                  //     // { name: 'Fuel Used (L)', data: [460, 560, 520, 580, 570, 600] },
+                  //     // { name: 'Fuel Cost (₹)', data: [2300, 2800, 2600, 2900, 2850, 3000] },
+                  //   ],
+                  // },
                 ],
               },
             ],
