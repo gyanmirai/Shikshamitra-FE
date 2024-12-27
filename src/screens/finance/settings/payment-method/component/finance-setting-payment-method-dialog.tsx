@@ -82,6 +82,7 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
       title={`${isEdit ? 'Edit' : 'Create New'} Payment Method`}
       open={dialogValue}
       handleClose={onClose}
+      maxWidth="md"
     >
       <Box px="15px">
         {showExistingEntryMessage ? (
@@ -92,11 +93,12 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
           <Box height="25px" />
         )}
       </Box>
-      <Scrollbar>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
               <TextField
+                size="small"
                 fullWidth
                 name="paymentMethodName"
                 label="Payment Method Name"
@@ -106,6 +108,7 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
                 helperText={formik.touched.paymentMethodName && formik.errors.paymentMethodName}
               />
               <TextField
+                size="small"
                 fullWidth
                 name="serviceProviderDetail.serviceProviderName"
                 label="Service Provider Name"
@@ -121,6 +124,7 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
                 }
               />
               <TextField
+                size="small"
                 fullWidth
                 name="serviceProviderDetail.serviceProviderMobile"
                 label="Service Provider Mobile"
@@ -136,6 +140,7 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
                 }
               />
               <TextField
+                size="small"
                 fullWidth
                 name="integrationKey"
                 label="Integration Key"
@@ -145,18 +150,15 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
                 helperText={formik.touched.integrationKey && formik.errors.integrationKey}
               />
             </Box>
-            <DialogActions>
-              <Button onClick={onClose} variant="contained" size="small">
-                Cancel
-              </Button>
-              <Button type="submit" variant="contained" size="small">
-                Save
-              </Button>
-            </DialogActions>
           </form>
           {showExistingEntryMessage && <Typography color="error">Entry already exists</Typography>}
         </Box>
       </Scrollbar>
+      <DialogActions>
+        <Button type="submit" variant="contained" size="small">
+          Save
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 };

@@ -8,7 +8,7 @@ const historyData = [
     grNo: '101',
     receiptNo: 'RCPT001',
     refundDate: '01-05-2024',
-    amount: 1500,
+    amount: '₹ 1500',
     modeOfPayment: 'Cheque',
     transactionId: 'TXN12345',
     receiptBook: 'RB001',
@@ -18,7 +18,7 @@ const historyData = [
     grNo: '102',
     receiptNo: 'RCPT002',
     refundDate: '15-05-2024',
-    amount: 2000,
+    amount: '₹ 2000',
     modeOfPayment: 'Transaction',
     transactionId: 'TXN12346',
     receiptBook: 'RB002',
@@ -31,8 +31,8 @@ const FinanceFeeRefundHistory = () => (
   </Typography> */}
     <CustomizableTable
       columns={[
-        { id: 'className', label: 'Class Name' },
-        { id: 'grNo', label: 'GrNo' },
+        // { id: 'className', label: 'Class Name' },
+        // { id: 'grNo', label: 'GrNo' },
         { id: 'receiptNo', label: 'Receipt No' },
         { id: 'refundDate', label: 'Refund Date' },
         { id: 'amount', label: 'Amount' },

@@ -55,7 +55,9 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
 
   return (
     <Box pt="15px">
-      <Typography sx={{ mb: '15px', fontSize: '16px' }}>Detailed Fee View</Typography>
+      <Typography variant="h6" sx={{ mb: '15px', ml: '3px' }}>
+        Detailed Fee View
+      </Typography>
       <Card>
         <CustomTabs value={tabs.value} onChange={tabs.onChange} variant="fullWidth">
           {TABS.map((tab) => (

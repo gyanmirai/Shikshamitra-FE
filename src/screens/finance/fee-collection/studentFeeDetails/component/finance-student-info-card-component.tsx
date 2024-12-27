@@ -77,24 +77,20 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           </Typography>
         </Box>
 
-        {/* Right Section: Student Information */}
+        {/* Information Grid: Class, Contact, Charges */}
         <Box sx={{ display: 'flex', flexDirection: 'column', width: '80%' }}>
-          {/* Header */}
-          {/* <Box sx={{ p: 1, backgroundColor: '#e3f2fd', textAlign: 'center' }}>
-          <Typography variant="subtitle1">Student Information</Typography>
-        </Box> */}
-
-          {/* Information Grid: Class, Contact, Charges */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mt: 2 }}>
+          {/* First Row */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2, mt: 2 }}>
             {[
               { label: 'Standard', icon: 'fa:mortar-board', value: '10-A' },
+              { label: 'Roll No', icon: 'fa:mortar-board', value: '57' },
+              { label: 'Gr No', icon: 'fa:mortar-board', value: '1234' },
               {
                 label: 'Parents Contact',
                 icon: 'material-symbols-light:call-outline',
                 value: '9876542347',
               },
               { label: 'Payable Fees', icon: 'arcticons:mymoney-pro', value: '₹ 60,000' },
-              { label: 'Total Charges', icon: 'arcticons:mymoney-pro', value: '₹ 0' },
             ].map(({ label, icon, value }) => (
               <Box key={label} sx={{ textAlign: 'center' }}>
                 <Typography variant="caption" sx={{ mb: 0.5, color: 'text.secondary' }}>
@@ -108,33 +104,43 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
             ))}
           </Box>
 
-          {/* Fees Information */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mt: 2 }}>
-            {['Paid Fees', 'Pending Fees', 'Overdue Fees', 'Total Refund'].map((label, index) => (
+          {/* Second Row */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2, mt: 2 }}>
+            {[
+              { label: 'Total Charges', icon: 'arcticons:mymoney-pro', value: '₹ 0' },
+              {
+                label: 'Paid Fees',
+                icon: 'arcticons:mymoney-pro',
+                value: '₹ 10,000',
+                color: 'success.main',
+              },
+              {
+                label: 'Pending Fees',
+                icon: 'arcticons:mymoney-pro',
+                value: '₹ 20,000',
+                color: 'warning.main',
+              },
+              {
+                label: 'Overdue Fees',
+                icon: 'arcticons:mymoney-pro',
+                value: '₹ 30,000',
+                color: 'error.main',
+              },
+              { label: 'Total Refund', icon: 'arcticons:mymoney-pro', value: '₹ 0' },
+            ].map(({ label, icon, value, color }) => (
               <Box key={label} sx={{ textAlign: 'center' }}>
                 <Typography variant="caption" sx={{ mb: 0.5, color: 'text.secondary' }}>
                   {label}
                 </Typography>
-                <Typography
-                  sx={{
-                    color:
-                      index === 0
-                        ? 'success.main'
-                        : index === 1
-                          ? 'warning.main'
-                          : index === 2
-                            ? 'error.main'
-                            : 'black',
-                  }}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ color: color || 'text.primary' }}
                 >
-                  {index === 0
-                    ? '₹ 10,000'
-                    : index === 1
-                      ? '₹ 20,000'
-                      : index === 2
-                        ? '₹ 30,000'
-                        : '₹ 0'}
-                </Typography>
+                  <Iconify icon={icon} width={20} height={20} sx={{ mr: 1 }} />
+                  {value}
+                </Box>
               </Box>
             ))}
           </Box>
