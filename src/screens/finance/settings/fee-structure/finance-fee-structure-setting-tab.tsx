@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Paper, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -277,8 +277,13 @@ const FinanceFeeStructureSettingTab = () => {
         {/* <Button variant="contained" size="small">
           Save
         </Button> */}
-        <Button onClick={dialog.onTrue} variant="contained" size="small">
-          Add New Fee Structure
+        <Button
+          startIcon={<Iconify icon="ic:outline-plus" />}
+          onClick={dialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          New Fee Structure
         </Button>
       </Box>
       <Box>
@@ -291,49 +296,50 @@ const FinanceFeeStructureSettingTab = () => {
         columns={[
           {
             id: 'bookRecipt',
-            label: 'Book Recipt',
-            children(row) {
-              const switchState = switchStates[row.id] || [];
-              return (
-                <>
-                  {row.feeSubCategoryList.length > 0 ? (
-                    <Box display="flex" gap={2} alignItems="center">
-                      {row.feeSubCategoryList.map((val: any, index: any) => (
-                        <React.Fragment key={index}>
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <Paper elevation={4} sx={{ p: 2, fontSize: '13PX' }}>
-                              {val.name}: {formatNumber(val.amount, 'INR')}
-                              <Switch
-                                checked={switchState[index]}
-                                onChange={() => handleSwitchChange(row.id, index)}
-                              />
-                              <Typography fontSize="13PX">
-                                Monthly: {formatNumber(val.amount / 12, 'INR')}
-                              </Typography>
-                              <Typography fontSize="13PX">
-                                Quartly: {formatNumber(val.amount / 4, 'INR')}
-                              </Typography>
-                              <Typography fontSize="13PX">
-                                Bi-annual: {formatNumber(val.amount / 2, 'INR')}
-                              </Typography>
-                              <Typography fontSize="13PX">
-                                Yearly: {formatNumber(val.amount, 'INR')}
-                              </Typography>
-                            </Paper>
-                          </Box>
-                        </React.Fragment>
-                      ))}
-                    </Box>
-                  ) : (
-                    <Box>
-                      <Typography>No data</Typography>
-                    </Box>
-                  )}
-                </>
-              );
-            },
+            label: 'Receipt Book',
+
+            // children(row) {
+            //   const switchState = switchStates[row.id] || [];
+            //   return (
+            //     <>
+            //       {row.feeSubCategoryList.length > 0 ? (
+            //         <Box display="flex" gap={2} alignItems="center">
+            //           {row.feeSubCategoryList.map((val: any, index: any) => (
+            //             <React.Fragment key={index}>
+            //               <Box display="flex" alignItems="center" gap={1}>
+            //                 <Paper elevation={4} sx={{ p: 2, fontSize: '13PX' }}>
+            //                   {val.name}: {formatNumber(val.amount, 'INR')}
+            //                   <Switch
+            //                     checked={switchState[index]}
+            //                     onChange={() => handleSwitchChange(row.id, index)}
+            //                   />
+            //                   <Typography fontSize="13PX">
+            //                     Monthly: {formatNumber(val.amount / 12, 'INR')}
+            //                   </Typography>
+            //                   <Typography fontSize="13PX">
+            //                     Quartly: {formatNumber(val.amount / 4, 'INR')}
+            //                   </Typography>
+            //                   <Typography fontSize="13PX">
+            //                     Bi-annual: {formatNumber(val.amount / 2, 'INR')}
+            //                   </Typography>
+            //                   <Typography fontSize="13PX">
+            //                     Yearly: {formatNumber(val.amount, 'INR')}
+            //                   </Typography>
+            //                 </Paper>
+            //               </Box>
+            //             </React.Fragment>
+            //           ))}
+            //         </Box>
+            //       ) : (
+            //         <Box>
+            //           <Typography>No data</Typography>
+            //         </Box>
+            //       )}
+            //     </>
+            //   );
+            // },
           },
-          { id: 'applicableGrade', label: 'Applicable Grade' },
+          { id: 'applicableGrade', label: 'Applicable Class' },
 
           {
             id: 'grossFee',
@@ -382,7 +388,7 @@ const FinanceFeeStructureSettingTab = () => {
           },
           {
             id: 'statustoggle',
-            label: 'Unpublish/Publish',
+            label: 'InActive/Active',
             render(statusToggle) {
               return <Switch value={statusToggle} />;
             },

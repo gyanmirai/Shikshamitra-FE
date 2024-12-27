@@ -23,8 +23,8 @@ const DefinedSchoolWideRulesComponent = () => (
           size="small"
         />
 
-        <Button variant="contained" size="small">
-          Add Additionally Discount Category
+        <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
+          Additionally Discount Category
         </Button>
       </Box>
     </Grid>

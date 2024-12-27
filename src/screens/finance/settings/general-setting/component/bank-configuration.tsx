@@ -26,8 +26,8 @@ const BankConfiguration = () => {
         >
           <TextField name="AddNewBank" label="Add New Bank" size="small" />
 
-          <Button variant="contained" size="small">
-            Add
+          <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
+            New Bank
           </Button>
         </Box>
       </Grid>

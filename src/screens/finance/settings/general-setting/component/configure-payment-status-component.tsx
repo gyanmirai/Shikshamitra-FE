@@ -63,10 +63,10 @@ const ConfigurePaymentStatusComponent = () => (
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Box display="flex" flexDirection="row" gap={3} alignItems="center">
-            <TextField name="Add new status" label="Add New Status" size="small" fullWidth />
-            <Button variant="contained" size="small">
-              Add
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <TextField name="Add new status" label="Add New Status" size="small" />
+            <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
+              Payment Status
             </Button>
           </Box>
         </Grid>

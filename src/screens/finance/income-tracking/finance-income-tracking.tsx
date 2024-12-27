@@ -8,7 +8,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -135,15 +134,20 @@ const FinanceIncomeTrackingScreen = () => {
         links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-        <Button onClick={dialog.onTrue} variant="contained" size="small">
-          Add New Income
+      <Box sx={{ mr: '15px' }} gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+        <Button
+          startIcon={<Iconify icon="ic:outline-plus" />}
+          onClick={dialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          New Income
         </Button>
       </Box>
       <Box>
-        <Typography component="span" variant="h6" gutterBottom>
+        {/* <Typography component="span" variant="h6" gutterBottom>
           Income OverView
-        </Typography>
+        </Typography> */}
       </Box>
       <CustomizableTable
         isScrollbar={false}
@@ -184,31 +188,31 @@ const FinanceIncomeTrackingScreen = () => {
               );
             },
           },
-          { id: 'paymentMethod', label: 'Payment Method' },
-          { id: 'date', label: 'Date' },
+          // { id: 'paymentMethod', label: 'Payment Method' },
+          { id: 'date', label: `Today / Received Date` },
 
-          {
-            id: 'paymentStatus',
-            label: 'Payment Status',
-            render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
+          // {
+          //   id: 'paymentStatus',
+          //   label: 'Payment Status',
+          //   render(value, row) {
+          //     return (
+          //       <Label
+          //         variant="soft"
+          //         color={
+          //           value === 'Overdue'
+          //             ? 'error'
+          //             : value === 'Unpaid'
+          //               ? 'warning'
+          //               : value === 'Paid'
+          //                 ? 'success'
+          //                 : 'default'
+          //         }
+          //       >
+          //         {value}
+          //       </Label>
+          //     );
+          //   },
+          // },
           {
             id: 'action',
             label: 'Action',

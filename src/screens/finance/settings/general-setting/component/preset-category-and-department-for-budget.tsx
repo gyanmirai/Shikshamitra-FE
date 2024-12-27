@@ -66,9 +66,9 @@ const PresetCategoryAndDepartmentForBudget = () => (
         </Grid>
         <Grid item xs={12} md={6}>
           <Box display="flex" flexDirection="row" gap={3} alignItems="center">
-            <TextField name="category" label="Add New Category" size="small" fullWidth />
-            <Button variant="contained" size="small">
-              Add
+            <TextField name="category" label="Add New Category" size="small" />
+            <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
+              New Category
             </Button>
           </Box>
         </Grid>

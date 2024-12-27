@@ -71,8 +71,8 @@ const PredefinedCategoryIncomeExpenseComponent = () => (
         <TextField name="category" label="Category" size="small" fullWidth />
         <TextField name="Addnewsubcategory" label="Add New Sub-Category" size="small" fullWidth />
         <Box display="flex" width="100%" alignSelf="flex-end">
-          <Button variant="contained" size="small">
-            Add
+          <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
+            New Sub-Category
           </Button>
         </Box>
       </Box>

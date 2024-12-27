@@ -128,15 +128,15 @@ const FinanceReconciliationTab = () => {
           { id: 'chequeNo', label: 'Cheque No' },
           { id: 'bankName', label: 'Bank Name' },
           { id: 'chequeDate', label: 'Cheque Date' },
-          {
-            id: 'chargesAmount',
-            label: 'Charges',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
-              );
-            },
-          },
+          // {
+          //   id: 'chargesAmount',
+          //   label: 'Charges',
+          //   render(value, row) {
+          //     return (
+          //       <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
+          //     );
+          //   },
+          // },
           { id: 'feeHead', label: 'Fee Head' },
           {
             id: 'amount',
@@ -160,6 +160,7 @@ const FinanceReconciliationTab = () => {
                           setSelectedEntry(row);
 
                           dialog.onTrue();
+                          popover.onClose();
                         }}
                       >
                         <Iconify icon="fluent:check-24-regular" />
@@ -171,6 +172,7 @@ const FinanceReconciliationTab = () => {
                           setSelectedEntry(row);
 
                           dialog.onTrue();
+                          popover.onClose();
                         }}
                       >
                         <Iconify icon="material-symbols-light:check" />

@@ -706,6 +706,11 @@ const financeModule = {
               _action: 'general-setting',
             },
             {
+              title: 'Receipt Book',
+              path: '/finance/settings/receipt-book',
+              _action: 'receipt-book',
+            },
+            {
               title: 'Fee Structure',
               path: '/finance/settings/fee-structure',
               _action: 'fee-structure-setting',
@@ -720,11 +725,7 @@ const financeModule = {
             //   path: '/finance/settings/expense-category',
             //   _action: 'expenense-category-setting',
             // },
-            {
-              title: 'Receipt Book',
-              path: '/finance/settings/receipt-book',
-              _action: 'receipt-book',
-            },
+
             {
               title: 'Tax Setting',
               path: '/finance/settings/tax-setting',
