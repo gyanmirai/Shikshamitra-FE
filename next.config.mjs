@@ -8,7 +8,6 @@ const nextConfig = {
   swcMinify: true,
   trailingSlash: true,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
-  reactStrictMode: true,
   env: {
     BUILD_STATIC_EXPORT: isStaticExport,
   },

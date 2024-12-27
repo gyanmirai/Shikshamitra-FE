@@ -101,8 +101,8 @@ const InquiryScreen = () => {
         links={[{ name: 'Student' }, { name: 'Inquiry' }]}
         sx={{ px: 1, mb: 2 }}
         action={
-          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            Add New Inquiry
+          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+            Inquiry
           </Button>
         }
       />
@@ -119,47 +119,21 @@ const InquiryScreen = () => {
 
       <CustomizableTable
         columns={[
-          { id: 'inquiryNumber', label: 'Enquiry Number', sticky: true },
+          { id: 'inquiryNumber', label: 'Inquiry Number', sticky: true, minWidth: '145px' },
           { id: 'organization', label: 'Organization' },
-          { id: 'batchName', label: 'Batch Name' },
+          { id: 'batchName', label: 'Batch Name', minWidth: '120px' },
           { id: 'class', label: 'Class' },
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'dateOfBirth', label: 'DOB' },
+          { id: 'studentName', label: 'Student Name', minWidth: '135px' },
+          { id: 'dateOfBirth', label: 'DOB', minWidth: '120px', align: 'left' },
           { id: 'age', label: 'Age' },
-          { id: 'dateOfInquiry', label: 'DOI' },
+          { id: 'dateOfInquiry', label: 'DOI', minWidth: '120px', align: 'left' },
           { id: 'gender', label: 'Gender' },
-          { id: 'address', label: 'Address' },
-          { id: 'parentsContactNo', label: 'Parents Co. No.' },
-          { id: 'alternateContact', label: 'Alternate Contact Details' },
-          { id: 'previousSchool', label: 'Previous School' },
-          { id: 'inquiryPreferences', label: 'Enquiry Preferences' },
-          // {
-          //   id: 'progress',
-          //   label: 'Progress',
-          //   render(value, row) {
-          //     return (
-          //       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-          //         <CircularProgress variant="determinate" value={value} />
-          //         <Box
-          //           sx={{
-          //             top: 0,
-          //             left: 0,
-          //             bottom: 0,
-          //             right: 0,
-          //             position: 'absolute',
-          //             display: 'flex',
-          //             alignItems: 'center',
-          //             justifyContent: 'center',
-          //           }}
-          //         >
-          //           <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-          //             {value}%
-          //           </Typography>
-          //         </Box>
-          //       </Box>
-          //     );
-          //   },
-          // },
+          { id: 'address', label: 'Address', minWidth: '120px' },
+          { id: 'parentsContactNo', label: 'Parents Co. No.', minWidth: '145px' },
+          { id: 'alternateContact', label: 'Alternate Contact Details', minWidth: '212px' },
+          { id: 'previousSchool', label: 'Previous School', minWidth: '150px' },
+          { id: 'inquiryPreferences', label: 'Enquiry Preferences', minWidth: '180px' },
+
           {
             id: 'actions',
             label: 'Actions',
@@ -255,6 +229,7 @@ interface FormikValues {
   state: string;
   pinCode: string;
   medium: string;
+  formNo: string;
 }
 
 const InquiryForm = ({ handleClose }: any) => {
@@ -279,6 +254,7 @@ const InquiryForm = ({ handleClose }: any) => {
     alternateContactDetails: '',
     previousSchool: '',
     inquiryPreferences: '',
+    formNo: '',
   };
 
   const handleSubmit = (
@@ -372,6 +348,17 @@ const InquiryForm = ({ handleClose }: any) => {
                   label="Middle Name"
                   error={touched.middleName && errors.middleName}
                   helperText={touched.middleName && errors.middleName}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Field
+                  as={TextField}
+                  fullWidth
+                  size="small"
+                  name="formNo"
+                  label="Form Number"
+                  error={touched.formNo && errors.formNo}
+                  helperText={touched.formNo && errors.formNo}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -494,7 +481,7 @@ const InquiryForm = ({ handleClose }: any) => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item xs={6}>
                 <CustomSelect
                   label="Enquiry Preferences"
                   name="inquiryPreferences"

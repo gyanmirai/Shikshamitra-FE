@@ -35,6 +35,7 @@ const personalInformationValidationSchema = Yup.object({
     .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
 
     .required('Pin code is required'),
+  organization: Yup.string().required('Organization is required'),
   //   employeeId: Yup.string().required('Employee ID is required'),
 });
 

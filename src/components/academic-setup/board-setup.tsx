@@ -192,7 +192,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
               >
                 {currentTabs.map((tab: EducationBoard) => (
                   <Tab
-                    sx={{ fontSize: '12px' }}
+                    // sx={{ fontSize: '12px' }}
                     key={tab.id}
                     label={
                       <Box display="flex" justifyContent="center" gap={1} alignItems="center">

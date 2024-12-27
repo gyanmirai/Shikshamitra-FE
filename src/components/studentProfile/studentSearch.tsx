@@ -29,7 +29,7 @@ const StudentSearch: React.FC<{ handleChange: (value: string) => void; value: st
         size="small"
         value={value}
         onChange={handleOnChange}
-        sx={{ '& input': { fontSize: '12px' } }}
+        // sx={{ '& input': { fontSize: '12px' } }}
       />
     </Box>
   );

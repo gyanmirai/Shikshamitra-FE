@@ -81,7 +81,7 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
             <Box
               component="span"
               className={navSectionClasses.item.title}
-              sx={{ fontSize: '12px' }}
+              // sx={{ fontSize: '12px' }}
             >
               {title}
             </Box>
@@ -141,7 +141,7 @@ const StyledNavItem = styled(ButtonBase, {
       ...sharedStyles.noWrap,
       ...theme.typography.body2,
       fontWeight: active ? theme.typography.fontWeightSemiBold : theme.typography.fontWeightMedium,
-      fontSize: '12px',
+      // fontSize: '13.5px',
       whiteSpace: 'normal',
     },
     caption: {

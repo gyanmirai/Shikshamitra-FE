@@ -65,7 +65,7 @@ const StudentTabs = () => {
       >
         {TABS.map((tab) => (
           <Tab
-            sx={{ fontSize: '12px' }}
+            // sx={{ fontSize: '12px' }}
             key={tab.value}
             label={tab.label}
             icon={tab.icon}

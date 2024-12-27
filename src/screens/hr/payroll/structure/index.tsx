@@ -31,10 +31,10 @@ import { formatCurrency } from 'src/utils/cureencyFormater';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
 import {
-  useGetPayrollStructuresQuery,
   useAddPayrollStructureMutation,
   useDeletePayrollStructureMutation,
   useUpdatePayrollStructureMutation,
+  useGetPayrollStructureByOrganizationQuery,
 } from 'src/redux/payrollStructure/payrollStructureApi';
 
 import { Iconify } from 'src/components/iconify';
@@ -58,6 +58,17 @@ const EmployeeSalaryStructureScreen = () => {
     setOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium]);
 
+  const { data: payrollStructure, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetPayrollStructureByOrganizationQuery,
+    params: organization,
+    options: {
+      skip: !organization,
+    },
+  });
+
+  console.log(payrollStructure, 'payrollStructure');
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -80,17 +91,31 @@ const EmployeeSalaryStructureScreen = () => {
           Search
         </Button>
       </Box>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Sections title="Earning" type={0} organization={organization} />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Sections title="Deduction" type={1} organization={organization} />
-        </Grid>
-        {/* <Grid item xs={12} md={6}>
+      {organization && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Sections
+              title="Earning"
+              data={payrollStructure || []}
+              isLoading={isLoading}
+              type={0}
+              organization={organization}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Sections
+              title="Deduction"
+              data={payrollStructure || []}
+              isLoading={isLoading}
+              type={1}
+              organization={organization}
+            />
+          </Grid>
+          {/* <Grid item xs={12} md={6}>
             
             </Grid> */}
-      </Grid>
+        </Grid>
+      )}
     </Box>
   );
 };
@@ -101,11 +126,13 @@ export const Sections = ({
   data,
   type,
   organization,
+  isLoading = false,
 }: {
   title?: string;
   data?: any;
   type: PayrollStructureType;
-  organization?: string;
+  organization: string;
+  isLoading?: boolean;
 }) => {
   const dialog = useBoolean();
   const confirm = useBoolean(false);
@@ -115,11 +142,6 @@ export const Sections = ({
   const [deletePayrollStructure, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useDeletePayrollStructureMutation,
-  });
-
-  const { data: payrollStructure } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPayrollStructuresQuery,
   });
 
   const actions = useCallback(
@@ -180,6 +202,7 @@ export const Sections = ({
           isPagination={false}
           isSearch={false}
           isShowedDense={false}
+          isLoading={isLoading}
           columns={[
             { id: 'payElement.name', label: 'Type' },
             {
@@ -194,12 +217,25 @@ export const Sections = ({
               label: 'Action',
               render(value, row) {
                 return (
-                  <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
+                  <ThreeDotsActions
+                    placement="right-top"
+                    showDeleteIcon
+                    showEditIcon
+                    showThreeDots={false}
+                    handleEditClick={() => {
+                      setEditData(row);
+                      dialog.onTrue();
+                    }}
+                    handleDeleteClick={() => {
+                      setDeleteInformation(row);
+                      confirm.onTrue();
+                    }}
+                  />
                 );
               },
             },
           ]}
-          data={payrollStructure?.items?.filter((i: any) => i.payrollStructureType === type) || []}
+          data={data?.filter((i: any) => i.payrollStructureType === type) || []}
         />
       </Box>
       <ConfirmDialog

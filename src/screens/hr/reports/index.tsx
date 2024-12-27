@@ -56,7 +56,7 @@ const ReportsScreen = () => {
       >
         {TABS.map((tab) => (
           <Tab
-            sx={{ fontSize: '12px' }}
+            // sx={{ fontSize: '12px' }}
             key={tab.value}
             value={tab.value}
             icon={tab.icon}

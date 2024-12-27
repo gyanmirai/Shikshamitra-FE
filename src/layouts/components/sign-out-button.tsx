@@ -8,8 +8,6 @@ import Button from '@mui/material/Button';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { logout } from 'src/redux/user/userSlice';
-
 // ----------------------------------------------------------------------
 
 type Props = ButtonProps & {
@@ -26,14 +24,15 @@ export function SignOutButton({ onClose, ...other }: Props) {
     try {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      dispatch(logout());
+      localStorage.removeItem('persist:root');
       router.push('/auth/logout');
+      // dispatch(logout());
 
       onClose?.();
     } catch (error) {
       console.error(error);
     }
-  }, [dispatch, onClose, router]);
+  }, [onClose, router]);
 
   return (
     <Button fullWidth variant="soft" size="large" color="error" onClick={handleLogout} {...other}>

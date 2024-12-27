@@ -66,7 +66,7 @@ const CustomSelect = <T extends string, J extends boolean>({
 
   return (
     <FormControl error={error} sx={{ width: '100%' }} {...formControlProps}>
-      <InputLabel size="small" sx={{ fontSize: '12px' }}>
+      <InputLabel size="small" sx={{ fontSize: '14px' }}>
         {label}
       </InputLabel>
       <Select
