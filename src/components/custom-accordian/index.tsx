@@ -34,7 +34,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
         boxShadow: 'none',
 
         color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
-        fontSize: '12px',
+        fontSize: '14px',
         '&:before': {
           display: 'none',
         },
@@ -65,7 +65,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
         <Typography
           variant="subtitle1"
           sx={{
-            fontSize: '12px',
+            fontSize: '14px',
             fontWeight: isActive
               ? theme.typography.fontWeightBold
               : theme.typography.fontWeightMedium,

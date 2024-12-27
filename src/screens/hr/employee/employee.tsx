@@ -1,9 +1,10 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
+import { Box, Grid, Card, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -32,6 +33,7 @@ const HrEmployee = () => {
   const [searchParams, setSearchParams] = useSearchParam();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
+
   const payrollDialog = useBoolean();
 
   const actions = useCallback(
@@ -41,27 +43,8 @@ const HrEmployee = () => {
         <MenuList>
           <MenuItem
             onClick={() => {
-              setSearchParams({ employee: row?.id });
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
-            View
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
-              setOpen(true);
-              pop.onClose();
-              setEditData(row);
-            }}
-          >
-            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-            Edit
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
               payrollDialog.onTrue();
+              setEditData(row);
               pop.onClose();
             }}
           >
@@ -84,7 +67,7 @@ const HrEmployee = () => {
         </MenuList>
       </>
     ),
-    [payrollDialog, setSearchParams, statusDialog]
+    [payrollDialog, statusDialog]
   );
 
   const handleClose = () => {
@@ -95,14 +78,52 @@ const HrEmployee = () => {
     statusDialog.onFalse();
     setEditData(null);
   };
+  const handleClosePayroll = () => {
+    payrollDialog.onFalse();
+    setEditData(null);
+  };
 
   const { data: employee, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });
+
+  const tableData = employee?.items?.map((item: any) => ({
+    ...item,
+    dob: dayjs(item?.dateOfBirth, 'YYYY-MM-DD').format('DD-MM-YYYY'),
+    genderValue: GenderType[item?.genderType],
+    doi: dayjs(item?.dateOfJoining, 'YYYY-MM-DD').format('DD-MM-YYYY'),
+    roleValue: item?.role?.name || 'Not Assigned',
+    statusValue: EmployeeStatusType[item?.employeeStatusType],
+  }));
   return (
     <>
-      {!searchParams?.employee ? (
+      {open ? (
+        <Box display="flex" flexDirection="column" gap={2} height="100%">
+          <CustomBreadcrumbs
+            heading={editData ? 'Update Employee' : 'Add Employee'}
+            links={[
+              { name: 'HR' },
+              { name: 'Employee List', onClick: handleClose },
+              { name: editData ? 'Update Employee' : 'Add Employee' },
+            ]}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleClose}
+              >
+                Back
+              </Button>
+            }
+          />
+
+          <Card>
+            <EmployeeFrom editData={editData} handleClose={handleClose} />
+          </Card>
+        </Box>
+      ) : !searchParams?.employee ? (
         <>
           {' '}
           <CustomBreadcrumbs
@@ -142,37 +163,33 @@ const HrEmployee = () => {
                   },
                 },
 
-                { id: 'dateOfBirth', label: 'DOB', minWidth: 100 },
+                { id: 'dob', label: 'DOB', minWidth: 100 },
                 {
-                  id: 'genderType',
+                  id: 'genderValue',
                   label: 'Gender',
-                  render(value, row) {
-                    return GenderType[value] || '-';
-                  },
                 },
-                { id: 'dateOfJoining', label: 'Date Of Joining', minWidth: 150 },
+                { id: 'doi', label: 'Date Of Joining', minWidth: 150 },
                 { id: 'email', label: 'Email' },
                 { id: 'mobileNo', label: 'Mobile No', minWidth: 150 },
                 {
-                  id: 'role.name',
+                  id: 'roleValue',
                   label: 'Role',
                   render(value, row) {
-                    return <Label variant="soft">{value || 'Not-assigned'}</Label>;
+                    return <Label variant="soft">{value}</Label>;
                   },
                 },
                 {
-                  id: 'employeeStatusType',
+                  id: 'statusValue',
                   label: 'Status',
                   render(value, row) {
-                    const status = EmployeeStatusType[value];
                     return (
                       <Label
                         variant="soft"
                         color={
-                          EmployeeStatusTypeColor[status as keyof typeof EmployeeStatusTypeColor]
+                          EmployeeStatusTypeColor[value as keyof typeof EmployeeStatusTypeColor]
                         }
                       >
-                        {status || '-'}
+                        {value || '-'}
                       </Label>
                     );
                   },
@@ -186,12 +203,21 @@ const HrEmployee = () => {
                       <ThreeDotsActions
                         actions={(props) => actions({ ...props, row })}
                         placement="right-top"
+                        showViewIcon
+                        showEditIcon
+                        handleViewClick={() => {
+                          setSearchParams({ employee: row?.id });
+                        }}
+                        handleEditClick={() => {
+                          setEditData(row);
+                          setOpen(true);
+                        }}
                       />
                     );
                   },
                 },
               ]}
-              data={employee?.items || []}
+              data={tableData || []}
             />
             <CustomDialog
               open={statusDialog.value}
@@ -204,13 +230,13 @@ const HrEmployee = () => {
                 status={editData?.employeeStatusType}
               />
             </CustomDialog>
-            <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee">
-              <EmployeeFrom editData={editData} handleClose={handleClose} />
-            </CustomDialog>
+            {/* <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee"> */}
+            {/*  <EmployeeFrom editData={editData} handleClose={handleClose} /> */}
+            {/* </CustomDialog> */}
             <CustomDialog
               maxWidth="lg"
               open={payrollDialog.value}
-              handleClose={payrollDialog.onFalse}
+              handleClose={handleClosePayroll}
               title="Payroll Structure"
               paperProps={{
                 sx: {
@@ -221,10 +247,20 @@ const HrEmployee = () => {
               <Box bgcolor="background.neutral" p={2}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
-                    <Sections title="Earning" data={[]} type={0} />
+                    <Sections
+                      title="Earning"
+                      organization={editData?.educationMediumStageId}
+                      data={[]}
+                      type={0}
+                    />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <Sections title="Deduction" data={[]} type={1} />
+                    <Sections
+                      title="Deduction"
+                      organization={editData?.educationMediumStageId}
+                      data={[]}
+                      type={1}
+                    />
                   </Grid>
                 </Grid>
               </Box>

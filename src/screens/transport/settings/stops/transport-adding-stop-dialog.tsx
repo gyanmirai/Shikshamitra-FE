@@ -26,7 +26,6 @@
 //     dialogValue: boolean;
 //     onClose: () => void;
 
-
 // }
 // const TransportAddingStopDialog: React.FC<TransportAddingStopDialogProps> = ({ dialogValue, onClose }) => {
 //     const [searchInput, setSearchInput] = useState('');
@@ -39,7 +38,6 @@
 //         setCharges(formattedValue);
 //     };
 //     const position: LatLngExpression = [21.212907926175802, 72.85037234842194];
-
 
 //     const iconUrl = `${CONFIG.site.basePath}/assets/images/location/placeholder.png`;
 //     const icon = L.icon({
@@ -87,8 +85,7 @@
 //         return null;
 //     };
 
-//     const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 }); 
-
+//     const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
 
 //     interface RecentViewProps {
 //         lat: any;
@@ -105,13 +102,9 @@
 //         return null;
 //     };
 
-
-
 //     // useEffect(() => {
 //     //     console.log('Current bus stops:', busStops);
 //     // }, [busStop]);
-
-
 
 //     const handleRemoveStop = (stopId: number) => {
 //         const updatedStops = busStops.filter((stop: any) => stop.stopId !== stopId);
@@ -132,7 +125,6 @@
 
 //                     />
 //                     {/* Additional fields for stop details */}
-
 
 //                     <Button onClick={() => {
 //                         const params: any = {
@@ -204,7 +196,7 @@
 //                         </Box>
 
 //                     </Grid>
-                   
+
 //                 </Grid>
 //             </Scrollbar>
 //             <DialogActions>
@@ -217,7 +209,6 @@
 // }
 
 // export default TransportAddingStopDialog
-
 
 //  {/* <Grid item xs={12} md={6}>
 //                         <Grid container spacing={2}>
@@ -269,4 +260,3 @@
 //                             </Grid>
 //                         </Grid>
 //                     </Grid> */}
-

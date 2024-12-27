@@ -36,6 +36,12 @@ export const payrollStructureApi = createApi({
       }),
       invalidatesTags: ['PayrollStructure'],
     }),
+    getPayrollStructureByOrganization: builder.query({
+      query: (organization) => ({
+        url: `/education-medium-stage/${organization}/payroll-structure`,
+      }),
+      providesTags: ['PayrollStructure'],
+    }),
   }),
 });
 
@@ -44,4 +50,5 @@ export const {
   useAddPayrollStructureMutation,
   useDeletePayrollStructureMutation,
   useUpdatePayrollStructureMutation,
+  useGetPayrollStructureByOrganizationQuery,
 } = payrollStructureApi;

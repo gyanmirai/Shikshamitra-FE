@@ -39,7 +39,6 @@ const RegisterForm = () => {
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => setActiveStep(index)}
-      errors={[]}
       initialValues={{
         ...generalFieldsInitialValues(),
         ...documentFieldsInitialValues(),

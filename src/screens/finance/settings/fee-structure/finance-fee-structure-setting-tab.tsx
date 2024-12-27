@@ -266,9 +266,6 @@ const FinanceFeeStructureSettingTab = () => {
   };
   const [data, setData] = useState(initialData);
 
-
-
-
   return (
     <>
       <CustomBreadcrumbs
@@ -289,8 +286,6 @@ const FinanceFeeStructureSettingTab = () => {
           Fee Categories Overview
         </Typography> */}
       </Box>
-
-
 
       <CustomizableTable
         columns={[
@@ -342,21 +337,19 @@ const FinanceFeeStructureSettingTab = () => {
 
           {
             id: 'grossFee',
-            label: 'Gross Fees', render(value, row) {
+            label: 'Gross Fees',
+            render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px' }}>
-                  {formatNumber(value, 'INR')}
-                </Typography>
+                <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
               );
             },
           },
           {
             id: 'totaldiscountAmount',
-            label: 'General Discount', render(value, row) {
+            label: 'General Discount',
+            render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px' }}>
-                  {formatNumber(value, 'INR')}
-                </Typography>
+                <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
               );
             },
           },
@@ -405,7 +398,7 @@ const FinanceFeeStructureSettingTab = () => {
                       <MenuItem
                         onClick={() => {
                           setSelectedEntry(row);
-                          dialog.onFalse()
+                          dialog.onFalse();
                           financeEditFeeStructureDialog.onTrue();
                         }}
                       >
@@ -429,12 +422,15 @@ const FinanceFeeStructureSettingTab = () => {
         ]}
         data={tableData}
       />
-      {financeEditFeeStructureDialog.value &&
+      {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
           data={selectedEntry}
           dialogValue={financeEditFeeStructureDialog.value}
-          onClose={() => { financeEditFeeStructureDialog.onFalse() }}
-        />}
+          onClose={() => {
+            financeEditFeeStructureDialog.onFalse();
+          }}
+        />
+      )}
       {dialog.value && selectedEntry && (
         <FinanceAddFeeCategorySettingDialog
           onSave={handleSave}
@@ -445,8 +441,6 @@ const FinanceFeeStructureSettingTab = () => {
           allData={tableData}
         />
       )}
-
-
     </>
   );
 };

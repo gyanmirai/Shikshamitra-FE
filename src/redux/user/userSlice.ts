@@ -5,11 +5,15 @@ import type { RootState } from '../store';
 interface UserState {
   isLoggedIn: boolean;
   userInfo: Record<string, any> | null;
+  lastAction: string;
+  isLoading: boolean;
 }
 
 const initialState: UserState = {
   isLoggedIn: false,
   userInfo: null,
+  lastAction: '',
+  isLoading: false,
 };
 
 export const getUser = createAsyncThunk(
@@ -77,14 +81,18 @@ const userSlice = createSlice({
     builder
       .addCase(getUser.pending, (state) => {
         state.isLoggedIn = false;
+        state.isLoading = true;
       })
       .addCase(getUser.fulfilled, (state, action) => {
         state.isLoggedIn = true;
         state.userInfo = action.payload;
+        state.isLoading = false;
       })
       .addCase(getUser.rejected, (state) => {
         state.isLoggedIn = false;
         state.userInfo = null;
+
+        state.isLoading = false;
       });
   },
 });

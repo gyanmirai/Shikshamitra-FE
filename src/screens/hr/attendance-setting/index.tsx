@@ -6,9 +6,6 @@ import { Tab, Box } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -59,11 +56,8 @@ const HrAttendanceSettingScreen = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
-  });
-  console.log(data, 'data');
+
+  // console.log(data, 'data');
   // const handleClose = () => {
   //   setEditData(null);
   //   dialog.onFalse();

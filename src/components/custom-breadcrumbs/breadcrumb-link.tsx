@@ -49,14 +49,14 @@ export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props)
 
   if (link.href) {
     return (
-      <Link component={RouterLink} href={link.href} sx={styles}>
+      <Link component={RouterLink} href={link.href} sx={styles} onClick={link?.onClick}>
         {renderContent}
       </Link>
     );
   }
 
   return (
-    <Box sx={styles} {...props}>
+    <Box sx={styles} onClick={link?.onClick} {...props}>
       {' '}
       {renderContent}{' '}
     </Box>

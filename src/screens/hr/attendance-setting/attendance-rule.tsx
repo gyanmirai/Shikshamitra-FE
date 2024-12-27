@@ -1,5 +1,5 @@
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -8,8 +8,6 @@ import {
   Grid,
   Card,
   Button,
-  MenuItem,
-  MenuList,
   Checkbox,
   TextField,
   Typography,
@@ -31,7 +29,6 @@ import {
   useDeleteEmployeeCustomAttendanceRuleMutation,
 } from 'src/redux/employee/employeeApi';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -44,35 +41,7 @@ const AttendanceRule = () => {
   const dialog = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
-  const actions = useCallback(
-    ({ popover }: any, row: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            confirm.onTrue();
-            popover.onClose();
-            setDeleteInformation(row);
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
 
-        <MenuItem
-          onClick={() => {
-            setEditData(row);
-            dialog.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-      </MenuList>
-    ),
-    [confirm, dialog]
-  );
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
@@ -106,7 +75,7 @@ const AttendanceRule = () => {
             Custom Attendance Rules
           </Typography>
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            Add Rule
+            Attendance Rule
           </Button>
         </Box>
 
@@ -132,7 +101,17 @@ const AttendanceRule = () => {
                   return (
                     <ThreeDotsActions
                       placement="right-top"
-                      actions={(props) => actions(props, row)}
+                      showDeleteIcon
+                      showEditIcon
+                      handleDeleteClick={() => {
+                        confirm.onTrue();
+                        setDeleteInformation(row);
+                      }}
+                      handleEditClick={() => {
+                        setEditData(row);
+                        dialog.onTrue();
+                      }}
+                      showThreeDots={false}
                     />
                   );
                 },

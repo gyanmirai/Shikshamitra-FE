@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, Typography, } from '@mui/material';
+import { Box, Card, Grid, Typography } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
@@ -150,7 +150,6 @@ const LibraryDashboard = () => {
     <>
       {/* Dropdowns for selecting class and data type */}
       <Grid container spacing={3} sx={{ marginBottom: 1, padding: 3 }}>
-
         <Box
           sx={{
             gap: 3,
@@ -170,7 +169,7 @@ const LibraryDashboard = () => {
                 transition: '0.3s ease-in-out',
               },
             }}
-            onClick={() => { }}
+            onClick={() => {}}
           >
             <Card sx={{ py: 3, pl: 3, pr: 2.5 }}>
               <Box sx={{ flexGrow: 1 }}>
@@ -584,7 +583,20 @@ const LibraryDashboard = () => {
             title="Reservation Trends Over Time"
             selectSeries="Standard 1"
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+              categories: [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+              ],
               series: [
                 {
                   name: 'Standard 1',
@@ -700,25 +712,3 @@ const LibraryDashboard = () => {
 };
 
 export default LibraryDashboard;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

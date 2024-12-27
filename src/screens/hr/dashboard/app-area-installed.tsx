@@ -34,7 +34,16 @@ type Props = CardProps & {
   sendToParent?: (data: any) => void;
 };
 
-export function AppAreaInstalled({ sendToParent, title, subheader, chart, selectSeries, height = 320, isShowChartLegendValue = true, ...other }: Props) {
+export function AppAreaInstalled({
+  sendToParent,
+  title,
+  subheader,
+  chart,
+  selectSeries,
+  height = 320,
+  isShowChartLegendValue = true,
+  ...other
+}: Props) {
   const theme = useTheme();
 
   const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
@@ -56,13 +65,15 @@ export function AppAreaInstalled({ sendToParent, title, subheader, chart, select
     ...chart.options,
   });
 
-  const handleChangeSeries = useCallback((newValue: string) => {
-    setSelectedSeries(newValue);
-    if (sendToParent) {
-      sendToParent(newValue);
-    }
-  }, [sendToParent]);
-
+  const handleChangeSeries = useCallback(
+    (newValue: string) => {
+      setSelectedSeries(newValue);
+      if (sendToParent) {
+        sendToParent(newValue);
+      }
+    },
+    [sendToParent]
+  );
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 

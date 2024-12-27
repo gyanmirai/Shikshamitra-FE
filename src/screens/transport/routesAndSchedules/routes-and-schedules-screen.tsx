@@ -200,7 +200,7 @@ const RoutesAndSchedulesScreen = () => {
     setMapData(null);
   };
 
-  useEffect(() => { }, [selectedExpense, isEdit, mapDialogOpen]);
+  useEffect(() => {}, [selectedExpense, isEdit, mapDialogOpen]);
 
   const handleSave = (item: any) => {
     console.log('from the save', item);

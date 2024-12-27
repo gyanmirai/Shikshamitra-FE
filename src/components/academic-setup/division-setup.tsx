@@ -175,7 +175,7 @@ const DivisionSetup = ({ classId }: DivisionSetupProps) => {
               >
                 {currentTabs.map((tab: IDivision) => (
                   <Tab
-                    sx={{ fontSize: '12px' }}
+                    // sx={{ fontSize: '12px' }}
                     key={tab.id}
                     label={
                       <Box display="flex" justifyContent="center" gap={1} alignItems="center">

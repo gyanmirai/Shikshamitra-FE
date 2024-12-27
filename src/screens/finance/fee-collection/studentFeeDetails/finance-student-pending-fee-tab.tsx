@@ -32,7 +32,7 @@ const FinanceStudentPendingFeeTab = () => {
   ];
   return (
     <>
-      <Typography sx={{ mt: '14px', fontSize: "14px", fontWeight: "bold" }}>
+      <Typography sx={{ mt: '14px', fontSize: '14px', fontWeight: 'bold' }}>
         Overdue Payments List
       </Typography>
       <CustomizableTable
@@ -75,7 +75,7 @@ const FinanceStudentPendingFeeTab = () => {
         data={overDuePaymentList}
       />
 
-      <Typography sx={{ mt: '14px', fontSize: "14px", fontWeight: "bold" }}>
+      <Typography sx={{ mt: '14px', fontSize: '14px', fontWeight: 'bold' }}>
         Upcoming Payments List
       </Typography>
       <CustomizableTable

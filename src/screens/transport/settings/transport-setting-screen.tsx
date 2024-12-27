@@ -2,11 +2,7 @@
 
 import React, { useMemo } from 'react';
 
-import {
-  Box,
-  Tab,
-  Card,
-} from '@mui/material';
+import { Box, Tab, Card } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
@@ -36,7 +32,6 @@ const TABS = [
   //   icon: <Iconify icon="tdesign:vehicle" width={20} />,
   //   component: () => <TransportVehicleSettingScreen />,
   // },
-
 ];
 
 const TransportSettingScreen = () => {
@@ -138,6 +133,3 @@ const TransportSettingScreen = () => {
 };
 
 export default TransportSettingScreen;
-
-
-

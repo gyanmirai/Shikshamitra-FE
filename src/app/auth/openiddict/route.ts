@@ -5,6 +5,12 @@ import { clientConfig, getClient } from '../../../utils/client';
 import fs from 'fs/promises';
 import path from 'path';
 
+const decodeToken = (token: string) => {
+  const encoder = new TextEncoder();
+  const binaryData = encoder.encode(token);
+  return binaryData;
+};
+
 export async function GET(request: NextApiRequest) {
   try {
     const session = await getSession();
