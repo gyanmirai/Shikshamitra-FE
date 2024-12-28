@@ -19,10 +19,10 @@ import FinanceFeeCollectionRefundTab from '../fee-collection/feeRefund/finance-f
 import FinanceFeeCollectionRefundApprovedDialog from '../fee-collection/feeRefund/component/fee-refund-approved-dialog';
 
 interface FeeRefundScreenProps {
-  fromStudentDetailedView: boolean;
+  fromStudentDetailedView?: boolean;
 }
 
-const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedView }) => {
+const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedView = false }) => {
   const studentRefundData = [
     {
       studentName: 'Vishal Rameshbhai Patel',
