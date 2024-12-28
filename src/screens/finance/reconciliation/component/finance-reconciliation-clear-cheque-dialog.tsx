@@ -47,10 +47,11 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
       title={fromClearCheck ? 'Clear Cheque' : 'Bounce Cheque'}
       open={dialogValue}
       handleClose={onClose}
+      maxWidth="md"
     >
       <Box>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
               <Grid2 container spacing={2}>
                 <Grid2 xs={6}>
@@ -167,7 +168,17 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
               {!fromClearCheck && (
                 <Grid2 container spacing={2}>
                   <Grid2 xs={6}>
+                    <CustomSelect
+                      label="Check Bounce Reason"
+                      options={[]}
+                      value=""
+                      onChange={() => {}}
+                      fullWidth
+                    />
+                  </Grid2>
+                  <Grid2 xs={6}>
                     <TextField
+                      fullWidth
                       disabled
                       name="checkBounceCharges"
                       label="Bounce Charges"
@@ -183,14 +194,6 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       //     </InputAdornment>
                       //   ),
                       // }}
-                    />
-                  </Grid2>
-                  <Grid2 xs={6}>
-                    <CustomSelect
-                      label="Check Bounce Reason"
-                      options={[]}
-                      value=""
-                      onChange={() => {}}
                     />
                   </Grid2>
                 </Grid2>

@@ -536,25 +536,18 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                   </Box>
                 </Grid>
               )}
-
-              {/* 
-
-                  {formik.values.paymentMode.includes("Cash") && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Cash Details
-                      </Typography>
-
-                      <FormattedAmountInput
-                        label="Cash Amount"
-                        value={cashAmountState}
-                        onChange={handleCashAmountChange}
-                      />
-                    </Grid>
-                  )} */}
             </Grid>
           )}
-
+          <TextField
+            multiline
+            rows={4}
+            name="remarks"
+            label="Remarks By Authority"
+            value="collect via cash"
+            onChange={formik.handleChange}
+            size="small"
+            disabled
+          />
           <TextField
             multiline
             rows={4}

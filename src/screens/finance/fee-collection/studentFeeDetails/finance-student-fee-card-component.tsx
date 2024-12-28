@@ -445,7 +445,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
                 feeRefundDialog.onTrue();
               }}
             >
-              Fee Refund
+              Process For Refund
             </Button>
           </Box>
         </Box>

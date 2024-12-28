@@ -425,6 +425,11 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             render: (value, row) => (
               <ThreeDotsActions
                 placement="right-top"
+                showViewIcon
+                handleViewClick={() => {
+                  dialog.onTrue();
+                  setSelectedEntry(row);
+                }}
                 actions={(popover) => (
                   <MenuList>
                     <MenuItem
@@ -435,16 +440,15 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
                       <Iconify icon="tabler:receipt" />
                       View Receipt
                     </MenuItem>
-                    <MenuItem
+                    {/* <MenuItem
                       onClick={() => {
                         console.log('data row', row);
-                        dialog.onTrue();
-                        setSelectedEntry(row);
+
                       }}
                     >
                       <Iconify icon="mdi:eye" />
                       View Details
-                    </MenuItem>
+                    </MenuItem> */}
                   </MenuList>
                 )}
               />

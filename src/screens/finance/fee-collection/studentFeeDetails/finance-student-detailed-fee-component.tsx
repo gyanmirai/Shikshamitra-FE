@@ -8,8 +8,8 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 
+import FeeRefundScreen from '../../fee-refund/fee-refund-screen';
 import FinanceStudentPendingFeeTab from './finance-student-pending-fee-tab';
-import FinanceFeeRefundHistory from '../feeRefund/finance-fee-refund-history';
 import FinanceStudentFeeBreakdownTab from './finance-student-fee-breakdown-tab';
 import FinanceFeeCollectionCharges from '../charges/finance-fee-collection-charges';
 // import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
@@ -39,7 +39,9 @@ const TABS = [
   {
     value: 'fee-refund',
     label: 'Refund History',
-    component: () => <FinanceFeeRefundHistory />,
+    component: () => <FeeRefundScreen fromStudentDetailedView />,
+
+    // <FinanceFeeRefundHistory />,
   },
 ];
 

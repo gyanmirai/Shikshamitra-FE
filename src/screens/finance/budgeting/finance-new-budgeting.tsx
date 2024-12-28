@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Tab, Button, Tooltip, useTheme, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Button, Tooltip, useTheme, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -375,22 +375,29 @@ const FinanceNewBudgetingScreen = () => {
                   return (
                     <ThreeDotsActions
                       placement="right-top"
-                      actions={({ popover }: any) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              setIsEdit(true);
-                              setSelectedEntry(row);
-                              dialog.onTrue();
-                              popover.onClose();
-                              console.log('income', row);
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" />
-                            Edit
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      showThreeDots={false}
+                      showEditIcon
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        setSelectedEntry(row);
+                        dialog.onTrue();
+                      }}
+                      // actions={({ popover }: any) => (
+                      //   <MenuList>
+                      //     <MenuItem
+                      //       onClick={() => {
+                      //         setIsEdit(true);
+                      //         setSelectedEntry(row);
+                      //         dialog.onTrue();
+                      //         popover.onClose();
+                      //         console.log('income', row);
+                      //       }}
+                      //     >
+                      //       <Iconify icon="solar:pen-bold" />
+                      //       Edit
+                      //     </MenuItem>
+                      //   </MenuList>
+                      // )}
                     />
                   );
                 },
@@ -465,22 +472,29 @@ const FinanceNewBudgetingScreen = () => {
                   return (
                     <ThreeDotsActions
                       placement="right-bottom"
-                      actions={({ popover }: any) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              setIsEdit(true);
-                              setSelectedEntry(row);
-                              dialog.onTrue();
-                              popover.onClose();
-                              console.log('income', row);
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" />
-                            Edit
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      showThreeDots={false}
+                      showEditIcon
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        setSelectedEntry(row);
+                        dialog.onTrue();
+                      }}
+                      // actions={({ popover }: any) => (
+                      //   <MenuList>
+                      //     <MenuItem
+                      //       onClick={() => {
+                      //         setIsEdit(true);
+                      //         setSelectedEntry(row);
+                      //         dialog.onTrue();
+                      //         popover.onClose();
+                      //         console.log('income', row);
+                      //       }}
+                      //     >
+                      //       <Iconify icon="solar:pen-bold" />
+                      //       Edit
+                      //     </MenuItem>
+                      //   </MenuList>
+                      // )}
                     />
                   );
                 },
