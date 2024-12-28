@@ -15,6 +15,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Reports from './reports';
+import TimeTableGrid from './tt';
 import CurrentTimetable from './currentTimetable';
 import TimeScheduleManagementsetting from './settings/time-schedule-management-setting';
 import TimeScheduleManagementDashboardTab from './dashboard/time-schedule-management-dashboard-tab';
@@ -30,11 +31,11 @@ const TABS = [
     label: 'Current Timetable Overview',
     component: (props: TabComponentType) => <CurrentTimetable {...props} />,
   },
-  // {
-  //   value: 'createNewTimetable',
-  //   label: 'Create New Timetable',
-  //   component: (props: TabComponentType) => <NewTimetable {...props} />,
-  // },
+  {
+    value: 'createNewTimetable',
+    label: 'Create New Timetable',
+    component: (props: TabComponentType) => <TimeTableGrid {...props} />,
+  },
 
   // {
   //   value: 'teacherManagement',

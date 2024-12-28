@@ -16,6 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Setting from './setting';
 import GradeEntry from './gradeEntry';
 import ScheduleExam from './schedule-exam';
+import QuizManagement from './quizManagement';
 import GradingAndAnalytics from './gradingAndAnalytics';
 // eslint-disable-next-line import/no-named-as-default
 import AssessmentManagement from './assessment-management';
@@ -49,11 +50,11 @@ const TABS = [
     label: 'Assessment Management',
     component: (props: TabComponentType) => <AssessmentManagement {...props} />,
   },
-  // {
-  //   value: 'rubricManagement',
-  //   label: 'Rubric Management',
-  //   component: (props: TabComponentType) => <RubricManagement {...props} />,
-  // },
+  {
+    value: 'quizManagement',
+    label: 'Quiz Management',
+    component: (props: TabComponentType) => <QuizManagement {...props} />,
+  },
   {
     value: 'studentPerformanceAndAnalytics',
     label: 'Student Performace Analytics',
