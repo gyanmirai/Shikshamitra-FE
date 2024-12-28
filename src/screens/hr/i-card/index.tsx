@@ -110,11 +110,6 @@ const StudentIcardScreen = () => {
           />
         </>
       )}
-      {/* <CustomDialog fullScreen title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
-        <Scrollbar sx={{ p: 2 }}>
-          <StudentICardForm handleClose={dialog.onFalse} />
-        </Scrollbar>
-      </CustomDialog> */}
       <CustomDialog
         maxWidth="lg"
         title="Preview"

@@ -13,6 +13,10 @@ export const EventHolidayApi = createApi({
       query: () => ({ url: '/app/event-and-holiday' }),
       providesTags: ['EventHoliday'],
     }),
+    getEventHolidayByDate: builder.query({
+      query: (date) => ({ url: `/app/event-and-holiday/event-and-holiday-by-month?date=${date}` }),
+      providesTags: ['EventHoliday'],
+    }),
     addEventHoliday: builder.mutation({
       query: (body) => ({
         url: '/app/event-and-holiday',
@@ -44,4 +48,7 @@ export const {
   useDeleteEventHolidayMutation,
   useGetEventHolidayQuery,
   useUpdateEventHolidayMutation,
+  useGetEventHolidayByDateQuery,
+  useLazyGetEventHolidayQuery,
+  useLazyGetEventHolidayByDateQuery,
 } = EventHolidayApi;

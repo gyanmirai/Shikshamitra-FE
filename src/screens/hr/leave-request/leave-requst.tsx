@@ -10,8 +10,9 @@ import { Form, Field, Formik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, Button, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
+import { convertBase64Format } from 'src/utils/base64Formate';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -124,7 +125,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       enableReinitialize
       validateOnChange
       initialValues={{
-        leaveType: editData?.leaveType || '',
+        leaveType: editData?.leaveTypeId || '',
         description: editData?.description || '',
         startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
         endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
@@ -132,7 +133,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         rejectionReason: editData?.rejectionReason || '',
         status: editData?.status || 0,
 
-        docs: '',
+        docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
       }}
       validationSchema={Yup.object().shape({
         leaveType: Yup.string().required('Leave type is required'),
@@ -157,10 +158,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           }),
         description: Yup.string().required('Description is required'),
         status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
-        rejectionReason: Yup.string().when('status', {
-          is: 'rejected',
-          then: (schema) => schema.required('Rejection reason is required'),
-        }),
+        rejectionReason: Yup.string().test(
+          'rejectionReason',
+          'Rejection reason is required',
+          function (value) {
+            const { status } = this.parent;
+            if (editData && status === EmployeeLeaveStatusType.Rejected) {
+              return !!value || this.createError({ message: 'Rejection reason is required' });
+            }
+            return true;
+          }
+        ),
         // color: Yup.string().required('Color is required'),
       })}
       onSubmit={async (values: FormValues, { setSubmitting, resetForm }) => {
@@ -213,6 +221,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   value={values.leaveType}
                   name="leaveType"
                   valueKey="id"
+                  disabled={editData}
                   labelKey="leaveType"
                   error={!!touched.leaveType && !!errors.leaveType}
                   helperText={(touched.leaveType && errors.leaveType) || ''}
@@ -344,7 +353,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 {editData && (
                   <>
                     {editData.status !== EmployeeLeaveStatusType.Rejected && (
-                      <Button
+                      <LoadingButton
+                        loading={isChangeStatusLoading}
                         variant="contained"
                         size="small"
                         color="primary"
@@ -363,9 +373,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                         style={{ marginRight: '10px' }}
                       >
                         Approve
-                      </Button>
+                      </LoadingButton>
                     )}
-                    <Button
+                    <LoadingButton
                       variant="contained"
                       size="small"
                       color="error"
@@ -374,7 +384,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       }}
                     >
                       Reject
-                    </Button>
+                    </LoadingButton>
                   </>
                 )}
               </Grid>
