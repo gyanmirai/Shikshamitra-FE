@@ -11,7 +11,9 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import MemberTransportScreen from './member-transport-screen';
+import TransportWaitingListScreen from './waiting-list-screen';
 import TransportRequestScreen from './transport-request-screen';
+import TransportNotifiedPersonlistScreen from './transport-notification-list-screen';
 
 const TABS = [
   {
@@ -21,10 +23,22 @@ const TABS = [
     component: () => <MemberTransportScreen />,
   },
   {
-    value: 'Request',
+    value: 'request',
     label: 'Request',
     icon: <Iconify icon="carbon:request-quote" width={20} />,
     component: () => <TransportRequestScreen />,
+  },
+  {
+    value: 'waiting',
+    label: 'Waiting List',
+    icon: <Iconify icon="medical-icon:i-waiting-area" width={20} />,
+    component: () => <TransportWaitingListScreen />,
+  },
+  {
+    value: 'notified',
+    label: 'Notified',
+    icon: <Iconify icon="ant-design:notification-outlined" width={20} />,
+    component: () => <TransportNotifiedPersonlistScreen />,
   },
 ];
 
@@ -44,7 +58,14 @@ const AssignedRouteScreen = () => {
           { name: 'Transport' },
           { name: 'Assigned Route' },
           {
-            name: searchParams.tab === 'assignedRoute' ? 'Assigned Route' : 'Request',
+            name:
+              searchParams.tab === 'assignedRoute'
+                ? 'Assigned Route'
+                : searchParams.tab === 'request'
+                  ? 'Request'
+                  : searchParams.tab === 'notified'
+                    ? 'Notified'
+                    : 'Waiting List',
           },
         ]}
         sx={{ px: 1, mb: 2 }}

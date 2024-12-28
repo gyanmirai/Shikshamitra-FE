@@ -217,7 +217,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
 
             <Box py="13px" display="flex" flexDirection="row" gap={4}>
               <CustomSelect
-                label="Book Receipt"
+                label="Receipt Book"
                 options={bookReciptList}
                 value={formik.values.bookRecipt}
                 onChange={(e) => formik.setFieldValue('bookRecipt', e)}
@@ -230,7 +230,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
               {isBulkEdit ? (
                 <CustomSelect
                   multiple
-                  label="Applicable Grade"
+                  label="Applicable Class"
                   options={[
                     { value: '1', label: '1' },
                     { value: '2', label: '2' },
@@ -253,7 +253,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 />
               ) : (
                 <CustomSelect
-                  label="Applicable Grade"
+                  label="Applicable Class"
                   options={[
                     { value: '1', label: '1' },
                     { value: '2', label: '2' },

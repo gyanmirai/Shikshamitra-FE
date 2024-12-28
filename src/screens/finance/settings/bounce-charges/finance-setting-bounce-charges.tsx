@@ -6,6 +6,7 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -55,6 +56,7 @@ const FinanceSettingBounceCharges = () => {
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
+          startIcon={<Iconify icon="ic:outline-plus" />}
           onClick={() => {
             setIsEdit(false);
             dialog.onTrue();
@@ -62,7 +64,7 @@ const FinanceSettingBounceCharges = () => {
           variant="contained"
           size="small"
         >
-          Add New Charges
+          New Charges
         </Button>
       </Box>
       {/* <Box>

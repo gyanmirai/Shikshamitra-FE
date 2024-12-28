@@ -94,6 +94,7 @@ const FinanceReceiptBookSetting = () => {
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
+          startIcon={<Iconify icon="ic:outline-plus" />}
           onClick={() => {
             setIsEdit(false);
             dialog.onTrue();
@@ -101,7 +102,7 @@ const FinanceReceiptBookSetting = () => {
           variant="contained"
           size="small"
         >
-          Add New Receipt Book
+          New Receipt Book
         </Button>
       </Box>
       <Box>
@@ -116,7 +117,7 @@ const FinanceReceiptBookSetting = () => {
 
           {
             id: 'toggle',
-            label: 'Active',
+            label: 'InActive/Active',
             render() {
               return <Switch />;
             },

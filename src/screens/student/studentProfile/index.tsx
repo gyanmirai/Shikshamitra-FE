@@ -22,11 +22,13 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Records from './records';
 import Finance from './finance';
+import Library from './libraray';
 import Academic from './academic';
 import Document from './document';
 import Attendance from './attendance';
 import Communication from './communication';
 import StudentDashboard from './studentDashboard';
+import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
 
 const students = [
@@ -146,14 +148,16 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn }) => <Communication {...props} />,
   },
   {
-    value: 'Transportation',
-    label: 'transportation',
+    value: 'transportation',
+    label: 'Transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <StudentTransportProfile {...props} />,
   },
   {
     value: 'library',
     label: 'Library',
     icon: <Iconify icon="mdi:library" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <Library {...props} />,
   },
 ];
 export function StudentProfile() {

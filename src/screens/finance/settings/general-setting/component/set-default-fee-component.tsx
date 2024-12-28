@@ -19,8 +19,8 @@ const SetDefaultFeeComponent = () => (
       >
         <TextField name="Add new fee head" label="Add New Fee Head" size="small" />
 
-        <Button variant="contained" size="small">
-          Add
+        <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
+          New Head
         </Button>
       </Box>
     </Grid>

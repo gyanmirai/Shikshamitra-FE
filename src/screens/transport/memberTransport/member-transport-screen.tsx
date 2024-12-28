@@ -13,8 +13,8 @@ import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import TransportRouteAssignedDialog from './component/assigned-route-dialog';
 import TransportNotifyParentsDialog from '../starffTransport/component/transport-notify-parents.dialog';
-import TransportStudentAndStaffUpdateInfoDialog from '../starffTransport/component/transport-student-update-route-dialog';
 
 const TABS = [
   {
@@ -107,7 +107,7 @@ const MemberTransportScreen = () => {
     { id: 'grade', label: 'Standard' },
 
     { id: 'assignedRoute', label: 'Assigned Route' },
-    { id: 'dropoffPoint', label: 'Pickup/DropOff Point' },
+    { id: 'dropoffPoint', label: 'Stop' },
 
     {
       id: 'action',
@@ -128,7 +128,7 @@ const MemberTransportScreen = () => {
                   }}
                 >
                   <Iconify icon="solar:pen-bold" />
-                  Assign/Change Route
+                  Change Route
                 </MenuItem>
 
                 <MenuItem
@@ -274,9 +274,9 @@ const MemberTransportScreen = () => {
 
         {/* CTA buttons aligned to the right */}
         <Box display="flex" gap={3}>
-          <Button onClick={dialogForBulkEdit.onTrue} variant="contained" size="small">
-            Bulk Assign
-          </Button>
+          {/* <Button onClick={dialogForBulkEdit.onTrue} variant="contained" size="small">
+                        Bulk Assign
+                    </Button> */}
           <Button onClick={dialog.onTrue} variant="contained" size="small">
             Assign Route
           </Button>
@@ -291,7 +291,7 @@ const MemberTransportScreen = () => {
         <CustomizableTable data={tableDataForStaff} columns={columnDataForStaff} />
       )}
       {dialog.value && (
-        <TransportStudentAndStaffUpdateInfoDialog
+        <TransportRouteAssignedDialog
           onSave={handleSave}
           dialogValue={dialog.value}
           onClose={closeDialog}

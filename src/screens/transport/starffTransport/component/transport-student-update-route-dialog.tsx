@@ -6,6 +6,7 @@ import {
   Grid,
   Radio,
   Button,
+  Switch,
   TextField,
   Typography,
   RadioGroup,
@@ -96,8 +97,9 @@ const grades = availableGrades.map((g) => g.grade);
 
 const TransportStudentAndStaffUpdateInfoDialog: React.FC<
   TransportStudentAndStaffUpdateInfoDialogProps
-> = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff, clickFromTable }) => {
+> = ({ dialogValue, data, onSave, onClose, isEdit, allData, isStaff, clickFromTable = false }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const [dropoffPoint, setDifferentDropOffPoint] = useState<boolean>(true);
 
   const formik = useFormik<FormikValue>({
     initialValues: {
@@ -146,22 +148,36 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
           </Typography>
         )}
       </Box>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
-        {!clickFromTable && (
-          <FormControl>
-            {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
-            <RadioGroup
-              row
-              aria-labelledby="user-type-label"
-              name="userType"
-              value={userType}
-              onChange={(e) => setUserType(e.target.value)}
-            >
-              <FormControlLabel value="staff" control={<Radio />} label="Employee" />
-              <FormControlLabel value="student" control={<Radio />} label="Student" />
-            </RadioGroup>
-          </FormControl>
-        )}
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '450px' }}>
+        <Box display="flex" alignItems="center">
+          {!clickFromTable && (
+            <FormControl>
+              {/* <FormLabel id="user-type-label">Select User Type</FormLabel> */}
+              <RadioGroup
+                row
+                aria-labelledby="user-type-label"
+                name="userType"
+                value={userType}
+                onChange={(e) => setUserType(e.target.value)}
+              >
+                <FormControlLabel value="staff" control={<Radio />} label="Employee" />
+                <FormControlLabel value="student" control={<Radio />} label="Student" />
+              </RadioGroup>
+            </FormControl>
+          )}
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={dropoffPoint}
+                onChange={() => {
+                  setDifferentDropOffPoint(!dropoffPoint);
+                }}
+              />
+            }
+            label="Different Dropoff Point"
+          />
+        </Box>
 
         <form onSubmit={formik.handleSubmit}>
           <Grid container spacing={2} sx={{ mt: '5px' }}>
@@ -242,6 +258,93 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
                 />
               </Grid>
             )}
+
+            {/* <Grid item xs={12} md={6}>
+              <TextField
+
+                name="Preferable Route"
+                label="Preferable Route"
+                value=''
+                onChange={() => { }}
+                size="small"
+                fullWidth
+              />
+
+            </Grid> */}
+
+            {/* Row 3 */}
+
+            {!dropoffPoint && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="Prefrable Pickup/Dropoff Point"
+                  label="Prefrable Pickup/Dropoff Point"
+                  value=""
+                  onChange={() => {}}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            )}
+
+            {dropoffPoint && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="Prefrable Pickup Point"
+                  label="Prefrable Pickup Point"
+                  value=""
+                  onChange={() => {}}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            )}
+            {dropoffPoint && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="Prefrable Dropoff Point"
+                  label="Prefrable Dropoff Point"
+                  value=""
+                  onChange={() => {}}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            )}
+            {dropoffPoint && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  label="Assigned Pickup"
+                  options={pickupPointsList}
+                  value={formik.values.pickupPoint}
+                  onChange={(e) => formik.setFieldValue('pickupPoint', e)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {dropoffPoint && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  label="Assigned DropOff"
+                  options={pickupPointsList}
+                  value={formik.values.pickupPoint}
+                  onChange={(e) => formik.setFieldValue('pickupPoint', e)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {!dropoffPoint && (
+              <Grid item xs={6}>
+                <CustomSelect
+                  label="Assigned Pickup/Dropoff Point"
+                  options={pickupPointsList}
+                  value={formik.values.pickupPoint}
+                  onChange={(e) => formik.setFieldValue('pickupPoint', e)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+
             <Grid item xs={6}>
               <CustomSelect
                 label="Assigned Route"
@@ -252,14 +355,54 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
               />
             </Grid>
 
-            {/* Row 3 */}
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <CustomSelect
-                label="Pickup/Dropoff Point"
-                options={pickupPointsList}
-                value={formik.values.pickupPoint}
-                onChange={(e: any) => formik.setFieldValue('pickupPoint', e)}
+                label="Select Vehicle"
+                options={assignedRoutesList}
+                value={formik.values.assignedRoute}
+                onChange={(e: any) => formik.setFieldValue('assignedRoute', e)}
                 formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Select Reason"
+                options={[
+                  { name: 'Route Not in Service', key: 'route_not_in_service' },
+                  { name: 'Vehicle at Full Capacity', key: 'vehicle_full_capacity' },
+                  { name: 'Stop Not in Service', key: 'stop_not_in_service' },
+                ]}
+                value=""
+                labelKey="name"
+                valueKey="key"
+                onChange={(val) => console.log('val', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={12}>
+              <TextField
+                multiline
+                rows={3}
+                name="notes"
+                label="Others"
+                value=""
+                onChange={() => {}}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={12}>
+              <TextField
+                multiline
+                rows={3}
+                name="notified message"
+                label="Message Sent to Student"
+                value=""
+                onChange={() => {}}
+                size="small"
+                fullWidth
               />
             </Grid>
           </Grid>
@@ -267,7 +410,7 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
       </Scrollbar>
       <DialogActions>
         <Button type="submit" variant="contained" size="small">
-          Save
+          Assigned / Declined
         </Button>
       </DialogActions>
     </CustomDialog>

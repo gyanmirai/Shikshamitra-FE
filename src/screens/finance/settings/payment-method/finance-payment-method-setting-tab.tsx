@@ -107,6 +107,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
       />
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
+          startIcon={<Iconify icon="ic:outline-plus" />}
           onClick={() => {
             setIsEdit(false);
             dialog.onTrue();
@@ -114,7 +115,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
           variant="contained"
           size="small"
         >
-          Add Payment Method
+          Payment Method
         </Button>
       </Box>
       {/* <Box>
@@ -143,7 +144,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
           },
           {
             id: 'toggle',
-            label: 'Active',
+            label: 'InActive/Active',
             render() {
               return <Switch />;
             },

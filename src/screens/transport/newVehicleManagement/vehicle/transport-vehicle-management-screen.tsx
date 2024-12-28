@@ -6,6 +6,8 @@ import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import IconEnum from 'src/utils/common-icon';
+
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
@@ -184,6 +186,7 @@ const TransportVehicleSettingScreen = () => {
             render(value, row) {
               return (
                 <ThreeDotsActions
+                  placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
                       <MenuItem
@@ -196,7 +199,7 @@ const TransportVehicleSettingScreen = () => {
                           vehicleDetailsDilog.onTrue();
                         }}
                       >
-                        <Iconify icon="mdi:eye" />
+                        <Iconify icon={IconEnum.VIEW} />
                         View
                       </MenuItem>
                       <MenuItem
@@ -206,7 +209,7 @@ const TransportVehicleSettingScreen = () => {
                           // driverFormDilog.onTrue();
                         }}
                       >
-                        <Iconify icon="solar:pen-bold" />
+                        <Iconify icon={IconEnum.EDIT} />
                         Edit
                       </MenuItem>
                     </MenuList>

@@ -160,6 +160,8 @@ import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-stru
 
 const students = [
   {
+    grNo: 1,
+    rollNo: 34,
     studentId: 123,
     name: 'Vishal Rameshbhai Patel',
     grade: 10,
@@ -496,6 +498,39 @@ const FinanceStudentFeeManagement = () => {
       <CustomizableTable
         columns={[
           {
+            id: 'grNo',
+            label: 'Gr No',
+            render(value, row) {
+              return (
+                <Typography minWidth="120px" fontSize="12px">
+                  {value}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'rollNo',
+            label: 'Roll No',
+            render(value, row) {
+              return (
+                <Typography minWidth="120px" fontSize="12px">
+                  {value}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'division',
+            label: 'Division',
+            render(value, row) {
+              return (
+                <Typography minWidth="120px" fontSize="12px">
+                  A
+                </Typography>
+              );
+            },
+          },
+          {
             id: 'name',
             label: 'Student Name',
             render(value, row) {
@@ -506,7 +541,7 @@ const FinanceStudentFeeManagement = () => {
               );
             },
           },
-          { id: 'grade', label: 'Standard' },
+          { id: 'grade', label: 'Class' },
           {
             id: 'totalFees',
             label: 'Gross Fees',

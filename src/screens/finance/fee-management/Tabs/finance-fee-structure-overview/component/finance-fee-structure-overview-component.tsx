@@ -117,9 +117,9 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
     <>
       <Box pb="10px">
         <Box display="flex" flexDirection="row" justifyContent="space-between">
-          <Typography component="span" variant="h6" gutterBottom>
+          {/* <Typography component="span" variant="h6" gutterBottom>
             Fee Structure Overview
-          </Typography>
+          </Typography> */}
           {/* <Button onClick={dialog.onTrue} variant="contained" size="medium">
             Create New Fee Structure
           </Button> */}
@@ -225,7 +225,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
           columns={[
             {
               id: 'bookRecipt',
-              label: 'Book Recipt',
+              label: 'Receipt Book',
               // children(row) {
               //   // const switchState = switchStates[row.id] || [];
               //   return (
