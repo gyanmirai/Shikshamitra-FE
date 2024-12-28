@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -44,6 +46,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface Document {
   id: string;
@@ -238,20 +241,28 @@ const Subject = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6">Subject Management</Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            setIsEdit(false);
-            setSelectedSubject(null);
-          }}
-        >
-          Add Subject
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Subjects"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Subjects' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              dialog.onTrue();
+              setIsEdit(false);
+              setSelectedSubject(null);
+            }}
+          >
+            Add Subject
+          </Button>
+        }
+      />
       <CustomSelect
         label="Class"
         name="class"

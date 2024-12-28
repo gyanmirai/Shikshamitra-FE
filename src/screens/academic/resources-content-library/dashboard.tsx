@@ -1,3 +1,5 @@
+'use client';
+
 import type { CardProps } from '@mui/material';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -22,6 +24,7 @@ import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -53,6 +56,15 @@ const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Resource Content Library' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card

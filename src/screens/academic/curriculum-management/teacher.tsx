@@ -1,17 +1,10 @@
+'use client';
+
 import { useFormik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import {
-  Box,
-  Grid,
-  Chip,
-  Button,
-  MenuList,
-  MenuItem,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Chip, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -23,6 +16,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TTeacherData {
   id: number;
@@ -128,10 +122,17 @@ const Teacher = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-        <Typography variant="h6">Subject-wise Teacher Assignment Table</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+      <CustomBreadcrumbs
+        heading="Teacher"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Teacher' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+
+      <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
         <CustomSelect
           label="Class"
           name="class"

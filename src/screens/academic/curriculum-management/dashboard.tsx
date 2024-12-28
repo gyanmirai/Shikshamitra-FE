@@ -4,9 +4,19 @@ import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, Typography } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const Dashboard = () => (
   <Box>
+    <CustomBreadcrumbs
+      heading="Dashboard"
+      links={[
+        { name: 'Academic and Assignment' },
+        { name: 'Curriculum Management' },
+        { name: 'Dashboard' },
+      ]}
+      sx={{ px: 1, mb: 2 }}
+    />
     <Grid2 container spacing={3}>
       <Grid2 lg={4}>
         <Card sx={{ p: 3, height: '100%' }}>

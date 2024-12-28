@@ -1,8 +1,11 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
+import type { Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
@@ -30,6 +33,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 type PeriodSetting = {
   label: string;
@@ -63,12 +67,20 @@ type AssignedTeacher = {
 };
 
 const TimeScheduleManagementSetting = (props: TabComponentType) => {
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+  const { searchParams, setSearchParams } = props;
+  const classes = searchParams?.classId ? searchParams?.classId : '';
+
   const [selectedEntry, setSelectedEntry] = useState(tableData);
   const [isEdit, setIsEdit] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [roomData, setRoomData] = useState(tableData);
   const dialog = useBoolean();
   const createSlotsDialog = useBoolean();
+  const createLectureNumberDialog = useBoolean();
 
   const periodSettings: PeriodSetting[] = [
     { label: 'Class Duration (e.g., 45 minutes)', unit: 'Select Unit' },
@@ -134,9 +146,97 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
     closeDialog();
   };
 
+  useEffect(() => {
+    if (classData?.items?.length) {
+      if (classes) {
+        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+      }
+    } else {
+      const firstClass = classData?.items[0];
+      setSearchParams?.({
+        classId: firstClass?.id,
+      });
+    }
+  }, [classData, classes, setSearchParams]);
+
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between">
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Time Table Management' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
+      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Typography component="span" variant="h6" gutterBottom>
+          Lectures Details
+        </Typography>
+        <Button
+          startIcon={<Iconify icon="mdi:plus" />}
+          variant="contained"
+          onClick={createLectureNumberDialog.onTrue}
+        >
+          Create Number of Lectures
+        </Button>
+      </Box>
+      {/* <CustomSelect
+        label="Class"
+        options={classData?.items || []}
+        labelKey="name"
+        valueKey="id"
+        onChange={(val) => {
+          const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+          setSearchParams?.({
+            classId: val as string,
+          });
+        }}
+        value={classes}
+        formControlProps={{
+          sx: { width: '100%', maxWidth: '200px' },
+        }}
+      /> */}
+      <CustomizableTable
+        columns={[
+          { id: 'class', label: 'Class' },
+          { id: 'noOfLecture', label: 'No of Lectures' },
+          {
+            id: 'action',
+            label: 'Action',
+          },
+        ]}
+        data={[
+          {
+            class: 'Class 1',
+            noOfLecture: 8,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 2',
+            noOfLecture: 9,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 3',
+            noOfLecture: 6,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 4',
+            noOfLecture: 7,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 5',
+            noOfLecture: 5,
+            action: 'Edit',
+          },
+        ]}
+      />
+
+      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
         <Typography component="span" variant="h6" gutterBottom>
           Slot Details
         </Typography>
@@ -392,11 +492,113 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         // allData={roomData}
         />
       </CustomDialog>
+
+      <CustomDialog
+        title="Create Number of Lectures"
+        open={createLectureNumberDialog.value}
+        handleClose={createLectureNumberDialog.onFalse}
+        maxWidth="md"
+      >
+        <CreateNoOfLecture
+        // onSave={handleSave}
+        // dialogValue={dialog.value}
+        // onClose={closeDialog}
+        // data={selectedEntry}
+        // isEdit={isEdit}
+        // allData={roomData}
+        />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default TimeScheduleManagementSetting;
+
+const initialData = [
+  { id: 1, subjects: 'Mathematics', noOfLecture: 0 },
+  { id: 2, subjects: 'Science', noOfLecture: 0 },
+  { id: 3, subjects: 'English', noOfLecture: 0 },
+  { id: 4, subjects: 'History', noOfLecture: 0 },
+  { id: 5, subjects: 'Geography', noOfLecture: 0 },
+];
+
+const CreateNoOfLecture = () => {
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+  const [subjectList, setSubjectList] = useState(initialData);
+
+  const handleInputChange = (id: number, value: string) => {
+    const numValue = Math.max(0, parseInt(value, 10) || 0);
+
+    setSubjectList((prevData) =>
+      prevData.map((row) => (row.id === id ? { ...row, noOfLecture: numValue } : row))
+    );
+  };
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={() => {}}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                options={classData?.items || []}
+                value=""
+                onChange={(val) => {
+                  //   formik.setFieldValue('className', val as string);
+                }}
+                label="Class"
+                // isLoading={isLoading}
+                labelKey="name"
+                valueKey="name"
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              />
+              {/* {formik.touched.className && formik.errors.className && (
+              <FormHelperText error>{formik.errors.className}</FormHelperText>
+            )} */}
+            </Grid>
+            <Grid item xs={12}>
+              <CustomizableTable
+                isSearch={false}
+                isShowedDense={false}
+                isFilter={false}
+                columns={[
+                  {
+                    id: 'subjects',
+                    label: 'Subjects',
+                  },
+                  {
+                    id: 'noOfLecture',
+                    label: 'No Of Lecture',
+                    render(value, row) {
+                      return (
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={value}
+                          onChange={(e) => handleInputChange(row.id, e.target.value)}
+                          className="w-24"
+                        />
+                      );
+                    },
+                  },
+                ]}
+                data={subjectList}
+              />
+            </Grid>
+          </Grid>
+        </Scrollbar>
+        <DialogActions>
+          <Button type="submit" variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </form>
+    </Box>
+  );
+};
 
 interface TimeSlot {
   id: number;
@@ -507,6 +709,24 @@ const CreateSlotsForm = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
+              <CustomSelect
+                options={classData?.items || []}
+                value=""
+                onChange={(val) => {
+                  //   formik.setFieldValue('className', val as string);
+                }}
+                label="Previous Class Slots"
+                // isLoading={isLoading}
+                labelKey="name"
+                valueKey="name"
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              />
+              {/* {formik.touched.className && formik.errors.className && (
+                <FormHelperText error>{formik.errors.className}</FormHelperText>
+              )} */}
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Total Slots"
@@ -605,6 +825,11 @@ const CreateSlotsForm = () => {
             </>
           )}
         </Scrollbar>
+        <DialogActions>
+          <Button type="submit" variant="contained">
+            Save
+          </Button>
+        </DialogActions>
       </form>
     </Box>
   );

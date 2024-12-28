@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -28,6 +30,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
@@ -67,6 +70,15 @@ const ClassProgress = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Class Progress"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Class Progress' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <CustomSelect

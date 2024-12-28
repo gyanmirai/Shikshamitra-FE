@@ -27,6 +27,6 @@
       }
     ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "build/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "build/types/**/*.ts", "src/app/(auth-route)/academic/course-management/courseProgress"],
   "exclude": ["node_modules", "**/route.ts", "**/overview/page.ts"]
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
@@ -15,6 +17,7 @@ import { CourseHoursSpent } from 'src/screens/hr/dashboard/course-hours-spent';
 
 import { SvgColor } from 'src/components/svg-color';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -49,7 +52,16 @@ const Dashboard = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Grid2 container spacing={3}>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Grid2 container spacing={3} mt={2}>
         <Grid2 xs={12} md={4}>
           <Card
             sx={{

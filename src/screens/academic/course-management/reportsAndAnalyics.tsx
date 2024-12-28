@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -11,6 +13,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const initialValues = {
   report: '',
@@ -41,6 +44,15 @@ const Reports = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Reports"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Reports' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}

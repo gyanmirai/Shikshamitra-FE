@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -29,6 +31,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TStudentGroup {
   id: number;
@@ -85,22 +88,28 @@ const StudentGroup = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Students Group
-        </Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            // setIsEdit(false);
-            // setSelectedSubject(null);
-          }}
-        >
-          Add Group
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Student Group"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity Management' },
+          { name: 'Student Group' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              dialog.onTrue();
+              // setIsEdit(false);
+              // setSelectedSubject(null);
+            }}
+          >
+            Add Group
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[

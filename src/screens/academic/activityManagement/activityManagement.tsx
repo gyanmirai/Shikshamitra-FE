@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -35,6 +37,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Enum for Activity Categories
 enum ActivityCategory {
@@ -168,20 +171,26 @@ const ActivityManagement = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Activity Management
-        </Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-          }}
-        >
-          Add Activity
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Activity Management"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity' },
+          { name: 'Activity Management' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              dialog.onTrue();
+            }}
+          >
+            Add Activity
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[

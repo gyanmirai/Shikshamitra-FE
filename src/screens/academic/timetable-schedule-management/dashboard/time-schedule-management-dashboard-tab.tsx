@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -11,6 +13,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
@@ -31,7 +34,16 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
     '10-10-2024 9:00 PM , Teacher - John Doe , Room No.- 101',
   ];
   return (
-    <>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Time Table Management' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Box display="flex" flexDirection="row" justifyContent="space-between">
         <Box display="flex" flexDirection="row" gap={3}>
           <CustomSelect
@@ -103,7 +115,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         </Grid2>
       </Grid2>
-    </>
+    </Box>
   );
 };
 

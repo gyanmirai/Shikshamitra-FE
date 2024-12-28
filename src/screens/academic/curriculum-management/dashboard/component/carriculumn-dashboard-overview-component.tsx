@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
@@ -10,6 +12,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -27,6 +30,15 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
 
   return (
     <Box sx={{ mb: 3 }}>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid2 container spacing={3} alignItems="stretch">
         <Grid2 xs={12} md={6} lg={6} xl={4}>
           <Card

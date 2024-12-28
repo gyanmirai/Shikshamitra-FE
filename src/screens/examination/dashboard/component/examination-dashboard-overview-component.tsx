@@ -4,7 +4,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Card, Grid, useTheme } from '@mui/material';
+import { Box, Card, Grid, alpha, useTheme, Typography } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -147,22 +147,18 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Card
-            sx={{
-              height: '100%',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
-            }}
-          >
-            <AppWidget
-              title="Class Performance"
-              icon="solar:user-rounded-bold"
-              chart={{ series: 60 }}
-            />
-          </Card>
+          <EmployeeDashboardCard
+            title="Total Quiz"
+            icon="mdi:quiz"
+            value={21}
+            labels={[
+              { name: 'Scheduled : 03', color: 'warning' },
+              { name: 'Active : 03', color: 'info' },
+              { name: 'Completed : 15', color: 'primary' },
+            ]}
+            color="secondary.main"
+            // href="/academic/homework-assignment-management/?tab=homeworkCreation"
+          />
         </Grid>
       </Grid>
 
@@ -219,6 +215,68 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
             }}
             sx={{ height: '100%' }}
           />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <Typography variant="subtitle1">Average Score of Quiz</Typography>
+            <Box display="flex" justifyContent="flex-end" alignItems="flex-end" gap={1}>
+              <CustomSelect
+                label="Class"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  // formik.setFieldValue('class', selectedClass?.name || '');
+                  setSearchParams?.({
+                    classId: val as string,
+                  });
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                value={classes}
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+              <CustomSelect
+                label="Division"
+                disabled={!classes}
+                labelKey="name"
+                valueKey="id"
+                options={divisionOptions}
+                value={division}
+                onChange={(val) => {
+                  // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
+                  // formik.setFieldValue('division', selectedDivision?.name || '');
+                  setDivision(val as string);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', maxWidth: '200px' },
+                }}
+              />
+            </Box>
+            <AnalyticsWebsiteVisits
+              title=""
+              //   subheader="(+43%) than last year"
+              chart={{
+                categories: ['Quiz 1', 'Quiz 2', 'Quiz 3', 'Quiz 4', 'Quiz 5', 'Quiz 6', 'Quiz 7'],
+                series: [{ name: '', data: [43, 33, 22, 37, 18, 35, 27] }],
+                colors: [alpha(theme.palette.primary.dark, 0.8)],
+                options: {
+                  legend: {
+                    show: false,
+                    position: 'top',
+                  },
+                },
+              }}
+              sx={{ height: '100%', boxShadow: 'none' }}
+            />
+          </Card>
         </Grid>
       </Grid>
       {/* <Grid2 container spacing={3}>

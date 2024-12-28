@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -32,6 +34,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // TimeTableCell Component
 interface TimeTableCellProps {
@@ -540,6 +543,15 @@ const TimeTableGrid = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="New Timetable"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'New Timetable' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"

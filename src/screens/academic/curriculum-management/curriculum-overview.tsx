@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -32,6 +34,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ViewSubject } from './subject';
 
@@ -114,6 +117,8 @@ const subjectData = {
   status: 'Publish',
 };
 
+const CurriculumOverviewMain = (props: TabComponentType) => {};
+
 const CurriculumOverview = (props: TabComponentType) => {
   const { setSearchParams } = props;
   const [curriculumTableData, setCurriculumTableData] = useState<TCurriculum[]>(CurriculumData);
@@ -187,21 +192,29 @@ const CurriculumOverview = (props: TabComponentType) => {
   const handleSubjectClick = () => {};
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6">Curriculum Management</Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            setIsEdit(false);
-            setSelectedCurriculum(null);
-            dialog.onTrue();
-          }}
-        >
-          Add Curriculum
-        </Button>
-      </Box>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Curriculum Overview"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Curriculum Overview' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              setIsEdit(false);
+              setSelectedCurriculum(null);
+              dialog.onTrue();
+            }}
+          >
+            Add Curriculum
+          </Button>
+        }
+      />
       <Grid2 container spacing={3}>
         {/* <Grid2 xs={12} md={6} lg={6}>
         <Card sx={{ p: 3, height: '100%' }}>

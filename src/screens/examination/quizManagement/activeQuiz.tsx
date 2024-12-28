@@ -33,6 +33,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -422,6 +423,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Options</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Marks</TableCell>
+              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Time(Min)</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Answer</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Edit</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete</TableCell>
@@ -487,6 +489,9 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                           <Typography variant="body2">{question.marks}</Typography>
                         </TableCell>
                         <TableCell>
+                          <Typography variant="body2">{question.questionTime}</Typography>
+                        </TableCell>
+                        <TableCell>
                           <Typography variant="body2">{question.correctAnswer}</Typography>
                         </TableCell>
                         <TableCell>
@@ -528,12 +533,15 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
   const [isRequired, setIsRequired] = useState(initialData?.isRequired || false);
   const [correctAnswer, setCorrectAnswer] = useState<any>(initialData?.correctAnswer || '');
   const [marks, setMarks] = useState(initialData?.marks?.toString() || '1');
+  const [questionTime, setQuestionTime] = useState(initialData?.questionTime?.toString() || '');
+
   const [errors, setErrors] = useState({
     question: '',
     questionType: '',
     options: '',
     correctAnswer: '',
     marks: '',
+    questionTime: '',
   });
 
   console.log('errors---', errors);
@@ -578,6 +586,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
       options: '',
       correctAnswer: '',
       marks: '',
+      questionTime: '',
     };
 
     if (!question.trim()) {
@@ -624,6 +633,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
         isRequired,
         correctAnswer,
         marks: Number(marks),
+        questionTime,
       };
       onSave(questionData);
     }
@@ -704,7 +714,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Scrollbar sx={{ p: 2, height: '300px', bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
             <CustomSelect
               label="Question Type"
               options={[
@@ -717,12 +727,12 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               required
               formControlProps={{
                 fullWidth: true,
-                sx: { minWidth: '200px' },
+                // sx: { minWidth: '200px' },
                 error: !!errors.questionType,
               }}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
             <TextField
               label="Marks"
               type="number"
@@ -736,10 +746,34 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               InputProps={{ inputProps: { min: 1 } }}
             />
           </Grid>
+
+          <Grid item xs={12} md={4}>
+            <TextField
+              label="Time (Minutes)"
+              type="number"
+              value={questionTime}
+              onChange={(e) => setQuestionTime(e.target.value)}
+              size="small"
+              fullWidth
+              required
+              error={!!errors.questionTime}
+              helperText={errors.questionTime}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Grid>
           {errors.questionType && <FormHelperText error>{errors.questionType}</FormHelperText>}
 
           <Grid item xs={12}>
-            <TextField
+            <Editor
+              value={question}
+              onChange={(value) => {
+                setQuestion(value);
+                // formik.setFieldValue('question', value);
+              }}
+              placeholder="Question"
+              sx={{ width: '100%', marginTop: '10px' }}
+            />
+            {/* <TextField
               fullWidth
               label="Question"
               name="question"
@@ -749,7 +783,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               required
               error={!!errors.question}
               helperText={errors.question}
-            />
+            /> */}
           </Grid>
 
           {questionType === 'multiple-choice' && (

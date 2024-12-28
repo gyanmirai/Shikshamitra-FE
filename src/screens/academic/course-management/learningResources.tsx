@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
@@ -29,6 +31,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TResourceData {
   id: number;
@@ -156,11 +159,30 @@ const LearningResources = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Typography variant="h6" marginBottom={3}>
+      <CustomBreadcrumbs
+        heading="Learning Resources"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Learning Resources' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={dialog.onTrue}
+            disabled={!classes || !subject}
+          >
+            Create New Resource
+          </Button>
+        }
+      />
+      <Typography variant="h6" marginBottom={3} mt={3}>
         Learning Resources For Subject
       </Typography>
 
-      <Box display="flex" flexDirection="row" gap={3}>
+      <Box display="flex" flexDirection="row" gap={2}>
         <CustomSelect
           options={classData?.items || []}
           value={classes}
@@ -191,18 +213,7 @@ const LearningResources = (props: TabComponentType) => {
             setSubject(val as string);
           }}
           formControlProps={{ sx: { minWidth: 200 } }}
-        />
-        <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
-          {' '}
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={dialog.onTrue}
-            disabled={!classes || !subject}
-          >
-            Create New Resource
-          </Button>
-        </Box>
+        />{' '}
       </Box>
 
       {classes && subject && (

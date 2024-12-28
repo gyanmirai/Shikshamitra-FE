@@ -23,11 +23,21 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { CalendarView } from 'src/sections/calendar/view/calendar-view';
 
 const Dashboard = (props: TabComponentType) => (
   <Box sx={{ flexGrow: 1 }}>
+    <CustomBreadcrumbs
+      heading="Dashboard"
+      links={[
+        { name: 'Academic and Assignment' },
+        { name: 'Learning Management System' },
+        { name: 'Dashboard' },
+      ]}
+      sx={{ px: 1, mb: 6 }}
+    />
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
         <Card

@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -13,11 +15,21 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const ContentLibrary = (props: TabComponentType) => {
   const viewLearningMaterial = useBoolean();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Content Library"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Content Library' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <CustomizableTable
         columns={[
           { id: 'resourceName', label: 'Resource Name' },

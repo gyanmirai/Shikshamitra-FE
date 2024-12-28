@@ -526,58 +526,296 @@ const academicModule = {
         },
         {
           title: 'Curriculum Management',
-          path: '/academic/curriculum-management',
+          path: '',
           _action: 'curriculum-management',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/curriculum-management/curriculumDashboard',
+              _action: 'curriculum-management-dashboard',
+            },
+            {
+              title: 'Subject',
+              path: '/academic/curriculum-management/subjects',
+              _action: 'curriculum-management-subjects',
+            },
+            {
+              title: 'Curriculum Overview',
+              path: '/academic/curriculum-management/curriculumOverview',
+              _action: 'student-enrollment-curriculumOverview',
+            },
+            {
+              title: 'Teacher',
+              path: '/academic/curriculum-management/teacher',
+              _action: 'student-enrollment-teacher',
+            },
+            {
+              title: 'Reports',
+              path: '/academic/curriculum-management/reports',
+              _action: 'student-enrollment-reports',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/curriculum-management/settings',
+              _action: 'student-enrollment-settings',
+            },
+          ],
         },
         {
           title: 'Course Management',
           path: '/academic/course-management',
           _action: 'course-management',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/course-management/courseDashboard',
+              _action: 'course-management-dashboard',
+            },
+            {
+              title: 'Subject',
+              path: '/academic/course-management/subjects',
+              _action: 'course-management-subjects',
+            },
+            {
+              title: 'Learning Resources',
+              path: '/academic/course-management/learningResources',
+              _action: 'course-management-learningResources',
+            },
+            {
+              title: 'Course Progress',
+              path: '/academic/course-management/courseProgress',
+              _action: 'course-management-courseProgress',
+            },
+            {
+              title: 'Reports',
+              path: '/academic/course-management/reports',
+              _action: 'course-management-reports',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/course-management/settings',
+              _action: 'course-management-settings',
+            },
+          ],
         },
         {
           title: 'Timetable & Schedule Management',
-          path: '/academic/timetable-schedule-management',
+          path: '',
           _action: 'timetable-schedule-management',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/timetable-schedule-management/timeTableDashboard',
+              _action: 'timetable-schedule-management',
+            },
+            {
+              title: 'New Timetable',
+              path: '/academic/timetable-schedule-management/newTimetable',
+              _action: 'timetable-schedule-management',
+            },
+            {
+              title: 'Reports',
+              path: '/academic/timetable-schedule-management/reports',
+              _action: 'timetable-schedule-management',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/timetable-schedule-management/settings',
+              _action: 'timetable-schedule-management',
+            },
+          ],
         },
         {
           title: 'Activity Management',
-          path: '/academic/activityManagement',
+          path: '',
           _action: 'activity-management',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/activityManagement/activityDashboard',
+              _action: 'activity-management-activityDashboard',
+            },
+            {
+              title: 'Dynamic Group',
+              path: '/academic/activityManagement/dynamicGroup',
+              _action: 'activity-management-dynamicGroup',
+            },
+            {
+              title: 'Activity Management',
+              path: '/academic/activityManagement/activityManagement',
+              _action: 'activity-management-activityManagement',
+            },
+            {
+              title: 'Student Group',
+              path: '/academic/activityManagement/studentGroup',
+              _action: 'activity-management-studentGroup',
+            },
+          ],
         },
-        // {
-        //   title: 'Examination & Assessment Management',
-        //   path: '/academic/examination-assessment-management',
-        //   _action: 'examination-assessment-management',
-        // },
         {
           title: 'Learning Management System (LMS)',
           path: '/academic/learning-management-system',
           _action: 'learning-management-system',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/learning-management-system/lmsDashboard',
+              _action: 'learning-management-system-lmsDashboard',
+            },
+            {
+              title: 'Course',
+              path: '/academic/learning-management-system/course',
+              _action: 'learning-management-system-course',
+            },
+            {
+              title: 'Student Progress Tracking',
+              path: '/academic/learning-management-system/studentProgressTracking',
+              _action: 'learning-management-system-studentProgressTracking',
+            },
+            {
+              title: 'Content Library',
+              path: '/academic/learning-management-system/contentLibrary',
+              _action: 'learning-management-system-contentLibrary',
+            },
+            {
+              title: 'Reports And Analytics',
+              path: '/academic/learning-management-system/reportsAndAnalytics',
+              _action: 'learning-management-system-reportsAndAnalytics',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/learning-management-system/settings',
+              _action: 'learning-management-system-settings',
+            },
+          ],
         },
         {
           title: 'Gradebook & Performance Tracking',
-          path: '/academic/gradebook-performance-tracking',
+          path: '',
           _action: 'gradebook-performance-tracking',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/gradebook-performance-tracking/gradebookDashboard',
+              _action: 'gradebook-performance-tracking-gradebookDashboard',
+            },
+            {
+              title: 'Gradebook',
+              path: '/academic/gradebook-performance-tracking/gradebook',
+              _action: 'gradebook-performance-tracking-gradebook',
+            },
+            {
+              title: 'Performance Analysis',
+              path: '/academic/gradebook-performance-tracking/performanceAnalysis',
+              _action: 'gradebook-performance-tracking-performanceAnalysis',
+            },
+            {
+              title: 'Reports',
+              path: '/academic/gradebook-performance-tracking/reports',
+              _action: 'gradebook-performance-tracking-reports',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/gradebook-performance-tracking/settings',
+              _action: 'gradebook-performance-tracking-settings',
+            },
+          ],
         },
         {
           title: 'Student Progress & Analytics',
-          path: '/academic/student-progress-analytics',
+          path: '',
           _action: 'student-progress-analytics',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/student-progress-analytics/progressDashboard',
+              _action: 'student-progress-analytics-progressDashboard',
+            },
+            {
+              title: 'Class Progress',
+              path: '/academic/student-progress-analytics/classProgress',
+              _action: 'student-progress-analytics-classProgress',
+            },
+            {
+              title: 'Individual Student Progress',
+              path: '/academic/student-progress-analytics/individualStudentProgress',
+              _action: 'student-progress-analytics-individualStudentProgress',
+            },
+            {
+              title: 'Comparative Analytics',
+              path: '/academic/student-progress-analytics/comparativeAnalytics',
+              _action: 'student-progress-analytics-comparativeAnalytics',
+            },
+            {
+              title: 'Reports',
+              path: '/academic/student-progress-analytics/reports',
+              _action: 'student-progress-analytics-reports',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/student-progress-analytics/settings',
+              _action: 'student-progress-analytics-settings',
+            },
+          ],
         },
         {
           title: 'Resources/Content Library',
-          path: '/academic/resources-content-library',
+          path: '',
           _action: 'resources-content-library',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/resources-content-library/resourceDashboard',
+              _action: 'resources-content-library-resourceDashboard',
+            },
+            {
+              title: 'All Resources',
+              path: '/academic/resources-content-library/allResources',
+              _action: 'resources-content-library-allResources',
+            },
+            {
+              title: 'Shared With Me',
+              path: '/academic/resources-content-library/sharedWithMe',
+              _action: 'resources-content-library-sharedWithMe',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/resources-content-library/settings',
+              _action: 'resources-content-library-settings',
+            },
+          ],
         },
-        // {
-        //   title: 'Parent-Teacher Communication',
-        //   path: '/academic/parent-teacher-communication',
-        //   _action: 'parent-teacher-communication',
-        // },
         {
           title: 'Homework & Assignment Management',
           path: '/academic/homework-assignment-management',
           _action: 'homework-assignment-management',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/homework-assignment-management/homeworkDashboard',
+              _action: 'homework-assignment-management-homeworkDashboard',
+            },
+            {
+              title: 'Homework Creation',
+              path: '/academic/homework-assignment-management/homeworkCreation',
+              _action: 'homework-assignment-management-homeworkCreation',
+            },
+            {
+              title: 'Student Submissions',
+              path: '/academic/homework-assignment-management/studentSubmissions',
+              _action: 'homework-assignment-management-studentSubmissions',
+            },
+            {
+              title: 'Grading And Feedback',
+              path: '/academic/homework-assignment-management/gradingAndFeedback',
+              _action: 'homework-assignment-management-gradingAndFeedback',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/homework-assignment-management/settings',
+              _action: 'homework-assignment-management-settings',
+            },
+          ],
         },
       ],
     },

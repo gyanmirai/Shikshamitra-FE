@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -36,6 +38,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TTemplate {
   id: number;
@@ -153,7 +156,16 @@ const Settings = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box sx={{ mb: 1 }}>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Box sx={{ mb: 1, mt: 4 }}>
         <Typography variant="h6">General Settings</Typography>
         <Card sx={{ p: 2, mt: 1 }}>
           <Box

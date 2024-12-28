@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -35,6 +37,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TResource {
   id: number;
@@ -133,6 +136,15 @@ const AllResources = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="All Resources"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Resource Content Library' },
+          { name: 'All Resources' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <ToggleButtonGroup
           size="small"

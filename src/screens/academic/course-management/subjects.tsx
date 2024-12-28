@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -45,6 +47,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { subjectTempData } from './subjectsData';
 
@@ -266,7 +269,16 @@ const Subjects = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Typography variant="h6" marginBottom={3}>
+      <CustomBreadcrumbs
+        heading="Content Management"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Content Management' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Typography variant="h6" marginBottom={3} mt={3}>
         Subject&apos;s Content Management
       </Typography>
       <CustomSelect

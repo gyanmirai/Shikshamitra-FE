@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -7,9 +9,19 @@ import { Box, MenuItem, MenuList } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const SharedWithMe = (props: TabComponentType) => (
   <Box>
+    <CustomBreadcrumbs
+      heading="Shared With Me"
+      links={[
+        { name: 'Academic and Assignment' },
+        { name: 'Resource Content Library' },
+        { name: 'Shared With Me' },
+      ]}
+      sx={{ px: 1, mb: 6 }}
+    />
     <CustomizableTable
       columns={[
         { id: 'resourceName', label: 'Resource Name' },

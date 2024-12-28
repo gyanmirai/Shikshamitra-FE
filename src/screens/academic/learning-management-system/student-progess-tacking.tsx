@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useState } from 'react';
@@ -30,6 +32,7 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -42,6 +45,15 @@ const StudentProgressTracking = (props: TabComponentType) => {
   };
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Student Progress Tracking"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Student Progress Tracking' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Typography variant="h6">Progress Dashboard</Typography>
       <Box display="flex" gap={2} mt={2}>
         <CustomSelect

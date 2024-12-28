@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -13,6 +15,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
 type PeriodSetting = {
   label: string;
   unit: string;
@@ -27,6 +31,15 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>

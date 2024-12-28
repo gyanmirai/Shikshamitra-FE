@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -32,6 +34,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Upload, UploadBox } from 'src/components/upload';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AddNewChapter } from '../course-management/subjects';
 import { subjectTempData } from '../course-management/subjectsData';
@@ -234,6 +237,15 @@ const Course = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Course"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Course' },
+        ]}
+        sx={{ px: 1, mb: 6 }}
+      />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"
