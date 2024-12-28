@@ -260,7 +260,7 @@ const StudentIDCardCreator = () => {
   };
 
   const handleDeleteField = (fieldName: any) => {
-    setFields(fields.filter((field: any) => field.name !== fieldName));
+    setFields(fields.filter((field: any) => (field.otherFiledName || field.name) !== fieldName));
   };
 
   const handleImageUpload = (event: any) => {

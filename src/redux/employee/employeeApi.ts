@@ -107,7 +107,7 @@ export const employeeApi = createApi({
     }),
     getAttendanceByEmployeeId: builder.query({
       query: ({ employeeId, month }: { employeeId: string; month: string }) => ({
-        url: `/app/employee-attendance/employee-attendance-summary?month=${month}&${employeeId}`,
+        url: `/app/employee-attendance/employee-attendance-summary?month=${month}&employeeIds=${employeeId}`,
         redirect: 'follow',
       }),
       providesTags: ['Attendance'],

@@ -79,7 +79,10 @@ const DateWise = ({
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
   // const [date, setDate] = useState<Dayjs | null>(dayjs());
-  const dateValue = searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs();
+  const dateValue = useMemo(
+    () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
+    [searchParams.date]
+  );
   const tabs = useTabs(EmployeeAttendanceStatus.All);
 
   const [getAttendance, { data: attendanceData, isLoading }] = useQueryAndMutation({
@@ -247,12 +250,18 @@ const EmployeeWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  const startDate = searchParams.startDate
-    ? dayjs(searchParams.startDate, 'DD-MM-YYYY')
-    : dayjs().startOf('month');
-  const endDate = searchParams.endDate
-    ? dayjs(searchParams.endDate, 'DD-MM-YYYY')
-    : dayjs().endOf('month');
+  const startDate = useMemo(
+    () =>
+      searchParams.startDate
+        ? dayjs(searchParams.startDate, 'DD-MM-YYYY')
+        : dayjs().startOf('month'),
+    [searchParams.startDate]
+  );
+  const endDate = useMemo(
+    () =>
+      searchParams.endDate ? dayjs(searchParams.endDate, 'DD-MM-YYYY') : dayjs().endOf('month'),
+    [searchParams.endDate]
+  );
 
   // const [employeeId, setEmployeeId] = useState<string>('');
   const { data: employees, isLoading } = useQueryAndMutation({
@@ -265,16 +274,22 @@ const EmployeeWise = ({
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
 
-  // useEffect(() => {
-  //   if (searchParams?.employeeId) {
-  //     getAttendance({
-  //       employeeId: `employeeIds=${searchParams.employeeId}`,
-  //       month: searchParams.monthYear
-  //         ? dayjs(searchParams.monthYear, 'DD-MM-YYYY')?.format('YYYY-MM-DD')
-  //         : dayjs().format('YYYY-MM-DD'),
-  //     });
-  //   }
-  // }, [searchParams.monthYear, searchParams.employeeId, getAttendance]);
+  useEffect(() => {
+    if (searchParams?.employeeId && startDate) {
+      console.log('getAttendance');
+      getAttendance({
+        employeeId: `${searchParams.employeeId}`,
+        month: dateConvertor(dayjs(startDate, 'DD-MM-YYYY').format(dateFormat), true),
+      });
+    }
+  }, [searchParams?.employeeId, getAttendance, startDate]);
+
+  useEffect(
+    () => () => {
+      setSearchParams({ date: '', startDate: '', endDate: '', employeeId: '' });
+    },
+    [setSearchParams]
+  );
 
   return (
     <>
@@ -341,7 +356,7 @@ const EmployeeWise = ({
           >
             <Typography variant="subtitle1">Total Present Days</Typography>
 
-            <Typography variant="h3">{data?.[0]?.presentDays}</Typography>
+            <Typography variant="h3">{data?.[0]?.presentDays || 0}</Typography>
           </Card>
           <Card
             sx={{
@@ -354,7 +369,7 @@ const EmployeeWise = ({
           >
             <Typography variant="subtitle1">Full Day Leave</Typography>
 
-            <Typography variant="h3">{data?.[0]?.leaveDays}</Typography>
+            <Typography variant="h3">{data?.[0]?.leaveDays || 0}</Typography>
           </Card>
           <Card
             sx={{
@@ -367,7 +382,7 @@ const EmployeeWise = ({
           >
             <Typography variant="subtitle1">Half Day Leave</Typography>
 
-            <Typography variant="h3">{data?.[0]?.halfDayLeaves}</Typography>
+            <Typography variant="h3">{data?.[0]?.halfDayLeaves || 0}</Typography>
           </Card>
         </Box>
       )}

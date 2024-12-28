@@ -20,6 +20,7 @@ import { payElementApi } from './payElement/payElementApi';
 import { organizationApi } from './oraganization/oraganization';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
+import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 
 const persistConfig = {
@@ -48,6 +49,7 @@ const reducers = combineReducers({
   [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
   [PFApi.reducerPath]: PFApi.reducer,
   [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
+  [ProfessionalApi.reducerPath]: ProfessionalApi.reducer,
 });
 
 const store = configureStore({
@@ -69,7 +71,8 @@ const store = configureStore({
       .concat(payElementApi.middleware)
       .concat(payrollStructureApi.middleware)
       .concat(PFApi.middleware)
-      .concat(EventHolidayApi.middleware),
+      .concat(EventHolidayApi.middleware)
+      .concat(ProfessionalApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
