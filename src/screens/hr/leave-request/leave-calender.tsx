@@ -2,22 +2,20 @@ import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { Form, Field, Formik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
-import { DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, useTheme, MenuItem, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { Box, Grid, useTheme, Typography } from '@mui/material';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
 
-import { Editor } from 'src/components/editor';
+import { Label } from 'src/components/label';
 import CommonCalender from 'src/components/calender';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import { ColorPicker } from 'src/components/color-utils';
-
-import { leaveTypes, CALENDAR_COLOR_OPTIONS } from './leave-requst';
 
 import type { TabComponentType } from '.';
 
@@ -48,11 +46,11 @@ const LeaveCalender = (props: TabComponentType) => {
       data?.items.map((i: any) => ({
         ...i,
         start: i.startDate,
-        color: i.color,
+        color: i.leavePolicy.color,
         end: i.endDate,
         allDay: false,
-        textColor: i.color,
-        title: `${i.leaveType} [${i.employee.firstName} ${i.employee.lastName}]`,
+        textColor: i.leavePolicy.color,
+        title: `${i.leavePolicy.leaveType} [${i.employee.firstName} ${i.employee.lastName}]`,
         description: i.description.replace(/<[^>]+>/g, ''),
         ...(i.employeeId === userInfo?.employee?.id ? { className: 'ownEvent' } : {}),
       })) || [],
@@ -90,124 +88,73 @@ const LeaveCalender = (props: TabComponentType) => {
 export default LeaveCalender;
 
 const LeaveRequestForm = ({ editData }: any) => (
-  <Formik
-    initialValues={{
-      leaveType: editData?.leaveType || '',
-      description: editData?.description || '',
-      startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
-      endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
-      isHalfDay: editData?.halfDay || false,
-      rejectionReason: editData?.rejectionReason || '',
-      status: editData?.status || 0,
-      color: editData?.color || '',
-    }}
-    // validationSchema={validationSchema}
-    onSubmit={() => {}}
-  >
-    {({ errors, touched, setFieldValue, values, submitForm }) => (
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3 }}>
-        <Form>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Field
-                name="leaveType"
-                as={TextField}
-                select
-                fullWidth
-                label="Leave Type"
-                size="small"
-                error={touched.leaveType && errors.leaveType}
-                helperText={touched.leaveType && errors.leaveType}
-                disabled={editData}
-              >
-                {leaveTypes.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Field>
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Field
-                    name="isHalfDay"
-                    as={Checkbox}
-                    checked={values.isHalfDay}
-                    disabled={editData}
-                    onChange={(e: any) => {
-                      setFieldValue('isHalfDay', e.target.checked);
-                      if (e.target.checked) {
-                        setFieldValue('endDate', null);
-                      }
-                    }}
-                  />
-                }
-                label="Half Day"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <DateTimePicker
-                label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
-                onChange={(value) => setFieldValue('startDate', value)}
-                format="DD-MM-YYYY HH:mm:ss"
-                value={values.startDate}
-                disabled={editData}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    helperText: touched.startDate && errors.startDate,
-                    error: touched.startDate && Boolean(errors.startDate),
-                    fullWidth: true,
-                  },
-                }}
-              />
-            </Grid>
-            {!values.isHalfDay && (
-              <Grid item xs={12}>
-                <DateTimePicker
-                  label="End Date and Time"
-                  onChange={(value) => setFieldValue('endDate', value)}
-                  value={values.endDate}
-                  format="DD-MM-YYYY HH:mm:ss"
-                  disabled={editData}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      helperText: touched.endDate && errors.endDate,
-                      error: touched.endDate && Boolean(errors.endDate),
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </Grid>
-            )}
-            <Grid item xs={12}>
-              <Editor
-                onChange={(value) => {
-                  setFieldValue('description', value);
-                }}
-                value={values.description}
-                placeholder="Leave description"
-                error={touched.description && Boolean(errors.description)}
-                // @ts-ignore
-                helperText={touched.description && errors.description}
-                editable={false}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <ColorPicker
-                selected={values.color}
-                onSelectColor={(color) => {
-                  setFieldValue('color', color);
-                }}
-                colors={CALENDAR_COLOR_OPTIONS}
-                disabled={editData}
-              />
-            </Grid>
-          </Grid>
-        </Form>
-      </Scrollbar>
+  <Grid container spacing={2} bgcolor="background.neutral" m={0} p={2}>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Employee</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      {editData?.employee?.firstName} {editData?.employee?.lastName}
+    </Grid>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Leave Type</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography
+        variant="body2"
+        component="span"
+        color={editData?.leavePolicy?.color}
+        sx={{
+          backgroundColor: `${editData?.leavePolicy?.color}20`,
+          p: 0.8,
+          borderRadius: 1,
+          fontSize: 12,
+        }}
+      >
+        {editData?.leavePolicy?.leaveType}
+      </Typography>
+    </Grid>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Half Day</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      {editData?.halfDay ? 'Yes' : 'No'}
+    </Grid>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Start Date</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      {dayjs(editData?.startDate).format('DD-MM-YYYY')}
+    </Grid>
+    {!editData?.halfDay && (
+      <>
+        {' '}
+        <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+          <Typography variant="body2"> End Date</Typography>
+        </Grid>
+        <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+          {dayjs(editData?.endDate).format('DD-MM-YYYY')}
+        </Grid>{' '}
+      </>
     )}
-  </Formik>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Description</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Box dangerouslySetInnerHTML={{ __html: editData?.description }} />
+    </Grid>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Status</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Label
+        color={
+          EmployeeLeaveStatusTypeColor[
+            EmployeeLeaveStatusType[editData?.status] as keyof typeof EmployeeLeaveStatusTypeColor
+          ]
+        }
+      >
+        {EmployeeLeaveStatusType[editData?.status]}
+      </Label>
+    </Grid>
+  </Grid>
 );

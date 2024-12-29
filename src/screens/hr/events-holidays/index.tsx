@@ -5,7 +5,7 @@ import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -29,10 +29,10 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  useGetEventHolidayQuery,
   useAddEventHolidayMutation,
   useDeleteEventHolidayMutation,
   useUpdateEventHolidayMutation,
+  useLazyGetEventHolidayByDateQuery,
 } from 'src/redux/eventHoliday/eventHolidayApi';
 
 import { Iconify } from 'src/components/iconify';
@@ -54,6 +54,7 @@ interface IEventHoliday {
   startDate: string;
   endDate: string;
   reason: string;
+  isHoliday: boolean;
 }
 const HrEventsAndHolidaysScreen = () => {
   const dialog = useBoolean();
@@ -64,14 +65,21 @@ const HrEventsAndHolidaysScreen = () => {
   const [date, setDate] = React.useState<Dayjs | null>(dayjs);
   const [editData, setEditData] = useState<null | IEventHoliday>(null);
   const theme = useTheme();
-  const { data: eventHolidayData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEventHolidayQuery,
+  const [fetchEvent, { data: eventHolidayData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEventHolidayByDateQuery,
+    // params: date?.format('YYYY-MM-DD'),
   });
+
   const [deleteEventHoliday, { isLoading: isEventHolidayDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEventHolidayMutation,
   });
+  useEffect(() => {
+    if (date) {
+      fetchEvent(date.format('YYYY-MM-DD'));
+    }
+  }, [date, fetchEvent]);
 
   const handelClose = () => {
     setEditData(null);
@@ -299,7 +307,7 @@ const HrEventsAndHolidaysForm = ({
       startDate: editData ? dayjs(editData?.startDate) : null,
       endDate: editData ? dayjs(editData?.endDate) : null,
       reason: editData?.reason || '',
-      isHoliday: false,
+      isHoliday: editData?.isHoliday || false,
     },
     onSubmit: async (value) => {
       try {
