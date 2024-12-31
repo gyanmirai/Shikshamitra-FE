@@ -23,6 +23,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import FeeConfirmationDialog from './fee-confirmation-dialog';
 import ReceivedAmountWarning from './received-amount-warning-dialog';
@@ -56,6 +57,8 @@ interface FormikValues {
   cashAmount: number;
   charges: number;
   chargesDetails: string;
+  amountDue: any;
+  receivedAmount: any;
 }
 
 const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
@@ -91,6 +94,8 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       cashAmount: 0,
       charges: data.previousCharges,
       chargesDetails: data.chargesDetails,
+      amountDue: '',
+      receivedAmount: '',
     },
     onSubmit: (values) => {
       onSave(values);
@@ -399,16 +404,38 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         ),
                       }}
                     />
-                    <FormattedAmountInput
+                    <NumericFormatCustom
+                      size="small"
+                      label="Amount Due"
+                      name="Amount Due"
+                      value={formik.values.amountDue}
+                      onChange={formik.handleChange}
+                      fullWidth
+
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                    />
+                    {/* <FormattedAmountInput
                       label="Amount Due"
                       value={amountDueState}
                       onChange={handleAmountDueChange}
+                    /> */}
+
+                    <NumericFormatCustom
+                      size="small"
+                      label="Received Payment"
+                      name="ReceivedPayment"
+                      value={formik.values.receivedAmount}
+                      onChange={formik.handleChange}
+                      fullWidth
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
-                    <FormattedAmountInput
+                    {/* <FormattedAmountInput
                       label="Received Payment"
                       value={receivedAmountState}
                       onChange={handleReceivedAmountChange}
-                    />
+                    /> */}
                   </Grid>
                 </Grid>
 

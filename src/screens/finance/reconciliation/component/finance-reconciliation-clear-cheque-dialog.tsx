@@ -124,7 +124,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     value={formik.values.chequeDate}
                     onChange={(newValue) => formik.setFieldValue('chequeDate', newValue)}
                     format="DD-MM-YYYY"
-                    slotProps={{ textField: { size: 'small' } }}
+                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     disabled
                   />
                 </Grid2>
@@ -149,7 +149,12 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       value={formik.values.chequeClearDate}
                       onChange={(newValue) => formik.setFieldValue('chequeClearDate', newValue)}
                       format="DD-MM-YYYY"
-                      slotProps={{ textField: { size: 'small' } }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                        },
+                      }}
                     />
                   </Grid2>
                 )}
@@ -160,7 +165,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       value={formik.values.checkBounceDate}
                       onChange={(newValue) => formik.setFieldValue('checkBounceDate', newValue)}
                       format="DD-MM-YYYY"
-                      slotProps={{ textField: { size: 'small' } }}
+                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     />
                   </Grid2>
                 )}

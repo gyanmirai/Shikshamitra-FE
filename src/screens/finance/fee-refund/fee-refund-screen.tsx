@@ -569,7 +569,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                       <MenuItem
                         onClick={() => {
                           dialogForApprovalRequest.onTrue();
-                          popover.onClose();
+                          // popover.onClose();
                         }}
                       >
                         <Iconify icon="mdi:check" />
@@ -579,7 +579,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                         onClick={() => {
                           setSelectedStudent(studentRefundData[0]);
                           dialog.onTrue();
-                          popover.onClose();
+                          // popover.onClose();
                         }}
                       >
                         <Iconify icon="uil:process" />
@@ -740,7 +740,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                       <MenuItem
                         onClick={() => {
                           dialogForApprovalRequest.onTrue();
-                          popover.onClose();
+                          // popover.onClose();
                         }}
                       >
                         <Iconify icon="mdi:check" />
@@ -750,7 +750,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                         onClick={() => {
                           setSelectedStudent(studentRefundData[0]);
                           dialog.onTrue();
-                          popover.onClose();
+                          // popover.onClose();
                         }}
                       >
                         <Iconify icon="uil:process" />

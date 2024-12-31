@@ -5,8 +5,7 @@ import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-
-import FormattedAmountInput from '../../common/input-for-finance';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceFeeRefundRequestDialogProps {
   dialogValue: boolean;
@@ -171,18 +170,40 @@ const FeeRefundRequestDialog: React.FC<FinanceFeeRefundRequestDialogProps> = ({
                 />
               </Grid>
               <Grid item xs={6}>
-                <FormattedAmountInput
+                <NumericFormatCustom
+                  size="small"
+                  label="Amount Applicable For Refund"
+                  name="amountApplicableForRefund"
+                  value=""
+                  onChange={() => {}}
+                  fullWidth
+                  // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                  // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                />
+
+                {/* <FormattedAmountInput
                   label="Amount Applicable For Refund"
                   value={amountDueState}
                   onChange={handleAmountDueChange}
-                />
+                /> */}
               </Grid>
               <Grid item xs={6}>
-                <FormattedAmountInput
+                <NumericFormatCustom
+                  size="small"
+                  label="Ask For Refund"
+                  name="askForRefund"
+                  value=""
+                  onChange={() => {}}
+                  fullWidth
+
+                  // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                  // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                />
+                {/* <FormattedAmountInput
                   label="Ask For Refund"
                   value={receivedAmountState}
                   onChange={handleReceivedAmountChange}
-                />
+                /> */}
               </Grid>
 
               {/* Additional Notes */}

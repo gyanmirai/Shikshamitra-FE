@@ -6,11 +6,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceFeeCollectionRefundTabProps {
   dialogValue: boolean;
@@ -266,29 +265,66 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
               render: (value: any, row: any) => {
                 if (row.feeHead === 'Tuition') {
                   return (
-                    <FormattedAmountInput
-                      label="Tuition Refund"
-                      value={tuitionFeeRefundAmount}
-                      onChange={handleChangeForTuition}
+                    <NumericFormatCustom
+                      size="small"
+                      label="Tuition Discount"
+                      name="tuitionDiscount"
+                      value=""
+                      onChange={() => {}}
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
                   );
                 }
                 if (row.feeHead === 'Library') {
                   return (
-                    <FormattedAmountInput
-                      label="Library Refund"
-                      value={libraryFeeRefundAmount}
-                      onChange={handleChangeForLibrary}
+                    <NumericFormatCustom
+                      size="small"
+                      label="Library Discount"
+                      name="libraryDiscount"
+                      value=""
+                      onChange={() => {}}
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
                   );
                 }
                 return (
-                  <FormattedAmountInput
-                    label="Total Refund"
-                    value={formatNumber(totalFeeRefundAmount.toString())}
+                  <NumericFormatCustom
+                    size="small"
+                    label="Total Discount"
+                    name="totalDiscount"
+                    value={totalFeeRefundAmount.toString()}
                     onChange={() => {}}
+                    // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                    // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                   />
                 );
+                // if (row.feeHead === 'Tuition') {
+                //   return (
+                //     <FormattedAmountInput
+                //       label="Tuition Refund"
+                //       value={tuitionFeeRefundAmount}
+                //       onChange={handleChangeForTuition}
+                //     />
+                //   );
+                // }
+                // if (row.feeHead === 'Library') {
+                //   return (
+                //     <FormattedAmountInput
+                //       label="Library Refund"
+                //       value={libraryFeeRefundAmount}
+                //       onChange={handleChangeForLibrary}
+                //     />
+                //   );
+                // }
+                // return (
+                //   <FormattedAmountInput
+                //     label="Total Refund"
+                //     value={formatNumber(totalFeeRefundAmount.toString())}
+                //     onChange={() => {}}
+                //   />
+                // );
               },
             },
           ]}
