@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -13,6 +15,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface Event {
   id: string;
@@ -71,9 +74,11 @@ const EventsArchieves = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Archieves Events</Typography>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Events Archieves"
+        links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'Events Archieves' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
 
       <CustomizableTable
         columns={[

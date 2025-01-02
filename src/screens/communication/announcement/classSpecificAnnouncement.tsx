@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -39,6 +41,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { DetailRow } from './schoolWiseAnnounsement';
 
@@ -265,10 +268,16 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">Class Wise Announcement</Typography>
-        <Box display="flex" gap={2}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Class Specific Announcement"
+        links={[
+          { name: 'Communication' },
+          { name: 'Announcement' },
+          { name: 'Class Specific Announcement' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
@@ -276,10 +285,10 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
               addAnounsmentDialog.onTrue();
             }}
           >
-            Add New Announcement
+            Announcement
           </Button>
-        </Box>
-      </Box>
+        }
+      />
 
       <CustomizableTable
         columns={[

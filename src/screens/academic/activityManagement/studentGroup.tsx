@@ -11,9 +11,7 @@ import {
   Box,
   Grid,
   Button,
-  MenuItem,
   Checkbox,
-  MenuList,
   TextField,
   Typography,
   DialogActions,
@@ -95,7 +93,7 @@ const StudentGroup = (props: TabComponentType) => {
           { name: 'Activity Management' },
           { name: 'Student Group' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
         action={
           <Button
             startIcon={<Add />}
@@ -127,51 +125,30 @@ const StudentGroup = (props: TabComponentType) => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px', mr: 1 }} />
-                      View Details
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                        pop.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="solar:pen-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    setSelectedGroup(row as TStudentGroup);
+                  }}
+                  handleEditClick={() => {
+                    setSelectedGroup(row as TStudentGroup);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedGroup(row as TStudentGroup);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={studentGroups}

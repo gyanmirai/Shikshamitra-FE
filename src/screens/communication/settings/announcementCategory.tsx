@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
@@ -23,6 +25,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TCategory {
   id: number;
@@ -65,7 +68,12 @@ const announcementCategories: TCategory[] = [
 ];
 
 const SettingAnnouncement = (props: TabComponentType) => (
-  <Box sx={{ flexGrow: 1, p: 3 }}>
+  <Box>
+    <CustomBreadcrumbs
+      heading="Setting Announcement"
+      links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'Setting Announcement' }]}
+      sx={{ px: 1, mb: 2 }}
+    />
     <AnnouncementCategory />
     <AnnouncementImportant />
   </Box>

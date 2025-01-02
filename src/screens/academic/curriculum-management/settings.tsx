@@ -183,7 +183,7 @@ const Settings = (props: TabComponentType) => {
                 dialog.onTrue();
               }}
             >
-              Add New Template
+              Template
             </Button>
           </Box>
           <CustomizableTable

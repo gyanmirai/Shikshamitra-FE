@@ -550,7 +550,7 @@ const TimeTableGrid = (props: TabComponentType) => {
           { name: 'New Timetable' },
           { name: 'Dashboard' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect

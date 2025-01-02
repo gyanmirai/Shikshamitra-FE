@@ -20,7 +20,7 @@ const SharedWithMe = (props: TabComponentType) => (
         { name: 'Resource Content Library' },
         { name: 'Shared With Me' },
       ]}
-      sx={{ px: 1, mb: 6 }}
+      sx={{ px: 1, mb: 2 }}
     />
     <CustomizableTable
       columns={[

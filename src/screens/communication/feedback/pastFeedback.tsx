@@ -1,3 +1,5 @@
+'use client';
+
 /* eslint-disable react/no-unescaped-entities */
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -26,6 +28,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
@@ -89,9 +92,11 @@ const PastSurvey = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">Past Survey</Typography>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Past Survey"
+        links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'Past Survey' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <CustomizableTable
         columns={[
           { id: 'surveyTitle', label: 'Survey Title' },

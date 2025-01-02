@@ -154,7 +154,7 @@ const CourseProgress = (props: TabComponentType) => {
           { name: 'Course Management' },
           { name: 'Course Progress' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <CustomSelect
         label="Class"

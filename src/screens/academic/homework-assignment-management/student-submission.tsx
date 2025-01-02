@@ -69,7 +69,7 @@ const StudentSubmission = (props: TabComponentType) => {
           { name: 'Homework And Assignment' },
           { name: 'Student Submission' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect

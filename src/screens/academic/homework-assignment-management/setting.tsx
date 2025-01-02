@@ -138,7 +138,7 @@ const Setting = (props: TabComponentType) => {
           { name: 'Homework And Assignment' },
           { name: 'Settings' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Grid container spacing={2} alignItems="center">

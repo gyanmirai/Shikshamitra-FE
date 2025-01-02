@@ -92,7 +92,7 @@ const LearningManagementSystemScreen = () => {
             },
           }}
         >
-          Create New Course
+          Course
         </Button>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}

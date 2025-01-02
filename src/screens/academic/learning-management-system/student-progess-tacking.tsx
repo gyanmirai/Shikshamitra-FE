@@ -2,7 +2,7 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { School, AssignmentTurnedIn } from '@mui/icons-material';
@@ -52,7 +52,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
           { name: 'Learning Management System' },
           { name: 'Student Progress Tracking' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Typography variant="h6">Progress Dashboard</Typography>
       <Box display="flex" gap={2} mt={2}>
@@ -395,6 +395,24 @@ const RenderTabs = () => {
 const Assignments = () => {
   const uploadAssignmentDialog = useBoolean();
   const [subject, setSubject] = useState('');
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              uploadAssignmentDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:upload" />
+            Upload Assignment
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [uploadAssignmentDialog]
+  );
   return (
     <Box>
       <CustomSelect
@@ -471,26 +489,17 @@ const Assignments = () => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        uploadAssignmentDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      Upload Assignment
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={[
@@ -553,6 +562,25 @@ const Assignments = () => {
 const Assessments = () => {
   const uploadAssessmentDialog = useBoolean();
   const [subject, setSubject] = useState('');
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              uploadAssessmentDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:upload" />
+            Upload Assessment
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [uploadAssessmentDialog]
+  );
+
   return (
     <Box>
       <CustomSelect
@@ -629,26 +657,17 @@ const Assessments = () => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        uploadAssessmentDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      Upload Assessment
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={[
@@ -740,23 +759,19 @@ const LearningMaterial = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        viewLearningMaterial.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      View
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    viewLearningMaterial.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={[

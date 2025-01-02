@@ -66,7 +66,7 @@ const Reports = (props: TabComponentType) => {
           { name: 'Time Table Management' },
           { name: 'Reports' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" flexDirection="column" justifyContent="space-between">
         <Formik

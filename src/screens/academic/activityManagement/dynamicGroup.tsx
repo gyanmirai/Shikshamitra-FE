@@ -12,8 +12,6 @@ import {
   Grid,
   Chip,
   Button,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   DialogContent,
@@ -22,7 +20,6 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -132,10 +129,10 @@ const DynamicGroupManagement = (props: TabComponentType) => {
           { name: 'Activity Management' },
           { name: 'Dynamic Group' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" onClick={handleOpenAddDialog}>
-            Add Dynamic Group
+            Dynamic Group
           </Button>
         }
       />
@@ -158,43 +155,27 @@ const DynamicGroupManagement = (props: TabComponentType) => {
             ),
           },
           {
-            id: 'actions',
-            label: 'Actions',
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        handleOpenEditDialog(row as DynamicGroup);
-                        pop.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="solar:pen-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as DynamicGroup);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    handleOpenEditDialog(row as DynamicGroup);
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedGroup(row as DynamicGroup);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={groups}

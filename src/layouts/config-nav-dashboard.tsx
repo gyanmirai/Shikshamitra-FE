@@ -572,7 +572,7 @@ const academicModule = {
               _action: 'course-management-dashboard',
             },
             {
-              title: 'Subject',
+              title: 'Content Management',
               path: '/academic/course-management/subjects',
               _action: 'course-management-subjects',
             },
@@ -599,7 +599,7 @@ const academicModule = {
           ],
         },
         {
-          title: 'Timetable & Schedule Management',
+          title: 'Timetable Management',
           path: '',
           _action: 'timetable-schedule-management',
           children: [
@@ -834,33 +834,130 @@ const communicationModule = {
         },
         {
           title: 'Messages',
-          path: '/communication/messages',
+          path: '',
           _action: 'messages',
+          children: [
+            {
+              title: 'All Conversation',
+              path: '/communication/messages/allConversation',
+              _action: 'messages-allConversation',
+            },
+            {
+              title: 'Staff Faculty',
+              path: '/communication/messages/staffFaculty',
+              _action: 'messages-staffFaculty',
+            },
+            {
+              title: 'Students',
+              path: '/communication/messages/students',
+              _action: 'messages-students',
+            },
+            {
+              title: 'Parents',
+              path: '/communication/messages/parents',
+              _action: 'messages-parents',
+            },
+          ],
         },
         {
           title: 'Announcements',
           path: '/communication/announcement',
           _action: 'announcement',
+          children: [
+            {
+              title: 'School Wise Announsement',
+              path: '/communication/announcement/schoolWiseAnnounsement',
+              _action: 'announcement-schoolWiseAnnounsement',
+            },
+            {
+              title: 'Class Specific Announcement',
+              path: '/communication/announcement/classSpecificAnnouncement',
+              _action: 'announcement-classSpecificAnnouncement',
+            },
+          ],
         },
         {
           title: 'Events & Calendar',
           path: '/communication/eventsAndCalendar',
           _action: 'eventsAndCalendar',
+          children: [
+            {
+              title: 'All Events',
+              path: '/communication/eventsAndCalendar/allEvents',
+              _action: 'eventsAndCalendar-allEvents',
+            },
+            {
+              title: 'Upcoming Events',
+              path: '/communication/eventsAndCalendar/upcomingEvents',
+              _action: 'eventsAndCalendar-upcomingEvents',
+            },
+            {
+              title: 'Event Archieves',
+              path: '/communication/eventsAndCalendar/eventArchieves',
+              _action: 'eventsAndCalendar-eventArchieves',
+            },
+          ],
         },
         {
           title: 'Feedback & Survey',
           path: '/communication/feedbackAndSurvey',
           _action: 'feedbackAndSurvey',
+          children: [
+            {
+              title: 'Scheduled Survey',
+              path: '/communication/feedbackAndSurvey/scheduledSurvey',
+              _action: 'feedbackAndSurvey-scheduledSurvey',
+            },
+            {
+              title: 'Active Survey',
+              path: '/communication/feedbackAndSurvey/activeSurvey',
+              _action: 'feedbackAndSurvey-activeSurvey',
+            },
+            {
+              title: 'Past Survey',
+              path: '/communication/feedbackAndSurvey/pastSurvey',
+              _action: 'feedbackAndSurvey-pastSurvey',
+            },
+          ],
         },
         {
           title: 'Meetings',
           path: '/communication/meetings',
           _action: 'meetings',
+          children: [
+            {
+              title: 'All Meetings',
+              path: '/communication/meetings/allMeetings',
+              _action: 'meetings-allMeetings',
+            },
+          ],
         },
         {
           title: 'Settings',
           path: '/communication/settings',
           _action: 'settings',
+          children: [
+            {
+              title: 'Notification Setting',
+              path: '/communication/settings/notificationSetting',
+              _action: 'settings-notificationSetting',
+            },
+            {
+              title: 'User Preferences',
+              path: '/communication/settings/userPreferences',
+              _action: 'settings-userPreferences',
+            },
+            {
+              title: 'Announcement',
+              path: '/communication/settings/announcement',
+              _action: 'settings-announcement',
+            },
+            {
+              title: 'Event Type',
+              path: '/communication/settings/eventType',
+              _action: 'settings-eventType',
+            },
+          ],
         },
       ],
     },
@@ -874,8 +971,45 @@ const examinationModule = {
       items: [
         {
           title: 'Examination',
-          path: '/examination',
+          path: '',
           _action: 'examination',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/examination/examinationDashboard',
+              _action: 'examination-homeworkDashboard',
+            },
+            {
+              title: 'Schedule Exam',
+              path: '/examination/scheduleExam',
+              _action: 'examination-scheduleExam',
+            },
+            {
+              title: 'Grade Entry',
+              path: '/examination/gradeEntry',
+              _action: 'examination-gradeEntry',
+            },
+            {
+              title: 'Assessment Management',
+              path: '/examination/assessmentManagement',
+              _action: 'examination-assessmentManagement',
+            },
+            {
+              title: 'Quiz Management',
+              path: '/examination/quizManagement',
+              _action: 'examination-quizManagement',
+            },
+            {
+              title: 'Student Performance And Analytics',
+              path: '/examination/studentPerformanceAndAnalytics',
+              _action: 'examination-studentPerformanceAndAnalytics',
+            },
+            {
+              title: 'Settings',
+              path: '/examination/settings',
+              _action: 'examination-settings',
+            },
+          ],
         },
       ],
     },
@@ -1132,7 +1266,7 @@ export const navData = [
       },
       {
         title: 'Examination & Assessment',
-        path: '/examination',
+        path: '/examination/examinationDashboard',
         icon: ICONS.dashboard,
         _action: 'examination',
         submodule: examinationModule[examinationPath].flatMap((list) => list.items),

@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 
 import * as yup from 'yup';
@@ -31,6 +33,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import type { TabComponentType } from '../hr/leave-request';
@@ -39,6 +42,15 @@ const ScheduleExam = (props: TabComponentType) => {
   const dialog = useBoolean();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Schedule Exam"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Schedule Exam' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Tooltip title="Schedule Exam">
           <Iconify

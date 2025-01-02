@@ -13,6 +13,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -38,6 +39,30 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
           { name: 'Dashboard' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Add New Subject',
+                href: '/academic/curriculum-management/subjects',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:pencil',
+                label: 'Edit Curriculum',
+                href: '/academic/curriculum-management/curriculumOverview',
+                color: 'warning',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'General Reports',
+                href: '/academic/curriculum-management/reports',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
       />
       <Grid2 container spacing={3} alignItems="stretch">
         <Grid2 xs={12} md={6} lg={6} xl={4}>
@@ -49,6 +74,12 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               flexDirection: 'column',
               justifyContent: 'space-between',
               backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+              cursor: 'pointer',
             }}
           >
             {' '}
@@ -79,6 +110,12 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               flexDirection: 'column',
               justifyContent: 'space-between',
               backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+              cursor: 'pointer',
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -110,13 +147,19 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
         <Grid2 xs={12} md={6} lg={6} xl={4}>
           <Card
             sx={{
-              p: 3,
+              p: 2,
               height: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+              cursor: 'pointer',
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Typography component="span" variant="h6" gutterBottom color="error.main">
+              <Typography component="span" variant="h6" gutterBottom>
                 Teacher Managed
               </Typography>
               <CustomSelect

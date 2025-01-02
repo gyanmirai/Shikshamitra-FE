@@ -106,7 +106,7 @@ const Setting = (props: TabComponentType) => {
           { name: 'Resource Content Library' },
           { name: 'Settings' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Grid container spacing={2} marginTop={1}>
         <Grid item xs={12} md={6}>

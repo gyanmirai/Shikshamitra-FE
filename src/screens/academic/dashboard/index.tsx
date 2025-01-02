@@ -167,7 +167,7 @@ const AcademicDashboardScreen = () => {
             Assignments Management
           </Typography>
           <Button variant="contained" sx={{ marginLeft: '700px' }}>
-            Create New Assignment
+            Assignment
           </Button>
           <CustomizableTable
             columns={[

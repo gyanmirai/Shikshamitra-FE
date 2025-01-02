@@ -15,8 +15,7 @@ import {
   Grid,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
+  TextField,
   Typography,
   DialogActions,
   DialogContent,
@@ -28,7 +27,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -53,6 +51,7 @@ interface TSubject {
 interface TCurriculum {
   id: number;
   className: string;
+  curriculumName: string; // Added curriculumName to the interface
   subjects: TSubject[];
   startDate: Dayjs | null;
   endDate: Dayjs | null;
@@ -64,6 +63,7 @@ const CurriculumData: TCurriculum[] = [
   {
     id: 1,
     className: '1',
+    curriculumName: 'First Grade Curriculum', // Added curriculumName
     subjects: [
       { name: 'Math', color: '#0077b6' },
       { name: 'Science', color: '#8e44ad' },
@@ -77,6 +77,7 @@ const CurriculumData: TCurriculum[] = [
   {
     id: 2,
     className: '2',
+    curriculumName: 'Second Grade Curriculum', // Added curriculumName
     subjects: [
       { name: 'Math', color: '#0077b6' },
       { name: 'Science', color: '#8e44ad' },
@@ -90,6 +91,7 @@ const CurriculumData: TCurriculum[] = [
   {
     id: 3,
     className: '3',
+    curriculumName: 'Third Grade Curriculum', // Added curriculumName
     subjects: [
       { name: 'Math', color: '#0077b6' },
       { name: 'Science', color: '#8e44ad' },
@@ -211,7 +213,7 @@ const CurriculumOverview = (props: TabComponentType) => {
               dialog.onTrue();
             }}
           >
-            Add Curriculum
+            Curriculum
           </Button>
         }
       />
@@ -340,6 +342,7 @@ const CurriculumOverview = (props: TabComponentType) => {
         <CustomizableTable
           columns={[
             { id: 'className', label: 'Class' },
+            { id: 'curriculumName', label: 'Curriculum Name' },
             {
               id: 'startDate',
               label: 'Start Date',
@@ -406,25 +409,19 @@ const CurriculumOverview = (props: TabComponentType) => {
               id: 'action',
               label: 'Action',
               isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover: pop }) => (
-                    <MenuList>
-                      {row.status === 'Unpublish' && (
-                        <MenuItem
-                          onClick={() => {
-                            handleEditCurriculum(row);
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Edit
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  )}
-                />
-              ),
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    // actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showThreeDots={false}
+                    handleEditClick={() => {
+                      handleEditCurriculum(row);
+                    }}
+                  />
+                );
+              },
             },
           ]}
           data={curriculumTableData}
@@ -509,6 +506,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
   const formik = useFormik({
     initialValues: {
       className: data?.className || '',
+      curriculumName: data?.curriculumName || '',
       subjects: data?.subjects.map((subject) => subject.name) || [],
       startDate: data?.startDate ? dayjs(data?.startDate) : dayjs(),
       endDate: data?.endDate ? dayjs(data?.endDate) : null,
@@ -550,6 +548,16 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '180px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="curriculumName"
+                label="curriculumName"
+                value={formik.values.curriculumName}
+                onChange={formik.handleChange}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
@@ -563,6 +571,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
+
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Predefined Template"

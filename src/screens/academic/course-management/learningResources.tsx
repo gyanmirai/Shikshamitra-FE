@@ -3,7 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import {
   Box,
@@ -83,7 +83,7 @@ const LearningResources = (props: TabComponentType) => {
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
-  const [selectedEntry, setSelectedEntry] = useState<TResourceData | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   const dialog = useBoolean();
@@ -157,6 +157,21 @@ const LearningResources = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="solar:share-bold" />
+            Share with classes/teachers
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -174,7 +189,7 @@ const LearningResources = (props: TabComponentType) => {
             onClick={dialog.onTrue}
             disabled={!classes || !subject}
           >
-            Create New Resource
+            Resource
           </Button>
         }
       />
@@ -226,47 +241,36 @@ const LearningResources = (props: TabComponentType) => {
             { id: 'dateUploaded', label: 'Date Uploaded' },
             {
               id: 'status',
-              label: 'Status',
+              label: 'Publish',
               render: (value: string, row: any) => (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography sx={{ mr: 2 }} fontSize={11}>
-                    Unpublish
-                  </Typography>
                   <Switch
                     size="small"
                     checked={value === 'Publish'}
                     onChange={() => handleStatusChange(row.id, value as string)}
                   />
-                  <Typography sx={{ ml: 2 }} fontSize={11}>
-                    Publish
-                  </Typography>
                 </Box>
               ),
             },
             {
               id: 'action',
               label: 'Action',
-              render(value: any, row: any) {
+              isSort: false,
+              render(value, row) {
                 return (
                   <ThreeDotsActions
-                    actions={({ popover }: any) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setIsEdit(true);
-                            setSelectedEntry(row);
-                            dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" />
-                          Edit
-                        </MenuItem>
-                        <MenuItem onClick={() => {}}>
-                          <Iconify icon="solar:share-bold" />
-                          Share with classes/teachers
-                        </MenuItem>
-                      </MenuList>
-                    )}
+                    actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showDeleteIcon
+                    showViewIcon
+                    handleViewClick={() => {}}
+                    handleDeleteClick={() => {}}
+                    handleEditClick={() => {
+                      setIsEdit(true);
+                      setSelectedEntry(row);
+                      dialog.onTrue();
+                    }}
                   />
                 );
               },

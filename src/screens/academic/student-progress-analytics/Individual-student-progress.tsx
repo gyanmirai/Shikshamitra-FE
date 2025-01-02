@@ -135,7 +135,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
           { name: 'Student Progress Analytics' },
           { name: 'Individual Student Progress' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Grid container spacing={3} justifyContent="center" alignItems="center">
         <Grid item xs={12}>

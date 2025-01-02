@@ -169,6 +169,39 @@ const ActivityManagement = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {row.status === 'Completed' && (
+            <MenuItem
+              onClick={() => {
+                uploadPictureDialog.onTrue();
+              }}
+            >
+              <Iconify icon="mdi:upload" sx={{ height: '16px', width: '16px' }} />
+              Upload Pictures
+            </MenuItem>
+          )}
+          {row.status === 'Completed' && (
+            <MenuItem
+              onClick={() => {
+                assignStudentDialog.onTrue();
+                setSelectedActivity(row as Activity);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
+              Assign Students
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    [assignStudentDialog, uploadPictureDialog]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -178,7 +211,7 @@ const ActivityManagement = (props: TabComponentType) => {
           { name: 'Activity' },
           { name: 'Activity Management' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
         action={
           <Button
             startIcon={<Add />}
@@ -243,79 +276,30 @@ const ActivityManagement = (props: TabComponentType) => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedActivity(row as Activity);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-
-                    {row.status === 'Completed' && (
-                      <MenuItem
-                        onClick={() => {
-                          uploadPictureDialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="mdi:upload" sx={{ height: '16px', width: '16px' }} />
-                        Upload Pictures
-                      </MenuItem>
-                    )}
-
-                    {row.status === 'Completed' && (
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedActivity(row as Activity);
-                          deleteConfirmDialog.onTrue();
-                          pop.onClose();
-                        }}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <Iconify
-                          icon="solar:trash-bin-trash-bold"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Delete
-                      </MenuItem>
-                    )}
-
-                    {row.status === 'Completed' && (
-                      <MenuItem
-                        onClick={() => {
-                          assignStudentDialog.onTrue();
-                          setSelectedActivity(row as Activity);
-                          pop.onClose();
-                        }}
-                      >
-                        <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
-                        Assign Students
-                      </MenuItem>
-                    )}
-
-                    {row.status === 'Active' && (
-                      <MenuItem
-                        onClick={() => {
-                          assignStudentDialog.onTrue();
-                          setSelectedActivity(row as Activity);
-                          pop.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Details
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  handleViewClick={() => {
+                    assignStudentDialog.onTrue();
+                    setSelectedActivity(row as Activity);
+                  }}
+                  handleEditClick={() => {
+                    setSelectedActivity(row as Activity);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedActivity(row as Activity);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={activities}

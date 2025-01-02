@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
@@ -5,6 +7,7 @@ import React, { useState } from 'react';
 import { Box } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ChatView } from 'src/sections/chat/view';
 
@@ -12,6 +15,11 @@ const AllConversation = (props: TabComponentType) => {
   const [selectedFilter, setSelectedFilter] = useState('staffFaculty');
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="All Conversation"
+        links={[{ name: 'Communication' }, { name: 'Messages' }, { name: 'All Conversation' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <CustomSelect
         options={[
           { value: 'staffFaculty', label: 'Staff / Faculty' },

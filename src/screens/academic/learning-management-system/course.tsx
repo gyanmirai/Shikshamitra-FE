@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -235,6 +235,37 @@ const Course = (props: TabComponentType) => {
     addChapterDialog.onFalse();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setSelectedSubject(row.subjectName);
+              addChapterDialog.onTrue();
+              setIsEditMode(false);
+              setSelectedChapter(null);
+            }}
+          >
+            <Iconify icon="mdi:plus" />
+            Chapter
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              viewAssignmentDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:eye" />
+            View Assignments
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [addChapterDialog, viewAssignmentDialog]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -244,7 +275,7 @@ const Course = (props: TabComponentType) => {
           { name: 'Learning Management System' },
           { name: 'Course' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
@@ -328,38 +359,17 @@ const Course = (props: TabComponentType) => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedSubject(row.subjectName);
-                        addChapterDialog.onTrue();
-                        setIsEditMode(false);
-                        setSelectedChapter(null);
-                      }}
-                    >
-                      <Iconify icon="mdi:plus" />
-                      Add New Chapter
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        viewAssignmentDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      View Assignments
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={subjectTableData}

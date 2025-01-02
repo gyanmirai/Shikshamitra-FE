@@ -38,7 +38,7 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => {
           { name: 'Student Progress Analytics' },
           { name: 'Settings' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>

@@ -82,7 +82,7 @@ const SettingScreen = (props: TabComponentType) => {
           { name: 'Gradebook Performace' },
           { name: 'Settings' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Card
         sx={{

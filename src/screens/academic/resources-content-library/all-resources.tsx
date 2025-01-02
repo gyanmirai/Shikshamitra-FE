@@ -143,7 +143,7 @@ const AllResources = (props: TabComponentType) => {
           { name: 'Resource Content Library' },
           { name: 'All Resources' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <ToggleButtonGroup

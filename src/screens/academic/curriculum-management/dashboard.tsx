@@ -5,6 +5,7 @@ import { Box, Card, Typography } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 const Dashboard = () => (
   <Box>
@@ -16,6 +17,30 @@ const Dashboard = () => (
         { name: 'Dashboard' },
       ]}
       sx={{ px: 1, mb: 2 }}
+      action={
+        <DashBoardQuickAction
+          actions={[
+            {
+              icon: 'mdi:plus',
+              label: 'Add New Subject',
+              href: '/academic/curriculum-management/subjects',
+              color: 'primary',
+            },
+            {
+              icon: 'mdi:pencil',
+              label: 'Edit Curriculum',
+              href: '/academic/curriculum-management/curriculumOverview',
+              color: 'warning',
+            },
+            {
+              icon: 'simple-icons:googledocs',
+              label: 'General Reports',
+              href: '/academic/curriculum-management/reports',
+              color: 'secondary',
+            },
+          ]}
+        />
+      }
     />
     <Grid2 container spacing={3}>
       <Grid2 lg={4}>

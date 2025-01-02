@@ -168,7 +168,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           { name: 'Time Table Management' },
           { name: 'Settings' },
         ]}
-        sx={{ px: 1, mb: 6 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <Typography component="span" variant="h6" gutterBottom>
@@ -288,7 +288,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           Room Details
         </Typography>
         <Button startIcon={<Iconify icon="mdi:plus" />} variant="contained" onClick={dialog.onTrue}>
-          Create New Room
+          Room
         </Button>
       </Box>
       <CustomizableTable
