@@ -15,7 +15,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FeeRefundRequestDialog from './component/fee-refund-request-dialog';
 import FinanceFeeRefundedViewDialog from './component/fee-refunded-view-dialog';
-import FinanceFeeCollectionRefundTab from '../fee-collection/feeRefund/finance-fee-collection-refund';
+import FinanceFeeRefundAllocationDialog from '../fee-collection/feeRefund/finance-fee-refund-allocated';
 import FinanceFeeCollectionRefundApprovedDialog from '../fee-collection/feeRefund/component/fee-refund-approved-dialog';
 
 interface FeeRefundScreenProps {
@@ -783,7 +783,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
         />
       )}
       {dialog.value && (
-        <FinanceFeeCollectionRefundTab
+        <FinanceFeeRefundAllocationDialog
           dialogValue={dialog.value}
           onClose={closeDialog}
           selectedData={selectedStudent}

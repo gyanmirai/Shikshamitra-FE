@@ -3,12 +3,12 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Button,
   Switch,
+  Checkbox,
   TextField,
   Typography,
   DialogActions,
@@ -42,6 +42,7 @@ interface FormikValue {
   feeHead: string;
   amount: string;
   bookRecipt: string;
+  chargesType: string;
   availableFeeHead?: string;
   feeAmountForAvailbleHead?: string;
   discountCategory: string[];
@@ -65,6 +66,12 @@ const feeHeadList = [
 const bookReciptList = [
   { value: 'cbse', label: 'CBSE' },
   { value: 'gseb', label: 'GSEB' },
+];
+
+const chargesTypeList = [
+  { value: 'fixed', label: 'Fixed' },
+  { value: 'perDay', label: 'Per Day' },
+  { value: 'perMonth', label: 'Per Month' },
 ];
 
 const discountCategoryList = [{ value: 'summerPromotion', label: 'Summner Campaign' }];
@@ -136,6 +143,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       discountAmount: isEdit ? 100 : 0,
       discountCategory: [],
       finalFee: 0,
+      chargesType: '',
     },
     validationSchema,
     onSubmit: (values) => {
@@ -378,8 +386,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
               />
             </Box>
-
-            <Grid2 xs={12} md={6}>
+            <Box py="13px" display="flex" flexDirection="row" gap={4}>
               <DatePicker
                 minDate={dayjs()}
                 label="Total Fees Due Date"
@@ -389,7 +396,34 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 slotProps={{ textField: { size: 'small' } }}
                 sx={{ width: '48%' }}
               />
-            </Grid2>
+              <FormControlLabel
+                control={<Checkbox size="small" checked onChange={() => {}} />}
+                label="Set Rule For Late Fees"
+              />
+            </Box>
+
+            <Box py="13px" display="flex" flexDirection="row" gap={4}>
+              <CustomSelect
+                label="Charges Type"
+                options={chargesTypeList}
+                value={formik.values.chargesType}
+                onChange={(e) => formik.setFieldValue('chargesType', e)}
+                formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
+                error={formik.touched.chargesType && Boolean(formik.errors.chargesType)}
+                // helperText={formik.touched.bookRecipt && formik.errors.bookRecipt}
+                disabled={isEdit}
+              />
+              {/* <NumericFormatCustom
+                  size="small"
+                  label="Ch"
+                  name="expenseAmount"
+                  value={formik.values.expenseAmount}
+                  onChange={formik.handleChange}
+                  fullWidth
+                  // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                  // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                /> */}
+            </Box>
 
             {/* <FormattedAmountInput
                 label="Fixed Reduction"

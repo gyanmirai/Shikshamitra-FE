@@ -3,23 +3,12 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Button,
-  Divider,
-  Tooltip,
-  TextField,
-  Typography,
-  DialogActions,
-  InputAdornment,
-} from '@mui/material';
+import { Box, Grid, Button, Divider, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -171,6 +160,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
 
   const dialog = useBoolean();
   const errorDialogForReceivedAmount = useBoolean();
+
   const closeConfirmationDialog = () => {
     dialog.onFalse();
   };
@@ -192,8 +182,22 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
 
         <Box>
           <form onSubmit={formik.handleSubmit}>
-            <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+            <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
               <Box pt="15px" display="flex" flexDirection="column" gap={3}>
+                <Box display="flex" flexDirection="row" gap={2} py="12px">
+                  <Typography>
+                    <strong>Name:</strong> Vishal RameshBhai Patel
+                  </Typography>
+                  <Typography>
+                    <strong>Standard:</strong> 10/B
+                  </Typography>
+                  <Typography>
+                    <strong>Gr Number:</strong> 89866
+                  </Typography>
+                  <Typography>
+                    <strong>Roll Number:</strong> 1
+                  </Typography>
+                </Box>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={3}>
                     <CustomSelect
@@ -383,7 +387,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                   justifyContent="flex-end"
                 >
                   <Grid item xs={12} md={6} display="flex" gap={2}>
-                    <TextField
+                    {/* <TextField
                       disabled
                       name="charges"
                       label="Charges"
@@ -403,7 +407,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                           </InputAdornment>
                         ),
                       }}
-                    />
+                    /> */}
                     <NumericFormatCustom
                       size="small"
                       label="Amount Due"

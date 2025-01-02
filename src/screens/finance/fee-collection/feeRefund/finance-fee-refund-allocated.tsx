@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Typography, DialogActions } from '@mui/material';
+import { Box, Button, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,15 +10,15 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import FeeRefundDialog from './component/fee-refund-dialog';
+import FeeRefundPaymentDialog from './component/fee-refund-dialog';
 
-interface FinanceFeeCollectionRefundTabProps {
+interface FinanceFeeRefundAllocationDialogProps {
   dialogValue: boolean;
   selectedData: any;
   onClose: () => void;
 }
 
-const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps> = ({
+const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialogProps> = ({
   dialogValue,
   selectedData,
   onClose,
@@ -233,6 +233,20 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
   return (
     <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+        <Box display="flex" flexDirection="row" gap={2} py="12px">
+          <Typography>
+            <strong>Name:</strong> Vishal RameshBhai Patel
+          </Typography>
+          <Typography>
+            <strong>Standard:</strong> 10/B
+          </Typography>
+          <Typography>
+            <strong>Gr Number:</strong> 89866
+          </Typography>
+          <Typography>
+            <strong>Roll Number:</strong> 1
+          </Typography>
+        </Box>
         <CustomizableTable
           isFilter={false}
           isShowedDense={false}
@@ -240,8 +254,8 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
           isScrollbar={false}
           isSearch={false}
           columns={[
-            { id: 'grNumber', label: 'Gr Number' },
-            { id: 'studentName', label: 'Student Name' },
+            // { id: 'grNumber', label: 'Gr Number' },
+
             { id: 'feeHead', label: 'Fee Head' },
             {
               id: 'paidAmount',
@@ -290,7 +304,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
           data={paymentHistoryData}
         />
 
-        <FeeRefundDialog
+        <FeeRefundPaymentDialog
           onSave={handleSave}
           dialogValue
           onClose={closeDialog}
@@ -312,4 +326,4 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
   );
 };
 
-export default FinanceFeeCollectionRefundTab;
+export default FinanceFeeRefundAllocationDialog;
