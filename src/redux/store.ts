@@ -1,0 +1,89 @@
+import storage from 'redux-persist/lib/storage';
+import { persistStore, persistReducer } from 'redux-persist';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+
+import { PFApi } from './PF/PFApi';
+import { userApi } from './user/userApi';
+import { roleApi } from './role/roleApi';
+import { yearApi } from './year/yearApi';
+import userReducer from './user/userSlice';
+import { boardApi } from './board/boardApi';
+import { classApi } from './class/classApi';
+import { mediumApi } from './medium/mediumApi';
+import { tenantApi } from './tenant/tenantApi';
+import { divisionApi } from './division/divisionApi';
+import { employeeApi } from './employee/employeeApi';
+import { documentApi } from './document/documentApi';
+import globalStateReducer from './globalState/globalSlice';
+import { permissionApi } from './permission/permissionApi';
+import { payElementApi } from './payElement/payElementApi';
+import { organizationApi } from './oraganization/oraganization';
+import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
+import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
+import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
+import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
+import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
+import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-typr-api';
+
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['globalState', 'user'],
+};
+
+const reducers = combineReducers({
+  user: userReducer,
+  globalState: globalStateReducer,
+  confirmPopup: confirmPopupReducer,
+  [userApi.reducerPath]: userApi.reducer,
+  [roleApi.reducerPath]: roleApi.reducer,
+  [permissionApi.reducerPath]: permissionApi.reducer,
+  [boardApi.reducerPath]: boardApi.reducer,
+  [mediumApi.reducerPath]: mediumApi.reducer,
+  [organizationApi.reducerPath]: organizationApi.reducer,
+  [classApi.reducerPath]: classApi.reducer,
+  [divisionApi.reducerPath]: divisionApi.reducer,
+  [yearApi.reducerPath]: yearApi.reducer,
+  [tenantApi.reducerPath]: tenantApi.reducer,
+  [employeeApi.reducerPath]: employeeApi.reducer,
+  [documentApi.reducerPath]: documentApi.reducer,
+  [payElementApi.reducerPath]: payElementApi.reducer,
+  [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
+  [PFApi.reducerPath]: PFApi.reducer,
+  [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
+  [ProfessionalApi.reducerPath]: ProfessionalApi.reducer,
+  [StudentAttendanceRuleApi.reducerPath]: StudentAttendanceRuleApi.reducer,
+  [StudentAttendanceTypeApi.reducerPath]: StudentAttendanceTypeApi.reducer,
+});
+
+const store = configureStore({
+  reducer: persistReducer(persistConfig, reducers),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware()
+      .concat(userApi.middleware)
+      .concat(roleApi.middleware)
+      .concat(permissionApi.middleware)
+      .concat(boardApi.middleware)
+      .concat(mediumApi.middleware)
+      .concat(organizationApi.middleware)
+      .concat(classApi.middleware)
+      .concat(divisionApi.middleware)
+      .concat(yearApi.middleware)
+      .concat(tenantApi.middleware)
+      .concat(employeeApi.middleware)
+      .concat(documentApi.middleware)
+      .concat(payElementApi.middleware)
+      .concat(payrollStructureApi.middleware)
+      .concat(PFApi.middleware)
+      .concat(EventHolidayApi.middleware)
+      .concat(ProfessionalApi.middleware)
+      .concat(StudentAttendanceRuleApi.middleware)
+      .concat(StudentAttendanceTypeApi.middleware),
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+export default store;
+
+export const persistor = persistStore(store);

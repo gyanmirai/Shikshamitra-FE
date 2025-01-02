@@ -1,0 +1,79 @@
+'use client';
+
+import React from 'react';
+
+import { Box } from '@mui/material';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/employee/employeeApi';
+
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+const HrAttendanceNotificationScreen = () => {
+  const { data } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeNotificationHistoryQuery,
+  });
+  console.log(data, 'data');
+
+  const dummyData = [
+    {
+      id: 1,
+      name: 'John Doe',
+      date: '2023-05-15',
+      recipient: 'Parent',
+      notificationType: 'Absence',
+      status: 'Delivered',
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      date: '2023-05-16',
+      recipient: 'Student',
+      notificationType: 'Late Arrival',
+      status: 'Pending',
+    },
+    {
+      id: 3,
+      name: 'Mike Johnson',
+      date: '2023-05-17',
+      recipient: 'Teacher',
+      notificationType: 'Early Departure',
+      status: 'Delivered',
+    },
+  ];
+
+  return (
+    <Box>
+      <CustomBreadcrumbs
+        heading="Notifications History"
+        links={[
+          { name: 'HR' },
+          { name: 'Attendance and Leave Management' },
+          { name: 'Notifications History' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <CustomizableTable
+        columns={[
+          { id: 'name', label: 'Name' },
+          { id: 'date', label: 'Date' },
+          // { id: 'recipient', label: 'Recipient' },
+          { id: 'notificationType', label: 'Notification Type' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return <Label color={value === 'Delivered' ? 'success' : 'warning'}>{value}</Label>;
+            },
+          },
+        ]}
+        data={dummyData}
+      />
+    </Box>
+  );
+};
+
+export default HrAttendanceNotificationScreen;

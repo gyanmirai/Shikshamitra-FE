@@ -1,0 +1,69 @@
+'use client';
+
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
+import React from 'react';
+
+import { Tab, Box, Card } from '@mui/material';
+
+import { useTabs } from 'src/hooks/use-tabs';
+
+import { CustomTabs } from 'src/components/custom-tabs';
+
+import GradeScaling from './settings/gradeScaling';
+import ExamAssessmentType from './settings/examType';
+import RubricManagement from './settings/rubricManagement';
+
+const TABS = [
+  {
+    value: 'rubricManagement',
+    label: 'Rubric Management',
+    component: () => <RubricManagement />,
+  },
+  {
+    value: 'gradeScaling',
+    label: 'Grade Scaling',
+    component: () => <GradeScaling />,
+  },
+  {
+    value: 'examAssessmentType',
+    label: 'Exam & Assessment Type',
+    component: () => <ExamAssessmentType />,
+  },
+  //   {
+  //     value: 'eventType',
+  //     label: 'Event Type',
+  //     component: (props: TabComponentType) => <EventType {...props} />,
+  //   },
+];
+
+const Setting = (props: TabComponentType) => {
+  const tabs = useTabs('rubricManagement');
+  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+
+  return (
+    <>
+      <Card
+        sx={{
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+        }}
+      >
+        <CustomTabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          variant="fullWidth"
+          slotProps={{ tab: { px: 0 } }}
+        >
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
+          ))}
+        </CustomTabs>
+      </Card>
+      <Box px={1} pt={2}>
+        {CurrentComponent?.()}
+      </Box>
+    </>
+  );
+};
+
+export default Setting;

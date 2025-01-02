@@ -1,0 +1,19 @@
+import React from 'react';
+
+import CustomizableTable from 'src/components/customizabaleTable';
+
+const PendingAssessment = () => (
+  <CustomizableTable
+    columns={[
+      { id: 'assessmentName', label: 'Assessment Name' },
+      { id: 'subject', label: 'Subject' },
+      { id: 'dueDate', label: 'Due Date' },
+      { id: 'submission', label: 'Submission' },
+      { id: 'status', label: 'Status' },
+      { id: 'action', label: 'Action' },
+    ]}
+    data={[]}
+  />
+);
+
+export default PendingAssessment;

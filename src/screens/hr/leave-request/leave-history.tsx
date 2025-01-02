@@ -1,0 +1,169 @@
+import type { UsePopoverReturn } from 'src/components/custom-popover';
+
+import dayjs from 'dayjs';
+import React, { useMemo, useState, useCallback } from 'react';
+
+import { Box, MenuItem, MenuList } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
+import {
+  useGetEmployeeLeaveQuery,
+  useEmployeeLeaveRequestStatusMutation,
+} from 'src/redux/employee/employeeApi';
+
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+
+import AddLeaveRequest from './leave-requst';
+
+import type { TabComponentType } from '.';
+import type { LeaveRequestType } from './type';
+
+const LeaveHistory = (props: TabComponentType) => {
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeLeaveQuery,
+  });
+  const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
+  });
+
+  const modal = useBoolean();
+  const [editData, setEditData] = useState<any>(null);
+  const actions = useCallback(
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ popover }: { popover: UsePopoverReturn }, row: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={async () => {
+            setEditData(row);
+            if (row.status === EmployeeLeaveStatusType.Pending) {
+              await changeStatus({
+                id: row?.id,
+                body: {
+                  status: EmployeeLeaveStatusType.Reviewed,
+                  rejectionReason: '',
+                },
+              });
+            }
+            modal.onTrue();
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
+          Review
+        </MenuItem>
+      </MenuList>
+    ),
+    [changeStatus, modal]
+  );
+  const tableData = useMemo(
+    () =>
+      data?.items?.map((item: LeaveRequestType) => ({
+        ...item,
+        start: dayjs(item.startDate).format('DD/MM/YYYY'),
+        end: dayjs(item.endDate).format('DD/MM/YYYY'),
+        statusValue: EmployeeLeaveStatusType[item.status],
+        description: item.description.replace(/<[^>]+>/g, ''),
+      })) || [],
+    [data]
+  );
+
+  const handleClose = () => {
+    setEditData(null);
+    modal.onFalse();
+  };
+  return (
+    <>
+      <CustomizableTable
+        isLoading={isLoading}
+        columns={[
+          {
+            label: 'Name',
+            id: 'employee.firstName',
+            render(value, row) {
+              return `${value} ${row.employee.lastName}`;
+            },
+          },
+          {
+            label: 'Start Date',
+            id: 'start',
+          },
+          {
+            label: 'End Date',
+            id: 'end',
+          },
+          {
+            label: 'Half Day',
+            id: 'isHalfDay',
+            render(value, row) {
+              return value ? 'Yes' : 'No';
+            },
+          },
+          {
+            label: 'Description',
+            id: 'description',
+          },
+          {
+            label: 'Rejection Reason',
+            id: 'rejectionReason',
+            render(value, row) {
+              return value || '-';
+            },
+          },
+          {
+            label: 'Status',
+            id: 'statusValue',
+            render(value: number, row) {
+              const status = EmployeeLeaveStatusType[row.status];
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    EmployeeLeaveStatusTypeColor[
+                      status as keyof typeof EmployeeLeaveStatusTypeColor
+                    ]
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+          {
+            label: 'Action',
+            id: 'action',
+            render(value, row) {
+              return (
+                <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />
+      <CustomDialog
+        maxWidth="md"
+        open={modal.value}
+        handleClose={handleClose}
+        title="View Leave Request"
+      >
+        <Box p={2}>
+          <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
+        </Box>
+      </CustomDialog>
+    </>
+  );
+};
+
+export default LeaveHistory;

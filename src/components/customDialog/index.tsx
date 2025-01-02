@@ -1,0 +1,79 @@
+import type { RootState } from 'src/redux/store';
+import type { PaperProps, DialogProps } from '@mui/material';
+
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { Close } from '@mui/icons-material';
+import { Box, Dialog, useTheme, IconButton, Typography } from '@mui/material';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
+type CustomDialogProps = DialogProps & {
+  handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
+  title: string;
+  children: React.ReactNode;
+  paperProps?: PaperProps;
+};
+
+const CustomDialog = ({
+  open,
+  handleClose,
+  title,
+  children,
+  paperProps,
+  ...props
+}: CustomDialogProps) => {
+  const theme = useTheme();
+  const { sx, ...paper } = paperProps || {};
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
+    if (reason === 'backdropClick') return;
+    if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+      handleClose(e, reason);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      handleClose(e, reason);
+    }
+  };
+  return (
+    <Dialog
+      open={open}
+      onClose={handleCloseDialog}
+      fullWidth
+      maxWidth="xs"
+      transitionDuration={{
+        enter: theme.transitions.duration.shortest,
+        exit: theme.transitions.duration.shortest - 80,
+      }}
+      PaperProps={{
+        sx: {
+          display: 'flex',
+          overflow: 'hidden',
+          flexDirection: 'column',
+          '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
+          ...(sx || {}),
+        },
+        ...paper,
+      }}
+      {...props}
+    >
+      <Box display="flex" alignItems="center" justifyContent="space-between" py={1} px={2}>
+        <Typography variant="h5">{title}</Typography>
+        <IconButton
+          aria-label="close"
+          onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
+          sx={{
+            color: theme.palette.grey[500],
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Box>
+      {children}
+    </Dialog>
+  );
+};
+export default CustomDialog;
