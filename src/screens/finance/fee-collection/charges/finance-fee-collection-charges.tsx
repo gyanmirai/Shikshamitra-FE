@@ -29,18 +29,21 @@ const FinanceFeeCollectionCharges = () => {
           chargesPerDay: '5',
           totalCharges: '150',
           status: 'Paid',
+          noOfDay: 30,
         },
         {
           dueDate: '01-02-2025',
           chargesPerDay: '5',
           totalCharges: '150',
           status: 'Pending',
+          noOfDay: 60,
         },
         {
           dueDate: '01-03-2025',
           chargesPerDay: '5',
           totalCharges: '150',
           status: 'Pending',
+          noOfDay: 120,
         },
       ],
     },
@@ -60,71 +63,48 @@ const FinanceFeeCollectionCharges = () => {
           chargesPerDay: '10',
           totalCharges: '300',
           status: 'Paid',
+          noOfDay: 60,
         },
         {
           dueDate: '01-05-2025',
           chargesPerDay: '10',
           totalCharges: '300',
           status: 'Pending',
+          noOfDay: 60,
         },
         {
           dueDate: '01-06-2025',
           chargesPerDay: '10',
           totalCharges: '300',
           status: 'Pending',
+          noOfDay: 60,
         },
       ],
     },
 
-    // {
-    //   srNo: 2,
-    //   chargeId: '674774',
-    //   chargeType: 'ID Card Replacement',
-    //   appliedDate: '10-07-2024',
-    //   overdueDate: '15-07-2024',
-    //   amount: '₹ 150',
-    //   status: 'Paid',
-    //   description: 'Charge for issuing a replacement ID card.',
-    //   details: [
-    //     {
-    //       dueDate: "01-01-2025",
+    {
+      srNo: 3,
+      chargeHead: 'Check Bounce',
+      chargeId: '874912',
+      chargeType: 'bounceCheck',
+      appliedDate: '10-09-2024',
+      overdueDate: '15-09-2024',
+      amount: '₹ 500',
+      status: 'Pending',
+      description: 'Bounce check for the payment of the sports fee of ₹ 5,000.',
+      details: [
+        {
+          feeHead: 'Tuition',
+          checkDate: '15-10-2024',
+          receivedCheckDate: '15-10-2024',
+          chequeAmount: 5000,
+          charges: '₹ 500 ',
+          bankName: 'Sbi',
 
-    //       totalCharges: "150",
-    //       status: 'Paid',
-    //     },
-
-    //   ]
-    // },
-    // {
-    //   srNo: 3,
-    //   chargeId: '674775',
-    //   chargeType: 'Library Late Return',
-    //   appliedDate: '05-09-2024',
-    //   overdueDate: '10-09-2024',
-    //   amount: '₹ 100',
-    //   status: 'Pending',
-    //   description: 'Penalty for returning a library book past the due date.'
-    // },
-    // {
-    //   srNo: 4,
-    //   chargeId: '674776',
-    //   chargeType: 'Damage Charge',
-    //   appliedDate: '01-08-2024',
-    //   overdueDate: '06-08-2024',
-    //   amount: '₹ 500',
-    //   status: 'Pending',
-    //   description: 'Charge for damage to school property.'
-    // },
-    // {
-    //   srNo: 5,
-    //   chargeId: '674777',
-    //   chargeType: 'Sports Equipment Fine',
-    //   appliedDate: '12-06-2024',
-    //   overdueDate: '17-06-2024',
-    //   amount: '₹ 200',
-    //   status: 'Paid',
-    //   description: 'Penalty for damage to sports equipment.'
-    // },
+          status: 'Pending',
+        },
+      ],
+    },
   ];
   const dialog = useBoolean();
   const dialogForViewCharges = useBoolean();
@@ -138,23 +118,22 @@ const FinanceFeeCollectionCharges = () => {
   const handleSave = () => {};
 
   useEffect(() => {}, [selectedEntry]);
+
   return (
     <>
       <Box>{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}</Box>
       <CustomizableTable
-        isShowedDense={false}
-        isFilter={false}
-        isSearch={false}
+        // isShowedDense={false}
+        // isFilter={false}
+        // isSearch={false}
         columns={[
-          //  {id:"srNo", label:"SR No"},
-
-          // { id: 'chequeNumber', label: 'Student Id' },
-          { id: 'chargeHead', label: 'Charge Head' },
-
-          // { id: 'appliedDate', label: 'Applied Date' },
+          {
+            id: 'chargeHead',
+            label: 'Charge Head',
+          },
           {
             id: 'amount',
-            label: 'Total Amount',
+            label: 'Tota Charges Amount',
             render(value, row) {
               return <Typography fontSize="12px">{row.amount}</Typography>;
             },
@@ -197,35 +176,6 @@ const FinanceFeeCollectionCharges = () => {
                     setSelectedEntry(row);
                     dialogForViewCharges.onTrue();
                   }}
-                  // actions={({ popover }: any) => (
-                  //   <MenuList>
-                  //     {row.status === 'Pending' && (
-                  //       <MenuItem
-                  //         onClick={() => {
-                  //           // setIsClearCheck(false)
-                  //           setSelectedEntry(row);
-
-                  //           dialog.onTrue();
-                  //         }}
-                  //       >
-                  //         <Iconify icon="fluent:check-24-regular" />
-                  //         Collect Charges
-                  //       </MenuItem>
-                  //     )}
-                  //     {row.status === 'Paid' && (
-                  //       <MenuItem
-                  //         onClick={() => {
-                  //           // setIsClearCheck(true)
-                  //           // setSelectedEntry(row);
-                  //           // dialog.onTrue();
-                  //         }}
-                  //       >
-                  //         <Iconify icon="circum:receipt" />
-                  //         Generate Receipt
-                  //       </MenuItem>
-                  //     )}
-                  //   </MenuList>
-                  // )}
                 />
               );
             },
@@ -233,6 +183,7 @@ const FinanceFeeCollectionCharges = () => {
         ]}
         data={chargesData}
       />
+      <Box pb="20px" />
 
       {dialog.value && (
         <FinanceChequeBounceChargeCollectDialog
