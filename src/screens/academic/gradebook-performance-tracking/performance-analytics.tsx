@@ -12,10 +12,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const PerformanceAnalytics = (props: TabComponentType) => {
   const [classes1, setClasses1] = useState<string>('');

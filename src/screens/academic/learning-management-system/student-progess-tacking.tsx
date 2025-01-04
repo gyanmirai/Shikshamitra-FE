@@ -30,9 +30,9 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const StudentProgressTracking = (props: TabComponentType) => {
   const dialog = useBoolean();
