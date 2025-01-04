@@ -410,8 +410,6 @@ const CurriculumOverview = (props: TabComponentType) => {
                 ...curriculumTableData[0].subjects.map((_, index) => ({
                   id: `subject${index + 1}`,
                   label: `Subject ${index + 1}`,
-                  minWidth: '120px',
-                  align: 'left',
                   render: (_value: any, row: any) => {
                     // Cast the row back to TCurriculum since we know its actual type
                     const curriculumRow = row as TCurriculum;
