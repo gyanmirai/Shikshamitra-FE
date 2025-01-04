@@ -1,3 +1,6 @@
+import type { RootState } from 'src/redux/store';
+
+import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
 
 import { usePathname } from 'src/routes/hooks';
@@ -18,8 +21,6 @@ export function NavList({
   slotProps,
   enabledRootRedirect,
   isSubLayout = false,
-  currentOpenMenu = '',
-  setCurrentOpenMenu = (val: string) => {},
 }: NavListProps) {
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
@@ -27,6 +28,9 @@ export function NavList({
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);
   const active = isSubLayout ? removeTrailingSlash === data.path : currentModule === data._action;
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -37,28 +41,21 @@ export function NavList({
       );
     if (recur(data.children)) {
       setOpenMenu(true);
-      setCurrentOpenMenu(data._action as string);
     }
-
-    return () => {
-      setOpenMenu(false);
-    };
-  }, [data, removeTrailingSlash, setCurrentOpenMenu]);
+  }, [data, removeTrailingSlash]);
 
   const handleToggleMenu = useCallback(
     (e: any) => {
       if (data.children) {
-        console.log('open');
-        setCurrentOpenMenu(currentOpenMenu === data._action ? '' : (data._action as string)); // setOpenMenu((prev) => !prev);
+        setOpenMenu((prev) => !prev);
       }
     },
-    [data.children, data._action, setCurrentOpenMenu, currentOpenMenu]
+    [data.children]
   );
 
   // const handleCloseMenu = useCallback(() => {
   //   setOpenMenu(false);
   // }, []);
-
   const renderNavItem = (
     <NavItem
       render={render}
@@ -69,11 +66,11 @@ export function NavList({
       title={data.title}
       caption={data.caption}
       // state
-      depth={currentOpenMenu === data._action && !openMenu ? 2 : depth}
-      active={active || currentOpenMenu === data._action || openMenu}
+      depth={depth}
+      active={active || openMenu}
       disabled={data.disabled}
       hasChild={!!data.children}
-      open={data.children && currentOpenMenu === data._action}
+      open={data.children && openMenu}
       externalLink={isExternalLink(data?.path || '')}
       enabledRootRedirect={enabledRootRedirect}
       // styles
@@ -100,17 +97,10 @@ export function NavList({
             '&:first-of-type': { mt: 'var(--nav-item-gap)' },
           },
         }}
-        // className={stateClasses({ active: currentOpenMenu === data._action && !openMenu })}
       >
         {renderNavItem}
 
-        <NavCollapse
-          data-group={data.title}
-          in={currentOpenMenu === data._action}
-          depth={depth}
-          unmountOnExit
-          mountOnEnter
-        >
+        <NavCollapse data-group={data.title} in={openMenu} depth={depth} unmountOnExit mountOnEnter>
           <NavSubList
             data={data.children}
             render={render}

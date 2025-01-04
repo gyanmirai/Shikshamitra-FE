@@ -17,6 +17,7 @@ export async function GET() {
       file = {};
     }
     const userInfo = file[session?.userInfo?.sub];
+    delete file[session?.userInfo?.sub as string];
     await fs.writeFile('src/tokenSet.json', JSON.stringify(file));
     // console.log(userInfo, file, '==============>');
     return NextResponse.json(userInfo || null);

@@ -7,6 +7,8 @@ import Link from 'next/link';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, useTheme, Typography } from '@mui/material';
 
+import { varAlpha } from 'src/theme/styles';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
@@ -40,7 +42,7 @@ export function StudentEnrollmentCard({
           gap: 5,
           flexGrow: 1,
           // @ts-ignore
-          // background: varAlpha(theme.palette[bgColor as keyof Palette]?.mainChannel || '', 0.08),
+          background: varAlpha(theme.palette[bgColor as keyof Palette]?.mainChannel || '', 0.08),
           cursor: 'pointer',
           height: '100%',
         }}
@@ -56,7 +58,9 @@ export function StudentEnrollmentCard({
         />
 
         <Box>
-          <Typography variant="subtitle1">{title}</Typography>
+          <Typography variant="subtitle1" color={color}>
+            {title}
+          </Typography>
           <Typography variant="h3" color={color}>
             {count}
           </Typography>

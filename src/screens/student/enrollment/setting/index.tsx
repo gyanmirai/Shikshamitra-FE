@@ -10,10 +10,14 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Notification from './notification';
-import StudentDocumentType from './document-type';
-import InquiryPreference from './inquiryPreference';
+import DocumentType from './document-type';
 
 const TABS = [
+  // {
+  //   value: 'inquiryFields',
+  //   label: 'Inquiry Fields',
+  //   component: () => <InquiryFields />,
+  // },
   {
     value: 'notificationPreferences',
     label: 'Notification Preferences',
@@ -22,12 +26,7 @@ const TABS = [
   {
     value: 'defaultDocumentTypes',
     label: 'Default Document Types',
-    component: () => <StudentDocumentType />,
-  },
-  {
-    value: 'inquiryPreference',
-    label: 'Inquiry Preference',
-    component: () => <InquiryPreference />,
+    component: () => <DocumentType />,
   },
 ];
 

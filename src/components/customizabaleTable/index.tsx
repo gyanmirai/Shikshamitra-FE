@@ -21,7 +21,6 @@ import {
   Box,
   Menu,
   Chip,
-  Card,
   Paper,
   Table,
   Select,
@@ -320,11 +319,11 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     setAnchorEl(null);
   };
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
+    <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
         {isSearch && (
           <TextField
-            label="Search"
+            label="Global Search"
             variant="outlined"
             size="small"
             value={searchTerm}
@@ -537,7 +536,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
         />
       )}
       <Box px="2px">
-        <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none' }}>
+        <ComponentBlock sx={{ px: 0, py: 0 }}>
           <Scrollbar sx={{ overflow: isScrollbar ? 'auto' : 'hidden', maxHeight: '70vh' }}>
             <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
               <TableHead>
@@ -584,12 +583,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                               {column?.renderColumn?.(column)}
                             </Box>
                             {column.isSort !== false && (
-                              <Box
-                                width="50px"
-                                display="flex"
-                                justifyContent="center"
-                                alignItems="center"
-                              >
+                              <Box width="50px">
                                 {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
                                   <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
                                     {sorts.findIndex((sort) => sort.column === column.id) + 1}
@@ -706,7 +700,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           </Scrollbar>
           {isShowedDense && (
             <Paper
-              elevation={0}
+              elevation={1}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -745,7 +739,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           )}
         </ComponentBlock>
       </Box>
-    </Card>
+    </Box>
   );
 };
 

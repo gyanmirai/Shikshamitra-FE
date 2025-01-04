@@ -13,6 +13,7 @@ import {
 
 import { CONFIG } from 'src/config-global';
 
+import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -21,7 +22,7 @@ const icon = (name: string) => (
   <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
 );
 
-export const ICONS = {
+const ICONS = {
   job: icon('ic-job'),
   blog: icon('ic-blog'),
   chat: icon('ic-chat'),
@@ -56,9 +57,6 @@ export const ICONS = {
   library: icon('ic-library'),
   transport: icon('ic-transport'),
   hostel: icon('ic-hostel'),
-  academic: icon('ic-academic'),
-  examination: icon('ic-examination'),
-  school: icon('ic-school'),
 };
 
 // ----------------------------------------------------------------------
@@ -66,7 +64,14 @@ export const ICONS = {
 export const settingMenu = {
   title: 'Institute Setup',
   path: '/setting/basic-information',
-  icon: ICONS.school,
+  icon: (
+    <Iconify
+      icon="emojione-monotone:school"
+      sx={{ height: '20px !important', width: '20px !important' }}
+      height={18}
+      width={18}
+    />
+  ),
   _action: 'setting',
 };
 
@@ -91,7 +96,7 @@ const studentModule = {
               _action: 'student-enrollment-inquiry',
             },
             {
-              title: 'Registration Form Details',
+              title: 'Registration Form',
               path: '/student/enrollment/registration-form',
               _action: 'student-enrollment-registration-form',
             },
@@ -883,14 +888,14 @@ export const navData = [
       {
         title: 'Academic & Assignment',
         path: '/academic/dashboard',
-        icon: ICONS.academic,
+        icon: ICONS.dashboard,
         _action: 'academic',
         submodule: academicModule[academicPath].flatMap((list) => list.items),
       },
       {
         title: 'Examination & Assessment',
         path: '/examination',
-        icon: ICONS.examination,
+        icon: ICONS.dashboard,
         _action: 'examination',
         submodule: examinationModule[examinationPath].flatMap((list) => list.items),
       },

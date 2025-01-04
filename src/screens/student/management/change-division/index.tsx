@@ -33,8 +33,7 @@ const ChangeDivisionScreen = ({ allDivision }: any) => {
           { id: 'name', label: 'Name' },
           {
             id: 'division',
-            label: '',
-            isSort: false,
+            label: 'Division',
             renderColumn(value) {
               return (
                 <>

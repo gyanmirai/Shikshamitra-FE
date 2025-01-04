@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -150,9 +150,9 @@ const FinanceExpenseTrackingScreen = () => {
         </Button>
       </Box>
       <Box>
-        <Typography component="span" variant="h6" gutterBottom>
+        {/* <Typography component="span" variant="h6" gutterBottom>
           Expense Overview
-        </Typography>
+        </Typography> */}
       </Box>
       <CustomizableTable
         columns={[
@@ -221,38 +221,53 @@ const FinanceExpenseTrackingScreen = () => {
               return (
                 <ThreeDotsActions
                   placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          console.log('data row', row);
-                          dialogForDetailsInExpense.onTrue();
-                          setSelectedExpense(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:eye" />
-                        View Details
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setIsEdit(true);
-                          setSelectedExpense(row);
-                          dialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" />
-                        Edit
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          handleDelete(row);
-                        }}
-                      >
-                        <Iconify icon="solar:trash-bin-trash-bold" />
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                  showThreeDots={false}
+                  showViewIcon
+                  handleViewClick={() => {
+                    dialogForDetailsInExpense.onTrue();
+                    setSelectedExpense(row);
+                  }}
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    handleDelete(row);
+                  }}
+                  showEditIcon
+                  handleEditClick={() => {
+                    setIsEdit(true);
+                    setSelectedExpense(row);
+                    dialog.onTrue();
+                  }}
+                  // actions={({ popover }: any) => (
+                  //   <MenuList>
+                  //     <MenuItem
+                  //       onClick={() => {
+                  //         console.log('data row', row);
+
+                  //       }}
+                  //     >
+                  //       <Iconify icon="mdi:eye" />
+                  //       View Details
+                  //     </MenuItem>
+                  //     <MenuItem
+                  //       onClick={() => {
+                  //         setIsEdit(true);
+                  //         setSelectedExpense(row);
+                  //         dialog.onTrue();
+                  //       }}
+                  //     >
+                  //       <Iconify icon="solar:pen-bold" />
+                  //       Edit
+                  //     </MenuItem>
+                  //     <MenuItem
+                  //       onClick={() => {
+                  //         handleDelete(row);
+                  //       }}
+                  //     >
+                  //       <Iconify icon="solar:trash-bin-trash-bold" />
+                  //       Delete
+                  //     </MenuItem>
+                  //   </MenuList>
+                  // )}
                 />
               );
             },

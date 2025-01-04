@@ -1,187 +1,95 @@
+import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 
-import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
+import { Add, RemoveCircle } from '@mui/icons-material';
 import {
   Box,
   Stack,
-  Switch,
   Button,
   TextField,
+  IconButton,
+  Autocomplete,
   DialogActions,
-  FormControlLabel,
+  createFilterOptions,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
-import {
-  useGetStudentDocumentTypeQuery,
-  useAddStudentDocumentTypeMutation,
-  useUpdateStudentDocumentTypeMutation,
-  useDeleteStudentDocumentTypeMutation,
-} from 'src/redux/student/document-type/document-type-api';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IStudentDocument {
-  id: string;
-  documentName: string;
-  isRequired: boolean;
-  documentTypes: DocumentType[];
-}
-const StudentDocumentType = () => {
+const DocumentType = () => {
   const dialog = useBoolean();
-  const confirm = useBoolean();
-  const [editData, setEditData] = useState<null | IStudentDocument>(null);
-
-  const { data: documents, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentDocumentTypeQuery,
-  });
-
-  const [deleteDocument, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteStudentDocumentTypeMutation,
-  });
-
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
-  };
   return (
     <Box>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-          setEditData(null);
-        }}
-        title="Delete"
-        content="Are you sure want to delete?"
-        action={
-          <LoadingButton
-            loading={isDeleteLoading}
-            variant="contained"
-            color="error"
-            onClick={async () => {
-              await deleteDocument(editData?.id);
-              confirm.onFalse();
-              setEditData(null);
-            }}
-          >
-            Delete
-          </LoadingButton>
-        }
-      />
-      <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Document
+      <Box display="flex" justifyContent="flex-end">
+        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          Add New document
         </Button>
       </Box>
       <CustomizableTable
-        isLoading={isLoading}
         columns={[
-          { id: 'documentName', label: 'Document' },
+          { id: 'document', label: 'Documents' },
           {
-            id: 'documentTypes',
+            id: 'type',
             label: 'Type',
             render(value, row) {
-              return value.map((item: number) => DocumentType[item]).join(', ');
+              return row.type.join(', ');
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'delete',
+            label: 'Remove',
             isSort: false,
             render(value, row) {
               return (
-                <ThreeDotsActions
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    setEditData(row as IStudentDocument);
-                    confirm.onTrue();
-                  }}
-                  showThreeDots={false}
-                  showEditIcon
-                  handleEditClick={() => {
-                    setEditData(row as IStudentDocument);
-                    dialog.onTrue();
-                  }}
-                />
+                <IconButton color="error">
+                  {' '}
+                  <RemoveCircle />
+                </IconButton>
               );
             },
           },
         ]}
-        data={documents?.items || []}
+        data={[
+          { document: 'Certificate_BonafiedTabular.pdf', type: ['image', 'pdf'] },
+          { document: 'Certificate_Bonafied_Double.pdf', type: ['image', 'pdf'] },
+          { document: 'Certificate_Bonafied_LetterHead.pdf', type: ['image'] },
+          { document: 'Certificate_Bonafied_WithAddress.pdf', type: ['image'] },
+          { document: 'Certificate_Bonafied_WithPreviousDetai', type: ['image', 'pdf'] },
+          { document: 'Certificate_CBSETransfer.pdf', type: ['image'] },
+          { document: 'Certificate_Transfer_CBSE.pdf', type: ['image'] },
+          { document: 'First Trial Certificates.pdf', type: ['image'] },
+        ]}
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Document">
-        <DocumentForm handleClose={handleClose} editData={editData} />
+      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Document">
+        <DocumentForm handleClose={dialog.onFalse} />
       </CustomDialog>
     </Box>
   );
 };
 
-export default StudentDocumentType;
+export default DocumentType;
 
-const DocumentForm = ({
-  editData,
-  handleClose,
-}: {
-  editData: null | IStudentDocument;
-  handleClose?: () => void;
-}) => {
-  const [addDocument, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddStudentDocumentTypeMutation,
-  });
-  const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateStudentDocumentTypeMutation,
-  });
+const filter = createFilterOptions<{ title: string; inputValue?: string }>();
 
-  const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
-    title: string;
-    documentType: DocumentType[];
-    isRequired: boolean;
+const DocumentForm = ({ handleClose }: { handleClose?: () => void }) => {
+  const { values, setFieldValue, handleSubmit } = useFormik<{
+    document: { title: string; inputValue?: string };
+    documentType: string[];
   }>({
     initialValues: {
-      title: editData?.documentName || '',
-      documentType: editData?.documentTypes || [],
-      isRequired: editData?.isRequired || false,
+      document: { title: '' },
+      documentType: [],
     },
     validationSchema: Yup.object({
-      title: Yup.string().required('Document name is required'),
-      documentType: Yup.array().min(1, 'At least one document type is required'),
+      documentType: Yup.string().required('Document type is required'),
     }),
-    onSubmit: async (formikValues) => {
+    onSubmit: (formikValues) => {
       console.log(formikValues);
-      if (editData) {
-        await updateDocument({
-          id: editData.id,
-          body: {
-            documentName: formikValues.title,
-            documentTypes: formikValues.documentType,
-            isRequired: formikValues.isRequired,
-          },
-        });
-        handleClose?.();
-        return;
-      }
-      await addDocument({
-        documentName: formikValues.title,
-        documentTypes: formikValues.documentType,
-        isRequired: formikValues.isRequired,
-      });
-      handleClose?.();
     },
   });
 
@@ -189,36 +97,84 @@ const DocumentForm = ({
     <form onSubmit={handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
         <Stack spacing={2}>
-          <TextField
+          <Autocomplete
+            value={values.document}
+            onChange={(event, newValue) => {
+              if (typeof newValue === 'string') {
+                setFieldValue('document', {
+                  title: newValue,
+                });
+              } else if (newValue && newValue.inputValue) {
+                // Create a new value from the user input
+                setFieldValue('document', {
+                  title: newValue.inputValue,
+                });
+              } else {
+                setFieldValue('document', newValue);
+              }
+            }}
+            filterOptions={(options, params) => {
+              const filtered = filter(options, params);
+
+              const { inputValue } = params;
+              // Suggest the creation of a new value
+              const isExisting = options.some((option) => inputValue === option.title);
+              if (inputValue !== '' && !isExisting) {
+                filtered.push({
+                  inputValue,
+                  title: `Add "${inputValue}"`,
+                });
+              }
+
+              return filtered;
+            }}
+            selectOnFocus
+            clearOnBlur
+            handleHomeEndKeys
+            id="free-solo-with-text-demo"
+            options={[
+              { title: 'Certificate_BonafiedTabular.pdf' },
+              { title: 'Certificate_Bonafied_Double.pdf' },
+              { title: 'Certificate_Bonafied_LetterHead.pdf' },
+              { title: 'Certificate_Bonafied_WithAddress.pdf' },
+              { title: 'Certificate_Bonafied_WithPreviousDetai' },
+              { title: 'Certificate_CBSETransfer.pdf' },
+              { title: 'Certificate_Transfer_CBSE.pdf' },
+              { title: 'First Trial Certificates.pdf' },
+            ]}
+            getOptionLabel={(option) => {
+              // Value selected with enter, right from the input
+              if (typeof option === 'string') {
+                return option;
+              }
+              // Add "xxx" option created dynamically
+              if (option.inputValue) {
+                return option.inputValue;
+              }
+              // Regular option
+              return option.title;
+            }}
+            renderOption={(props, option) => <li {...props}>{option.title}</li>}
+            freeSolo
             fullWidth
-            size="small"
-            label="Document Name"
-            name="document.title"
-            value={values.title}
-            onChange={(e) => setFieldValue('title', e.target.value)}
-            error={Boolean(errors.title && touched.title)}
-            helperText={(touched.title && errors.title) || ''}
+            renderInput={(params) => (
+              <TextField {...params} fullWidth size="small" label="search and add document" />
+            )}
           />
 
           <CustomSelect
-            options={DocumentTypeArray}
+            options={[
+              { label: 'Image', value: 'image' },
+              { label: 'Pdf', value: 'pdf' },
+              { label: 'Doc', value: 'doc' },
+              { label: 'Docx', value: 'docx' },
+              { label: 'Xlsx', value: 'xlsx' },
+            ]}
             value={values.documentType}
             multiple
             label="Select document Type"
             onChange={(value) => setFieldValue('documentType', value)}
             formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            error={Boolean(errors.documentType && touched.documentType)}
-            helperText={(touched.documentType && errors.documentType) as string}
-          />
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={values.isRequired}
-                onChange={(e) => setFieldValue('isRequired', e.target.checked)}
-              />
-            }
-            label="Is Required"
           />
         </Stack>
       </Scrollbar>
@@ -226,9 +182,9 @@ const DocumentForm = ({
         <Button variant="outlined" onClick={handleClose}>
           Cancel
         </Button>
-        <LoadingButton loading={isUpdateLoading || isLoading} variant="contained" type="submit">
+        <Button variant="contained" type="submit">
           Submit
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </form>
   );

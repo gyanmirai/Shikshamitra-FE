@@ -1,58 +1,51 @@
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { MuiColorInput } from 'mui-color-input';
 
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetStudentAttendanceTypeQuery,
-  useAddStudentAttendanceTypeMutation,
-  useDeleteStudentAttendanceTypeMutation,
-  useUpdateStudentAttendanceTypeMutation,
-} from 'src/redux/student/attendance-type/attendance-type-api';
-
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IAttendanceRule {
-  id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  tenantId: string;
-  type: string;
-  color: string;
-}
 const AttendanceType = () => {
   const dialog = useBoolean();
   const confirm = useBoolean();
 
-  const [editData, setEditData] = useState<IAttendanceRule | null>(null);
+  const actions = useCallback(
+    ({ popover }: any, row: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            confirm.onTrue();
 
-  const { data: attendanceTypes, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
-  });
+            popover.onClose();
+          }}
+          sx={{ color: 'error.main' }}
+        >
+          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
+          Delete
+        </MenuItem>
 
-  const [deleteAttendanceType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteStudentAttendanceTypeMutation,
-  });
-
-  const handleClose = () => {
-    dialog.onFalse();
-    setEditData(null);
-  };
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            dialog.onTrue();
+          }}
+        >
+          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+          Edit
+        </MenuItem>
+      </MenuList>
+    ),
+    [confirm, dialog]
+  );
 
   return (
     <Box>
@@ -62,13 +55,11 @@ const AttendanceType = () => {
         </Button>
       </Box>
       <CustomizableTable
-        isLoading={isLoading}
         columns={[
           { id: 'type', label: 'Type' },
           {
             id: 'color',
             label: 'Color',
-            isSort: false,
             render(value, row) {
               return (
                 <Box
@@ -85,50 +76,36 @@ const AttendanceType = () => {
           {
             id: 'action',
             label: 'Action',
-            render: (value, row) => (
-              <ThreeDotsActions
-                showThreeDots={false}
-                showEditIcon
-                showDeleteIcon
-                handleEditClick={() => {
-                  dialog.onTrue();
-                  setEditData(row as IAttendanceRule);
-                }}
-                handleDeleteClick={() => {
-                  confirm.onTrue();
-                  setEditData(row as IAttendanceRule);
-                }}
-              />
-            ),
+            render: (value, row) => <ThreeDotsActions actions={(prop) => actions(prop, row)} />,
           },
         ]}
-        data={attendanceTypes?.items || []}
+        data={[
+          { id: 1, type: 'Present', color: '#4CAF50' },
+          { id: 2, type: 'Absent', color: '#F44336' },
+          { id: 3, type: 'Late', color: '#FFC107' },
+          { id: 4, type: 'Half Day', color: '#FF9800' },
+          { id: 5, type: 'Leave', color: '#9C27B0' },
+        ]}
       />
       <ConfirmDialog
         open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-          setEditData(null);
-        }}
+        onClose={confirm.onFalse}
         title="Delete"
         content="Are you sure want to delete?"
         action={
-          <LoadingButton
-            loading={isDeleteLoading}
+          <Button
             variant="contained"
             color="error"
-            onClick={async () => {
-              await deleteAttendanceType(editData?.id);
+            onClick={() => {
               confirm.onFalse();
-              setEditData(null);
             }}
           >
             Delete
-          </LoadingButton>
+          </Button>
         }
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Attendance Type">
-        <AttendanceTypeForm handleClose={handleClose} editData={editData} />
+      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Attendance Type">
+        <AttendanceTypeForm />
       </CustomDialog>
     </Box>
   );
@@ -136,59 +113,24 @@ const AttendanceType = () => {
 
 export default AttendanceType;
 
-const AttendanceTypeForm = ({
-  handleClose,
-  editData,
-}: {
-  handleClose: () => void;
-  editData?: IAttendanceRule | null;
-}) => {
-  const [updateAttendanceType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateStudentAttendanceTypeMutation,
-  });
-  const [addAttendanceType, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddStudentAttendanceTypeMutation,
-  });
-
-  const { values, handleChange, setFieldValue, handleSubmit, errors, touched } = useFormik({
+const AttendanceTypeForm = () => {
+  const { values, handleChange, setFieldValue } = useFormik({
     initialValues: {
-      type: editData?.type || '',
-      color: editData?.color || 'white',
+      type: '',
+      color: 'white',
     },
-    validationSchema: Yup.object({
-      type: Yup.string().required('Type is required'),
-      color: Yup.string().required('Color is required'),
-    }),
-    onSubmit: async (value) => {
-      try {
-        if (editData) {
-          await updateAttendanceType({
-            id: editData.id,
-            body: value,
-          });
-        } else {
-          await addAttendanceType(value);
-        }
-        handleClose();
-      } catch (error) {
-        console.log(error);
-      }
-    },
+    onSubmit: () => {},
   });
   return (
-    <Box component="form" onSubmit={handleSubmit}>
+    <Box component="form">
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2.5}>
+        <Stack spacing={2}>
           <TextField
             label="Type"
             name="type"
             value={values.type}
             onChange={handleChange}
             size="small"
-            error={!!(errors.type && touched.type)}
-            helperText={touched.type && errors.type}
           />
           <MuiColorInput
             format="hex"
@@ -198,18 +140,16 @@ const AttendanceTypeForm = ({
             placeholder="color"
             label="Background Color"
             size="small"
-            error={!!(errors.color && touched.color)}
-            helperText={touched.color && errors.color}
           />
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" color="inherit" onClick={handleClose}>
+        <Button variant="outlined" color="inherit" onClick={() => {}}>
           Cancel
         </Button>
-        <LoadingButton loading={isUpdateLoading || isLoading} variant="contained" type="submit">
+        <Button variant="contained" onClick={() => {}}>
           Save
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Box>
   );

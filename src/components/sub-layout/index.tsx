@@ -6,14 +6,13 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
-import { Box, Slide } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { yearApi } from 'src/redux/year/yearApi';
 import { boardApi } from 'src/redux/board/boardApi';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 
 import { Scrollbar } from '../scrollbar';
-import { useSettingsContext } from '../settings';
 import { LoadingScreen } from '../loading-screen';
 import { NavSectionVertical } from '../nav-section';
 
@@ -22,9 +21,6 @@ const SubLayout = ({ children }: any) => {
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
   const currentData = navSubData[`/${currentModule}` as keyof typeof navSubData];
-
-  const settings = useSettingsContext();
-  const isNavMini = settings.navLayout === 'mini';
 
   const yearLoading = useSelector(
     (state: RootState) => yearApi.endpoints.getYear.select(undefined)(state)?.isLoading
@@ -42,24 +38,22 @@ const SubLayout = ({ children }: any) => {
       // sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
     >
       {currentData?.length > 0 && (
-        <Slide direction="right" in={isNavMini} mountOnEnter unmountOnExit>
-          <Scrollbar
-            fillContent
-            sx={{
-              height: '100%',
-              width: '320px',
-              boxShadow: 'var(--shadows-3)',
-              bgcolor: (theme) => theme.palette.background.paper,
-              borderRadius: 1,
-            }}
-          >
-            <NavSectionVertical
-              data={currentData}
-              sx={{ p: 1, flex: '1 1 auto', width: '100%' }}
-              isSubLayout
-            />
-          </Scrollbar>
-        </Slide>
+        <Scrollbar
+          fillContent
+          sx={{
+            height: '100%',
+            width: '320px',
+            boxShadow: 'var(--shadows-3)',
+            bgcolor: (theme) => theme.palette.background.paper,
+            borderRadius: 1,
+          }}
+        >
+          <NavSectionVertical
+            data={currentData}
+            sx={{ p: 1, flex: '1 1 auto', width: '100%' }}
+            isSubLayout
+          />
+        </Scrollbar>
       )}
       <Box
         sx={{
@@ -78,7 +72,6 @@ const SubLayout = ({ children }: any) => {
           borderRadius: 1,
           borderBottom: 'none',
           borderRight: 'none',
-          transition: 'all 0.3s ease-in-out',
         }}
       >
         {(yearLoading || boardLoading || isLoading) &&
@@ -87,13 +80,12 @@ const SubLayout = ({ children }: any) => {
         ) : (
           <Scrollbar
             sx={{
-              // maxWidth: '1440px',
+              maxWidth: '1440px',
               width: '100%',
               mx: 'auto',
               height: '100%',
               overflow: 'auto',
               p: 2,
-
               // p: 1,
               // bgcolor: (theme) => theme.palette.background.default,
             }}

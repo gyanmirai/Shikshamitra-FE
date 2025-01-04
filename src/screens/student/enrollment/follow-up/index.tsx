@@ -4,15 +4,12 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
 
-import { Add, Send } from '@mui/icons-material';
+import { Send } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Button, TextField, IconButton, DialogActions, InputAdornment } from '@mui/material';
 
-import { varAlpha } from 'src/theme/styles';
-
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -116,37 +113,33 @@ const FollowUpScreen: React.FC = () => {
               return <Label color={color}>{value}</Label>;
             },
           },
-          {
-            id: 'conversation',
-            label: 'Conversation',
-            isSort: false,
-            align: 'center',
-            render(value, row) {
-              return (
-                <IconButton
-                  sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
-                    color: (theme) => theme.palette.primary.main,
-                    '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
-                    },
-                    height: '24px',
-                    width: '24px',
-                  }}
-                  onClick={() => setOpenDialog(true)}
-                >
-                  <Add sx={{ height: '18px', width: '18px' }} />
-                </IconButton>
-              );
-            },
-          },
+          //   {
+          //     id: 'conversation',
+          //     label: 'Conversation',
+          //     isSort: false,
+          //     align: 'center',
+          //     render(value, row) {
+          //       return (
+          //         <IconButton
+          //           sx={{
+          //             backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+          //             color: (theme) => theme.palette.primary.main,
+          //             '&:hover': {
+          //               backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+          //             },
+          //             height: '24px',
+          //             width: '24px',
+          //           }}
+          //           onClick={() => setOpenDialog(true)}
+          //         >
+          //           <Add sx={{ height: '18px', width: '18px' }} />
+          //         </IconButton>
+          //       );
+          //     },
+          //   },
         ]}
         data={dummyData}
       />
-
-      <CustomDialog open={openDialog} handleClose={handleCloseDialog} title="Communication History">
-        <CommunicationForm handleCloseDialog={handleCloseDialog} />
-      </CustomDialog>
     </Box>
   );
 };

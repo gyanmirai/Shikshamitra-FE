@@ -60,8 +60,6 @@ export type NavListProps = {
   render?: NavItemBaseProps['render'];
   enabledRootRedirect?: NavItemStateProps['enabledRootRedirect'];
   isSubLayout?: boolean;
-  currentOpenMenu?: string;
-  setCurrentOpenMenu?: (val: string) => void;
 };
 
 export type NavSubListProps = Omit<NavListProps, 'data'> & {

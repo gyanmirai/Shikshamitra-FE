@@ -11,7 +11,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
 import { settingMenu } from '../config-nav-dashboard';
-import { NavToggleButton } from '../components/nav-toggle-button';
 
 // ----------------------------------------------------------------------
 
@@ -81,8 +80,7 @@ export function NavVertical({
         flexDirection: 'column',
         bgcolor: 'var(--layout-nav-bg)',
         zIndex: 'var(--layout-nav-zIndex)',
-        // width: isNavMini ? 'var(--layout-nav-mini-width)' : 'var(--layout-nav-vertical-width)',
-        width: 'var(--layout-nav-mini-width)',
+        width: isNavMini ? 'var(--layout-nav-mini-width)' : 'var(--layout-nav-vertical-width)',
         borderRight: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
         transition: theme.transitions.create(['width'], {
           easing: 'var(--layout-transition-easing)',
@@ -94,7 +92,7 @@ export function NavVertical({
         ...sx,
       }}
     >
-      <NavToggleButton
+      {/* <NavToggleButton
         isNavMini={isNavMini}
         onClick={onToggleNav}
         sx={{
@@ -103,25 +101,10 @@ export function NavVertical({
             display: 'inline-flex',
           },
         }}
-      />
-      {/* {isNavMini ? renderNavMini : renderNavVertical} */}
-      {renderNavMini}
+      /> */}
+      {isNavMini ? renderNavMini : renderNavVertical}
       {/* <NavList depth={1} data={settingMenu} cssVars={cssVars} /> */}
-      <NavSectionMini
-        data={[{ items: [settingMenu] }]}
-        sx={{
-          pb: 2,
-          px: 0.5,
-          ...hideScrollY,
-          flex: '1 1 auto',
-          overflowY: 'auto',
-          '& ul': {
-            justifyContent: 'end',
-          },
-        }}
-        // {...other}
-      />
-      {/* {isNavMini ? (
+      {isNavMini ? (
         <NavSectionMini
           data={[{ items: [settingMenu] }]}
           sx={{
@@ -138,7 +121,7 @@ export function NavVertical({
         />
       ) : (
         <NavSectionVertical data={[{ items: [settingMenu] }]} sx={{ px: 2, flex: '1 1 auto' }} />
-      )} */}
+      )}
     </Box>
   );
 }

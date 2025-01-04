@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Typography, DialogActions } from '@mui/material';
+import { Box, Button, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,16 +10,15 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import FeeRefundDialog from './component/fee-refund-dialog';
-import FormattedAmountInput from '../../common/input-for-finance';
+import FeeRefundPaymentDialog from './component/fee-refund-dialog';
 
-interface FinanceFeeCollectionRefundTabProps {
+interface FinanceFeeRefundAllocationDialogProps {
   dialogValue: boolean;
   selectedData: any;
   onClose: () => void;
 }
 
-const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps> = ({
+const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialogProps> = ({
   dialogValue,
   selectedData,
   onClose,
@@ -58,6 +57,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
       status: 'Paid',
       totalFees: 60000,
       charges: 0,
+      askForRefund: 2000,
       fees: [
         {
           feeHeadId: 198,
@@ -133,6 +133,7 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
       paidDate: '20-04-2024',
       status: 'Paid',
       totalFees: 60000,
+      askForRefund: 2000,
       charges: 0,
       fees: [
         {
@@ -185,15 +186,15 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
     0
   );
 
-  const totalRow = {
-    paymentId: '',
-    feeHead: '',
-    paidAmount: 'Total',
-    refundAmount: totalRefundAmount,
+  // const totalRow = {
+  //   paymentId: '',
+  //   feeHead: '',
+  //   paidAmount: 'Total',
+  //   refundAmount: totalRefundAmount,
 
-    paidDate: '',
-    status: '',
-  };
+  //   paidDate: '',
+  //   status: '',
+  // };
 
   const handleSave = () => {};
 
@@ -232,6 +233,20 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
   return (
     <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+        <Box display="flex" flexDirection="row" gap={2} py="12px">
+          <Typography>
+            <strong>Name:</strong> Vishal RameshBhai Patel
+          </Typography>
+          <Typography>
+            <strong>Standard:</strong> 10/B
+          </Typography>
+          <Typography>
+            <strong>Gr Number:</strong> 89866
+          </Typography>
+          <Typography>
+            <strong>Roll Number:</strong> 1
+          </Typography>
+        </Box>
         <CustomizableTable
           isFilter={false}
           isShowedDense={false}
@@ -239,8 +254,8 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
           isScrollbar={false}
           isSearch={false}
           columns={[
-            { id: 'grNumber', label: 'Gr Number' },
-            { id: 'studentName', label: 'Student Name' },
+            // { id: 'grNumber', label: 'Gr Number' },
+
             { id: 'feeHead', label: 'Fee Head' },
             {
               id: 'paidAmount',
@@ -258,53 +273,38 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
                 );
               },
             },
-
+            {
+              id: 'askForRefund',
+              label: 'Ask For Refund',
+              render(value, row) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
+            },
             {
               id: 'refundAmount',
-              label: 'Refund Amount',
+              label: 'Approved Refund Amount',
               render: (value: any, row: any) => {
                 if (row.feeHead === 'Tuition') {
                   return (
-                    <FormattedAmountInput
-                      label="Tuition Refund"
-                      value={tuitionFeeRefundAmount}
-                      onChange={handleChangeForTuition}
-                    />
+                    <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
                   );
                 }
                 if (row.feeHead === 'Library') {
                   return (
-                    // <CurrencyInput
-                    //   value={libraryFeeRefundAmount}
-                    //   currencyCode="INR"
-                    //   onChange={(formattedValue, numericValue) => {
-                    //     console.log('Formatted Value:', formattedValue);
-                    //     console.log('Numeric Value:', numericValue);
-                    //     setlibraryFeeRefundAmount(formattedValue);
-                    //   }}
-                    //   label="Enter Amount"
-                    // />
-                    <FormattedAmountInput
-                      label="Library Refund"
-                      value={libraryFeeRefundAmount}
-                      onChange={handleChangeForLibrary}
-                    />
+                    <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
                   );
                 }
                 return (
-                  <FormattedAmountInput
-                    label="Total Refund"
-                    value={formatNumber(totalFeeRefundAmount.toString())}
-                    onChange={() => {}}
-                  />
+                  <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
                 );
               },
             },
           ]}
-          data={[...paymentHistoryData, totalRow]}
+          // data={[...paymentHistoryData, totalRow]}
+          data={paymentHistoryData}
         />
 
-        <FeeRefundDialog
+        <FeeRefundPaymentDialog
           onSave={handleSave}
           dialogValue
           onClose={closeDialog}
@@ -316,23 +316,6 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
           libraryFeeFeeAmount={libraryFeeRefundAmount}
           totalFeeAmount={totalFeeRefundAmount}
         />
-
-        {/* <Box>
-        {dialog.value && selectedEntry && (
-          <FeeRefundDialog
-            onSave={handleSave}
-            dialogValue={dialog.value}
-            onClose={closeDialog}
-            data={selectedEntry}
-            isEdit={isEdit}
-            allData={paymentHistoryData}
-            total={totalRefundAmount}
-            tuitionFeeAmount={tuitionFeeRefundAmount}
-            libraryFeeFeeAmount={libraryFeeRefundAmount}
-            totalFeeAmount={totalFeeRefundAmount}
-          />
-        )}
-      </Box> */}
       </Scrollbar>
       <DialogActions>
         <Button type="submit" variant="contained" size="small">
@@ -343,4 +326,4 @@ const FinanceFeeCollectionRefundTab: React.FC<FinanceFeeCollectionRefundTabProps
   );
 };
 
-export default FinanceFeeCollectionRefundTab;
+export default FinanceFeeRefundAllocationDialog;

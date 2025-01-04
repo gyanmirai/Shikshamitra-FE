@@ -9,7 +9,7 @@ import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import CustomSelect from 'src/components/custom-select';
 
-interface FeeRefundDialogProps {
+interface FeeRefundPaymentDialogProps {
   dialogValue: boolean;
   data: any;
   onSave: (values: any) => void;
@@ -58,7 +58,7 @@ const columnsTable = [
   { key: 'feeHead', label: 'Fee Head' },
   { key: 'refundAmount', label: 'Refund Amount' },
 ];
-const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
+const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
   dialogValue,
   data,
   onSave,
@@ -272,15 +272,6 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Box px="15px" pt="10px" display="flex" flexDirection="column" gap={3}>
           <Box pt="10px" display="flex" flexDirection="row" gap={3}>
-            {/* <TextField
-              name="totalAmount"
-              label="Total Refund Amount"
-              value={formatNumber(formik.values.totalAmount, "INR")}
-              onChange={formik.handleChange}
-              size="small"
-              disabled
-            /> */}
-
             <CustomSelect
               label="Payment Mode"
               options={[
@@ -536,25 +527,18 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
                   </Box>
                 </Grid>
               )}
-
-              {/* 
-
-                  {formik.values.paymentMode.includes("Cash") && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Cash Details
-                      </Typography>
-
-                      <FormattedAmountInput
-                        label="Cash Amount"
-                        value={cashAmountState}
-                        onChange={handleCashAmountChange}
-                      />
-                    </Grid>
-                  )} */}
             </Grid>
           )}
-
+          <TextField
+            multiline
+            rows={4}
+            name="remarks"
+            label="Remarks By Authority"
+            value="collect via cash"
+            onChange={formik.handleChange}
+            size="small"
+            disabled
+          />
           <TextField
             multiline
             rows={4}
@@ -571,4 +555,4 @@ const FeeRefundDialog: React.FC<FeeRefundDialogProps> = ({
   );
 };
 
-export default FeeRefundDialog;
+export default FeeRefundPaymentDialog;

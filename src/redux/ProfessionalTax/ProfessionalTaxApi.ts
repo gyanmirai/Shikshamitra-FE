@@ -25,10 +25,10 @@ export const ProfessionalApi = createApi({
       invalidatesTags: ['PF'],
     }),
     updateProfessionalTax: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/professional-tax/${id}`,
+      query: (data) => ({
+        url: `/app/professional-tax/${data.id}`,
         method: 'PUT',
-        data: body,
+        data,
       }),
       invalidatesTags: ['PF'],
     }),

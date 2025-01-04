@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 
 import { Box, Grid, useTheme } from '@mui/material';
 
-import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
-
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
 
@@ -120,7 +118,7 @@ const FinanceDashboardScreen = () => {
             />
           </Grid> */}
 
-          <Grid item xs={12} md={12}>
+          {/* <Grid item xs={12} md={12}>
             <AppAreaInstalled
               isShowChartLegendValue={false}
               height={400}
@@ -164,7 +162,7 @@ const FinanceDashboardScreen = () => {
                 ],
               }}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
 
         <Grid container spacing={2} sx={{ pt: '20px' }}>

@@ -25,11 +25,11 @@ import { TimeUnitType } from 'src/enums/time-units';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
 import {
-  useGetStudentAttendanceRuleQuery,
-  useAddStudentAttendanceRuleMutation,
-  useDeleteStudentAttendanceRuleMutation,
-  useUpdateStudentAttendanceRuleMutation,
-} from 'src/redux/student/attendance-rule/attendance-rule-api';
+  useGetEmployeeCustomAttendanceRuleQuery,
+  useAddEmployeeCustomAttendanceRuleMutation,
+  useUpdateEmployeeCustomAttendanceRuleMutation,
+  useDeleteEmployeeCustomAttendanceRuleMutation,
+} from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -75,12 +75,12 @@ const AttendanceRule = () => {
   );
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStudentAttendanceRuleQuery,
+    currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });
 
-  const [deleteRule, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+  const [deleteRule] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteStudentAttendanceRuleMutation,
+    currentQueryAndMutation: useDeleteEmployeeCustomAttendanceRuleMutation,
   });
   const handleClose = () => {
     setEditData(null);
@@ -116,18 +116,13 @@ const AttendanceRule = () => {
             columns={[
               { label: 'Name', id: 'name' },
               { label: 'Type', id: 'typeValue' },
-              { label: 'Late Threshold', id: 'lateThreshold', minWidth: 140 },
-              { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue', minWidth: '150px' },
-              { label: 'Half Day Threshold', id: 'halfDayThreshold', minWidth: '175px' },
-              {
-                label: 'Half Day Threshold Unit',
-                id: 'halfDayThresholdUnitValue',
-                minWidth: '200px',
-              },
+              { label: 'Late Threshold', id: 'lateThreshold' },
+              { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue' },
+              { label: 'Half Day Threshold', id: 'halfDayThreshold' },
+              { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnitValue' },
               {
                 label: 'Enable Notification',
                 id: 'enableNotification',
-                minWidth: '150px',
               },
               {
                 label: 'Actions',
@@ -137,18 +132,7 @@ const AttendanceRule = () => {
                   return (
                     <ThreeDotsActions
                       placement="right-top"
-                      // actions={(props) => actions(props, row)}
-                      showThreeDots={false}
-                      showEditIcon
-                      showDeleteIcon
-                      handleEditClick={() => {
-                        setEditData(row);
-                        dialog.onTrue();
-                      }}
-                      handleDeleteClick={() => {
-                        confirm.onTrue();
-                        setDeleteInformation(row);
-                      }}
+                      actions={(props) => actions(props, row)}
                     />
                   );
                 },
@@ -165,8 +149,7 @@ const AttendanceRule = () => {
         title="Delete"
         content="Are you sure want to delete?"
         action={
-          <LoadingButton
-            loading={isDeleteLoading}
+          <Button
             variant="contained"
             color="error"
             onClick={() => {
@@ -175,7 +158,7 @@ const AttendanceRule = () => {
             }}
           >
             Delete
-          </LoadingButton>
+          </Button>
         }
       />
 
@@ -196,12 +179,12 @@ interface AttendanceRuleFormProps {
 const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) => {
   const [addRule, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddStudentAttendanceRuleMutation,
+    currentQueryAndMutation: useAddEmployeeCustomAttendanceRuleMutation,
   });
 
-  const [updateRule, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateRule] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateStudentAttendanceRuleMutation,
+    currentQueryAndMutation: useUpdateEmployeeCustomAttendanceRuleMutation,
   });
   const formik = useFormik({
     initialValues: {
@@ -357,7 +340,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <LoadingButton loading={isLoading || isUpdateLoading} type="submit" variant="contained">
+          <LoadingButton loading={isLoading} type="submit" variant="contained">
             Submit
           </LoadingButton>
         </DialogActions>

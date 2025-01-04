@@ -111,8 +111,8 @@ const ProfessionalTax = () => {
             },
           },
           {
-            id: 'taxAmount',
-            label: 'Tax Amount',
+            id: 'Tax amount',
+            label: 'tax Amount',
             render(value, row) {
               return formatCurrency(value);
             },
@@ -150,10 +150,9 @@ const ProfessionalTax = () => {
 
 export default ProfessionalTax;
 
-const numberConvertor = (value: string | number): number => {
+const numberConvertor = (value: string | number) => {
   if (typeof value === 'string') {
-    const matches = value.match(/\d+/g);
-    return matches ? +matches.join('') : 0;
+    return value.match(/\d+/g)?.join('');
   }
 
   return value;

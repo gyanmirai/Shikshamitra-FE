@@ -28,8 +28,6 @@ export function NavSectionVertical({
     ...overridesVars,
   };
 
-  const [currentOpenMenu, setCurrentOpenMenu] = useState('');
-
   return (
     <Stack component="nav" className={navSectionClasses.vertical.root} sx={{ ...cssVars, ...sx }}>
       <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
@@ -42,8 +40,6 @@ export function NavSectionVertical({
             slotProps={slotProps}
             enabledRootRedirect={enabledRootRedirect}
             isSubLayout={isSubLayout}
-            currentOpenMenu={currentOpenMenu}
-            setCurrentOpenMenu={setCurrentOpenMenu}
           />
         ))}
       </NavUl>
@@ -60,8 +56,6 @@ function Group({
   slotProps,
   enabledRootRedirect,
   isSubLayout = false,
-  currentOpenMenu = '',
-  setCurrentOpenMenu = (val: string) => {},
 }: NavGroupProps) {
   const [open, setOpen] = useState(true);
 
@@ -80,8 +74,6 @@ function Group({
           slotProps={slotProps}
           enabledRootRedirect={enabledRootRedirect}
           isSubLayout={isSubLayout}
-          currentOpenMenu={currentOpenMenu}
-          setCurrentOpenMenu={setCurrentOpenMenu}
         />
       ))}
     </NavUl>

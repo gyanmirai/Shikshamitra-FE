@@ -52,12 +52,11 @@ const ThreeDotsActions = ({
   handleViewClick = () => {},
   handleEditClick = () => {},
   handleDeleteClick = () => {},
-  ...props
 }: Omit<IconButtonOwnProps, 'onClick'> & IThreeDotesActionsType) => {
   const popover = usePopover();
 
   return (
-    <Box display="flex" gap={2} alignItems="center" {...props}>
+    <Box display="flex" gap={2} alignItems="center">
       {showViewIcon && (
         <Iconify
           icon="carbon:view-filled"

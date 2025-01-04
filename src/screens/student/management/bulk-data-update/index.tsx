@@ -140,9 +140,9 @@ const BulkDataUpdateScreen = () => {
             { id: 'name', label: 'Name' },
             {
               id: 'dynamic',
-              label: headerLabel,
+              label: '',
               isSort: false,
-              // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
+              renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
               render: (row: any) => <TextField size="small" label={headerLabel} />,
             },
           ]}

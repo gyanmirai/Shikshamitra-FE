@@ -3,8 +3,8 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
+import Grid2 from '@mui/material/Unstable_Grid2';
 import {
   Box,
   Button,
@@ -20,6 +20,7 @@ import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceAddFeeCategorySettingDialogProps {
   dialogValue: boolean;
@@ -42,11 +43,13 @@ interface FormikValue {
   feeHead: string;
   amount: string;
   bookRecipt: string;
+  chargesType: string;
   availableFeeHead?: string;
   feeAmountForAvailbleHead?: string;
   discountCategory: string[];
   discountAmount: number;
   finalFee: number;
+  enterChargesAmount: number;
 }
 const validationSchema = Yup.object({
   amount: Yup.string().required("Fee Amount can't be empty"),
@@ -65,6 +68,13 @@ const feeHeadList = [
 const bookReciptList = [
   { value: 'cbse', label: 'CBSE' },
   { value: 'gseb', label: 'GSEB' },
+];
+
+const chargesTypeList = [
+  { value: 'none', label: 'None' },
+  { value: 'fixed', label: 'Fixed' },
+  { value: 'perDay', label: 'Per Day' },
+  { value: 'perMonth', label: 'Per Month' },
 ];
 
 const discountCategoryList = [{ value: 'summerPromotion', label: 'Summner Campaign' }];
@@ -136,6 +146,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       discountAmount: isEdit ? 100 : 0,
       discountCategory: [],
       finalFee: 0,
+      chargesType: '',
+      enterChargesAmount: 0,
     },
     validationSchema,
     onSubmit: (values) => {
@@ -204,16 +216,23 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
           <Box>
-            <FormControlLabel
-              control={
-                <Switch
-                  disabled={isEdit}
-                  checked={isBulkEdit}
-                  onChange={() => setIsBulkEdit(!isBulkEdit)}
-                />
-              }
-              label="Switch to Bulk Update"
-            />
+            <Box display="flex" gap={2} flexDirection="row">
+              <FormControlLabel
+                control={
+                  <Switch
+                    disabled={isEdit}
+                    checked={isBulkEdit}
+                    onChange={() => setIsBulkEdit(!isBulkEdit)}
+                  />
+                }
+                label="Switch to Bulk Update"
+              />
+
+              {/* <FormControlLabel
+                control={<Checkbox size="small" checked onChange={() => { }} />}
+                label="Set Rule For Late Fees"
+              /> */}
+            </Box>
 
             <Box py="13px" display="flex" flexDirection="row" gap={4}>
               <CustomSelect
@@ -378,8 +397,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
               />
             </Box>
-
-            <Grid2 xs={12} md={6}>
+            <Box py="13px" display="flex" flexDirection="row" gap={4}>
               <DatePicker
                 minDate={dayjs()}
                 label="Total Fees Due Date"
@@ -388,6 +406,26 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
                 format="DD-MM-YYYY"
                 slotProps={{ textField: { size: 'small' } }}
                 sx={{ width: '48%' }}
+              />
+              <CustomSelect
+                label="Late Fees Charges Type"
+                options={chargesTypeList}
+                value={formik.values.chargesType}
+                onChange={(e) => formik.setFieldValue('chargesType', e)}
+                formControlProps={{ sx: { flex: 1 } }}
+                error={formik.touched.chargesType && Boolean(formik.errors.chargesType)}
+                disabled={isEdit}
+                fullWidth
+              />
+            </Box>
+
+            <Grid2 xs={12} md={6} sx={{ pt: '10px' }}>
+              <NumericFormatCustom
+                size="small"
+                label="Enter Charges Amount"
+                name="enterChargesAmount"
+                value={formik.values.enterChargesAmount}
+                onChange={formik.handleChange}
               />
             </Grid2>
 

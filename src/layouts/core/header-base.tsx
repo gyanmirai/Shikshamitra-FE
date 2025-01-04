@@ -133,7 +133,7 @@ export function HeaderBase({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
     options: {
-      skip: !workspaces || !userInfo?.access_token,
+      skip: !userInfo?.access_token,
     },
   });
 
@@ -141,7 +141,7 @@ export function HeaderBase({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
     options: {
-      skip: !workspaces || !userInfo?.access_token,
+      skip: !userInfo?.access_token,
     },
   });
   const [boards, setBoards] = useState([]);
@@ -247,26 +247,23 @@ export function HeaderBase({
                   <CircularProgress size={16} />
                 ))}
 
-              {workspaces &&
-                (!isBoardsLoading ? (
-                  <BoardPopover
-                    data-slot="boards"
-                    board={currentBoard || {}}
-                    setBoard={(value) => dispatch(setCurrentBoard(value))}
-                    data={boards || []}
-                  />
-                ) : (
-                  <CircularProgress size={16} />
-                ))}
-
-              {workspaces && (
-                <MediumPopover
-                  data-slot="medium"
-                  medium={currentMedium || {}}
-                  setMedium={(value) => dispatch(setCurrentMedium(value))}
-                  data={currentBoard?.educationMediums || []}
+              {!isBoardsLoading ? (
+                <BoardPopover
+                  data-slot="boards"
+                  board={currentBoard || {}}
+                  setBoard={(value) => dispatch(setCurrentBoard(value))}
+                  data={boards || []}
                 />
+              ) : (
+                <CircularProgress size={16} />
               )}
+
+              <MediumPopover
+                data-slot="medium"
+                medium={currentMedium || {}}
+                setMedium={(value) => dispatch(setCurrentMedium(value))}
+                data={currentBoard?.educationMediums || []}
+              />
 
               {/* -- Searchbar -- */}
               {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />}

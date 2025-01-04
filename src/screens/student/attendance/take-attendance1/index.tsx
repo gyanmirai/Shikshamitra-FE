@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Search, RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
+import { Save, Search, RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -20,6 +20,7 @@ import {
   Switch,
   Button,
   Divider,
+  Tooltip,
   TextField,
   Typography,
   IconButton,
@@ -158,13 +159,16 @@ const TakeAttendanceScreen = () => {
           </Button>
         </ButtonGroup>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button size="small" variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
-            Reset
-          </Button>
-
-          <Button size="small" variant="contained" startIcon={<Stack />} onClick={() => {}}>
-            Save
-          </Button>
+          <Tooltip title="Reset">
+            <IconButton>
+              <RestartAlt />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Save">
+            <IconButton>
+              <Save />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -342,9 +346,9 @@ const ListView = ({ isSaved }: any) => {
               <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>
             ) : (
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                {/* <Typography component="small" fontSize="12px">
+                <Typography component="small" fontSize="12px">
                   Absent
-                </Typography> */}
+                </Typography>
                 <Switch
                   size="small"
                   inputProps={{ 'aria-label': 'controlled' }}
@@ -370,9 +374,9 @@ const ListView = ({ isSaved }: any) => {
                     },
                   }}
                 />
-                {/* <Typography component="small" fontSize="12px">
+                <Typography component="small" fontSize="12px">
                   Present
-                </Typography> */}
+                </Typography>
               </Stack>
             );
           },

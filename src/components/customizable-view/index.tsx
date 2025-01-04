@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
 
-import { Box } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 
 // const initialSections = [
 //   { id: '1', title: 'Section 1', content: 'Content for Section 1' },
@@ -30,14 +30,10 @@ const CustomizableView = ({ sections, setSections }: any) => {
 
   return (
     <Box
-      sx={{
-        mb: 2,
-        // border: (theme) => `dashed 1px ${theme.vars.palette.divider}`,
-        borderRadius: 1,
-      }}
+      sx={{ mb: 2, border: (theme) => `dashed 1px ${theme.vars.palette.divider}`, borderRadius: 1 }}
     >
       <DragDropContext onDragEnd={handleOnDragEnd}>
-        {/* <Droppable droppableId="titles" direction="horizontal">
+        <Droppable droppableId="titles" direction="horizontal">
           {(provided) => (
             <Box
               ref={provided.innerRef}
@@ -72,7 +68,7 @@ const CustomizableView = ({ sections, setSections }: any) => {
               {provided.placeholder}
             </Box>
           )}
-        </Droppable> */}
+        </Droppable>
       </DragDropContext>
     </Box>
   );

@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const GrNoGenerationScreen = () => {
@@ -32,8 +34,8 @@ const GrNoGenerationScreen = () => {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
         <Button
           onClick={() => {
-            // router.push('/student/student-i-card');
-            // dispatch(setIsChanges(false));
+            router.push('/student/student-i-card');
+            dispatch(setIsChanges(false));
           }}
           startIcon={<Save />}
           variant="outlined"
@@ -56,11 +58,7 @@ const GrNoGenerationScreen = () => {
             id: 'newGrNo',
             label: 'New GR No.',
             render(value, row) {
-              return (
-                isManual && (
-                  <TextField size="small" variant="standard" placeholder="Enter New GR No." />
-                )
-              );
+              return isManual && <TextField size="small" variant="standard" />;
             },
           },
         ]}

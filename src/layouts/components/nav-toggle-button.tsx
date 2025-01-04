@@ -23,8 +23,7 @@ export function NavToggleButton({ isNavMini, sx, ...other }: NavToggleButtonProp
         bgcolor: 'background.default',
         transform: 'translateX(-50%)',
         zIndex: 'var(--layout-nav-zIndex)',
-        // left: isNavMini ? 'var(--layout-nav-mini-width)' : 'var(--layout-nav-vertical-width)',
-        left: 'var(--layout-nav-mini-width)',
+        left: isNavMini ? 'var(--layout-nav-mini-width)' : 'var(--layout-nav-vertical-width)',
         border: (theme) => `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
         transition: (theme) =>
           theme.transitions.create(['left'], {

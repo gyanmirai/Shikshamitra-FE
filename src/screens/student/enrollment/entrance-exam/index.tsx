@@ -16,13 +16,11 @@ import {
   MenuList,
   TextField,
   Typography,
-  ButtonGroup,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -36,8 +34,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CalendarView } from 'src/sections/calendar/view';
 
 const EntranceExamScreen = () => {
-  // const [view, setView] = React.useState('calender');
-  const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
   const dialog = useBoolean();
   const resultDialog = useBoolean();
   const dummyData = [
@@ -133,91 +129,72 @@ const EntranceExamScreen = () => {
       {/* <EntranceExamDashboard /> */}
       {/* <Card> */}
       {/* <CommonCalender data={[]} /> */}
+      <CalendarView />
       {/* </Card> */}
 
-      <ButtonGroup>
-        <Button
-          variant={searchParams.view === 'calender' ? 'contained' : 'outlined'}
-          color="inherit"
-          onClick={() => setSearchParam({ view: 'calender' })}
-        >
-          <Iconify icon="uis:calender" />
-        </Button>
-        <Button
-          color="inherit"
-          variant={searchParams.view === 'table' ? 'contained' : 'outlined'}
-          onClick={() => setSearchParam({ view: 'table' })}
-        >
-          <Iconify icon="lucide:layout-list" />
-        </Button>
-      </ButtonGroup>
-      {searchParams.view === 'calender' && <CalendarView />}
-
-      {searchParams.view === 'table' && (
-        <CustomizableTable
-          columns={[
-            { id: 'date', label: 'Date' },
-            {
-              id: 'name',
-              label: 'Student',
+      <CustomizableTable
+        columns={[
+          { id: 'date', label: 'Date' },
+          {
+            id: 'name',
+            label: 'Student',
+          },
+          {
+            id: 'medium',
+            label: 'Medium',
+          },
+          {
+            id: 'class',
+            label: 'Class',
+          },
+          {
+            id: 'totalMarks',
+            label: 'Total Marks',
+          },
+          {
+            id: 'obtainedMarks',
+            label: 'Obtained Marks',
+          },
+          {
+            id: 'percentage',
+            label: 'Percentage',
+            render(value, row) {
+              return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
             },
-            {
-              id: 'medium',
-              label: 'Medium',
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  color={value === 'Pass' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
+                >
+                  {value}
+                </Label>
+              );
             },
-            {
-              id: 'class',
-              label: 'Class',
+          },
+          {
+            id: 'admission',
+            label: '',
+            isSort: false,
+            render(value, row) {
+              return (
+                <Button variant="soft" size="small" color="primary">
+                  Admission
+                </Button>
+              );
             },
-            {
-              id: 'totalMarks',
-              label: 'Total Marks',
-            },
-            {
-              id: 'obtainedMarks',
-              label: 'Obtained Marks',
-            },
-            {
-              id: 'percentage',
-              label: 'Percentage',
-              render(value, row) {
-                return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
-              },
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              render(value, row) {
-                return (
-                  <Label
-                    color={value === 'Pass' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
-                  >
-                    {value}
-                  </Label>
-                );
-              },
-            },
-            {
-              id: 'admission',
-              label: '',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <Button variant="soft" size="small" color="primary">
-                    Admission
-                  </Button>
-                );
-              },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              render: (value, row) => <ThreeDotsActions placement="right-top" actions={actions} />,
-            },
-          ]}
-          data={dummyData}
-        />
-      )}
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            render: (value, row) => <ThreeDotsActions placement="right-top" actions={actions} />,
+          },
+        ]}
+        data={dummyData}
+      />
       <CustomDialog title="Result" handleClose={resultDialog.onFalse} open={resultDialog.value}>
         <ResultForm />
       </CustomDialog>
