@@ -15,7 +15,7 @@ import {
   useAddStudentAttendanceTypeMutation,
   useDeleteStudentAttendanceTypeMutation,
   useUpdateStudentAttendanceTypeMutation,
-} from 'src/redux/student/attendance-type/attendance-typr-api';
+} from 'src/redux/student/attendance-type/attendance-type-api';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';

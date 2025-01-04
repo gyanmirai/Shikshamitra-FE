@@ -57,7 +57,7 @@ const EnrollmentDashboardScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Student Enrollment Dashboard"
+        heading="Student Enrollment Dashboardss"
         links={[{ name: 'Student' }, { name: 'Student Enrollment Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={

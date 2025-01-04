@@ -19,11 +19,14 @@ import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { organizationApi } from './oraganization/oraganization';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
+import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
+import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
-import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-typr-api';
+import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
+import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
 
 const persistConfig = {
   key: 'root',
@@ -54,6 +57,9 @@ const reducers = combineReducers({
   [ProfessionalApi.reducerPath]: ProfessionalApi.reducer,
   [StudentAttendanceRuleApi.reducerPath]: StudentAttendanceRuleApi.reducer,
   [StudentAttendanceTypeApi.reducerPath]: StudentAttendanceTypeApi.reducer,
+  [StudentDocumentTypeApi.reducerPath]: StudentDocumentTypeApi.reducer,
+  [inquiryPreferenceApi.reducerPath]: inquiryPreferenceApi.reducer,
+  [StudentInquiryApi.reducerPath]: StudentInquiryApi.reducer,
 });
 
 const store = configureStore({
@@ -78,7 +84,10 @@ const store = configureStore({
       .concat(EventHolidayApi.middleware)
       .concat(ProfessionalApi.middleware)
       .concat(StudentAttendanceRuleApi.middleware)
-      .concat(StudentAttendanceTypeApi.middleware),
+      .concat(StudentAttendanceTypeApi.middleware)
+      .concat(StudentDocumentTypeApi.middleware)
+      .concat(inquiryPreferenceApi.middleware)
+      .concat(StudentInquiryApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

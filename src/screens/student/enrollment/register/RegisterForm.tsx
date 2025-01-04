@@ -39,6 +39,7 @@ const RegisterForm = () => {
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => setActiveStep(index)}
+      scrollbarHeight="100%"
       initialValues={{
         ...generalFieldsInitialValues(),
         ...documentFieldsInitialValues(),
@@ -143,7 +144,7 @@ const FormSlider = ({
 }) => {
   const containerRef = React.useRef<HTMLElement>(null);
   return (
-    <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
+    <Box ref={containerRef} sx={{ p: 2, height: '100%' }}>
       {allStep.map(
         (_, index) =>
           index === step && (

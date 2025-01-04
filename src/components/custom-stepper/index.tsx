@@ -7,7 +7,6 @@ import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Step,
-  Slide,
   styled,
   Button,
   Stepper,
@@ -127,7 +126,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   });
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
+    <Box sx={{ width: '100%', p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Stepper activeStep={activeStep} alternativeLabel connector={<QontoConnector />}>
         {steps.map((label: string, index: number) => (
           <Step
@@ -146,21 +145,19 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           </Step>
         ))}
       </Stepper>
+
       <Box
         component="form"
         sx={{
-          '& input': { fontSize: '12px' },
-          '& textarea': { fontSize: '12px' },
-          '& label': { fontSize: '12px' },
-          '& .MuiSelect-select': { fontSize: '12px' },
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
         }}
         onSubmit={formik.handleSubmit}
       >
-        <Scrollbar sx={{ height: scrollbarHeight }}>
-          {' '}
-          {/* <FormSlider step={activeStep} steps={steps}> */}
+        {' '}
+        <Scrollbar sx={{ height: scrollbarHeight, overflow: 'auto' }}>
           {formik && renderItem({ formik, activeStep, isBackClick })}
-          {/* </FormSlider> */}
         </Scrollbar>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
           <Button
@@ -186,35 +183,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           </LoadingButton>
         </Box>
       </Box>
-    </Box>
-  );
-};
-
-const FormSlider = ({
-  step,
-  steps,
-  children,
-}: {
-  children: any;
-  step: number;
-  steps: string[];
-}) => {
-  const containerRef = React.useRef<HTMLElement>(null);
-  return (
-    <Box ref={containerRef} sx={{ p: 2, height: '100%', overflow: 'hidden' }}>
-      {steps.map(
-        (_, index) =>
-          index === step && (
-            <Slide
-              in={index === step}
-              container={containerRef.current}
-              direction="left"
-              key={index}
-            >
-              {children}
-            </Slide>
-          )
-      )}
     </Box>
   );
 };
