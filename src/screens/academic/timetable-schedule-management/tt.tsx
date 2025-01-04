@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -565,7 +567,7 @@ const TimeTableGrid = (props: TabComponentType) => {
           }}
           value={classes}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
         <CustomSelect
@@ -579,7 +581,7 @@ const TimeTableGrid = (props: TabComponentType) => {
             setDivision(val as string);
           }}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
       </Box>

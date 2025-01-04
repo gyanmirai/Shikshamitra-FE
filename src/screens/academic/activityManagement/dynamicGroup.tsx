@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import * as Yup from 'yup';
@@ -129,7 +131,12 @@ const DynamicGroupManagement = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
         action={
-          <Button startIcon={<Add />} variant="contained" onClick={handleOpenAddDialog}>
+          <Button
+            startIcon={<Add />}
+            size="small"
+            variant="contained"
+            onClick={handleOpenAddDialog}
+          >
             Dynamic Group
           </Button>
         }

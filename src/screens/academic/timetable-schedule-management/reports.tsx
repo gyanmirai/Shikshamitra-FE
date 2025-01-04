@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 

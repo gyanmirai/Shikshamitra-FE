@@ -1,8 +1,11 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -18,6 +21,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -136,105 +140,253 @@ const Setting = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Card sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <CustomDialog
-            open={homeworkDialog.value}
-            handleClose={handleCloseDialog}
-            title={isEdit ? 'Update Type' : 'Add Type'}
-          >
-            <AddCategory
-              onSubmit={handleHomeworkSubmit}
-              data={selectedHomeworkType}
-              isEdit={isEdit}
-            />
-          </CustomDialog>
-
-          <CustomDialog
-            open={homeworkDialog.value}
-            handleClose={handleCloseDialog}
-            title={isEdit ? 'Update Category' : 'Add Category'}
-          >
-            <AddCategory
-              onSubmit={handleAssignmentSubmit}
-              data={selectedAssignmentType}
-              isEdit={isEdit}
-            />
-          </CustomDialog>
-
-          <Grid item xs={12} md={4}>
-            <Typography variant="subtitle1" gutterBottom>
-              Default Deadlines
-            </Typography>
-            <DatePicker
-              label="Select the Default Deadline"
-              format="DD/MM/YYYY"
-              sx={{}}
-              slotProps={{ textField: { size: 'small' } }}
-            />
+          <Grid item xs={12} md={6}>
+            <Card sx={{ p: 2, height: '100%' }}>
+              <Box sx={{ typography: 'subtitle1' }}>Homework Types</Box>
+              <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
+                <Box
+                  component="ul"
+                  sx={{
+                    listStyle: 'none',
+                    padding: 0,
+                  }}
+                >
+                  {homeworkTypeData.map((category) => (
+                    <Box
+                      key={category.id}
+                      component="li"
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        p: 1,
+                        m: 0.5,
+                        borderRadius: '15px',
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2" fontWeight="bold">
+                          {category.name}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Iconify
+                          icon="solar:pen-bold"
+                          sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
+                          onClick={() => {
+                            setSelectedHomeworkType(category);
+                            setIsEdit(true);
+                            homeworkDialog.onTrue();
+                          }}
+                        />
+                        <Iconify
+                          icon="mdi:delete"
+                          sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
+                          onClick={() => {
+                            setSelectedHomeworkType(category);
+                            deleteConfirmDialog.onTrue();
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Scrollbar>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button
+                  startIcon={<Add />}
+                  size="small"
+                  variant="contained"
+                  onClick={() => {
+                    homeworkDialog.onTrue();
+                    setIsEdit(false);
+                    setSelectedHomeworkType(null);
+                  }}
+                >
+                  Homework Type
+                </Button>
+              </Box>
+            </Card>
           </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Typography variant="subtitle1" gutterBottom>
-              Reminder Schedules
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Switch />
-              <Typography>24 hours before</Typography>
-              <Switch />
-              <Typography>1 hour before</Typography>
-            </Box>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ p: 2, height: '100%' }}>
+              <Box sx={{ typography: 'subtitle1' }}>Assignment Types</Box>
+              <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
+                <Box
+                  component="ul"
+                  sx={{
+                    listStyle: 'none',
+                    padding: 0,
+                  }}
+                >
+                  {assignmentTypeData.map((category) => (
+                    <Box
+                      key={category.id}
+                      component="li"
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        p: 1,
+                        m: 0.5,
+                        borderRadius: '15px',
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2" fontWeight="bold">
+                          {category.name}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Iconify
+                          icon="solar:pen-bold"
+                          sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
+                          onClick={() => {
+                            setSelectedAssignmentType(category);
+                            setIsEdit(true);
+                            assignmentDialog.onTrue();
+                          }}
+                        />
+                        <Iconify
+                          icon="mdi:delete"
+                          sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
+                          onClick={() => {
+                            setSelectedAssignmentType(category);
+                            deleteConfirmDialog.onTrue();
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Scrollbar>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button
+                  startIcon={<Add />}
+                  variant="contained"
+                  size="small"
+                  onClick={() => {
+                    assignmentDialog.onTrue();
+                    setIsEdit(false);
+                    setSelectedAssignmentType(null);
+                  }}
+                >
+                  Assignment Type
+                </Button>
+              </Box>
+            </Card>
           </Grid>
         </Grid>
-      </Card>
-      <Card sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Custom Notifications
-        </Typography>
-        <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={4}>
-            <Typography variant="subtitle1" gutterBottom>
-              Choose Notifications
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Card sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Assignment Preferences
+          </Typography>
+          <Grid container spacing={2} alignItems="center">
+            <CustomDialog
+              open={homeworkDialog.value}
+              handleClose={handleCloseDialog}
+              title={isEdit ? 'Update Type' : 'Add Type'}
+            >
+              <AddCategory
+                onSubmit={handleHomeworkSubmit}
+                data={selectedHomeworkType}
+                isEdit={isEdit}
+              />
+            </CustomDialog>
+
+            <CustomDialog
+              open={homeworkDialog.value}
+              handleClose={handleCloseDialog}
+              title={isEdit ? 'Update Category' : 'Add Category'}
+            >
+              <AddCategory
+                onSubmit={handleAssignmentSubmit}
+                data={selectedAssignmentType}
+                isEdit={isEdit}
+              />
+            </CustomDialog>
+
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle1" gutterBottom>
+                Default Deadlines
+              </Typography>
+              <DatePicker
+                label="Select the Default Deadline"
+                format="DD/MM/YYYY"
+                sx={{}}
+                slotProps={{ textField: { size: 'small' } }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle1" gutterBottom>
+                Reminder Schedules
+              </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
-                <Typography>New Assignments</Typography>
+                <Switch />
+                <Typography>24 hours before</Typography>
+                <Switch />
+                <Typography>1 hour before</Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
-                <Typography>Grading Updates</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
-                <Typography>Upcoming Deadlines</Typography>
-              </Box>
-            </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Typography variant="subtitle1" gutterBottom>
-              Notification Frequency
-            </Typography>
-            <CustomSelect
-              label="Frequency Options"
-              options={[
-                { value: 'Immediately', label: 'Immediately' },
-                { value: 'Daily', label: 'Daily' },
-                { value: 'Weekly', label: 'Weekly' },
-              ]}
-              value=""
-              onChange={() => {}}
-            />
+        </Card>
+        <Card sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Custom Notifications
+          </Typography>
+          <Grid container spacing={2} alignItems="flex-start">
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle1" gutterBottom>
+                Choose Notifications
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+                  <Typography>New Assignments</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+                  <Typography>Grading Updates</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+                  <Typography>Upcoming Deadlines</Typography>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle1" gutterBottom>
+                Notification Frequency
+              </Typography>
+              <CustomSelect
+                label="Frequency Options"
+                options={[
+                  { value: 'Immediately', label: 'Immediately' },
+                  { value: 'Daily', label: 'Daily' },
+                  { value: 'Weekly', label: 'Weekly' },
+                ]}
+                value=""
+                onChange={() => {}}
+              />
+            </Grid>
           </Grid>
-        </Grid>
-        <Button
-          color="secondary"
-          variant="contained"
-          sx={{ maxWidth: '200px', width: '100%', marginLeft: '80%' }}
-        >
-          Save Changes
-        </Button>
-      </Card>
+          <Button
+            color="secondary"
+            variant="contained"
+            size="small"
+            sx={{ maxWidth: '200px', width: '100%', marginLeft: '80%' }}
+          >
+            Save Changes
+          </Button>
+        </Card>
+      </Box>
     </Box>
   );
 };

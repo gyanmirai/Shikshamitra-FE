@@ -12,7 +12,6 @@ import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Teacher from './teacher';
 import Subject from './subject';
@@ -76,7 +75,7 @@ const CurriculumManagementScreen = () => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
+      {/* <CustomBreadcrumbs
         heading="Curriculum Management"
         links={[
           { name: 'Academic And Assessment' },
@@ -84,7 +83,7 @@ const CurriculumManagementScreen = () => {
           { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
-      />
+      /> */}
       <Box
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
@@ -148,22 +147,18 @@ const CurriculumManagementScreen = () => {
           Edit Curriculum
         </Button>
       </Box>
-      <Card
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
+
+      <Card>
         <CustomTabs
           value={searchParams.tab}
-          onChange={(_, newValue) => handleTabChange(newValue)}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          onChange={(e, value) => setSearchParams({ tab: value })}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
+
       <Box px={1} pt={2}>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component

@@ -12,12 +12,9 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradingScale from './settingsScreen/gradingScale';
-import StudentGroup from './settingsScreen/studentGroup';
 import GradeSubmission from './settingsScreen/gradeSubmission';
 import PermissionAccess from './settingsScreen/permissionAccess';
 import NotificationAlert from './settingsScreen/notificationAlert';
-import DynamicGroupManagement from './settingsScreen/dynamicGroup';
-import ActivityManagement from './settingsScreen/activityManagement';
 import WeightingAdjustment from './settingsScreen/weightingAdjustment';
 
 const TABS = [
@@ -43,23 +40,6 @@ const TABS = [
     label: 'Permission Access',
     component: () => <PermissionAccess />,
     // component: (props: TabComponentType) => <PermissionAccess {...props} />,
-  },
-  {
-    value: 'dynamicGroup',
-    label: 'Dynamic Group',
-    component: () => <DynamicGroupManagement />,
-    // component: (props: TabComponentType) => <StudentGroup {...props} />,
-  },
-  {
-    value: 'activityManagement',
-    label: 'Activity Management',
-    component: () => <ActivityManagement />,
-  },
-  {
-    value: 'studentGroup',
-    label: 'Student Group',
-    component: () => <StudentGroup />,
-    // component: (props: TabComponentType) => <StudentGroup {...props} />,
   },
   {
     value: 'notificationAlert',

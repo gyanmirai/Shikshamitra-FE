@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { Division } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -22,7 +24,6 @@ import {
   TextField,
   RadioGroup,
   Typography,
-  ListItemText,
   ToggleButton,
   DialogActions,
   DialogContent,
@@ -298,12 +299,14 @@ const HomeworkCreation = (props: TabComponentType) => {
     },
     { id: 'subject', label: 'Subject' },
     { id: 'topic', label: 'Topic' },
-    { id: 'homeworkType', label: 'Homework Type' },
-    { id: 'title', label: 'Homework Title' },
-    { id: 'description', label: 'Homework Description' },
+    { id: 'homeworkType', label: 'Homework Type', minWidth: '170px', align: 'left' },
+    { id: 'title', label: 'Homework Title', minWidth: '170px', align: 'left' },
+    { id: 'description', label: 'Homework Description', minWidth: '200px', align: 'left' },
     {
       id: 'dueDate',
       label: 'Due Date',
+      minWidth: '130px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -322,6 +325,8 @@ const HomeworkCreation = (props: TabComponentType) => {
     {
       id: 'isDailyTask',
       label: 'Daily Task',
+      minWidth: '150px',
+      align: 'left',
       render: (value: any, row: any) =>
         value ? (
           <Iconify icon="healthicons:yes" sx={{ color: 'green' }} />
@@ -329,18 +334,19 @@ const HomeworkCreation = (props: TabComponentType) => {
           <Iconify icon="healthicons:no" sx={{ color: 'red' }} />
         ),
     },
-    { id: 'dayOfSubmission', label: 'Day of Submission' },
+    { id: 'dayOfSubmission', label: 'Day of Submission', minWidth: '180px', align: 'left' },
     {
       id: 'endDate',
       label: 'End Date',
+      minWidth: '130px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
       ),
     },
-    { id: 'submissionType', label: 'Submission Type' },
-
+    { id: 'submissionType', label: 'Submission Type', minWidth: '180px', align: 'left' },
     {
       id: 'status',
       label: 'Publish',
@@ -358,28 +364,21 @@ const HomeworkCreation = (props: TabComponentType) => {
       },
     },
     {
-      id: 'action',
-      label: 'Action',
+      id: 'actions',
+      label: 'Actions',
+      isSort: false,
       render(value: any, row: any) {
         return (
           <ThreeDotsActions
+            // actions={(prop) => actions({ ...prop, row })}
             placement="right-top"
-            actions={() => (
-              <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    submissionDialog.onTrue();
-                  }}
-                >
-                  <Iconify icon="mdi:eye" />
-                  <ListItemText>View Submission</ListItemText>
-                </MenuItem>
-                <MenuItem>
-                  <Iconify icon="solar:pen-bold" />
-                  <ListItemText>Edit</ListItemText>
-                </MenuItem>
-              </MenuList>
-            )}
+            showViewIcon
+            showEditIcon
+            showThreeDots={false}
+            handleEditClick={() => {}}
+            handleViewClick={() => {
+              submissionDialog.onTrue();
+            }}
           />
         );
       },
@@ -401,11 +400,13 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     { id: 'subject', label: 'Subject' },
-    { id: 'title', label: 'Assignment Title' },
-    { id: 'description', label: 'Assignment Description' },
+    { id: 'title', label: 'Assignment Title', minWidth: '170px', align: 'left' },
+    { id: 'description', label: 'Assignment Description', minWidth: '200px', align: 'left' },
     {
       id: 'dueDate',
       label: 'Due Date',
+      minWidth: '130px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -421,12 +422,12 @@ const HomeworkCreation = (props: TabComponentType) => {
         </Typography>
       ),
     },
-    { id: 'submissionType', label: 'Submission Type' },
-    { id: 'assignmentType', label: 'Assignment Type' },
+    { id: 'submissionType', label: 'Submission Type', minWidth: '180px', align: 'left' },
+    { id: 'assignmentType', label: 'Assignment Type', minWidth: '200px', align: 'left' },
     { id: 'topic', label: 'Topic' },
-    { id: 'assignedResources', label: 'Assigned Resources' },
-    { id: 'evaluationCriteria', label: 'Evaluation Criteria' },
-    { id: 'customRubric', label: 'Custom Rubric' },
+    { id: 'assignedResources', label: 'Assigned Resources', minWidth: '200px', align: 'left' },
+    { id: 'evaluationCriteria', label: 'Evaluation Criteria', minWidth: '200px', align: 'left' },
+    { id: 'customRubric', label: 'Custom Rubric', minWidth: '150px', align: 'left' },
     {
       id: 'status',
       label: 'Publish',
@@ -449,15 +450,15 @@ const HomeworkCreation = (props: TabComponentType) => {
       render(value: any, row: any) {
         return (
           <ThreeDotsActions
+            // actions={(prop) => actions({ ...prop, row })}
             placement="right-top"
-            actions={() => (
-              <MenuList>
-                <MenuItem>
-                  <Iconify icon="solar:pen-bold" />
-                  <ListItemText>Edit</ListItemText>
-                </MenuItem>
-              </MenuList>
-            )}
+            showViewIcon
+            showEditIcon
+            showThreeDots={false}
+            handleEditClick={() => {}}
+            handleViewClick={() => {
+              submissionDialog.onTrue();
+            }}
           />
         );
       },
@@ -504,8 +505,8 @@ const HomeworkCreation = (props: TabComponentType) => {
             <Typography variant="subtitle2">Assignment</Typography>
           </ToggleButton>
         </ToggleButtonGroup>
-        <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue}>
-          Create {view === 'homework' ? 'Homework' : 'Assignment'}
+        <Button variant="contained" size="small" startIcon={<Add />} onClick={dialog.onTrue}>
+          {view === 'homework' ? 'Homework' : 'Assignment'}
         </Button>
       </Box>
 
@@ -993,11 +994,30 @@ export const StudentSubmissions = () => {
     viewSubmissionDialog.onFalse();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {(row.status === 'Pending' || row.status === 'Overdue') && (
+            <MenuItem onClick={() => {}}>
+              {' '}
+              <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
+              Send Reminder
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
-    <Box sx={{ p: 1 }}>
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+    <Box>
+      <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
         <Button
           variant="contained"
+          size="small"
           startIcon={<Iconify icon="mdi:pencil" />}
           disabled={selectedStudents.length === 0}
           onClick={bulkGradeDialog.onTrue}
@@ -1019,7 +1039,7 @@ export const StudentSubmissions = () => {
                 />
               ),
             },
-            { id: 'studentName', label: 'Student Name' },
+            { id: 'studentName', label: 'Student Name', minWidth: '150px', align: 'left' },
             { id: 'assignments', label: 'Assignments' },
             { id: 'subject', label: 'Subject' },
             {
@@ -1050,7 +1070,7 @@ export const StudentSubmissions = () => {
                   </Typography>
                 ),
             },
-            { id: 'weightedAverage', label: 'Weighted Average' },
+            { id: 'weightedAverage', label: 'Weighted Average', minWidth: '180px', align: 'left' },
             {
               id: 'status',
               label: 'Status',
@@ -1071,72 +1091,19 @@ export const StudentSubmissions = () => {
               ),
             },
             {
-              id: 'action',
-              label: 'Action',
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions
-                    actions={() => (
-                      <MenuList>
-                        {row.status === 'Submitted' && (
-                          <MenuItem
-                            onClick={() => {
-                              viewSubmissionDialog.onTrue();
-                              setSelectedStudent(row);
-                            }}
-                          >
-                            {' '}
-                            <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                            View Submission
-                          </MenuItem>
-                        )}
-
-                        {(row.status === 'Pending' || row.status === 'Overdue') && (
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-                            Send Reminder
-                          </MenuItem>
-                        )}
-                        {/* {row.grade === 'Assign Grade' ? (
-                      <MenuItem>
-                        <Iconify
-                          icon="mingcute:notification-fill"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Remind To Teacher
-                      </MenuItem>
-                    ) : (
-                      <MenuItem>
-                        <Iconify
-                          icon="material-symbols:upload"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Upload to Student
-                      </MenuItem>
-                    )} */}
-                        {/* <MenuItem
-                      onClick={() => {
-                        viewResultDialog.onTrue();
-                        setSelectedStudent(row);
-                      }}
-                    >
-                      {' '}
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                      View Result
-                    </MenuItem> */}
-
-                        {/* <MenuItem
-                      onClick={() => {
-                        viewProfile.onTrue();
-                      }}
-                    >
-                      {' '}
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                      View Profile
-                    </MenuItem> */}
-                      </MenuList>
-                    )}
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                    showViewIcon
+                    handleViewClick={() => {
+                      viewSubmissionDialog.onTrue();
+                      setSelectedStudent(row);
+                    }}
                   />
                 );
               },

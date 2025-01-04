@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -68,7 +70,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
               <Typography variant="subtitle1">Class Comparison</Typography>
               <CustomSelect
                 label="Class"
@@ -85,7 +87,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 }}
                 value={classes1}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />{' '}
               <CustomSelect
@@ -99,7 +101,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 onChange={() => {}}
                 value=""
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -142,7 +144,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 }}
                 value={classes2}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />{' '}
             </Box>
@@ -192,7 +194,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
               }}
               value={classes1}
               formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '100%', maxWidth: '150px' },
               }}
             />{' '}
             <CustomSelect
@@ -208,7 +210,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 setDivision(val as string);
               }}
               formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '100%', maxWidth: '150px' },
               }}
             />{' '}
             <CustomSelect
@@ -225,7 +227,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 setSelectedStudent(val as string);
               }}
               formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '100%', maxWidth: '150px' },
               }}
             />
           </Box>

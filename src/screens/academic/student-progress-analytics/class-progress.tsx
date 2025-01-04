@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -12,8 +14,6 @@ import {
   Grid,
   Checkbox,
   ListItem,
-  MenuList,
-  MenuItem,
   CardHeader,
   Typography,
   CardContent,
@@ -24,7 +24,6 @@ import { varAlpha } from 'src/theme/styles';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -287,18 +286,15 @@ const ClassProgress = (props: TabComponentType) => {
               {
                 id: 'action',
                 label: 'Action',
+                isSort: false,
                 render(value, row) {
                   return (
                     <ThreeDotsActions
-                      actions={() => (
-                        <MenuList>
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                            View Details
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showViewIcon
+                      handleViewClick={() => {}}
+                      showThreeDots={false}
                     />
                   );
                 },

@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -291,7 +293,7 @@ const Course = (props: TabComponentType) => {
           }}
           value={classes}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
         <CustomSelect
@@ -307,7 +309,7 @@ const Course = (props: TabComponentType) => {
             setDivision(val as string);
           }}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
       </Box>
@@ -472,11 +474,18 @@ const ViewAssignmentData = () => {
       <Scrollbar sx={{ height: '600px' }}>
         <CustomizableTable
           columns={[
-            { id: 'title', label: 'Assignment Title' },
-            { id: 'description', label: 'Assignment Description' },
+            { id: 'title', label: 'Assignment Title', minWidth: '200px', align: 'left' },
+            {
+              id: 'description',
+              label: 'Assignment Description',
+              minWidth: '200px',
+              align: 'left',
+            },
             {
               id: 'dueDate',
               label: 'Due Date',
+              minWidth: '130px',
+              align: 'left',
               render: (value: any, row: any) => (
                 <Typography fontSize="12px" gutterBottom>
                   {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -492,12 +501,22 @@ const ViewAssignmentData = () => {
                 </Typography>
               ),
             },
-            { id: 'submissionType', label: 'Submission Type' },
-            { id: 'assignmentType', label: 'Assignment Type' },
+            { id: 'submissionType', label: 'Submission Type', minWidth: '200px', align: 'left' },
+            { id: 'assignmentType', label: 'Assignment Type', minWidth: '200px', align: 'left' },
             { id: 'topic', label: 'Topic' },
-            { id: 'assignedResources', label: 'Assigned Resources' },
-            { id: 'evaluationCriteria', label: 'Evaluation Criteria' },
-            { id: 'customRubric', label: 'Custom Rubric' },
+            {
+              id: 'assignedResources',
+              label: 'Assigned Resources',
+              minWidth: '200px',
+              align: 'left',
+            },
+            {
+              id: 'evaluationCriteria',
+              label: 'Evaluation Criteria',
+              minWidth: '200px',
+              align: 'left',
+            },
+            { id: 'customRubric', label: 'Custom Rubric', minWidth: '180px', align: 'left' },
             {
               id: 'action',
               label: 'Action',

@@ -1,3 +1,5 @@
+'use client';
+
 import type { CardProps } from '@mui/material';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 

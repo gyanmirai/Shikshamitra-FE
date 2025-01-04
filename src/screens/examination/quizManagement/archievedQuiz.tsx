@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import { color } from '@mui/system';
 import {
@@ -95,6 +95,51 @@ const ArchievedQuiz = () => {
   const [archivedTableData, setArchivedTableData] = useState(tableInitialData);
   const viewSubmissionDialog = useBoolean();
   const viewAnalyticsDialog = useBoolean();
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {row.status === 'Completed' && (
+            <>
+              <MenuItem
+                onClick={() => {
+                  viewAnalyticsDialog.onTrue();
+                  pop.onClose();
+                }}
+              >
+                <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+                View Analytics
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  //   submissionDialog.onTrue();
+                }}
+              >
+                <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
+                Publish Result
+              </MenuItem>
+            </>
+          )}
+
+          {(row.status === 'Pending' || row.status === 'Completed') && (
+            <MenuItem
+              onClick={() => {
+                viewSubmissionDialog.onTrue();
+                pop.onClose();
+              }}
+            >
+              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+              View Submission
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    [viewAnalyticsDialog, viewSubmissionDialog]
+  );
+
   return (
     <Box>
       <CustomizableTable
@@ -116,12 +161,12 @@ const ArchievedQuiz = () => {
             },
           },
           { id: 'subject', label: 'Subject' },
-          { id: 'quizTitle', label: 'Quiz Title' },
-          { id: 'createdAt', label: 'Created At' },
-          { id: 'quizDate', label: 'Quiz Date' },
-          { id: 'quizTime', label: 'Quiz Time' },
-          { id: 'totalMakrs', label: 'Total Marks' },
-          { id: 'passingMarks', label: 'Passing Marks' },
+          { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
+          { id: 'createdAt', label: 'Created At', minWidth: '130px', align: 'left' },
+          { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
+          { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
+          { id: 'totalMakrs', label: 'Total Marks', minWidth: '130px', align: 'left' },
+          { id: 'passingMarks', label: 'Passing Marks', minWidth: '150px', align: 'left' },
           {
             id: 'status',
             label: 'Status',
@@ -138,52 +183,14 @@ const ArchievedQuiz = () => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
                   placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      {row.status === 'Completed' && (
-                        <>
-                          <MenuItem
-                            onClick={() => {
-                              viewAnalyticsDialog.onTrue();
-                              popover.onClose();
-                            }}
-                          >
-                            <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                            View Analytics
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              //   submissionDialog.onTrue();
-                            }}
-                          >
-                            <Iconify
-                              icon="material-symbols:upload"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Publish Result
-                          </MenuItem>
-                        </>
-                      )}
-
-                      {(row.status === 'Pending' || row.status === 'Completed') && (
-                        <MenuItem
-                          onClick={() => {
-                            viewSubmissionDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                          View Submission
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  )}
                 />
               );
             },

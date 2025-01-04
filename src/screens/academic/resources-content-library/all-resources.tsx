@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -132,6 +134,38 @@ const AllResources = (props: TabComponentType) => {
     []
   );
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem>
+            <Iconify icon="mdi:download" />
+            <ListItemText>Download</ListItemText>
+          </MenuItem>
+          <MenuItem>
+            <Iconify icon="mdi:share" />
+            <ListItemText>Share</ListItemText>
+          </MenuItem>
+          <MenuItem>
+            {row.favourite === false ? (
+              <>
+                <Iconify icon="mdi:star" />
+                <ListItemText>Add in Favourite</ListItemText>
+              </>
+            ) : (
+              <>
+                <Iconify icon="mdi:star" />
+                <ListItemText>Remove from Favourite</ListItemText>
+              </>
+            )}
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -142,6 +176,20 @@ const AllResources = (props: TabComponentType) => {
           { name: 'All Resources' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={() => {
+              dialog.onTrue();
+              // setIsEdit(false);
+              // setSelectedSubject(null);
+            }}
+          >
+            Resource
+          </Button>
+        }
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <ToggleButtonGroup
@@ -166,40 +214,31 @@ const AllResources = (props: TabComponentType) => {
             <Iconify icon="lucide:layout-list" />
           </ToggleButton>
         </ToggleButtonGroup>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            // setIsEdit(false);
-            // setSelectedSubject(null);
-          }}
-        >
-          Add Resource
-        </Button>
       </Box>
 
       {view === 'list' ? (
         <CustomizableTable
           columns={[
-            { id: 'resourceName', label: 'Resource Name' },
-            { id: 'category', label: 'Category' },
-            { id: 'fileType', label: 'File Type' },
-            { id: 'uploadedBy', label: 'Uploaded By' },
+            { id: 'resourceName', label: 'Resource Name', minWidth: '150px', align: 'left' },
+            { id: 'category', label: 'Category', minWidth: '130px', align: 'left' },
+            { id: 'fileType', label: 'File Type', minWidth: '150px', align: 'left' },
+            { id: 'uploadedBy', label: 'Uploaded By', minWidth: '150px', align: 'left' },
             {
               id: 'favourite',
               label: 'Favourite',
               render(value, row) {
                 return value === true ? (
-                  <Iconify icon="mdi:star" />
+                  <Iconify icon="mdi:star" sx={{ ml: 2 }} />
                 ) : (
-                  <Iconify icon="mdi:star-outline" />
+                  <Iconify icon="mdi:star-outline" sx={{ ml: 2 }} />
                 );
               },
             },
             {
               id: 'dateUploaded',
               label: 'Date Uploaded',
+              minWidth: '150px',
+              align: 'left',
               render: (value, row) => (
                 <Typography fontSize="12px" gutterBottom>
                   {dayjs(value).format('DD MMM YYYY')}
@@ -216,53 +255,22 @@ const AllResources = (props: TabComponentType) => {
               ),
             },
             {
-              id: 'action',
-              label: 'Action',
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
                     placement="right-top"
-                    actions={() => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setSelectedResource(row as any);
-                            setIsEdit(true);
-                            dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Edit
-                        </MenuItem>
-                        <MenuItem>
-                          <Iconify icon="mdi:download" />
-
-                          <ListItemText>Download</ListItemText>
-                        </MenuItem>
-                        <MenuItem>
-                          <Iconify icon="mdi:share" />
-                          <ListItemText>Share</ListItemText>
-                        </MenuItem>
-                        <MenuItem>
-                          {row.favourite === false ? (
-                            <>
-                              <Iconify icon="mdi:star" />
-                              <ListItemText>Add in Favourite</ListItemText>
-                            </>
-                          ) : (
-                            <>
-                              <Iconify icon="mdi:star" />
-                              <ListItemText>Remove from Favourite</ListItemText>
-                            </>
-                          )}
-                        </MenuItem>
-                        <MenuItem>
-                          <Iconify icon="mdi:eye" />
-
-                          <ListItemText>Preview</ListItemText>
-                        </MenuItem>
-                      </MenuList>
-                    )}
+                    showEditIcon
+                    showViewIcon
+                    handleViewClick={() => {}}
+                    handleEditClick={() => {
+                      setSelectedResource(row as any);
+                      setIsEdit(true);
+                      dialog.onTrue();
+                    }}
                   />
                 );
               },

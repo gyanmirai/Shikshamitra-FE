@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -45,6 +47,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { subjectTempData } from './subjectsData';
 
@@ -302,7 +305,16 @@ const Subjects = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Typography variant="h6" marginBottom={3}>
+      <CustomBreadcrumbs
+        heading="Content Management"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Content Management' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Typography variant="h6" marginBottom={3} mt={3}>
         Subject&apos;s Content Management
       </Typography>
       <CustomSelect
@@ -315,7 +327,7 @@ const Subjects = (props: TabComponentType) => {
         isLoading={isLoading}
         labelKey="name"
         valueKey="name"
-        formControlProps={{ sx: { minWidth: 200 } }}
+        formControlProps={{ sx: { minWidth: 150 } }}
       />
       {subjectTableData.length > 0 && (
         <CustomizableTable
@@ -323,11 +335,15 @@ const Subjects = (props: TabComponentType) => {
             {
               id: 'subjectName',
               label: 'Subject Name',
+              minWidth: '140px',
+              align: 'left',
             },
-            { id: 'primaryTeacher', label: 'Primary Teacher' },
+            { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '150px', align: 'left' },
             {
               id: 'secondaryTeacher',
               label: 'Secondary Teacher',
+              minWidth: '170px',
+              align: 'left',
               render: (value) => (
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                   {value.map((audience: string) => (
@@ -380,19 +396,6 @@ const Subjects = (props: TabComponentType) => {
               },
             },
             {
-              id: 'viewDetails',
-              label: 'View Details',
-              render: (value, row) => (
-                <IconButton
-                  onClick={() => {
-                    handleEyeClick(row.subjectName);
-                  }}
-                >
-                  <Iconify icon="mdi:eye" />
-                </IconButton>
-              ),
-            },
-            {
               id: 'actions',
               label: 'Actions',
               isSort: false,
@@ -401,6 +404,10 @@ const Subjects = (props: TabComponentType) => {
                   <ThreeDotsActions
                     actions={(prop) => actions({ ...prop, row })}
                     placement="right-top"
+                    showViewIcon
+                    handleViewClick={() => {
+                      handleEyeClick(row.subjectName);
+                    }}
                   />
                 );
               },
@@ -818,6 +825,7 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={onAddNewChapter}
           >
             New Chapter

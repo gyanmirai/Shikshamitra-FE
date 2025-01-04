@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -8,7 +10,6 @@ import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { TimelineDot } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -16,6 +17,7 @@ import {
   Box,
   List,
   Grid,
+  Card,
   Button,
   Switch,
   ListItem,
@@ -151,7 +153,7 @@ const Subject = (props: TabComponentType) => {
 
   console.log('filteredData--', filteredData);
 
-  const dialog = useBoolean();
+  const [open, setOpen] = useState(false);
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
@@ -195,7 +197,7 @@ const Subject = (props: TabComponentType) => {
     } else {
       setSubjectTableData([...subjectTableData, values]);
     }
-    dialog.onFalse();
+    setOpen(false);
     setIsEdit(false);
     setSelectedSubject(null);
   };
@@ -206,7 +208,7 @@ const Subject = (props: TabComponentType) => {
   };
 
   const handleCloseDialog = () => {
-    dialog.onFalse();
+    setOpen(false);
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     setIsEdit(false);
@@ -238,158 +240,207 @@ const Subject = (props: TabComponentType) => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Subjects"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Curriculum Management' },
-          { name: 'Subjects' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            startIcon={<Add />}
-            variant="contained"
-            onClick={() => {
-              dialog.onTrue();
-              setIsEdit(false);
-              setSelectedSubject(null);
-            }}
-          >
-            Subject
-          </Button>
-        }
-      />
-      <CustomSelect
-        label="Class"
-        name="class"
-        isLoading={isLoading}
-        options={classData?.items || []}
-        valueKey="id"
-        labelKey="name"
-        formControlProps={{ sx: { width: '200px' } }}
-        value={classes}
-        onChange={(value) => {
-          // setClasses(value);
-        }}
-      />
-      <Grid2 container spacing={3}>
-        {classes && (
-          <CustomizableTable
-            columns={[
-              { id: 'className', label: 'Class' },
-              { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
-              { id: 'subjectName', label: 'Subject Name', minWidth: '135px', align: 'left' },
-              {
-                id: 'subjectColor',
-                label: 'Subject Color',
-                minWidth: '130px',
-                render(value, row) {
-                  return (
-                    <TimelineDot
-                      sx={{
-                        bgcolor: value,
-                        width: '12px',
-                        height: '12px',
-                        ml: '30px',
-                      }}
-                    />
-                  );
-                },
-              },
-              { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '150px', align: 'left' },
-              {
-                id: 'secondaryTeacher',
-                label: 'Secondary Teacher',
-                minWidth: '170px',
-                align: 'left',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((audience: string) => (
-                      // <Chip key={audience} label={audience} size="small" variant="outlined" />
-                      <Typography
-                        component="span"
-                        variant="body2"
-                        sx={{
-                          px: 1.0,
-                          py: 0.5,
-                          borderRadius: '30px',
-                          border: `1px solid black`,
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {audience}
-                      </Typography>
-                    ))}
-                  </Box>
-                ),
-              },
-              { id: 'prerequisites', label: 'Prerequisites' },
-              { id: 'learningGoal', label: 'Learning Goal' },
-              {
-                id: 'status',
-                label: 'Publish',
-                render: (value: string, row: any) => (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Switch
-                      size="small"
-                      checked={value === 'Publish'}
-                      onChange={() => handleStatusChange(row.id, value as string)}
-                    />
-                  </Box>
-                ),
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isSort: false,
-                render(value, row) {
-                  const subject = subjectTableData.find((s) => s.id === row.id);
-                  return (
-                    <ThreeDotsActions
-                      // actions={(prop) => actions({ ...props, row })}
-                      placement="right-top"
-                      showViewIcon
-                      showEditIcon
-                      showDeleteIcon
-                      showThreeDots={false}
-                      handleViewClick={() => {
-                        if (subject) {
-                          handleViewSubject(subject);
-                        }
-                      }}
-                      handleEditClick={() => {
-                        setSelectedSubject(row as any);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                      }}
-                      handleDeleteClick={() => {
-                        setSelectedSubject(row as any);
-                        deleteConfirmDialog.onTrue();
-                      }}
-                    />
-                  );
-                },
-              },
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Subjects"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Curriculum Management' },
+              { name: 'Subjects' },
             ]}
-            data={filteredData}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleCloseDialog}
+              >
+                Back
+              </Button>
+            }
           />
-        )}
-      </Grid2>
-
-      <CustomDialog
-        maxWidth="sm"
-        open={dialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Subject' : 'Add Subject'}
-      >
-        <SubjectForm
-          onSubmit={handleSubmit}
-          onClose={dialog.onFalse}
-          data={selectedSubject}
-          isEdit={isEdit}
-        />{' '}
-      </CustomDialog>
+          {/* <CustomDialog
+            maxWidth="sm"
+            open={dialog.value}
+            handleClose={handleCloseDialog}
+            title={isEdit ? 'Update Subject' : 'Add Subject'}
+          > */}
+          <Card>
+            <SubjectForm
+              onSubmit={handleSubmit}
+              onClose={handleCloseDialog}
+              data={selectedSubject}
+              isEdit={isEdit}
+            />{' '}
+          </Card>
+          {/* </CustomDialog> */}
+        </>
+      ) : (
+        <>
+          {' '}
+          <CustomBreadcrumbs
+            heading="Subjects"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Curriculum Management' },
+              { name: 'Subjects' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="contained"
+                onClick={() => {
+                  setOpen(true);
+                  setIsEdit(false);
+                  setSelectedSubject(null);
+                }}
+              >
+                Subject
+              </Button>
+            }
+          />
+          <CustomSelect
+            label="Class"
+            name="class"
+            isLoading={isLoading}
+            options={classData?.items || []}
+            valueKey="id"
+            labelKey="name"
+            formControlProps={{ sx: { width: '150px' } }}
+            value={classes}
+            onChange={(value) => {
+              // setClasses(value);
+            }}
+          />
+          <Grid2 container spacing={3}>
+            {classes && (
+              <CustomizableTable
+                columns={[
+                  { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
+                  // {
+                  //   id: 'subjectColor',
+                  //   label: 'Subject Color',
+                  //   minWidth: '130px',
+                  //   render(value, row) {
+                  //     return (
+                  //       <TimelineDot
+                  //         sx={{
+                  //           bgcolor: value,
+                  //           width: '12px',
+                  //           height: '12px',
+                  //           ml: '30px',
+                  //         }}
+                  //       />
+                  //     );
+                  //   },
+                  // },
+                  {
+                    id: 'subjectName',
+                    label: 'Subject Name',
+                    minWidth: '135px',
+                    align: 'left',
+                    render(value, row) {
+                      return (
+                        <Typography variant="caption" color={row.subjectColor}>
+                          {value}
+                        </Typography>
+                      );
+                    },
+                  },
+                  {
+                    id: 'primaryTeacher',
+                    label: 'Primary Teacher',
+                    minWidth: '150px',
+                    align: 'left',
+                  },
+                  {
+                    id: 'secondaryTeacher',
+                    label: 'Secondary Teacher',
+                    minWidth: '170px',
+                    align: 'left',
+                    render: (value) => (
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {value.map((audience: string, index: number) => (
+                          // <Chip key={audience} label={audience} size="small" variant="outlined" />
+                          // <Typography
+                          //   component="span"
+                          //   variant="body2"
+                          //   sx={{
+                          //     px: 1.0,
+                          //     py: 0.5,
+                          //     borderRadius: '30px',
+                          //     border: `1px solid black`,
+                          //     fontSize: '0.75rem',
+                          //   }}
+                          // >
+                          //   {audience}
+                          // </Typography>
+                          <Typography variant="caption">
+                            {audience}
+                            {index < value.length - 1 && ' | '}
+                          </Typography>
+                        ))}
+                      </Box>
+                    ),
+                  },
+                  { id: 'prerequisites', label: 'Prerequisites' },
+                  { id: 'learningGoal', label: 'Learning Goal', minWidth: '150px', align: 'left' },
+                  {
+                    id: 'status',
+                    label: 'Publish',
+                    render: (value: string, row: any) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Switch
+                          size="small"
+                          checked={value === 'Publish'}
+                          onChange={() => handleStatusChange(row.id, value as string)}
+                        />
+                      </Box>
+                    ),
+                  },
+                  {
+                    id: 'action',
+                    label: 'Action',
+                    isSort: false,
+                    render(value, row) {
+                      const subject = subjectTableData.find((s) => s.id === row.id);
+                      return (
+                        <ThreeDotsActions
+                          // actions={(prop) => actions({ ...props, row })}
+                          placement="right-top"
+                          showViewIcon
+                          showEditIcon
+                          showDeleteIcon
+                          showThreeDots={false}
+                          handleViewClick={() => {
+                            if (subject) {
+                              handleViewSubject(subject);
+                            }
+                          }}
+                          handleEditClick={() => {
+                            setSelectedSubject(row as any);
+                            setIsEdit(true);
+                            setOpen(true);
+                          }}
+                          handleDeleteClick={() => {
+                            setSelectedSubject(row as any);
+                            deleteConfirmDialog.onTrue();
+                          }}
+                        />
+                      );
+                    },
+                  },
+                ]}
+                data={filteredData}
+              />
+            )}
+          </Grid2>
+        </>
+      )}
 
       <CustomDialog
         maxWidth="sm"
@@ -757,7 +808,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '300px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <CustomSelect

@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -152,7 +154,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
             }}
             value={classes}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '150px' },
             }}
           />{' '}
           <CustomSelect
@@ -168,7 +170,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
               setDivision(val as string);
             }}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '150px' },
             }}
           />{' '}
           <CustomSelect
@@ -184,7 +186,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
               setSelectedStudent(val as string);
             }}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '150px' },
             }}
           />
         </Grid>

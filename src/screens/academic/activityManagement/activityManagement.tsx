@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -214,11 +216,12 @@ const ActivityManagement = (props: TabComponentType) => {
           <Button
             startIcon={<Add />}
             variant="contained"
+            size="small"
             onClick={() => {
               dialog.onTrue();
             }}
           >
-            Add Activity
+            Activity
           </Button>
         }
       />

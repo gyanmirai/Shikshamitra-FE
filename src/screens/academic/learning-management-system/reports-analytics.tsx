@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -35,7 +37,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
           value=""
           label="Course"
           onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
         />
         <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
         <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
@@ -123,7 +125,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="class"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -132,7 +134,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Student"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -141,7 +143,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Report Type"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -190,7 +192,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="class"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -199,7 +201,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Subject"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -208,7 +210,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Assignment Status"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>

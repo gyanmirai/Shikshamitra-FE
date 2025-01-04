@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -82,7 +84,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -99,7 +101,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivision1(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -172,7 +174,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -186,7 +188,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivision2(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -198,7 +200,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                 onChange={() => {}}
                 value=""
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -257,7 +259,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -321,7 +323,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -338,7 +340,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivision4(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -350,7 +352,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                 onChange={() => {}}
                 value=""
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>

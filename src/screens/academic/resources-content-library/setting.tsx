@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
@@ -192,13 +194,14 @@ const Setting = (props: TabComponentType) => {
               <Button
                 startIcon={<Add />}
                 variant="contained"
+                size="small"
                 onClick={() => {
                   dialog.onTrue();
                   setIsEdit(false);
                   setSelectedCategory(null);
                 }}
               >
-                Add Resource Category
+                Resource Category
               </Button>
             </Box>
           </Card>
