@@ -1,7 +1,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import {
   Box,
@@ -29,6 +29,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TResourceData {
   id: number;
@@ -80,7 +81,7 @@ const LearningResources = (props: TabComponentType) => {
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
-  const [selectedEntry, setSelectedEntry] = useState<TResourceData | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   const dialog = useBoolean();
@@ -154,9 +155,43 @@ const LearningResources = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="solar:share-bold" />
+            Share with classes/teachers
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
-      <Typography variant="h6" marginBottom={3}>
+      <CustomBreadcrumbs
+        heading="Learning Resources"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Learning Resources' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={dialog.onTrue}
+            disabled={!classes || !subject}
+          >
+            Resource
+          </Button>
+        }
+      />
+      <Typography variant="h6" marginBottom={3} mt={3}>
         Learning Resources For Subject
       </Typography>
 
@@ -215,47 +250,36 @@ const LearningResources = (props: TabComponentType) => {
             { id: 'dateUploaded', label: 'Date Uploaded' },
             {
               id: 'status',
-              label: 'Status',
+              label: 'Publish',
               render: (value: string, row: any) => (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography sx={{ mr: 2 }} fontSize={11}>
-                    Unpublish
-                  </Typography>
                   <Switch
                     size="small"
                     checked={value === 'Publish'}
                     onChange={() => handleStatusChange(row.id, value as string)}
                   />
-                  <Typography sx={{ ml: 2 }} fontSize={11}>
-                    Publish
-                  </Typography>
                 </Box>
               ),
             },
             {
               id: 'action',
               label: 'Action',
-              render(value: any, row: any) {
+              isSort: false,
+              render(value, row) {
                 return (
                   <ThreeDotsActions
-                    actions={({ popover }: any) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setIsEdit(true);
-                            setSelectedEntry(row);
-                            dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" />
-                          Edit
-                        </MenuItem>
-                        <MenuItem onClick={() => {}}>
-                          <Iconify icon="solar:share-bold" />
-                          Share with classes/teachers
-                        </MenuItem>
-                      </MenuList>
-                    )}
+                    actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showDeleteIcon
+                    showViewIcon
+                    handleViewClick={() => {}}
+                    handleDeleteClick={() => {}}
+                    handleEditClick={() => {
+                      setIsEdit(true);
+                      setSelectedEntry(row);
+                      dialog.onTrue();
+                    }}
                   />
                 );
               },

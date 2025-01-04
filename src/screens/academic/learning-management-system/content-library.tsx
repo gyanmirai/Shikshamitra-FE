@@ -3,21 +3,30 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Upload } from 'src/components/upload';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const ContentLibrary = (props: TabComponentType) => {
   const viewLearningMaterial = useBoolean();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Content Library"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Content Library' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <CustomizableTable
         columns={[
           { id: 'resourceName', label: 'Resource Name' },
@@ -28,23 +37,19 @@ const ContentLibrary = (props: TabComponentType) => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        viewLearningMaterial.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      View
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    viewLearningMaterial.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={[

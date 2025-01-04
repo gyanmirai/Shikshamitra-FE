@@ -10,6 +10,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -55,6 +56,15 @@ const ComparativeAnalytics = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Comparative Analytics"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Comparative Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>

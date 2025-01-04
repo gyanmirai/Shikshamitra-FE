@@ -11,6 +11,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
@@ -31,7 +33,40 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
     '10-10-2024 9:00 PM , Teacher - John Doe , Room No.- 101',
   ];
   return (
-    <>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Time Table Management' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Timetable',
+                href: '/academic/timetable-schedule-management/newTimetable',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Room',
+                href: '/academic/timetable-schedule-management/settings',
+                color: 'warning',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'General Reports',
+                href: '/academic/timetable-schedule-management/reports',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
       <Box display="flex" flexDirection="row" justifyContent="space-between">
         <Box display="flex" flexDirection="row" gap={3}>
           <CustomSelect
@@ -103,7 +138,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         </Grid2>
       </Grid2>
-    </>
+    </Box>
   );
 };
 

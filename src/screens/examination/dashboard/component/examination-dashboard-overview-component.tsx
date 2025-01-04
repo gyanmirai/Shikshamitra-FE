@@ -1,3 +1,5 @@
+'use client';
+
 import type { ChartOptions } from 'src/components/chart';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -15,6 +17,8 @@ import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -71,6 +75,45 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:calendar',
+                label: 'Schedule Exam',
+                href: '/examination/scheduleExam',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Create Assessment',
+                href: '/examination/assessmentManagement',
+                color: 'secondary',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Create Rubric',
+                href: '/examination/settings',
+                color: 'warning',
+              },
+              {
+                icon: 'mdi:upload',
+                label: 'Upload Marks',
+                href: '/examination/gradeEntry',
+                color: 'error',
+              },
+            ]}
+          />
+        }
+      />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"

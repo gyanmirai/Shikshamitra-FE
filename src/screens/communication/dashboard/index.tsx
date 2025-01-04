@@ -7,16 +7,7 @@ import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import {
-  Box,
-  Card,
-  Grid,
-  alpha,
-  Button,
-  Typography,
-  ToggleButton,
-  ToggleButtonGroup,
-} from '@mui/material';
+import { Box, Card, Grid, alpha, Button, Typography } from '@mui/material';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
@@ -30,9 +21,6 @@ import CustomSelect from 'src/components/custom-select';
 
 import { CalendarView } from 'src/sections/calendar/view';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-
-import SchoolWiseAnnounsement from '../announcement/schoolWiseAnnounsement';
-import ClassWiseAnnounsement from '../announcement/classSpecificAnnouncement';
 
 const CommunicationDashboard = () => {
   const [view, setView] = useState('schoolwise');
@@ -103,7 +91,7 @@ const CommunicationDashboard = () => {
         </Grid>
       </Grid>
 
-      <Box
+      {/* <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -136,14 +124,14 @@ const CommunicationDashboard = () => {
         </ToggleButtonGroup>
       </Box>
 
-      {view === 'schoolwise' ? <SchoolWiseAnnounsement /> : <ClassWiseAnnounsement />}
+      {view === 'schoolwise' ? <SchoolWiseAnnounsement /> : <ClassWiseAnnounsement />} */}
 
-      <Box display="flex" justifyContent="space-between" alignItems="space-between">
+      <Box display="flex" justifyContent="space-between" alignItems="space-between" mt={2}>
         <Typography variant="h6" sx={{ mt: 2 }}>
           Event Calendar
         </Typography>
         <Button variant="contained" startIcon={<Add />}>
-          Create New Event
+          Event
         </Button>
       </Box>
 
@@ -181,9 +169,9 @@ const CommunicationDashboard = () => {
         </Grid>
       </Grid>
 
-      <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
+      <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mt={2}>
         <Button variant="contained" startIcon={<Add />}>
-          Create New Survey
+          Survey
         </Button>
       </Box>
       <Grid container spacing={2} mt={1}>

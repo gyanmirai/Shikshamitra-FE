@@ -60,7 +60,7 @@ const AssessmentScreen = () => {
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
         <Button startIcon={<Iconify icon="mdi:calendar" />} color="secondary" variant="contained">
-          Create New Assessment
+          Assessment
         </Button>
         <Button startIcon={<Iconify icon="mdi:upload" />} color="primary" variant="contained">
           Bulk Upload Mark

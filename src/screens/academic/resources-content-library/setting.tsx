@@ -27,6 +27,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 
 import { FileStorageOverview } from 'src/sections/file-manager/file-storage-overview';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TCategory {
   id: number;
@@ -96,6 +97,15 @@ const Setting = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Resource Content Library' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2} marginTop={1}>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>

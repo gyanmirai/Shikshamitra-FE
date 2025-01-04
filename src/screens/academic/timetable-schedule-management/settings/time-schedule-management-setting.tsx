@@ -30,6 +30,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 type PeriodSetting = {
   label: string;
@@ -69,6 +70,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
   const [roomData, setRoomData] = useState(tableData);
   const dialog = useBoolean();
   const createSlotsDialog = useBoolean();
+  const createLectureNumberDialog = useBoolean();
 
   const periodSettings: PeriodSetting[] = [
     { label: 'Class Duration (e.g., 45 minutes)', unit: 'Select Unit' },
@@ -136,7 +138,82 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between">
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Time Table Management' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Typography component="span" variant="h6" gutterBottom>
+          Lectures Details
+        </Typography>
+        <Button
+          startIcon={<Iconify icon="mdi:plus" />}
+          variant="contained"
+          onClick={createLectureNumberDialog.onTrue}
+        >
+          Create Number of Lectures
+        </Button>
+      </Box>
+      {/* <CustomSelect
+        label="Class"
+        options={classData?.items || []}
+        labelKey="name"
+        valueKey="id"
+        onChange={(val) => {
+          const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+          setSearchParams?.({
+            classId: val as string,
+          });
+        }}
+        value={classes}
+        formControlProps={{
+          sx: { width: '100%', maxWidth: '200px' },
+        }}
+      /> */}
+      <CustomizableTable
+        columns={[
+          { id: 'class', label: 'Class' },
+          { id: 'noOfLecture', label: 'No of Lectures' },
+          {
+            id: 'action',
+            label: 'Action',
+          },
+        ]}
+        data={[
+          {
+            class: 'Class 1',
+            noOfLecture: 8,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 2',
+            noOfLecture: 9,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 3',
+            noOfLecture: 6,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 4',
+            noOfLecture: 7,
+            action: 'Edit',
+          },
+          {
+            class: 'Class 5',
+            noOfLecture: 5,
+            action: 'Edit',
+          },
+        ]}
+      />
+
+      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
         <Typography component="span" variant="h6" gutterBottom>
           Slot Details
         </Typography>
@@ -188,7 +265,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           Room Details
         </Typography>
         <Button startIcon={<Iconify icon="mdi:plus" />} variant="contained" onClick={dialog.onTrue}>
-          Create New Room
+          Room
         </Button>
       </Box>
       <CustomizableTable

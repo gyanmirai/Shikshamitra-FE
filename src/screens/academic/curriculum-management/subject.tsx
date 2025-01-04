@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { MuiColorInput } from 'mui-color-input';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { TimelineDot } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -18,8 +18,6 @@ import {
   Grid,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
   ListItem,
   TextField,
   Typography,
@@ -44,6 +42,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface Document {
   id: string;
@@ -157,6 +156,7 @@ const Subject = (props: TabComponentType) => {
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
   const addBulkDialog = useBoolean();
+  const [classes, setClasses] = useState('');
 
   const [selectedSubject, setSelectedSubject] = useState<TSubjectTable | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -168,19 +168,17 @@ const Subject = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!searchParams?.classId) {
+      if (!classes) {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setClasses(firstClass?.id);
       }
-      const selectedClass = classData.items.find((c: any) => c.id === searchParams?.classId);
+      const selectedClass = classData.items.find((c: any) => c.id === classes);
       if (selectedClass) {
         const filtered = subjectTableData.filter((item) => item.className === selectedClass?.name);
         setFilteredData(filtered);
       }
     }
-  }, [searchParams?.classId, classData, subjectTableData, setSearchParams]);
+  }, [classData, subjectTableData, setSearchParams, classes]);
 
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
@@ -236,22 +234,32 @@ const Subject = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  const actions = useCallback(({ popover: pop, row }: any) => <> </>, []);
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6">Subject Management</Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            setIsEdit(false);
-            setSelectedSubject(null);
-          }}
-        >
-          Add Subject
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Subjects"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Subjects' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              dialog.onTrue();
+              setIsEdit(false);
+              setSelectedSubject(null);
+            }}
+          >
+            Subject
+          </Button>
+        }
+      />
       <CustomSelect
         label="Class"
         name="class"
@@ -260,23 +268,22 @@ const Subject = (props: TabComponentType) => {
         valueKey="id"
         labelKey="name"
         formControlProps={{ sx: { width: '200px' } }}
-        value={searchParams?.classId || ''}
+        value={classes}
         onChange={(value) => {
-          setSearchParams?.({
-            classId: value as string,
-          });
+          // setClasses(value);
         }}
       />
       <Grid2 container spacing={3}>
-        {searchParams?.classId && (
+        {classes && (
           <CustomizableTable
             columns={[
               { id: 'className', label: 'Class' },
-              { id: 'subjectCode', label: 'Subject Code' },
-              { id: 'subjectName', label: 'Subject Name' },
+              { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
+              { id: 'subjectName', label: 'Subject Name', minWidth: '135px', align: 'left' },
               {
                 id: 'subjectColor',
                 label: 'Subject Color',
+                minWidth: '130px',
                 render(value, row) {
                   return (
                     <TimelineDot
@@ -284,15 +291,18 @@ const Subject = (props: TabComponentType) => {
                         bgcolor: value,
                         width: '12px',
                         height: '12px',
+                        ml: '30px',
                       }}
                     />
                   );
                 },
               },
-              { id: 'primaryTeacher', label: 'Primary Teacher' },
+              { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '150px', align: 'left' },
               {
                 id: 'secondaryTeacher',
                 label: 'Secondary Teacher',
+                minWidth: '170px',
+                align: 'left',
                 render: (value) => (
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {value.map((audience: string) => (
@@ -330,57 +340,36 @@ const Subject = (props: TabComponentType) => {
                 ),
               },
               {
-                id: 'viewChapters',
-                label: 'View Details',
-                render: (_, row) => {
-                  const subject = subjectTableData.find((s) => s.id === row.id);
-                  return (
-                    <IconButton onClick={() => subject && handleViewSubject(subject)} sx={{}}>
-                      <Iconify icon="mdi:eye" />
-                    </IconButton>
-                  );
-                },
-              },
-              {
                 id: 'action',
                 label: 'Action',
                 isSort: false,
-                render: (value, row) => (
-                  <ThreeDotsActions
-                    placement="right-top"
-                    actions={({ popover: pop }) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setSelectedSubject(row as any);
-                            setIsEdit(true);
-                            dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Edit
-                        </MenuItem>
-
-                        {row.status === 'Publish' && (
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedSubject(row as any);
-                              deleteConfirmDialog.onTrue();
-                              pop.onClose();
-                            }}
-                            sx={{ color: 'error.main' }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                        )}
-                      </MenuList>
-                    )}
-                  />
-                ),
+                render(value, row) {
+                  const subject = subjectTableData.find((s) => s.id === row.id);
+                  return (
+                    <ThreeDotsActions
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showViewIcon
+                      showEditIcon
+                      showDeleteIcon
+                      showThreeDots={false}
+                      handleViewClick={() => {
+                        if (subject) {
+                          handleViewSubject(subject);
+                        }
+                      }}
+                      handleEditClick={() => {
+                        setSelectedSubject(row as any);
+                        setIsEdit(true);
+                        dialog.onTrue();
+                      }}
+                      handleDeleteClick={() => {
+                        setSelectedSubject(row as any);
+                        deleteConfirmDialog.onTrue();
+                      }}
+                    />
+                  );
+                },
               },
             ]}
             data={filteredData}

@@ -27,7 +27,7 @@ const AssessmentDashboardOverviewComponent = () => {
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >
         <Button color="secondary" variant="contained">
-          Create New Assessment
+          Assessment
         </Button>
         <Button color="primary" variant="contained">
           Review Pending Assesment

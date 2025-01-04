@@ -9,14 +9,24 @@ import { Box, Grid, alpha, Paper, Button, useTheme, Typography } from '@mui/mate
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ReportsAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
-    <Box sx={{ p: 1 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Reports And Analytics"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Reports And Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Typography variant="h6" sx={{ mb: 3 }}>
         Course performance
       </Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>

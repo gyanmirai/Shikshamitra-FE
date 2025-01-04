@@ -12,6 +12,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const initialValues = {
   report: '',
@@ -101,6 +102,15 @@ const Reports = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Reports"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Gradebook Performace' },
+          { name: 'Reports' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Formik
         initialValues={initialValues}
         validationSchema={(values: any) => getValidationSchema(values?.report)}

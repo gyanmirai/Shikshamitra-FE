@@ -7,13 +7,23 @@ import { Box, Card, Grid, useTheme, Typography } from '@mui/material';
 import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
 const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={3}>
         {/* <Grid item xs={12}>
           <CustomSelect

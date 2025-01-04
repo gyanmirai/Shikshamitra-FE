@@ -105,7 +105,7 @@ const CurriculumManagementScreen = () => {
             });
           }}
         >
-          Add New Subject
+          Subject
         </Button>
 
         <Button

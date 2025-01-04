@@ -10,8 +10,6 @@ import {
   Grid,
   Chip,
   Button,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   DialogContent,
@@ -20,12 +18,12 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Available field options
 const AVAILABLE_FIELDS = [
@@ -122,20 +120,20 @@ const DynamicGroupManagement = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h6" my={1}>
-          Dynamic Group Management
-        </Typography>
-        <Button startIcon={<Add />} variant="contained" onClick={handleOpenAddDialog}>
-          Add Dynamic Group
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Dynamic Group"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity Management' },
+          { name: 'Dynamic Group' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button startIcon={<Add />} variant="contained" onClick={handleOpenAddDialog}>
+            Dynamic Group
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[
@@ -155,43 +153,27 @@ const DynamicGroupManagement = (props: TabComponentType) => {
             ),
           },
           {
-            id: 'actions',
-            label: 'Actions',
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        handleOpenEditDialog(row as DynamicGroup);
-                        pop.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="solar:pen-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as DynamicGroup);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    handleOpenEditDialog(row as DynamicGroup);
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedGroup(row as DynamicGroup);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={groups}

@@ -15,6 +15,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Label, type LabelColor } from 'src/components/label';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -39,7 +41,40 @@ const Dashboard = (props: TabComponentType) => {
   });
 
   return (
-    <Box sx={{ p: 1 }}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity Management' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Dynamic Group',
+                href: '/academic/activityManagement/dynamicGroup',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Activity',
+                href: '/academic/activityManagement/activityManagement',
+                color: 'warning',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Student Group',
+                href: '/academic/activityManagement/studentGroup',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
       <Grid container spacing={3}>
         {/* Statistics Cards */}
         <Grid item xs={12} sm={6} md={4}>
@@ -178,18 +213,12 @@ export const ActivityDashboardCard = ({
   color,
   classRequire = false,
 }: DashboardCardProps) => {
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  const [classes1, setClasses1] = useState<string>('All');
-  console.log('class requie====', classRequire);
-
-  const classOptions = React.useMemo(() => {
-    const allOption = { name: 'All', value: 'all' };
-    return [allOption, ...(classData?.items || [])];
-  }, [classData]);
+  const [classes1, setClasses1] = useState<string>('');
 
   return (
     <Box
@@ -197,9 +226,8 @@ export const ActivityDashboardCard = ({
       href={href}
       sx={{
         textDecoration: 'none',
-        '&:hover': {
-          textDecoration: 'none',
-        },
+        height: '100%',
+        display: 'block',
       }}
     >
       <Card
@@ -215,57 +243,84 @@ export const ActivityDashboardCard = ({
         <CardContent
           sx={{
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            flexDirection: 'column',
             height: '100%',
+            position: 'relative',
+            pt: 3, // Consistent top padding for all cards
           }}
         >
-          <Box display="flex" flexDirection="column" justifyContent="space-between" height="100%">
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-              <Box sx={{ typography: 'subtitle1' }}>{title}</Box>
-              {/* <Typography variant="h6">Total Employees</Typography> */}
-              {classRequire && (
-                <CustomSelect
-                  label="Class"
-                  name="className"
-                  options={classOptions}
-                  labelKey="name"
-                  valueKey="name"
-                  value={classes1}
-                  onChange={(val) => setClasses1(val as string)}
-                  formControlProps={{
-                    sx: {
-                      minWidth: 120,
-                      marginLeft: 'auto', // Align dropdown to the right
-                    },
-                  }}
-                />
-              )}
-            </Box>
-            {typeof value === 'number' && (
-              <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{fNumber(value)}</Box>
-            )}
-            {typeof value === 'string' && (
-              <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{value}</Box>
-            )}
-            {/* <Typography variant="h4">{stats.totalEmployees}</Typography> */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start', // Changed from center to flex-start
+              width: '100%',
+              mb: 2,
+              minHeight: classRequire ? 56 : 40, // Minimum height to accommodate dropdown
+            }}
+          >
             <Box
               sx={{
-                mt: 1.5,
-                mb: 1,
+                typography: 'subtitle1',
+                flex: 1,
+                mr: 2,
+                mt: classRequire ? 1 : 0, // Add top margin when dropdown is present
+              }}
+            >
+              {title}
+            </Box>
+            {classRequire && (
+              <CustomSelect
+                label="Class"
+                name="className"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="name"
+                value={classes1}
+                onChange={(val) => setClasses1(val as string)}
+                formControlProps={{
+                  size: 'small',
+                  sx: {
+                    minWidth: 120,
+                    '& .MuiInputBase-root': {
+                      height: 40,
+                    },
+                  },
+                }}
+              />
+            )}
+          </Box>
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box
+              sx={{
+                typography: 'h3',
+                mb: 2,
+                mt: classRequire ? 0 : 1, // Adjust margin based on presence of dropdown
+              }}
+            >
+              {typeof value === 'number' ? fNumber(value) : value}
+            </Box>
+
+            <Box
+              sx={{
                 typography: 'subtitle2',
                 display: 'flex',
                 gap: 1,
                 flexWrap: 'wrap',
+                mb: 2,
               }}
             >
               {labels.map((label, index) => (
-                <Label color={label.color || 'success'}>{label.name}</Label>
+                <Label key={index} color={label.color || 'success'}>
+                  {label.name}
+                </Label>
               ))}
             </Box>
           </Box>
-          <Iconify icon={icon} sx={{ width: 50, height: 50, color }} />
-          {/* <Typography variant="body2"></Typography> */}
+
+          <Box sx={{ position: 'absolute', right: 24, bottom: 24 }}>
+            <Iconify icon={icon} sx={{ width: 50, height: 50, color }} />
+          </Box>
         </CardContent>
       </Card>
     </Box>

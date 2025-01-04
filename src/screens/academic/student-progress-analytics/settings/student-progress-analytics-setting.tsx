@@ -12,6 +12,7 @@ import {
   Typography,
   FormControlLabel,
 } from '@mui/material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 type PeriodSetting = {
   label: string;
@@ -27,6 +28,15 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>

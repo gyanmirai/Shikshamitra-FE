@@ -15,6 +15,7 @@ import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const PerformanceAnalytics = (props: TabComponentType) => {
   const [classes1, setClasses1] = useState<string>('');
@@ -37,6 +38,15 @@ const PerformanceAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Performace Analytics"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Gradebook Performace' },
+          { name: 'Performace Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>

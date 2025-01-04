@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -38,6 +40,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TAssessment {
   id: number;
@@ -217,6 +220,15 @@ const AssessmentManagement = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Assessment Management"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Assessment Management' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box
         display="flex"
         gap={2}

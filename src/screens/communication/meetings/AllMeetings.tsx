@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -37,6 +39,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 export interface Meeting {
   id: number;
@@ -185,18 +188,22 @@ const AllMeetings = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">All Meetings</Typography>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          onClick={() => {
-            addNewMeetingDialog.onTrue();
-          }}
-        >
-          Add New Meeting
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="All Meetings"
+        links={[{ name: 'Communication' }, { name: 'Meetings' }, { name: 'All Meetings' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Iconify icon="mdi:plus" />}
+            variant="contained"
+            onClick={() => {
+              addNewMeetingDialog.onTrue();
+            }}
+          >
+            Meeting
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[

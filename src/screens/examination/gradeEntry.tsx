@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 
 import { useFormik } from 'formik';
@@ -27,6 +29,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import type { TabComponentType } from '../hr/leave-request';
 
@@ -172,6 +175,15 @@ const GradeEntry = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Grade Entry"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Grade Entry' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
           label="Class"

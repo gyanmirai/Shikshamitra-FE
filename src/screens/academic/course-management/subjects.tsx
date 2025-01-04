@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -264,6 +264,42 @@ const Subjects = (props: TabComponentType) => {
     chapterDialog.onTrue();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setSelectedSubject(row.subjectName);
+              addChapterDialog.onTrue();
+              setIsEditMode(false);
+              setSelectedChapter(null);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="mdi:plus" />
+            Chapter
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              // setSearchParams?.({
+              //   tab: 'learningResources',
+              //   class: classes,
+              //   subject: row.subjectName,
+              // });
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+            Add Learning Resources
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [addChapterDialog]
+  );
+
   return (
     <Box>
       <Typography variant="h6" marginBottom={3}>
@@ -357,41 +393,17 @@ const Subjects = (props: TabComponentType) => {
               ),
             },
             {
-              id: 'action',
-              label: 'Action',
+              id: 'actions',
+              label: 'Actions',
               isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover: pop }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedSubject(row.subjectName);
-                          addChapterDialog.onTrue();
-                          setIsEditMode(false);
-                          setSelectedChapter(null);
-                        }}
-                      >
-                        <Iconify icon="mdi:plus" />
-                        Add New Chapter
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setSearchParams?.({
-                            tab: 'learningResources',
-                            class: classes,
-                            subject: row.subjectName,
-                          });
-                        }}
-                      >
-                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-                        Add Learning Resources
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              ),
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                  />
+                );
+              },
             },
           ]}
           data={subjectTableData}
@@ -866,6 +878,7 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               onEditChapter(chapter);
+                              popover.onClose();
                             }}
                           >
                             <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />

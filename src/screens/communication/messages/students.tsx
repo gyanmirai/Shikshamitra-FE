@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
@@ -8,6 +10,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ChatView } from 'src/sections/chat/view';
 
@@ -21,6 +24,11 @@ const Students = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Students"
+        links={[{ name: 'Communication' }, { name: 'Messages' }, { name: 'Students' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <CustomSelect
         options={classData?.items || []}
         value={classes}

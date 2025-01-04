@@ -9,9 +9,7 @@ import {
   Box,
   Grid,
   Button,
-  MenuItem,
   Checkbox,
-  MenuList,
   TextField,
   Typography,
   DialogActions,
@@ -29,6 +27,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TStudentGroup {
   id: number;
@@ -85,22 +84,28 @@ const StudentGroup = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Students Group
-        </Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            // setIsEdit(false);
-            // setSelectedSubject(null);
-          }}
-        >
-          Add Group
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Student Group"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity Management' },
+          { name: 'Student Group' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              dialog.onTrue();
+              // setIsEdit(false);
+              // setSelectedSubject(null);
+            }}
+          >
+            Add Group
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[
@@ -118,51 +123,30 @@ const StudentGroup = (props: TabComponentType) => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px', mr: 1 }} />
-                      View Details
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                        pop.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="solar:pen-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    setSelectedGroup(row as TStudentGroup);
+                  }}
+                  handleEditClick={() => {
+                    setSelectedGroup(row as TStudentGroup);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedGroup(row as TStudentGroup);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={studentGroups}

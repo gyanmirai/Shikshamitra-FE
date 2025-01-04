@@ -1,10 +1,12 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 
 import { Search as SearchIcon } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, IconButton, Typography } from '@mui/material';
+import { Box, Grid, TextField, IconButton } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -14,6 +16,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
@@ -22,18 +25,11 @@ const AllEvents = (props: TabComponentType) => {
   const addEventDialog = useBoolean();
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">Events and Calendar</Typography>
-        {/* <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          onClick={() => {
-            addEventDialog.onTrue();
-          }}
-        >
-          Add New Event
-        </Button> */}
-      </Box>{' '}
+      <CustomBreadcrumbs
+        heading="All Events"
+        links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'All Events' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
         <CustomSelect
           options={[

@@ -2,23 +2,13 @@ import { useFormik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import {
-  Box,
-  Grid,
-  Chip,
-  Button,
-  MenuList,
-  MenuItem,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Chip, Button, DialogActions, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -185,22 +175,18 @@ const Teacher = ({
             {
               id: 'action',
               label: 'Action',
+              isSort: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions
-                    actions={() => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            dialog.onTrue();
-                            setSelectedTeacher(row as any);
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Reassign Teacher
-                        </MenuItem>
-                      </MenuList>
-                    )}
+                    // actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showThreeDots={false}
+                    handleEditClick={() => {
+                      dialog.onTrue();
+                      setSelectedTeacher(row as any);
+                    }}
                   />
                 );
               },

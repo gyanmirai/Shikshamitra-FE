@@ -13,7 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AppWidget } from './courseManagement';
 
 interface CourseDetail {
@@ -144,6 +144,15 @@ const CourseProgress = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Course Progress"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Course Progress' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <CustomSelect
         label="Class"
         name="class"

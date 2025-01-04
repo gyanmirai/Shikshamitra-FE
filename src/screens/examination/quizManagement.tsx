@@ -9,6 +9,7 @@ import { Tab, Box, Card } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ActiveQuiz from './quizManagement/activeQuiz';
 import ArchievedQuiz from './quizManagement/archievedQuiz';
@@ -36,7 +37,16 @@ const QuizManagement = (props: TabComponentType) => {
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
   return (
-    <>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Card
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
@@ -56,7 +66,7 @@ const QuizManagement = (props: TabComponentType) => {
       <Box px={1} pt={2}>
         {CurrentComponent?.()}
       </Box>
-    </>
+    </Box>
   );
 };
 
