@@ -2,12 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, TextField, Typography } from '@mui/material';
+import { Add, Send } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
+import {
+  Box,
+  Button,
+  TextField,
+  IconButton,
+  Typography,
+  DialogActions,
+  InputAdornment,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import { varAlpha } from 'src/theme/styles';
+
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -27,6 +41,7 @@ const FinanceBounceTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      parentsContactNumber: 9843539133,
     },
     {
       srNo: 2,
@@ -40,6 +55,7 @@ const FinanceBounceTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      parentsContactNumber: 9843539133,
     },
     {
       srNo: 3,
@@ -53,6 +69,7 @@ const FinanceBounceTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      parentsContactNumber: 9843539133,
     },
     {
       srNo: 4,
@@ -66,6 +83,7 @@ const FinanceBounceTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      parentsContactNumber: 9843539133,
     },
     {
       srNo: 5,
@@ -79,6 +97,7 @@ const FinanceBounceTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      parentsContactNumber: 9843539133,
     },
   ];
   const dialog = useBoolean();
@@ -92,6 +111,13 @@ const FinanceBounceTab = () => {
   const handleSave = () => {};
 
   useEffect(() => {}, [selectedEntry]);
+  const [, setSelectedInquiry] = useState<any>(null);
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedInquiry(null);
+  };
   return (
     <>
       {/* <CustomBreadcrumbs
@@ -130,7 +156,9 @@ const FinanceBounceTab = () => {
       <CustomizableTable
         columns={[
           //  {id:"srNo", label:"SR No"},
+
           { id: 'grNumber', label: 'GR No' },
+          { id: 'parentsContactNumber', label: 'Contact Number' },
           { id: 'chequeNumber', label: 'Cheque Number' },
           { id: 'chequeDate', label: 'Cheque Date' },
           {
@@ -151,6 +179,30 @@ const FinanceBounceTab = () => {
             label: 'Amount',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
+            },
+          },
+          {
+            id: 'conversation',
+            label: 'Conversation',
+            isSort: false,
+            align: 'center',
+            render(value, row) {
+              return (
+                <IconButton
+                  sx={{
+                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                    color: (theme) => theme.palette.primary.main,
+                    '&:hover': {
+                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                    },
+                    height: '24px',
+                    width: '24px',
+                  }}
+                  onClick={() => setOpenDialog(true)}
+                >
+                  <Add sx={{ height: '18px', width: '18px' }} />
+                </IconButton>
+              );
             },
           },
           //  {
@@ -216,6 +268,10 @@ const FinanceBounceTab = () => {
         data={chargesData}
       />
 
+      <CustomDialog open={openDialog} handleClose={handleCloseDialog} title="Communication History">
+        <CommunicationForm handleCloseDialog={handleCloseDialog} />
+      </CustomDialog>
+
       {dialog.value && (
         <FinanceChequeBounceChargeCollect
           onSave={handleSave}
@@ -229,3 +285,72 @@ const FinanceBounceTab = () => {
 };
 
 export default FinanceBounceTab;
+
+export const CommunicationForm = ({ handleCloseDialog }: any) => (
+  <Box>
+    <Scrollbar
+      sx={{
+        p: 3,
+        bgcolor: 'background.neutral',
+
+        position: 'relative',
+      }}
+    >
+      <Box height="350px" />
+
+      <Box
+        sx={{
+          // position: 'absolute',
+          // bottom: 16,
+          // right: 16,
+          // left: 16,
+          // zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          flexDirection: 'column',
+        }}
+      >
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Type a message..."
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton>
+                  <Send />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <DatePicker
+          label="Due Date"
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+        />
+        <CustomSelect
+          options={
+            [
+              // { label: 'Interested', value: 'interested' },
+              // { label: 'Not Interested', value: 'notInterested' },
+              // { label: 'Pending', value: 'pending' },
+            ]
+          }
+          value=""
+          onChange={() => {}}
+          label="Change Status"
+          formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
+        />
+      </Box>
+    </Scrollbar>
+    <DialogActions>
+      <Button onClick={handleCloseDialog} variant="outlined" color="error">
+        Close
+      </Button>
+      <Button onClick={handleCloseDialog} variant="contained">
+        Submit
+      </Button>
+    </DialogActions>
+  </Box>
+);

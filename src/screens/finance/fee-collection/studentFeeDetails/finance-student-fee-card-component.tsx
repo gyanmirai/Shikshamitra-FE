@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
-import { Box, Button, TextField } from '@mui/material';
+import { Box, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomSelect from 'src/components/custom-select';
 
-import FinanceFeeCollectionRefundTab from '../feeRefund/finance-fee-collection-refund';
+import FinanceCollectCharges from '../charges/component/collect-charges';
+import FinanceFeeRefundAllocationDialog from '../feeRefund/finance-fee-refund-allocated';
 import FinanceStudentAdditionalDiscountDialog from './component/student-additional-discount';
 import FinanceStudentInfoCardComponent from './component/finance-student-info-card-component';
 import FinanceNewCollectFeeDialog from '../collectFees/component/finance-new-fee-collect-dialog';
@@ -363,6 +364,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
   const financeStudentAdditionalDiscountDialog = useBoolean();
+  const collectChargesDialog = useBoolean();
 
   const [tableData, setTableData] = useState(dummyUser);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -405,7 +407,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             onChange={(e) => {}}
           />
         </Box>
-        <Box display="flex" justifyContent="flex-end" alignItems="center">
+        {/* <Box display="flex" justifyContent="flex-end" alignItems="center">
           <Box display="flex" flexDirection="row" gap={2}>
             <Button
               variant="contained"
@@ -414,7 +416,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
                 feeRefundDialog.onFalse();
                 dialog.onFalse();
                 setSelectedStudent(students[0]);
-                // setIsEdit(true);
+               
                 financeStudentAdditionalDiscountDialog.onTrue();
               }}
             >
@@ -438,6 +440,19 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
               variant="contained"
               size="small"
               onClick={() => {
+                feeRefundDialog.onFalse();
+                dialog.onFalse();
+                setSelectedStudent(students[0]);
+                // setIsEdit(true);
+                collectChargesDialog.onTrue();
+              }}
+            >
+              Collect Charges
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
                 financeStudentAdditionalDiscountDialog.onFalse();
                 dialog.onFalse();
                 setSelectedStudent(students[0]);
@@ -445,10 +460,10 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
                 feeRefundDialog.onTrue();
               }}
             >
-              Fee Refund
+              Process For Refund
             </Button>
           </Box>
-        </Box>
+        </Box> */}
       </Box>
       <FinanceStudentInfoCardComponent user={dummyUser} />
       {financeStudentAdditionalDiscountDialog.value && (
@@ -460,7 +475,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
       )}
 
       {feeRefundDialog.value && (
-        <FinanceFeeCollectionRefundTab
+        <FinanceFeeRefundAllocationDialog
           dialogValue={feeRefundDialog.value}
           onClose={feeRefundCloseDialog}
           selectedData={selectedStudent}
@@ -475,6 +490,15 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
           data={selectedStudent}
           isEdit={false}
           allData={tableData}
+        />
+      )}
+      {collectChargesDialog.value && (
+        <FinanceCollectCharges
+          dialogValue={collectChargesDialog.value}
+          onClose={() => {
+            collectChargesDialog.onFalse();
+          }}
+          data={selectedStudent}
         />
       )}
     </>

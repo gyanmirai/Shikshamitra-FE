@@ -136,15 +136,7 @@
 // export default FinanceStudentStructureOverviewTabScreen;
 import React, { useState } from 'react';
 
-import {
-  Box,
-  MenuList,
-  MenuItem,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -621,29 +613,34 @@ const FinanceStudentFeeManagement = () => {
               return (
                 <ThreeDotsActions
                   placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          handleOpen(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:eye" />
-                        View Details
-                      </MenuItem>
+                  showThreeDots={false}
+                  showViewIcon
+                  handleViewClick={() => {
+                    handleOpen(row);
+                  }}
+                  // actions={({ popover }: any) => (
+                  //   <MenuList>
+                  //     <MenuItem
+                  //       onClick={() => {
+                  //         handleOpen(row);
+                  //       }}
+                  //     >
+                  //       <Iconify icon="mdi:eye" />
+                  //       View Details
+                  //     </MenuItem>
 
-                      {/* <MenuItem
-                        onClick={() => {
-                          setSelectedStudent(row);
-                          dialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" />
-                        Edit
-                      </MenuItem> */}
-                    </MenuList>
-                  )}
+                  //     {/* <MenuItem
+                  //       onClick={() => {
+                  //         setSelectedStudent(row);
+                  //         dialog.onTrue();
+                  //         popover.onClose();
+                  //       }}
+                  //     >
+                  //       <Iconify icon="solar:pen-bold" />
+                  //       Edit
+                  //     </MenuItem> */}
+                  //   </MenuList>
+                  // )}
                 />
               );
             },

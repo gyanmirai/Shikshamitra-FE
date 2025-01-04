@@ -3,11 +3,12 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceNewBudgetCreateDialogProps {
   dialogValue: boolean;
@@ -69,7 +70,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
   }, [formik.values.categoryType]);
 
   return (
-    <CustomDialog title="Create New Budget" open={dialogValue} handleClose={onClose}>
+    <CustomDialog maxWidth="md" title="Create New Budget" open={dialogValue} handleClose={onClose}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Box pt="10px" display="flex" flexDirection="column" gap={3}>
@@ -101,7 +102,17 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 
             <Grid2 container spacing={2}>
               <Grid2 xs={6}>
-                <TextField
+                <NumericFormatCustom
+                  size="small"
+                  label="Fund Allocation"
+                  name="fundAllocation"
+                  value={formik.values.fundAllocation}
+                  onChange={formik.handleChange}
+                  fullWidth
+                  // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                  // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                />
+                {/* <TextField
                   name="fundAllocation"
                   label="Fund Allocation"
                   value={formik.values.fundAllocation}
@@ -109,15 +120,15 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                   size="small"
                   type="number"
                   fullWidth
-                />
+                /> */}
               </Grid2>
             </Grid2>
           </Box>
         </Scrollbar>
         <DialogActions>
-          <Button onClick={onClose} variant="contained" size="small">
+          {/* <Button onClick={onClose} variant="contained" size="small">
             Cancel
-          </Button>
+          </Button> */}
           <Button type="submit" variant="contained" size="small">
             Save
           </Button>

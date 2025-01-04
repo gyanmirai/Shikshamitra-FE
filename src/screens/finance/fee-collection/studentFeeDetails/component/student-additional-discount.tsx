@@ -6,11 +6,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceStudentAdditionalDiscountDialogProps {
   dialogValue: boolean;
@@ -286,29 +285,46 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
               render: (value: any, row: any) => {
                 if (row.feeHead === 'Tuition') {
                   return (
-                    <FormattedAmountInput
+                    <NumericFormatCustom
+                      size="small"
                       label="Tuition Discount"
-                      value={tuitionFeeRefundAmount}
-                      onChange={handleChangeForTuition}
+                      name="tuitionDiscount"
+                      value=""
+                      onChange={() => {}}
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
                   );
                 }
                 if (row.feeHead === 'Library') {
                   return (
-                    <FormattedAmountInput
+                    <NumericFormatCustom
+                      size="small"
                       label="Library Discount"
-                      value={libraryFeeRefundAmount}
-                      onChange={handleChangeForLibrary}
+                      name="libraryDiscount"
+                      value=""
+                      onChange={() => {}}
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
                   );
                 }
                 return (
                   <Box pt="20px" pb="20px">
-                    <FormattedAmountInput
+                    <NumericFormatCustom
+                      size="small"
+                      label="Total Discount"
+                      name="totalDiscount"
+                      value={totalFeeRefundAmount.toString()}
+                      onChange={() => {}}
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                    />
+                    {/* <FormattedAmountInput
                       label="Total Discount"
                       value={formatNumber(totalFeeRefundAmount.toString())}
-                      onChange={() => {}}
-                    />
+                      onChange={() => { }}
+                    /> */}
                   </Box>
                 );
               },

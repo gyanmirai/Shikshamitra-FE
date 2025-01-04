@@ -4,6 +4,7 @@ import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -17,6 +18,16 @@ const FinanceStudentPendingFeeTab = () => {
       amountDue: '5000',
       dueDate: '23-12-2024',
       action: 'mark as paid',
+      status: 'Overdue',
+    },
+    {
+      id: 2,
+      feeName: 'Sports Fee',
+
+      amountDue: '2500',
+      dueDate: '23-01-2025',
+      action: 'mark as paid',
+      status: 'Upcoming',
     },
   ];
 
@@ -32,12 +43,11 @@ const FinanceStudentPendingFeeTab = () => {
   ];
   return (
     <>
-      <Typography sx={{ mt: '14px', fontSize: '14px', fontWeight: 'bold' }}>
+      {/* <Typography sx={{ mt: '14px', fontSize: '14px', fontWeight: 'bold' }}>
         Overdue Payments List
-      </Typography>
+      </Typography> */}
       <CustomizableTable
         isShowedDense={false}
-        isFilter={false}
         isSearch={false}
         columns={[
           { id: 'feeName', label: 'Fee Name' },
@@ -50,6 +60,30 @@ const FinanceStudentPendingFeeTab = () => {
             },
           },
           { id: 'dueDate', label: 'Due Date' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return value !== '' ? (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Overdue'
+                      ? 'error'
+                      : value === 'Upcoming'
+                        ? 'warning'
+                        : value === 'Paid'
+                          ? 'success'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              ) : (
+                <Box />
+              );
+            },
+          },
           {
             id: 'action',
             label: 'Action',
@@ -75,7 +109,7 @@ const FinanceStudentPendingFeeTab = () => {
         data={overDuePaymentList}
       />
 
-      <Typography sx={{ mt: '14px', fontSize: '14px', fontWeight: 'bold' }}>
+      {/* <Typography sx={{ mt: '14px', fontSize: '14px', fontWeight: 'bold' }}>
         Upcoming Payments List
       </Typography>
       <CustomizableTable
@@ -116,7 +150,7 @@ const FinanceStudentPendingFeeTab = () => {
           },
         ]}
         data={upcomingPaymentList}
-      />
+      /> */}
       <Box pb="20px" />
     </>
   );
