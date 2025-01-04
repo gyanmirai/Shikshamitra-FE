@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
-import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -365,20 +364,27 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
               render(value, row: any) {
                 return (
                   <ThreeDotsActions
+                    showThreeDots={false}
                     placement="right-top"
-                    actions={({ popover }) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setSelectedEntry(row);
-                            detaiFeeStructure.onTrue();
-                          }}
-                        >
-                          <Iconify icon="mdi:eye" />
-                          View Details
-                        </MenuItem>
-                      </MenuList>
-                    )}
+                    showViewIcon
+                    handleViewClick={() => {
+                      setSelectedEntry(row);
+                      detaiFeeStructure.onTrue();
+                    }}
+
+                    // actions={({ popover }) => (
+                    //   <MenuList>
+                    //     <MenuItem
+                    //       onClick={() => {
+                    //         setSelectedEntry(row);
+                    //         detaiFeeStructure.onTrue();
+                    //       }}
+                    //     >
+                    //       <Iconify icon="mdi:eye" />
+                    //       View Details
+                    //     </MenuItem>
+                    //   </MenuList>
+                    // )}
                   />
                 );
               },

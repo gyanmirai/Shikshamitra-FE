@@ -29,6 +29,7 @@ const FinanceReconciliationTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      receivedChequeDate: '01-11-2024',
     },
     {
       srNo: 2,
@@ -42,6 +43,7 @@ const FinanceReconciliationTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      receivedChequeDate: '01-11-2024',
     },
     {
       srNo: 3,
@@ -55,6 +57,7 @@ const FinanceReconciliationTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      receivedChequeDate: '01-11-2024',
     },
     {
       srNo: 4,
@@ -68,6 +71,7 @@ const FinanceReconciliationTab = () => {
       chargesAmount: '300',
       feeHead: 'Library',
       grNumber: 89554,
+      receivedChequeDate: '01-11-2024',
     },
   ];
 
@@ -127,7 +131,8 @@ const FinanceReconciliationTab = () => {
           { id: 'class', label: 'Class' },
           { id: 'chequeNo', label: 'Cheque No' },
           { id: 'bankName', label: 'Bank Name' },
-          { id: 'chequeDate', label: 'Cheque Date' },
+          { id: 'chequeDate', label: 'Date On Cheque' },
+          { id: 'receivedChequeDate', label: 'Received Cheque Date' },
           // {
           //   id: 'chargesAmount',
           //   label: 'Charges',
