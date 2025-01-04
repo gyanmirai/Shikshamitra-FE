@@ -91,7 +91,7 @@ const studentModule = {
               _action: 'student-enrollment-inquiry',
             },
             {
-              title: 'Registration Form',
+              title: 'Registration Form Details',
               path: '/student/enrollment/registration-form',
               _action: 'student-enrollment-registration-form',
             },

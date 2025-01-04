@@ -1,173 +1,112 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
+import type { GenderType } from 'src/enums/gender';
+import type { Medium, Standards } from 'src/types/school';
 
-import React from 'react';
-import dayjs from 'dayjs';
-import * as Yup from 'yup';
-import { Form, Field, Formik } from 'formik';
+import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Select,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  InputLabel,
-  FormControl,
-  DialogActions,
-} from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import calculateAge from 'src/utils/calculate-age';
-
-import { GenderType, GenderTypeArray } from 'src/enums/gender';
-
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import InquiryForm from './inquiry-form';
+import InquiryTable from './inquiry-table';
 import { CommunicationForm } from '../follow-up';
 
-const dummyData = [
-  {
-    inquiryNumber: 'INQ001',
-    organization: 'ABC School',
-    batchName: 'Batch 2023',
-    class: '10th Grade',
-    studentName: 'John Doe',
-    dateOfBirth: '2005-05-15',
-    age: 18,
-    dateOfInquiry: '2023-06-01',
-    gender: 'Male',
-    address: '123 Main St, City',
-    parentsContactNo: '123-456-7890',
-    alternateContact: '987-654-3210',
-    previousSchool: 'XYZ High School',
-    inquiryPreferences: 'Science Stream',
-    progress: 85,
-  },
-  {
-    inquiryNumber: 'INQ002',
-    organization: 'XYZ Academy',
-    batchName: 'Batch 2023',
-    class: '11th Grade',
-    studentName: 'Jane Smith',
-    dateOfBirth: '2004-08-22',
-    age: 19,
-    dateOfInquiry: '2023-06-02',
-    gender: 'Female',
-    address: '456 Elm St, Town',
-    parentsContactNo: '234-567-8901',
-    alternateContact: '876-543-2109',
-    previousSchool: 'PQR Secondary School',
-    inquiryPreferences: 'Commerce Stream',
-    progress: 50,
-  },
-  {
-    inquiryNumber: 'INQ003',
-    organization: 'LMN Institute',
-    batchName: 'Batch 2023',
-    class: '12th Grade',
-    studentName: 'Mike Johnson',
-    dateOfBirth: '2003-11-10',
-    age: 20,
-    dateOfInquiry: '2023-06-03',
-    gender: 'Male',
-    address: '789 Oak St, Village',
-    parentsContactNo: '345-678-9012',
-    alternateContact: '765-432-1098',
-    previousSchool: 'DEF High School',
-    inquiryPreferences: 'Arts Stream',
-    progress: 78,
-  },
-];
+export interface IInquiryData {
+  id: string;
+  creationTime: string;
+  creatorId: string;
+  lastModificationTime: string;
+  lastModifierId: string;
+  inquiryNumber: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  formNumber: string;
+  previousSchoolName: string;
+  dateOfBirth: string;
+  age: number;
+  dateOfInquiry: string;
+  genderType: GenderType;
+  parentContactNumber: string;
+  alternativeContactNumber: string;
+  city: string;
+  state: string;
+  pinCode: number;
+  address: string;
+  educationMediumId: string;
+  academicYearId: string;
+  standerdId: string;
+  inquiryPreferenceId: string;
+  educationMedium: Medium;
+  academicYear: {
+    id: string;
+    creationTime: string;
+    creatorId: string;
+    lastModificationTime: string;
+    lastModifierId: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+  };
+  standard: Standards;
+  inquiryPreference: {
+    id: string;
+    creationTime: string;
+    creatorId: string;
+    lastModificationTime: string;
+    lastModifierId: string;
+    preferenceName: string;
+  };
+}
+
 const InquiryScreen = () => {
+  const [editData, setEditData] = useState<null | IInquiryData>(null);
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
+  const links = dialog.value
+    ? [{ name: 'Student' }, { name: 'Inquiry' }, { name: 'Inquiry Form' }]
+    : [{ name: 'Student' }, { name: 'Inquiry' }];
+
+  const handleClose = () => {
+    dialog.onFalse();
+    setEditData(null);
+  };
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Inquiry"
-        links={[{ name: 'Student' }, { name: 'Inquiry' }]}
+        links={links}
         sx={{ px: 1, mb: 2 }}
         action={
-          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            Inquiry
+          <Button
+            size="small"
+            startIcon={dialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={dialog.value ? handleClose : dialog.onTrue}
+          >
+            {dialog.value ? 'Back' : 'Inquiry'}
           </Button>
         }
       />
-      <CustomDialog
-        open={dialog.value}
-        handleClose={dialog.onFalse}
-        title="Inquiry"
-        paperProps={{
-          sx: { maxWidth: '600px', width: '100%' },
-        }}
-      >
-        <InquiryForm handleClose={dialog.onFalse} />
-      </CustomDialog>
 
-      <CustomizableTable
-        columns={[
-          { id: 'inquiryNumber', label: 'Inquiry Number', sticky: true, minWidth: '145px' },
-          { id: 'organization', label: 'Organization' },
-          { id: 'batchName', label: 'Batch Name', minWidth: '120px' },
-          { id: 'class', label: 'Class' },
-          { id: 'studentName', label: 'Student Name', minWidth: '135px' },
-          { id: 'dateOfBirth', label: 'DOB', minWidth: '120px', align: 'left' },
-          { id: 'age', label: 'Age' },
-          { id: 'dateOfInquiry', label: 'DOI', minWidth: '120px', align: 'left' },
-          { id: 'gender', label: 'Gender' },
-          { id: 'address', label: 'Address', minWidth: '120px' },
-          { id: 'parentsContactNo', label: 'Parents Co. No.', minWidth: '145px' },
-          { id: 'alternateContact', label: 'Alternate Contact Details', minWidth: '212px' },
-          { id: 'previousSchool', label: 'Previous School', minWidth: '150px' },
-          { id: 'inquiryPreferences', label: 'Enquiry Preferences', minWidth: '180px' },
+      {dialog.value ? (
+        <InquiryForm handleClose={handleClose} editData={editData} />
+      ) : (
+        <InquiryTable
+          dialog={dialog}
+          followUpDialog={followUpDialog}
+          editData={editData}
+          setEditData={setEditData}
+        />
+      )}
 
-          {
-            id: 'actions',
-            label: 'Actions',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={() => (
-                    <MenuList>
-                      <MenuItem>
-                        <Iconify icon="solar:pen-bold" sx={{ mr: 2 }} />
-                        Edit
-                      </MenuItem>
-                      <MenuItem>
-                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-                        Move To Registration
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          followUpDialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
-                        Follow Up
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
-            },
-          },
-        ]}
-        data={dummyData}
-      />
       <CustomDialog
         open={followUpDialog.value}
         handleClose={followUpDialog.onFalse}
@@ -180,391 +119,3 @@ const InquiryScreen = () => {
 };
 
 export default InquiryScreen;
-
-const validationSchema = Yup.object().shape({
-  inquiryNumber: Yup.string().required('Inquiry number is required'),
-  organization: Yup.string().required('Organization is required'),
-  academicYear: Yup.string().required('Academic Year is required'),
-  class: Yup.string().required('Class is required'),
-  lastName: Yup.string().required('Last name is required'),
-  firstName: Yup.string().required('First name is required'),
-  middleName: Yup.string(),
-  dateOfBirth: Yup.date().required('Date of birth is required'),
-  age: Yup.number()
-    .positive('Age must be positive')
-    .integer('Age must be an integer')
-    .required('Age is required'),
-  dateOfInquiry: Yup.date().required('Date of inquiry is required'),
-  gender: Yup.string()
-    .oneOf(['male', 'female', 'other'], 'Invalid gender')
-    .required('Gender is required'),
-  address: Yup.string().required('Address is required'),
-  parentsContactNo: Yup.string()
-    .matches(/^[0-9]+$/, 'Must be only digits')
-    .min(10, 'Must be at least 10 digits')
-    .required('Parents contact number is required'),
-  alternateContactDetails: Yup.string(),
-  previousSchool: Yup.string(),
-  inquiryPreferences: Yup.string(),
-});
-
-interface FormikValues {
-  inquiryNumber: string;
-  organization: string;
-  academicYear: string;
-  class: string;
-  lastName: string;
-  firstName: string;
-  middleName: string;
-  dateOfBirth: Dayjs | null;
-  age: string;
-  dateOfInquiry: Dayjs | null;
-  gender: string;
-  address: string;
-  parentsContactNo: string;
-  alternateContactDetails: string;
-  previousSchool: string;
-  inquiryPreferences: string;
-  city: string;
-  state: string;
-  pinCode: string;
-  medium: string;
-  formNo: string;
-}
-
-const InquiryForm = ({ handleClose }: any) => {
-  const initialValues = {
-    inquiryNumber: '12345',
-    organization: '',
-    medium: '',
-    academicYear: '',
-    class: '',
-    lastName: '',
-    city: '',
-    state: '',
-    pinCode: '',
-    firstName: '',
-    middleName: '',
-    dateOfBirth: null,
-    age: '',
-    dateOfInquiry: dayjs(new Date()),
-    gender: '',
-    address: '',
-    parentsContactNo: '',
-    alternateContactDetails: '',
-    previousSchool: '',
-    inquiryPreferences: '',
-    formNo: '',
-  };
-
-  const handleSubmit = (
-    values: FormikValues,
-    { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
-  ) => {
-    // Handle form submission here
-    console.log(values);
-    setSubmitting(false);
-  };
-
-  return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
-    >
-      {({ errors, touched, handleChange, isSubmitting, setFieldValue, values }) => (
-        <Form>
-          <Scrollbar
-            sx={{
-              p: 3,
-              bgcolor: 'background.neutral',
-              // height: 'calc(100vh - 150px)',
-            }}
-          >
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="inquiryNumber"
-                  label="Enquiry Number"
-                  disabled
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <CustomSelect
-                  name="medium"
-                  label="Medium"
-                  options={[]}
-                  value={values.medium}
-                  onChange={(value) => setFieldValue('medium', value)}
-                  error={!!(touched.organization && errors.organization) || false}
-                  helperText={(touched.organization && errors.organization) || ''}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <CustomSelect
-                  name="academicYear"
-                  label="Academic Year"
-                  options={[]}
-                  value={values.academicYear}
-                  onChange={(value) => setFieldValue('academicYear', value)}
-                  error={!!(touched.academicYear && errors.academicYear) || false}
-                  helperText={(touched.academicYear && errors.academicYear) || ''}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                />
-              </Grid>
-
-              <Grid item xs={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="lastName"
-                  label="Last Name"
-                  error={touched.lastName && errors.lastName}
-                  helperText={touched.lastName && errors.lastName}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="firstName"
-                  label="First Name"
-                  error={touched.firstName && errors.firstName}
-                  helperText={touched.firstName && errors.firstName}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="middleName"
-                  label="Middle Name"
-                  error={touched.middleName && errors.middleName}
-                  helperText={touched.middleName && errors.middleName}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="formNo"
-                  label="Form Number"
-                  error={touched.formNo && errors.formNo}
-                  helperText={touched.formNo && errors.formNo}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <CustomSelect
-                  name="class"
-                  label="Class"
-                  options={[]}
-                  value={values.class}
-                  onChange={(value) => setFieldValue('class', value)}
-                  error={!!(touched.class && errors.class) || false}
-                  helperText={(touched.class && errors.class) || ''}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="previousSchool"
-                  label="Previous School"
-                  error={touched.previousSchool && errors.previousSchool}
-                  helperText={touched.previousSchool && errors.previousSchool}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <DatePicker
-                  label="Date of Birth"
-                  name="dateOfBirth"
-                  value={values.dateOfBirth}
-                  format="DD/MM/YYYY"
-                  onChange={(newValue) => {
-                    const date = newValue?.format();
-                    if (date) {
-                      const age = calculateAge(date);
-                      setFieldValue('age', age);
-                    }
-                    setFieldValue('dateOfBirth', newValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
-                      error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  value={values.age}
-                  fullWidth
-                  size="small"
-                  name="age"
-                  label="Age"
-                  disabled
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <DatePicker
-                  label="Date of Inquiry"
-                  name="dateOfInquiry"
-                  value={values.dateOfInquiry}
-                  format="DD/MM/YYYY"
-                  onChange={(newValue) => setFieldValue('dateOfInquiry', newValue)}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
-                      error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="dropdown-label" size="small">
-                    Gender
-                  </InputLabel>
-                  <Select
-                    labelId="dropdown-label"
-                    id="dropdown"
-                    value={values.gender}
-                    onChange={handleChange}
-                    size="small"
-                    label="Gender"
-                    name="gender"
-                  >
-                    {GenderTypeArray.map((i, index) => (
-                      <MenuItem key={i} value={index}>
-                        {GenderType[index]}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="parentsContactNo"
-                  label="Parents Co. No."
-                  error={touched.parentsContactNo && errors.parentsContactNo}
-                  helperText={touched.parentsContactNo && errors.parentsContactNo}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="alternateContactDetails"
-                  label="Alternate Contact Details"
-                  error={touched.alternateContactDetails && errors.alternateContactDetails}
-                  helperText={touched.alternateContactDetails && errors.alternateContactDetails}
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <CustomSelect
-                  label="Enquiry Preferences"
-                  name="inquiryPreferences"
-                  options={[
-                    { label: 'Online Classes', value: 'online' },
-                    { label: 'Offline Classes', value: 'offline' },
-                    { label: 'Hybrid Learning', value: 'hybrid' },
-                    { label: 'Weekend Batches', value: 'weekend' },
-                    { label: 'Evening Classes', value: 'evening' },
-                    { label: 'Morning Classes', value: 'morning' },
-                    { label: 'Afternoon Classes', value: 'afternoon' },
-                    { label: 'One-on-One Sessions', value: 'individual' },
-                    { label: 'Group Classes', value: 'group' },
-                    { label: 'Crash Course', value: 'crash' },
-                    { label: 'Regular Batches', value: 'regular' },
-                    { label: 'Fast Track Program', value: 'fasttrack' },
-                  ]}
-                  value={values.inquiryPreferences}
-                  onChange={(value) => setFieldValue('inquiryPreferences', value)}
-                  formControlProps={{
-                    fullWidth: true,
-                    sx: {
-                      maxWidth: 'unset',
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="city"
-                  label="City"
-                  error={touched.city && errors.city}
-                  helperText={touched.city && errors.city}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="state"
-                  label="State"
-                  error={touched.state && errors.state}
-                  helperText={touched.state && errors.state}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="pinCode"
-                  label="Pincode"
-                  error={touched.pinCode && errors.pinCode}
-                  helperText={touched.pinCode && errors.pinCode}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  size="small"
-                  name="address"
-                  label="Address"
-                  error={touched.address && errors.address}
-                  helperText={touched.address && errors.address}
-                  multiline
-                  rows={4}
-                />
-              </Grid>
-            </Grid>
-          </Scrollbar>
-          <DialogActions sx={{ flexShrink: 0 }}>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button type="submit" variant="contained">
-              Submit
-            </Button>
-          </DialogActions>
-        </Form>
-      )}
-    </Formik>
-  );
-};

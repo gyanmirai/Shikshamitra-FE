@@ -13,21 +13,25 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const RegistrationFormScreen = () => (
   <Box>
     <CustomBreadcrumbs
-      heading="Registration Form"
-      links={[{ name: 'Student' }, { name: 'Student Enroll' }, { name: 'Registration Form' }]}
+      heading="Registration Form Details"
+      links={[
+        { name: 'Student' },
+        { name: 'Student Enroll' },
+        { name: 'Registration Form Details' },
+      ]}
       sx={{ px: 1, mb: 2 }}
     />
     <CustomizableTable
       columns={[
-        { id: 'inquiryNo', label: 'Inquiry No' },
-        { id: 'formNo', label: 'Form No' },
+        { id: 'inquiryNo', label: 'Inquiry No', minWidth: '104px' },
+        { id: 'formNo', label: 'Form No', minWidth: '90px' },
         // { id: 'FirstName', label: 'First Name' },
         // { id: 'MiddleName', label: 'Middle Name' },
         { id: 'Name', label: 'Name' },
         { id: 'Code', label: 'Code' },
         { id: 'class', label: 'Class' },
         { id: 'Organization', label: 'Organization' },
-        { id: 'parentContactNo', label: 'Parent Contact No' },
+        { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
         // { id: 'EmployeeDesignation', label: 'Role' },
 
         {
@@ -55,8 +59,8 @@ const RegistrationFormScreen = () => (
                         // dialog.onTrue();
                       }}
                     >
-                      <Iconify icon="fa-solid:exchange-alt" sx={{ mr: 2 }} />
-                      Change Status
+                      <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+                      Move To Registration
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
@@ -82,7 +86,7 @@ const RegistrationFormScreen = () => (
           FirstName: 'Sarah',
           MiddleName: 'Marie',
           EmployeeDesignation: 'Student',
-          StatusName: 'Completed',
+          StatusName: 'Pending',
           parentContactNo: '+91-555-0101',
           class: '5',
           inquiryNo: 'INQ001',
@@ -110,7 +114,7 @@ const RegistrationFormScreen = () => (
           FirstName: 'Emily',
           MiddleName: 'Sofia',
           EmployeeDesignation: 'Student',
-          StatusName: 'Completed',
+          StatusName: 'Pending',
           parentContactNo: '+91-555-0103',
           class: '3',
           inquiryNo: 'INQ003',
@@ -124,7 +128,7 @@ const RegistrationFormScreen = () => (
           FirstName: 'David',
           MiddleName: 'Alexander',
           EmployeeDesignation: 'Student',
-          StatusName: 'Completed',
+          StatusName: 'Pending',
           parentContactNo: '+91-555-0104',
           class: '9',
           inquiryNo: 'INQ004',

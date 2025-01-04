@@ -151,11 +151,12 @@ const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
               </Box>
             )}
             <ThreeDotsActions
-              sx={{ position: 'absolute', right: '8px', top: '8px' }}
+              sx={{ position: 'absolute', right: '8px', top: '8px', zIndex: 10 }}
               actions={({ popover }) => (
                 <MenuList>
                   <MenuItem
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setOpen(true);
                       popover.onClose();
                     }}
@@ -164,7 +165,8 @@ const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
                     Edit
                   </MenuItem>
                   <MenuItem
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       divisionDialog.onTrue();
                       popover.onClose();
                     }}
@@ -182,9 +184,9 @@ const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
                 <Typography variant="subtitle2" fontWeight={400}>
                   Class 5
                 </Typography>
-                <Typography variant="subtitle2" fontWeight={400}>
+                {/* <Typography variant="subtitle2" fontWeight={400}>
                   Submission Date 01-01-2025
-                </Typography>
+                </Typography> */}
               </Box>
             </Stack>
           </StyledItem>

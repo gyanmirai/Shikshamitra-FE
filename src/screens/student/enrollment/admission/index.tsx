@@ -34,18 +34,19 @@ import {
   Box,
   Stack,
   Paper,
+  Drawer,
   Button,
   Divider,
   TextField,
   IconButton,
   Typography,
-  ClickAwayListener,
+  drawerClasses,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { hideScrollY } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { paper, varAlpha, hideScrollY } from 'src/theme/styles';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -348,7 +349,7 @@ const AdmissionScreen = () => {
   const isSortingContainer = activeId ? columnIds.includes(activeId) : false;
 
   return (
-    <Box height="100%" className="admission-container">
+    <Box height="100%" className="admission-container" ref={ref}>
       <DashboardContent
         maxWidth={false}
         disablePadding
@@ -438,30 +439,50 @@ const AdmissionScreen = () => {
       </DashboardContent>
       {/* {container && openDetails.value && ( */}
 
-      <ClickAwayListener
+      {/* <ClickAwayListener
         onClickAway={(e) => {
-          if (ref.current.getAttribute('data-open') !== 'first') {
-            ref.current.setAttribute('data-open', 'first');
-          } else {
-            ref.current.setAttribute('data-open', '');
-            openDetails.onFalse();
-          }
+          console.log('close');
+          // openDetails.onFalse();
+          // if (ref.current.getAttribute('data-open') !== 'first') {
+          //   ref.current.setAttribute('data-open', 'first');
+          // } else {
+          //   ref.current.setAttribute('data-open', '');
+          //   openDetails.onFalse();
+          // }
+        }}
+
+      > */}
+      <Drawer
+        anchor="right"
+        open={openDetails.value}
+        onClose={openDetails.onFalse}
+        slotProps={{ backdrop: { invisible: true } }}
+        sx={{
+          [`& .${drawerClasses.paper}`]: (theme) => ({
+            ...paper({
+              theme,
+              color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9),
+            }),
+            width: 400,
+          }),
         }}
       >
         <Paper
           elevation={12}
+          component="button"
+          autoFocus
           sx={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
+            border: 'none',
             maxWidth: '400px',
             width: '100%',
             zIndex: 9999,
             height: '100%',
-            transition: 'all 0.3s ease',
-            transform: openDetails.value ? 'translateX(0)' : 'translateX(110%)',
+            textAlign: 'left',
+            // transition: 'all 0.3s ease',
+            // transform: openDetails.value ? 'translateX(0)' : 'translateX(110%)',
           }}
-          ref={ref}
+
+          // ref={ref}
         >
           <Scrollbar sx={{ height: '100%', p: 2 }}>
             <Iconify
@@ -469,10 +490,12 @@ const AdmissionScreen = () => {
               onClick={openDetails.onFalse}
               sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
             />
-            {openDetails.value && <StudentDetails />}
+            <StudentDetails />
           </Scrollbar>
         </Paper>
-      </ClickAwayListener>
+      </Drawer>
+
+      {/* </ClickAwayListener> */}
     </Box>
   );
 };
