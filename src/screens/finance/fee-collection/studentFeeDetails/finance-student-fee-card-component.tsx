@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Box, Button, TextField } from '@mui/material';
+import { Box, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -407,7 +407,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             onChange={(e) => {}}
           />
         </Box>
-        <Box display="flex" justifyContent="flex-end" alignItems="center">
+        {/* <Box display="flex" justifyContent="flex-end" alignItems="center">
           <Box display="flex" flexDirection="row" gap={2}>
             <Button
               variant="contained"
@@ -416,7 +416,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
                 feeRefundDialog.onFalse();
                 dialog.onFalse();
                 setSelectedStudent(students[0]);
-                // setIsEdit(true);
+               
                 financeStudentAdditionalDiscountDialog.onTrue();
               }}
             >
@@ -463,7 +463,7 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
               Process For Refund
             </Button>
           </Box>
-        </Box>
+        </Box> */}
       </Box>
       <FinanceStudentInfoCardComponent user={dummyUser} />
       {financeStudentAdditionalDiscountDialog.value && (
