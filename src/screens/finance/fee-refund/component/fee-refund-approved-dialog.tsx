@@ -12,6 +12,7 @@ import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import FeeConfirmationDialog from '../../fee-collection/collectFees/component/fee-confirmation-dialog';
 import ReceivedAmountWarning from '../../fee-collection/collectFees/component/received-amount-warning-dialog';
@@ -48,6 +49,8 @@ interface FormikValues {
   cashAmount: number;
   charges: number;
   chargesDetails: string;
+  refundAmount: any;
+  amountPaid: any;
 }
 
 const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogProps> = ({
@@ -83,6 +86,8 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
       cashAmount: 0,
       charges: data.previousCharges,
       chargesDetails: data.chargesDetails,
+      refundAmount: '',
+      amountPaid: '',
     },
     onSubmit: (values) => {
       onSave(values);
@@ -395,7 +400,27 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
                         ),
                       }}
                     /> */}
-                    <FormattedAmountInput
+                    <NumericFormatCustom
+                      size="small"
+                      label="Amount Paid"
+                      name="amountPaid"
+                      value={formik.values.amountPaid}
+                      onChange={formik.handleChange}
+                      fullWidth
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                    />
+                    <NumericFormatCustom
+                      size="small"
+                      label="Refund Amount"
+                      name="refundAmount"
+                      value={formik.values.refundAmount}
+                      onChange={formik.handleChange}
+                      fullWidth
+                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
+                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                    />
+                    {/* <FormattedAmountInput
                       label="Amount Paid"
                       value={amountDueState}
                       onChange={handleAmountDueChange}
@@ -404,7 +429,7 @@ const FinanceFeeRefundApprovedDialog: React.FC<FinanceFeeRefundApprovedDialogPro
                       label="Refund Amount"
                       value={receivedAmountState}
                       onChange={handleReceivedAmountChange}
-                    />
+                    /> */}
                   </Grid>
                 </Grid>
 

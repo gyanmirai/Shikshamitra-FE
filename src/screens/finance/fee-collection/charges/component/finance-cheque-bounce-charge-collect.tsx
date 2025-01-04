@@ -71,7 +71,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
     >
       <Box>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
               {/* <Typography variant="subtitle2">Student: </Typography>
 

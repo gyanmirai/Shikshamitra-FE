@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList, TextField } from '@mui/material';
+import { Box, Button, Tooltip, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -13,10 +13,16 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import FinanceFeeCollectionRefundTab from '../fee-collection/feeRefund/finance-fee-collection-refund';
+import FeeRefundRequestDialog from './component/fee-refund-request-dialog';
+import FinanceFeeRefundedViewDialog from './component/fee-refunded-view-dialog';
+import FinanceFeeRefundAllocationDialog from '../fee-collection/feeRefund/finance-fee-refund-allocated';
+import FinanceFeeCollectionRefundApprovedDialog from '../fee-collection/feeRefund/component/fee-refund-approved-dialog';
 
-const FeeRefundScreen = () => {
-  const dialog = useBoolean();
+interface FeeRefundScreenProps {
+  fromStudentDetailedView?: boolean;
+}
+
+const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedView = false }) => {
   const studentRefundData = [
     {
       studentName: 'Vishal Rameshbhai Patel',
@@ -25,7 +31,7 @@ const FeeRefundScreen = () => {
       refrenceNumber: 'refsm8q7wq',
       requestedOn: '18-11-2024',
       reason: 'Fee paid Twice',
-      status: 'Approved',
+      status: 'Pending',
       feestructureId: 'hkjl987',
       paymentTerm: 'Monthly',
       totalPending: 38000,
@@ -36,6 +42,9 @@ const FeeRefundScreen = () => {
       totalFees: 78000,
       totalDueAfterDiscount: 0,
       previousCharges: 500,
+      askForRefund: 3000,
+      reasonForRejection: '-',
+      approvedAmount: '-',
       chargesDetails:
         'The payment of 500 made by cheque in June 2024 was bounced. Cheque No: H8749.',
 
@@ -385,6 +394,10 @@ const FeeRefundScreen = () => {
   // const [selectedEntry, setSelectedEntry] = useState(dummyUser);
   // const [isEdit, setIsEdit] = useState(false);
   // const [tableData, setTableData] = useState(dummyUser);
+  const dialog = useBoolean();
+  const dialogForCreateRequest = useBoolean();
+  const dialogForApprovalRequest = useBoolean();
+  const dialogForFeeRefundedView = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
   const closeDialog = () => {
@@ -395,106 +408,394 @@ const FeeRefundScreen = () => {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Fee Refund"
-        links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      {/* <RefundTracking /> */}
-      <Box pt="20px" display="flex" flexDirection="row" gap={3}>
-        <CustomSelect
-          label="Standard"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 140 } }}
+      {!fromStudentDetailedView && (
+        <>
+          <CustomBreadcrumbs
+            heading="Fee Refund"
+            links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
+            sx={{ px: 1, mb: 2 }}
+          />
+
+          {/* Header Section */}
+          <Box
+            pt={2} // Consistent padding
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            {/* Filters Section */}
+            <Box display="flex" gap={3} alignItems="center">
+              <CustomSelect
+                label="Standard"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 140 } }}
+              />
+              <CustomSelect
+                label="Division"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 140 } }}
+              />
+              <TextField
+                label="Search by student name"
+                variant="outlined"
+                size="small"
+                value=""
+                onChange={(e) => {
+                  console.log(e.target.value);
+                }}
+              />
+            </Box>
+
+            {/* Action Button */}
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                dialogForCreateRequest.onTrue();
+              }}
+            >
+              Create Request
+            </Button>
+          </Box>
+        </>
+      )}
+
+      {fromStudentDetailedView && (
+        <CustomizableTable
+          isShowedDense={false}
+          isFilter={false}
+          isSearch={false}
+          data={studentRefundData}
+          columns={[
+            {
+              id: 'requestedOn',
+              label: 'Requested On',
+              render(value, row) {
+                return (
+                  <Typography minWidth="150px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'reason',
+              label: 'Reason',
+              render(value, row) {
+                return (
+                  <Tooltip title={value} arrow>
+                    <Typography minWidth="200px" fontSize="12px" noWrap>
+                      {value}
+                    </Typography>
+                  </Tooltip>
+                );
+              },
+            },
+            {
+              id: 'reasonForRejection',
+              label: 'Reason For Rejection',
+              render(value, row) {
+                return (
+                  <Tooltip title={value} arrow>
+                    <Typography minWidth="200px" fontSize="12px" noWrap>
+                      {value}
+                    </Typography>
+                  </Tooltip>
+                );
+              },
+            },
+            {
+              id: 'askForRefund',
+              label: 'Ask For Refund',
+              render(value, row) {
+                return (
+                  <Typography minWidth="100px" fontSize="12px" textAlign="center">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'approvedAmount',
+              label: 'Approved Amount',
+              render(value, row) {
+                return (
+                  <Typography minWidth="100px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              render(value, row) {
+                return (
+                  <Label
+                    variant="soft"
+                    color={
+                      value === 'Rejected'
+                        ? 'error'
+                        : value === 'Pending'
+                          ? 'warning'
+                          : value === 'Approved'
+                            ? 'success'
+                            : 'default'
+                    }
+                  >
+                    {value}
+                  </Label>
+                );
+              },
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              render: (row: any, popover) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showViewIcon
+                  handleViewClick={() => {
+                    setSelectedStudent(studentRefundData[0]);
+
+                    dialogForFeeRefundedView.onTrue();
+                  }}
+                  actions={() => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={() => {
+                          dialogForApprovalRequest.onTrue();
+                          // popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="mdi:check" />
+                        Approved
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setSelectedStudent(studentRefundData[0]);
+                          dialog.onTrue();
+                          // popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="uil:process" />
+                        Proceed For Refund
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              ),
+            },
+          ]}
         />
-        <CustomSelect
-          label="Division"
-          options={[]}
-          value=""
-          onChange={() => {}}
-          formControlProps={{ sx: { minWidth: 140 } }}
+      )}
+
+      {!fromStudentDetailedView && (
+        <CustomizableTable
+          data={studentRefundData}
+          columns={[
+            {
+              id: 'rollNo',
+              label: 'Roll No',
+              render(value, row) {
+                return (
+                  <Typography minWidth="120px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'studentName',
+              label: 'Student Name',
+              render(value, row) {
+                return (
+                  <Typography minWidth="180px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'standard',
+              label: 'Standard',
+              render(value, row) {
+                return (
+                  <Typography minWidth="100px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'class',
+              label: 'Class',
+              render(value, row) {
+                return (
+                  <Typography minWidth="100px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'requestedOn',
+              label: 'Requested On',
+              render(value, row) {
+                return (
+                  <Typography minWidth="150px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'reason',
+              label: 'Reason',
+              render(value, row) {
+                return (
+                  <Tooltip title={value} arrow>
+                    <Typography minWidth="200px" fontSize="12px" noWrap>
+                      {value}
+                    </Typography>
+                  </Tooltip>
+                );
+              },
+            },
+            {
+              id: 'reasonForRejection',
+              label: 'Reason For Rejection',
+              render(value, row) {
+                return (
+                  <Tooltip title={value} arrow>
+                    <Typography minWidth="200px" fontSize="12px" noWrap>
+                      {value}
+                    </Typography>
+                  </Tooltip>
+                );
+              },
+            },
+            {
+              id: 'askForRefund',
+              label: 'Ask For Refund',
+              render(value, row) {
+                return (
+                  <Typography minWidth="100px" fontSize="12px" textAlign="center">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'approvedAmount',
+              label: 'Approved Amount',
+              render(value, row) {
+                return (
+                  <Typography minWidth="100px" fontSize="12px">
+                    {value}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              render(value, row) {
+                return (
+                  <Label
+                    variant="soft"
+                    color={
+                      value === 'Rejected'
+                        ? 'error'
+                        : value === 'Pending'
+                          ? 'warning'
+                          : value === 'Approved'
+                            ? 'success'
+                            : 'default'
+                    }
+                  >
+                    {value}
+                  </Label>
+                );
+              },
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              render: (row: any, popover) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showViewIcon
+                  handleViewClick={() => {
+                    setSelectedStudent(studentRefundData[0]);
+
+                    dialogForFeeRefundedView.onTrue();
+                  }}
+                  actions={() => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={() => {
+                          dialogForApprovalRequest.onTrue();
+                          // popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="mdi:check" />
+                        Approved
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setSelectedStudent(studentRefundData[0]);
+                          dialog.onTrue();
+                          // popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="uil:process" />
+                        Proceed For Refund
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              ),
+            },
+          ]}
         />
-        <TextField
-          label="Search by student name"
-          variant="outlined"
-          size="small"
-          value=""
-          onChange={(e) => {
-            console.log(e);
+      )}
+      {dialogForApprovalRequest.value && (
+        <FinanceFeeCollectionRefundApprovedDialog
+          dialogValue={dialogForApprovalRequest.value}
+          onClose={() => {
+            dialogForApprovalRequest.onFalse();
+          }}
+          selectedData={selectedStudent}
+        />
+      )}
+
+      {dialogForCreateRequest.value && (
+        <FeeRefundRequestDialog
+          dialogValue={dialogForCreateRequest.value}
+          onClose={() => {
+            dialogForCreateRequest.onFalse();
           }}
         />
-      </Box>
-      <CustomizableTable
-        data={studentRefundData}
-        columns={[
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'standard', label: 'Standard' },
-          { id: 'class', label: 'Class' },
-          { id: 'refrenceNumber', label: 'Refrence Number' },
-          { id: 'requestedOn', label: 'Requested On' },
-          { id: 'reason', label: 'Reason' },
-          {
-            id: 'status',
-            label: 'Status',
-            render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Rejected'
-                      ? 'error'
-                      : value === 'Pending'
-                        ? 'warning'
-                        : value === 'Approved'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render: (row: any, popover) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={() => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedStudent(studentRefundData[0]);
-
-                        dialog.onTrue();
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="material-symbols-light:check" color="green" />
-                      View
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="si:close-line" color="red" />
-                      Reject
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
-          },
-        ]}
-      />
+      )}
       {dialog.value && (
-        <FinanceFeeCollectionRefundTab
+        <FinanceFeeRefundAllocationDialog
           dialogValue={dialog.value}
           onClose={closeDialog}
+          selectedData={selectedStudent}
+        />
+      )}
+
+      {dialogForFeeRefundedView.value && (
+        <FinanceFeeRefundedViewDialog
+          dialogValue={dialogForFeeRefundedView.value}
+          onClose={() => {
+            dialogForFeeRefundedView.onFalse();
+          }}
           selectedData={selectedStudent}
         />
       )}
