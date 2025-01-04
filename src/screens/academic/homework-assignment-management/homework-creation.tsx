@@ -2,6 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { Division } from 'src/types/school';
+import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
@@ -284,8 +285,11 @@ const HomeworkCreation = (props: TabComponentType) => {
     []
   );
 
-  const homeworkColumns = [
-    { id: 'class', label: 'Class' },
+  const homeworkColumns: Column[] = [
+    {
+      id: 'class',
+      label: 'Class',
+    },
     {
       id: 'division',
       label: 'Division',
@@ -297,15 +301,35 @@ const HomeworkCreation = (props: TabComponentType) => {
         </Box>
       ),
     },
-    { id: 'subject', label: 'Subject' },
-    { id: 'topic', label: 'Topic' },
-    { id: 'homeworkType', label: 'Homework Type', minWidth: '170px', align: 'left' },
-    { id: 'title', label: 'Homework Title', minWidth: '170px', align: 'left' },
-    { id: 'description', label: 'Homework Description', minWidth: '200px', align: 'left' },
+    {
+      id: 'subject',
+      label: 'Subject',
+    },
+    {
+      id: 'topic',
+      label: 'Topic',
+    },
+    {
+      id: 'homeworkType',
+      label: 'Homework Type',
+      minWidth: 170,
+      align: 'left',
+    },
+    {
+      id: 'title',
+      label: 'Homework Title',
+      minWidth: 170,
+      align: 'left',
+    },
+    {
+      id: 'description',
+      label: 'Homework Description',
+      minWidth: 200,
+      align: 'left',
+    },
     {
       id: 'dueDate',
       label: 'Due Date',
-      minWidth: '130px',
       align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
@@ -325,7 +349,7 @@ const HomeworkCreation = (props: TabComponentType) => {
     {
       id: 'isDailyTask',
       label: 'Daily Task',
-      minWidth: '150px',
+      minWidth: 150,
       align: 'left',
       render: (value: any, row: any) =>
         value ? (
@@ -334,60 +358,66 @@ const HomeworkCreation = (props: TabComponentType) => {
           <Iconify icon="healthicons:no" sx={{ color: 'red' }} />
         ),
     },
-    { id: 'dayOfSubmission', label: 'Day of Submission', minWidth: '180px', align: 'left' },
+    {
+      id: 'dayOfSubmission',
+      label: 'Day of Submission',
+      minWidth: 180,
+      align: 'left',
+    },
     {
       id: 'endDate',
       label: 'End Date',
-      minWidth: '130px',
-      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
       ),
     },
-    { id: 'submissionType', label: 'Submission Type', minWidth: '180px', align: 'left' },
+    {
+      id: 'submissionType',
+      label: 'Submission Type',
+      minWidth: 180,
+      align: 'left',
+    },
     {
       id: 'status',
       label: 'Publish',
-      render(value: any, row: any) {
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Switch
-              size="small"
-              checked={row.status === 'publish'}
-              onChange={() => handleSwitchChange(row as Assignment)}
-              inputProps={{ 'aria-label': 'Toggle view' }}
-            />
-          </Box>
-        );
-      },
+      render: (value: any, row: any) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Switch
+            size="small"
+            checked={row.status === 'publish'}
+            onChange={() => handleSwitchChange(row as Assignment)}
+            inputProps={{ 'aria-label': 'Toggle view' }}
+          />
+        </Box>
+      ),
     },
     {
       id: 'actions',
       label: 'Actions',
       isSort: false,
-      render(value: any, row: any) {
-        return (
-          <ThreeDotsActions
-            // actions={(prop) => actions({ ...prop, row })}
-            placement="right-top"
-            showViewIcon
-            showEditIcon
-            showThreeDots={false}
-            handleEditClick={() => {}}
-            handleViewClick={() => {
-              submissionDialog.onTrue();
-            }}
-          />
-        );
-      },
+      render: (value: any, row: any) => (
+        <ThreeDotsActions
+          placement="right-top"
+          showViewIcon
+          showEditIcon
+          showThreeDots={false}
+          handleEditClick={() => {}}
+          handleViewClick={() => {
+            submissionDialog.onTrue();
+          }}
+        />
+      ),
     },
   ];
 
   // Columns for Assignment view
-  const assignmentColumns = [
-    { id: 'class', label: 'Class' },
+  const assignmentColumns: Column[] = [
+    {
+      id: 'class',
+      label: 'Class',
+    },
     {
       id: 'division',
       label: 'Division',
@@ -399,14 +429,25 @@ const HomeworkCreation = (props: TabComponentType) => {
         </Box>
       ),
     },
-    { id: 'subject', label: 'Subject' },
-    { id: 'title', label: 'Assignment Title', minWidth: '170px', align: 'left' },
-    { id: 'description', label: 'Assignment Description', minWidth: '200px', align: 'left' },
+    {
+      id: 'subject',
+      label: 'Subject',
+    },
+    {
+      id: 'title',
+      label: 'Assignment Title',
+      minWidth: 170,
+      align: 'left',
+    },
+    {
+      id: 'description',
+      label: 'Assignment Description',
+      minWidth: 200,
+      align: 'left',
+    },
     {
       id: 'dueDate',
       label: 'Due Date',
-      minWidth: '130px',
-      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -422,46 +463,69 @@ const HomeworkCreation = (props: TabComponentType) => {
         </Typography>
       ),
     },
-    { id: 'submissionType', label: 'Submission Type', minWidth: '180px', align: 'left' },
-    { id: 'assignmentType', label: 'Assignment Type', minWidth: '200px', align: 'left' },
-    { id: 'topic', label: 'Topic' },
-    { id: 'assignedResources', label: 'Assigned Resources', minWidth: '200px', align: 'left' },
-    { id: 'evaluationCriteria', label: 'Evaluation Criteria', minWidth: '200px', align: 'left' },
-    { id: 'customRubric', label: 'Custom Rubric', minWidth: '150px', align: 'left' },
+    {
+      id: 'submissionType',
+      label: 'Submission Type',
+      minWidth: 180,
+      align: 'left',
+    },
+    {
+      id: 'assignmentType',
+      label: 'Assignment Type',
+      minWidth: 200,
+      align: 'left',
+    },
+    {
+      id: 'topic',
+      label: 'Topic',
+    },
+    {
+      id: 'assignedResources',
+      label: 'Assigned Resources',
+      minWidth: 200,
+      align: 'left',
+    },
+    {
+      id: 'evaluationCriteria',
+      label: 'Evaluation Criteria',
+      minWidth: 200,
+      align: 'left',
+    },
+    {
+      id: 'customRubric',
+      label: 'Custom Rubric',
+      minWidth: 150,
+      align: 'left',
+    },
     {
       id: 'status',
       label: 'Publish',
-      render(value: any, row: any) {
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Switch
-              size="small"
-              checked={row.status === 'publish'}
-              onChange={() => handleSwitchChange(row as Assignment)}
-              inputProps={{ 'aria-label': 'Toggle view' }}
-            />
-          </Box>
-        );
-      },
+      render: (value: any, row: any) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Switch
+            size="small"
+            checked={row.status === 'publish'}
+            onChange={() => handleSwitchChange(row as Assignment)}
+            inputProps={{ 'aria-label': 'Toggle view' }}
+          />
+        </Box>
+      ),
     },
     {
       id: 'action',
       label: 'Action',
-      render(value: any, row: any) {
-        return (
-          <ThreeDotsActions
-            // actions={(prop) => actions({ ...prop, row })}
-            placement="right-top"
-            showViewIcon
-            showEditIcon
-            showThreeDots={false}
-            handleEditClick={() => {}}
-            handleViewClick={() => {
-              submissionDialog.onTrue();
-            }}
-          />
-        );
-      },
+      render: (value: any, row: any) => (
+        <ThreeDotsActions
+          placement="right-top"
+          showViewIcon
+          showEditIcon
+          showThreeDots={false}
+          handleEditClick={() => {}}
+          handleViewClick={() => {
+            submissionDialog.onTrue();
+          }}
+        />
+      ),
     },
   ];
 

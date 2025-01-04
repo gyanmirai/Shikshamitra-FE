@@ -14,6 +14,7 @@ import {
   Box,
   Grid,
   Card,
+  Chip,
   Button,
   Switch,
   TextField,
@@ -407,37 +408,15 @@ const CurriculumOverview = (props: TabComponentType) => {
                     </Typography>
                   ),
                 },
-                ...curriculumTableData[0].subjects.map((_, index) => ({
-                  id: `subject${index + 1}`,
-                  label: `Subject ${index + 1}`,
-                  render: (_value: any, row: any) => {
-                    // Cast the row back to TCurriculum since we know its actual type
-                    const curriculumRow = row as TCurriculum;
-                    return (
-                      <Typography
-                        component="span"
-                        variant="body2"
-                        sx={{
-                          px: 1.5,
-                          py: 0.5,
-                          borderRadius: '16px',
-                          color: curriculumRow.subjects[index]?.color,
-                          border: `1px solid ${curriculumRow.subjects[index]?.color}`,
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => {
-                          showDialog.onTrue();
-                        }}
-                      >
-                        {curriculumRow.subjects[index]?.name
-                          ? curriculumRow.subjects[index]?.name
-                          : '-'}
-                      </Typography>
-                    );
+                {
+                  id: 'subjects',
+                  label: 'Subjects',
+                  render(value, row) {
+                    return row.subjects.map((data: any, index: any) => (
+                      <Chip size="small" label={data.name} variant="outlined" />
+                    ));
                   },
-                })),
+                },
                 {
                   id: 'status',
                   label: 'Publish',
