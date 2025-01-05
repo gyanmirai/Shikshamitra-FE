@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -44,6 +46,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -165,18 +168,22 @@ const AllSurvey = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">Scheduled Survey</Typography>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          onClick={() => {
-            addNewSurveyDialog.onTrue();
-          }}
-        >
-          Add New Survey
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="All Survey"
+        links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'All Survey' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Iconify icon="mdi:plus" />}
+            variant="contained"
+            onClick={() => {
+              addNewSurveyDialog.onTrue();
+            }}
+          >
+            Survey
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[

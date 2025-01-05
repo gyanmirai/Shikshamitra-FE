@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -10,6 +12,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -55,10 +58,19 @@ const ComparativeAnalytics = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Comparative Analytics"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Comparative Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
               <Typography variant="subtitle1">Class Comparison</Typography>
               <CustomSelect
                 label="Class"
@@ -75,7 +87,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 }}
                 value={classes1}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />{' '}
               <CustomSelect
@@ -89,7 +101,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 onChange={() => {}}
                 value=""
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -132,7 +144,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 }}
                 value={classes2}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />{' '}
             </Box>
@@ -182,7 +194,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
               }}
               value={classes1}
               formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '100%', maxWidth: '150px' },
               }}
             />{' '}
             <CustomSelect
@@ -198,7 +210,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 setDivision(val as string);
               }}
               formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '100%', maxWidth: '150px' },
               }}
             />{' '}
             <CustomSelect
@@ -215,7 +227,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
                 setSelectedStudent(val as string);
               }}
               formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '100%', maxWidth: '150px' },
               }}
             />
           </Box>

@@ -1,17 +1,16 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 
 import * as yup from 'yup';
 import React, { useState } from 'react';
 
-import { CheckBox } from '@mui/icons-material';
+import { Add, CheckBox } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
   Button,
-  Tooltip,
-  MenuList,
-  MenuItem,
   TextField,
   DialogContent,
   DialogActions,
@@ -26,11 +25,11 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import type { TabComponentType } from '../hr/leave-request';
@@ -39,17 +38,28 @@ const ScheduleExam = (props: TabComponentType) => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Tooltip title="Schedule Exam">
-          <Iconify
-            cursor="pointer"
-            icon="mdi:add-circle"
-            onClick={dialog.onTrue}
-            height={40}
-            width={40}
-          />
-        </Tooltip>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Schedule Exam"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Schedule Exam' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            size="small"
+            onClick={() => {
+              dialog.onTrue();
+            }}
+          >
+            Schedule Exam
+          </Button>
+        }
+      />
+
       <CustomizableTable
         columns={[
           { id: 'class', label: 'Class' },
@@ -65,38 +75,19 @@ const ScheduleExam = (props: TabComponentType) => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  showThreeDots={false}
                   placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          //   confirm.onTrue();
-                          popover.onClose();
-                        }}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <Iconify
-                          icon="solar:trash-bin-trash-bold"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Delete
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          //   modal.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                        Edit
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                  showEditIcon
+                  showDeleteIcon
+                  handleEditClick={() => {}}
+                  handleDeleteClick={() => {}}
                 />
               );
             },

@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -11,6 +13,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { StudentSubmissions } from './homework-creation';
 
@@ -59,6 +62,15 @@ const StudentSubmission = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Student Submission"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Homework And Assignment' },
+          { name: 'Student Submission' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
           label="Class"

@@ -1,11 +1,14 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import {
   Box,
   Grid,
+  Card,
   Switch,
   Button,
   MenuItem,
@@ -13,8 +16,6 @@ import {
   TextField,
   Typography,
   DialogActions,
-  DialogContent,
-  DialogContentText,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -25,10 +26,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TResourceData {
   id: number;
@@ -80,10 +81,11 @@ const LearningResources = (props: TabComponentType) => {
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
-  const [selectedEntry, setSelectedEntry] = useState<TResourceData | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
+  const [open, setOpen] = useState(false);
   const confirm_dialog = useBoolean();
 
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -124,7 +126,7 @@ const LearningResources = (props: TabComponentType) => {
   const closeDialog = () => {
     setIsEdit(false);
     setSelectedEntry(null);
-    dialog.onFalse();
+    setOpen(false);
   };
 
   const handleStatusChange = (id: number, value: string) => {
@@ -154,152 +156,152 @@ const LearningResources = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="solar:share-bold" />
+            Share with classes/teachers
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
-    <Box>
-      <Typography variant="h6" marginBottom={3}>
-        Learning Resources For Subject
-      </Typography>
+    <>
+      {/* Breadcrumbs Section */}
+      <CustomBreadcrumbs
+        heading="Learning Resources"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Learning Resources' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          open ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="eva:arrow-back-fill" />}
+              onClick={closeDialog}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="mdi:plus" />}
+              onClick={() => {
+                setOpen(true);
+              }}
+              disabled={!classes || !subject}
+            >
+              Resource
+            </Button>
+          )
+        }
+      />
 
-      <Box display="flex" flexDirection="row" gap={3}>
-        <CustomSelect
-          options={classData?.items || []}
-          value={classes}
-          onChange={(val) => {
-            setClasses(val as string);
-          }}
-          label="Class"
-          isLoading={isLoading}
-          labelKey="name"
-          valueKey="name"
-          formControlProps={{ sx: { minWidth: 200 } }}
-        />
-        <CustomSelect
-          label="Course/Subject"
-          disabled={!classes}
-          options={[
-            {
-              value: 'Math',
-              label: 'Math',
-            },
-            {
-              value: 'English',
-              label: 'English',
-            },
-          ]}
-          value={subject}
-          onChange={(val) => {
-            setSubject(val as string);
-          }}
-          formControlProps={{ sx: { minWidth: 200 } }}
-        />
-        <Box display="flex" justifyContent="flex-end" alignItems="center" mb={1}>
-          {' '}
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={dialog.onTrue}
-            disabled={!classes || !subject}
-          >
-            Create New Resource
-          </Button>
-        </Box>
-      </Box>
-
-      {classes && subject && (
-        <CustomizableTable
-          columns={[
-            { id: 'resourceTitle', label: 'Resource Title' },
-            { id: 'typeOfResource', label: 'Type of Resource' },
-            { id: 'className', label: 'Class' },
-            { id: 'subject', label: 'Subject' },
-            { id: 'dateUploaded', label: 'Date Uploaded' },
-            {
-              id: 'status',
-              label: 'Status',
-              render: (value: string, row: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography sx={{ mr: 2 }} fontSize={11}>
-                    Unpublish
-                  </Typography>
-                  <Switch
-                    size="small"
-                    checked={value === 'Publish'}
-                    onChange={() => handleStatusChange(row.id, value as string)}
-                  />
-                  <Typography sx={{ ml: 2 }} fontSize={11}>
-                    Publish
-                  </Typography>
-                </Box>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              render(value: any, row: any) {
-                return (
-                  <ThreeDotsActions
-                    actions={({ popover }: any) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setIsEdit(true);
-                            setSelectedEntry(row);
-                            dialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" />
-                          Edit
-                        </MenuItem>
-                        <MenuItem onClick={() => {}}>
-                          <Iconify icon="solar:share-bold" />
-                          Share with classes/teachers
-                        </MenuItem>
-                      </MenuList>
-                    )}
-                  />
-                );
-              },
-            },
-          ]}
-          data={filteredData}
-        />
+      {/* Dialog for Creating/Editing Resource */}
+      {open && (
+        <Card>
+          <CreateNewResource
+            onSave={handleSave}
+            onClose={closeDialog}
+            data={selectedEntry}
+            isEdit={isEdit}
+            currentClass={classes}
+            currentSubject={subject}
+          />
+        </Card>
       )}
 
-      <CustomDialog
-        title={isEdit ? 'Edit Resource' : 'New Resource'}
-        open={dialog.value}
-        handleClose={closeDialog}
-        maxWidth="sm"
-      >
-        <CreateNewResource
-          onSave={handleSave}
-          onClose={closeDialog}
-          data={selectedEntry}
-          isEdit={isEdit}
-          currentClass={classes}
-          currentSubject={subject}
-        />
-      </CustomDialog>
+      {!open && (
+        <>
+          {/* Filters Section */}
+          <Typography variant="h6" marginBottom={3} mt={3}>
+            Learning Resources For Subject
+          </Typography>
+          <Box display="flex" flexDirection="row" gap={2}>
+            <CustomSelect
+              options={classData?.items || []}
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              label="Class"
+              isLoading={isLoading}
+              labelKey="name"
+              valueKey="name"
+              formControlProps={{ sx: { minWidth: 150 } }}
+            />
+            <CustomSelect
+              label="Course/Subject"
+              disabled={!classes}
+              options={[
+                { value: 'Math', label: 'Math' },
+                { value: 'English', label: 'English' },
+              ]}
+              value={subject}
+              onChange={(val) => setSubject(val as string)}
+              formControlProps={{ sx: { minWidth: 150 } }}
+            />
+          </Box>
 
-      <CustomDialog
-        title="Confirm Publication"
-        open={confirm_dialog.value}
-        handleClose={cancelStatusChange}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>
-            Are you sure to {pendingStatusChange?.newStatus === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
-            this resource?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
-            Confirm
-          </Button>
-        </DialogActions>
-      </CustomDialog>
-    </Box>
+          {/* Table Section */}
+          {classes && subject && (
+            <CustomizableTable
+              columns={[
+                { id: 'resourceTitle', label: 'Resource Title' },
+                { id: 'typeOfResource', label: 'Type of Resource' },
+                { id: 'className', label: 'Class' },
+                { id: 'subject', label: 'Subject' },
+                { id: 'dateUploaded', label: 'Date Uploaded' },
+                {
+                  id: 'status',
+                  label: 'Publish',
+                  render: (value, row) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Switch
+                        size="small"
+                        checked={value === 'Publish'}
+                        onChange={() => handleStatusChange(row.id, value)}
+                      />
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isSort: false,
+                  render: (value, row) => (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showDeleteIcon
+                      showViewIcon
+                      handleViewClick={() => {}}
+                      handleDeleteClick={() => {}}
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        setSelectedEntry(row);
+                        setOpen(true);
+                      }}
+                    />
+                  ),
+                },
+              ]}
+              data={filteredData}
+            />
+          )}
+        </>
+      )}
+    </>
   );
 };
 
@@ -360,10 +362,11 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
       onSave(updatedValues);
     },
   });
+
   return (
-    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-      <Box display="flex" flexDirection="column" gap={2}>
-        <form onSubmit={formik.handleSubmit}>
+    <Box display="flex" flexDirection="column" gap={2}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, height: '350px' }}>
           <Grid container spacing={2} marginTop={1}>
             <Grid item xs={12} md={6}>
               <CustomSelect
@@ -374,7 +377,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 isLoading={isLoading}
                 labelKey="name"
                 valueKey="name"
-                formControlProps={{ sx: { minWidth: 270 } }}
+                formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -388,7 +391,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 name="subject"
                 value={formik.values.subject}
                 onChange={(val) => formik.setFieldValue('subject', val as string)}
-                formControlProps={{ sx: { minWidth: 275 } }}
+                formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -455,30 +458,30 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
               />
             </Grid>
           </Grid>
-          <DialogActions>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setIsDraft(true);
-                formik.handleSubmit();
-              }}
-              color="warning"
-            >
-              Save as Draft
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              onClick={() => {
-                setIsDraft(false);
-                formik.handleSubmit();
-              }}
-            >
-              Save and Publish
-            </Button>
-          </DialogActions>
-        </form>
-      </Box>
-    </Scrollbar>
+        </Scrollbar>
+        <DialogActions>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setIsDraft(true);
+              formik.handleSubmit();
+            }}
+            color="warning"
+          >
+            Save as Draft
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            onClick={() => {
+              setIsDraft(false);
+              formik.handleSubmit();
+            }}
+          >
+            Save and Publish
+          </Button>
+        </DialogActions>
+      </form>
+    </Box>
   );
 };

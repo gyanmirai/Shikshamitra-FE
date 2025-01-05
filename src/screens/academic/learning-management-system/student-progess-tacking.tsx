@@ -1,6 +1,8 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { School, AssignmentTurnedIn } from '@mui/icons-material';
@@ -30,6 +32,7 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -42,6 +45,15 @@ const StudentProgressTracking = (props: TabComponentType) => {
   };
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Student Progress Tracking"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Student Progress Tracking' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Typography variant="h6">Progress Dashboard</Typography>
       <Box display="flex" gap={2} mt={2}>
         <CustomSelect
@@ -49,7 +61,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
           value=""
           label="Class"
           onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
           size="small"
         />
         <CustomSelect
@@ -57,7 +69,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
           value=""
           label="Division"
           onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
           size="small"
         />
         <CustomSelect
@@ -65,7 +77,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
           value=""
           label="Student"
           onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
           size="small"
         />
         {/* <DatePicker
@@ -175,7 +187,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
             </Box>
             <Typography
               variant="h3"
-              sx={{ mt: 1, textAlign: 'center', color: '#1976d2', fontWeight: 'bold' }}
+              sx={{ mt: 1, textAlign: 'center', color: '#008000', fontWeight: 'bold' }}
             >
               14
             </Typography>
@@ -383,6 +395,24 @@ const RenderTabs = () => {
 const Assignments = () => {
   const uploadAssignmentDialog = useBoolean();
   const [subject, setSubject] = useState('');
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              uploadAssignmentDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:upload" />
+            Upload Assignment
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [uploadAssignmentDialog]
+  );
   return (
     <Box>
       <CustomSelect
@@ -405,15 +435,17 @@ const Assignments = () => {
       />
       <CustomizableTable
         columns={[
-          { id: 'subjectName', label: 'Subject Name' },
-          { id: 'assignmentType', label: 'Assignment Type' },
-          { id: 'assignmentName', label: 'Assignment Name' },
-          { id: 'assignedTeacher', label: 'Assigned Teacher' },
-          { id: 'dueDate', label: 'Due Date' },
-          { id: 'completionDate', label: 'Completion Date' },
+          { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },
+          { id: 'assignmentType', label: 'Assignment Type', minWidth: '170px', align: 'left' },
+          { id: 'assignmentName', label: 'Assignment Name', minWidth: '180px', align: 'left' },
+          { id: 'assignedTeacher', label: 'Assigned Teacher', minWidth: '180px', align: 'left' },
+          { id: 'dueDate', label: 'Due Date', minWidth: '130px', align: 'left' },
+          { id: 'completionDate', label: 'Completion Date', minWidth: '180px', align: 'left' },
           {
             id: 'gradeFeedback',
             label: 'Grade & Feedback',
+            minWidth: '180px',
+            align: 'left',
             render(value, row) {
               return (
                 <>
@@ -446,6 +478,8 @@ const Assignments = () => {
           {
             id: 'submissionStatus',
             label: 'Submission Status',
+            minWidth: '180px',
+            align: 'left',
             render(value, row) {
               return (
                 <Label
@@ -459,26 +493,17 @@ const Assignments = () => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        uploadAssignmentDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      Upload Assignment
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={[
@@ -541,6 +566,25 @@ const Assignments = () => {
 const Assessments = () => {
   const uploadAssessmentDialog = useBoolean();
   const [subject, setSubject] = useState('');
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              uploadAssessmentDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:upload" />
+            Upload Assessment
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [uploadAssessmentDialog]
+  );
+
   return (
     <Box>
       <CustomSelect
@@ -563,15 +607,17 @@ const Assessments = () => {
       />
       <CustomizableTable
         columns={[
-          { id: 'subjectName', label: 'Subject Name' },
-          { id: 'assessmentType', label: 'Assessment Type' },
-          { id: 'assessmentName', label: 'Assessment Name' },
-          { id: 'assignedTeacher', label: 'Assigned Teacher' },
-          { id: 'dueDate', label: 'Due Date' },
-          { id: 'completionDate', label: 'Completion Date' },
+          { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },
+          { id: 'assessmentType', label: 'Assessment Type', minWidth: '170px', align: 'left' },
+          { id: 'assessmentName', label: 'Assessment Name', minWidth: '170px', align: 'left' },
+          { id: 'assignedTeacher', label: 'Assigned Teacher', minWidth: '170px', align: 'left' },
+          { id: 'dueDate', label: 'Due Date', minWidth: '130px', align: 'left' },
+          { id: 'completionDate', label: 'Completion Date', minWidth: '170px', align: 'left' },
           {
             id: 'gradeFeedback',
             label: 'Grade & Feedback',
+            minWidth: '170px',
+            align: 'left',
             render(value, row) {
               return (
                 <>
@@ -604,6 +650,8 @@ const Assessments = () => {
           {
             id: 'submissionStatus',
             label: 'Submission Status',
+            minWidth: '170px',
+            align: 'left',
             render(value, row) {
               return (
                 <Label
@@ -617,26 +665,17 @@ const Assessments = () => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        uploadAssessmentDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      Upload Assessment
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={[
@@ -728,23 +767,19 @@ const LearningMaterial = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        viewLearningMaterial.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      View
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    viewLearningMaterial.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={[

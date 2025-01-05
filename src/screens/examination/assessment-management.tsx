@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -5,15 +7,15 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { PDFViewer } from '@react-pdf/renderer';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
   Button,
   Switch,
-  Tooltip,
   MenuList,
   MenuItem,
   Checkbox,
@@ -38,6 +40,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TAssessment {
   id: number;
@@ -215,8 +218,60 @@ const AssessmentManagement = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {(row.status === 'Pending' || row.status === 'Under Review') && (
+            <MenuItem
+              onClick={() => {
+                submissionDialog.onTrue();
+              }}
+            >
+              <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+              Enter Marks
+            </MenuItem>
+          )}
+          {row.status === 'Completed' && (
+            <MenuItem
+              onClick={() => {
+                //   submissionDialog.onTrue();
+              }}
+            >
+              <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
+              Publish Result
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    [submissionDialog]
+  );
+
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Assessment Management"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Assessment Management' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => {
+              newAssesmentDialog.onTrue();
+            }}
+            startIcon={<Add />}
+          >
+            Assessment
+          </Button>
+        }
+      />
       <Box
         display="flex"
         gap={2}
@@ -240,7 +295,7 @@ const AssessmentManagement = (props: TabComponentType) => {
             }}
             value={classes}
             formControlProps={{
-              sx: { width: '100%', minWidth: '200px' },
+              sx: { width: '100%', minWidth: '150px' },
             }}
           />
           <CustomSelect
@@ -254,30 +309,21 @@ const AssessmentManagement = (props: TabComponentType) => {
               setDivision(val as string);
             }}
             formControlProps={{
-              sx: { width: '100%', minWidth: '200px' },
+              sx: { width: '100%', minWidth: '150px' },
             }}
           />
         </Box>
-        <Tooltip title="Create Assessment">
-          <Iconify
-            cursor="pointer"
-            icon="mdi:add-circle"
-            onClick={newAssesmentDialog.onTrue}
-            height={40}
-            width={40}
-          />
-        </Tooltip>
       </Box>
 
       <CustomizableTable
         columns={[
           { id: 'className', label: 'Class' },
           { id: 'division', label: 'Division' },
-          { id: 'subject', label: 'Subject Name' },
-          { id: 'assesmentTitle', label: 'Assessment Title' },
-          { id: 'examName', label: 'Exam Name' },
-          { id: 'assessmentType', label: 'Assessment Type' },
-          { id: 'assignmentName', label: 'Assignment Name' },
+          { id: 'subject', label: 'Subject Name', minWidth: '150px', align: 'left' },
+          { id: 'assesmentTitle', label: 'Assessment Title', minWidth: '200px', align: 'left' },
+          { id: 'examName', label: 'Exam Name', minWidth: '150px', align: 'left' },
+          { id: 'assessmentType', label: 'Assessment Type', minWidth: '200px', align: 'left' },
+          { id: 'assignmentName', label: 'Assignment Name', minWidth: '200px', align: 'left' },
           {
             id: 'publish',
             label: 'Publish',
@@ -319,59 +365,21 @@ const AssessmentManagement = (props: TabComponentType) => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      {(row.status === 'Pending' || row.status === 'Under Review') && (
-                        <MenuItem
-                          onClick={() => {
-                            submissionDialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Enter Marks
-                        </MenuItem>
-                      )}
-                      {row.status === 'Completed' && (
-                        <MenuItem
-                          onClick={() => {
-                            //   submissionDialog.onTrue();
-                          }}
-                        >
-                          <Iconify
-                            icon="material-symbols:upload"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Publish Result
-                        </MenuItem>
-                      )}
-                      {!row.publish && (
-                        <>
-                          <MenuItem
-                            onClick={() => {
-                              //   submissionDialog.onTrue();
-                            }}
-                          >
-                            <Iconify icon="mdi:pen" sx={{ height: '16px', width: '16px' }} />
-                            Edit
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              newAssesmentDialog.onTrue();
-                              setIsEdit(true);
-                            }}
-                          >
-                            <Iconify icon="mdi:trash" sx={{ height: '16px', width: '16px' }} />
-                            Delete
-                          </MenuItem>
-                        </>
-                      )}
-                    </MenuList>
-                  )}
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    newAssesmentDialog.onTrue();
+                    setIsEdit(true);
+                  }}
+                  handleEditClick={() => {}}
                 />
               );
             },

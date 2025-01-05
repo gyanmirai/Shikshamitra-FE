@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -12,6 +14,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -37,6 +40,15 @@ const PerformanceAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Performace Analytics"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Gradebook Performace' },
+          { name: 'Performace Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
@@ -72,7 +84,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -89,7 +101,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivision1(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -162,7 +174,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -176,7 +188,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivision2(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -188,7 +200,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                 onChange={() => {}}
                 value=""
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -247,7 +259,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>
@@ -311,7 +323,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -328,7 +340,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                   setDivision4(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
               <CustomSelect
@@ -340,7 +352,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
                 onChange={() => {}}
                 value=""
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '150px' },
                 }}
               />
             </Box>

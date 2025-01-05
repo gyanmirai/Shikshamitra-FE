@@ -14,8 +14,6 @@ import {
   Switch,
   Button,
   TableRow,
-  MenuItem,
-  MenuList,
   TextField,
   TableHead,
   TableCell,
@@ -33,6 +31,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -117,6 +116,7 @@ const ActiveQuiz = () => {
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
+          size="small"
           onClick={() => {
             addQuizDialog.onTrue();
           }}
@@ -144,16 +144,16 @@ const ActiveQuiz = () => {
             },
           },
           { id: 'subject', label: 'Subject' },
-          { id: 'quizTitle', label: 'Quiz Title' },
-          { id: 'createdAt', label: 'Created At' },
-          { id: 'quizDate', label: 'Quiz Date' },
-          { id: 'quizTime', label: 'Quiz Time' },
-          { id: 'quizEndDate', label: 'Quiz End Date' },
-          { id: 'quizEndTime', label: 'Quiz End Time' },
-          { id: 'quizDuration', label: 'Quiz Duration' },
-          { id: 'attemptsAllow', label: 'Attempts Allow' },
-          { id: 'totalMakrs', label: 'Total Marks' },
-          { id: 'passingMarks', label: 'Passing Marks' },
+          { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
+          { id: 'createdAt', label: 'Created At', minWidth: '150px', align: 'left' },
+          { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
+          { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
+          { id: 'quizEndDate', label: 'Quiz End Date', minWidth: '200px', align: 'left' },
+          { id: 'quizEndTime', label: 'Quiz End Time', minWidth: '200px', align: 'left' },
+          { id: 'quizDuration', label: 'Quiz Duration', minWidth: '200px', align: 'left' },
+          { id: 'attemptsAllow', label: 'Attempts Allow', minWidth: '200px', align: 'left' },
+          { id: 'totalMakrs', label: 'Total Marks', minWidth: '200px', align: 'left' },
+          { id: 'passingMarks', label: 'Passing Marks', minWidth: '200px', align: 'left' },
           {
             id: 'status',
             label: 'Active',
@@ -174,38 +174,19 @@ const ActiveQuiz = () => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
                   placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          //   confirm.onTrue();
-                          popover.onClose();
-                        }}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <Iconify
-                          icon="solar:trash-bin-trash-bold"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Delete
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          //   modal.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                        Edit
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                  showThreeDots={false}
+                  showEditIcon
+                  showDeleteIcon
+                  handleEditClick={() => {}}
+                  handleDeleteClick={() => {}}
                 />
               );
             },
@@ -422,6 +403,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Options</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Marks</TableCell>
+              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Time(Min)</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Answer</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Edit</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete</TableCell>
@@ -487,6 +469,9 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                           <Typography variant="body2">{question.marks}</Typography>
                         </TableCell>
                         <TableCell>
+                          <Typography variant="body2">{question.questionTime}</Typography>
+                        </TableCell>
+                        <TableCell>
                           <Typography variant="body2">{question.correctAnswer}</Typography>
                         </TableCell>
                         <TableCell>
@@ -528,12 +513,15 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
   const [isRequired, setIsRequired] = useState(initialData?.isRequired || false);
   const [correctAnswer, setCorrectAnswer] = useState<any>(initialData?.correctAnswer || '');
   const [marks, setMarks] = useState(initialData?.marks?.toString() || '1');
+  const [questionTime, setQuestionTime] = useState(initialData?.questionTime?.toString() || '');
+
   const [errors, setErrors] = useState({
     question: '',
     questionType: '',
     options: '',
     correctAnswer: '',
     marks: '',
+    questionTime: '',
   });
 
   console.log('errors---', errors);
@@ -578,6 +566,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
       options: '',
       correctAnswer: '',
       marks: '',
+      questionTime: '',
     };
 
     if (!question.trim()) {
@@ -624,6 +613,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
         isRequired,
         correctAnswer,
         marks: Number(marks),
+        questionTime,
       };
       onSave(questionData);
     }
@@ -704,7 +694,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Scrollbar sx={{ p: 2, height: '300px', bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
             <CustomSelect
               label="Question Type"
               options={[
@@ -717,12 +707,12 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               required
               formControlProps={{
                 fullWidth: true,
-                sx: { minWidth: '200px' },
+                // sx: { minWidth: '200px' },
                 error: !!errors.questionType,
               }}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
             <TextField
               label="Marks"
               type="number"
@@ -736,10 +726,34 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               InputProps={{ inputProps: { min: 1 } }}
             />
           </Grid>
+
+          <Grid item xs={12} md={4}>
+            <TextField
+              label="Time (Minutes)"
+              type="number"
+              value={questionTime}
+              onChange={(e) => setQuestionTime(e.target.value)}
+              size="small"
+              fullWidth
+              required
+              error={!!errors.questionTime}
+              helperText={errors.questionTime}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Grid>
           {errors.questionType && <FormHelperText error>{errors.questionType}</FormHelperText>}
 
           <Grid item xs={12}>
-            <TextField
+            <Editor
+              value={question}
+              onChange={(value) => {
+                setQuestion(value);
+                // formik.setFieldValue('question', value);
+              }}
+              placeholder="Question"
+              sx={{ width: '100%', marginTop: '10px' }}
+            />
+            {/* <TextField
               fullWidth
               label="Question"
               name="question"
@@ -749,7 +763,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               required
               error={!!errors.question}
               helperText={errors.question}
-            />
+            /> */}
           </Grid>
 
           {questionType === 'multiple-choice' && (

@@ -2,13 +2,11 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
   Button,
-  Tooltip,
-  MenuList,
-  MenuItem,
   TextField,
   Typography,
   DialogContent,
@@ -18,7 +16,6 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -147,15 +144,16 @@ const GradingScale = () => {
         <Typography variant="h6" my={1}>
           Grading Scales
         </Typography>
-        <Tooltip title="Create Grade Scale">
-          <Iconify
-            cursor="pointer"
-            icon="mdi:add-circle"
-            onClick={dialog.onTrue}
-            height={40}
-            width={40}
-          />
-        </Tooltip>
+        <Button
+          startIcon={<Add />}
+          onClick={() => {
+            dialog.onTrue();
+          }}
+          size="small"
+          variant="contained"
+        >
+          Grade Scale
+        </Button>
       </Box>
       <CustomizableTable
         columns={[
@@ -169,43 +167,29 @@ const GradingScale = () => {
             label: 'Descriptive Scale',
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGrade(row as any);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGrade(row as any);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  showThreeDots={false}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    setSelectedGrade(row as any);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                  handleEditClick={() => {
+                    setSelectedGrade(row as any);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={grades}

@@ -8,8 +8,6 @@ import {
   Grid,
   Button,
   Switch,
-  MenuList,
-  MenuItem,
   TextField,
   Typography,
   DialogActions,
@@ -141,6 +139,7 @@ const ExamTypeSettings = () => {
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
+          size="small"
           onClick={() => {
             dialog.onTrue();
           }}
@@ -166,41 +165,29 @@ const ExamTypeSettings = () => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {row.status === 'UnPublish' && (
-                      <MenuItem
-                        onClick={() => {
-                          dialog.onTrue();
-                          setSelectedExamType(row);
-                          setIsEdit(true);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-
-                    <MenuItem
-                      onClick={() => {
-                        confirmDeleteDialog.onTrue();
-                        setSelectedExamType(row);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                  showThreeDots={false}
+                  showEditIcon
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    confirmDeleteDialog.onTrue();
+                    setSelectedExamType(row);
+                  }}
+                  handleEditClick={() => {
+                    dialog.onTrue();
+                    setSelectedExamType(row);
+                    setIsEdit(true);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={examTypeTable}
@@ -469,11 +456,12 @@ const AssessmentTypeSettings = () => {
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
+          size="small"
           onClick={() => {
             dialog.onTrue();
           }}
         >
-          Add Assessment Type
+          Assessment Type
         </Button>
       </Box>
       <CustomizableTable
@@ -494,41 +482,29 @@ const AssessmentTypeSettings = () => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {row.status === 'UnPublish' && (
-                      <MenuItem
-                        onClick={() => {
-                          dialog.onTrue();
-                          setSelectedAssessmentType(row);
-                          setIsEdit(true);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-
-                    <MenuItem
-                      onClick={() => {
-                        confirmDeleteDialog.onTrue();
-                        setSelectedAssessmentType(row);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                  showThreeDots={false}
+                  showEditIcon
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    confirmDeleteDialog.onTrue();
+                    setSelectedAssessmentType(row);
+                  }}
+                  handleEditClick={() => {
+                    dialog.onTrue();
+                    setSelectedAssessmentType(row);
+                    setIsEdit(true);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={assessmentTypeData}

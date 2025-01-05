@@ -4,9 +4,44 @@ import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, Typography } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 const Dashboard = () => (
   <Box>
+    <CustomBreadcrumbs
+      heading="Dashboard"
+      links={[
+        { name: 'Academic and Assignment' },
+        { name: 'Curriculum Management' },
+        { name: 'Dashboard' },
+      ]}
+      sx={{ px: 1, mb: 2 }}
+      action={
+        <DashBoardQuickAction
+          actions={[
+            {
+              icon: 'mdi:plus',
+              label: 'Add New Subject',
+              href: '/academic/curriculum-management/subjects',
+              color: 'primary',
+            },
+            {
+              icon: 'mdi:pencil',
+              label: 'Edit Curriculum',
+              href: '/academic/curriculum-management/curriculumOverview',
+              color: 'warning',
+            },
+            {
+              icon: 'simple-icons:googledocs',
+              label: 'General Reports',
+              href: '/academic/curriculum-management/reports',
+              color: 'secondary',
+            },
+          ]}
+        />
+      }
+    />
     <Grid2 container spacing={3}>
       <Grid2 lg={4}>
         <Card sx={{ p: 3, height: '100%' }}>

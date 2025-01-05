@@ -1,7 +1,9 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 
 import { useFormik } from 'formik';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Box,
@@ -27,6 +29,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import type { TabComponentType } from '../hr/leave-request';
 
@@ -170,8 +173,98 @@ const GradeEntry = (props: TabComponentType) => {
     }
   }, [classData?.items, classes, setSearchParams]);
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {row.status === 'Pending' && (
+            <MenuItem
+              onClick={() => {
+                viewSubmissionDialog.onTrue();
+                setSelectedStudent(row);
+              }}
+            >
+              {' '}
+              <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
+              Assign Grade
+            </MenuItem>
+          )}
+
+          {row.status === 'Assigned' && (
+            <MenuItem
+              onClick={() => {
+                //   viewSubmissionDialog.onTrue();
+                //   setSelectedStudent(row);
+              }}
+            >
+              {' '}
+              <Iconify icon="mdi:pen" sx={{ height: '16px', width: '16px' }} />
+              Edit Grade
+            </MenuItem>
+          )}
+
+          {/* {(row.status === 'Pending' || row.status === 'Overdue') && (
+                          <MenuItem onClick={() => {}}>
+                            {' '}
+                            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
+                            Send Reminder
+                          </MenuItem>
+                        )} */}
+          {/* {row.grade === 'Assign Grade' ? (
+                      <MenuItem>
+                        <Iconify
+                          icon="mingcute:notification-fill"
+                          sx={{ height: '16px', width: '16px' }}
+                        />
+                        Remind To Teacher
+                      </MenuItem>
+                    ) : (
+                      <MenuItem>
+                        <Iconify
+                          icon="material-symbols:upload"
+                          sx={{ height: '16px', width: '16px' }}
+                        />
+                        Upload to Student
+                      </MenuItem>
+                    )} */}
+          {/* <MenuItem
+                      onClick={() => {
+                        viewResultDialog.onTrue();
+                        setSelectedStudent(row);
+                      }}
+                    >
+                      {' '}
+                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+                      View Result
+                    </MenuItem> */}
+
+          {/* <MenuItem
+                      onClick={() => {
+                        viewProfile.onTrue();
+                      }}
+                    >
+                      {' '}
+                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+                      View Profile
+                    </MenuItem> */}
+        </MenuList>
+      </>
+    ),
+    [viewSubmissionDialog]
+  );
+
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Grade Entry"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Grade Entry' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
           label="Class"
@@ -265,6 +358,7 @@ const GradeEntry = (props: TabComponentType) => {
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
         <Button
           variant="contained"
+          size="small"
           startIcon={<Iconify icon="mdi:pencil" />}
           disabled={selectedStudents.length === 0}
           onClick={bulkGradeDialog.onTrue}
@@ -273,6 +367,7 @@ const GradeEntry = (props: TabComponentType) => {
         </Button>
         <Button
           variant="contained"
+          size="small"
           startIcon={<Iconify icon="material-symbols:upload" />}
           onClick={() => {}}
         >
@@ -337,88 +432,14 @@ const GradeEntry = (props: TabComponentType) => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  actions={() => (
-                    <MenuList>
-                      {row.status === 'Pending' && (
-                        <MenuItem
-                          onClick={() => {
-                            viewSubmissionDialog.onTrue();
-                            setSelectedStudent(row);
-                          }}
-                        >
-                          {' '}
-                          <Iconify
-                            icon="mdi:arrow-right-bold"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Assign Grade
-                        </MenuItem>
-                      )}
-
-                      {row.status === 'Assigned' && (
-                        <MenuItem
-                          onClick={() => {
-                            //   viewSubmissionDialog.onTrue();
-                            //   setSelectedStudent(row);
-                          }}
-                        >
-                          {' '}
-                          <Iconify icon="mdi:pen" sx={{ height: '16px', width: '16px' }} />
-                          Edit Grade
-                        </MenuItem>
-                      )}
-
-                      {/* {(row.status === 'Pending' || row.status === 'Overdue') && (
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-                            Send Reminder
-                          </MenuItem>
-                        )} */}
-                      {/* {row.grade === 'Assign Grade' ? (
-                      <MenuItem>
-                        <Iconify
-                          icon="mingcute:notification-fill"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Remind To Teacher
-                      </MenuItem>
-                    ) : (
-                      <MenuItem>
-                        <Iconify
-                          icon="material-symbols:upload"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Upload to Student
-                      </MenuItem>
-                    )} */}
-                      {/* <MenuItem
-                      onClick={() => {
-                        viewResultDialog.onTrue();
-                        setSelectedStudent(row);
-                      }}
-                    >
-                      {' '}
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                      View Result
-                    </MenuItem> */}
-
-                      {/* <MenuItem
-                      onClick={() => {
-                        viewProfile.onTrue();
-                      }}
-                    >
-                      {' '}
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                      View Profile
-                    </MenuItem> */}
-                    </MenuList>
-                  )}
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
                 />
               );
             },
@@ -510,7 +531,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" variant="contained">
+          <Button size="small" type="submit" variant="contained">
             Submit
           </Button>
         </DialogActions>

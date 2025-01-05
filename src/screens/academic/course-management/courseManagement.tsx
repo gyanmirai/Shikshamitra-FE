@@ -650,15 +650,18 @@ export const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart 
   return (
     <Box
       sx={{
-        p: 3,
-        gap: 3,
+        p: 1.5,
+        gap: 2,
         borderRadius: 2,
         display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
         position: 'relative',
         alignItems: 'center',
+        justifyContent: 'center',
         bgcolor: 'common.white',
         color: 'common.black',
+        width: '100%',
       }}
     >
       <Box
@@ -688,10 +691,23 @@ export const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart 
           }}
         />
       </Box>
-      <div>
-        <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
-        <Typography variant="h3">{fNumber(total)}</Typography>
-      </div>
+
+      <Box sx={{ textAlign: 'center' }}>
+        {total && <Typography variant="h3">{fNumber(total)}</Typography>}
+        <Typography
+          variant="subtitle2"
+          sx={{
+            mt: 1,
+            color: 'text.secondary',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%',
+          }}
+        >
+          {title}
+        </Typography>
+      </Box>
     </Box>
   );
 };

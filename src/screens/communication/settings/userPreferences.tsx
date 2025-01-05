@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -17,12 +19,15 @@ import {
 } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const UserPreferences = (props: TabComponentType) => (
-  <Box sx={{ flexGrow: 1, p: 3 }}>
-    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-      <Typography variant="h6">Notification Setting</Typography>
-    </Box>
+  <Box>
+    <CustomBreadcrumbs
+      heading="User Preferences"
+      links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'User Preferences' }]}
+      sx={{ px: 1, mb: 2 }}
+    />
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>

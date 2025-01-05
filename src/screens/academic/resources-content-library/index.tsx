@@ -27,28 +27,11 @@ const TABS = [
     label: 'All Resources',
     component: (props: TabComponentType) => <AllResources {...props} />,
   },
-  // {
-  //   value: 'categories',
-  //   label: 'Categories',
-  //   component: (props: TabComponentType) => <Categories {...props} />,
-  // },
-
-  // {
-  //   value: 'uploadContent',
-  //   label: 'Upload Content',
-  //   component: () => <UploadContent />,
-  // },
   {
     value: 'sharedWithMe',
     label: 'Shared with Me',
     component: (props: TabComponentType) => <SharedWithMe {...props} />,
   },
-  // {
-  //   value: 'favorites',
-  //   label: 'Favorites',
-  //   component: (props: TabComponentType) => <Favorite {...props} />,
-  // },
-
   {
     value: 'settings',
     label: 'Settings',

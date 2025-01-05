@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -9,14 +11,24 @@ import { Box, Grid, alpha, Paper, Button, useTheme, Typography } from '@mui/mate
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ReportsAnalytics = (props: TabComponentType) => {
   const theme = useTheme();
   return (
-    <Box sx={{ p: 1 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Reports And Analytics"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Reports And Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Typography variant="h6" sx={{ mb: 3 }}>
         Course performance
       </Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
@@ -25,7 +37,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
           value=""
           label="Course"
           onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
         />
         <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
         <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
@@ -113,7 +125,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="class"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -122,7 +134,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Student"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -131,7 +143,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Report Type"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -180,7 +192,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="class"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -189,7 +201,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Subject"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -198,7 +210,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
                   label="Assignment Status"
                   value=""
                   onChange={() => {}}
-                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>

@@ -432,7 +432,7 @@ const Settings = (props: TabComponentType) => {
             </Grid>
             <Grid item xs={4}>
               <Typography variant="h6" gutterBottom>
-                Create New Rubric
+                Rubric
               </Typography>
             </Grid>
           </Grid>

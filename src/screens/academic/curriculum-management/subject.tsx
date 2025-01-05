@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -6,9 +8,8 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { MuiColorInput } from 'mui-color-input';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-import { TimelineDot } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -16,10 +17,9 @@ import {
   Box,
   List,
   Grid,
+  Card,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
   ListItem,
   TextField,
   Typography,
@@ -44,6 +44,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface Document {
   id: string;
@@ -152,11 +153,12 @@ const Subject = (props: TabComponentType) => {
 
   console.log('filteredData--', filteredData);
 
-  const dialog = useBoolean();
+  const [open, setOpen] = useState(false);
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
   const addBulkDialog = useBoolean();
+  const [classes, setClasses] = useState('');
 
   const [selectedSubject, setSelectedSubject] = useState<TSubjectTable | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -168,19 +170,17 @@ const Subject = (props: TabComponentType) => {
 
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!searchParams?.classId) {
+      if (!classes) {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setClasses(firstClass?.id);
       }
-      const selectedClass = classData.items.find((c: any) => c.id === searchParams?.classId);
+      const selectedClass = classData.items.find((c: any) => c.id === classes);
       if (selectedClass) {
         const filtered = subjectTableData.filter((item) => item.className === selectedClass?.name);
         setFilteredData(filtered);
       }
     }
-  }, [searchParams?.classId, classData, subjectTableData, setSearchParams]);
+  }, [classData, subjectTableData, setSearchParams, classes]);
 
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
@@ -197,7 +197,7 @@ const Subject = (props: TabComponentType) => {
     } else {
       setSubjectTableData([...subjectTableData, values]);
     }
-    dialog.onFalse();
+    setOpen(false);
     setIsEdit(false);
     setSelectedSubject(null);
   };
@@ -208,7 +208,7 @@ const Subject = (props: TabComponentType) => {
   };
 
   const handleCloseDialog = () => {
-    dialog.onFalse();
+    setOpen(false);
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     setIsEdit(false);
@@ -236,171 +236,211 @@ const Subject = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  const actions = useCallback(({ popover: pop, row }: any) => <> </>, []);
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6">Subject Management</Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            setIsEdit(false);
-            setSelectedSubject(null);
-          }}
-        >
-          Add Subject
-        </Button>
-      </Box>
-      <CustomSelect
-        label="Class"
-        name="class"
-        isLoading={isLoading}
-        options={classData?.items || []}
-        valueKey="id"
-        labelKey="name"
-        formControlProps={{ sx: { width: '200px' } }}
-        value={searchParams?.classId || ''}
-        onChange={(value) => {
-          setSearchParams?.({
-            classId: value as string,
-          });
-        }}
-      />
-      <Grid2 container spacing={3}>
-        {searchParams?.classId && (
-          <CustomizableTable
-            columns={[
-              { id: 'className', label: 'Class' },
-              { id: 'subjectCode', label: 'Subject Code' },
-              { id: 'subjectName', label: 'Subject Name' },
-              {
-                id: 'subjectColor',
-                label: 'Subject Color',
-                render(value, row) {
-                  return (
-                    <TimelineDot
-                      sx={{
-                        bgcolor: value,
-                        width: '12px',
-                        height: '12px',
-                      }}
-                    />
-                  );
-                },
-              },
-              { id: 'primaryTeacher', label: 'Primary Teacher' },
-              {
-                id: 'secondaryTeacher',
-                label: 'Secondary Teacher',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((audience: string) => (
-                      // <Chip key={audience} label={audience} size="small" variant="outlined" />
-                      <Typography
-                        component="span"
-                        variant="body2"
-                        sx={{
-                          px: 1.0,
-                          py: 0.5,
-                          borderRadius: '30px',
-                          border: `1px solid black`,
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {audience}
-                      </Typography>
-                    ))}
-                  </Box>
-                ),
-              },
-              { id: 'prerequisites', label: 'Prerequisites' },
-              { id: 'learningGoal', label: 'Learning Goal' },
-              {
-                id: 'status',
-                label: 'Publish',
-                render: (value: string, row: any) => (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Switch
-                      size="small"
-                      checked={value === 'Publish'}
-                      onChange={() => handleStatusChange(row.id, value as string)}
-                    />
-                  </Box>
-                ),
-              },
-              {
-                id: 'viewChapters',
-                label: 'View Details',
-                render: (_, row) => {
-                  const subject = subjectTableData.find((s) => s.id === row.id);
-                  return (
-                    <IconButton onClick={() => subject && handleViewSubject(subject)} sx={{}}>
-                      <Iconify icon="mdi:eye" />
-                    </IconButton>
-                  );
-                },
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isSort: false,
-                render: (value, row) => (
-                  <ThreeDotsActions
-                    placement="right-top"
-                    actions={({ popover: pop }) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Subjects"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Curriculum Management' },
+              { name: 'Subjects' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleCloseDialog}
+              >
+                Back
+              </Button>
+            }
+          />
+          {/* <CustomDialog
+            maxWidth="sm"
+            open={dialog.value}
+            handleClose={handleCloseDialog}
+            title={isEdit ? 'Update Subject' : 'Add Subject'}
+          > */}
+          <Card>
+            <SubjectForm
+              onSubmit={handleSubmit}
+              onClose={handleCloseDialog}
+              data={selectedSubject}
+              isEdit={isEdit}
+            />{' '}
+          </Card>
+          {/* </CustomDialog> */}
+        </>
+      ) : (
+        <>
+          {' '}
+          <CustomBreadcrumbs
+            heading="Subjects"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Curriculum Management' },
+              { name: 'Subjects' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="contained"
+                onClick={() => {
+                  setOpen(true);
+                  setIsEdit(false);
+                  setSelectedSubject(null);
+                }}
+              >
+                Subject
+              </Button>
+            }
+          />
+          <CustomSelect
+            label="Class"
+            name="class"
+            isLoading={isLoading}
+            options={classData?.items || []}
+            valueKey="id"
+            labelKey="name"
+            formControlProps={{ sx: { width: '150px' } }}
+            value={classes}
+            onChange={(value) => {
+              // setClasses(value);
+            }}
+          />
+          <Grid2 container spacing={3}>
+            {classes && (
+              <CustomizableTable
+                columns={[
+                  { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
+                  // {
+                  //   id: 'subjectColor',
+                  //   label: 'Subject Color',
+                  //   minWidth: '130px',
+                  //   render(value, row) {
+                  //     return (
+                  //       <TimelineDot
+                  //         sx={{
+                  //           bgcolor: value,
+                  //           width: '12px',
+                  //           height: '12px',
+                  //           ml: '30px',
+                  //         }}
+                  //       />
+                  //     );
+                  //   },
+                  // },
+                  {
+                    id: 'subjectName',
+                    label: 'Subject Name',
+                    minWidth: '135px',
+                    align: 'left',
+                    render(value, row) {
+                      return (
+                        <Typography variant="caption" color={row.subjectColor}>
+                          {value}
+                        </Typography>
+                      );
+                    },
+                  },
+                  {
+                    id: 'primaryTeacher',
+                    label: 'Primary Teacher',
+                    minWidth: '150px',
+                    align: 'left',
+                  },
+                  {
+                    id: 'secondaryTeacher',
+                    label: 'Secondary Teacher',
+                    minWidth: '170px',
+                    align: 'left',
+                    render: (value) => (
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {value.map((audience: string, index: number) => (
+                          // <Chip key={audience} label={audience} size="small" variant="outlined" />
+                          // <Typography
+                          //   component="span"
+                          //   variant="body2"
+                          //   sx={{
+                          //     px: 1.0,
+                          //     py: 0.5,
+                          //     borderRadius: '30px',
+                          //     border: `1px solid black`,
+                          //     fontSize: '0.75rem',
+                          //   }}
+                          // >
+                          //   {audience}
+                          // </Typography>
+                          <Typography variant="caption">
+                            {audience}
+                            {index < value.length - 1 && ' | '}
+                          </Typography>
+                        ))}
+                      </Box>
+                    ),
+                  },
+                  { id: 'prerequisites', label: 'Prerequisites' },
+                  { id: 'learningGoal', label: 'Learning Goal', minWidth: '150px', align: 'left' },
+                  {
+                    id: 'status',
+                    label: 'Publish',
+                    render: (value: string, row: any) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Switch
+                          size="small"
+                          checked={value === 'Publish'}
+                          onChange={() => handleStatusChange(row.id, value as string)}
+                        />
+                      </Box>
+                    ),
+                  },
+                  {
+                    id: 'action',
+                    label: 'Action',
+                    isSort: false,
+                    render(value, row) {
+                      const subject = subjectTableData.find((s) => s.id === row.id);
+                      return (
+                        <ThreeDotsActions
+                          // actions={(prop) => actions({ ...props, row })}
+                          placement="right-top"
+                          showViewIcon
+                          showEditIcon
+                          showDeleteIcon
+                          showThreeDots={false}
+                          handleViewClick={() => {
+                            if (subject) {
+                              handleViewSubject(subject);
+                            }
+                          }}
+                          handleEditClick={() => {
                             setSelectedSubject(row as any);
                             setIsEdit(true);
-                            dialog.onTrue();
+                            setOpen(true);
                           }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Edit
-                        </MenuItem>
-
-                        {row.status === 'Publish' && (
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedSubject(row as any);
-                              deleteConfirmDialog.onTrue();
-                              pop.onClose();
-                            }}
-                            sx={{ color: 'error.main' }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                        )}
-                      </MenuList>
-                    )}
-                  />
-                ),
-              },
-            ]}
-            data={filteredData}
-          />
-        )}
-      </Grid2>
-
-      <CustomDialog
-        maxWidth="sm"
-        open={dialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Subject' : 'Add Subject'}
-      >
-        <SubjectForm
-          onSubmit={handleSubmit}
-          onClose={dialog.onFalse}
-          data={selectedSubject}
-          isEdit={isEdit}
-        />{' '}
-      </CustomDialog>
+                          handleDeleteClick={() => {
+                            setSelectedSubject(row as any);
+                            deleteConfirmDialog.onTrue();
+                          }}
+                        />
+                      );
+                    },
+                  },
+                ]}
+                data={filteredData}
+              />
+            )}
+          </Grid2>
+        </>
+      )}
 
       <CustomDialog
         maxWidth="sm"
@@ -768,7 +808,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '300px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <CustomSelect

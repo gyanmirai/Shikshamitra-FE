@@ -9,6 +9,7 @@ import { Tab, Box, Card } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradeScaling from './settings/gradeScaling';
 import ExamAssessmentType from './settings/examType';
@@ -42,7 +43,16 @@ const Setting = (props: TabComponentType) => {
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
   return (
-    <>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Card
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
@@ -62,7 +72,7 @@ const Setting = (props: TabComponentType) => {
       <Box px={1} pt={2}>
         {CurrentComponent?.()}
       </Box>
-    </>
+    </Box>
   );
 };
 

@@ -94,7 +94,7 @@ const TimetableScheduleManagementScreen = () => {
             });
           }}
         >
-          Create New TimeTable
+          TimeTable
         </Button>
 
         <Button
@@ -134,7 +134,7 @@ const TimetableScheduleManagementScreen = () => {
             });
           }}
         >
-          Add New Room
+          Room
         </Button>
       </Box>
       <Card

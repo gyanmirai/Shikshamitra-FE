@@ -1,3 +1,5 @@
+'use client';
+
 import type { CardProps } from '@mui/material';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -22,6 +24,8 @@ import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -53,6 +57,39 @@ const Dashboard = (props: TabComponentType) => {
   const theme = useTheme();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Resource Content Library' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Resource',
+                href: '/academic/resources-content-library/allResources',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:share-variant',
+                label: 'My Share',
+                href: '/academic/resources-content-library/sharedWithMe',
+                color: 'warning',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Resource Category',
+                href: '/academic/resources-content-library/settings',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card
