@@ -1,7 +1,7 @@
 'use client';
 
 import type { GenderType } from 'src/enums/gender';
-import type { Medium, Standards } from 'src/types/school';
+import type { Medium, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
 
@@ -31,7 +31,6 @@ export interface IInquiryData {
   formNumber: string;
   previousSchoolName: string;
   dateOfBirth: string;
-  age: number;
   dateOfInquiry: string;
   genderType: GenderType;
   parentContactNumber: string;
@@ -41,20 +40,12 @@ export interface IInquiryData {
   pinCode: number;
   address: string;
   educationMediumId: string;
+  educationBoardId: string;
   academicYearId: string;
   standerdId: string;
   inquiryPreferenceId: string;
   educationMedium: Medium;
-  academicYear: {
-    id: string;
-    creationTime: string;
-    creatorId: string;
-    lastModificationTime: string;
-    lastModifierId: string;
-    name: string;
-    startDate: string;
-    endDate: string;
-  };
+  academicYear: AcademicYear;
   standard: Standards;
   inquiryPreference: {
     id: string;
@@ -65,14 +56,18 @@ export interface IInquiryData {
     preferenceName: string;
   };
 }
-
 const InquiryScreen = () => {
   const [editData, setEditData] = useState<null | IInquiryData>(null);
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
   const links = dialog.value
-    ? [{ name: 'Student' }, { name: 'Inquiry' }, { name: 'Inquiry Form' }]
-    : [{ name: 'Student' }, { name: 'Inquiry' }];
+    ? [
+        { name: 'Student' },
+        { name: 'Student Enrollment' },
+        { name: 'Inquiry' },
+        { name: 'Inquiry Form' },
+      ]
+    : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
 
   const handleClose = () => {
     dialog.onFalse();

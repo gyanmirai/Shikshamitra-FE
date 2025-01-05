@@ -1,8 +1,10 @@
 import type { Dayjs } from 'dayjs';
+import type { Board } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
+import { matchIsValidTel } from 'mui-tel-input';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -19,8 +21,11 @@ import {
 } from '@mui/material';
 
 import calculateAge from 'src/utils/calculate-age';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
+import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
@@ -29,36 +34,44 @@ import {
   useUpdateStudentInquiryMutation,
 } from 'src/redux/student/inquiry/inquiry-api';
 
+import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 
 import type { IInquiryData } from '.';
 
 const validationSchema = Yup.object().shape({
-  inquiryNumber: Yup.string().required('Inquiry number is required'),
-  organization: Yup.string().required('Organization is required'),
+  inquiryNumber: Yup.string(),
+  organization: Yup.string(),
   academicYear: Yup.string().required('Academic Year is required'),
   class: Yup.string().required('Class is required'),
   lastName: Yup.string().required('Last name is required'),
   firstName: Yup.string().required('First name is required'),
   middleName: Yup.string(),
   dateOfBirth: Yup.date().required('Date of birth is required'),
-  age: Yup.number()
-    .positive('Age must be positive')
-    .integer('Age must be an integer')
-    .required('Age is required'),
+  age: Yup.string().required('Age is required'),
   dateOfInquiry: Yup.date().required('Date of inquiry is required'),
   gender: Yup.string()
-    .oneOf(['male', 'female', 'other'], 'Invalid gender')
+    // .oneOf(['male', 'female', 'other'], 'Invalid gender')
     .required('Gender is required'),
   address: Yup.string().required('Address is required'),
   parentsContactNo: Yup.string()
-    .matches(/^[0-9]+$/, 'Must be only digits')
-    .min(10, 'Must be at least 10 digits')
+    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
+      matchIsValidTel((value || '') as string)
+    )
     .required('Parents contact number is required'),
-  alternateContactDetails: Yup.string(),
+  alternateContactDetails: Yup.string().test('Mobile NO', 'ContactNo is not valid', (value) =>
+    value ? matchIsValidTel(value as string) : true
+  ),
   previousSchool: Yup.string(),
   inquiryPreferences: Yup.string(),
+  pinCode: Yup.number()
+    .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
+    .required('Pin code is required'),
+  state: Yup.string().required('State is required'),
+  city: Yup.string().required('City is required'),
+  // board: Yup.string().required('Board is required'),
+  // medium: Yup.string().required('Medium is required'),
 });
 
 interface FormikValues {
@@ -83,6 +96,7 @@ interface FormikValues {
   pinCode: number;
   medium: string;
   formNo: string;
+  board: string;
 }
 
 const InquiryForm = ({
@@ -105,7 +119,8 @@ const InquiryForm = ({
     firstName: editData?.firstName || '',
     middleName: editData?.middleName || '',
     dateOfBirth: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
-    age: editData?.age || '',
+    age: editData?.dateOfBirth ? calculateAge(dayjs(editData?.dateOfBirth).format()) : '',
+    // age: editData?.age || '',
     dateOfInquiry: editData?.dateOfInquiry ? dayjs(editData?.dateOfInquiry) : dayjs(new Date()),
     gender: editData?.genderType || GenderType.Male,
     address: editData?.address || '',
@@ -113,7 +128,9 @@ const InquiryForm = ({
     alternateContactDetails: editData?.alternativeContactNumber || '',
     previousSchool: editData?.previousSchoolName || '',
     inquiryPreferences: editData?.inquiryPreferenceId || '',
+    board: editData?.educationBoardId || '',
     formNo: editData?.formNumber || '',
+    // organization: editData?. || '',
   };
   const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
     type: 'query',
@@ -122,6 +139,14 @@ const InquiryForm = ({
   const { data: classes, isLoading: classLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
+  });
+  const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetYearQuery,
+  });
+  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
   });
 
   const [addInquiry] = useQueryAndMutation({
@@ -152,9 +177,10 @@ const InquiryForm = ({
                   lastName: values.lastName,
                   formNumber: values.formNo,
                   previousSchoolName: values.previousSchool,
-                  dateOfBirth: values.dateOfBirth?.format('YYYY-MM-DD') || '',
-                  age: values.age,
-                  dateOfInquiry: values.dateOfInquiry?.format('YYYY-MM-DD') || '',
+                  dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
+                  // age: values.age,
+                  dateOfInquiry:
+                    dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
                   genderType: values.gender,
                   parentContactNumber: values.parentsContactNo,
                   alternativeContactNumber: values.alternateContactDetails,
@@ -166,6 +192,8 @@ const InquiryForm = ({
                   academicYearId: values.academicYear,
                   standerdId: values.class,
                   inquiryPreferenceId: values.inquiryPreferences,
+
+                  educationBoardId: values.board,
                 },
               });
             } else {
@@ -175,9 +203,9 @@ const InquiryForm = ({
                 lastName: values.lastName,
                 formNumber: values.formNo,
                 previousSchoolName: values.previousSchool,
-                dateOfBirth: values.dateOfBirth?.format('YYYY-MM-DD') || '',
-                age: values.age,
-                dateOfInquiry: values.dateOfInquiry?.format('YYYY-MM-DD') || '',
+                dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
+                // age: values.age,
+                dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
                 genderType: values.gender,
                 parentContactNumber: values.parentsContactNo,
                 alternativeContactNumber: values.alternateContactDetails,
@@ -189,8 +217,10 @@ const InquiryForm = ({
                 academicYearId: values.academicYear,
                 standerdId: values.class,
                 inquiryPreferenceId: values.inquiryPreferences,
+                educationBoardId: values.board,
               });
             }
+            handleClose();
           } catch (error) {
             console.error('Error:', error);
           }
@@ -221,28 +251,64 @@ const InquiryForm = ({
                 </Grid> */}
                 <Grid item xs={12} md={4}>
                   <CustomSelect
-                    name="medium"
-                    label="Medium"
-                    options={[]}
-                    value={values.medium}
-                    onChange={(value) => setFieldValue('medium', value)}
-                    error={!!(touched.medium && errors.medium) || false}
-                    helperText={(touched.medium && errors.medium) || ''}
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <CustomSelect
                     name="academicYear"
                     label="Academic Year"
-                    options={[]}
+                    isLoading={yearLoading}
+                    options={academicYear?.items || []}
                     value={values.academicYear}
+                    labelKey="name"
+                    valueKey="id"
                     onChange={(value) => setFieldValue('academicYear', value)}
                     error={!!(touched.academicYear && errors.academicYear) || false}
                     helperText={(touched.academicYear && errors.academicYear) || ''}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </Grid>
+                <Grid item xs={12} md={4}>
+                  <CustomSelect
+                    name="board"
+                    label="Board"
+                    isLoading={boardLoading}
+                    options={board?.items || []}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.board}
+                    onChange={(value) => setFieldValue('board', value)}
+                    error={!!(touched.board && errors.board) || false}
+                    helperText={(touched.board && errors.board) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <CustomSelect
+                    name="medium"
+                    label="Medium"
+                    disabled={!values.board}
+                    options={
+                      board?.items?.find((item: Board) => item.id === values.board)
+                        ?.educationMediums || []
+                    }
+                    value={values.medium}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={(value) => setFieldValue('medium', value)}
+                    error={!!(touched.medium && errors.medium) || false}
+                    helperText={(touched.medium && errors.medium) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </Grid>
+                {/* <Grid item xs={12} md={4}>
+                  <CustomSelect
+                    name="organization"
+                    label="organization"
+                    options={[]}
+                    value={values.organization}
+                    onChange={(value) => setFieldValue('organization', value)}
+                    error={!!(touched.organization && errors.organization) || false}
+                    helperText={(touched.organization && errors.organization) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </Grid> */}
 
                 <Grid item xs={4}>
                   <Field
@@ -389,25 +455,33 @@ const InquiryForm = ({
                 </Grid>
 
                 <Grid item xs={6}>
-                  <Field
-                    as={TextField}
-                    fullWidth
-                    size="small"
+                  <PhoneInput
                     name="parentsContactNo"
-                    label="Parents Co. No."
-                    error={touched.parentsContactNo && errors.parentsContactNo}
+                    value={values.parentsContactNo}
+                    onChange={(value) => {
+                      setFieldValue('parentsContactNo', value);
+                    }}
+                    placeholder="Parents Contact No."
+                    error={touched.parentsContactNo && Boolean(errors.parentsContactNo)}
                     helperText={touched.parentsContactNo && errors.parentsContactNo}
+                    variant="outlined"
+                    size="small"
                   />
                 </Grid>
                 <Grid item xs={6}>
-                  <Field
-                    as={TextField}
-                    fullWidth
-                    size="small"
+                  <PhoneInput
                     name="alternateContactDetails"
-                    label="Alternate Contact Details"
-                    error={touched.alternateContactDetails && errors.alternateContactDetails}
+                    value={values.alternateContactDetails}
+                    onChange={(value) => {
+                      setFieldValue('alternateContactDetails', value);
+                    }}
+                    placeholder="Alternate Contact Details"
+                    error={
+                      touched.alternateContactDetails && Boolean(errors.alternateContactDetails)
+                    }
                     helperText={touched.alternateContactDetails && errors.alternateContactDetails}
+                    variant="outlined"
+                    label="Alternate Contact Details"
                   />
                 </Grid>
 

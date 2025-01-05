@@ -7,7 +7,7 @@ export const StudentInquiryApi = createApi({
   baseQuery: axiosBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   }),
-  tagTypes: ['Student-Document-Type'],
+  tagTypes: ['Student-Inquiry'],
   endpoints: (builder) => ({
     getStudentInquiry: builder.query({
       query: (params) => ({
@@ -15,6 +15,7 @@ export const StudentInquiryApi = createApi({
         method: 'GET',
         params,
       }),
+      providesTags: ['Student-Inquiry'],
     }),
     addStudentInquiry: builder.mutation({
       query: (body) => ({
@@ -22,6 +23,7 @@ export const StudentInquiryApi = createApi({
         method: 'POST',
         data: body,
       }),
+      invalidatesTags: ['Student-Inquiry'],
     }),
     updateStudentInquiry: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,12 +31,15 @@ export const StudentInquiryApi = createApi({
         method: 'PUT',
         data: body,
       }),
+      invalidatesTags: ['Student-Inquiry'],
     }),
+
     deleteStudentInquiry: builder.mutation({
       query: (id) => ({
         url: `/app/student-inquiry/${id}`,
         method: 'DELETE',
       }),
+      invalidatesTags: ['Student-Inquiry'],
     }),
   }),
 });
