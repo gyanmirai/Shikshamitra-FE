@@ -158,110 +158,98 @@ const Settings = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Settings"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Curriculum Management' },
-          { name: 'Settings' },
-        ]}
+        links={[{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Settings' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ mb: 1, mt: 4 }}>
-        <Typography variant="h6">General Settings</Typography>
-        <Card sx={{ p: 2, mt: 1 }}>
-          <Box
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
-          >
-            <Typography variant="h6" sx={{ pl: '20px' }}>
-              Curriculum Templates
-            </Typography>
-            <Button
-              startIcon={<Add />}
-              size="small"
-              variant="contained"
-              onClick={() => {
-                setIsEdit(false);
-                setSelectedTemplate(null);
-                dialog.onTrue();
-              }}
-            >
-              Template
-            </Button>
-          </Box>
-          <CustomizableTable
-            columns={[
-              { id: 'templateName', label: 'Template Name' },
-              { id: 'className', label: 'Class' },
-              {
-                id: 'subjects',
-                label: 'Subjects',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((audience: string) => (
-                      <Chip key={audience} label={audience} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'status',
-                label: 'Publish',
-                render: (value: string, row: any) => (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Switch
-                      size="small"
-                      checked={value === 'Publish'}
-                      onChange={() => handleStatusChange(row.id, value as string)}
-                    />
-                  </Box>
-                ),
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isSort: false,
-                render: (value, row) => (
-                  <ThreeDotsActions
-                    placement="right-top"
-                    actions={({ popover: pop }) => (
-                      <MenuList>
-                        {row.status === 'Unpublish' && (
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedTemplate(row as any);
-                              setIsEdit(true);
-                              dialog.onTrue();
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                            Edit
-                          </MenuItem>
-                        )}
-                        {row.status === 'Publish' && (
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedTemplate(row as any);
-                              deleteConfirmDialog.onTrue();
-                              pop.onClose();
-                            }}
-                            sx={{ color: 'error.main' }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                        )}
-                      </MenuList>
-                    )}
-                  />
-                ),
-              },
-            ]}
-            data={templateData}
-          />
-        </Card>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography variant="h6">Curriculum Templates</Typography>
+        <Button
+          startIcon={<Add />}
+          size="small"
+          variant="contained"
+          onClick={() => {
+            setIsEdit(false);
+            setSelectedTemplate(null);
+            dialog.onTrue();
+          }}
+        >
+          Template
+        </Button>
       </Box>
+      <CustomizableTable
+        columns={[
+          { id: 'templateName', label: 'Template Name' },
+          { id: 'className', label: 'Class' },
+          {
+            id: 'subjects',
+            label: 'Subjects',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
+          },
+          {
+            id: 'status',
+            label: 'Publish',
+            render: (value: string, row: any) => (
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Switch
+                  size="small"
+                  checked={value === 'Publish'}
+                  onChange={() => handleStatusChange(row.id, value as string)}
+                />
+              </Box>
+            ),
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                actions={({ popover: pop }) => (
+                  <MenuList>
+                    {row.status === 'Unpublish' && (
+                      <MenuItem
+                        onClick={() => {
+                          setSelectedTemplate(row as any);
+                          setIsEdit(true);
+                          dialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+                        Edit
+                      </MenuItem>
+                    )}
+                    {row.status === 'Publish' && (
+                      <MenuItem
+                        onClick={() => {
+                          setSelectedTemplate(row as any);
+                          deleteConfirmDialog.onTrue();
+                          pop.onClose();
+                        }}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <Iconify
+                          icon="solar:trash-bin-trash-bold"
+                          sx={{ height: '16px', width: '16px' }}
+                        />
+                        Delete
+                      </MenuItem>
+                    )}
+                  </MenuList>
+                )}
+              />
+            ),
+          },
+        ]}
+        data={templateData}
+      />
 
       {/* <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>
         Subject Management
@@ -396,65 +384,78 @@ const Settings = (props: TabComponentType) => {
           formControlProps={{ sx: { minWidth: 220 } }}
         />
       </Box> */}
-      <Typography variant="h6">Notification Section</Typography>
-      <Card sx={{ p: 2 }}>
-        <Grid container spacing={2} mt={1}>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ p: 2, height: '100%' }}>
-              <Typography variant="h6">Set Reminders</Typography>
+      <Typography variant="h6" mt={2}>
+        Notification Section
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6">Set Reminders</Typography>
 
-              <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
-              <Box sx={{ pb: '20px', pt: '20px', width: '400px' }}>
-                <TextField
-                  multiline
-                  rows={4}
-                  fullWidth
-                  placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
-                  name="description"
-                  label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
-                  // value={formik.values.description}
-                  // onChange={formik.handleChange}
-                  size="small"
-                />
-              </Box>
-              <FormControlLabel
-                control={<Switch />}
-                label="Notify teachers when curriculum is updated"
+            <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
+            <Box sx={{ pb: '20px', pt: '20px', width: '400px' }}>
+              <TextField
+                multiline
+                rows={4}
+                fullWidth
+                placeholder="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+                name="description"
+                label="explaining when notifications will be triggered (e.g., 2 weeks before review date)"
+                // value={formik.values.description}
+                // onChange={formik.handleChange}
+                size="small"
               />
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ p: 2, height: '100%' }}>
-              <Typography variant="h6">Permission Connection</Typography>
-              <Box sx={{ pl: '20px', pb: '20px', pt: 2 }}>
-                <CustomSelect
-                  label="Edit Curriculum"
-                  options={[]}
-                  value=""
-                  onChange={() => {}}
-                  formControlProps={{ sx: { minWidth: 220 } }}
-                />
-              </Box>
-              <Box sx={{ pl: '20px', pb: '20px' }}>
-                <CustomSelect
-                  label="Approved Curriculum Update"
-                  options={[]}
-                  value=""
-                  onChange={() => {}}
-                  formControlProps={{ sx: { minWidth: 220 } }}
-                />
-              </Box>
-            </Card>
-          </Grid>
+            </Box>
+            <FormControlLabel
+              control={<Switch />}
+              label="Notify teachers when curriculum is updated"
+            />
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                mt: 'auto',
+                pt: 2,
+              }}
+            >
+              <Button variant="contained">Save</Button>
+            </Box>
+          </Card>
         </Grid>
-        <Button
-          color="secondary"
-          variant="contained"
-          sx={{ maxWidth: '200px', width: '100%', alignSelf: 'flex-end', mt: 2, mb: 2 }}
-        >
-          Save Changes
-        </Button>
-      </Card>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6">Permission Connection</Typography>
+            <Box sx={{ pl: '20px', pb: '20px', pt: 2 }}>
+              <CustomSelect
+                label="Edit Curriculum"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 250 } }}
+              />
+            </Box>
+            <Box sx={{ pl: '20px', pb: '20px' }}>
+              <CustomSelect
+                label="Approved Curriculum Update"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 250 } }}
+              />
+            </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                mt: 'auto',
+                pt: 13,
+              }}
+            >
+              <Button variant="contained">Save</Button>
+            </Box>
+          </Card>
+        </Grid>
+      </Grid>
 
       <CustomDialog
         title={isEdit ? `Update ${selectedTemplate?.templateName}` : 'Add New Template'}
@@ -495,7 +496,7 @@ const Settings = (props: TabComponentType) => {
         maxWidth="sm"
         open={deleteConfirmDialog.value}
         handleClose={handleCloseDialog}
-        title="Delete Subject"
+        title="Delete Template"
       >
         <DialogContent>
           <DialogContentText>

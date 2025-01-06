@@ -44,7 +44,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
         heading="Performace Analytics"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Gradebook Performace' },
+          { name: 'Gradebook And Performace Tracking' },
           { name: 'Performace Analytics' },
         ]}
         sx={{ px: 1, mb: 2 }}

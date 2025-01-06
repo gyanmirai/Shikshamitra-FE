@@ -16,8 +16,6 @@ import {
   Switch,
   Button,
   Checkbox,
-  MenuList,
-  MenuItem,
   TextField,
   Typography,
   DialogActions,
@@ -240,17 +238,18 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="School Specific Announcement"
+        heading="School Wise Announcement"
         links={[
           { name: 'Communication' },
-          { name: 'Announcement' },
-          { name: 'School Specific Announcement' },
+          { name: 'Announcements' },
+          { name: 'School Wise Announcement' },
         ]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={() => {
               addAnounsmentDialog.onTrue();
             }}
@@ -266,6 +265,8 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           {
             id: 'publishDate',
             label: 'Publish Date',
+            minWidth: '180px',
+            align: 'left',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -275,6 +276,8 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           {
             id: 'expiryDate',
             label: 'Expiry Date',
+            minWidth: '180px',
+            align: 'left',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -323,13 +326,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((audience: string) => (
-                  <Chip
-                    key={audience}
-                    label={audience}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
                 ))}
               </Box>
             ),
@@ -359,46 +356,31 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        view_dialog.onTrue();
-                        setViewAnnouncement(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      Details
-                    </MenuItem>
-                    {row.status === 'Scheduled' && (
-                      <MenuItem
-                        onClick={() => {
-                          addAnounsmentDialog.onTrue();
-                          setEditingAnnouncement(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-                    {row.status === 'Scheduled' && (
-                      <MenuItem
-                        onClick={() => {
-                          confirm_dialog.onTrue();
-                          setDeleteAnnouncement(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Delete
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    addAnounsmentDialog.onTrue();
+                    setEditingAnnouncement(row);
+                  }}
+                  handleDeleteClick={() => {
+                    confirm_dialog.onTrue();
+                    setDeleteAnnouncement(row.id);
+                  }}
+                  handleViewClick={() => {
+                    view_dialog.onTrue();
+                    setViewAnnouncement(row);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={announcementTableData}

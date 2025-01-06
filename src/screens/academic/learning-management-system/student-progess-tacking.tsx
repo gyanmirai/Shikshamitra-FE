@@ -54,7 +54,6 @@ const StudentProgressTracking = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Typography variant="h6">Progress Dashboard</Typography>
       <Box display="flex" gap={2} mt={2}>
         <CustomSelect
           options={[]}

@@ -15,8 +15,6 @@ import {
   Chip,
   Switch,
   Button,
-  MenuList,
-  MenuItem,
   Checkbox,
   TextField,
   Typography,
@@ -270,17 +268,18 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Class Specific Announcement"
+        heading="Class Wise Announcement"
         links={[
           { name: 'Communication' },
-          { name: 'Announcement' },
-          { name: 'Class Specific Announcement' },
+          { name: 'Announcements' },
+          { name: 'Class Wise Announcement' },
         ]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={() => {
               addAnounsmentDialog.onTrue();
             }}
@@ -370,13 +369,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((audience: string) => (
-                  <Chip
-                    key={audience}
-                    label={audience}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
                 ))}
               </Box>
             ),
@@ -406,46 +399,31 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        view_dialog.onTrue();
-                        setViewAnnouncement(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      Details
-                    </MenuItem>
-                    {row.status === 'Scheduled' && (
-                      <MenuItem
-                        onClick={() => {
-                          addAnounsmentDialog.onTrue();
-                          setEditingAnnouncement(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-                    {row.status === 'Scheduled' && (
-                      <MenuItem
-                        onClick={() => {
-                          confirm_dialog.onTrue();
-                          setDeleteAnnouncement(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Delete
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    addAnounsmentDialog.onTrue();
+                    setEditingAnnouncement(row);
+                  }}
+                  handleDeleteClick={() => {
+                    confirm_dialog.onTrue();
+                    setDeleteAnnouncement(row.id);
+                  }}
+                  handleViewClick={() => {
+                    view_dialog.onTrue();
+                    setViewAnnouncement(row);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={announcementTableData}

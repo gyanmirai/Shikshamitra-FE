@@ -94,7 +94,7 @@ const Dashboard = (props: TabComponentType) => {
         heading="Dashboard"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Gradebook Performace' },
+          { name: 'Gradebook And Performace Tracking' },
           { name: 'Dashboard' },
         ]}
         sx={{ px: 1, mb: 2 }}

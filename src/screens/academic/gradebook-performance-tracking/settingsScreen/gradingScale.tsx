@@ -8,7 +8,6 @@ import {
   Grid,
   Button,
   TextField,
-  Typography,
   DialogContent,
   DialogActions,
   DialogContentText,
@@ -140,10 +139,7 @@ const GradingScale = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Grading Scales
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Add />}
           variant="contained"

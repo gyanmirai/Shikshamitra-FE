@@ -38,11 +38,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Dashboard"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Time Table Management' },
-          { name: 'Dashboard' },
-        ]}
+        links={[{ name: 'Academic and Assignment' }, { name: 'Time Table' }, { name: 'Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <DashBoardQuickAction
@@ -70,7 +66,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
         }
       />
       <Box display="flex" flexDirection="row" justifyContent="space-between">
-        <Box display="flex" flexDirection="row" gap={3}>
+        <Box display="flex" flexDirection="row" gap={2}>
           <CustomSelect
             label="Organization"
             options={[]}

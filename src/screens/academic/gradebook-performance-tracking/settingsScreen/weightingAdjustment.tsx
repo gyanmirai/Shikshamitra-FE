@@ -124,10 +124,7 @@ const AssignmentWeightageManagement = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Assignment Weightage
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Add />}
           variant="contained"

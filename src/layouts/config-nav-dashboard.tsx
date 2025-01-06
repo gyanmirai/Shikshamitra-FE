@@ -791,7 +791,7 @@ const academicModule = {
               _action: 'homework-assignment-management-homeworkDashboard',
             },
             {
-              title: 'Homework Creation',
+              title: 'Homework & Assignment Creation',
               path: '/academic/homework-assignment-management/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
             },
@@ -865,14 +865,14 @@ const communicationModule = {
               _action: 'announcement-schoolWiseAnnounsement',
             },
             {
-              title: 'Class Specific Announcement',
+              title: 'Class Wise Announcement',
               path: '/communication/announcement/classSpecificAnnouncement',
               _action: 'announcement-classSpecificAnnouncement',
             },
           ],
         },
         {
-          title: 'Events & Calendar',
+          title: 'Events',
           path: '/communication/eventsAndCalendar',
           _action: 'eventsAndCalendar',
           children: [

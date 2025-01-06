@@ -250,7 +250,7 @@ const Gradebook = (props: TabComponentType) => {
         heading="Gradebook"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Gradebook Performace' },
+          { name: 'Gradebook And Performace Tracking' },
           { name: 'Gradebook' },
         ]}
         sx={{ px: 1, mb: 2 }}

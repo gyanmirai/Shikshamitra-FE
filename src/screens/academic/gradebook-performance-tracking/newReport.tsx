@@ -108,7 +108,7 @@ const Reports = (props: TabComponentType) => {
         heading="Reports"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Gradebook Performace' },
+          { name: 'Gradebook And Performace Tracking' },
           { name: 'Reports' },
         ]}
         sx={{ px: 1, mb: 2 }}

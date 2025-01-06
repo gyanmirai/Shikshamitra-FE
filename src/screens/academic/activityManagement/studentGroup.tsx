@@ -87,16 +87,17 @@ const StudentGroup = (props: TabComponentType) => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Student Group"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Activity Management' },
-          { name: 'Student Group' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          open ? (
+      {open ? (
+        <CustomBreadcrumbs
+          heading="Student Group"
+          links={[
+            { name: 'Academic and Assignment' },
+            { name: 'Activity' },
+            { name: 'Student Group' },
+            { name: 'Add Student Group' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
             <Button
               variant="contained"
               size="small"
@@ -105,7 +106,18 @@ const StudentGroup = (props: TabComponentType) => {
             >
               Back
             </Button>
-          ) : (
+          }
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Student Group"
+          links={[
+            { name: 'Academic and Assignment' },
+            { name: 'Activity' },
+            { name: 'Student Group' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
             <Button
               startIcon={<Add />}
               variant="contained"
@@ -118,9 +130,9 @@ const StudentGroup = (props: TabComponentType) => {
             >
               Group
             </Button>
-          )
-        }
-      />
+          }
+        />
+      )}
 
       {open ? (
         <Card>

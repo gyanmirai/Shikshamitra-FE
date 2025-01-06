@@ -13,10 +13,7 @@ import {
   Grid,
   Chip,
   Button,
-  MenuList,
-  MenuItem,
   TextField,
-  IconButton,
   Typography,
   DialogActions,
   DialogContent,
@@ -179,6 +176,7 @@ const UpcomingEvents = (props: TabComponentType) => {
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={() => {
               addEventDialog.onTrue();
             }}
@@ -189,9 +187,9 @@ const UpcomingEvents = (props: TabComponentType) => {
       />
       <CustomizableTable
         columns={[
-          { id: 'eventTitle', label: 'Event Title' },
-          { id: 'eventVenue', label: 'Event Venue' },
-          { id: 'eventType', label: 'Event Type' },
+          { id: 'eventTitle', label: 'Event Title', minWidth: '180px', align: 'left' },
+          { id: 'eventVenue', label: 'Event Venue', minWidth: '180px', align: 'left' },
+          { id: 'eventType', label: 'Event Type', minWidth: '180px', align: 'left' },
           {
             id: 'eventDate',
             label: 'Date',
@@ -255,53 +253,35 @@ const UpcomingEvents = (props: TabComponentType) => {
               </Box>
             ),
           },
-          {
-            id: 'details',
-            label: 'View Details',
-            render(value, row) {
-              return (
-                <IconButton
-                  onClick={() => {
-                    handleEyeClick(row.id);
-                  }}
-                >
-                  <Iconify icon="mdi:eye" />
-                </IconButton>
-              );
-            },
-          },
-          { id: 'eventOrganizer', label: 'Event Organizer' },
-          { id: 'eventBudget', label: 'Event Budget' },
+          { id: 'eventOrganizer', label: 'Event Organizer', minWidth: '200px', align: 'left' },
+          { id: 'eventBudget', label: 'Event Budget', minWidth: '180px', align: 'left' },
           {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        addEventDialog.onTrue();
-                        setEditingEvent(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        confirm_dialog.onTrue();
-                        setDeleteEvent(row.id);
-                      }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    addEventDialog.onTrue();
+                    setEditingEvent(row);
+                  }}
+                  handleDeleteClick={() => {
+                    confirm_dialog.onTrue();
+                    setDeleteEvent(row.id);
+                  }}
+                  handleViewClick={() => {
+                    handleEyeClick(row.id);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={eventTableData}

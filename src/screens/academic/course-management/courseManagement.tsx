@@ -229,8 +229,8 @@ const CourseManagement = (props: TabComponentType) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={3}>
+    <Box>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={5}>
         <Button
           variant="contained"
           startIcon={<Add />}
