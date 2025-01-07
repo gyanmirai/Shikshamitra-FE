@@ -812,6 +812,11 @@ const academicModule = {
             },
           ],
         },
+        {
+          title: 'Assign Teacher',
+          path: '/academic/assignTeacher',
+          _action: 'assign-teacher',
+        },
       ],
     },
   ],
