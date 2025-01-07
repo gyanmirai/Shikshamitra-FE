@@ -555,7 +555,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '250px' }}>
+        <Scrollbar sx={{ p: 2, height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -582,7 +582,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            {/* <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Predefined Template"
                 name="predefinedTemplate"
@@ -612,7 +612,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
               >
                 Add Template ?
               </Typography>
-            </Grid>
+            </Grid> */}
 
             <Grid item xs={12} md={6}>
               <CustomSelect
