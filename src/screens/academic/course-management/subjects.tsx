@@ -309,7 +309,7 @@ const Subjects = (props: TabComponentType) => {
         heading="Content Management"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Course Management' },
+          { name: 'Course' },
           { name: 'Content Management' },
         ]}
         sx={{ px: 1, mb: 2 }}
