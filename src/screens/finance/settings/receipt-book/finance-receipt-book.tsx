@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Switch, MenuItem, MenuList } from '@mui/material';
+import { Box, Button, Switch } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -105,12 +105,13 @@ const FinanceReceiptBookSetting = () => {
           New Receipt Book
         </Button>
       </Box>
-      <Box>
-        {/* <Typography component="span" variant="h6" gutterBottom>
-          Receipt Book Overview
-        </Typography> */}
-      </Box>
+      <Box pb="20px" />
+
       <CustomizableTable
+        isShowedDense={false}
+        isPagination={false}
+        isFilter={false}
+        isSearch={false}
         columns={[
           { id: 'receiptBookName', label: 'Receipt Book' },
           { id: 'receiptBookCode', label: 'R-Book Code' },
@@ -127,32 +128,46 @@ const FinanceReceiptBookSetting = () => {
             label: 'Action',
             render: (value, row: any) => (
               <ThreeDotsActions
-                actions={({ popover }: any) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setIsEdit(true);
+                showThreeDots={false}
+                showDeleteIcon
+                handleDeleteClick={() => {
+                  handleDelete(row);
+                }}
+                showEditIcon
+                handleEditClick={() => {
+                  setIsEdit(true);
 
-                        setSelectedEntry(row);
-                        dialog.onTrue();
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify color="blue" icon="solar:pen-bold" />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleDelete(row); // Handle delete action
-                        popover.onClose(); // Close the popover
-                      }}
-                    >
-                      <Iconify color="red" icon="solar:trash-bin-trash-bold" />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
+                  setSelectedEntry(row);
+                  dialog.onTrue();
+                }}
               />
+              // <ThreeDotsActions
+              //   actions={({ popover }: any) => (
+              //     <MenuList>
+              //       <MenuItem
+              //         onClick={() => {
+              //           setIsEdit(true);
+
+              //           setSelectedEntry(row);
+              //           dialog.onTrue();
+              //           popover.onClose();
+              //         }}
+              //       >
+              //         <Iconify color="blue" icon="solar:pen-bold" />
+              //         Edit
+              //       </MenuItem>
+              //       <MenuItem
+              //         onClick={() => {
+              //           handleDelete(row); // Handle delete action
+              //           popover.onClose(); // Close the popover
+              //         }}
+              //       >
+              //         <Iconify color="red" icon="solar:trash-bin-trash-bold" />
+              //         Delete
+              //       </MenuItem>
+              //     </MenuList>
+              //   )}
+              // />
             ),
           },
         ]}

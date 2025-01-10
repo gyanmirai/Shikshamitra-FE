@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { Box, Grid, Button, MenuItem, MenuList, TextField } from '@mui/material';
+import { Box, Grid, Button, TextField } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
-import DataTable from 'src/components/commonTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const SetDefaultFeeComponent = () => (
   <Box display="flex" flexDirection="column" gap={2}>
@@ -28,31 +28,22 @@ const SetDefaultFeeComponent = () => (
     <Grid container spacing={2}>
       <Grid item xs={12} md={12}>
         <Box>
-          <DataTable
+          <CustomizableTable
+            isShowedDense={false}
+            isPagination={false}
+            isFilter={false}
+            isSearch={false}
             columns={[
-              { key: 'existingFeeHead', label: 'Existing Fee Head' },
+              { id: 'existingFeeHead', label: 'Existing Fee Head' },
               {
-                key: 'action',
+                id: 'action',
                 label: 'Action',
                 render(row: any) {
                   return (
                     <ThreeDotsActions
-                      actions={({ popover }: any) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              // uploadModal.onTrue();
-                              // popover.onClose();
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      showThreeDots={false}
+                      showDeleteIcon
+                      handleDeleteClick={() => {}}
                     />
                   );
                 },

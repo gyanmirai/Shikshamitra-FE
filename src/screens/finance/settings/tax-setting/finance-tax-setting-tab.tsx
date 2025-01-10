@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Tooltip, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -119,11 +118,8 @@ const FinanceTaxSettingTab = () => {
           Add New Tax
         </Button>
       </Box>
-      <Box>
-        <Typography component="span" variant="h6" gutterBottom>
-          Tax Settings Overview
-        </Typography>
-      </Box>
+      <Box pb="20px" />
+
       <CustomizableTable
         columns={[
           { id: 'taxName', label: 'Tax Name' },
@@ -191,29 +187,17 @@ const FinanceTaxSettingTab = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedEntry(row);
-                          setIsEdit(true);
-                          dialog.onTrue();
-                          //   popover.onClose();
-                        }}
-                      >
-                        <Iconify color="blue" icon="solar:pen-bold" />
-                        Edit
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          handleDelete(row);
-                        }}
-                      >
-                        <Iconify color="red" icon="solar:trash-bin-trash-bold" />
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                  showThreeDots={false}
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    handleDelete(row);
+                  }}
+                  showEditIcon
+                  handleEditClick={() => {
+                    setSelectedEntry(row);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
                 />
               );
             },

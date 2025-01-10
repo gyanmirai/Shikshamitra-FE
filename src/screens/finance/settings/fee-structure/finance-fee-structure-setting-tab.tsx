@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Switch, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -286,11 +286,7 @@ const FinanceFeeStructureSettingTab = () => {
           New Fee Structure
         </Button>
       </Box>
-      <Box>
-        {/* <Typography component="span" variant="h6" gutterBottom>
-          Fee Categories Overview
-        </Typography> */}
-      </Box>
+      <Box pb="20px" />
 
       <CustomizableTable
         columns={[
@@ -399,29 +395,42 @@ const FinanceFeeStructureSettingTab = () => {
             render(value, row: any) {
               return (
                 <ThreeDotsActions
-                  actions={({ popover }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedEntry(row);
-                          dialog.onFalse();
-                          financeEditFeeStructureDialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" />
-                        Edit
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          handleDelete(row);
-                        }}
-                      >
-                        <Iconify icon="solar:trash-bin-trash-bold" />
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                  showThreeDots={false}
+                  showDeleteIcon
+                  handleDeleteClick={() => {
+                    handleDelete(row);
+                  }}
+                  showEditIcon
+                  handleEditClick={() => {
+                    setSelectedEntry(row);
+                    dialog.onFalse();
+                    financeEditFeeStructureDialog.onTrue();
+                  }}
                 />
+                // <ThreeDotsActions
+                //   actions={({ popover }) => (
+                //     <MenuList>
+                //       <MenuItem
+                //         onClick={() => {
+                //           setSelectedEntry(row);
+                //           dialog.onFalse();
+                //           financeEditFeeStructureDialog.onTrue();
+                //         }}
+                //       >
+                //         <Iconify icon="solar:pen-bold" />
+                //         Edit
+                //       </MenuItem>
+                //       <MenuItem
+                //         onClick={() => {
+                //           handleDelete(row);
+                //         }}
+                //       >
+                //         <Iconify icon="solar:trash-bin-trash-bold" />
+                //         Delete
+                //       </MenuItem>
+                //     </MenuList>
+                //   )}
+                // />
               );
             },
           },

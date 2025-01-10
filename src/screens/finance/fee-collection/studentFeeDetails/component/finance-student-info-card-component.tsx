@@ -11,8 +11,9 @@ import { Iconify } from 'src/components/iconify';
 import FinanceFeeOverviewTab from './finance-fee-overview-tab';
 import FinanceCollectCharges from '../../charges/component/collect-charges';
 import FinanceStudentAdditionalDiscountDialog from './student-additional-discount';
-import FinanceFeeRefundAllocationDialog from '../../feeRefund/finance-fee-refund-allocated';
 import FinanceNewCollectFeeDialog from '../../collectFees/component/finance-new-fee-collect-dialog';
+// import FeeCollectionForm from '../../collectFees/component/finance-collect-fee-table-view';
+import FinanceFeeRefundAllocationDialog from '../../../fee-refund/component/finance-fee-refund-allocated';
 
 export type IUserCard = {
   id: string;
@@ -518,8 +519,11 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
               }}
               startIcon={<Iconify icon="iconamoon:discount-thin" />}
               variant="outlined"
-              size="small"
-              color="info"
+              size="large"
+              sx={{
+                backgroundColor: 'transparent',
+                color: '#1a91bc',
+              }}
             >
               Additional Discount
             </Button>
@@ -533,7 +537,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
               }}
               startIcon={<Iconify icon="game-icons:receive-money" />}
               variant="outlined"
-              size="small"
+              size="large"
               color="primary"
             >
               Collect Fees
@@ -548,7 +552,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
               }}
               startIcon={<Iconify icon="fa6-solid:piggy-bank" />}
               variant="outlined"
-              size="small"
+              size="large"
               color="secondary"
             >
               Collect Charges
@@ -561,10 +565,24 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
                 // setIsEdit(true);
                 feeRefundDialog.onTrue();
               }}
-              startIcon={<Iconify icon="game-icons:pay-money" />}
+              startIcon={
+                <Iconify
+                  icon="game-icons:pay-money"
+                  style={{
+                    fontSize: '28px', // Larger size
+                    fill: '#000', // Black fill for boldness
+                    stroke: '#000', // Black stroke for extra weight
+                    strokeWidth: '2px', // Thicker stroke
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.5)', // Subtle shadow for depth
+                  }}
+                />
+              }
               variant="outlined"
-              size="small"
-              color="warning"
+              size="large"
+              sx={{
+                backgroundColor: 'transparent',
+                color: '#ad7c00',
+              }}
             >
               Process For Refund
             </Button>
@@ -588,6 +606,10 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
       )}
 
       {dialog.value && (
+        // <FeeCollectionForm
+        //   dialogValue={dialog.value}
+        //   onClose={closeDialog}
+        // />
         <FinanceNewCollectFeeDialog
           onSave={() => {}}
           dialogValue={dialog.value}

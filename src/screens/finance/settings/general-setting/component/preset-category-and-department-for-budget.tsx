@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { Box, Grid, Button, MenuItem, MenuList, TextField } from '@mui/material';
+import { Box, Grid, Button, TextField } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
-import DataTable from 'src/components/commonTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const PresetCategoryAndDepartmentForBudget = () => (
   <>
@@ -18,41 +18,23 @@ const PresetCategoryAndDepartmentForBudget = () => (
       <Grid container spacing={3}>
         {/* Existing Categories and Departments Table */}
         <Grid item xs={12} md={6}>
-          <DataTable
+          <CustomizableTable
+            isShowedDense={false}
+            isPagination={false}
+            isFilter={false}
+            isSearch={false}
             columns={[
-              { key: 'categories', label: 'Categories' },
+              { id: 'categories', label: 'Categories' },
 
               {
-                key: 'action',
+                id: 'action',
                 label: 'Action',
                 render(row: any) {
                   return (
                     <ThreeDotsActions
-                      actions={({ popover }: any) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              // modal.onTrue();
-                              // popover.onClose();
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                            Edit
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              // uploadModal.onTrue();
-                              // popover.onClose();
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      showThreeDots={false}
+                      showDeleteIcon
+                      handleDeleteClick={() => {}}
                     />
                   );
                 },
