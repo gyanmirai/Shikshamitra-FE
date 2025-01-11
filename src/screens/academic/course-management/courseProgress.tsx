@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -13,6 +15,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AppWidget } from './courseManagement';
 
@@ -144,6 +147,15 @@ const CourseProgress = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Course Progress"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Course Progress' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <CustomSelect
         label="Class"
         name="class"
@@ -151,7 +163,7 @@ const CourseProgress = (props: TabComponentType) => {
         options={classData?.items || []}
         valueKey="id"
         labelKey="name"
-        formControlProps={{ sx: { width: '200px' } }}
+        formControlProps={{ sx: { width: '150px' } }}
         value={searchParams?.classId || ''}
         onChange={(value) => {
           setSearchParams?.({
@@ -159,7 +171,7 @@ const CourseProgress = (props: TabComponentType) => {
           });
         }}
       />
-      <Grid container spacing={2} marginTop={2}>
+      <Grid container spacing={2} marginTop={2} marginBottom={2}>
         {courses.map((course) => (
           <Grid item xs={12} md={2}>
             <Card
@@ -169,12 +181,14 @@ const CourseProgress = (props: TabComponentType) => {
                 display: 'flex',
                 justifyContent: 'center',
                 border:
-                  selectedCourse?.id === course.id ? '2px solid black' : '1px solid transparent',
-                transition: 'border 0.2s ease',
-                // Optional: add shadow effect when selected
-                boxShadow: selectedCourse?.id === course.id ? '0 0 0 2px rgba(0, 0, 0, 0)' : 'none',
+                  selectedCourse?.id === course.id
+                    ? '2px solid #1a1a1a' // Darker border when selected
+                    : '1px solid #e0e0e0', // Initial light border
+                transition: 'all 0.2s ease',
+                boxShadow:
+                  selectedCourse?.id === course.id ? '0 0 0 2px rgba(0, 0, 0, 0.1)' : 'none',
                 '&:hover': {
-                  borderColor: 'gray', // lighter blue for hover state
+                  borderColor: '#757575', // Medium gray for hover state
                 },
                 cursor: 'pointer',
               }}
@@ -190,108 +204,78 @@ const CourseProgress = (props: TabComponentType) => {
             </Card>
           </Grid>
         ))}
-        {selectedCourse && (
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              {selectedCourse.name} Details
-            </Typography>
-            <CustomizableTable
-              columns={[
-                { id: 'chapterName', label: 'Chapter Name' },
-                { id: 'teacherName', label: 'Teacher Name' },
-                {
-                  id: 'progress',
-                  label: 'Progress',
-                  render(value, row) {
-                    return (
-                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                        <CircularProgress variant="determinate" value={value} />
-                        <Box
-                          sx={{
-                            top: 0,
-                            left: 0,
-                            bottom: 0,
-                            right: 0,
-                            position: 'absolute',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            component="div"
-                            sx={{ color: 'text.secondary' }}
-                          >
-                            {value}%
-                          </Typography>
-                        </Box>
-                      </Box>
-                    );
-                  },
-                },
-                {
-                  id: 'pending',
-                  label: 'Pending',
-                  render(value, row) {
-                    return (
-                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                        <CircularProgress color="error" variant="determinate" value={value} />
-                        <Box
-                          sx={{
-                            top: 0,
-                            left: 0,
-                            bottom: 0,
-                            right: 0,
-                            position: 'absolute',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            component="div"
-                            sx={{ color: 'text.secondary' }}
-                          >
-                            {value}%
-                          </Typography>
-                        </Box>
-                      </Box>
-                    );
-                  },
-                },
-                {
-                  id: 'timeLine',
-                  label: 'Timeline',
-                  render: (value, row) => (
-                    <Typography fontSize="12px" gutterBottom>
-                      {dayjs(value).format('DD MMM YYYY')}
-                    </Typography>
-                  ),
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  render(value: any, row: any) {
-                    return (
-                      <ThreeDotsActions
-                        actions={({ popover }: any) => (
-                          <MenuList>
-                            <Iconify icon="mdi:bell" sx={{ mr: 2 }} />
-                            <MenuItem onClick={() => {}}>Send Reminder</MenuItem>
-                          </MenuList>
-                        )}
-                      />
-                    );
-                  },
-                },
-              ]}
-              data={selectedCourse.details}
-            />
-          </Grid>
-        )}
       </Grid>
+      {selectedCourse && (
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            {selectedCourse.name} Details
+          </Typography>
+          <CustomizableTable
+            columns={[
+              { id: 'chapterName', label: 'Chapter Name' },
+              { id: 'teacherName', label: 'Teacher Name' },
+              {
+                id: 'progress',
+                label: 'Progress',
+                render(value, row) {
+                  return (
+                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                      <CircularProgress variant="determinate" value={value} />
+                      <Box
+                        sx={{
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          right: 0,
+                          position: 'absolute',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          component="div"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          {value}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                },
+              },
+              {
+                id: 'timeLine',
+                label: 'Timeline',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value: any, row: any) {
+                  return (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={({ popover }: any) => (
+                        <MenuList>
+                          <Iconify icon="mdi:bell" />
+                          <MenuItem onClick={() => {}}>Reminder</MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={selectedCourse.details}
+          />
+        </Box>
+      )}
     </Box>
   );
 };

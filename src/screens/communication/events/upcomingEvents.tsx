@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -33,6 +35,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface Event {
   id: string;
@@ -168,18 +171,22 @@ const UpcomingEvents = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Upcoming Events</Typography>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          onClick={() => {
-            addEventDialog.onTrue();
-          }}
-        >
-          Add New Event
-        </Button>
-      </Box>{' '}
+      <CustomBreadcrumbs
+        heading="Upcoming Events"
+        links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'Upcoming Events' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Iconify icon="mdi:plus" />}
+            variant="contained"
+            onClick={() => {
+              addEventDialog.onTrue();
+            }}
+          >
+            Event
+          </Button>
+        }
+      />
       <CustomizableTable
         columns={[
           { id: 'eventTitle', label: 'Event Title' },

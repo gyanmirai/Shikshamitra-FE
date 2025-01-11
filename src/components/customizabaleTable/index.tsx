@@ -49,7 +49,7 @@ import { Scrollbar } from '../scrollbar';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
 
-interface Column {
+export interface Column {
   id: string;
   label: string;
   minWidth?: number | string;

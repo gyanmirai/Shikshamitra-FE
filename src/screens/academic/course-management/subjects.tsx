@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -5,7 +7,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -45,6 +47,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { subjectTempData } from './subjectsData';
 
@@ -264,9 +267,54 @@ const Subjects = (props: TabComponentType) => {
     chapterDialog.onTrue();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setSelectedSubject(row.subjectName);
+              addChapterDialog.onTrue();
+              setIsEditMode(false);
+              setSelectedChapter(null);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="mdi:plus" />
+            Chapter
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              // setSearchParams?.({
+              //   tab: 'learningResources',
+              //   class: classes,
+              //   subject: row.subjectName,
+              // });
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+            Add Learning Resources
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [addChapterDialog]
+  );
+
   return (
     <Box>
-      <Typography variant="h6" marginBottom={3}>
+      <CustomBreadcrumbs
+        heading="Content Management"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Content Management' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <Typography variant="h6" marginBottom={3} mt={3}>
         Subject&apos;s Content Management
       </Typography>
       <CustomSelect
@@ -279,7 +327,7 @@ const Subjects = (props: TabComponentType) => {
         isLoading={isLoading}
         labelKey="name"
         valueKey="name"
-        formControlProps={{ sx: { minWidth: 200 } }}
+        formControlProps={{ sx: { minWidth: 150 } }}
       />
       {subjectTableData.length > 0 && (
         <CustomizableTable
@@ -287,11 +335,15 @@ const Subjects = (props: TabComponentType) => {
             {
               id: 'subjectName',
               label: 'Subject Name',
+              minWidth: '140px',
+              align: 'left',
             },
-            { id: 'primaryTeacher', label: 'Primary Teacher' },
+            { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '150px', align: 'left' },
             {
               id: 'secondaryTeacher',
               label: 'Secondary Teacher',
+              minWidth: '170px',
+              align: 'left',
               render: (value) => (
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                   {value.map((audience: string) => (
@@ -344,54 +396,21 @@ const Subjects = (props: TabComponentType) => {
               },
             },
             {
-              id: 'viewDetails',
-              label: 'View Details',
-              render: (value, row) => (
-                <IconButton
-                  onClick={() => {
-                    handleEyeClick(row.subjectName);
-                  }}
-                >
-                  <Iconify icon="mdi:eye" />
-                </IconButton>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Action',
+              id: 'actions',
+              label: 'Actions',
               isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover: pop }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedSubject(row.subjectName);
-                          addChapterDialog.onTrue();
-                          setIsEditMode(false);
-                          setSelectedChapter(null);
-                        }}
-                      >
-                        <Iconify icon="mdi:plus" />
-                        Add New Chapter
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setSearchParams?.({
-                            tab: 'learningResources',
-                            class: classes,
-                            subject: row.subjectName,
-                          });
-                        }}
-                      >
-                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-                        Add Learning Resources
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              ),
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                    showViewIcon
+                    handleViewClick={() => {
+                      handleEyeClick(row.subjectName);
+                    }}
+                  />
+                );
+              },
             },
           ]}
           data={subjectTableData}
@@ -806,6 +825,7 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={onAddNewChapter}
           >
             New Chapter
@@ -866,6 +886,7 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               onEditChapter(chapter);
+                              popover.onClose();
                             }}
                           >
                             <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />

@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useState } from 'react';
@@ -25,6 +27,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TEvent {
   id: number;
@@ -119,7 +122,12 @@ const EventType = (props: TabComponentType) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Event Type"
+        links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'Event Type' }]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mb={3}>
         <Box display="flex" gap={2}>
           <Button

@@ -1,6 +1,7 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 
 import { MenuItem, MenuList } from '@mui/material';
@@ -36,6 +37,8 @@ const InquiryTable = ({
     () =>
       inquiryData?.items.map((item: IInquiryData) => ({
         ...item,
+        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+        doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
       })),
@@ -46,13 +49,14 @@ const InquiryTable = ({
       isLoading={isLoading}
       columns={[
         { id: 'inquiryNumber', label: 'Inquiry Number', sticky: true, minWidth: '145px' },
-        { id: 'educationMedium.name', label: 'Medium' },
+        // { id: 'educationBoard.name', label: 'Board', minWidth: '145px' },
+        // { id: 'educationMedium.name', label: 'Medium' },
         // { id: 'batchName', label: 'Batch Name', minWidth: '120px' },
         { id: 'standard.name', label: 'Class' },
         { id: 'studentName', label: 'Student Name', minWidth: '135px' },
-        { id: 'dateOfBirth', label: 'DOB', minWidth: '120px', align: 'left' },
+        { id: 'dobValue', label: 'DOB', minWidth: '120px', align: 'left' },
         { id: 'age', label: 'Age' },
-        { id: 'dateOfInquiry', label: 'DOI', minWidth: '120px', align: 'left' },
+        { id: 'doiValue', label: 'DOI', minWidth: '120px', align: 'left' },
         { id: 'genderValue', label: 'Gender' },
         { id: 'address', label: 'Address', minWidth: '120px' },
         { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '145px' },

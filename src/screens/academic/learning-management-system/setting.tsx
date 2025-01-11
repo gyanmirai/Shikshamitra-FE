@@ -9,6 +9,7 @@ import { Box, Tab, Card } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GeneralSettings from './settingScreen/general';
 import Integrations from './settingScreen/integrations';
@@ -47,6 +48,15 @@ const SettingScreen = (props: TabComponentType) => {
 
   return (
     <>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Card
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },

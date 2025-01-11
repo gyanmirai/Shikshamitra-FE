@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -29,6 +31,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -85,7 +89,34 @@ const Dashboard = (props: TabComponentType) => {
   }, [classData, classes, setSearchParams]);
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Gradebook Performace' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Gradebook',
+                href: '/academic/gradebook-performance-tracking/gradebook',
+                color: 'primary',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'Reports',
+                href: '/academic/gradebook-performance-tracking/reports',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"
@@ -133,6 +164,11 @@ const Dashboard = (props: TabComponentType) => {
               alignItems: 'center',
               height: '100%',
               bgcolor: varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
               cursor: 'pointer',
             }}
             onClick={() => {
@@ -160,6 +196,12 @@ const Dashboard = (props: TabComponentType) => {
               p: 2,
               bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.1),
               height: '100%',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+              cursor: 'pointer',
             }}
           >
             <Typography variant="h6" gutterBottom>

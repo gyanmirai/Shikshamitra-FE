@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
@@ -15,6 +17,8 @@ import { CourseHoursSpent } from 'src/screens/hr/dashboard/course-hours-spent';
 
 import { SvgColor } from 'src/components/svg-color';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -49,7 +53,40 @@ const Dashboard = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Grid2 container spacing={3}>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Course Management' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Add New Course',
+                href: '/academic/course-management/subjects',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:progress-helper',
+                label: 'Course Progress',
+                href: '/academic/course-management/courseProgress',
+                color: 'warning',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'General Reports',
+                href: '/academic/course-management/reports',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
+      <Grid2 container spacing={3} mt={2}>
         <Grid2 xs={12} md={4}>
           <Card
             sx={{
@@ -61,6 +98,12 @@ const Dashboard = (props: TabComponentType) => {
               position: 'relative',
               color: `${color}.darker`,
               backgroundColor: 'common.white',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+              cursor: 'pointer',
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -114,6 +157,12 @@ const Dashboard = (props: TabComponentType) => {
               position: 'relative',
               color: `${color}.darker`,
               backgroundColor: 'common.white',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+              cursor: 'pointer',
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -163,6 +212,7 @@ const Dashboard = (props: TabComponentType) => {
             sx={{
               alignItems: 'center',
               p: 3,
+              height: '100%',
             }}
           >
             <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
@@ -194,6 +244,7 @@ const Dashboard = (props: TabComponentType) => {
             sx={{
               alignItems: 'center',
               p: 3,
+              height: '100%',
             }}
           >
             <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">

@@ -12,8 +12,6 @@ import {
   Box,
   Grid,
   Button,
-  MenuList,
-  MenuItem,
   Typography,
   DialogContent,
   DialogActions,
@@ -25,7 +23,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -128,11 +125,12 @@ const GradeSubmission = () => {
         <Button
           startIcon={<Add />}
           variant="contained"
+          size="small"
           onClick={() => {
             dialog.onTrue();
           }}
         >
-          Add Grade Deadline
+          Grade Deadline
         </Button>
       </Box>
 
@@ -159,40 +157,26 @@ const GradeSubmission = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedAssignment(row as TGradeDeadline);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedAssignment(row as TGradeDeadline);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    setSelectedAssignment(row as TGradeDeadline);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedAssignment(row as TGradeDeadline);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={assignments}

@@ -23,7 +23,9 @@ const CourseManagementSetting = () => {
   return (
     <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
-        <Button variant="contained">Manage Archieved Courses</Button>
+        <Button variant="contained" size="small">
+          Manage Archieved Courses
+        </Button>
       </Box>
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>

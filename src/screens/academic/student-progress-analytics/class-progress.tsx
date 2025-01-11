@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -12,8 +14,6 @@ import {
   Grid,
   Checkbox,
   ListItem,
-  MenuList,
-  MenuItem,
   CardHeader,
   Typography,
   CardContent,
@@ -24,10 +24,10 @@ import { varAlpha } from 'src/theme/styles';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
@@ -67,6 +67,15 @@ const ClassProgress = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Class Progress"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Class Progress' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <CustomSelect
@@ -277,18 +286,15 @@ const ClassProgress = (props: TabComponentType) => {
               {
                 id: 'action',
                 label: 'Action',
+                isSort: false,
                 render(value, row) {
                   return (
                     <ThreeDotsActions
-                      actions={() => (
-                        <MenuList>
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                            View Details
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showViewIcon
+                      handleViewClick={() => {}}
+                      showThreeDots={false}
                     />
                   );
                 },

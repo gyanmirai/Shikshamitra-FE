@@ -1,28 +1,22 @@
+'use client';
+
 import { useFormik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import {
-  Box,
-  Grid,
-  Chip,
-  Button,
-  MenuList,
-  MenuItem,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Chip, Button, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TTeacherData {
   id: number;
@@ -128,15 +122,22 @@ const Teacher = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-        <Typography variant="h6">Subject-wise Teacher Assignment Table</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+      <CustomBreadcrumbs
+        heading="Teacher"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum Management' },
+          { name: 'Teacher' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+
+      <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
         <CustomSelect
           label="Class"
           name="class"
           options={classOptions}
-          formControlProps={{ sx: { width: '200px' } }}
+          formControlProps={{ sx: { width: '150px' } }}
           value={selectedClass}
           onChange={(value) => {
             setSearchParams?.({ classId: value as string });
@@ -151,7 +152,7 @@ const Teacher = ({
             { value: 'English', label: 'English' },
             { value: 'Science', label: 'Science' },
           ]}
-          formControlProps={{ sx: { width: '200px' } }}
+          formControlProps={{ sx: { width: '150px' } }}
           value={selectedSubject}
           onChange={(value) => setSearchParams?.({ subject: value as string })}
         />
@@ -159,10 +160,6 @@ const Teacher = ({
       <Grid2 container spacing={3}>
         <CustomizableTable
           columns={[
-            {
-              id: 'id',
-              label: 'Id',
-            },
             {
               id: 'className',
               label: 'Class',
@@ -185,22 +182,18 @@ const Teacher = ({
             {
               id: 'action',
               label: 'Action',
+              isSort: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions
-                    actions={() => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            dialog.onTrue();
-                            setSelectedTeacher(row as any);
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Reassign Teacher
-                        </MenuItem>
-                      </MenuList>
-                    )}
+                    // actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showThreeDots={false}
+                    handleEditClick={() => {
+                      dialog.onTrue();
+                      setSelectedTeacher(row as any);
+                    }}
                   />
                 );
               },
@@ -243,35 +236,37 @@ const TeacherReassign: React.FC<TeacherReassignProps> = ({ selectedTeacher, onSu
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} p={2}>
+    <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <CustomSelect
-              label="Assigned Teacher"
-              options={[
-                { value: 'John Doe', label: 'John Doe' },
-                { value: 'Jane Smith', label: 'Jane Smith' },
-                { value: 'Robert Johnson', label: 'Robert Johnson' },
-                { value: 'Emily Brown', label: 'Emily Brown' },
-                { value: 'Michael Wilson', label: 'Michael Wilson' },
-              ]}
-              name="assignedTeacher"
-              multiple
-              value={formik.values.assignedTeacher}
-              formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-              onChange={(val) => {
-                formik.setFieldValue('assignedTeacher', val);
-              }}
-              error={formik.touched.assignedTeacher}
-            />
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <CustomSelect
+                label="Assigned Teacher"
+                options={[
+                  { value: 'John Doe', label: 'John Doe' },
+                  { value: 'Jane Smith', label: 'Jane Smith' },
+                  { value: 'Robert Johnson', label: 'Robert Johnson' },
+                  { value: 'Emily Brown', label: 'Emily Brown' },
+                  { value: 'Michael Wilson', label: 'Michael Wilson' },
+                ]}
+                name="assignedTeacher"
+                multiple
+                value={formik.values.assignedTeacher}
+                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                onChange={(val) => {
+                  formik.setFieldValue('assignedTeacher', val);
+                }}
+                error={formik.touched.assignedTeacher}
+              />
+            </Grid>
           </Grid>
-          <DialogActions>
-            <Button type="submit" variant="contained">
-              Reassign
-            </Button>
-          </DialogActions>
-        </Grid>
+        </Scrollbar>
+        <DialogActions>
+          <Button type="submit" variant="contained">
+            Reassign
+          </Button>
+        </DialogActions>
       </form>
     </Box>
   );

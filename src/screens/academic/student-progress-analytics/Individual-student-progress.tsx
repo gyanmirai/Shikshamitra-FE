@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -23,6 +25,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -124,7 +127,16 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
   // Conditional card background color based on the theme mode (light/dark)
 
   return (
-    <StyledPaper>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Individual Student Progress"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Student Progress Analytics' },
+          { name: 'Individual Student Progress' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={3} justifyContent="center" alignItems="center">
         <Grid item xs={12}>
           <CustomSelect
@@ -142,7 +154,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
             }}
             value={classes}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '150px' },
             }}
           />{' '}
           <CustomSelect
@@ -158,7 +170,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
               setDivision(val as string);
             }}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '150px' },
             }}
           />{' '}
           <CustomSelect
@@ -174,7 +186,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
               setSelectedStudent(val as string);
             }}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '150px' },
             }}
           />
         </Grid>
@@ -381,7 +393,7 @@ const IndividualStudentProgress = (props: TabComponentType, { student = dummyStu
           </Card>
         </Grid>  */}
       </Grid>
-    </StyledPaper>
+    </Box>
   );
 };
 

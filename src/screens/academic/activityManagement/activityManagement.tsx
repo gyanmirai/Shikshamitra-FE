@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -35,6 +37,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Enum for Activity Categories
 enum ActivityCategory {
@@ -166,22 +169,62 @@ const ActivityManagement = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {row.status === 'Completed' && (
+            <MenuItem
+              onClick={() => {
+                uploadPictureDialog.onTrue();
+              }}
+            >
+              <Iconify icon="mdi:upload" sx={{ height: '16px', width: '16px' }} />
+              Upload Pictures
+            </MenuItem>
+          )}
+          {row.status === 'Completed' && (
+            <MenuItem
+              onClick={() => {
+                assignStudentDialog.onTrue();
+                setSelectedActivity(row as Activity);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
+              Assign Students
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    [assignStudentDialog, uploadPictureDialog]
+  );
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Activity Management
-        </Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-          }}
-        >
-          Add Activity
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Activity Management"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity' },
+          { name: 'Activity Management' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={() => {
+              dialog.onTrue();
+            }}
+          >
+            Activity
+          </Button>
+        }
+      />
 
       <CustomizableTable
         columns={[
@@ -234,79 +277,30 @@ const ActivityManagement = (props: TabComponentType) => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedActivity(row as Activity);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-
-                    {row.status === 'Completed' && (
-                      <MenuItem
-                        onClick={() => {
-                          uploadPictureDialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="mdi:upload" sx={{ height: '16px', width: '16px' }} />
-                        Upload Pictures
-                      </MenuItem>
-                    )}
-
-                    {row.status === 'Completed' && (
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedActivity(row as Activity);
-                          deleteConfirmDialog.onTrue();
-                          pop.onClose();
-                        }}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <Iconify
-                          icon="solar:trash-bin-trash-bold"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Delete
-                      </MenuItem>
-                    )}
-
-                    {row.status === 'Completed' && (
-                      <MenuItem
-                        onClick={() => {
-                          assignStudentDialog.onTrue();
-                          setSelectedActivity(row as Activity);
-                          pop.onClose();
-                        }}
-                      >
-                        <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
-                        Assign Students
-                      </MenuItem>
-                    )}
-
-                    {row.status === 'Active' && (
-                      <MenuItem
-                        onClick={() => {
-                          assignStudentDialog.onTrue();
-                          setSelectedActivity(row as Activity);
-                          pop.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Details
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  handleViewClick={() => {
+                    assignStudentDialog.onTrue();
+                    setSelectedActivity(row as Activity);
+                  }}
+                  handleEditClick={() => {
+                    setSelectedActivity(row as Activity);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedActivity(row as Activity);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={activities}

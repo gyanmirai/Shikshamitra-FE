@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
@@ -9,6 +11,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -28,6 +31,15 @@ const GradingAndAnalytics = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Grading And Analytics"
+        links={[
+          { name: 'Examination and Assessment' },
+          { name: 'Examination' },
+          { name: 'Grading And Analytics' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box display="flex" gap={2} mt={2} mb={5}>
         <CustomSelect
           label="Class"

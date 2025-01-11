@@ -7,8 +7,6 @@ import {
   Box,
   Grid,
   Button,
-  MenuList,
-  MenuItem,
   TextField,
   Typography,
   DialogContent,
@@ -19,7 +17,6 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -134,11 +131,12 @@ const AssignmentWeightageManagement = () => {
         <Button
           startIcon={<Add />}
           variant="contained"
+          size="small"
           onClick={() => {
             dialog.onTrue();
           }}
         >
-          Add Weightage
+          Weightage
         </Button>
       </Box>
       <CustomizableTable
@@ -165,40 +163,26 @@ const AssignmentWeightageManagement = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedWeightage(row as any);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedWeightage(row as any);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    setSelectedWeightage(row as any);
+                    setIsEdit(true);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedWeightage(row as any);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={weightages}

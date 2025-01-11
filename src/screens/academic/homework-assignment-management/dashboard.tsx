@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -14,6 +16,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
@@ -87,6 +91,39 @@ const Dashboard = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Homework And Assignment' },
+          { name: 'Dashboard' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Homework/Assignment',
+                href: '/academic/homework-assignment-management/homeworkCreation',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:assignment',
+                label: 'Submission',
+                href: '/academic/homework-assignment-management/studentSubmissions',
+                color: 'warning',
+              },
+              {
+                icon: 'mdi:arrow-right',
+                label: 'Assign Grade',
+                href: '/academic/homework-assignment-management/gradingAndFeedback',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"
@@ -103,7 +140,7 @@ const Dashboard = (props: TabComponentType) => {
           }}
           value={classes}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
         <CustomSelect
@@ -119,7 +156,7 @@ const Dashboard = (props: TabComponentType) => {
             setDivision(val as string);
           }}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
       </Box>

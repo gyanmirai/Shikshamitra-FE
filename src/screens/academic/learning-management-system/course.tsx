@@ -1,8 +1,10 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -32,6 +34,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Upload, UploadBox } from 'src/components/upload';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AddNewChapter } from '../course-management/subjects';
 import { subjectTempData } from '../course-management/subjectsData';
@@ -232,8 +235,48 @@ const Course = (props: TabComponentType) => {
     addChapterDialog.onFalse();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setSelectedSubject(row.subjectName);
+              addChapterDialog.onTrue();
+              setIsEditMode(false);
+              setSelectedChapter(null);
+            }}
+          >
+            <Iconify icon="mdi:plus" />
+            Chapter
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              viewAssignmentDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:eye" />
+            View Assignments
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [addChapterDialog, viewAssignmentDialog]
+  );
+
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Course"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Learning Management System' },
+          { name: 'Course' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"
@@ -250,7 +293,7 @@ const Course = (props: TabComponentType) => {
           }}
           value={classes}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
         <CustomSelect
@@ -266,7 +309,7 @@ const Course = (props: TabComponentType) => {
             setDivision(val as string);
           }}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '150px' },
           }}
         />
       </Box>
@@ -316,38 +359,17 @@ const Course = (props: TabComponentType) => {
             },
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
             isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedSubject(row.subjectName);
-                        addChapterDialog.onTrue();
-                        setIsEditMode(false);
-                        setSelectedChapter(null);
-                      }}
-                    >
-                      <Iconify icon="mdi:plus" />
-                      Add New Chapter
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        viewAssignmentDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" />
-                      View Assignments
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={subjectTableData}
@@ -452,11 +474,18 @@ const ViewAssignmentData = () => {
       <Scrollbar sx={{ height: '600px' }}>
         <CustomizableTable
           columns={[
-            { id: 'title', label: 'Assignment Title' },
-            { id: 'description', label: 'Assignment Description' },
+            { id: 'title', label: 'Assignment Title', minWidth: '200px', align: 'left' },
+            {
+              id: 'description',
+              label: 'Assignment Description',
+              minWidth: '200px',
+              align: 'left',
+            },
             {
               id: 'dueDate',
               label: 'Due Date',
+              minWidth: '130px',
+              align: 'left',
               render: (value: any, row: any) => (
                 <Typography fontSize="12px" gutterBottom>
                   {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -472,12 +501,22 @@ const ViewAssignmentData = () => {
                 </Typography>
               ),
             },
-            { id: 'submissionType', label: 'Submission Type' },
-            { id: 'assignmentType', label: 'Assignment Type' },
+            { id: 'submissionType', label: 'Submission Type', minWidth: '200px', align: 'left' },
+            { id: 'assignmentType', label: 'Assignment Type', minWidth: '200px', align: 'left' },
             { id: 'topic', label: 'Topic' },
-            { id: 'assignedResources', label: 'Assigned Resources' },
-            { id: 'evaluationCriteria', label: 'Evaluation Criteria' },
-            { id: 'customRubric', label: 'Custom Rubric' },
+            {
+              id: 'assignedResources',
+              label: 'Assigned Resources',
+              minWidth: '200px',
+              align: 'left',
+            },
+            {
+              id: 'evaluationCriteria',
+              label: 'Evaluation Criteria',
+              minWidth: '200px',
+              align: 'left',
+            },
+            { id: 'customRubric', label: 'Custom Rubric', minWidth: '180px', align: 'left' },
             {
               id: 'action',
               label: 'Action',

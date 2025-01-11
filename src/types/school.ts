@@ -1,3 +1,14 @@
+export interface AcademicYear {
+  id: string;
+  creationTime: string;
+  creatorId: string;
+  lastModificationTime: string;
+  lastModifierId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}
+
 export interface Board {
   id: string;
   creationTime: string;

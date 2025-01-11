@@ -1,3 +1,5 @@
+'use client';
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
@@ -25,6 +27,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { FileStorageOverview } from 'src/sections/file-manager/file-storage-overview';
 
@@ -96,6 +99,15 @@ const Setting = (props: TabComponentType) => {
 
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Settings"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Resource Content Library' },
+          { name: 'Settings' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Grid container spacing={2} marginTop={1}>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
@@ -182,13 +194,14 @@ const Setting = (props: TabComponentType) => {
               <Button
                 startIcon={<Add />}
                 variant="contained"
+                size="small"
                 onClick={() => {
                   dialog.onTrue();
                   setIsEdit(false);
                   setSelectedCategory(null);
                 }}
               >
-                Add Resource Category
+                Resource Category
               </Button>
             </Box>
           </Card>

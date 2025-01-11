@@ -30,11 +30,6 @@ const TABS = [
     label: 'Dashboard',
     component: (props: TabComponentType) => <ExaminationDashboardTab {...props} />,
   },
-  // {
-  //   value: 'examOverview',
-  //   label: 'Exam Overview',
-  //   component: (props: TabComponentType) => <ExamOverview {...props} />,
-  // },
   {
     value: 'scheduleExam',
     label: 'Schedule Exam',

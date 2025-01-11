@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -11,10 +13,11 @@ import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import {
   Box,
   Grid,
+  Card,
+  Chip,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
+  TextField,
   Typography,
   DialogActions,
   DialogContent,
@@ -32,6 +35,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ViewSubject } from './subject';
 
@@ -50,6 +54,7 @@ interface TSubject {
 interface TCurriculum {
   id: number;
   className: string;
+  curriculumName: string; // Added curriculumName to the interface
   subjects: TSubject[];
   startDate: Dayjs | null;
   endDate: Dayjs | null;
@@ -61,6 +66,7 @@ const CurriculumData: TCurriculum[] = [
   {
     id: 1,
     className: '1',
+    curriculumName: 'First Grade Curriculum', // Added curriculumName
     subjects: [
       { name: 'Math', color: '#0077b6' },
       { name: 'Science', color: '#8e44ad' },
@@ -74,6 +80,7 @@ const CurriculumData: TCurriculum[] = [
   {
     id: 2,
     className: '2',
+    curriculumName: 'Second Grade Curriculum', // Added curriculumName
     subjects: [
       { name: 'Math', color: '#0077b6' },
       { name: 'Science', color: '#8e44ad' },
@@ -87,6 +94,7 @@ const CurriculumData: TCurriculum[] = [
   {
     id: 3,
     className: '3',
+    curriculumName: 'Third Grade Curriculum', // Added curriculumName
     subjects: [
       { name: 'Math', color: '#0077b6' },
       { name: 'Science', color: '#8e44ad' },
@@ -114,12 +122,15 @@ const subjectData = {
   status: 'Publish',
 };
 
+const CurriculumOverviewMain = (props: TabComponentType) => {};
+
 const CurriculumOverview = (props: TabComponentType) => {
   const { setSearchParams } = props;
   const [curriculumTableData, setCurriculumTableData] = useState<TCurriculum[]>(CurriculumData);
   const [selectedCurriculum, setSelectedCurriculum] = useState<TCurriculum | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
+  const [open, setOpen] = useState(false);
   const showDialog = useBoolean();
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
@@ -128,7 +139,7 @@ const CurriculumOverview = (props: TabComponentType) => {
   const confirmPublishDialog = useBoolean();
 
   const handleCloseDialog = () => {
-    dialog.onFalse();
+    setOpen(false);
     setSelectedCurriculum(null);
     setIsEdit(false);
     confirmPublishDialog.onFalse();
@@ -137,7 +148,7 @@ const CurriculumOverview = (props: TabComponentType) => {
   const handleEditCurriculum = (curriculum: any) => {
     setSelectedCurriculum(curriculum);
     setIsEdit(true);
-    dialog.onTrue();
+    setOpen(true);
   };
 
   const confirmStatusChange = () => {
@@ -187,251 +198,262 @@ const CurriculumOverview = (props: TabComponentType) => {
   const handleSubjectClick = () => {};
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6">Curriculum Management</Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            setIsEdit(false);
-            setSelectedCurriculum(null);
-            dialog.onTrue();
-          }}
-        >
-          Add Curriculum
-        </Button>
-      </Box>
-      <Grid2 container spacing={3}>
-        {/* <Grid2 xs={12} md={6} lg={6}>
-        <Card sx={{ p: 3, height: '100%' }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
-              Curriculum Overview
-            </Typography>
-            <CustomSelect
-              label="Class"
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { minWidth: 120, bgcolor: 'white' } }}
-            />
-          </Box>
-
-          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
-            >
-              <Typography component="span" variant="h6">
-                Subjects
-              </Typography>
-              <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                12
-              </Typography>
-            </Box>
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
-            >
-              <Typography component="span" variant="h6">
-                Teachers
-              </Typography>
-              <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                12
-              </Typography>
-            </Box>
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
-            >
-              <Typography component="span" variant="h6">
-                Topics Covered
-              </Typography>
-              <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                12
-              </Typography>
-            </Box>
-          </Box>
-        </Card>
-      </Grid2> */}
-        {/* <Grid2 xs={12}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography component="span" variant="h6" gutterBottom>
-              Class-wise Curriculum Grid
-            </Typography>
-            <CustomSelect
-              label="class"
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { minWidth: 120 } }}
-            />
-          </Box>
-          <CustomizableTable
-            columns={[
-              { id: 'grade', label: 'Grade' },
-              { id: 'maths', label: 'Maths' },
-              { id: 'science', label: 'Science' },
-              { id: 'english', label: 'English' },
-              { id: 'gujarati', label: 'Gujarati' },
+    <Box>
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Curriculum Overview"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Curriculum Management' },
+              { name: 'Curriculum Overview' },
             ]}
-            data={[
-              {
-                grade: '1st',
-                maths: 'Numbers',
-                science: 'Plants',
-                english: 'Alphabets',
-                gujarati: 'વર્ણમાળા',
-              },
-              {
-                grade: '2nd',
-                maths: 'Addition',
-                science: 'Animals',
-                english: 'Grammar',
-                gujarati: 'શબ્દો',
-              },
-              {
-                grade: '3rd',
-                maths: 'Multiplication',
-                science: 'Human Body',
-                english: 'Comprehension',
-                gujarati: 'વાક્યો',
-              },
-              {
-                grade: '4th',
-                maths: 'Fractions',
-                science: 'Environment',
-                english: 'Writing',
-                gujarati: 'નિબંધ',
-              },
-              {
-                grade: '5th',
-                maths: 'Geometry',
-                science: 'Matter',
-                english: 'Literature',
-                gujarati: 'કવિતા',
-              },
-            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleCloseDialog}
+              >
+                Back
+              </Button>
+            }
           />
-        </Grid2> */}
-        <CustomizableTable
-          columns={[
-            { id: 'className', label: 'Class' },
-            {
-              id: 'startDate',
-              label: 'Start Date',
-              render: (value, row) => (
-                <Typography fontSize="12px" gutterBottom>
-                  {dayjs(value).format('DD MMM YYYY')}
-                </Typography>
-              ),
-            },
-            {
-              id: 'endDate',
-              label: 'End Date',
-              render: (value, row) => (
-                <Typography fontSize="12px" gutterBottom>
-                  {dayjs(value).format('DD MMM YYYY')}
-                </Typography>
-              ),
-            },
-            ...curriculumTableData[0].subjects.map((_, index) => ({
-              id: `subject${index + 1}`,
-              label: `Subject ${index + 1}`,
-              render: (value: any, row: any) => {
-                // Cast the row back to TCurriculum since we know its actual type
-                const curriculumRow = row as TCurriculum;
-                return (
-                  <Typography
-                    component="span"
-                    variant="body2"
-                    sx={{
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: '16px',
-                      color: curriculumRow.subjects[index]?.color,
-                      border: `1px solid ${curriculumRow.subjects[index]?.color}`,
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => {
-                      showDialog.onTrue();
-                    }}
-                  >
-                    {curriculumRow.subjects[index]?.name
-                      ? curriculumRow.subjects[index]?.name
-                      : '-'}
-                  </Typography>
-                );
-              },
-            })),
-            {
-              id: 'status',
-              label: 'Publish',
-              render: (value: string, row: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Switch
-                    size="small"
-                    checked={value === 'Publish'}
-                    onChange={() => handleStatusChange(row.id, value as string)}
-                  />
-                </Box>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover: pop }) => (
-                    <MenuList>
-                      {row.status === 'Unpublish' && (
-                        <MenuItem
-                          onClick={() => {
-                            handleEditCurriculum(row);
-                          }}
-                        >
-                          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                          Edit
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  )}
-                />
-              ),
-            },
-          ]}
-          data={curriculumTableData}
+          <Card>
+            <CurriculumForm
+              setSearchParams={setSearchParams}
+              onSubmit={handleSubmit}
+              onClose={handleCloseDialog}
+              isEdit={isEdit}
+              data={selectedCurriculum}
+            />
+          </Card>
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Curriculum Overview"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Curriculum Management' },
+              { name: 'Curriculum Overview' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Add />}
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setIsEdit(false);
+                  setSelectedCurriculum(null);
+                  setOpen(true);
+                }}
+              >
+                Curriculum
+              </Button>
+            }
+          />
+          <Grid2 container spacing={3}>
+            {/* <Grid2 xs={12} md={6} lg={6}>
+    <Card sx={{ p: 3, height: '100%' }}>
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
+          Curriculum Overview
+        </Typography>
+        <CustomSelect
+          label="Class"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 120, bgcolor: 'white' } }}
         />
-      </Grid2>
+      </Box>
 
-      <CustomDialog
-        maxWidth="sm"
-        open={dialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Curriculum' : 'Add Curriculum'}
-      >
-        <CurriculumForm
-          setSearchParams={setSearchParams}
-          onSubmit={handleSubmit}
-          onClose={handleCloseDialog}
-          isEdit={isEdit}
-          data={selectedCurriculum}
+      <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
+        >
+          <Typography component="span" variant="h6">
+            Subjects
+          </Typography>
+          <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+            12
+          </Typography>
+        </Box>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
+        >
+          <Typography component="span" variant="h6">
+            Teachers
+          </Typography>
+          <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+            12
+          </Typography>
+        </Box>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          sx={{ bgcolor: 'white', borderRadius: 1, p: 2, boxShadow: 1 }}
+        >
+          <Typography component="span" variant="h6">
+            Topics Covered
+          </Typography>
+          <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+            12
+          </Typography>
+        </Box>
+      </Box>
+    </Card>
+  </Grid2> */}
+            {/* <Grid2 xs={12}>
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Typography component="span" variant="h6" gutterBottom>
+          Class-wise Curriculum Grid
+        </Typography>
+        <CustomSelect
+          label="class"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 120 } }}
         />
-      </CustomDialog>
+      </Box>
+      <CustomizableTable
+        columns={[
+          { id: 'grade', label: 'Grade' },
+          { id: 'maths', label: 'Maths' },
+          { id: 'science', label: 'Science' },
+          { id: 'english', label: 'English' },
+          { id: 'gujarati', label: 'Gujarati' },
+        ]}
+        data={[
+          {
+            grade: '1st',
+            maths: 'Numbers',
+            science: 'Plants',
+            english: 'Alphabets',
+            gujarati: 'વર્ણમાળા',
+          },
+          {
+            grade: '2nd',
+            maths: 'Addition',
+            science: 'Animals',
+            english: 'Grammar',
+            gujarati: 'શબ્દો',
+          },
+          {
+            grade: '3rd',
+            maths: 'Multiplication',
+            science: 'Human Body',
+            english: 'Comprehension',
+            gujarati: 'વાક્યો',
+          },
+          {
+            grade: '4th',
+            maths: 'Fractions',
+            science: 'Environment',
+            english: 'Writing',
+            gujarati: 'નિબંધ',
+          },
+          {
+            grade: '5th',
+            maths: 'Geometry',
+            science: 'Matter',
+            english: 'Literature',
+            gujarati: 'કવિતા',
+          },
+        ]}
+      />
+    </Grid2> */}
+            <CustomizableTable
+              columns={[
+                { id: 'className', label: 'Class', minWidth: '100px', align: 'left' },
+                {
+                  id: 'curriculumName',
+                  label: 'Curriculum Name',
+                  minWidth: '170px',
+                  align: 'left',
+                },
+                {
+                  id: 'startDate',
+                  label: 'Start Date',
+                  minWidth: '130px',
+                  align: 'left',
+                  render: (value, row) => (
+                    <Typography fontSize="12px" gutterBottom>
+                      {dayjs(value).format('DD MMM YYYY')}
+                    </Typography>
+                  ),
+                },
+                {
+                  id: 'endDate',
+                  label: 'End Date',
+                  minWidth: '130px',
+                  align: 'left',
+                  render: (value, row) => (
+                    <Typography fontSize="12px" gutterBottom>
+                      {dayjs(value).format('DD MMM YYYY')}
+                    </Typography>
+                  ),
+                },
+                {
+                  id: 'subjects',
+                  label: 'Subjects',
+                  render(value, row) {
+                    return row.subjects.map((data: any, index: any) => (
+                      <Chip size="small" label={data.name} variant="outlined" />
+                    ));
+                  },
+                },
+                {
+                  id: 'status',
+                  label: 'Publish',
+                  render: (value: string, row: any) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Switch
+                        size="small"
+                        checked={value === 'Publish'}
+                        onChange={() => handleStatusChange(row.id, value as string)}
+                      />
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isSort: false,
+                  render(value, row) {
+                    return (
+                      <ThreeDotsActions
+                        // actions={(prop) => actions({ ...props, row })}
+                        placement="right-top"
+                        showEditIcon
+                        showThreeDots={false}
+                        handleEditClick={() => {
+                          handleEditCurriculum(row);
+                        }}
+                      />
+                    );
+                  },
+                },
+              ]}
+              data={curriculumTableData}
+            />
+          </Grid2>
+        </>
+      )}
 
       <CustomDialog
         title="Subject Details"
@@ -496,6 +518,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
   const formik = useFormik({
     initialValues: {
       className: data?.className || '',
+      curriculumName: data?.curriculumName || '',
       subjects: data?.subjects.map((subject) => subject.name) || [],
       startDate: data?.startDate ? dayjs(data?.startDate) : dayjs(),
       endDate: data?.endDate ? dayjs(data?.endDate) : null,
@@ -534,8 +557,18 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '180px' }}>
+        <Scrollbar sx={{ p: 2, height: '250px' }}>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="curriculumName"
+                label="curriculumName"
+                value={formik.values.curriculumName}
+                onChange={formik.handleChange}
+                size="small"
+              />
+            </Grid>
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Class"
@@ -550,6 +583,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
+
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Predefined Template"

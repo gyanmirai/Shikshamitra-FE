@@ -1,26 +1,15 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Switch,
-  Button,
-  Tooltip,
-  MenuItem,
-  MenuList,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Switch, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -90,23 +79,29 @@ const RubricManagement = () => {
           Rubric Management
         </Typography>
 
-        <Tooltip title="Create Rubric">
-          <Iconify
-            cursor="pointer"
-            icon="mdi:add-circle"
-            onClick={dialog.onTrue}
-            height={40}
-            width={40}
-          />
-        </Tooltip>
+        <Button
+          startIcon={<Add />}
+          onClick={() => {
+            dialog.onTrue();
+          }}
+          size="small"
+          variant="contained"
+        >
+          Rubric
+        </Button>
       </Box>
       <CustomizableTable
         columns={[
           { id: 'class', label: 'Class' },
-          { id: 'subjectName', label: 'Subject Name' },
-          { id: 'pointScale', label: 'Point Scale' },
+          { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },
+          { id: 'pointScale', label: 'Point Scale', minWidth: '150px', align: 'left' },
           { id: 'objective', label: 'Objective' },
-          { id: 'rubricDescription', label: 'Rubric Description' },
+          {
+            id: 'rubricDescription',
+            label: 'Rubric Description',
+            minWidth: '200px',
+            align: 'left',
+          },
           { id: 'date', label: 'Date' },
           {
             id: 'status',
@@ -128,50 +123,21 @@ const RubricManagement = () => {
             ),
           },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          //   modal.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Details
-                      </MenuItem>
-                      {!row.status && (
-                        <>
-                          <MenuItem
-                            onClick={() => {
-                              //   confirm.onTrue();
-                              popover.onClose();
-                            }}
-                            sx={{ color: 'error.main' }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              //   modal.onTrue();
-                              popover.onClose();
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                            Edit
-                          </MenuItem>
-                        </>
-                      )}
-                    </MenuList>
-                  )}
+                  // actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                  showThreeDots={false}
+                  showViewIcon
+                  showEditIcon
+                  showDeleteIcon
+                  handleDeleteClick={() => {}}
+                  handleEditClick={() => {}}
+                  handleViewClick={() => {}}
                 />
               );
             },

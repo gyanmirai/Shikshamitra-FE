@@ -1,3 +1,5 @@
+'use client';
+
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -8,10 +10,9 @@ import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
+  Card,
   Button,
-  MenuItem,
   Checkbox,
-  MenuList,
   TextField,
   Typography,
   DialogActions,
@@ -25,10 +26,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TStudentGroup {
   id: number;
@@ -74,108 +75,110 @@ const StudentGroup = (props: TabComponentType) => {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<TStudentGroup | null>(null);
 
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
+  const [open, setOpen] = useState(false);
   const deleteConfirmDialog = useBoolean();
 
   const handleCloseDialog = () => {
-    dialog.onFalse();
+    setOpen(false);
   };
 
   const handleSubmit = () => {};
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Students Group
-        </Typography>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            dialog.onTrue();
-            // setIsEdit(false);
-            // setSelectedSubject(null);
-          }}
-        >
-          Add Group
-        </Button>
-      </Box>
-
-      <CustomizableTable
-        columns={[
-          { id: 'className', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'groupName', label: 'Group Name' },
-          { id: 'groupType', label: 'Group Type' },
-          {
-            id: 'dynamicGroup',
-            label: 'Dynamic Group Type',
-            render: (value) => value || '-',
-          },
-          { id: 'totalStudents', label: 'Total Students' },
-          {
-            id: 'action',
-            label: 'Action',
-            isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px', mr: 1 }} />
-                      View Details
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                        setIsEdit(true);
-                        dialog.onTrue();
-                        pop.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="solar:pen-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setSelectedGroup(row as TStudentGroup);
-                        deleteConfirmDialog.onTrue();
-                        pop.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px', mr: 1 }}
-                      />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
-          },
+      <CustomBreadcrumbs
+        heading="Student Group"
+        links={[
+          { name: 'Academic and Assignment' },
+          { name: 'Activity Management' },
+          { name: 'Student Group' },
         ]}
-        data={studentGroups}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          open ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="eva:arrow-back-fill" />}
+              onClick={handleCloseDialog}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              startIcon={<Add />}
+              variant="contained"
+              size="small"
+              onClick={() => {
+                setOpen(true);
+                // setIsEdit(false);
+                // setSelectedSubject(null);
+              }}
+            >
+              Group
+            </Button>
+          )
+        }
       />
 
-      <CustomDialog
-        maxWidth="md"
-        open={dialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Group' : 'Add Group'}
-      >
-        <AddGroup onSubmit={handleSubmit} onClose={dialog.onFalse} data={[]} isEdit={isEdit} />
-      </CustomDialog>
+      {open ? (
+        <Card>
+          <AddGroup
+            onSubmit={handleSubmit}
+            onClose={() => {
+              setOpen(false);
+            }}
+            data={[]}
+            isEdit={isEdit}
+          />
+        </Card>
+      ) : (
+        <CustomizableTable
+          columns={[
+            { id: 'className', label: 'Class' },
+            { id: 'division', label: 'Division' },
+            { id: 'groupName', label: 'Group Name' },
+            { id: 'groupType', label: 'Group Type' },
+            {
+              id: 'dynamicGroup',
+              label: 'Dynamic Group Type',
+              render: (value) => value || '-',
+            },
+            { id: 'totalStudents', label: 'Total Students' },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    // actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showDeleteIcon
+                    showViewIcon
+                    showThreeDots={false}
+                    handleViewClick={() => {
+                      setSelectedGroup(row as TStudentGroup);
+                    }}
+                    handleEditClick={() => {
+                      setSelectedGroup(row as TStudentGroup);
+                      setIsEdit(true);
+                      setOpen(true);
+                    }}
+                    handleDeleteClick={() => {
+                      setSelectedGroup(row as TStudentGroup);
+                      deleteConfirmDialog.onTrue();
+                    }}
+                  />
+                );
+              },
+            },
+          ]}
+          data={studentGroups}
+        />
+      )}
     </Box>
   );
 };
@@ -434,7 +437,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '300px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <CustomSelect
