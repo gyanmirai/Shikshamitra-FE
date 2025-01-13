@@ -12,6 +12,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Notification from './notification';
 import StudentDocumentType from './document-type';
 import InquiryPreference from './inquiryPreference';
+import EntranceExamSlots from './entrance-exam-slots';
 
 const TABS = [
   {
@@ -28,6 +29,11 @@ const TABS = [
     value: 'inquiryPreference',
     label: 'Inquiry Preference',
     component: () => <InquiryPreference />,
+  },
+  {
+    value: 'entranceExamSlots',
+    label: 'Entrance Exam Slots',
+    component: () => <EntranceExamSlots />,
   },
 ];
 

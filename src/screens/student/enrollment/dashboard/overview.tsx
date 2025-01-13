@@ -141,7 +141,7 @@ const Overview = () => (
             count={17}
             color="error.main"
             bgColor="error"
-            href="/student/enrollment/entrance-exam"
+            href="/student/enrollment/entrance-exam/?view=table"
             labels={[
               { name: 'Passed 15', color: 'success' },
               { name: 'Failed 2', color: 'error' },

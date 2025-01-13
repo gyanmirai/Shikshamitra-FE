@@ -12,8 +12,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const tokenSet = await client.refresh(body.token!);
     let file;
+    const filePath = path.join(process.cwd(), 'public', 'tokenSet.json');
     try {
-      const filePath = path.join(process.cwd(), 'src', 'tokenSet.json');
+      // const filePath = path.join(process.cwd(), 'src', 'tokenSet.json');
       const response = await fs.readFile(filePath, 'utf-8');
       file = JSON.parse(response);
     } catch (error) {
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
       [session?.userInfo?.sub!]: tokenSet,
     };
 
-    await fs.writeFile('src/tokenSet.json', JSON.stringify(tokenSets));
+    await fs.writeFile(filePath, JSON.stringify(tokenSets));
     session.access_token = tokenSet.access_token;
     await session.save();
     return Response.json(tokenSet);

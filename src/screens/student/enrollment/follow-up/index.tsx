@@ -6,7 +6,16 @@ import React, { useState } from 'react';
 
 import { Add, Send } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField, IconButton, DialogActions, InputAdornment } from '@mui/material';
+import {
+  Box,
+  Button,
+  Avatar,
+  TextField,
+  IconButton,
+  Typography,
+  DialogActions,
+  InputAdornment,
+} from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 
@@ -157,58 +166,119 @@ export const CommunicationForm = ({ handleCloseDialog }: any) => (
   <Box>
     <Scrollbar
       sx={{
-        p: 3,
         bgcolor: 'background.neutral',
 
         position: 'relative',
+        height: '350px',
+        p: 2,
       }}
     >
-      <Box height="350px" />
-
-      <Box
-        sx={{
-          // position: 'absolute',
-          // bottom: 16,
-          // right: 16,
-          // left: 16,
-          // zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          flexDirection: 'column',
-        }}
-      >
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Type a message..."
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton>
-                  <Send />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <DatePicker
-          label="Due Date"
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
-        />
-        <CustomSelect
-          options={[
-            { label: 'Interested', value: 'interested' },
-            { label: 'Not Interested', value: 'notInterested' },
-            { label: 'Pending', value: 'pending' },
-          ]}
-          value=""
-          onChange={() => {}}
-          label="Change Status"
-          formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
-        />
+      <Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Avatar />
+          <Box display="flex" flexDirection="column">
+            <Typography variant="subtitle1">John Doe</Typography>
+            <Typography component="span" variant="subtitle2" color="text.secondary">
+              06-01-2025 12:30 PM
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
+          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
+          laboriosam dolores illo molestiae. Dolores, eaque.
+        </Typography>
+      </Box>
+      <Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Avatar />
+          <Box display="flex" flexDirection="column">
+            <Typography variant="subtitle1">John Doe</Typography>
+            <Typography component="span" variant="subtitle2" color="text.secondary">
+              06-01-2025 12:30 PM
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
+          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
+          laboriosam dolores illo molestiae. Dolores, eaque.
+        </Typography>
+      </Box>
+      <Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Avatar />
+          <Box display="flex" flexDirection="column">
+            <Typography variant="subtitle1">John Doe</Typography>
+            <Typography component="span" variant="subtitle2" color="text.secondary">
+              06-01-2025 12:30 PM
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
+          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
+          laboriosam dolores illo molestiae. Dolores, eaque.
+        </Typography>
+      </Box>
+      <Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Avatar />
+          <Box display="flex" flexDirection="column">
+            <Typography variant="subtitle1">John Doe</Typography>
+            <Typography component="span" variant="subtitle2" color="text.secondary">
+              06-01-2025 12:30 PM
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
+          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
+          laboriosam dolores illo molestiae. Dolores, eaque.
+        </Typography>
       </Box>
     </Scrollbar>
+    <Box
+      sx={{
+        // position: 'absolute',
+        // bottom: 16,
+        // right: 16,
+        // left: 16,
+        // zIndex: 1000,
+        p: 2,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        flexDirection: 'column',
+      }}
+    >
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Follow Up Message"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton>
+                <Send />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+      <DatePicker label="Due Date" slotProps={{ textField: { size: 'small', fullWidth: true } }} />
+      <CustomSelect
+        options={[
+          { label: 'Interested', value: 'interested' },
+          { label: 'Not Interested', value: 'notInterested' },
+          { label: 'Pending', value: 'pending' },
+        ]}
+        value=""
+        onChange={() => {}}
+        label="Change Status"
+        formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
+      />
+    </Box>
     <DialogActions>
       <Button onClick={handleCloseDialog} variant="outlined" color="error">
         Close
