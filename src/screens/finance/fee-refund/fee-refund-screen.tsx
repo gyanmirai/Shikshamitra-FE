@@ -2,21 +2,22 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, Tooltip, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FeeRefundRequestDialog from './component/fee-refund-request-dialog';
 import FinanceFeeRefundedViewDialog from './component/fee-refunded-view-dialog';
-import FinanceFeeRefundAllocationDialog from '../fee-collection/feeRefund/finance-fee-refund-allocated';
-import FinanceFeeCollectionRefundApprovedDialog from '../fee-collection/feeRefund/component/fee-refund-approved-dialog';
+import FinanceFeeRefundAllocationDialog from './component/finance-fee-refund-allocated';
+import FinanceFeeCollectionRefundApprovedDialog from './component/fee-refund-approved-dialog';
 
 interface FeeRefundScreenProps {
   fromStudentDetailedView?: boolean;
@@ -419,12 +420,13 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
           {/* Header Section */}
           <Box
             pt={2} // Consistent padding
+            pb={5}
             display="flex"
-            justifyContent="space-between"
+            justifyContent="flex-end"
             alignItems="center"
           >
             {/* Filters Section */}
-            <Box display="flex" gap={3} alignItems="center">
+            {/* <Box display="flex" gap={3} alignItems="center">
               <CustomSelect
                 label="Standard"
                 options={[]}
@@ -448,7 +450,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                   console.log(e.target.value);
                 }}
               />
-            </Box>
+            </Box> */}
 
             {/* Action Button */}
             <Button
@@ -514,7 +516,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               render(value, row) {
                 return (
                   <Typography minWidth="100px" fontSize="12px" textAlign="center">
-                    {value}
+                    {formatNumber(value, 'INR')}
                   </Typography>
                 );
               },
@@ -558,12 +560,12 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               render: (row: any, popover) => (
                 <ThreeDotsActions
                   placement="right-top"
-                  showViewIcon
-                  handleViewClick={() => {
-                    setSelectedStudent(studentRefundData[0]);
+                  // showViewIcon
+                  // handleViewClick={() => {
+                  //   setSelectedStudent(studentRefundData[0]);
 
-                    dialogForFeeRefundedView.onTrue();
-                  }}
+                  //   dialogForFeeRefundedView.onTrue();
+                  // }}
                   actions={() => (
                     <MenuList>
                       <MenuItem
@@ -684,8 +686,8 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               label: 'Ask For Refund',
               render(value, row) {
                 return (
-                  <Typography minWidth="100px" fontSize="12px" textAlign="center">
-                    {value}
+                  <Typography minWidth="100px" fontSize="12px" textAlign="left">
+                    {formatNumber(value, 'INR')}
                   </Typography>
                 );
               },

@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { Box, Grid, Button, MenuList, MenuItem, TextField } from '@mui/material';
+import { Box, Grid, Button, TextField } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
-import DataTable from 'src/components/commonTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const DefinedSchoolWideRulesComponent = () => (
   <Box display="flex" flexDirection="column" gap={2}>
@@ -32,31 +32,22 @@ const DefinedSchoolWideRulesComponent = () => (
     <Grid container spacing={2}>
       <Grid item xs={12} md={12}>
         <Box>
-          <DataTable
+          <CustomizableTable
+            isShowedDense={false}
+            isPagination={false}
+            isFilter={false}
+            isSearch={false}
             columns={[
-              { key: 'additionallyDiscountCategory', label: 'Additionally Discount Category' },
+              { id: 'additionallyDiscountCategory', label: 'Additionally Discount Category' },
               {
-                key: 'action',
+                id: 'action',
                 label: 'Action',
                 render(row: any) {
                   return (
                     <ThreeDotsActions
-                      actions={({ popover }: any) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              // uploadModal.onTrue();
-                              // popover.onClose();
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ height: '16px', width: '16px' }}
-                            />
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      )}
+                      showThreeDots={false}
+                      showDeleteIcon
+                      handleDeleteClick={() => {}}
                     />
                   );
                 },

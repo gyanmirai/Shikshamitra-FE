@@ -562,7 +562,7 @@ const FinanceStudentFeeManagement = () => {
 
             render(value, row) {
               return (
-                <Typography minWidth="180px" fontSize="12px">
+                <Typography sx={{ textAlign: 'center' }} minWidth="200px" fontSize="12px">
                   {formatNumber(row.totalGeneralDiscount, 'INR')}
                 </Typography>
               );
@@ -574,7 +574,7 @@ const FinanceStudentFeeManagement = () => {
 
             render(value, row) {
               return (
-                <Typography minWidth="180px" fontSize="12px">
+                <Typography minWidth="180px" fontSize="12px" sx={{ textAlign: 'center' }}>
                   {formatNumber(row.totalAdditionalDiscount, 'INR')}
                 </Typography>
               );

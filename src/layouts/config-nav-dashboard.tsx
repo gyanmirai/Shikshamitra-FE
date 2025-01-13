@@ -1082,6 +1082,11 @@ const financeModule = {
               path: '/finance/settings/fee-structure',
               _action: 'fee-structure-setting',
             },
+            {
+              title: 'Create Receipt',
+              path: '/finance/settings/create-receipt',
+              _action: 'receipt-book',
+            },
             // {
             //   title: 'Discount Category',
             //   path: '/finance/settings/discount-category',
@@ -1104,9 +1109,9 @@ const financeModule = {
               _action: 'payment-method-setting',
             },
             {
-              title: 'Bounce Check Charges',
-              path: '/finance/settings/bounce-check-charges-setting',
-              _action: 'bounce-check-charges-setting',
+              title: 'Bounce Cheque Charges',
+              path: '/finance/settings/bounce-cheque-charges-setting',
+              _action: 'bounce-cheque-charges-setting',
             },
             {
               title: 'Notification',

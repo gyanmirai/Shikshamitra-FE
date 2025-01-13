@@ -7,6 +7,7 @@ import { Box, Grid, Button, Divider, TextField, Typography, DialogActions } from
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import ViewReceipt from 'src/screens/finance/viewReceipt/view-receipt';
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -87,6 +88,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       receivedAmount: '',
     },
     onSubmit: (values) => {
+      console.log('here values', values);
       onSave(values);
     },
   });
@@ -168,6 +170,8 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   const closeDialogForReceivedAmount = () => {
     errorDialogForReceivedAmount.onFalse();
   };
+
+  const viewReceiptDialog = useBoolean();
 
   return (
     <>
@@ -459,7 +463,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
 
                 <TextField
                   multiline
-                  rows={4}
+                  rows={6}
                   name="note"
                   label="Note"
                   value={formik.values.note}
@@ -468,10 +472,10 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                 />
               </Box>
             </Scrollbar>
-          </form>
-          <DialogActions>
-            <Box pr="15px" display="flex" gap={2}>
-              {/* <TextField
+
+            <DialogActions>
+              <Box pr="15px" display="flex" gap={2}>
+                {/* <TextField
               name="amount"
               label="Amount"
               value={formik.values.amount}
@@ -480,7 +484,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
               sx={{width:"140px"}}
 
             /> */}
-              {/* <TextField
+                {/* <TextField
               name="amount"
               label="Amount Due"
               value={formik.values.amount}
@@ -500,35 +504,39 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
             
              
             /> */}
-            </Box>
-            {/* <Button onClick={onClose} variant="contained" size="small">
+              </Box>
+              {/* <Button onClick={onClose} variant="contained" size="small">
             Cancel
           </Button> */}
-            <Button
-              disabled={formik.values.receivedPayment < 1}
-              onClick={() => {}}
-              variant="contained"
-              size="small"
-            >
-              View Receipt
-            </Button>
+              <Button
+                // disabled={formik.values.receivedPayment < 1}
+                onClick={() => {
+                  viewReceiptDialog.onTrue();
+                }}
+                variant="contained"
+                size="small"
+                type="submit"
+              >
+                View Receipt
+              </Button>
 
-            <Button
-              // disabled={formik.values.receivedPayment < 1}
-              type="submit"
-              variant="contained"
-              size="small"
-              onClick={() => {
-                if (parseNumber(receivedAmountState) > parseNumber(amountDueState)) {
-                  errorDialogForReceivedAmount.onTrue();
-                } else {
-                  dialog.onTrue();
-                }
-              }}
-            >
-              Collect
-            </Button>
-          </DialogActions>
+              <Button
+                // disabled={formik.values.receivedPayment < 1}
+                type="submit"
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  // if (parseNumber(receivedAmountState) > parseNumber(amountDueState)) {
+                  //   errorDialogForReceivedAmount.onTrue();
+                  // } else {
+                  //   dialog.onTrue();
+                  // }
+                }}
+              >
+                Collect
+              </Button>
+            </DialogActions>
+          </form>
         </Box>
       </CustomDialog>
 
@@ -547,6 +555,15 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
           open={errorDialogForReceivedAmount.value}
           onClose={closeDialogForReceivedAmount}
           title="Received amount cannot exceed the due amount."
+        />
+      )}
+
+      {viewReceiptDialog.value && (
+        <ViewReceipt
+          dialogValue={viewReceiptDialog.value}
+          onClose={() => {
+            viewReceiptDialog.onFalse();
+          }}
         />
       )}
     </>

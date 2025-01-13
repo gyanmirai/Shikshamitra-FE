@@ -10,7 +10,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import FeeRefundPaymentDialog from './component/fee-refund-dialog';
+import FeeRefundPaymentDialog from './fee-refund-payment-dialog';
 
 interface FinanceFeeRefundAllocationDialogProps {
   dialogValue: boolean;

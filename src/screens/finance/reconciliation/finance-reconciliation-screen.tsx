@@ -21,8 +21,8 @@ const TABS = [
     component: () => <FinanceReconciliationTab />,
   },
   {
-    value: 'bounce-check-list',
-    label: 'Bounce Check Details',
+    value: 'bounce-cheque-list',
+    label: 'Bounce Cheque Details',
     icon: <Iconify icon="fluent:check-24-filled" width={20} />,
     component: () => <FinanceBounceTab />,
   },
@@ -47,7 +47,7 @@ const FinanceReconciliationScreen = () => {
             name:
               searchParams.tab === 'reconciliation-list'
                 ? 'Reconciliation'
-                : 'Bounce Check Details',
+                : 'Bounce Cheque Details',
           },
         ]}
         sx={{ px: 1, mb: 2 }}

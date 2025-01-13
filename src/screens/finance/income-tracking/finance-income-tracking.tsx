@@ -134,7 +134,13 @@ const FinanceIncomeTrackingScreen = () => {
         links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ mr: '15px' }} gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box
+        sx={{ mr: '15px', mb: '20px' }}
+        gap={3}
+        display="flex"
+        flexDirection="row"
+        justifyContent="flex-end"
+      >
         <Button
           startIcon={<Iconify icon="ic:outline-plus" />}
           onClick={dialog.onTrue}

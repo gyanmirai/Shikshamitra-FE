@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Switch, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Switch, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -105,7 +105,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
         links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
         <Button
           startIcon={<Iconify icon="ic:outline-plus" />}
           onClick={() => {
@@ -154,31 +154,18 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
             label: 'Action',
             render: (value, row: any) => (
               <ThreeDotsActions
-                actions={({ popover }: any) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setIsEdit(true);
+                showThreeDots={false}
+                showDeleteIcon
+                handleDeleteClick={() => {
+                  handleDelete(row);
+                }}
+                showEditIcon
+                handleEditClick={() => {
+                  setIsEdit(true);
 
-                        setSelectedEntry(row);
-                        dialog.onTrue();
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify color="blue" icon="solar:pen-bold" />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleDelete(row); // Handle delete action
-                        popover.onClose(); // Close the popover
-                      }}
-                    >
-                      <Iconify color="red" icon="solar:trash-bin-trash-bold" />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
+                  setSelectedEntry(row);
+                  dialog.onTrue();
+                }}
               />
             ),
           },

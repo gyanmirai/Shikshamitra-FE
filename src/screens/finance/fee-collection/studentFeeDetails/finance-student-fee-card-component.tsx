@@ -7,10 +7,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 
 import FinanceCollectCharges from '../charges/component/collect-charges';
-import FinanceFeeRefundAllocationDialog from '../feeRefund/finance-fee-refund-allocated';
 import FinanceStudentAdditionalDiscountDialog from './component/student-additional-discount';
 import FinanceStudentInfoCardComponent from './component/finance-student-info-card-component';
 import FinanceNewCollectFeeDialog from '../collectFees/component/finance-new-fee-collect-dialog';
+import FinanceFeeRefundAllocationDialog from '../../fee-refund/component/finance-fee-refund-allocated';
 
 import type { IUserCard } from './component/finance-student-info-card-component';
 
@@ -407,63 +407,6 @@ const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentPro
             onChange={(e) => {}}
           />
         </Box>
-        {/* <Box display="flex" justifyContent="flex-end" alignItems="center">
-          <Box display="flex" flexDirection="row" gap={2}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                feeRefundDialog.onFalse();
-                dialog.onFalse();
-                setSelectedStudent(students[0]);
-               
-                financeStudentAdditionalDiscountDialog.onTrue();
-              }}
-            >
-              Additional Discount
-            </Button>
-
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                financeStudentAdditionalDiscountDialog.onFalse();
-                feeRefundDialog.onFalse();
-                setSelectedStudent(students[0]);
-                // setIsEdit(true);
-                dialog.onTrue();
-              }}
-            >
-              Collect Fees
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                feeRefundDialog.onFalse();
-                dialog.onFalse();
-                setSelectedStudent(students[0]);
-                // setIsEdit(true);
-                collectChargesDialog.onTrue();
-              }}
-            >
-              Collect Charges
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                financeStudentAdditionalDiscountDialog.onFalse();
-                dialog.onFalse();
-                setSelectedStudent(students[0]);
-                // setIsEdit(true);
-                feeRefundDialog.onTrue();
-              }}
-            >
-              Process For Refund
-            </Button>
-          </Box>
-        </Box> */}
       </Box>
       <FinanceStudentInfoCardComponent user={dummyUser} />
       {financeStudentAdditionalDiscountDialog.value && (
