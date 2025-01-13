@@ -16,6 +16,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { EmployeeInformation } from './information';
+import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
@@ -60,6 +61,14 @@ const TABS = [
     label: 'Transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
     component: (props: { tabs: UseTabsReturn }) => <></>,
+  },
+  {
+    value: 'communications',
+    label: 'Communication',
+    icon: <Iconify icon="maki:communications-tower" width={20} />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <EmployeeCommunication employee={props.employee} />
+    ),
   },
 ];
 

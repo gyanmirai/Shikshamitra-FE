@@ -13,6 +13,7 @@ import {
   Box,
   Grid,
   Chip,
+  Card,
   Switch,
   Button,
   Checkbox,
@@ -122,15 +123,62 @@ const SchoolWiseAnnouncementInitialData: Announcement[] = [
   },
 ];
 
+export const getImportanceLevelColor = (level: string) => {
+  switch (level.toLowerCase()) {
+    case 'urgent':
+      return {
+        bg: '#FEE2E2',
+        text: '#DC2626',
+        border: '#FECACA',
+      };
+    case 'critical':
+      return {
+        bg: '#FFEDD5',
+        text: '#EA580C',
+        border: '#FED7AA',
+      };
+    case 'high':
+      return {
+        bg: '#FEF3C7',
+        text: '#D97706',
+        border: '#FDE68A',
+      };
+    case 'medium':
+      return {
+        bg: '#E0F2FE',
+        text: '#0284C7',
+        border: '#BAE6FD',
+      };
+    case 'low':
+      return {
+        bg: '#DCFCE7',
+        text: '#16A34A',
+        border: '#BBF7D0',
+      };
+    case 'informational':
+      return {
+        bg: '#F3F4F6',
+        text: '#4B5563',
+        border: '#E5E7EB',
+      };
+    default:
+      return {
+        bg: '#F3F4F6',
+        text: '#4B5563',
+        border: '#E5E7EB',
+      };
+  }
+};
+
 const SchoolWiseAnnounsement = (props: TabComponentType) => {
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
-  const addAnounsmentDialog = useBoolean();
   const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
   const view_dialog = useBoolean();
   const [deleteAnnouncement, setDeleteAnnouncement] = useState('');
   const confirm_dialog = useBoolean();
   const publish_modal = useBoolean();
   const [publishingAnnouncement, setPublishingAnnouncement] = useState<any | null>(null);
+  const [open, setOpen] = useState(false);
 
   const [announcementTableData, setAnnouncementTableData] = useState<Announcement[]>(
     SchoolWiseAnnouncementInitialData
@@ -166,7 +214,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
 
   const handleCloseDialog = () => {
     setEditingAnnouncement(null);
-    addAnounsmentDialog.onFalse();
+    setOpen(false);
     publish_modal.onFalse();
     setPublishingAnnouncement(null);
   };
@@ -188,216 +236,189 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     setPublishingAnnouncement(null);
   };
 
-  const getImportanceLevelColor = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'urgent':
-        return {
-          bg: '#FEE2E2',
-          text: '#DC2626',
-          border: '#FECACA',
-        };
-      case 'critical':
-        return {
-          bg: '#FFEDD5',
-          text: '#EA580C',
-          border: '#FED7AA',
-        };
-      case 'high':
-        return {
-          bg: '#FEF3C7',
-          text: '#D97706',
-          border: '#FDE68A',
-        };
-      case 'medium':
-        return {
-          bg: '#E0F2FE',
-          text: '#0284C7',
-          border: '#BAE6FD',
-        };
-      case 'low':
-        return {
-          bg: '#DCFCE7',
-          text: '#16A34A',
-          border: '#BBF7D0',
-        };
-      case 'informational':
-        return {
-          bg: '#F3F4F6',
-          text: '#4B5563',
-          border: '#E5E7EB',
-        };
-      default:
-        return {
-          bg: '#F3F4F6',
-          text: '#4B5563',
-          border: '#E5E7EB',
-        };
-    }
-  };
-
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="School Wise Announcement"
-        links={[
-          { name: 'Communication' },
-          { name: 'Announcements' },
-          { name: 'School Wise Announcement' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            size="small"
-            onClick={() => {
-              addAnounsmentDialog.onTrue();
-            }}
-          >
-            Announcement
-          </Button>
-        }
-      />
-
-      <CustomizableTable
-        columns={[
-          { id: 'title', label: 'Title' },
-          {
-            id: 'publishDate',
-            label: 'Publish Date',
-            minWidth: '180px',
-            align: 'left',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'expiryDate',
-            label: 'Expiry Date',
-            minWidth: '180px',
-            align: 'left',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'organization',
-            label: 'Organizations',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((org: string) => (
-                  <Chip key={org} label={org} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'importance_level',
-            label: 'Importance',
-            render: (value) => {
-              const colors = getImportanceLevelColor(value);
-              return (
-                <Typography
-                  component="span"
-                  variant="body2"
-                  sx={{
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: '16px',
-                    backgroundColor: colors.bg,
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                  }}
-                >
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'audience',
-            label: 'Audience',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip key={audience} label={audience} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            render: (value, row) =>
-              value === 'Published' ? (
-                <Label variant="soft" color="primary">
-                  {value}
-                </Label>
-              ) : (
-                <Label
-                  variant="soft"
-                  color="warning"
-                  onClick={() => {
-                    publish_modal.onTrue();
-                    setPublishingAnnouncement(row);
-                  }}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  {value}
-                </Label>
-              ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isSort: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...props, row })}
-                  placement="right-top"
-                  showEditIcon
-                  showDeleteIcon
-                  showViewIcon
-                  showThreeDots={false}
-                  handleEditClick={() => {
-                    addAnounsmentDialog.onTrue();
-                    setEditingAnnouncement(row);
-                  }}
-                  handleDeleteClick={() => {
-                    confirm_dialog.onTrue();
-                    setDeleteAnnouncement(row.id);
-                  }}
-                  handleViewClick={() => {
-                    view_dialog.onTrue();
-                    setViewAnnouncement(row);
-                  }}
-                />
-              );
-            },
-          },
-        ]}
-        data={announcementTableData}
-      />
-
-      <CustomDialog
-        title={editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}
-        open={addAnounsmentDialog.value}
-        handleClose={handleCloseDialog}
-        maxWidth="md"
-      >
-        <AnnouncementForm
-          initialValues={editingAnnouncement}
-          onSubmit={handleSubmit}
-          isEdit={!!editingAnnouncement}
-        />
-      </CustomDialog>
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="School Wise Announcement"
+            links={[
+              { name: 'Communication' },
+              { name: 'Announcements' },
+              { name: 'School Wise Announcement' },
+              { name: 'Announcement Form' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleCloseDialog}
+              >
+                Back
+              </Button>
+            }
+          />
+          <Card>
+            <AnnouncementForm
+              initialValues={editingAnnouncement}
+              onSubmit={handleSubmit}
+              isEdit={!!editingAnnouncement}
+            />
+          </Card>
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="School Wise Announcement"
+            links={[
+              { name: 'Communication' },
+              { name: 'Announcements' },
+              { name: 'School Wise Announcement' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Iconify icon="mdi:plus" />}
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setOpen(true);
+                }}
+              >
+                Announcement
+              </Button>
+            }
+          />
+          <CustomizableTable
+            columns={[
+              { id: 'title', label: 'Title' },
+              {
+                id: 'publishDate',
+                label: 'Publish Date',
+                minWidth: '180px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'expiryDate',
+                label: 'Expiry Date',
+                minWidth: '180px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'organization',
+                label: 'Organizations',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((org: string) => (
+                      <Chip key={org} label={org} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'importance_level',
+                label: 'Importance',
+                render: (value) => {
+                  const colors = getImportanceLevelColor(value);
+                  return (
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: '16px',
+                        backgroundColor: colors.bg,
+                        color: colors.text,
+                        border: `1px solid ${colors.border}`,
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'audience',
+                label: 'Audience',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((audience: string) => (
+                      <Chip key={audience} label={audience} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                render: (value, row) =>
+                  value === 'Published' ? (
+                    <Label variant="soft" color="primary">
+                      {value}
+                    </Label>
+                  ) : (
+                    <Label
+                      variant="soft"
+                      color="warning"
+                      onClick={() => {
+                        publish_modal.onTrue();
+                        setPublishingAnnouncement(row);
+                      }}
+                      sx={{ cursor: 'pointer' }}
+                    >
+                      {value}
+                    </Label>
+                  ),
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showDeleteIcon
+                      showViewIcon
+                      showThreeDots={false}
+                      handleEditClick={() => {
+                        setOpen(true);
+                        setEditingAnnouncement(row);
+                      }}
+                      handleDeleteClick={() => {
+                        confirm_dialog.onTrue();
+                        setDeleteAnnouncement(row.id);
+                      }}
+                      handleViewClick={() => {
+                        view_dialog.onTrue();
+                        setViewAnnouncement(row);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={announcementTableData}
+          />
+        </>
+      )}
 
       <CustomDialog
         title="Confirm Delete"
@@ -663,7 +684,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
