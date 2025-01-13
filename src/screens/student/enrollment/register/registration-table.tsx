@@ -21,14 +21,14 @@ const RegistrationTable = ({
     <CustomizableTable
       columns={[
         { id: 'inquiryNo', label: 'Inquiry No', minWidth: '104px' },
-        { id: 'FirstName', label: 'First Name', minWidth: '110px' },
-        { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
+        // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
+        // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
         { id: 'Name', label: 'Name' },
         { id: 'Code', label: 'Code' },
         { id: 'class', label: 'Class' },
         { id: 'Organization', label: 'Organization' },
         { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
-        { id: 'EmployeeDesignation', label: 'Role' },
+        // { id: 'EmployeeDesignation', label: 'Role' },
         {
           id: 'progress',
           label: 'Progress',

@@ -39,7 +39,7 @@ const RegisterForm = () => {
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => setActiveStep(index)}
-      scrollbarHeight="100%"
+      scrollbarHeight="55vh"
       initialValues={{
         ...generalFieldsInitialValues(),
         ...documentFieldsInitialValues(),

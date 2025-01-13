@@ -7,7 +7,7 @@ import { getSession, SessionData, sessionOptions } from '../../../lib';
 export async function GET() {
   try {
     const session = await getSession();
-    const filePath = path.join(process.cwd(), 'src', 'tokenSet.json');
+    const filePath = path.join(process.cwd(), 'public', 'tokenSet.json');
     let file;
     try {
       const response = await fs.readFile(filePath, 'utf-8');

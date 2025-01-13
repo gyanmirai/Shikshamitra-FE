@@ -47,6 +47,12 @@ const InquiryTable = ({
   return (
     <CustomizableTable
       isLoading={isLoading}
+      startDateProps={{
+        label: 'Start Date Of Inquiry',
+      }}
+      endDateProps={{
+        label: 'End Date Of Inquiry',
+      }}
       columns={[
         { id: 'inquiryNumber', label: 'Inquiry Number', sticky: true, minWidth: '145px' },
         // { id: 'educationBoard.name', label: 'Board', minWidth: '145px' },
@@ -56,7 +62,7 @@ const InquiryTable = ({
         { id: 'studentName', label: 'Student Name', minWidth: '135px' },
         { id: 'dobValue', label: 'DOB', minWidth: '120px', align: 'left' },
         { id: 'age', label: 'Age' },
-        { id: 'doiValue', label: 'DOI', minWidth: '120px', align: 'left' },
+        { id: 'doiValue', label: 'DOI', minWidth: '120px', align: 'left', isDateRangeFilter: true },
         { id: 'genderValue', label: 'Gender' },
         { id: 'address', label: 'Address', minWidth: '120px' },
         { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '145px' },

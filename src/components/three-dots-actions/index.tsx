@@ -2,7 +2,7 @@ import type { IconButtonOwnProps } from '@mui/material';
 
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { usePopover, CustomPopover } from '../custom-popover';
@@ -57,48 +57,60 @@ const ThreeDotsActions = ({
   const popover = usePopover();
 
   return (
-    <Box display="flex" gap={2} alignItems="center" {...props}>
+    <Box display="flex" gap={0.5} alignItems="center" {...props}>
       {showViewIcon && (
-        <Iconify
-          icon="carbon:view-filled"
-          sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+        <IconButton
           onClick={(e) => {
             e.stopPropagation();
             handleViewClick(e);
           }}
-        />
+        >
+          <Iconify
+            icon="carbon:view-filled"
+            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+          />
+        </IconButton>
       )}
       {showEditIcon && (
-        <Iconify
-          icon="solar:pen-bold"
-          sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+        <IconButton
           onClick={(e) => {
             e.stopPropagation();
             handleEditClick(e);
           }}
-        />
+        >
+          <Iconify
+            icon="solar:pen-bold"
+            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+          />
+        </IconButton>
       )}
       {showDeleteIcon && (
-        <Iconify
-          icon="solar:trash-bin-trash-bold"
-          color="error.main"
-          sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+        <IconButton
           onClick={(e) => {
             e.stopPropagation();
             handleDeleteClick(e);
           }}
-        />
+        >
+          <Iconify
+            icon="solar:trash-bin-trash-bold"
+            color="error.main"
+            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+          />
+        </IconButton>
       )}
       {showThreeDots && (
-        <Iconify
-          icon="eva:more-vertical-fill"
-          sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+        <IconButton
           onClick={(e) => {
             e.stopPropagation();
             popover.onOpen(e as any);
             onClickThreeDots?.(e);
           }}
-        />
+        >
+          <Iconify
+            icon="eva:more-vertical-fill"
+            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+          />
+        </IconButton>
       )}
       {/* <IconButton
         color={popover.open ? 'inherit' : 'default'}

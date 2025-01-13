@@ -24,8 +24,9 @@ export async function GET(request: NextApiRequest) {
     session.access_token = tokenSet.access_token;
     const decoded = jwtDecode(tokenSet.access_token!);
     let file;
+    const filePath = path.join(process.cwd(), 'public', 'tokenSet.json');
     try {
-      const filePath = path.join(process.cwd(), 'src', 'tokenSet.json');
+      // const filePath = path.join(process.cwd(), 'src', 'tokenSet.json');
       const response = await fs.readFile(filePath, 'utf-8');
       file = JSON.parse(response);
     } catch (error) {
@@ -35,7 +36,7 @@ export async function GET(request: NextApiRequest) {
       ...file,
       [decoded.sub as string]: tokenSet,
     };
-    await fs.writeFile('src/tokenSet.json', JSON.stringify(userTokenSetArray));
+    await fs.writeFile(filePath, JSON.stringify(userTokenSetArray));
     session.userInfo = {
       ...decoded,
     };

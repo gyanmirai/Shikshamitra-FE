@@ -1,12 +1,18 @@
+import type { Dayjs } from 'dayjs';
+import type { DatePickerProps } from '@mui/lab';
 import type { TableRowProps } from '@mui/material';
 
 import jsPDF from 'jspdf';
+import dayjs from 'dayjs';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as XLSX from 'xlsx';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
+import { DatePicker } from '@mui/x-date-pickers';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import {
@@ -49,6 +55,10 @@ import { Scrollbar } from '../scrollbar';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
 
+dayjs.extend(isSameOrAfter);
+
+dayjs.extend(isSameOrBefore);
+
 export interface Column {
   id: string;
   label: string;
@@ -60,6 +70,8 @@ export interface Column {
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
   sticky?: boolean;
+  isDateFilter?: boolean;
+  isDateRangeFilter?: boolean;
 }
 
 interface Data {
@@ -85,6 +97,9 @@ interface CustomizableTableProps {
   isScrollbar?: boolean;
   isShowedDense?: boolean;
   rowProps?: (row: Data, index: number) => TableRowProps;
+  startDateProps?: DatePickerProps<Dayjs>;
+  endDateProps?: DatePickerProps<Dayjs>;
+  dateProps?: DatePickerProps<Dayjs>;
 }
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
@@ -103,6 +118,9 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   isScrollbar = true,
   isShowedDense = true,
   rowProps = () => {},
+  startDateProps,
+  endDateProps,
+  dateProps,
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -125,6 +143,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     []
   );
   const [sorts, setSorts] = useState<Array<{ column: string; direction: 'asc' | 'desc' }>>([]);
+  const [dateFilter, setDateFilter] = useState<null | Dayjs>(null);
+  const [dateRangeFilter, setDateRangeFilter] = useState<{
+    start: null | Dayjs;
+    end: null | Dayjs;
+  }>({
+    start: null,
+    end: null,
+  });
   const handleChangePage = useCallback(
     (event: unknown, newPage: number) => {
       setPage(newPage);
@@ -231,19 +257,48 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     () =>
       serverSide
         ? data
-        : data.filter(
-            (row) =>
-              Object.entries(row).some(
-                ([key, value]) =>
-                  columnVisibility[key] &&
-                  _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                  _.get(row, columns.find((col) => col.id === key)?.id || '')
-                    .toString()
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
-              ) && applyFilter(row)
-          ),
-    [serverSide, data, columnVisibility, columns, searchTerm, applyFilter]
+        : data.filter((row) => {
+            const searchMatch = Object.entries(row).some(
+              ([key, value]) =>
+                columnVisibility[key] &&
+                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+                _.get(row, columns.find((col) => col.id === key)?.id || '')
+                  .toString()
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+            );
+
+            const dateFilterMatch = dateFilter
+              ? columns.some(
+                  (col) =>
+                    col.isDateFilter &&
+                    dayjs(row[col.id], 'DD-MM-YYYY').format('YYYY-MM-DD') ===
+                      dayjs(dateFilter).format('YYYY-MM-DD')
+                )
+              : true;
+            const dateRangeFilterMatch =
+              dateRangeFilter.start && dateRangeFilter.end
+                ? columns.some(
+                    (col) =>
+                      col.isDateRangeFilter &&
+                      dayjs(row[col.id], 'DD-MM-YYYY').isSameOrAfter(dateRangeFilter.start) &&
+                      dayjs(row[col.id], 'DD-MM-YYYY').isSameOrBefore(dateRangeFilter.end)
+                  )
+                : true;
+
+            return searchMatch && dateFilterMatch && dateRangeFilterMatch && applyFilter(row);
+          }),
+    [
+      serverSide,
+      data,
+      dateFilter,
+      columns,
+      dateRangeFilter.start,
+      dateRangeFilter.end,
+      applyFilter,
+      columnVisibility,
+      searchTerm,
+    ]
   );
 
   const sortedData = useMemo(() => {
@@ -321,7 +376,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   };
   return (
     <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
         {isSearch && (
           <TextField
             label="Search"
@@ -345,6 +400,93 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               ),
             }}
           />
+        )}
+
+        {/* Add Date Filter */}
+        {columns.some((col) => col.isDateFilter) && (
+          <DatePicker
+            format="DD-MM-YYYY"
+            label="Date Filter"
+            value={dateFilter}
+            onChange={(date) => setDateFilter(date)}
+            slotProps={{
+              textField: {
+                size: 'small',
+                ...(dateFilter
+                  ? {
+                      InputProps: {
+                        endAdornment: (
+                          <IconButton size="small" onClick={() => setDateFilter(null)}>
+                            <ClearIcon />
+                          </IconButton>
+                        ),
+                      },
+                    }
+                  : {}),
+              },
+            }}
+            {...dateProps}
+          />
+        )}
+
+        {/* Add Date Range Filter */}
+        {columns.some((col) => col.isDateRangeFilter) && (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <DatePicker
+              format="DD-MM-YYYY"
+              label="Start Date"
+              value={dateRangeFilter.start}
+              onChange={(date) => setDateRangeFilter((prev) => ({ ...prev, start: date }))}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  ...(dateRangeFilter.start
+                    ? {
+                        InputProps: {
+                          endAdornment: (
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                setDateRangeFilter((prev) => ({ ...prev, start: null }))
+                              }
+                            >
+                              <ClearIcon />
+                            </IconButton>
+                          ),
+                        },
+                      }
+                    : {}),
+                },
+              }}
+              {...startDateProps}
+            />
+            <DatePicker
+              format="DD-MM-YYYY"
+              label="End Date"
+              value={dateRangeFilter.end}
+              onChange={(date) => setDateRangeFilter((prev) => ({ ...prev, end: date }))}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  ...(dateRangeFilter.end
+                    ? {
+                        InputProps: {
+                          endAdornment: (
+                            <IconButton
+                              size="small"
+                              onClick={() => setDateRangeFilter((prev) => ({ ...prev, end: null }))}
+                            >
+                              <ClearIcon />
+                            </IconButton>
+                          ),
+                        },
+                      }
+                    : {}),
+                },
+              }}
+              {...endDateProps}
+            />
+          </Box>
         )}
         {isFilter && (
           <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center">

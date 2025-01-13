@@ -39,4 +39,4 @@ build
 .unimportedrc.json
 tsconfig.tsbuildinfo
 
-src/tokenSet.json
+tokenSet.json

@@ -8,26 +8,41 @@ import { Label } from 'src/components/label';
 const HomeHero = () => (
   <Box
     sx={{
-      height: '455px',
+      height: '734px',
       width: '100%',
-      background:
-        'linear-gradient(103.61deg, #002D1E 19.31%, #044A3A 51.76%, #006251 71.87%, #007867 80.69%);',
+      position: 'relative',
     }}
   >
+    <Box
+      component="img"
+      src="/assets/images/landing/gradient-image.svg"
+      alt=""
+      sx={{
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        left: '0px',
+        top: '0px',
+        zIndex: -1,
+        objectFit: 'cover',
+        // top: '72px',
+      }}
+    />
     <Container sx={{ height: '100%' }}>
-      <Grid container sx={{ height: '100%' }}>
+      <Grid container sx={{ height: '100%' }} spacing={2}>
         <Grid
           item
           xs={12}
           md={6}
           display="flex"
-          justifyContent="space-around"
+          gap={3}
+          justifyContent="center"
           flexDirection="column"
         >
           <Typography
             variant="body2"
-            color="white"
-            sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+            color="#000000"
+            sx={{ display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 700 }}
           >
             <Label variant="filled" color="success">
               New
@@ -36,9 +51,10 @@ const HomeHero = () => (
           </Typography>
           <Typography
             variant="h2"
-            color="white"
+            color="#000000"
+            fontWeight={800}
           >{`"Simplify School Operations with Our All-in-One ERP System."`}</Typography>
-          <Typography variant="subtitle1" color="white">
+          <Typography variant="subtitle1" color="#000000" fontWeight={700}>
             {`"Empower your institution with seamless management tools."`}
           </Typography>
           <Box display="flex" gap="16px">
@@ -54,16 +70,38 @@ const HomeHero = () => (
               variant="outlined"
               color="success"
               endIcon={<ArrowForward />}
-              sx={{ borderRadius: '0' }}
+              sx={{
+                borderRadius: '0',
+                color: 'black',
+                border: (theme) => `2px solid ${theme.palette.success.main}`,
+                '&:hover': {
+                  border: (theme) => `2px solid ${theme.palette.success.main}`,
+                  outline: 'none',
+                  boxShadow: 'none',
+                },
+              }}
             >
               REQUEST DEMO
             </Button>
           </Box>
         </Grid>
-        <Grid item xs={12} md={6} />
+        <Grid
+          item
+          xs={12}
+          md={6}
+          sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}
+        >
+          <Box
+            component="img"
+            src="/assets/images/landing/banner-image.svg"
+            alt=""
+            sx={{ scale: 1.3 }}
+          />
+        </Grid>
       </Grid>
     </Container>
   </Box>
 );
 
 export default HomeHero;
+/* Vector 2 */
