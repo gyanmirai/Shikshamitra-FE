@@ -863,7 +863,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Type</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Options</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete Question</TableCell>
+              <TableCell sx={{ width: '30%', fontWeight: 'bold' }}>Action</TableCell>
             </TableRow>
           </TableHead>
           <Droppable droppableId="questions">
@@ -923,14 +923,21 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => onDeleteQuestion(index)}
-                            sx={{ ml: 1 }}
-                          >
-                            <Iconify icon="mdi:delete" />
-                          </IconButton>
+                          <ThreeDotsActions
+                            // actions={(prop) => actions({ ...props, row })}
+                            placement="right-top"
+                            showEditIcon
+                            showDeleteIcon
+                            showThreeDots={false}
+                            handleViewClick={() => {}}
+                            handleEditClick={() => {
+                              // addAnounsmentDialog.onTrue();
+                              // setEditingAnnouncement(row);
+                            }}
+                            handleDeleteClick={() => {
+                              onDeleteQuestion(index);
+                            }}
+                          />
                         </TableCell>
                       </TableRow>
                     )}
@@ -975,7 +982,12 @@ const QuestionBuilder = ({ formik }: any) => {
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">{formik.values.surveyTitle}</Typography>{' '}
-        <Button variant="contained" startIcon={<Add />} onClick={() => addQuestionDialog.onTrue()}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => addQuestionDialog.onTrue()}
+        >
           Add Question
         </Button>
       </Box>
@@ -1132,7 +1144,16 @@ const AddNewQuestion = ({ onSave }: any) => {
                   </Box>
                 </Box>
               ))}
-              {errors.options && <FormHelperText error>{errors.options}</FormHelperText>}
+              {errors.options && (
+                <FormHelperText
+                  error
+                  sx={{
+                    mb: 5, // Add margin bottom to separate from Add Option button
+                  }}
+                >
+                  {errors.options}
+                </FormHelperText>
+              )}
               <Button
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:plus" />}

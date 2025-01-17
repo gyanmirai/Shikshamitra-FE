@@ -43,6 +43,16 @@ const NotificationSetting = (props: TabComponentType) => (
                 <Typography variant="body2">Parents</Typography>
               </Box>
             </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                mt: 'auto',
+                pt: 2,
+              }}
+            >
+              <Button variant="contained">Save</Button>
+            </Box>
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
@@ -71,6 +81,16 @@ const NotificationSetting = (props: TabComponentType) => (
                 onChange={() => {}}
               />
             </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                mt: 'auto',
+                pt: 2,
+              }}
+            >
+              <Button variant="contained">Save</Button>
+            </Box>
           </Card>
         </Grid>
       </Grid>
@@ -98,6 +118,16 @@ const NotificationSetting = (props: TabComponentType) => (
                 <Typography variant="body2">Remind me 1 day before events</Typography>
               </Box>
             </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                mt: 'auto',
+                pt: 2,
+              }}
+            >
+              <Button variant="contained">Save</Button>
+            </Box>
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
@@ -118,13 +148,20 @@ const NotificationSetting = (props: TabComponentType) => (
                 onChange={() => {}}
               />
             </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                mt: 'auto',
+                pt: 8,
+              }}
+            >
+              <Button variant="contained">Save</Button>
+            </Box>
           </Card>
         </Grid>
       </Grid>
     </Box>
-    <Button variant="contained" sx={{ mb: 4 }}>
-      Save Preferences
-    </Button>
   </Box>
 );
 

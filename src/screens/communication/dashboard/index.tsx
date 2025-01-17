@@ -133,11 +133,13 @@ const CommunicationDashboard = () => {
         </Button>
       </Box>
 
-      <CalendarView />
+      <Box display="flex" width="1215px" height="700px" ml="-40px">
+        <CalendarView />
+      </Box>
 
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+          <Card sx={{ p: 1, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
               <CustomSelect
                 label="Year"

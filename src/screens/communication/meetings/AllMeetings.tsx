@@ -204,13 +204,8 @@ const AllMeetings = (props: TabComponentType) => {
       {open ? (
         <>
           <CustomBreadcrumbs
-            heading="All Meetings"
-            links={[
-              { name: 'Communication' },
-              { name: 'Meetings' },
-              { name: 'All Meetings' },
-              { name: 'Meeting Form' },
-            ]}
+            heading="Meetings"
+            links={[{ name: 'Communication' }, { name: 'Meetings' }, { name: 'Meeting Form' }]}
             sx={{ px: 1, mb: 2 }}
             action={
               <Button
@@ -228,8 +223,8 @@ const AllMeetings = (props: TabComponentType) => {
       ) : (
         <>
           <CustomBreadcrumbs
-            heading="All Meetings"
-            links={[{ name: 'Communication' }, { name: 'Meetings' }, { name: 'All Meetings' }]}
+            heading="Meetings"
+            links={[{ name: 'Communication' }, { name: 'Meetings' }]}
             sx={{ px: 1, mb: 2 }}
             action={
               <Button

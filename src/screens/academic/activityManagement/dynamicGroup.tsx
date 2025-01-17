@@ -190,7 +190,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
       <CustomDialog
         open={dialog.value}
         handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Weightage' : 'Add Weightage'}
+        title={isEdit ? 'Update Dynamic Group' : 'Add Dynamic Group'}
       >
         <DynamicGroupForm
           open={dialog.value}
