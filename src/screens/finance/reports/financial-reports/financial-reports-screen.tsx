@@ -210,6 +210,7 @@ const FinancialReportsScreen = () => {
           <CustomizableTable
             columns={gradeWiseFeeCollectionColumns}
             data={gradeWiseFeeCollectedData}
+            tableId="grade-wise-fee-collection"
           />
           <Box py="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
