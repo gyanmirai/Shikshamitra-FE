@@ -348,7 +348,9 @@ const AllSurvey = (props: TabComponentType) => {
                       placement="right-top"
                       showEditIcon
                       showDeleteIcon
+                      showViewIcon
                       showThreeDots={false}
+                      handleViewClick={() => {}}
                       handleEditClick={() => {
                         // addAnounsmentDialog.onTrue();
                         // setEditingAnnouncement(row);

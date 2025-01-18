@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Card,
@@ -41,8 +41,8 @@ interface Event {
   eventVenue: string;
   organization: string[];
   className: string[];
-  eventDate: Dayjs;
-  eventTime: Dayjs;
+  eventStartDate: Dayjs;
+  eventEndDate: Dayjs;
   eventType: string;
   audience: string[];
   description: string;
@@ -57,8 +57,8 @@ const eventsData: Event[] = [
     eventVenue: 'Main Hall',
     organization: ['Secondary', 'Higher Secondary'],
     className: ['9'],
-    eventDate: dayjs('2024-11-10'),
-    eventTime: dayjs('10:00'),
+    eventStartDate: dayjs('2024-11-10T10:00'),
+    eventEndDate: dayjs('2024-11-10T14:00'),
     eventType: 'Academic',
     audience: ['Students', 'Parents'],
     description: 'A science exhibition showcasing various projects from students.',
@@ -71,8 +71,8 @@ const eventsData: Event[] = [
     eventVenue: 'Sports Ground',
     organization: ['Primary', 'Secondary'],
     className: ['5'],
-    eventDate: dayjs('2024-11-15'),
-    eventTime: dayjs('09:00'),
+    eventStartDate: dayjs('2024-11-15T09:00'),
+    eventEndDate: dayjs('2024-11-15T17:00'),
     eventType: 'Sports',
     audience: ['Students', 'Parents', 'Staff'],
     description: 'A day of various sports competitions among classes.',
@@ -85,8 +85,8 @@ const eventsData: Event[] = [
     eventVenue: 'Classroom A1',
     organization: ['Primary'],
     className: ['3'],
-    eventDate: dayjs('2024-11-20'),
-    eventTime: dayjs('14:00'),
+    eventStartDate: dayjs('2024-11-20T14:00'),
+    eventEndDate: dayjs('2024-11-20T16:00'),
     eventType: 'Parent Teacher Meeting',
     audience: ['Parents'],
     description: 'Discussion on student performance and upcoming plans for the academic year.',
@@ -99,8 +99,8 @@ const eventsData: Event[] = [
     eventVenue: 'Auditorium',
     organization: ['Secondary', 'Higher Secondary'],
     className: ['10'],
-    eventDate: dayjs('2024-12-05'),
-    eventTime: dayjs('11:00'),
+    eventStartDate: dayjs('2024-12-05T11:00'),
+    eventEndDate: dayjs('2024-12-05T18:00'),
     eventType: 'Cultural',
     audience: ['Students', 'Parents'],
     description: 'A festival celebrating diverse cultures with performances and exhibitions.',
@@ -113,8 +113,8 @@ const eventsData: Event[] = [
     eventVenue: 'Library Hall',
     organization: ['Higher Secondary'],
     className: ['12'],
-    eventDate: dayjs('2024-12-15'),
-    eventTime: dayjs('12:30'),
+    eventStartDate: dayjs('2024-12-15T12:30'),
+    eventEndDate: dayjs('2024-12-15T16:30'),
     eventType: 'Academic',
     audience: ['Students', 'Staff'],
     description: 'A workshop to enhance digital learning skills among students and teachers.',
@@ -225,8 +225,10 @@ const UpcomingEvents = (props: TabComponentType) => {
               { id: 'eventVenue', label: 'Event Venue', minWidth: '180px', align: 'left' },
               { id: 'eventType', label: 'Event Type', minWidth: '180px', align: 'left' },
               {
-                id: 'eventDate',
-                label: 'Date',
+                id: 'eventStartDate',
+                label: 'Start Date',
+                minWidth: '180px',
+                align: 'left',
                 render: (value, row) => (
                   <Typography fontSize="12px" gutterBottom>
                     {dayjs(value).format('DD MMM YYYY')}
@@ -234,11 +236,13 @@ const UpcomingEvents = (props: TabComponentType) => {
                 ),
               },
               {
-                id: 'eventTime',
-                label: 'Time',
+                id: 'eventEndDate',
+                label: 'End Date',
+                minWidth: '180px',
+                align: 'left',
                 render: (value, row) => (
                   <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('HH:mm')}
+                    {dayjs(value).format('DD MMM YYYY')}
                   </Typography>
                 ),
               },
@@ -340,10 +344,10 @@ const UpcomingEvents = (props: TabComponentType) => {
                 <strong>Organizer:</strong> {event.eventOrganizer}
               </Typography>
               <Typography variant="body1">
-                <strong>Date:</strong> {event.eventDate.format('YYYY-MM-DD')}
+                <strong>Start Date:</strong> {event.eventStartDate.format('YYYY-MM-DD')}
               </Typography>
               <Typography variant="body1">
-                <strong>Time:</strong> {event.eventTime.format('HH:mm')}
+                <strong>End Date:</strong> {event.eventEndDate.format('HH:mm')}
               </Typography>
               <Typography variant="body1">
                 <strong>Venue:</strong> {event.eventVenue}
@@ -402,8 +406,8 @@ interface EventFormValues {
   eventVenue: string;
   organization: string[];
   className: string[];
-  eventDate: Dayjs | null;
-  eventTime: Dayjs | null;
+  eventStartDate: Dayjs | null;
+  eventEndDate: Dayjs | null;
   eventType: string;
   audience: string[];
   description: string;
@@ -475,8 +479,8 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
       audience: initialValues?.audience || [],
       organization: initialValues?.organization || [],
       className: initialValues?.className || [],
-      eventDate: initialValues?.eventDate ? dayjs(initialValues?.eventDate) : null,
-      eventTime: initialValues?.eventTime ? dayjs(initialValues?.eventTime) : null,
+      eventStartDate: initialValues?.eventStartDate ? dayjs(initialValues?.eventStartDate) : null,
+      eventEndDate: initialValues?.eventEndDate ? dayjs(initialValues?.eventEndDate) : null,
       eventType: initialValues?.eventType || '',
       description: initialValues?.description || '',
       eventOrganizer: initialValues?.eventOrganizer || '',
@@ -565,12 +569,12 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Event Date"
-                name="eventDate"
-                value={formik.values.eventDate}
+              <DateTimePicker
+                label="Event Start Date"
+                name="eventStartDate"
+                value={formik.values.eventStartDate}
                 onChange={(newValue) => {
-                  formik.setFieldValue('eventDate', newValue);
+                  formik.setFieldValue('eventStartDate', newValue);
                 }}
                 slotProps={{
                   textField: {
@@ -582,16 +586,19 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TimePicker
-                label="Event Time"
-                format="HH:mm"
-                name="eventTime"
-                value={formik.values.eventTime}
+              <DateTimePicker
+                label="Event End Date"
+                name="eventEndDate"
+                value={formik.values.eventEndDate}
                 onChange={(newValue) => {
-                  formik.setFieldValue('eventTime', newValue);
+                  formik.setFieldValue('eventEndDate', newValue);
                 }}
-                views={['hours', 'minutes']}
-                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                  },
+                }}
               />
             </Grid>
 

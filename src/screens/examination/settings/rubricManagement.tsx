@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Switch, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Switch, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -74,11 +74,7 @@ const RubricManagement = () => {
   const [rubricData, setRubricData] = useState(initialRubricData);
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Rubric Management
-        </Typography>
-
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Add />}
           onClick={() => {
@@ -151,7 +147,7 @@ const RubricManagement = () => {
         maxWidth="sm"
         open={dialog.value}
         handleClose={dialog.onFalse}
-        title="Create Exam"
+        title="New Rubric"
       >
         <RubricCreationForm />
       </CustomDialog>

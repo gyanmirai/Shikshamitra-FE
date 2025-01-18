@@ -14,6 +14,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Card,
   Button,
   Switch,
   MenuList,
@@ -143,10 +144,10 @@ const AssessmentManagement = (props: TabComponentType) => {
   const { searchParams, setSearchParams } = props;
   const [selectedAssessment, setSelectedAssessment] = useState<TAssessment | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [open, setOpen] = useState(false);
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
   const submissionDialog = useBoolean();
-  const newAssesmentDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
 
   const [division, setDivision] = useState('');
@@ -185,7 +186,7 @@ const AssessmentManagement = (props: TabComponentType) => {
   }, [classData?.items, classes, setSearchParams]);
 
   const handleCloseDialog = () => {
-    newAssesmentDialog.onFalse();
+    setOpen(false);
     setIsEdit(false);
     setSelectedAssessment(null);
     confirmPublishDialog.onFalse();
@@ -251,143 +252,176 @@ const AssessmentManagement = (props: TabComponentType) => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Assessment Management"
-        links={[
-          { name: 'Examination and Assessment' },
-          { name: 'Examination' },
-          { name: 'Assessment Management' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            onClick={() => {
-              newAssesmentDialog.onTrue();
-            }}
-            startIcon={<Add />}
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Assessment"
+            links={[
+              { name: 'Examination and Assessment' },
+              { name: 'Examination' },
+              { name: 'Assessment' },
+              { name: 'Assessment Form' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                Back
+              </Button>
+            }
+          />
+          <Card>
+            <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
+          </Card>
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Assessment"
+            links={[
+              { name: 'Examination and Assessment' },
+              { name: 'Examination' },
+              { name: 'Assessment' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => {
+                  setOpen(true);
+                }}
+                startIcon={<Add />}
+              >
+                Assessment
+              </Button>
+            }
+          />
+          <Box
+            display="flex"
+            gap={2}
+            flexWrap="wrap"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={3}
           >
-            Assessment
-          </Button>
-        }
-      />
-      <Box
-        display="flex"
-        gap={2}
-        flexWrap="wrap"
-        alignItems="center"
-        justifyContent="space-between"
-        mb={3}
-      >
-        <Box display="flex" gap={2}>
-          <CustomSelect
-            label="Class"
-            options={classData?.items || []}
-            labelKey="name"
-            valueKey="id"
-            onChange={(val) => {
-              const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              setSearchParams?.({
-                classId: val as string,
-              });
-              setDivisionOptions(selectedClass?.divisions || []);
-            }}
-            value={classes}
-            formControlProps={{
-              sx: { width: '100%', minWidth: '150px' },
-            }}
+            <Box display="flex" gap={2}>
+              <CustomSelect
+                label="Class"
+                options={classData?.items || []}
+                labelKey="name"
+                valueKey="id"
+                onChange={(val) => {
+                  const selectedClass: Standards = classData.items.find(
+                    (i: Standards) => i.id === val
+                  );
+                  setSearchParams?.({
+                    classId: val as string,
+                  });
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                value={classes}
+                formControlProps={{
+                  sx: { width: '100%', minWidth: '150px' },
+                }}
+              />
+              <CustomSelect
+                label="Division"
+                disabled={!classes}
+                labelKey="name"
+                valueKey="id"
+                options={divisionOptions}
+                value={division}
+                onChange={(val) => {
+                  setDivision(val as string);
+                }}
+                formControlProps={{
+                  sx: { width: '100%', minWidth: '150px' },
+                }}
+              />
+            </Box>
+          </Box>
+          <CustomizableTable
+            tableId="assessment-management-table"
+            columns={[
+              { id: 'className', label: 'Class' },
+              { id: 'division', label: 'Division' },
+              { id: 'subject', label: 'Subject Name', minWidth: '150px', align: 'left' },
+              { id: 'assesmentTitle', label: 'Assessment Title', minWidth: '200px', align: 'left' },
+              { id: 'examName', label: 'Exam Name', minWidth: '150px', align: 'left' },
+              { id: 'assessmentType', label: 'Assessment Type', minWidth: '200px', align: 'left' },
+              { id: 'assignmentName', label: 'Assignment Name', minWidth: '200px', align: 'left' },
+              {
+                id: 'publish',
+                label: 'Publish',
+                render: (value: boolean, row: any) => (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Switch
+                      size="small"
+                      checked={value}
+                      onChange={() => {
+                        setPendingStatusChange({
+                          id: row.id, // Use row.id instead of undefined 'id'
+                          value: !value,
+                        });
+                        confirmPublishDialog.onTrue();
+                      }}
+                    />
+                  </Box>
+                ),
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                render(value: any, row: any) {
+                  return (
+                    <Label
+                      color={
+                        value === 'Completed'
+                          ? 'primary'
+                          : value === 'Pending'
+                            ? 'error'
+                            : value === 'Under Review'
+                              ? 'secondary'
+                              : 'default'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'actions',
+                label: 'Actions',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showDeleteIcon
+                      handleDeleteClick={() => {
+                        setOpen(true);
+                        setIsEdit(true);
+                      }}
+                      handleEditClick={() => {}}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={assessmentData}
           />
-          <CustomSelect
-            label="Division"
-            disabled={!classes}
-            labelKey="name"
-            valueKey="id"
-            options={divisionOptions}
-            value={division}
-            onChange={(val) => {
-              setDivision(val as string);
-            }}
-            formControlProps={{
-              sx: { width: '100%', minWidth: '150px' },
-            }}
-          />
-        </Box>
-      </Box>
-
-      <CustomizableTable
-        tableId="assessment-management-table"
-        columns={[
-          { id: 'className', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'subject', label: 'Subject Name', minWidth: '150px', align: 'left' },
-          { id: 'assesmentTitle', label: 'Assessment Title', minWidth: '200px', align: 'left' },
-          { id: 'examName', label: 'Exam Name', minWidth: '150px', align: 'left' },
-          { id: 'assessmentType', label: 'Assessment Type', minWidth: '200px', align: 'left' },
-          { id: 'assignmentName', label: 'Assignment Name', minWidth: '200px', align: 'left' },
-          {
-            id: 'publish',
-            label: 'Publish',
-            render: (value: boolean, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch
-                  size="small"
-                  checked={value}
-                  onChange={() => {
-                    setPendingStatusChange({
-                      id: row.id, // Use row.id instead of undefined 'id'
-                      value: !value,
-                    });
-                    confirmPublishDialog.onTrue();
-                  }}
-                />
-              </Box>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            render(value: any, row: any) {
-              return (
-                <Label
-                  color={
-                    value === 'Completed'
-                      ? 'primary'
-                      : value === 'Pending'
-                        ? 'error'
-                        : value === 'Under Review'
-                          ? 'secondary'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                  showEditIcon
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    newAssesmentDialog.onTrue();
-                    setIsEdit(true);
-                  }}
-                  handleEditClick={() => {}}
-                />
-              );
-            },
-          },
-        ]}
-        data={assessmentData}
-      />
+        </>
+      )}
 
       <CustomDialog
         title="View Student Submission"
@@ -396,15 +430,6 @@ const AssessmentManagement = (props: TabComponentType) => {
         maxWidth="md"
       >
         <StudentSubmissions />
-      </CustomDialog>
-
-      <CustomDialog
-        maxWidth="md"
-        open={newAssesmentDialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? `Edit ${selectedAssessment?.assesmentTitle}` : `Create Assessment`}
-      >
-        <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
       </CustomDialog>
 
       <CustomDialog
@@ -475,7 +500,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <CustomSelect

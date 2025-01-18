@@ -355,7 +355,7 @@ const GradeEntry = (props: TabComponentType) => {
         />
       </Box>
 
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1, mb: 2 }}>
         <Button
           variant="contained"
           size="small"

@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import {
   Box,
@@ -16,7 +16,6 @@ import {
   MenuList,
   MenuItem,
   TextField,
-  IconButton,
   Typography,
   CircularProgress,
 } from '@mui/material';
@@ -90,6 +89,25 @@ const PastSurvey = (props: TabComponentType) => {
     viewSummaryDialog.onFalse();
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              viewSummaryDialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
+            View Summary
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [viewSummaryDialog]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -149,39 +167,22 @@ const PastSurvey = (props: TabComponentType) => {
             },
           },
           {
-            id: 'viewDetails',
-            label: 'View Details',
-            render: (value, row) => (
-              <IconButton
-                onClick={() => {
-                  viewDetailsDialog.onTrue();
-                  setViewSurvey(row);
-                }}
-              >
-                <Iconify icon="mdi:eye" />
-              </IconButton>
-            ),
-          },
-          {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        viewSummaryDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      View Summary
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showViewIcon
+                  handleViewClick={() => {
+                    viewDetailsDialog.onTrue();
+                    setViewSurvey(row);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={surveyTableData}

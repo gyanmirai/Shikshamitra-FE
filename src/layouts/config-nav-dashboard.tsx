@@ -990,7 +990,7 @@ const examinationModule = {
               _action: 'examination-gradeEntry',
             },
             {
-              title: 'Assessment Management',
+              title: 'Assessment',
               path: '/examination/assessmentManagement',
               _action: 'examination-assessmentManagement',
             },

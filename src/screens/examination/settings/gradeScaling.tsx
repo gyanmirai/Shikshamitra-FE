@@ -8,7 +8,6 @@ import {
   Grid,
   Button,
   TextField,
-  Typography,
   DialogContent,
   DialogActions,
   DialogContentText,
@@ -140,10 +139,7 @@ const GradingScale = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Grading Scales
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Add />}
           onClick={() => {
@@ -267,7 +263,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField

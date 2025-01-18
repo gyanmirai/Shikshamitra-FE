@@ -32,11 +32,11 @@ const GradingAndAnalytics = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Grading And Analytics"
+        heading="Student Performance And Analytics"
         links={[
           { name: 'Examination and Assessment' },
           { name: 'Examination' },
-          { name: 'Grading And Analytics' },
+          { name: 'Student Performance And Analytics' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

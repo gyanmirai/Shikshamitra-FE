@@ -952,7 +952,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
         </Scrollbar>
         <DialogActions>
           <Button type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'} Announcement
+            {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>

@@ -132,10 +132,8 @@ const ExamTypeSettings = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Exam Type
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6">Exam Type</Typography>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
@@ -144,7 +142,7 @@ const ExamTypeSettings = () => {
             dialog.onTrue();
           }}
         >
-          Add Exam Type
+          Exam Type
         </Button>
       </Box>
       <CustomizableTable
@@ -450,10 +448,16 @@ const AssessmentTypeSettings = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Assessment Type
-        </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mt: 2,
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6">Assessment Type</Typography>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"

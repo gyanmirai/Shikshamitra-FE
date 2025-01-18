@@ -127,10 +127,8 @@ const CommunicationDashboard = () => {
       {view === 'schoolwise' ? <SchoolWiseAnnounsement /> : <ClassWiseAnnounsement />} */}
 
       <Box display="flex" justifyContent="space-between" alignItems="space-between" mt={2}>
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Event Calendar
-        </Typography>
-        <Button variant="contained" startIcon={<Add />}>
+        <Typography variant="h6">Event Calendar</Typography>
+        <Button variant="contained" size="small" startIcon={<Add />}>
           Event
         </Button>
       </Box>
@@ -170,7 +168,7 @@ const CommunicationDashboard = () => {
       </Grid>
 
       <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mt={2}>
-        <Button variant="contained" startIcon={<Add />}>
+        <Button variant="contained" size="small" startIcon={<Add />}>
           Survey
         </Button>
       </Box>
