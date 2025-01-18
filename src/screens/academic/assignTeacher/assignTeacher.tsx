@@ -72,6 +72,7 @@ const AssignTeacher = () => {
       />
 
       <CustomizableTable
+        tableId="assignTeacherTable"
         columns={[
           {
             id: 'className',
