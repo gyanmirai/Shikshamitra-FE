@@ -287,6 +287,7 @@ const EmployeeAnnouncement = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        tableId="employeeAnnouncementTable"
         columns={[
           { id: 'title', label: 'Title' },
           { id: 'announcementType', label: 'Announcement Type', align: 'left', minWidth: '180px' },
@@ -468,6 +469,7 @@ const EmployeeEvent = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        tableId="employeeEventId"
         columns={[
           { id: 'eventTitle', label: 'Event Title', minWidth: '180px', align: 'left' },
           { id: 'eventVenue', label: 'Event Venue', minWidth: '180px', align: 'left' },
@@ -645,6 +647,7 @@ const EmployeeMeetings = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        tableId="employeeMeetingId"
         columns={[
           { id: 'title', label: 'Title' },
           { id: 'meetingType', label: 'Meeting Type', minWidth: '180px', align: 'left' },
