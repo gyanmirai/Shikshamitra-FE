@@ -59,7 +59,7 @@ const SettingScreen = (props: TabComponentType) => {
         heading="Settings"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Gradebook Performace' },
+          { name: 'Gradebook And Performace Tracking' },
           { name: 'Settings' },
         ]}
         sx={{ px: 1, mb: 2 }}

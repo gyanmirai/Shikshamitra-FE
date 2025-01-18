@@ -177,7 +177,7 @@ const ActiveSurvey = (props: TabComponentType) => {
       <CustomizableTable
         tableId="survey"
         columns={[
-          { id: 'surveyTitle', label: 'Survey Title' },
+          { id: 'surveyTitle', label: 'Survey Title', minWidth: '180px', align: 'left' },
           {
             id: 'audience',
             label: 'Audience',
@@ -220,6 +220,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'startDate',
             label: 'Start Date',
+            minWidth: '180px',
+            align: 'left',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -229,6 +231,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'endDate',
             label: 'End Date',
+            minWidth: '180px',
+            align: 'left',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -238,6 +242,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'responseRate',
             label: 'Response Rate',
+            minWidth: '200px',
+            align: 'left',
             render(value, row) {
               return (
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -279,6 +285,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'status',
             label: 'Response Status',
+            minWidth: '200px',
+            align: 'left',
             render: (value, row) =>
               value === 'Pending' ? (
                 <Label

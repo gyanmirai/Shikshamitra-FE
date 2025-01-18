@@ -126,7 +126,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
         heading="Dynamic Group"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Activity Management' },
+          { name: 'Activity' },
           { name: 'Dynamic Group' },
         ]}
         sx={{ px: 1, mb: 2 }}

@@ -324,7 +324,7 @@ const Subjects = (props: TabComponentType) => {
         isLoading={isLoading}
         labelKey="name"
         valueKey="name"
-        formControlProps={{ sx: { minWidth: 150 } }}
+        formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
       />
       {subjectTableData.length > 0 && (
         <CustomizableTable

@@ -20,8 +20,6 @@ import {
   Button,
   Switch,
   Divider,
-  MenuItem,
-  MenuList,
   TableRow,
   TableCell,
   TextField,
@@ -169,13 +167,14 @@ const AllSurvey = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="All Survey"
-        links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'All Survey' }]}
+        heading="Scheduled Survey"
+        links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'Scheduled Survey' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={() => {
               addNewSurveyDialog.onTrue();
             }}
@@ -316,64 +315,25 @@ const AllSurvey = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {/* <MenuItem
-                      onClick={() => {
-                        viewResponseDialog.onTrue();
-                        setResponseSurvey(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      View Responses
-                    </MenuItem> */}
-
-                    <>
-                      <MenuItem
-                        onClick={() => {
-                          //   addAnounsmentDialog.onTrue();
-                          //   setEditingAnnouncement(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          handleCloseSurvey(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Delete
-                      </MenuItem>
-                      {/* <MenuItem
-                          onClick={() => {
-                            //   addAnounsmentDialog.onTrue();
-                            //   setEditingAnnouncement(row);
-                          }}
-                        >
-                          <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
-                          Send Reminder
-                        </MenuItem> */}
-                    </>
-
-                    {/* {row.status === 'Active' && (
-                      <MenuItem
-                        onClick={() => {
-                          handleCloseSurvey(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Close Survey
-                      </MenuItem>
-                    )} */}
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    // addAnounsmentDialog.onTrue();
+                    // setEditingAnnouncement(row);
+                  }}
+                  handleDeleteClick={() => {
+                    handleCloseSurvey(row.id);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={surveyTableData}

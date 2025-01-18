@@ -11,7 +11,6 @@ import { MuiColorInput } from 'mui-color-input';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -242,8 +241,9 @@ const Subject = (props: TabComponentType) => {
             heading="Subjects"
             links={[
               { name: 'Academic and Assignment' },
-              { name: 'Curriculum Management' },
-              { name: 'Subjects' },
+              { name: 'Curriculum' },
+              { name: 'Subject' },
+              { name: 'Subject Form' },
             ]}
             sx={{ px: 1, mb: 2 }}
             action={
@@ -280,8 +280,8 @@ const Subject = (props: TabComponentType) => {
             heading="Subjects"
             links={[
               { name: 'Academic and Assignment' },
-              { name: 'Curriculum Management' },
-              { name: 'Subjects' },
+              { name: 'Curriculum' },
+              { name: 'Subject' },
             ]}
             sx={{ px: 1, mb: 2 }}
             action={
@@ -306,136 +306,145 @@ const Subject = (props: TabComponentType) => {
             options={classData?.items || []}
             valueKey="id"
             labelKey="name"
-            formControlProps={{ sx: { width: '150px' } }}
+            formControlProps={{ sx: { width: '150px', mb: 2 } }}
             value={classes}
             onChange={(value) => {
               // setClasses(value);
             }}
           />
-          <Grid2 container spacing={3}>
-            {classes && (
-              <CustomizableTable
-                tableId="subject-table"
-                columns={[
-                  { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
-                  // {
-                  //   id: 'subjectColor',
-                  //   label: 'Subject Color',
-                  //   minWidth: '130px',
-                  //   render(value, row) {
-                  //     return (
-                  //       <TimelineDot
-                  //         sx={{
-                  //           bgcolor: value,
-                  //           width: '12px',
-                  //           height: '12px',
-                  //           ml: '30px',
-                  //         }}
-                  //       />
-                  //     );
-                  //   },
-                  // },
-                  {
-                    id: 'subjectName',
-                    label: 'Subject Name',
-                    minWidth: '135px',
-                    align: 'left',
-                    render(value, row) {
-                      return (
-                        <Typography variant="caption" color={row.subjectColor}>
-                          {value}
+          {classes && (
+            <CustomizableTable
+              tableId="subject-table"
+              columns={[
+                { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
+                // {
+                //   id: 'subjectColor',
+                //   label: 'Subject Color',
+                //   minWidth: '130px',
+                //   render(value, row) {
+                //     return (
+                //       <TimelineDot
+                //         sx={{
+                //           bgcolor: value,
+                //           width: '12px',
+                //           height: '12px',
+                //           ml: '30px',
+                //         }}
+                //       />
+                //     );
+                //   },
+                // },
+                {
+                  id: 'subjectName',
+                  label: 'Subject Name',
+                  minWidth: '135px',
+                  align: 'left',
+                  render(value, row) {
+                    return (
+                      <Typography variant="caption" color={row.subjectColor}>
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'primaryTeacher',
+                  label: 'Primary Teacher',
+                  minWidth: '150px',
+                  align: 'left',
+                },
+                {
+                  id: 'secondaryTeacher',
+                  label: 'Secondary Teacher',
+                  minWidth: '170px',
+                  align: 'left',
+                  render: (value) => (
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {value.map((audience: string, index: number) => (
+                        // <Chip key={audience} label={audience} size="small" variant="outlined" />
+                        // <Typography
+                        //   component="span"
+                        //   variant="body2"
+                        //   sx={{
+                        //     px: 1.0,
+                        //     py: 0.5,
+                        //     borderRadius: '30px',
+                        //     border: `1px solid black`,
+                        //     fontSize: '0.75rem',
+                        //   }}
+                        // >
+                        //   {audience}
+                        // </Typography>
+                        <Typography variant="caption">
+                          {audience}
+                          {index < value.length - 1 && ' | '}
                         </Typography>
-                      );
-                    },
+                      ))}
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'scheduleDate',
+                  label: 'Schedule Date',
+                  minWidth: '180px',
+                  align: 'left',
+                  render: (value, row) => (
+                    <Typography fontSize="12px" gutterBottom>
+                      {dayjs(value).format('DD MMM YYYY')}
+                    </Typography>
+                  ),
+                },
+                { id: 'prerequisites', label: 'Prerequisites' },
+                { id: 'learningGoal', label: 'Learning Goal', minWidth: '150px', align: 'left' },
+                {
+                  id: 'status',
+                  label: 'Publish',
+                  render: (value: string, row: any) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Switch
+                        size="small"
+                        checked={value === 'Publish'}
+                        onChange={() => handleStatusChange(row.id, value as string)}
+                      />
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isSort: false,
+                  render(value, row) {
+                    const subject = subjectTableData.find((s) => s.id === row.id);
+                    return (
+                      <ThreeDotsActions
+                        // actions={(prop) => actions({ ...props, row })}
+                        placement="right-top"
+                        showViewIcon
+                        showEditIcon
+                        showDeleteIcon
+                        showThreeDots={false}
+                        handleViewClick={() => {
+                          if (subject) {
+                            handleViewSubject(subject);
+                          }
+                        }}
+                        handleEditClick={() => {
+                          setSelectedSubject(row as any);
+                          setIsEdit(true);
+                          setOpen(true);
+                        }}
+                        handleDeleteClick={() => {
+                          setSelectedSubject(row as any);
+                          deleteConfirmDialog.onTrue();
+                        }}
+                      />
+                    );
                   },
-                  {
-                    id: 'primaryTeacher',
-                    label: 'Primary Teacher',
-                    minWidth: '150px',
-                    align: 'left',
-                  },
-                  {
-                    id: 'secondaryTeacher',
-                    label: 'Secondary Teacher',
-                    minWidth: '170px',
-                    align: 'left',
-                    render: (value) => (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {value.map((audience: string, index: number) => (
-                          // <Chip key={audience} label={audience} size="small" variant="outlined" />
-                          // <Typography
-                          //   component="span"
-                          //   variant="body2"
-                          //   sx={{
-                          //     px: 1.0,
-                          //     py: 0.5,
-                          //     borderRadius: '30px',
-                          //     border: `1px solid black`,
-                          //     fontSize: '0.75rem',
-                          //   }}
-                          // >
-                          //   {audience}
-                          // </Typography>
-                          <Typography variant="caption">
-                            {audience}
-                            {index < value.length - 1 && ' | '}
-                          </Typography>
-                        ))}
-                      </Box>
-                    ),
-                  },
-                  { id: 'prerequisites', label: 'Prerequisites' },
-                  { id: 'learningGoal', label: 'Learning Goal', minWidth: '150px', align: 'left' },
-                  {
-                    id: 'status',
-                    label: 'Publish',
-                    render: (value: string, row: any) => (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Switch
-                          size="small"
-                          checked={value === 'Publish'}
-                          onChange={() => handleStatusChange(row.id, value as string)}
-                        />
-                      </Box>
-                    ),
-                  },
-                  {
-                    id: 'action',
-                    label: 'Action',
-                    isSort: false,
-                    render(value, row) {
-                      const subject = subjectTableData.find((s) => s.id === row.id);
-                      return (
-                        <ThreeDotsActions
-                          // actions={(prop) => actions({ ...props, row })}
-                          placement="right-top"
-                          showViewIcon
-                          showEditIcon
-                          showDeleteIcon
-                          showThreeDots={false}
-                          handleViewClick={() => {
-                            if (subject) {
-                              handleViewSubject(subject);
-                            }
-                          }}
-                          handleEditClick={() => {
-                            setSelectedSubject(row as any);
-                            setIsEdit(true);
-                            setOpen(true);
-                          }}
-                          handleDeleteClick={() => {
-                            setSelectedSubject(row as any);
-                            deleteConfirmDialog.onTrue();
-                          }}
-                        />
-                      );
-                    },
-                  },
-                ]}
-                data={filteredData}
-              />
-            )}
-          </Grid2>
+                },
+              ]}
+              data={filteredData}
+            />
+          )}
         </>
       )}
 
@@ -803,7 +812,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <CustomSelect
