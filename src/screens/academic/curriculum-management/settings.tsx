@@ -7,17 +7,13 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Add } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Chip,
   Card,
   Grid,
   Button,
   Switch,
-  MenuList,
-  MenuItem,
   TextField,
   Typography,
   DialogActions,
@@ -32,12 +28,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TTemplate {
@@ -160,96 +153,6 @@ const Settings = (props: TabComponentType) => {
         heading="Settings"
         links={[{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Settings' }]}
         sx={{ px: 1, mb: 2 }}
-      />
-
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6">Curriculum Templates</Typography>
-        <Button
-          startIcon={<Add />}
-          size="small"
-          variant="contained"
-          onClick={() => {
-            setIsEdit(false);
-            setSelectedTemplate(null);
-            dialog.onTrue();
-          }}
-        >
-          Template
-        </Button>
-      </Box>
-      <CustomizableTable
-        tableId="curriculum-management-settings-table"
-        columns={[
-          { id: 'templateName', label: 'Template Name' },
-          { id: 'className', label: 'Class' },
-          {
-            id: 'subjects',
-            label: 'Subjects',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip key={audience} label={audience} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Publish',
-            render: (value: string, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch
-                  size="small"
-                  checked={value === 'Publish'}
-                  onChange={() => handleStatusChange(row.id, value as string)}
-                />
-              </Box>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover: pop }) => (
-                  <MenuList>
-                    {row.status === 'Unpublish' && (
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedTemplate(row as any);
-                          setIsEdit(true);
-                          dialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                        Edit
-                      </MenuItem>
-                    )}
-                    {row.status === 'Publish' && (
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedTemplate(row as any);
-                          deleteConfirmDialog.onTrue();
-                          pop.onClose();
-                        }}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <Iconify
-                          icon="solar:trash-bin-trash-bold"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Delete
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
-          },
-        ]}
-        data={templateData}
       />
 
       {/* <Typography sx={{ fontSize: '24px', fontWeight: '600', pb: '20px' }}>

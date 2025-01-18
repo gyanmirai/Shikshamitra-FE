@@ -13,7 +13,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -56,127 +55,76 @@ const AssignTeacher = () => {
         heading="Assign Teacher"
         links={[{ name: 'Academic and Assignment' }, { name: 'Assign Teacher' }]}
         sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="mdi:arrow-right-circle" />}
-            onClick={() => {
-              assignTeacherDialog.onTrue();
-            }}
-          >
-            Assign Teacher
-          </Button>
-        }
       />
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <CustomSelect
-          label="Class"
-          options={classData?.items || []}
-          labelKey="name"
-          valueKey="id"
-          onChange={(val) => {
-            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-            setClasses(val as string);
-            setDivisionOptions(selectedClass?.divisions || []);
-          }}
-          value={classes}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
-        />
-        <CustomSelect
-          label="Division"
-          disabled={!classes}
-          labelKey="name"
-          valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            setDivision(val as string);
-          }}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
-        />
-      </Box>
+      <CustomSelect
+        label="Select Organization"
+        options={[
+          { value: 'Pre Primary', label: 'Pre Primary' },
+          { value: 'Primary', label: 'Primary' },
+          { value: 'Secondary', label: 'Secondary' },
+          { value: 'Higher Secondary', label: 'Higher Secondary' },
+        ]}
+        value=""
+        onChange={(val) => {
+          // formik.setFieldValue('organization', val);
+        }}
+        formControlProps={{ fullWidth: true, sx: { maxWidth: '200px', mb: 2 } }}
+      />
 
       <CustomizableTable
         columns={[
           {
-            id: 'fullName',
-            label: 'Full Name',
+            id: 'className',
+            label: 'Class',
           },
           {
-            id: 'dob',
-            label: 'DOB',
+            id: 'division',
+            label: 'Division',
           },
           {
-            id: 'age',
-            label: 'Age',
+            id: 'classTeacher',
+            label: 'Class Teacher',
+            render(value, row) {
+              return (
+                <CustomSelect
+                  label="Class Teacher"
+                  options={[
+                    { value: 'ABC', label: 'ABC' },
+                    { value: 'XYZ', label: 'XYZ' },
+                    { value: 'PQR', label: 'PQR' },
+                  ]}
+                  value=""
+                  onChange={(val) => {
+                    // formik.setFieldValue('organization', val);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
+                />
+              );
+            },
           },
-          {
-            id: 'email',
-            label: 'Email',
-          },
-          {
-            id: 'mobileNo',
-            label: 'Mobile No',
-          },
-          //   {
-          //     id: 'category',
-          //     label: 'Category',
-          //   },
-          //   {
-          //     id: 'status',
-          //     label: 'Status',
-          //     render: (value) => (
-          //       <Label
-          //         color={
-          //           value === 'Completed'
-          //             ? 'error'
-          //             : value === 'Active'
-          //               ? 'primary'
-          //               : value === 'Scheduled'
-          //                 ? 'warning'
-          //                 : 'default'
-          //         }
-          //       >
-          //         {value}
-          //       </Label>
-          //     ),
-          //   },
-          //   {
-          //     id: 'action',
-          //     label: 'Action',
-          //     isSort: false,
-          //     render(value, row) {
-          //       return (
-          //         <ThreeDotsActions
-          //           actions={(prop) => actions({ ...props, row })}
-          //           placement="right-top"
-          //           showEditIcon
-          //           showDeleteIcon
-          //           showViewIcon
-          //           handleViewClick={() => {
-          //             assignStudentDialog.onTrue();
-          //             setSelectedActivity(row as Activity);
-          //           }}
-          //           handleEditClick={() => {
-          //             setSelectedActivity(row as Activity);
-          //             setIsEdit(true);
-          //             dialog.onTrue();
-          //           }}
-          //           handleDeleteClick={() => {
-          //             setSelectedActivity(row as Activity);
-          //             deleteConfirmDialog.onTrue();
-          //           }}
-          //         />
-          //       );
-          //     },
-          //   },
         ]}
-        data={[]}
+        data={[
+          {
+            className: '1',
+            division: 'A',
+            classTeacher: '',
+          },
+          {
+            className: '1',
+            division: 'B',
+            classTeacher: '',
+          },
+          {
+            className: '3',
+            division: 'C',
+            classTeacher: '',
+          },
+          {
+            className: '4',
+            division: 'D',
+            classTeacher: '',
+          },
+        ]}
       />
 
       <CustomDialog

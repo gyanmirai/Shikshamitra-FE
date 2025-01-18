@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
@@ -134,16 +135,28 @@ const CourseProgress = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  const [classes, setClasses] = useState('');
+  const [division, setDivision] = useState('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
   useEffect(() => {
     if (classData?.items?.length) {
-      if (!searchParams?.classId) {
+      if (classes) {
+        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+        setDivisionOptions(selectedClass?.divisions || []);
+        if (selectedClass?.divisions?.length) {
+          setDivision(selectedClass.divisions[0].id);
+        }
+      } else {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setClasses(firstClass.id);
+        setDivisionOptions(firstClass?.divisions || []);
+        if (firstClass?.divisions?.length) {
+          setDivision(firstClass.divisions[0].id);
+        }
       }
     }
-  }, [classData?.items, searchParams?.classId, setSearchParams]);
+  }, [classData, classes]);
 
   return (
     <Box>
@@ -156,21 +169,35 @@ const CourseProgress = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <CustomSelect
-        label="Class"
-        name="class"
-        isLoading={isLoading}
-        options={classData?.items || []}
-        valueKey="id"
-        labelKey="name"
-        formControlProps={{ sx: { width: '150px' } }}
-        value={searchParams?.classId || ''}
-        onChange={(value) => {
-          setSearchParams?.({
-            classId: value as string,
-          });
-        }}
-      />
+      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+        <CustomSelect
+          label="Class"
+          name="class"
+          isLoading={isLoading}
+          options={classData?.items || []}
+          valueKey="id"
+          labelKey="name"
+          formControlProps={{ sx: { width: '150px' } }}
+          value={searchParams?.classId || ''}
+          onChange={(value) => {
+            setClasses(value as string);
+          }}
+        />
+        <CustomSelect
+          label="Division"
+          disabled={!classes}
+          labelKey="name"
+          valueKey="id"
+          options={divisionOptions}
+          value={division}
+          onChange={(val) => {
+            setDivision(val as string);
+          }}
+          formControlProps={{
+            sx: { width: '100%', maxWidth: '150px' },
+          }}
+        />
+      </Box>
       <Grid container spacing={2} marginTop={2} marginBottom={2}>
         {courses.map((course) => (
           <Grid item xs={12} md={2}>

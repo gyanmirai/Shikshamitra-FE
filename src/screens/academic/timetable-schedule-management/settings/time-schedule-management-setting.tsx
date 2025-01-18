@@ -8,13 +8,11 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
-  Card,
   Button,
-  Switch,
   MenuList,
   MenuItem,
   TextField,
@@ -362,7 +360,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         )}
       </Box>
 
-      <Card sx={{ p: 2, mb: 1, mt: 3 }}>
+      {/* <Card sx={{ p: 2, mb: 1, mt: 3 }}>
         <Typography variant="h6">General Settings</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Switch />
@@ -451,7 +449,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         <Box display="flex" justifyContent="flex-end" alignItems="center">
           <Button variant="contained">Save Changes</Button>
         </Box>
-      </Card>
+      </Card> */}
       <CustomDialog
         title={isEdit ? 'Update Room' : 'Create Room'}
         open={dialog.value}
@@ -731,7 +729,12 @@ const CreateSlotsForm = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Button startIcon={<Add />} variant="contained" onClick={handleCreateSlots}>
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="contained"
+                onClick={handleCreateSlots}
+              >
                 Create Slots
               </Button>
             </Grid>
