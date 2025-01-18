@@ -35,6 +35,7 @@ const ExaminationDashboardExamlistComponent = (props: TabComponentType) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="exam-dashboard-table"
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'subjectName', label: 'Subject Name' },
