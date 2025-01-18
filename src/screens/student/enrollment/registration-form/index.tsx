@@ -53,19 +53,23 @@ const RegistrationFormScreen = () => (
           render(value, row) {
             return (
               <ThreeDotsActions
-                actions={(props) => (
+                actions={({ popover }) => (
                   <MenuList>
                     <MenuItem
-                      onClick={() => {
+                      onClick={(e) => {
                         // dialog.onTrue();
+                        e.stopPropagation();
+                        popover.onClose();
                       }}
                     >
                       <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-                      Move To Registration
+                      Move to Registration
                     </MenuItem>
                     <MenuItem
-                      onClick={() => {
+                      onClick={(e) => {
                         // followUpDialog.onTrue();
+                        e.stopPropagation();
+                        popover.onClose();
                       }}
                     >
                       <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />

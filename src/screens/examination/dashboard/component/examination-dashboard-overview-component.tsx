@@ -250,14 +250,16 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <AnalyticsWebsiteVisits
-            title="Student engagement across different Exams"
-            chart={{
-              categories: ['Math', 'English', 'Science', 'Gujarati'],
-              series: [{ name: '', data: [65, 70, 40, 55] }],
-            }}
-            sx={{ height: '100%' }}
-          />
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <AnalyticsWebsiteVisits
+              title="Student engagement across different Exams"
+              chart={{
+                categories: ['Math', 'English', 'Science', 'Gujarati'],
+                series: [{ name: '', data: [65, 70, 40, 55] }],
+              }}
+              sx={{ height: '100%' }}
+            />
+          </Card>
         </Grid>
       </Grid>
 

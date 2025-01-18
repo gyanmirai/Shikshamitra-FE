@@ -3,17 +3,7 @@ import type { Meeting } from 'src/screens/communication/meetings/AllMeetings';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import {
-  Box,
-  Card,
-  Grid,
-  Chip,
-  Paper,
-  Button,
-  IconButton,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Card, Grid, Chip, Paper, Button, Typography, CircularProgress } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,9 +12,9 @@ import { surveyData } from 'src/screens/communication/feedback/pastFeedback';
 import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { CalendarView } from 'src/sections/calendar/view';
@@ -152,25 +142,19 @@ const Communication = (props: StudentTabsComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle2' }}>New Announcement</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     width: '100%',
                     padding: 0,
-                    animation: 'scrollAnimation 10s linear infinite',
-                    animationDelay: '1s',
-                    '@keyframes scrollAnimation': {
-                      '0%': { transform: 'translateY(0)' },
-                      '100%': { transform: 'translateY(-100%)' },
-                    },
-                    '&:hover': {
-                      animationPlayState: 'paused',
-                    },
                   }}
                 >
                   {[
+                    'Student record updated',
+                    'Student attendance updated',
+                    'Student record updated',
                     'Student record updated',
                     'Student attendance updated',
                     'Student record updated',
@@ -197,22 +181,13 @@ const Communication = (props: StudentTabsComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle2' }}>Upcoming Events</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     width: '100%',
                     padding: 0,
-                    animation: 'scrollAnimation 10s linear infinite',
-                    animationDelay: '1s',
-                    '@keyframes scrollAnimation': {
-                      '0%': { transform: 'translateY(0)' },
-                      '100%': { transform: 'translateY(-100%)' },
-                    },
-                    '&:hover': {
-                      animationPlayState: 'paused',
-                    },
                   }}
                 >
                   {[
@@ -242,22 +217,13 @@ const Communication = (props: StudentTabsComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle2' }}>New Messages</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     width: '100%',
                     padding: 0,
-                    animation: 'scrollAnimation 10s linear infinite',
-                    animationDelay: '1s',
-                    '@keyframes scrollAnimation': {
-                      '0%': { transform: 'translateY(0)' },
-                      '100%': { transform: 'translateY(-100%)' },
-                    },
-                    '&:hover': {
-                      animationPlayState: 'paused',
-                    },
                   }}
                 >
                   {[
@@ -287,22 +253,13 @@ const Communication = (props: StudentTabsComponentType) => {
           >
             <Box sx={{ flexGrow: 1 }}>
               <Box sx={{ typography: 'subtitle2' }}>Pending Survey</Box>
-              <Scrollbar sx={{ mt: 1.5 }}>
+              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
                   sx={{
                     listStyle: 'none',
                     width: '100%',
                     padding: 0,
-                    animation: 'scrollAnimation 10s linear infinite',
-                    animationDelay: '1s',
-                    '@keyframes scrollAnimation': {
-                      '0%': { transform: 'translateY(0)' },
-                      '100%': { transform: 'translateY(-100%)' },
-                    },
-                    '&:hover': {
-                      animationPlayState: 'paused',
-                    },
                   }}
                 >
                   {[
@@ -334,6 +291,8 @@ const Communication = (props: StudentTabsComponentType) => {
           {
             id: 'endDate',
             label: 'Submit Date',
+            align: 'left',
+            minWidth: '180px',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -343,9 +302,11 @@ const Communication = (props: StudentTabsComponentType) => {
           {
             id: 'responseRate',
             label: 'Response Rate',
+            align: 'left',
+            minWidth: '180px',
             render(value, row) {
               return (
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                <Box sx={{ position: 'relative', display: 'inline-flex', ml: 2 }}>
                   <CircularProgress variant="determinate" value={value} />
                   <Box
                     sx={{
@@ -368,18 +329,23 @@ const Communication = (props: StudentTabsComponentType) => {
             },
           },
           {
-            id: 'viewDetails',
-            label: 'View Details',
-            render: (value, row) => (
-              <IconButton
-                onClick={() => {
-                  viewDetailsDialog.onTrue();
-                  setViewSurvey(row);
-                }}
-              >
-                <Iconify icon="mdi:eye" />
-              </IconButton>
-            ),
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    viewDetailsDialog.onTrue();
+                    setViewSurvey(row);
+                  }}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={surveyTableData}
@@ -392,10 +358,12 @@ const Communication = (props: StudentTabsComponentType) => {
         tableId="meeting-table"
         columns={[
           { id: 'title', label: 'Title' },
-          { id: 'meetingType', label: 'Meeting Type' },
+          { id: 'meetingType', label: 'Meeting Type', align: 'left', minWidth: '180px' },
           {
             id: 'meetingDate',
             label: 'Meeting Date',
+            align: 'left',
+            minWidth: '180px',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -405,6 +373,8 @@ const Communication = (props: StudentTabsComponentType) => {
           {
             id: 'meetingTime',
             label: 'Meeting Time',
+            align: 'left',
+            minWidth: '180px',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('HH:mm')}

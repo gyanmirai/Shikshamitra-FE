@@ -283,12 +283,6 @@ const studentModule = {
               path: '/student/attendance/take-attendance',
               _action: 'student-attendance-take-attendance',
             },
-
-            {
-              title: 'Reports',
-              path: '/student/attendance/reports',
-              _action: 'student-attendance-reports',
-            },
             {
               title: 'Leave & Absence',
               path: '/student/attendance/leave-absent',
@@ -298,6 +292,11 @@ const studentModule = {
               title: 'Notifications History',
               path: '/student/attendance/notification',
               _action: 'student-attendance-notification',
+            },
+            {
+              title: 'Reports',
+              path: '/student/attendance/reports',
+              _action: 'student-attendance-reports',
             },
             {
               title: 'Setting',

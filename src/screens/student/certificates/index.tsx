@@ -17,7 +17,7 @@ import FirstTrialCertificate from './first-trial-certificate';
 const TABS = [
   {
     value: 'bonafiedCertificates',
-    label: 'Bonafied Certificates',
+    label: 'Bonafide Certificates',
     component: () => <BonofiedCertificate />,
   },
   {

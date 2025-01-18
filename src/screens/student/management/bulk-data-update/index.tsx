@@ -99,38 +99,41 @@ const BulkDataUpdateScreen = () => {
 
   return (
     <Box>
-      <Box display="flex" gap={2} flexWrap="wrap">
-        <CustomSelect
-          options={allCategory}
-          label="Category"
-          value={category}
-          onChange={(val) => {
-            setAllSubCategory(allCategory.find((cat: any) => cat.id === val)?.subCategory || []);
-            setSubCategory('');
-            setCategory(val as string);
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          // disabled={!division}
-        />
-        <CustomSelect
-          options={allSubCategory}
-          label="Sub Category"
-          value={subCategory}
-          onChange={(val) => {
-            setSubCategory(val as string);
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!category}
-        />
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
-        <Button startIcon={<Save />} variant="outlined">
-          Save
-        </Button>
+      <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
+        <Box display="flex" gap={2}>
+          <CustomSelect
+            options={allCategory}
+            label="Category"
+            value={category}
+            onChange={(val) => {
+              setAllSubCategory(allCategory.find((cat: any) => cat.id === val)?.subCategory || []);
+              setSubCategory('');
+              setCategory(val as string);
+            }}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { width: '200px' } }}
+            // disabled={!division}
+          />
+          <CustomSelect
+            options={allSubCategory}
+            label="Sub Category"
+            value={subCategory}
+            onChange={(val) => {
+              setSubCategory(val as string);
+            }}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { width: '200px' } }}
+            disabled={!category}
+          />
+        </Box>
+        <Box display="flex" gap={2}>
+          {' '}
+          <Button startIcon={<Save />} variant="outlined" disabled={!category || !subCategory}>
+            Save
+          </Button>
+        </Box>
       </Box>
       {subCategory && (
         <CustomizableTable

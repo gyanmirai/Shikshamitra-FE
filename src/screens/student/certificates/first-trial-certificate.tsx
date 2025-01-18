@@ -12,6 +12,8 @@ import { Box, Button, TextField, Autocomplete, DialogActions } from '@mui/materi
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -21,8 +23,8 @@ const FirstTrialCertificate = () => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end">
-        <Button startIcon={<Create />} variant="contained" onClick={dialog.onTrue}>
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Button startIcon={<Create />} size="small" variant="contained" onClick={dialog.onTrue}>
           Create First Trial
         </Button>
       </Box>
@@ -33,15 +35,20 @@ const FirstTrialCertificate = () => {
           { id: 'organization', label: 'organization' },
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
-          { id: 'grNo', label: 'GR.No.' },
-          { id: 'studentName', label: 'Student Name' },
+          { id: 'grNo', label: 'GR.No.', align: 'left', minWidth: '180px' },
+          { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
 
-          { id: 'creationDate', label: 'Creation Date' },
+          { id: 'creationDate', label: 'Creation Date', align: 'left', minWidth: '180px' },
           { id: 'reason', label: 'Reason' },
         ]}
         data={[]}
       />
-      <CustomDialog title="Create First Trial" open={dialog.value} handleClose={dialog.onFalse}>
+      <CustomDialog
+        title="Create First Trial"
+        maxWidth="lg"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+      >
         <FirstTrialForm />
       </CustomDialog>
     </Box>
@@ -104,7 +111,7 @@ const FirstTrialForm = () => {
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allOrganization}
               label="Organization"
@@ -118,7 +125,7 @@ const FirstTrialForm = () => {
               disabled={!medium}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -132,7 +139,7 @@ const FirstTrialForm = () => {
               disabled={!organization}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allDivision}
               label="Division"
@@ -144,7 +151,7 @@ const FirstTrialForm = () => {
               disabled={!classes}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <Autocomplete
               loading={false}
               noOptionsText="No Student Found"
@@ -171,7 +178,7 @@ const FirstTrialForm = () => {
               )}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.grNo}
@@ -181,7 +188,7 @@ const FirstTrialForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <DatePicker
               label="First Trial Date"
               value={values.firstTrialDate}
@@ -197,7 +204,7 @@ const FirstTrialForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <DatePicker
               label="Exam Year"
               value={values.examYear}
@@ -214,7 +221,7 @@ const FirstTrialForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.examCenter}
@@ -224,7 +231,7 @@ const FirstTrialForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.seatNumber}
@@ -234,7 +241,7 @@ const FirstTrialForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={[
                 { name: 'First Trial', id: 'first' },
@@ -252,7 +259,7 @@ const FirstTrialForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.lastExamName}
@@ -273,6 +280,9 @@ const FirstTrialForm = () => {
               label="remarks"
               fullWidth
             />
+          </Grid>
+          <Grid xs={12}>
+            <BonofiedCertificateTemplate1 />
           </Grid>
         </Grid>
       </Scrollbar>

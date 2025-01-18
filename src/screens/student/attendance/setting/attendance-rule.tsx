@@ -6,14 +6,11 @@ import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
-  Card,
   Button,
   MenuItem,
   MenuList,
   Checkbox,
   TextField,
-  Typography,
-  CardContent,
   DialogActions,
   InputAdornment,
   FormControlLabel,
@@ -100,65 +97,59 @@ const AttendanceRule = () => {
   );
   return (
     <>
-      <Card elevation={3} sx={{ p: 2, my: 2, boxShadow: 'var(--shadows-3)' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="h6" gutterBottom>
-            Custom Attendance Rules
-          </Typography>
-          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            Add Rule
-          </Button>
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button startIcon={<Add />} size="small" variant="contained" onClick={dialog.onTrue}>
+          Add Rule
+        </Button>
+      </Box>
 
-        <CardContent>
-          <CustomizableTable
-            tableId="attendance-rule-table"
-            isLoading={isLoading}
-            columns={[
-              { label: 'Name', id: 'name' },
-              { label: 'Type', id: 'typeValue' },
-              { label: 'Late Threshold', id: 'lateThreshold', minWidth: 140 },
-              { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue', minWidth: '150px' },
-              { label: 'Half Day Threshold', id: 'halfDayThreshold', minWidth: '175px' },
-              {
-                label: 'Half Day Threshold Unit',
-                id: 'halfDayThresholdUnitValue',
-                minWidth: '200px',
-              },
-              {
-                label: 'Enable Notification',
-                id: 'enableNotification',
-                minWidth: '150px',
-              },
-              {
-                label: 'Actions',
-                id: 'action',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      // actions={(props) => actions(props, row)}
-                      showThreeDots={false}
-                      showEditIcon
-                      showDeleteIcon
-                      handleEditClick={() => {
-                        setEditData(row);
-                        dialog.onTrue();
-                      }}
-                      handleDeleteClick={() => {
-                        confirm.onTrue();
-                        setDeleteInformation(row);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={tableData}
-          />
-        </CardContent>
-      </Card>
+      <CustomizableTable
+        tableId="attendance-rule-table"
+        isLoading={isLoading}
+        columns={[
+          { label: 'Name', id: 'name' },
+          { label: 'Type', id: 'typeValue' },
+          { label: 'Late Threshold', id: 'lateThreshold', minWidth: 140 },
+          { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue', minWidth: '180px' },
+          { label: 'Half Day Threshold', id: 'halfDayThreshold', minWidth: '200px', align: 'left' },
+          {
+            label: 'Half Day Threshold Unit',
+            id: 'halfDayThresholdUnitValue',
+            minWidth: '200px',
+          },
+          {
+            label: 'Enable Notification',
+            id: 'enableNotification',
+            minWidth: '200px',
+            align: 'left',
+          },
+          {
+            label: 'Actions',
+            id: 'action',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  // actions={(props) => actions(props, row)}
+                  showThreeDots={false}
+                  showEditIcon
+                  showDeleteIcon
+                  handleEditClick={() => {
+                    setEditData(row);
+                    dialog.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    confirm.onTrue();
+                    setDeleteInformation(row);
+                  }}
+                />
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />
 
       <ConfirmDialog
         open={confirm.value}

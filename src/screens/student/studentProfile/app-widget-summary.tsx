@@ -46,6 +46,7 @@ export function AppWidgetSummary({ title, icon, percent, total, sx, color, ...ot
         display: 'flex',
         alignItems: 'center',
         p: 3,
+
         ...sx,
       }}
       {...other}

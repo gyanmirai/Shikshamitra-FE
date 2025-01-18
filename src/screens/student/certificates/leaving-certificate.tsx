@@ -12,6 +12,8 @@ import { Box, Button, TextField, Autocomplete, DialogActions } from '@mui/materi
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -21,8 +23,8 @@ const LeavingCertificate = () => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end">
-        <Button startIcon={<Create />} variant="contained" onClick={dialog.onTrue}>
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Button startIcon={<Create />} size="small" variant="contained" onClick={dialog.onTrue}>
           Create Leaving
         </Button>
       </Box>
@@ -34,14 +36,18 @@ const LeavingCertificate = () => {
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
           { id: 'grNo', label: 'GR.No.' },
-          { id: 'studentName', label: 'Student Name' },
-
-          { id: 'creationDate', label: 'Creation Date' },
+          { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
+          { id: 'creationDate', label: 'Creation Date', align: 'left', minWidth: '180px' },
           { id: 'reason', label: 'Reason' },
         ]}
         data={[]}
       />
-      <CustomDialog title="Create Leaving" open={dialog.value} handleClose={dialog.onFalse}>
+      <CustomDialog
+        maxWidth="lg"
+        title="Create Leaving"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+      >
         <LeavingForm />
       </CustomDialog>
     </Box>
@@ -108,7 +114,7 @@ const LeavingForm = () => {
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allOrganization}
               label="Organization"
@@ -122,7 +128,7 @@ const LeavingForm = () => {
               disabled={!medium}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -136,7 +142,7 @@ const LeavingForm = () => {
               disabled={!organization}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allDivision}
               label="Division"
@@ -148,7 +154,7 @@ const LeavingForm = () => {
               disabled={!classes}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <Autocomplete
               loading={false}
               noOptionsText="No Student Found"
@@ -185,7 +191,7 @@ const LeavingForm = () => {
               fullWidth
             />
           </Grid> */}
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.lcNo}
@@ -195,7 +201,7 @@ const LeavingForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <DatePicker
               label="LC Date"
               value={values.lcDate}
@@ -211,7 +217,7 @@ const LeavingForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <DatePicker
               label="Left Date"
               value={values.leftdate}
@@ -227,7 +233,7 @@ const LeavingForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.lcCopy}
@@ -237,7 +243,7 @@ const LeavingForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               value={values.behavior}
               name="behavior"
@@ -247,7 +253,7 @@ const LeavingForm = () => {
               size="small"
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               value={values.progress}
               name="progress"
@@ -257,7 +263,7 @@ const LeavingForm = () => {
               size="small"
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.lcReason}
@@ -269,7 +275,7 @@ const LeavingForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.remarks}
@@ -281,7 +287,7 @@ const LeavingForm = () => {
               fullWidth
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.bookNumber}
@@ -292,7 +298,7 @@ const LeavingForm = () => {
             />
           </Grid>
 
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.feesDetails}
@@ -301,6 +307,9 @@ const LeavingForm = () => {
               label="Fees Details"
               fullWidth
             />
+          </Grid>
+          <Grid xs={12}>
+            <BonofiedCertificateTemplate1 />
           </Grid>
         </Grid>
       </Scrollbar>
