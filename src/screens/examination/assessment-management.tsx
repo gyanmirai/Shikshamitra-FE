@@ -316,6 +316,7 @@ const AssessmentManagement = (props: TabComponentType) => {
       </Box>
 
       <CustomizableTable
+        tableId="assessment-management-table"
         columns={[
           { id: 'className', label: 'Class' },
           { id: 'division', label: 'Division' },
@@ -791,6 +792,7 @@ const StudentSubmissions = () => {
 
       <Scrollbar sx={{ p: 2, height: '500px' }}>
         <CustomizableTable
+          tableId="student-submissions"
           columns={[
             {
               id: 'select',

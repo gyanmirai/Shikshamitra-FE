@@ -91,6 +91,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
               {/* Table for Fines */}
               <Grid item xs={12}>
                 <CustomizableTable
+                  tableId="finesTable"
                   isFilter={false}
                   isSearch={false}
                   isShowedDense={false}

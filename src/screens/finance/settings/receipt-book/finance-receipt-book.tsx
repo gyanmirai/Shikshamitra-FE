@@ -108,6 +108,7 @@ const FinanceReceiptBookSetting = () => {
       <Box pb="20px" />
 
       <CustomizableTable
+        tableId="finance-receipt-book-setting-table"
         isShowedDense={false}
         isPagination={false}
         isFilter={false}

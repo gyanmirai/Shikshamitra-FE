@@ -248,6 +248,7 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
           </Typography>
         </Box>
         <CustomizableTable
+          tableId="fee-refund-allocated"
           isFilter={false}
           isShowedDense={false}
           isPagination={false}

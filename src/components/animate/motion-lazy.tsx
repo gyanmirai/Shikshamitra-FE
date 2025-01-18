@@ -8,7 +8,10 @@ type Props = {
   children: React.ReactNode;
 };
 
-const loadFeaturesAsync = async () => import('./features').then((res) => res.default);
+const loadFeaturesAsync = async () => {
+  const res = await import('./features');
+  return res.default;
+};
 
 export function MotionLazy({ children }: Props) {
   return (

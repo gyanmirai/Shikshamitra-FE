@@ -84,6 +84,7 @@ const FinanceStudentFeeBreakdownTab = () => {
   return (
     <>
       <CustomizableTable
+        tableId="finance-student-fee-breakdown-tab"
         isFilter={false}
         isPagination={false}
         isSearch={false}

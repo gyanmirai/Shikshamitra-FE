@@ -114,6 +114,7 @@ const FinanceExpenseSettingTab = () => {
         </Typography>
       </Box>
       <CustomizableTable
+        tableId="expense-category"
         columns={[
           { id: 'categoryName', label: 'Category Name' },
           { id: 'parentCategory', label: 'Parent Category' },

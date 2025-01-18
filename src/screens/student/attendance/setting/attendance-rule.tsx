@@ -112,6 +112,7 @@ const AttendanceRule = () => {
 
         <CardContent>
           <CustomizableTable
+            tableId="attendance-rule-table"
             isLoading={isLoading}
             columns={[
               { label: 'Name', id: 'name' },

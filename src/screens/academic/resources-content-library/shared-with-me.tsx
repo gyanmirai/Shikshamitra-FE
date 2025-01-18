@@ -42,6 +42,7 @@ const SharedWithMe = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
+        tableId="shared-with-me"
         columns={[
           { id: 'resourceName', label: 'Resource Name' },
           { id: 'sharedBy', label: 'Shared By' },

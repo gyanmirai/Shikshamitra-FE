@@ -218,6 +218,7 @@ const AllResources = (props: TabComponentType) => {
 
       {view === 'list' ? (
         <CustomizableTable
+          tableId="all-resources-table"
           columns={[
             { id: 'resourceName', label: 'Resource Name', minWidth: '150px', align: 'left' },
             { id: 'category', label: 'Category', minWidth: '130px', align: 'left' },

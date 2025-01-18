@@ -15,6 +15,8 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Button, TextField, DialogActions } from '@mui/material';
 
+import { convertBase64Format } from 'src/utils/base64Formate';
+
 import { varAlpha } from 'src/theme/styles';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
 
@@ -74,7 +76,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
     <AnimateAvatar
       width={96}
       slotProps={{
-        avatar: { src: '', alt: '' },
+        avatar: { src: convertBase64Format(userInfo?.employee?.profilePicture || ''), alt: '' },
         overlay: {
           border: 2,
           spacing: 3,
@@ -82,7 +84,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         },
       }}
     >
-      ABC
+      {userInfo?.employee?.shortName}
     </AnimateAvatar>
   );
 
@@ -122,10 +124,10 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
           <Stack alignItems="center" sx={{ pt: 8 }}>
             {renderAvatar}
             <Label sx={{ mt: 1 }} color="primary">
-              {userInfo?.role}
+              {userInfo?.employee?.role?.name}
             </Label>
             <Typography variant="subtitle1" noWrap sx={{ mt: 1 }}>
-              {userInfo?.given_name}
+              {userInfo?.employee?.employeeName}
             </Typography>
 
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>

@@ -35,6 +35,7 @@ const Setting = () => (
       />
     </Box>
     <CustomizableTable
+      tableId="grading-scale-table"
       columns={[
         { id: 'gradeName', label: 'Grade Name' },
         { id: 'minimumPercentage', label: 'Minimum Percentage' },

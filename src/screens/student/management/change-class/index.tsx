@@ -62,6 +62,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="change-class-table"
         columns={[
           {
             id: 'checkBox',

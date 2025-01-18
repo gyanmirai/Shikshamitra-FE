@@ -261,6 +261,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="school-wise-announcement-table"
         columns={[
           { id: 'title', label: 'Title' },
           {

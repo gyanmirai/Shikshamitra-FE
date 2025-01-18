@@ -198,6 +198,7 @@ export const Sections = ({
       </Box>
       <Box p={2} pt={0}>
         <CustomizableTable
+          tableId="payroll-structure"
           isFilter={false}
           isPagination={false}
           isSearch={false}

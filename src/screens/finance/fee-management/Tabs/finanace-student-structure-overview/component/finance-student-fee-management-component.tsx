@@ -109,6 +109,7 @@ const FinanceStudentFeeManagementComponent = () => {
 
         <Box>
           <CustomizableTable
+            tableId="student-fee-management-table"
             columns={[
               { id: 'studentName', label: 'Student Name' },
               { id: 'gradeLevel', label: 'Grade Level' },

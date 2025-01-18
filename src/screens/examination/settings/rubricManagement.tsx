@@ -91,6 +91,7 @@ const RubricManagement = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="rubricTable"
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },

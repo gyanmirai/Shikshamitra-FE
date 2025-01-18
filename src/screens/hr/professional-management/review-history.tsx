@@ -29,6 +29,7 @@ const ReviewHistory = () => (
       />
     </Box>
     <CustomizableTable
+      tableId="review-history"
       columns={[
         { id: 'date', label: 'Date' },
         { id: 'reviewer', label: 'Reviewer' },

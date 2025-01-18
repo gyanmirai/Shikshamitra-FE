@@ -156,6 +156,7 @@ const GradingScale = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="gradesTable"
         columns={[
           { id: 'grade', label: 'Grade' },
           {

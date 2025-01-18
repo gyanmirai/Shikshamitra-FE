@@ -41,6 +41,7 @@ const AssessmentDashboardListComponent = () => {
         />
       </Box>
       <CustomizableTable
+        tableId="assessment-list-table"
         columns={[
           { id: 'assessmentTitle', label: 'Assessment Title' },
           { id: 'subject', label: 'Subject' },

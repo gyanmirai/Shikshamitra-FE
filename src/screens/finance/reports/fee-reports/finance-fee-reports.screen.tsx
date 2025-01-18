@@ -418,7 +418,11 @@ const FinanceFeeReportsScreen = () => {
         Generate Custom Reports
       </Typography>
 
-      <CustomizableTable columns={columns} data={monthlyFeeCollectedData} />
+      <CustomizableTable
+        columns={columns}
+        data={monthlyFeeCollectedData}
+        tableId="monthly-fee-collected"
+      />
     </>
   );
 };

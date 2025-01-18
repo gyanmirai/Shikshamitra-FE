@@ -7,7 +7,7 @@ import Add from '@mui/icons-material/Add';
 import { Box, Grid, Card, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
@@ -30,7 +30,7 @@ import ChangeStatusForm from './chnage-status-form';
 
 const HrEmployee = () => {
   const statusDialog = useBoolean();
-  const [searchParams, setSearchParams] = useSearchParam();
+  const [searchParams, setSearchParams] = useNewSearchParams<{ employee: string }>();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
@@ -119,7 +119,7 @@ const HrEmployee = () => {
             }
           />
 
-          <Card>
+          <Card sx={{ height: '100%' }}>
             <EmployeeFrom editData={editData} handleClose={handleClose} />
           </Card>
         </Box>
@@ -144,6 +144,7 @@ const HrEmployee = () => {
           <Paper sx={{ px: 1, py: 2 }}>
             <CustomizableTable
               isLoading={isLoading}
+              tableId="employee-table"
               columns={[
                 { id: 'employeeCode', label: 'Employee Code' },
                 {

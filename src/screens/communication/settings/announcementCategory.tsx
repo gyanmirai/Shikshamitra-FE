@@ -156,6 +156,7 @@ const AnnouncementCategory = () => {
         </Box>
       </Box>
       <CustomizableTable
+        tableId="announcement-category-table"
         columns={[
           { id: 'categoryName', label: 'Category Name' },
           { id: 'categoryDescription', label: 'Category Description' },
@@ -481,6 +482,7 @@ const AnnouncementImportant = () => {
         </Box>
       </Box>
       <CustomizableTable
+        tableId="important-level-table"
         columns={[
           { id: 'importantLevel', label: 'Important Level' },
           { id: 'importantLevelDesc', label: 'Important Level Desc' },

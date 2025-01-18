@@ -124,7 +124,11 @@ const VehicleRouteHistory: React.FC<VehicleRouteHistoryProps> = ({ vehicleData }
   const data = [];
   return (
     <>
-      <CustomizableTable data={routeHistories} columns={columnData} />
+      <CustomizableTable
+        data={routeHistories}
+        columns={columnData}
+        tableId="vehicle-route-history"
+      />
       <Box py="20px" display="flex" flexDirection="row" justifyContent="flex-end">
         {/* <Button variant="contained" size="small"> Reassign History</Button> */}
       </Box>

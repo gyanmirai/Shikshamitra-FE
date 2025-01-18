@@ -74,6 +74,7 @@ const LibraryReservationManagement = () => {
     );
   return (
     <CustomizableTable
+      tableId="library-reservation-management"
       columns={[
         { id: 'bookId', label: 'Book Id' },
         { id: 'title', label: 'Title' },

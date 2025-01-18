@@ -30,6 +30,7 @@ const ContentLibrary = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
+        tableId="content-library-table"
         columns={[
           { id: 'resourceName', label: 'Resource Name' },
           { id: 'category', label: 'Category' },

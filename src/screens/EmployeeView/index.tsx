@@ -19,6 +19,7 @@ const EmployeeViewScreen = () => (
         data={[]}
       /> */}
     <CustomizableTable
+      tableId="employee-view-table"
       columns={[
         {
           id: 'name',

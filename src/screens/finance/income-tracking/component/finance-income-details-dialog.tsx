@@ -25,6 +25,7 @@ const FinanceIncomeDetailsDialog: React.FC<FinanceIncomeDetailsDialogProps> = ({
     <CustomDialog maxWidth="md" title="Income Details" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
         <CustomizableTable
+          tableId="finance-income-details-table"
           isFilter={false}
           isScrollbar={false}
           isSearch={false}

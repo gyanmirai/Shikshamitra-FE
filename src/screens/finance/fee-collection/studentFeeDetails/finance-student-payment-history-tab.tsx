@@ -35,6 +35,7 @@ export const FinanceStudentPaymentHistoryTab = () => {
   return (
     <>
       <CustomizableTable
+        tableId="financeStudentPaymentHistory"
         columns={[
           { id: 'date', label: 'Date' },
           { id: 'feeType', label: 'Fee Type' },

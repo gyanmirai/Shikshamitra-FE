@@ -76,6 +76,7 @@ const RollNoGenerationScreen = () => {
             </Button>
           </Box>
           <CustomizableTable
+            tableId="roll-no-generation-table"
             columns={[
               { id: 'srNo', label: 'Sr. No.' },
               { id: 'grNo', label: 'GR No.' },

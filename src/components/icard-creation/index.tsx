@@ -292,7 +292,6 @@ const StudentIDCardCreator = () => {
       cardBackground,
       cardBackgroundColor,
     };
-    console.log(configuration, 'configuration');
     localStorage.setItem('idCardConfiguration', JSON.stringify(configuration));
     alert('Configuration saved successfully!');
   };

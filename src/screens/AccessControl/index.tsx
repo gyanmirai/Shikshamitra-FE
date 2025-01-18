@@ -86,6 +86,7 @@ const AccessControlScreen = () => {
         }
       />
       <CustomizableTable
+        tableId="access-control"
         columns={[
           { id: 'employee', label: 'Employee Name' },
           { id: 'board', label: 'Employee Name' },

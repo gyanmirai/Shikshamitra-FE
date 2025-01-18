@@ -56,6 +56,7 @@ const FinanceDetailFeeStructureView: React.FC<FinanceDetailFeeStructureViewProps
     >
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
         <CustomizableTable
+          tableId="fee-structure-detail"
           isSearch={false}
           isFilter={false}
           isPagination={false}

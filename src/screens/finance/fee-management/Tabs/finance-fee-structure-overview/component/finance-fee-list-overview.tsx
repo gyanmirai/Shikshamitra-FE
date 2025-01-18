@@ -58,6 +58,7 @@ const FinanceFeeListOverviewComponent = () => (
 
       <Box>
         <CustomizableTable
+          tableId="fee-list-table"
           columns={[
             { id: 'class', label: 'Class' },
             { id: 'studentName', label: 'Student Name' },

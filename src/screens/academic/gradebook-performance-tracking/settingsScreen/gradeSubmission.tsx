@@ -84,8 +84,6 @@ const GradeSubmission = () => {
   };
 
   const handleSubmit = (values: any) => {
-    console.log('values----', values);
-
     const newDeadline = {
       ...values,
       id:
@@ -135,6 +133,7 @@ const GradeSubmission = () => {
       </Box>
 
       <CustomizableTable
+        tableId="grade-submission-table"
         columns={[
           { id: 'className', label: 'Class' },
           { id: 'division', label: 'Division' },

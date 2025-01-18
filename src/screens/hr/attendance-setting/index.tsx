@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 
 import { Tab, Box } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -50,7 +50,8 @@ const TABS = [
 ];
 
 const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'notification' });
+  console.log('🚀 ~ file: index.tsx:54 ~ HrAttendanceSettingScreen ~ searchParams:', searchParams);
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

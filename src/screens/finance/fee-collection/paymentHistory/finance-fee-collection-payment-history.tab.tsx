@@ -336,6 +336,7 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
   return (
     <>
       <CustomizableTable
+        tableId="finance-fee-collection-payment-history-table"
         columns={[
           { id: 'date', label: 'Paid Date' },
           {

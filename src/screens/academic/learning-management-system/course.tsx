@@ -314,6 +314,7 @@ const Course = (props: TabComponentType) => {
         />
       </Box>
       <CustomizableTable
+        tableId="course-table"
         columns={[
           {
             id: 'subjectName',
@@ -473,6 +474,7 @@ const ViewAssignmentData = () => {
     <Box sx={{ p: 2 }}>
       <Scrollbar sx={{ height: '600px' }}>
         <CustomizableTable
+          tableId="assignment-table"
           columns={[
             { id: 'title', label: 'Assignment Title', minWidth: '200px', align: 'left' },
             {

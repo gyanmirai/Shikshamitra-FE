@@ -142,6 +142,7 @@ const EventType = (props: TabComponentType) => {
         </Box>
       </Box>
       <CustomizableTable
+        tableId="eventTypeTable"
         columns={[
           { id: 'eventType', label: 'Event Type' },
           { id: 'eventTypeDesc', label: 'Event Type Desc' },

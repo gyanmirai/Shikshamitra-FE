@@ -57,6 +57,7 @@ const HrAttendanceNotificationScreen = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
+        tableId="hr-attendance-notification"
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'date', label: 'Date' },

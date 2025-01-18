@@ -156,6 +156,7 @@ const FinanceIncomeTrackingScreen = () => {
         </Typography> */}
       </Box>
       <CustomizableTable
+        tableId="income-tracking-table"
         isScrollbar={false}
         columns={[
           {

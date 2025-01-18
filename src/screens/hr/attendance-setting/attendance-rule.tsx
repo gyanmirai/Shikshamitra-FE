@@ -1,3 +1,5 @@
+'use client';
+
 import { useFormik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
@@ -6,12 +8,9 @@ import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
-  Card,
   Button,
   Checkbox,
   TextField,
-  Typography,
-  CardContent,
   DialogActions,
   InputAdornment,
   FormControlLabel,
@@ -69,58 +68,51 @@ const AttendanceRule = () => {
   );
   return (
     <>
-      <Card elevation={3} sx={{ p: 2, my: 2, boxShadow: 'var(--shadows-3)' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="h6" gutterBottom>
-            Custom Attendance Rules
-          </Typography>
-          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            Attendance Rule
-          </Button>
-        </Box>
-
-        <CardContent>
-          <CustomizableTable
-            isLoading={isLoading}
-            columns={[
-              { label: 'Name', id: 'name' },
-              { label: 'Type', id: 'typeValue' },
-              { label: 'Late Threshold', id: 'lateThreshold' },
-              { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue' },
-              { label: 'Half Day Threshold', id: 'halfDayThreshold' },
-              { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnitValue' },
-              {
-                label: 'Enable Notification',
-                id: 'enableNotification',
-              },
-              {
-                label: 'Actions',
-                id: 'action',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      showDeleteIcon
-                      showEditIcon
-                      handleDeleteClick={() => {
-                        confirm.onTrue();
-                        setDeleteInformation(row);
-                      }}
-                      handleEditClick={() => {
-                        setEditData(row);
-                        dialog.onTrue();
-                      }}
-                      showThreeDots={false}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={tableData}
-          />
-        </CardContent>
-      </Card>
+      <Box display="flex" justifyContent="flex-end" alignItems="center">
+        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          Attendance Rule
+        </Button>
+      </Box>
+      <CustomizableTable
+        isLoading={isLoading}
+        tableId="attendance-rule"
+        columns={[
+          { label: 'Name', id: 'name' },
+          { label: 'Type', id: 'typeValue' },
+          { label: 'Late Threshold', id: 'lateThreshold' },
+          { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue' },
+          { label: 'Half Day Threshold', id: 'halfDayThreshold' },
+          { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnitValue' },
+          {
+            label: 'Enable Notification',
+            id: 'enableNotification',
+          },
+          {
+            label: 'Actions',
+            id: 'action',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showDeleteIcon
+                  showEditIcon
+                  handleDeleteClick={() => {
+                    confirm.onTrue();
+                    setDeleteInformation(row);
+                  }}
+                  handleEditClick={() => {
+                    setEditData(row);
+                    dialog.onTrue();
+                  }}
+                  showThreeDots={false}
+                />
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />
 
       <ConfirmDialog
         open={confirm.value}

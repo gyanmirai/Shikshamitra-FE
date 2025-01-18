@@ -151,6 +151,7 @@ const CurrentTimetable = (props: TabComponentType) => {
       <Grid2 container spacing={3}>
         {selectedClassData && (
           <CustomizableTable
+            tableId="timetable-table"
             columns={[
               // {
               //   id: 'className',

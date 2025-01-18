@@ -81,6 +81,7 @@ const EventsArchieves = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="events-archieves-table"
         columns={[
           { id: 'eventTitle', label: 'Event Title' },
           {

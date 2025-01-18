@@ -206,6 +206,7 @@ const AllMeetings = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="meetingTable"
         columns={[
           { id: 'title', label: 'Title' },
           { id: 'meetingType', label: 'Meeting Type' },

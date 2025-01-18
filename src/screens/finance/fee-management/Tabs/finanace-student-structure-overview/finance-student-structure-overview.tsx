@@ -488,6 +488,7 @@ const FinanceStudentFeeManagement = () => {
         
       /> */}
       <CustomizableTable
+        tableId="student-fee-management"
         columns={[
           {
             id: 'grNo',

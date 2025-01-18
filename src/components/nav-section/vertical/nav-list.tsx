@@ -48,7 +48,6 @@ export function NavList({
   const handleToggleMenu = useCallback(
     (e: any) => {
       if (data.children) {
-        console.log('open');
         setCurrentOpenMenu(currentOpenMenu === data._action ? '' : (data._action as string)); // setOpenMenu((prev) => !prev);
       }
     },

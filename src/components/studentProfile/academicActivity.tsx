@@ -14,7 +14,13 @@ const AcademicActivity = () => {
     { id: 'date', label: 'Date' },
   ];
 
-  return <CustomizableTable columns={columns} data={studentActivityData} />;
+  return (
+    <CustomizableTable
+      columns={columns}
+      data={studentActivityData}
+      tableId="student-activity-table"
+    />
+  );
 };
 
 export default AcademicActivity;

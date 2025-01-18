@@ -116,6 +116,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
     <>
       <Box pb="10px">
         <CustomizableTable
+          tableId="fee-structure-overview"
           isSearch={false}
           isFilter={false}
           isPagination={false}

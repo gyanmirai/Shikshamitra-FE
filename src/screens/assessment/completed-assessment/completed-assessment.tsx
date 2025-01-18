@@ -34,6 +34,7 @@ const CompletedAssessment = () => {
     <>
       {/* Customizable Table */}
       <CustomizableTable
+        tableId="completed-assessment-table"
         columns={[
           { id: 'assessmentName', label: 'Assessment Name' },
           { id: 'class', label: 'Class' },

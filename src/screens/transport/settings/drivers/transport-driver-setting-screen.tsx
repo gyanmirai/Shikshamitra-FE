@@ -92,6 +92,7 @@ const TransportDriverSettingScreen = () => {
   return (
     <>
       <CustomizableTable
+        tableId="transport-driver-table"
         data={Driverdata}
         columns={[
           {

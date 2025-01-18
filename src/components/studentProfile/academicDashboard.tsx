@@ -181,6 +181,7 @@ const AcademicDashboard = () => {
         }}
       />
       <CustomizableTable
+        tableId="academic-dashboard-table"
         data={[
           {
             date: '01-01-2024',

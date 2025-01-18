@@ -188,6 +188,7 @@ const Settings = (props: TabComponentType) => {
             </Button>
           </Box>
           <CustomizableTable
+            tableId="curriculum-management-settings-table"
             columns={[
               { id: 'templateName', label: 'Template Name' },
               { id: 'className', label: 'Class' },

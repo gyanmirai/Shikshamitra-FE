@@ -449,6 +449,7 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               <Grid container spacing={1}>
                 <Grid item xs={12}>
                   <CustomizableTable
+                    tableId="attendance-table"
                     data={[
                       {
                         date: '18/07/2024',

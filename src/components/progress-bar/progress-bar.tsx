@@ -113,13 +113,10 @@ export function ProgressBar() {
     };
 
     const handelPopup = (event: any) => {
-      console.log('called', isChanges);
-
       if (isChanges) {
         // Modern browsers ignore custom messages; any text works.
         const message = 'You have unsaved changes. Do you want to leave?';
         event.returnValue = message; // Legacy way for some browsers
-        console.log('called', event.returnValue);
         return message; // Standard way to trigger the dialog
       }
       return undefined;

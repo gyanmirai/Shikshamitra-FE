@@ -80,8 +80,6 @@ const Teacher = ({
   const [teacherData, setTeacherData] = useState<TTeacherData[]>(TeacherData);
   const dialog = useBoolean();
 
-  console.log('teacher data---------', teacherData);
-
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleTeacherReassignment = (values: { assignedTeacher: string[] }) => {
@@ -97,7 +95,6 @@ const Teacher = ({
 
   const classOptions = useMemo(() => {
     if (!classData) return [{ label: 'All', value: 'All' }];
-    console.log('class Data----', classData);
 
     return [
       { label: 'All', value: 'All' },
@@ -159,6 +156,7 @@ const Teacher = ({
       </Box>
       <Grid2 container spacing={3}>
         <CustomizableTable
+          tableId="teacher-table"
           columns={[
             {
               id: 'className',
@@ -224,8 +222,6 @@ interface TeacherReassignProps {
 }
 
 const TeacherReassign: React.FC<TeacherReassignProps> = ({ selectedTeacher, onSubmit }) => {
-  console.log('selected teacher---', selectedTeacher);
-
   const formik = useFormik({
     initialValues: {
       assignedTeacher: selectedTeacher?.assignedTeacher || [],

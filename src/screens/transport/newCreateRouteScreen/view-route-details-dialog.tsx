@@ -53,6 +53,7 @@ const ViewRouteDetailsDialog: React.FC<ViewRouteDetailsDialogProps> = ({
             </AccordionSummary>
             <AccordionDetails>
               <CustomizableTable
+                tableId="route-details-table"
                 isShowedDense={false}
                 isFilter={false}
                 isPagination={false}

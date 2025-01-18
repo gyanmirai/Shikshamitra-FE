@@ -93,6 +93,7 @@ const ProfessionalTax = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="professional-table"
         isLoading={isLoading}
         columns={[
           { id: 'genderValue', label: 'Gender' },

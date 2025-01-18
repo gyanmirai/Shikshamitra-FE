@@ -291,6 +291,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="class-specific-announcement-table"
         columns={[
           { id: 'title', label: 'Title' },
           {

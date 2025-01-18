@@ -148,6 +148,7 @@ const ExamTypeSettings = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="examTypeTable"
         columns={[
           { id: 'examType', label: 'Exam Type' },
           { id: 'description', label: 'Description' },
@@ -465,6 +466,7 @@ const AssessmentTypeSettings = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="assessment-type"
         columns={[
           { id: 'assessmentType', label: 'Assessment Type' },
           { id: 'description', label: 'Description' },

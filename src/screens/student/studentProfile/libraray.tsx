@@ -189,6 +189,7 @@ const Libraray = (props: StudentTabsComponentType) => {
 
       {searchParams.tab === 'currentIssue' && (
         <CustomizableTable
+          tableId="currentIssue"
           isShowedDense={false}
           data={libraryData[0].currentBorrowerBook}
           columns={[
@@ -203,6 +204,7 @@ const Libraray = (props: StudentTabsComponentType) => {
 
       {searchParams.tab === 'borrowingHistory' && (
         <CustomizableTable
+          tableId="borrowingHistory"
           data={libraryData[0].pastBorrowedBooks}
           columns={[
             { id: 'bookId', label: 'Book Id' },
@@ -215,6 +217,7 @@ const Libraray = (props: StudentTabsComponentType) => {
 
       {searchParams.tab === 'reservation' && (
         <CustomizableTable
+          tableId="reservation"
           data={libraryData[0].reservedBooks}
           columns={[
             { id: 'bookId', label: 'Book Id' },

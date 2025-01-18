@@ -233,6 +233,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
     <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <CustomizableTable
+          tableId="fee-refund-table"
           isFilter={false}
           isShowedDense={false}
           isPagination={false}

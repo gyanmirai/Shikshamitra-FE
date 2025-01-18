@@ -1,5 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
+
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+
+import { isJSONStringified } from 'src/utils/is-json-string';
 
 export type useSearchParamReturnType = [Record<string, string>, (obj: Record<string, any>) => void];
 
@@ -39,4 +43,103 @@ export const useSearchParam = (
   }, [pathName, router, searchParams, state]);
 
   return [state, setParam];
+};
+
+function isFunction<T>(
+  value: T | Partial<T> | ((params: T) => T) | (T & Function)
+): value is (params: T) => T {
+  return typeof value === 'function';
+}
+
+// Utility function to parse URLSearchParams into an object
+const parseSearchParams = <T>(params: URLSearchParams): T => {
+  const parsedParams: Record<string, any> = {};
+  params.forEach((value, key) => {
+    try {
+      parsedParams[key] =
+        value === 'true' || value === 'false'
+          ? value === 'true'
+          : isJSONStringified(value)
+            ? JSON.parse(value)
+            : value;
+    } catch {
+      parsedParams[key] = value; // Fallback to original value if JSON parsing fails
+    }
+  });
+  return parsedParams as T;
+};
+
+const updateSearchParams = <T>(params: URLSearchParams, updates: T | Partial<T>) => {
+  Object.entries(updates as Object).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      params.set(key, typeof value === 'string' ? value : JSON.stringify(value));
+    } else {
+      params.delete(key);
+    }
+  });
+};
+
+export const useNewSearchParams = <T>(
+  defaultValues: T = {} as T
+): [T, (obj: T | Partial<T> | ((params: T) => T)) => void, () => void, (key: string) => void] => {
+  const originalSearchParams = useSearchParams();
+  const pathName = usePathname();
+  const router = useRouter();
+  const paramsValues = useRef<T>({
+    ...defaultValues,
+    ...parseSearchParams(new URLSearchParams(originalSearchParams.toString())),
+  });
+
+  const searchParams = useMemo(() => {
+    const params = new URLSearchParams(originalSearchParams.toString());
+    updateSearchParams(params, paramsValues.current);
+    return params;
+  }, [originalSearchParams]);
+
+  const allSearchParams = useMemo(() => parseSearchParams<T>(searchParams), [searchParams]);
+
+  const setSearchParams = useCallback(
+    (obj: T | Partial<T> | ((params: T) => T)) => {
+      const newParams =
+        typeof obj === 'function' ? (obj as (params: T) => T)(allSearchParams) : obj;
+
+      const updatedParams = new URLSearchParams(searchParams.toString());
+      updateSearchParams(updatedParams, newParams);
+
+      paramsValues.current = parseSearchParams<T>(updatedParams);
+      router.push(`${pathName}?${updatedParams.toString()}`);
+    },
+    [allSearchParams, pathName, router, searchParams]
+  );
+
+  const removeSearchParams = useCallback(() => router.push(pathName), [pathName, router]);
+
+  const removeSearchParamsByKey = useCallback(
+    (key: string) => {
+      const updatedParams = new URLSearchParams(searchParams.toString());
+      updatedParams.delete(key);
+      router.push(`${pathName}?${updatedParams.toString()}`);
+    },
+    [pathName, router, searchParams]
+  );
+
+  return [allSearchParams, setSearchParams, removeSearchParams, removeSearchParamsByKey];
+};
+
+export const convertNextJsParamsToObject = (param: ReadonlyURLSearchParams) => {
+  const params = new URLSearchParams(param.toString());
+  const parsedParams: Record<string, any> = {};
+  if (params.size > 0) {
+    params.entries().forEach(([key, value]) => {
+      if (value === 'true' || value === 'false') {
+        parsedParams[key] = value === 'true';
+      } else if (isJSONStringified(value)) {
+        parsedParams[key] = JSON.parse(value);
+      } else {
+        parsedParams[key] = value;
+      }
+    });
+  }
+
+  return parsedParams;
 };

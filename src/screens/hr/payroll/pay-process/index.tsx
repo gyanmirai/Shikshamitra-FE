@@ -91,19 +91,21 @@ const PayProcessScreen = () => {
         />
       </Box>
       <CustomizableTable
+        tableId="payProcess"
         columns={[
-          { id: 'employeeCode', label: 'Employee Code' },
+          { id: 'employeeCode', label: 'Employee Code', minWidth: 144 },
           { id: 'name', label: 'Name' },
           { id: 'remark', label: 'Remark' },
 
-          { id: 'salaryMonth', label: 'Salary Month' },
+          { id: 'salaryMonth', label: 'Salary Month', minWidth: 130 },
 
           { id: 'year', label: 'Year' },
-          { id: 'workingDays', label: 'Total Days' },
-          { id: 'presentDays', label: 'Present Days' },
+          { id: 'workingDays', label: 'Total Days', minWidth: 110 },
+          { id: 'presentDays', label: 'Present Days', minWidth: 128 },
           {
             id: 'salary',
             label: 'Salary',
+            align: 'right',
             render(value, row) {
               return formatCurrency(value);
             },
@@ -111,6 +113,8 @@ const PayProcessScreen = () => {
           {
             id: 'grossSalary',
             label: 'Gross Salary',
+            align: 'right',
+            minWidth: 125,
             render(value, row) {
               return formatCurrency(value);
             },
@@ -118,6 +122,8 @@ const PayProcessScreen = () => {
           {
             id: 'pr',
             label: 'PR',
+            align: 'right',
+
             render(value, row) {
               return formatCurrency(value);
             },
@@ -125,6 +131,8 @@ const PayProcessScreen = () => {
           {
             id: 'profTax',
             label: 'Prof. Tax',
+            align: 'right',
+            minWidth: 120,
             render(value, row) {
               return formatCurrency(value);
             },
@@ -132,6 +140,7 @@ const PayProcessScreen = () => {
           {
             id: 'tds',
             label: 'TDS',
+            align: 'right',
             render(value, row) {
               return formatCurrency(value);
             },
@@ -139,6 +148,8 @@ const PayProcessScreen = () => {
           {
             id: 'netSalary',
             label: 'Net Salary',
+            align: 'right',
+            minWidth: 110,
             render(value, row) {
               return formatCurrency(value);
             },

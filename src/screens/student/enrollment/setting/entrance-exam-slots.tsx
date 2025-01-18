@@ -29,6 +29,7 @@ const EntranceExamSlots = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="entrance-exam-slots"
         columns={[
           { label: 'Start Time', id: 'startTime' },
           { label: 'End Time', id: 'endTime' },

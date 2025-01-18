@@ -97,6 +97,7 @@ const AddPayElement = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="pay-element-table"
         isLoading={isLoading}
         columns={[
           { id: 'code', label: 'Code' },

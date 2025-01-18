@@ -4,6 +4,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const GradeBook = () => (
   <CustomizableTable
+    tableId="grade-book"
     columns={[
       { id: 'assessmentName', label: 'Assessment Name' },
       { id: 'class', label: 'Class' },

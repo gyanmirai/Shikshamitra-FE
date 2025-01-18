@@ -14,6 +14,7 @@ const LibraryLoanSetting: React.FC = () => {
   return (
     <Box sx={{ padding: 3 }}>
       <CustomizableTable
+        tableId="library-loan-setting"
         isFilter={false}
         isShowedDense={false}
         isSearch={false}

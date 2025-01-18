@@ -4,6 +4,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const EmployeeHistory = () => (
   <CustomizableTable
+    tableId="employee-history"
     columns={[
       { id: 'company', label: 'Company' },
       { id: 'position', label: 'Position' },

@@ -40,6 +40,7 @@ const FinanceStudentTransectionOverviewComponent = () => (
     </Typography>
 
     <CustomizableTable
+      tableId="finance-student-transection-overview-table"
       columns={[
         { id: 'date', label: 'Date' },
         { id: 'amountDue', label: 'Amount Due' },

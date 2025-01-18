@@ -130,6 +130,7 @@ const FinanceBudgetSettingTab = () => {
         </Typography>
       </Box>
       <CustomizableTable
+        tableId="budget-setting"
         columns={[
           { id: 'departmentName', label: 'Department/Project Name' },
           { id: 'allocatedAmount', label: 'Allocated Budget Amount' },

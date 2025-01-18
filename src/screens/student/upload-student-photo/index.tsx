@@ -111,6 +111,7 @@ const UploadStudentPhotoScreen = () => {
 
       {division && (
         <CustomizableTable
+          tableId="upload-student-photo"
           columns={[
             { id: 'fullName', label: 'Full Name' },
             {

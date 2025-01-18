@@ -43,7 +43,6 @@ export function SettingsProvider({
 
   useEffect(() => {
     if (userInfo === null && !userInfo?.sub && !['/login'].includes(pathname.replace(/\/$/, ''))) {
-      console.log('dispatching getUser');
       dispatch(getUser() as any);
     }
   }, [dispatch, lastAction, pathname, userInfo]);

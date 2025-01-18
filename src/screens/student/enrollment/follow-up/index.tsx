@@ -101,6 +101,7 @@ const FollowUpScreen: React.FC = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
+        tableId="followUpTable"
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'board', label: 'Board' },

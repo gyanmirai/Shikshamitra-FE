@@ -240,6 +240,7 @@ const LibraryMemberManagementScreen = () => {
       </Box>
 
       <CustomizableTable
+        tableId="member-management"
         columns={[
           { id: 'memberId', label: 'Member Id' },
           { id: 'role', label: 'Role' },

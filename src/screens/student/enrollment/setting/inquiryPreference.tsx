@@ -79,6 +79,7 @@ const InquiryPreference = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="inquiry-preference"
         isLoading={isLoading}
         columns={[
           { id: 'preferenceName', label: 'Name' },

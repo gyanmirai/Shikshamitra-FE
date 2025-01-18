@@ -33,6 +33,7 @@ const DefinedSchoolWideRulesComponent = () => (
       <Grid item xs={12} md={12}>
         <Box>
           <CustomizableTable
+            tableId="defined-school-wide-rules"
             isShowedDense={false}
             isPagination={false}
             isFilter={false}

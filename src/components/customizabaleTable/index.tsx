@@ -1,19 +1,20 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { DatePickerProps } from '@mui/lab';
 import type { TableRowProps } from '@mui/material';
 
 import jsPDF from 'jspdf';
 import dayjs from 'dayjs';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import * as XLSX from 'xlsx';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
+import { useSearchParams } from 'next/navigation';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import {
   Clear as ClearIcon,
@@ -46,9 +47,14 @@ import {
   IconButton,
   InputLabel,
   FormControl,
+  TableContainer,
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
+
+import { useNewSearchParams, convertNextJsParamsToObject } from 'src/hooks/use-search-param';
+
+import debounce from 'src/utils/debounce';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
@@ -59,9 +65,17 @@ dayjs.extend(isSameOrAfter);
 
 dayjs.extend(isSameOrBefore);
 
+// Add this interface to your existing interfaces
+interface ColumnFilterAnchor {
+  element: HTMLElement;
+  column: Column;
+}
+
 export interface Column {
   id: string;
   label: string;
+  filterType?: 'string' | 'number' | 'date';
+  isFilter?: boolean;
   minWidth?: number | string;
   align?: 'right' | 'left' | 'center';
   render?: (value: any, row: Data) => React.ReactNode;
@@ -100,7 +114,24 @@ interface CustomizableTableProps {
   startDateProps?: DatePickerProps<Dayjs>;
   endDateProps?: DatePickerProps<Dayjs>;
   dateProps?: DatePickerProps<Dayjs>;
+  tableId: string;
 }
+
+type IParams = {
+  page: number;
+  rowsPerPage: number;
+  searchTerm: string;
+  filterColumn: string;
+  filterType: string;
+  dense: boolean;
+  columnSearchTerm: string;
+  filters: Array<{ column: string; type: string; value: string; valueType: string }>;
+  sorts: Array<{ column: string; direction: 'asc' | 'desc' }>;
+  dateFilter: null | Dayjs;
+  dateRangeFilter: { start: null | Dayjs; end: null | Dayjs };
+  filterValue: string;
+  columnVisibility: Record<string, boolean>;
+};
 
 const CustomizableTable: React.FC<CustomizableTableProps> = ({
   columns,
@@ -121,66 +152,137 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   startDateProps,
   endDateProps,
   dateProps,
+  tableId,
 }) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  // const [sortColumn, setSortColumn] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [columnVisibility, setColumnVisibility] = useState<{ [key: string]: boolean }>(
-    columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {})
+  const currentParams = convertNextJsParamsToObject(useSearchParams());
+
+  const [params, setParams, _removeAllParams, removeParamsByKey] = useNewSearchParams<
+    Record<string, IParams>
+  >({
+    ...currentParams,
+    [tableId]: {
+      page: 0,
+      rowsPerPage: 10,
+      searchTerm: '',
+      filterColumn: '',
+      filterType: 'contains',
+      dense: true,
+      columnSearchTerm: '',
+      filters: [],
+      sorts: [],
+      dateFilter: null,
+      dateRangeFilter: { start: null, end: null },
+      filterValue: '',
+      columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
+      // ...(currentParams?.[tableId] || {}),
+    },
+  });
+
+  const handelChangeParams = useCallback(
+    (param: Partial<IParams>) => {
+      setParams((pre) => ({
+        ...pre,
+        [tableId]: {
+          ...pre[tableId],
+          ...param,
+        },
+      }));
+    },
+    [setParams, tableId]
   );
-  const [filterColumn, setFilterColumn] = useState('');
-  const [filterType, setFilterType] = useState('contains');
-  const [filterValue, setFilterValue] = useState('');
+
+  // const [page, setPage] = useState(0);
+  const { page } = params[tableId];
+  // const [rowsPerPage, setRowsPerPage] = useState(10);
+  const { rowsPerPage } = params[tableId];
+  // const [searchTerm, setSearchTerm] = useState('');
+  const { searchTerm } = params[tableId];
+
+  // const [columnVisibility, setColumnVisibility] = useState<{ [key: string]: boolean }>(
+  //   columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {})
+  // );
+  const { columnVisibility } = params[tableId];
+  // const [filterColumn, setFilterColumn] = useState('');
+  const { filterColumn } = params[tableId];
+
+  // const [filterType, setFilterType] = useState('contains');
+  const { filterType } = params[tableId];
+
+  // const [filterValue, setFilterValue] = useState('');
+  const { filterValue } = params[tableId];
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
   const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
+
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
 
-  const [dense, setDense] = useState(true);
+  // const [dense, setDense] = useState(true);
+  const { dense } = params[tableId];
+
   const [expandedRows, setExpandedRows] = useState<{ [key: number]: boolean }>({});
-  const [columnSearchTerm, setColumnSearchTerm] = useState<string>('');
-  const [filters, setFilters] = useState<Array<{ column: string; type: string; value: string }>>(
-    []
-  );
-  const [sorts, setSorts] = useState<Array<{ column: string; direction: 'asc' | 'desc' }>>([]);
-  const [dateFilter, setDateFilter] = useState<null | Dayjs>(null);
-  const [dateRangeFilter, setDateRangeFilter] = useState<{
-    start: null | Dayjs;
-    end: null | Dayjs;
-  }>({
-    start: null,
-    end: null,
-  });
+  const [searchValue, setSearchValue] = useState(searchTerm);
+
+  // const [columnSearchTerm, setColumnSearchTerm] = useState<string>('');
+  const { columnSearchTerm } = params[tableId];
+
+  // const [filters, setFilters] = useState<Array<{ column: string; type: string; value: string }>>(
+  //   []
+  // );
+  const { filters } = params[tableId];
+
+  // const [sorts, setSorts] = useState<Array<{ column: string; direction: 'asc' | 'desc' }>>([]);
+  const { sorts } = params[tableId];
+
+  const [filterAnchorEl, setFilterAnchorEl] = useState<ColumnFilterAnchor | null>(null);
+
+  // const { dateRangeFilter } = params[tableId][paramsKey.current];
+
   const handleChangePage = useCallback(
     (event: unknown, newPage: number) => {
-      setPage(newPage);
+      handelChangeParams({ page: newPage });
+      // setPage(newPage);
       if (serverSide && onServerPagination) {
         onServerPagination(newPage, rowsPerPage);
       }
     },
-    [serverSide, onServerPagination, rowsPerPage]
+    [handelChangeParams, serverSide, onServerPagination, rowsPerPage]
   );
   const removeFilter = (index: number) => {
-    setFilters(filters.filter((_a, i) => i !== index));
+    handelChangeParams({ filters: filters.filter((_a, i) => i !== index) });
+    // setFilters(filters.filter((_a, i) => i !== index));
   };
 
   const clearAllFilters = () => {
-    setFilters([]);
+    // setFilters([]);
+    handelChangeParams({ filters: [] });
   };
 
   useEffect(() => {
-    setColumnVisibility(columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}));
-  }, [columns]);
+    debounce(() => {
+      handelChangeParams({ searchTerm: searchValue });
+    }, 500);
+  }, [handelChangeParams, searchValue]);
+
+  useEffect(
+    () => () => {
+      removeParamsByKey(tableId);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tableId]
+  );
 
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(+event.target.value);
-      setPage(0);
+      // setRowsPerPage(+event.target.value);
+      // setPage(0);
+      handelChangeParams({ rowsPerPage: +event.target.value, page: 0 });
+
       if (serverSide && onServerPagination) {
         onServerPagination(0, +event.target.value);
       }
     },
-    [serverSide, onServerPagination]
+    [handelChangeParams, serverSide, onServerPagination]
   );
 
   const handleSort = useCallback(
@@ -197,30 +299,24 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       } else {
         newSortConfig.push({ column, direction: 'asc' });
       }
-      setSorts(newSortConfig);
+      handelChangeParams({ sorts: newSortConfig });
+      // setSorts(newSortConfig);
       if (serverSide && onServerSort) {
         onServerSort(column, newSortConfig);
       }
-
-      // const columnDef = columns.find((col) => col.id === column);
-      // if (columnDef && columnDef.isSort !== false) {
-      //   const isAsc = sortColumn === column && sortDirection === 'asc';
-      //   setSortDirection(isAsc ? 'desc' : 'asc');
-      //   setSortColumn(column);
-      //   if (serverSide && onServerSort) {
-      //     onServerSort(column, isAsc ? 'desc' : 'asc');
-      //   }
-      // }
     },
-    [sorts, serverSide, onServerSort]
+    [sorts, handelChangeParams, serverSide, onServerSort]
   );
 
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchTerm(event.target.value);
-      if (serverSide && onServerSearch) {
-        onServerSearch(event.target.value);
-      }
+      setSearchValue(event.target.value);
+      // setParams({ searchTerm: event.target.value });
+      debounce(() => {
+        if (serverSide && onServerSearch) {
+          onServerSearch(event.target.value);
+        }
+      });
     },
     [serverSide, onServerSearch]
   );
@@ -228,28 +324,45 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const applyFilter = useCallback(
     (row: Data) =>
       filters.every((filter) => {
-        const value = row[filter.column];
+        const value = _.get(row, filter.column, '');
         const valueAsNumber = !isNumber(Number(value)) ? Number(value) : value;
         const filterValueAsNumber = !isNumber(Number(filter.value))
           ? Number(filter.value)
           : filter.value;
-        switch (filter.type) {
-          case 'contains':
-            return value.toString().toLowerCase().includes(filter.value.toLowerCase());
-          case 'equals':
-            return value.toString().toLowerCase() === filter.value.toLowerCase();
-          case 'startsWith':
-            return value.toString().toLowerCase().startsWith(filter.value.toLowerCase());
-          case 'endsWith':
-            return value.toString().toLowerCase().endsWith(filter.value.toLowerCase());
-          case 'greaterThan':
-            return valueAsNumber > filterValueAsNumber;
-          case 'lessThan':
-            return valueAsNumber < filterValueAsNumber;
-          default:
-            return true;
+        const isDateType = filter.valueType === 'date';
+
+        if (isDateType) {
+          switch (filter.type) {
+            case 'equals':
+              return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
+
+            case 'after':
+              return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(dayjs(filter.value, 'DD-MM-YYYY'));
+            case 'before':
+              return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
+            default:
+              return false;
+          }
+        } else {
+          switch (filter.type) {
+            case 'contains':
+              return value.toString().toLowerCase().includes(filter.value.toLowerCase());
+            case 'equals':
+              return value.toString().toLowerCase() === filter.value.toLowerCase();
+            case 'startsWith':
+              return value.toString().toLowerCase().startsWith(filter.value.toLowerCase());
+            case 'endsWith':
+              return value.toString().toLowerCase().endsWith(filter.value.toLowerCase());
+            case 'greaterThan':
+              return valueAsNumber > filterValueAsNumber;
+            case 'lessThan':
+              return valueAsNumber < filterValueAsNumber;
+            default:
+              return true;
+          }
         }
       }),
+
     [filters]
   );
 
@@ -265,40 +378,12 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 _.get(row, columns.find((col) => col.id === key)?.id || '')
                   .toString()
                   .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
+                  .includes(searchValue.toLowerCase())
             );
 
-            const dateFilterMatch = dateFilter
-              ? columns.some(
-                  (col) =>
-                    col.isDateFilter &&
-                    dayjs(row[col.id], 'DD-MM-YYYY').format('YYYY-MM-DD') ===
-                      dayjs(dateFilter).format('YYYY-MM-DD')
-                )
-              : true;
-            const dateRangeFilterMatch =
-              dateRangeFilter.start && dateRangeFilter.end
-                ? columns.some(
-                    (col) =>
-                      col.isDateRangeFilter &&
-                      dayjs(row[col.id], 'DD-MM-YYYY').isSameOrAfter(dateRangeFilter.start) &&
-                      dayjs(row[col.id], 'DD-MM-YYYY').isSameOrBefore(dateRangeFilter.end)
-                  )
-                : true;
-
-            return searchMatch && dateFilterMatch && dateRangeFilterMatch && applyFilter(row);
+            return searchMatch && applyFilter(row);
           }),
-    [
-      serverSide,
-      data,
-      dateFilter,
-      columns,
-      dateRangeFilter.start,
-      dateRangeFilter.end,
-      applyFilter,
-      columnVisibility,
-      searchTerm,
-    ]
+    [serverSide, data, applyFilter, columnVisibility, columns, searchValue]
   );
 
   const sortedData = useMemo(() => {
@@ -323,14 +408,20 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   );
 
   const handleChangeDense = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDense(event.target.checked);
+    handelChangeParams({ dense: event.target.checked });
   };
 
   const clearFilter = () => {
-    setFilterColumn('');
-    setFilterType('contains');
-    setFilterValue('');
-    setPage(0);
+    handelChangeParams({
+      filterColumn: '',
+      filterType: 'contains',
+      filterValue: '',
+      page: 0,
+    });
+    // setFilterColumn('');
+    // setFilterType('contains');
+    // setFilterValue('');
+    // setPage(0);
     setAnchorEl(null);
   };
 
@@ -351,44 +442,78 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
         window.print();
       } else if (format === 'pdf') {
         // Export to PDF
+        const pageWidth = columns.length * 50 + 20; // Adding 20 for padding
+        const pageHeight = 297;
         // eslint-disable-next-line new-cap
-        const doc = new jsPDF();
+        const doc = new jsPDF({
+          orientation: 'landscape', // Optional: For a horizontal layout
+          unit: 'mm', // Units: 'pt', 'mm', 'cm', or 'in'
+          format: [pageWidth, pageHeight], // Custom page size
+        });
         const columnData = columns.map((column) => ({
           header: column.label,
           dataKey: column.id,
         }));
         // @ts-ignore
         autoTable(doc, { columns: columnData, body: data });
-        doc.save(`${data[0].fileName ?? 'table_data'}.pdf`);
+        doc.save(`${data?.[0]?.fileName ?? 'table_data'}.pdf`);
       }
     },
     [data, columns]
   );
   const handleApplyFilter = () => {
     if (filterColumn && filterType && filterValue) {
-      setFilters([...filters, { column: filterColumn, type: filterType, value: filterValue }]);
-      setFilterColumn('');
-      setFilterType('contains');
-      setFilterValue('');
+      handelChangeParams({
+        filters: [
+          ...filters,
+          { column: filterColumn, type: filterType, value: filterValue, valueType: '' },
+        ],
+        filterColumn: '',
+        filterType: 'contains',
+        filterValue: '',
+      });
+      // setFilters([...filters, { column: filterColumn, type: filterType, value: filterValue }]);
+      // setFilterColumn('');
+      // setFilterType('contains');
+      // setFilterValue('');
     }
-    setPage(0);
+    handelChangeParams({ page: 0 });
+    // setPage(0);
     setAnchorEl(null);
   };
+  const handleColumnFilterClick = (event: React.MouseEvent, column: Column) => {
+    event.stopPropagation(); // Prevent sort trigger
+    setFilterAnchorEl({ element: event.currentTarget as HTMLElement, column });
+  };
+
+  const handleApplyColumnFilter = (
+    columnId: string,
+    filterTypes: string,
+    value: any,
+    valueType: string
+  ) => {
+    const newFilter = { column: columnId, type: filterTypes, value, valueType };
+    handelChangeParams({
+      filters: [...filters, newFilter],
+      page: 0,
+    });
+    setFilterAnchorEl(null);
+  };
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
+    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
         {isSearch && (
           <TextField
             label="Search"
             variant="outlined"
             size="small"
-            value={searchTerm}
+            value={searchValue}
             onChange={handleSearch}
             InputProps={{
               endAdornment: (
                 <>
-                  {searchTerm ? (
-                    <IconButton size="small" onClick={() => setSearchTerm('')}>
+                  {searchValue ? (
+                    <IconButton size="small" onClick={() => setSearchValue('')}>
                       <ClearIcon />
                     </IconButton>
                   ) : (
@@ -402,94 +527,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           />
         )}
 
-        {/* Add Date Filter */}
-        {columns.some((col) => col.isDateFilter) && (
-          <DatePicker
-            format="DD-MM-YYYY"
-            label="Date Filter"
-            value={dateFilter}
-            onChange={(date) => setDateFilter(date)}
-            slotProps={{
-              textField: {
-                size: 'small',
-                ...(dateFilter
-                  ? {
-                      InputProps: {
-                        endAdornment: (
-                          <IconButton size="small" onClick={() => setDateFilter(null)}>
-                            <ClearIcon />
-                          </IconButton>
-                        ),
-                      },
-                    }
-                  : {}),
-              },
-            }}
-            {...dateProps}
-          />
-        )}
-
-        {/* Add Date Range Filter */}
-        {columns.some((col) => col.isDateRangeFilter) && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <DatePicker
-              format="DD-MM-YYYY"
-              label="Start Date"
-              value={dateRangeFilter.start}
-              onChange={(date) => setDateRangeFilter((prev) => ({ ...prev, start: date }))}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  ...(dateRangeFilter.start
-                    ? {
-                        InputProps: {
-                          endAdornment: (
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                setDateRangeFilter((prev) => ({ ...prev, start: null }))
-                              }
-                            >
-                              <ClearIcon />
-                            </IconButton>
-                          ),
-                        },
-                      }
-                    : {}),
-                },
-              }}
-              {...startDateProps}
-            />
-            <DatePicker
-              format="DD-MM-YYYY"
-              label="End Date"
-              value={dateRangeFilter.end}
-              onChange={(date) => setDateRangeFilter((prev) => ({ ...prev, end: date }))}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  ...(dateRangeFilter.end
-                    ? {
-                        InputProps: {
-                          endAdornment: (
-                            <IconButton
-                              size="small"
-                              onClick={() => setDateRangeFilter((prev) => ({ ...prev, end: null }))}
-                            >
-                              <ClearIcon />
-                            </IconButton>
-                          ),
-                        },
-                      }
-                    : {}),
-                },
-              }}
-              {...endDateProps}
-            />
-          </Box>
-        )}
         {isFilter && (
-          <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center">
+          <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
             <Box sx={{ ml: 2 }}>
               <Button
                 // variant="outlined"
@@ -518,7 +557,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                     size="small"
                     placeholder="Search columns"
                     value={columnSearchTerm}
-                    onChange={(e) => setColumnSearchTerm(e.target.value)}
+                    onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
                     sx={{ mb: 2 }}
                   />
                   <FormGroup>
@@ -533,10 +572,16 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             <Checkbox
                               checked={columnVisibility[column.id]}
                               onChange={(e) => {
-                                setColumnVisibility((prev) => ({
-                                  ...prev,
-                                  [column.id]: e.target.checked,
-                                }));
+                                handelChangeParams({
+                                  columnVisibility: {
+                                    ...columnVisibility,
+                                    [column.id]: e.target.checked,
+                                  },
+                                });
+                                // setColumnVisibility((prev) => ({
+                                //   ...prev,
+                                //   [column.id]: e.target.checked,
+                                // }));
                               }}
                             />
                           }
@@ -548,10 +593,15 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                     <Button
                       size="small"
                       onClick={() => {
-                        setColumnVisibility(
-                          Object.fromEntries(columns.map((column) => [column.id, true]))
-                        );
-                        setColumnSearchTerm('');
+                        // setColumnVisibility(
+                        //   Object.fromEntries(columns.map((column) => [column.id, true]))
+                        // );
+                        handelChangeParams({
+                          columnSearchTerm: '',
+                          columnVisibility: Object.fromEntries(
+                            columns.map((column) => [column.id, true])
+                          ),
+                        });
                       }}
                     >
                       Reset
@@ -560,81 +610,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 </Box>
               </Popover>{' '}
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
-              <Button
-                size="small"
-                startIcon={<FilterAltIcon />}
-                onClick={(event) => setAnchorEl(event.currentTarget)}
-              >
-                Filters
-              </Button>
-              <Popover
-                open={Boolean(anchorEl)}
-                anchorEl={anchorEl}
-                onClose={() => setAnchorEl(null)}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
-                }}
-              >
-                <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Column</InputLabel>
-                    <Select
-                      value={filterColumn}
-                      onChange={(e) => setFilterColumn(e.target.value as string)}
-                      label="Column"
-                    >
-                      {columns.map((column) => (
-                        <MenuItem key={column.id} value={column.id}>
-                          {column.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Filter Type</InputLabel>
-                    <Select
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value as string)}
-                      label="Filter Type"
-                    >
-                      <MenuItem value="contains">Contains</MenuItem>
-                      <MenuItem value="equals">Equals</MenuItem>
-                      <MenuItem value="startsWith">Starts With</MenuItem>
-                      <MenuItem value="endsWith">Ends With</MenuItem>
-                      <MenuItem value="greaterThan">Greater than</MenuItem>
-                      <MenuItem value="lessThan">Less than</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    label="Filter Value"
-                    variant="outlined"
-                    size="small"
-                    value={filterValue}
-                    onChange={(e) => setFilterValue(e.target.value)}
-                  />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => {
-                        handleApplyFilter();
-                      }}
-                    >
-                      Apply
-                    </Button>
-                    <Button size="small" variant="outlined" onClick={clearFilter}>
-                      Clear
-                    </Button>
-                  </Box>
-                </Box>
-              </Popover>
-            </Box>
+
             <Box>
               <Button
                 startIcon={<Iconify icon="solar:export-bold" />}
@@ -678,215 +654,229 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           clearAllFilters={clearAllFilters}
         />
       )}
-      <Box px="2px">
-        <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none' }}>
-          <Scrollbar sx={{ overflow: isScrollbar ? 'auto' : 'hidden', maxHeight: '70vh' }}>
-            <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
-              <TableHead>
-                <TableRow>
-                  {columns.some((column) => column.children) && <TableCell />}
-                  {columns.map(
-                    (column) =>
-                      columnVisibility[column.id] && (
-                        <TableCell
-                          key={column.id}
-                          align={column.align || 'center'}
-                          sx={{
-                            fontSize: '14px',
-                            width: column.minWidth,
-                            position: column.sticky ? 'sticky' : 'static',
-                            left: column.sticky ? 0 : 'auto',
-                            zIndex: column.sticky ? 2 : 'auto',
-                            backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                            boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
-                            ...(column.sticky ? { backgroundImage: 'none' } : {}),
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              cursor: column.isSort !== false ? 'pointer' : 'default',
-                              userSelect: 'none',
-                              fontWeight: 'bold',
-                              width: 'inherit',
-                            }}
-                            onClick={() => column.isSort !== false && handleSort(column.id)}
-                          >
-                            <Box
-                              fontSize="14px"
-                              display="block"
-                              textAlign={column.align}
-                              gap={1}
-                              width="inherit"
-                              component="span"
-                            >
-                              {column.label}
 
-                              {column?.renderColumn?.(column)}
-                            </Box>
-                            {column.isSort !== false && (
-                              <Box
-                                width="50px"
-                                display="flex"
-                                justifyContent="center"
-                                alignItems="center"
-                              >
-                                {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                                  <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
-                                    {sorts.findIndex((sort) => sort.column === column.id) + 1}
-                                  </Box>
-                                )}
-                                <IconButton
-                                  size="small"
-                                  sx={{
-                                    opacity: sorts.find((sort) => sort.column === column.id)
-                                      ? 1
-                                      : 0,
-                                  }}
-                                >
-                                  {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                  'asc' ? (
-                                    <ArrowUpwardIcon fontSize="inherit" />
-                                  ) : (
-                                    <ArrowDownwardIcon fontSize="inherit" />
-                                  )}
-                                </IconButton>
-                              </Box>
-                            )}
-                          </Box>
-                        </TableCell>
-                      )
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell rowSpan={columns.length + 1} colSpan={columns.length + 1}>
-                      {/* <CircularProgress color="primary" size={24} /> */}
-                      <Box
+      <ColumnFilterMenu
+        anchorEl={filterAnchorEl}
+        onClose={() => setFilterAnchorEl(null)}
+        onApplyFilter={handleApplyColumnFilter}
+      />
+      <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
+        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }}>
+          <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
+            <TableHead>
+              <TableRow>
+                {columns.some((column) => column.children) && <TableCell />}
+                {columns.map(
+                  (column) =>
+                    columnVisibility[column.id] && (
+                      <TableCell
+                        key={column.id}
+                        align={column.align || 'center'}
                         sx={{
-                          width: '100%',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          // height: '300px',
-                          alignItems: 'center',
+                          fontSize: '14px',
+                          width: column.minWidth,
+                          position: column.sticky ? 'sticky' : 'static',
+                          left: column.sticky ? 0 : 'auto',
+                          zIndex: column.sticky ? 2 : 'auto',
+                          backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                          boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                          ...(column.sticky ? { backgroundImage: 'none' } : {}),
+                          '& .column-filter-icon': {
+                            opacity: 0,
+                            transition: 'opacity 0.3s ease',
+                          },
+                          '&:hover .column-filter-icon': {
+                            opacity: 1,
+                          },
                         }}
                       >
-                        {/* <LoadingScreen /> */}
-                        <div className="loader" />
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ) : paginatedData.length > 0 ? (
-                  paginatedData.map((row, index) => (
-                    <React.Fragment key={index}>
-                      <TableRow
-                        hover
-                        tabIndex={-1}
-                        onClick={() => handleRowClick(row, index)}
-                        {...rowProps(row, index)}
-                      >
-                        {columns.some((column) => column.children) && (
-                          <TableCell sx={{ fontSize: '13px' }}>
-                            <IconButton size="small" onClick={() => handleExpandRow(index)}>
-                              {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </IconButton>
-                          </TableCell>
-                        )}
-                        {columns.map(
-                          (column) =>
-                            columnVisibility[column.id] && (
-                              <TableCell
-                                key={column.id}
-                                align={column.align}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: column.isSort !== false ? 'pointer' : 'default',
+                            userSelect: 'none',
+                            fontWeight: 'bold',
+                            width: 'inherit',
+                            gap: 0.5,
+                          }}
+                          onClick={() => column.isSort !== false && handleSort(column.id)}
+                        >
+                          <Box
+                            fontSize="14px"
+                            display="block"
+                            textAlign={column.align}
+                            gap={1}
+                            width="inherit"
+                            component="span"
+                          >
+                            {column.label} {column?.renderColumn?.(column)}
+                          </Box>
+
+                          <Iconify
+                            icon="eva:more-vertical-fill"
+                            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                            onClick={(e) => handleColumnFilterClick(e, column)}
+                            className="column-filter-icon"
+                          />
+
+                          {column.isSort !== false && (
+                            <Box
+                              width="50px"
+                              display="flex"
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                                <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
+                                  {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                                </Box>
+                              )}
+                              <IconButton
+                                size="small"
                                 sx={{
-                                  alignItems: 'center',
-                                  fontSize: '13px',
-                                  position: column.sticky ? 'sticky' : 'static',
-                                  left: column.sticky ? 0 : 'auto',
-                                  zIndex: column.sticky ? 2 : 'auto',
-                                  backgroundColor: column.sticky
-                                    ? 'background.paper'
-                                    : 'transparent',
-                                  boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                                  opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
                                 }}
                               >
-                                {column.render
-                                  ? column.render(_.get(row, column.id, ''), row)
-                                  : _.get(row, column.id, '-')}
-                              </TableCell>
-                            )
-                        )}
-                      </TableRow>
-                      {columns.some((column) => column.children) && (
-                        <TableRow>
-                          <TableCell
-                            style={{ paddingBottom: 0, paddingTop: 0 }}
-                            colSpan={columns.length + 1}
-                          >
-                            <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
-                              <Box sx={{ margin: 1 }}>
-                                {columns.map((column) => column.children && column.children(row))}
-                              </Box>
-                            </Collapse>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length + 1}>
-                      <EmptyContent />
-                    </TableCell>
-                  </TableRow>
+                                {sorts.find((sort) => sort.column === column.id)?.direction ===
+                                'asc' ? (
+                                  <ArrowUpwardIcon fontSize="inherit" />
+                                ) : (
+                                  <ArrowDownwardIcon fontSize="inherit" />
+                                )}
+                              </IconButton>
+                            </Box>
+                          )}
+                        </Box>
+                      </TableCell>
+                    )
                 )}
-              </TableBody>
-            </Table>
-          </Scrollbar>
-          {isShowedDense && (
-            <Paper
-              elevation={0}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                p: 1,
-                width: '100%',
-              }}
-            >
-              {isShowedDense && (
-                <FormControlLabel
-                  control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
-                  label="Dense"
-                />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell rowSpan={columns.length + 1} colSpan={columns.length + 1}>
+                    {/* <CircularProgress color="primary" size={24} /> */}
+                    <Box
+                      sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        // height: '300px',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {/* <LoadingScreen /> */}
+                      <div className="loader" />
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedData.length > 0 ? (
+                paginatedData.map((row, index) => (
+                  <React.Fragment key={index}>
+                    <TableRow
+                      hover
+                      tabIndex={-1}
+                      onClick={() => handleRowClick(row, index)}
+                      {...rowProps(row, index)}
+                    >
+                      {columns.some((column) => column.children) && (
+                        <TableCell sx={{ fontSize: '13px' }}>
+                          <IconButton size="small" onClick={() => handleExpandRow(index)}>
+                            {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </TableCell>
+                      )}
+                      {columns.map(
+                        (column) =>
+                          columnVisibility[column.id] && (
+                            <TableCell
+                              key={column.id}
+                              align={column.align}
+                              sx={{
+                                alignItems: 'center',
+                                fontSize: '13px',
+                                position: column.sticky ? 'sticky' : 'static',
+                                left: column.sticky ? 0 : 'auto',
+                                zIndex: column.sticky ? 2 : 'auto',
+                                backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                                boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                              }}
+                            >
+                              {column.render
+                                ? column.render(_.get(row, column.id, ''), row)
+                                : _.get(row, column.id, '-')}
+                            </TableCell>
+                          )
+                      )}
+                    </TableRow>
+                    {columns.some((column) => column.children) && (
+                      <TableRow>
+                        <TableCell
+                          style={{ paddingBottom: 0, paddingTop: 0 }}
+                          colSpan={columns.length + 1}
+                        >
+                          <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                            <Box sx={{ margin: 1 }}>
+                              {columns.map((column) => column.children && column.children(row))}
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 1}>
+                    <EmptyContent />
+                  </TableCell>
+                </TableRow>
               )}
-              {isPagination && (
-                <TablePagination
-                  rowsPerPageOptions={[10, 25, 100]}
-                  component="div"
-                  count={serverSide ? totalCount || 0 : filteredData.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  size="small"
-                  sx={{
-                    '& *': { fontSize: '14px !important' },
-                    '& svg': { fontSize: '18px !important' },
-                    '& .MuiToolbar-root': {
-                      minHeight: 'unset',
-                      height: 'auto',
-                    },
-                  }}
-                />
-              )}
-            </Paper>
-          )}
-        </ComponentBlock>
-      </Box>
+            </TableBody>
+          </Table>
+        </TableContainer>
+        {isShowedDense && (
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              p: 1,
+              width: '100%',
+            }}
+          >
+            {isShowedDense && (
+              <FormControlLabel
+                control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
+                label="Dense"
+              />
+            )}
+            {isPagination && (
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 100]}
+                component="div"
+                count={serverSide ? totalCount || 0 : filteredData.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                size="small"
+                sx={{
+                  '& *': { fontSize: '14px !important' },
+                  '& svg': { fontSize: '18px !important' },
+                  '& .MuiToolbar-root': {
+                    minHeight: 'unset',
+                    height: 'auto',
+                  },
+                }}
+              />
+            )}
+          </Paper>
+        )}
+      </ComponentBlock>
     </Card>
   );
 };
@@ -929,3 +919,121 @@ const FilterChips = ({ filters, removeFilter, clearAllFilters }: any) => (
     )}
   </Box>
 );
+
+const ColumnFilterMenu: React.FC<{
+  anchorEl: ColumnFilterAnchor | null;
+  onClose: () => void;
+  onApplyFilter: (columnId: string, filterType: string, value: any, valueType: string) => void;
+}> = ({ anchorEl, onClose, onApplyFilter }) => {
+  const [filterType, setFilterType] = useState('');
+  const [filterValue, setFilterValue] = useState<null | string | Dayjs>(null);
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+
+  const getFilterOptions = () => {
+    if (!anchorEl) return [];
+
+    switch (anchorEl.column.filterType) {
+      case 'string':
+        return [
+          { value: 'contains', label: 'Contains' },
+          { value: 'equals', label: 'Equals' },
+          { value: 'startsWith', label: 'Starts With' },
+          { value: 'endsWith', label: 'Ends With' },
+        ];
+      case 'number':
+        return [
+          { value: 'equals', label: 'Equals' },
+          { value: 'greaterThan', label: 'Greater Than' },
+          { value: 'lessThan', label: 'Less Than' },
+          { value: 'between', label: 'Between' },
+        ];
+      case 'date':
+        return [
+          { value: 'equals', label: 'Equals' },
+          // { value: 'range', label: 'Date Range' },
+          { value: 'after', label: 'After' },
+          { value: 'before', label: 'Before' },
+        ];
+      default:
+        return [
+          { value: 'contains', label: 'Contains' },
+          { value: 'equals', label: 'Equals' },
+          { value: 'startsWith', label: 'Starts With' },
+          { value: 'endsWith', label: 'Ends With' },
+        ];
+    }
+  };
+
+  const handleApply = () => {
+    if (!anchorEl) return;
+
+    let value = filterValue;
+    if (anchorEl.column.filterType === 'date') {
+      value = (value as Dayjs).format('DD-MM-YYYY');
+    }
+
+    console.log(value, 'value', anchorEl.column.id);
+
+    onApplyFilter(anchorEl.column.id, filterType, value, anchorEl.column.filterType as string);
+    setFilterType('');
+    setFilterValue(null);
+    setDateRange([null, null]);
+  };
+
+  return (
+    <Menu anchorEl={anchorEl?.element} open={Boolean(anchorEl)} onClose={onClose}>
+      <Box sx={{ p: 2, minWidth: 250 }}>
+        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+          <InputLabel>Filter Type</InputLabel>
+          <Select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            label="Filter Type"
+          >
+            {getFilterOptions().map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {filterType === 'range' ? null : anchorEl?.column.filterType === 'date' ? (
+          <DatePicker
+            value={filterValue as null | Dayjs}
+            onChange={(newValue) => setFilterValue(newValue)}
+            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            format="DD-MM-YYYY"
+          />
+        ) : (
+          <TextField
+            fullWidth
+            size="small"
+            value={filterValue as string}
+            onChange={(e) => setFilterValue(e.target.value as string)}
+            type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
+            label={anchorEl?.column.label}
+            placeholder={anchorEl?.column.label}
+          />
+        )}
+
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button
+            size="small"
+            onClick={() => {
+              setFilterType('');
+              setFilterValue(null);
+              setDateRange([null, null]);
+              onClose();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button variant="contained" size="small" onClick={handleApply}>
+            Apply
+          </Button>
+        </Box>
+      </Box>
+    </Menu>
+  );
+};

@@ -61,6 +61,7 @@ const LibraryPermissionSettingScreen = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="library-permission-setting-table"
         isFilter={false}
         isShowedDense={false}
         isSearch={false}

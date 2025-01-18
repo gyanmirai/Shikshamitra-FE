@@ -20,18 +20,22 @@ const BiometricIntegrationScreen = () => (
         { name: 'Attendance And Leave Management' },
         { name: 'Biometric Integration' },
       ]}
+      action={
+        <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
+          <Button variant="outlined" startIcon={<Iconify icon="eva:download-fill" />}>
+            Download Sample File
+          </Button>
+          <Button variant="contained" startIcon={<Iconify icon="eva:upload-fill" />}>
+            Upload File
+          </Button>
+        </Box>
+      }
       sx={{ px: 1, mb: 3 }}
     />
-    <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
-      <Button variant="outlined" startIcon={<Iconify icon="eva:download-fill" />}>
-        Download Sample File
-      </Button>
-      <Button variant="contained" startIcon={<Iconify icon="eva:upload-fill" />}>
-        Upload File
-      </Button>
-    </Box>
+
     <CustomizableTable
       // isLoading={isLoading}
+      tableId="biometric-integration-table"
       columns={[
         { id: 'employeeName', label: 'Name' },
 

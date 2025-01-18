@@ -29,6 +29,7 @@ const SetDefaultFeeComponent = () => (
       <Grid item xs={12} md={12}>
         <Box>
           <CustomizableTable
+            tableId="set-default-fee"
             isShowedDense={false}
             isPagination={false}
             isFilter={false}

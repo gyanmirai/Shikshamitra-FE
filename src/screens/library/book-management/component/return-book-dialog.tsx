@@ -313,6 +313,7 @@ const ReturnBookDialog: React.FC<ReturnBookDialogProps> = ({
               {/* Reservation List Table */}
               <Grid item xs={12}>
                 <CustomizableTable
+                  tableId="reservation-list"
                   isFilter={false}
                   isSearch={false}
                   isShowedDense={false}

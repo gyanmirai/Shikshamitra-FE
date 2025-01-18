@@ -22,6 +22,7 @@ const RegistrationFormScreen = () => (
       sx={{ px: 1, mb: 2 }}
     />
     <CustomizableTable
+      tableId="student-registration-form-table"
       columns={[
         { id: 'inquiryNo', label: 'Inquiry No', minWidth: '104px' },
         { id: 'formNo', label: 'Form No', minWidth: '90px' },

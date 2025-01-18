@@ -27,6 +27,7 @@ const FirstTrialCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="first-trial-certificate"
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },

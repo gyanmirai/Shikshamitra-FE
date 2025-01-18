@@ -377,6 +377,7 @@ const Gradebook = (props: TabComponentType) => {
       </Box>
       {showTable && (
         <CustomizableTable
+          tableId="gradebook-table"
           columns={[
             {
               id: 'select',

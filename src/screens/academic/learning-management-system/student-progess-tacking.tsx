@@ -434,6 +434,7 @@ const Assignments = () => {
         formControlProps={{ sx: { minWidth: 200 } }}
       />
       <CustomizableTable
+        tableId="assignment-table"
         columns={[
           { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },
           { id: 'assignmentType', label: 'Assignment Type', minWidth: '170px', align: 'left' },
@@ -606,6 +607,7 @@ const Assessments = () => {
         formControlProps={{ sx: { minWidth: 200 } }}
       />
       <CustomizableTable
+        tableId="assessment-table"
         columns={[
           { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },
           { id: 'assessmentType', label: 'Assessment Type', minWidth: '170px', align: 'left' },
@@ -759,6 +761,7 @@ const LearningMaterial = () => {
         formControlProps={{ sx: { minWidth: 200 } }}
       />
       <CustomizableTable
+        tableId="learning-material-table"
         columns={[
           { id: 'resourceName', label: 'Resource Name' },
           { id: 'resourceType', label: 'Resource Type' },
@@ -811,6 +814,7 @@ const LearningMaterial = () => {
 
 const Quizzes = () => (
   <CustomizableTable
+    tableId="quiz-table"
     columns={[
       { id: 'quizName', label: 'Quiz Name' },
       { id: 'attempts', label: 'Attempts' },

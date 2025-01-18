@@ -90,6 +90,7 @@ const GroupMessage = (props: TabComponentType) => {
         Message History
       </Typography>
       <CustomizableTable
+        tableId="message-history-table"
         data={dummyData}
         columns={[
           { id: 'dateAndTime', label: 'Date and time sent' },

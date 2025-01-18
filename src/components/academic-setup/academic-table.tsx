@@ -313,7 +313,7 @@ function CollapsibleTableRow({
     ),
     [confirm, modal]
   );
-  const onCloseDialog = async () => {
+  const onCloseDialog = () => {
     setChildEditData(undefined);
     // await getData(id);
     childModal.onFalse();

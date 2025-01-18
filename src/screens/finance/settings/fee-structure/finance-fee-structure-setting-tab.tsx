@@ -289,6 +289,7 @@ const FinanceFeeStructureSettingTab = () => {
       <Box pb="20px" />
 
       <CustomizableTable
+        tableId="finance-fee-structure-setting-tab"
         columns={[
           {
             id: 'bookRecipt',

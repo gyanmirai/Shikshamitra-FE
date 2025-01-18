@@ -61,6 +61,7 @@ const ScheduleExam = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="schedule-exam"
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'subjectName', label: 'Subject Name' },
@@ -508,6 +509,7 @@ const InputEvaluationCriteria = () => (
 const AssignTeachers = ({ formik }: any) => (
   <Box display="flex" flexDirection="column" gap={2}>
     <CustomizableTable
+      tableId="assignTeachersTable"
       isShowedDense={false}
       isSearch={false}
       isFilter={false}

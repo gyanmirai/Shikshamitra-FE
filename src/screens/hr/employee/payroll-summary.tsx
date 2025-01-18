@@ -1,0 +1,205 @@
+'use client';
+
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
+import React, { useState } from 'react';
+
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Card, Grid, Button, CardHeader, Typography, CardContent } from '@mui/material';
+
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
+import { varAlpha } from 'src/theme/styles';
+
+import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+
+const PayrollSummary = ({ employee }: any) => {
+  const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
+
+  return (
+    <Box>
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <DatePicker
+          value={monthYear}
+          onChange={(val) => setMonthYear(val)}
+          views={['month', 'year']}
+          label="Select Year Month"
+          format="MMMM-YYYY"
+          sx={{ maxWidth: '250px', width: '100%' }}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
+      </Box>
+
+      <Box display="flex" gap={2} flexWrap="wrap" my={2}>
+        <Card
+          sx={{
+            flexGrow: 1,
+            background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+          }}
+        >
+          <CardHeader
+            title={
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="pepicons-pop:dollar-circle-filled" /> Total Earning
+              </Box>
+            }
+            sx={{ color: 'success.main' }}
+          />
+          <CardContent sx={{ color: 'success.main' }}>
+            <Typography variant="h3">{formatCurrency(40000)}</Typography>
+          </CardContent>
+        </Card>
+        <Card
+          sx={{
+            flexGrow: 1,
+            background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+          }}
+        >
+          <CardHeader
+            title={
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="game-icons:cancel" /> Total Deduction
+              </Box>
+            }
+            sx={{ color: 'error.main' }}
+          />
+          <CardContent sx={{ color: 'error.main' }}>
+            <Typography variant="h3">{formatCurrency(10000)}</Typography>
+          </CardContent>
+        </Card>
+        <Card
+          sx={{
+            flexGrow: 1,
+            background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+          }}
+        >
+          <CardHeader
+            title={
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="ion:wallet" /> Net Payable
+              </Box>
+            }
+            sx={{ color: 'info.main' }}
+          />
+          <CardContent sx={{ color: 'info.main' }}>
+            <Typography variant="h3">{formatCurrency(30000)}</Typography>
+          </CardContent>
+        </Card>
+      </Box>
+      <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
+        <Button
+          startIcon={<Iconify icon="ion:download" />}
+          variant="contained"
+          color="primary"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            color: 'primary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            },
+          }}
+        >
+          Download PDF
+        </Button>
+
+        <Button
+          startIcon={<Iconify icon="ion:print" />}
+          variant="contained"
+          color="secondary"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            color: 'secondary.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            },
+          }}
+        >
+          Print Payslip
+        </Button>
+
+        <Button
+          startIcon={<Iconify icon="ion:email" />}
+          variant="contained"
+          color="warning"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
+        >
+          Email Payslip
+        </Button>
+      </Box>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Typography variant="h5">Earning Section</Typography>
+          <CustomizableTable
+            tableId="earning-section"
+            columns={[
+              { id: 'employeeType', label: 'Employee Type' },
+              {
+                id: 'amount',
+                label: 'Amount',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
+              {
+                id: 'total',
+                label: 'Total',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
+            ]}
+            data={[
+              { employeeType: 'Teaching Allowance', amount: 5000, total: 5000 },
+              { employeeType: 'Transport Allowance', amount: 2000, total: 2000 },
+              { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
+              { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
+            ]}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Typography variant="h5">Deductions Section</Typography>
+          <CustomizableTable
+            tableId="deduction-section"
+            columns={[
+              { id: 'deductionType', label: 'Deduction Type' },
+              {
+                id: 'amount',
+                label: 'Amount',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
+              {
+                id: 'totalDeduction',
+                label: 'Total Deduction',
+                render(value, row) {
+                  return formatCurrency(value);
+                },
+              },
+            ]}
+            data={[
+              { deductionType: 'Income Tax', amount: 5000, totalDeduction: 5000 },
+              { deductionType: 'Provident Fund', amount: 3000, totalDeduction: 3000 },
+              { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
+              { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
+            ]}
+          />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default PayrollSummary;

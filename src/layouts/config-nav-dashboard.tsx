@@ -472,11 +472,11 @@ const hrModule = {
               path: '/hr/attendance-tracking',
               _action: 'attendance-tracking',
             },
-            {
-              title: 'Notifications History',
-              path: '/hr/attendance-notification',
-              _action: 'hr-attendance-notification',
-            },
+            // {
+            //   title: 'Notifications History',
+            //   path: '/hr/attendance-notification',
+            //   _action: 'hr-attendance-notification',
+            // },
             {
               title: 'Setting',
               path: '/hr/attendance-setting',

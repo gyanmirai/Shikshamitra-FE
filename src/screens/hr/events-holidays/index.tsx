@@ -177,6 +177,7 @@ const HrEventsAndHolidaysScreen = () => {
       </Box>
       {view === 'list' ? (
         <CustomizableTable
+          tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[
             { id: 'sDate', label: 'Start Date' },
@@ -275,7 +276,7 @@ const HrEventsAndHolidaysScreen = () => {
 
 export default HrEventsAndHolidaysScreen;
 
-const HrEventsAndHolidaysForm = ({
+export const HrEventsAndHolidaysForm = ({
   handleClose,
   editData,
   isCalenderPreview = false,

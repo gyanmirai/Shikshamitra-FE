@@ -286,6 +286,7 @@ const ProgressReport = (props: TabComponentType) => (
           </Card>
         </Card>
         <CustomizableTable
+          tableId="demo__5"
           columns={[
             { id: 'assignmentName', label: 'Assignment Name' },
             { id: 'grade', label: 'Grade' },

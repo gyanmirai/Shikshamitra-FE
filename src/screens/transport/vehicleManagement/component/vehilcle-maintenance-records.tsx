@@ -168,7 +168,7 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
           Add New Record
         </Button>
       </Box>
-      <CustomizableTable data={tableData} columns={columnData} />
+      <CustomizableTable data={tableData} columns={columnData} tableId="maintenance-records" />
       {dialog.value && (
         <TransportMaintenanceDialog
           onSave={handleSave}

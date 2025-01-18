@@ -233,6 +233,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
         </Box>
 
         <CustomizableTable
+          tableId="student-fee-details-table"
           isFilter={false}
           isShowedDense={false}
           isPagination={false}

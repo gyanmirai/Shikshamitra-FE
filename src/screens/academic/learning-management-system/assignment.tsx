@@ -85,6 +85,7 @@ const Assignment = (props: TabComponentType) => {
         <CalendarView />
       ) : (
         <CustomizableTable
+          tableId="assignment-table"
           columns={[
             { id: 'assignmentTitle', label: 'Assignment Title' },
             { id: 'course', label: 'Course' },

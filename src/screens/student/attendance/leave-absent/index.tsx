@@ -53,6 +53,7 @@ const LeaveAndAbsentScreen = () => {
         }
       />
       <CustomizableTable
+        tableId="leave-absent-table"
         columns={[
           {
             id: 'student',

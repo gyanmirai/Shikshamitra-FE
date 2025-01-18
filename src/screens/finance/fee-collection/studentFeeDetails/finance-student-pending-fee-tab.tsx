@@ -47,6 +47,7 @@ const FinanceStudentPendingFeeTab = () => {
         Overdue Payments List
       </Typography> */}
       <CustomizableTable
+        tableId="finance-student-overdue-payment-table"
         isShowedDense={false}
         isSearch={false}
         columns={[

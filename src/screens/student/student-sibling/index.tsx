@@ -25,7 +25,7 @@ const StudentSiblingScreen = () => {
           </Button>
         }
       />
-      <CustomizableTable columns={[]} data={[]} />
+      <CustomizableTable columns={[]} data={[]} tableId="student-sibling" />
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Sibling">
         <SiblingForm />
       </CustomDialog>

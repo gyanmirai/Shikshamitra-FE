@@ -120,6 +120,7 @@ const LibraryFineManagement = () => {
   return (
     <>
       <CustomizableTable
+        tableId="library-fine-management"
         columns={[
           { id: 'memberId', label: 'Gr No' },
           { id: 'memberName', label: 'Name' },

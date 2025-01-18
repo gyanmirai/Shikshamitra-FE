@@ -12,6 +12,7 @@ import type { StudentTabsComponentType } from '.';
 
 const Document = (props: StudentTabsComponentType) => (
   <CustomizableTable
+    tableId="student-document"
     columns={[
       { id: 'name', label: 'Name' },
       {

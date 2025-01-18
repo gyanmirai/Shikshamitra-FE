@@ -102,6 +102,7 @@ const ImportAttendanceScreen = () => {
         />
       </Box>
       <CustomizableTable
+        tableId="attendanceImport"
         columns={[
           {
             id: 'checkbox',

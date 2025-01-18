@@ -135,6 +135,7 @@ const StudentGroup = (props: TabComponentType) => {
         </Card>
       ) : (
         <CustomizableTable
+          tableId="student-group-table"
           columns={[
             { id: 'className', label: 'Class' },
             { id: 'division', label: 'Division' },

@@ -218,6 +218,7 @@ const Settings = (props: TabComponentType) => {
             </Button>
           </Box>
           <CustomizableTable
+            tableId="rubric-table"
             columns={[
               { id: 'class', label: 'Class' },
               { id: 'subjectName', label: 'Subject Name' },
@@ -332,6 +333,7 @@ const Settings = (props: TabComponentType) => {
             </Button>
           </Box>
           <CustomizableTable
+            tableId="grade-table"
             columns={[
               { id: 'grade', label: 'Grade' },
               {

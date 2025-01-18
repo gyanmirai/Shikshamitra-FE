@@ -315,6 +315,7 @@ const ListView = ({ isSaved }: any) => {
   ];
   return (
     <CustomizableTable
+      tableId="student-attendance-list"
       isSearch={false}
       columns={[
         { id: 'rollNo', label: 'Roll No' },

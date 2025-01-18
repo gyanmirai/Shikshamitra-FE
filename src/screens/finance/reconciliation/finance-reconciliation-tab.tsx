@@ -124,6 +124,7 @@ const FinanceReconciliationTab = () => {
         </Box>
       </Box>{' '}
       <CustomizableTable
+        tableId="reconciliationTable"
         columns={[
           { id: 'grNumber', label: 'GR No' },
           // { id: 'srNo', label: 'SR No' },

@@ -154,6 +154,7 @@ const FinanceBounceTab = () => {
         </Box>
       </Box>
       <CustomizableTable
+        tableId="finance-bounce-checklist-tab"
         columns={[
           //  {id:"srNo", label:"SR No"},
 

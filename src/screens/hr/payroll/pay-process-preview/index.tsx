@@ -87,6 +87,7 @@ const PayProcessPreviewScreen = () => {
         />
       </Box>
       <CustomizableTable
+        tableId="payProcessPreview"
         columns={[
           { id: 'employeeCode', label: 'Employee Code' },
           { id: 'name', label: 'Name' },

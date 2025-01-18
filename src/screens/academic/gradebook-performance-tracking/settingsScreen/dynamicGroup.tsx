@@ -136,6 +136,7 @@ const DynamicGroupManagement: React.FC = () => {
       </Box>
 
       <CustomizableTable
+        tableId="dynamic-group-table"
         columns={[
           {
             id: 'name',

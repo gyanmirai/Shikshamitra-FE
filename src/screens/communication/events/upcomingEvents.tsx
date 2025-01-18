@@ -188,6 +188,7 @@ const UpcomingEvents = (props: TabComponentType) => {
         }
       />
       <CustomizableTable
+        tableId="event-table"
         columns={[
           { id: 'eventTitle', label: 'Event Title' },
           { id: 'eventVenue', label: 'Event Venue' },

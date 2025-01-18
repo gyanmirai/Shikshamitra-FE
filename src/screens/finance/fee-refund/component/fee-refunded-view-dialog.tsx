@@ -249,6 +249,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
           </Typography>
         </Box>
         <CustomizableTable
+          tableId="fee-refund-table"
           isFilter={false}
           isShowedDense={false}
           isPagination={false}
