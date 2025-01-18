@@ -126,6 +126,7 @@ const ActiveQuiz = () => {
       </Box>
 
       <CustomizableTable
+        tableId="quiz-table"
         columns={[
           { id: 'class', label: 'Class' },
           {
@@ -993,6 +994,7 @@ const QuizSetting = ({ formik }: any) => {
         </Grid>
       </Grid>
       <CustomizableTable
+        tableId="quiz-questions"
         columns={[
           { id: 'question', label: 'Question' },
           { id: 'questionType', label: 'Question Type' },

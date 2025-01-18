@@ -63,27 +63,11 @@ export const ReportHeader = memo(
   }) => (
     <View style={{ position: 'relative', height: height || 100 }}>
       {elements.map((item: any, index) => {
-        console.log(
-          item,
-          '========',
-          `translate(${item?.position?.x || 0}, ${(item?.position?.y || 0) + (item?.style?.height || 0) + 100})`
-        );
         if (item.type === 'text') {
           let value = '';
           if (item.filedType === 'dynamic') {
             const str = item.text.search('{{');
             const findDotIndex = item.label.search(/\./);
-            console.log(
-              str,
-              'ppp',
-              item.text,
-              '=========',
-              findDotIndex,
-              '[][',
-              item.label.slice(findDotIndex + 1),
-              '00000',
-              item.label
-            );
 
             value = item.text.slice(0, str) + data[item.label.slice(findDotIndex + 1)];
           } else {

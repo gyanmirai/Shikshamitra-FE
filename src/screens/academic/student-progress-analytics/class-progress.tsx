@@ -265,6 +265,7 @@ const ClassProgress = (props: TabComponentType) => {
         <Grid item xs={12}>
           <Typography variant="h6">Detailed Class Breakdown</Typography>
           <CustomizableTable
+            tableId="student-progress-table"
             columns={[
               {
                 id: 'select',

@@ -19,6 +19,7 @@ const PresetCategoryAndDepartmentForBudget = () => (
         {/* Existing Categories and Departments Table */}
         <Grid item xs={12} md={6}>
           <CustomizableTable
+            tableId="existing-categories-departments"
             isShowedDense={false}
             isPagination={false}
             isFilter={false}

@@ -55,6 +55,7 @@ const AttendanceType = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="attendance-type"
         columns={[
           { id: 'type', label: 'Type' },
           {

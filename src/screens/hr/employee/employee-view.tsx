@@ -15,12 +15,13 @@ import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import PayrollSummary from './payroll-summary';
 import { EmployeeInformation } from './information';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
 
-const TABS = [
+export const TABS = [
   //   {
   //     value: 'dashboard',
   //     label: 'Dashboard',
@@ -53,7 +54,9 @@ const TABS = [
     value: 'payrollSummary',
     label: 'Payroll Summary',
     icon: <Iconify icon="fluent:payment-16-filled" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <></>,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <PayrollSummary employee={props.employee} />
+    ),
   },
   {
     value: 'transport',

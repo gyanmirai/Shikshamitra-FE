@@ -27,6 +27,7 @@ const CharacterCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="character-certificate"
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },

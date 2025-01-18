@@ -87,6 +87,7 @@ const LeaveHistory = (props: TabComponentType) => {
     <>
       <CustomizableTable
         isLoading={isLoading}
+        tableId="leave-history-table"
         columns={[
           {
             label: 'Name',

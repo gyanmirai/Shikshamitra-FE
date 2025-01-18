@@ -196,6 +196,7 @@ export const RenderDocuments = (props: any) => {
     <>
       <CustomizableTable
         isLoading={isLoading || isEmployeeDocLoading}
+        tableId="documents"
         columns={[
           { id: 'documentName', label: 'Name' },
           {
@@ -648,9 +649,9 @@ export const InformationFields: FieldsType[] = [
   },
   {
     type: 'text',
-    label: 'Role',
-    name: 'role',
-    placeholder: 'Enter Role',
+    label: 'organization',
+    name: 'organization',
+    placeholder: 'Enter organization',
     renderComp: (props) => <RenderOrganization {...props} />,
   },
   {

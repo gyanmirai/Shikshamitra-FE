@@ -196,6 +196,7 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
             </Stack>
             <Divider sx={{ my: 1 }} />
             <CustomizableTable
+              tableId="assigned-students"
               data={[
                 {
                   name: 'Jay Desai',

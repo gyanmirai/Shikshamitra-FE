@@ -192,7 +192,7 @@ const RoutesAndSchedulesScreen = () => {
           Routes List
         </Typography>
       </Box>
-      <CustomizableTable data={tableData} columns={columns} />
+      <CustomizableTable data={tableData} columns={columns} tableId="routes-and-schedules-table" />
       <CustomDialog
         maxWidth="sm"
         open={dialog.value}

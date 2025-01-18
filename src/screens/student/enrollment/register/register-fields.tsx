@@ -162,6 +162,7 @@ export const documentFields: FieldsType[] = [
     renderComp(props) {
       return (
         <CustomizableTable
+          tableId="certificate-table"
           columns={[
             { id: 'name', label: 'Name' },
             {

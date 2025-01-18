@@ -121,6 +121,7 @@ const FinanceTaxSettingTab = () => {
       <Box pb="20px" />
 
       <CustomizableTable
+        tableId="finance-tax-setting-table"
         columns={[
           { id: 'taxName', label: 'Tax Name' },
           { id: 'taxPercentage', label: 'Tax Percentage' },

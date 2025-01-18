@@ -100,6 +100,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
             Assignment Table
           </Typography>
           <CustomizableTable
+            tableId="assignmentTable"
             columns={[
               { id: 'assignmentName', label: 'Assignment Name' },
               { id: 'dueDate', label: 'Due Date' },
@@ -166,6 +167,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
             Student Progress Table
           </Typography>
           <CustomizableTable
+            tableId="studentProgressTable"
             columns={[
               { id: 'studentName', label: 'Student Name' },
               { id: 'corseProgress', label: 'Course Progress' },

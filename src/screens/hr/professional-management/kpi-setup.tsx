@@ -134,6 +134,7 @@ const KPISetup = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="kpi-setup"
         columns={[
           { id: 'kpiName', label: 'KPI Name' },
           { id: 'description', label: 'Description' },

@@ -57,6 +57,7 @@ const ResultReport = () => (
           </Button>
         </Box>
         <CustomizableTable
+          tableId="result-report-table"
           columns={[
             { id: 'name', label: 'Name' },
             { id: 'maths', label: 'Maths' },

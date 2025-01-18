@@ -227,6 +227,7 @@ const NewCreateRouteScreen = () => {
       </Box>
 
       <CustomizableTable
+        tableId="routes-table"
         data={routesData}
         columns={[
           { id: 'routeName', label: 'Route Name' },

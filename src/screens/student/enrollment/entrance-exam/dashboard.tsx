@@ -306,6 +306,7 @@ const EntranceExamDashboard = () => {
       >
         <Box p={1}>
           <CustomizableTable
+            tableId="scheduled-exam"
             columns={[
               { id: 'date', label: 'Date' },
               {

@@ -350,6 +350,7 @@ export const StudentPerformance = () => (
 
 export const StudentSubjectPerformace = () => (
   <CustomizableTable
+    tableId="student-subject-performance"
     columns={[
       { id: 'subject', label: 'Subject' },
       { id: 'studentGrade', label: 'Student Grade' },

@@ -107,6 +107,7 @@ const LeavePolicy = () => {
       </Box>
       <CustomizableTable
         isLoading={isLoading}
+        tableId="leave-policy-table"
         columns={[
           {
             id: 'leaveType',
@@ -163,7 +164,38 @@ const LeavePolicy = () => {
             },
           },
         ]}
-        data={tableData}
+        data={[
+          {
+            id: '1',
+            leaveType: 'Annual Leave',
+            leaveDays: '20',
+            isCarryForward: 'Yes',
+            accrualRateString: 'Monthly',
+            color: '#FF5733',
+            carryForward: true,
+            accrualRate: 0,
+          },
+          {
+            id: '2',
+            leaveType: 'Sick Leave',
+            leaveDays: '10',
+            isCarryForward: 'No',
+            accrualRateString: 'Yearly',
+            color: '#33FF57',
+            carryForward: false,
+            accrualRate: 1,
+          },
+          {
+            id: '3',
+            leaveType: 'Maternity Leave',
+            leaveDays: '90',
+            isCarryForward: 'No',
+            accrualRateString: 'Yearly',
+            color: '#3357FF',
+            carryForward: false,
+            accrualRate: 1,
+          },
+        ]}
       />
 
       <CustomDialog title="Leave Policy" open={dialog.value} handleClose={handleClose}>
@@ -172,7 +204,6 @@ const LeavePolicy = () => {
     </Box>
   );
 };
-
 export default LeavePolicy;
 
 const LeavePolicyForm = ({ handleClose, editData }: any) => {

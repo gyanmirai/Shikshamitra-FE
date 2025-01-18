@@ -194,6 +194,7 @@ const PendingAssessment = (props: TabComponentType) => {
         />
       </Box>
       <CustomizableTable
+        tableId="assessment-table"
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'subject', label: 'Subject Name' },
@@ -399,6 +400,7 @@ const StudentSubmissions = () => {
 
       <Scrollbar sx={{ p: 2, height: '500px' }}>
         <CustomizableTable
+          tableId="student-submission-table"
           columns={[
             {
               id: 'select',

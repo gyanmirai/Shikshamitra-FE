@@ -84,6 +84,7 @@ const PF = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="pf-table"
         isLoading={isLoading}
         columns={[
           { id: 'code', label: 'Code' },

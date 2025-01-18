@@ -343,6 +343,7 @@ const FinanceNewBudgetingScreen = () => {
         {/* Income Table */}
         {tabs.value === 'income' && (
           <CustomizableTable
+            tableId="income-table"
             columns={[
               { id: 'name', label: 'Income Category' },
               {
@@ -441,6 +442,7 @@ const FinanceNewBudgetingScreen = () => {
         )}
         {tabs.value === 'expenses' && (
           <CustomizableTable
+            tableId="expenses-table"
             columns={[
               { id: 'name', label: 'Expense Category' },
               {

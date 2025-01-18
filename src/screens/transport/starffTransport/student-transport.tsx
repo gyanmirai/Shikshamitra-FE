@@ -260,7 +260,7 @@ const StudentTransportScreen = () => {
           formControlProps={{ sx: { minWidth: 120 } }}
         /> */}
       </Box>
-      <CustomizableTable data={tableData} columns={columnData} />
+      <CustomizableTable data={tableData} columns={columnData} tableId="student-transport-table" />
       {dialog.value && selectedEntry && (
         <TransportStudentAndStaffUpdateInfoDialog
           onSave={handleSave}

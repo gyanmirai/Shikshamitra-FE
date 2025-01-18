@@ -72,6 +72,7 @@ const HrSetting = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="documents"
         isLoading={isLoading}
         columns={[
           { id: 'documentName', label: 'Documents Name' },

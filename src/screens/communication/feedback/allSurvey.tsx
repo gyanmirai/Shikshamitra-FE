@@ -186,6 +186,7 @@ const AllSurvey = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="survey-table"
         columns={[
           { id: 'surveyTitle', label: 'Survey Title' },
           {
@@ -575,6 +576,7 @@ const ResponseComponent = () => {
   const [tableData, setTableData] = useState<any>(responseTableData);
   return (
     <CustomizableTable
+      tableId="response-table"
       columns={[
         {
           id: 'responsendedName',
@@ -1194,6 +1196,7 @@ const PreviewAndPublish = ({ formik }: any) => {
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       <Typography variant="h6">{formik.values.surveyTitle}</Typography>{' '}
       <CustomizableTable
+        tableId="questionTable"
         columns={[
           { id: 'question', label: 'Question' },
           { id: 'questionType', label: 'Question Type' },

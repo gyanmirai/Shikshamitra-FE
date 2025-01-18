@@ -14,7 +14,6 @@ import { navSubData } from 'src/layouts/config-nav-dashboard';
 
 import { Scrollbar } from '../scrollbar';
 import { useSettingsContext } from '../settings';
-import { LoadingScreen } from '../loading-screen';
 import { NavSectionVertical } from '../nav-section';
 
 const SubLayout = ({ children }: any) => {
@@ -81,26 +80,26 @@ const SubLayout = ({ children }: any) => {
           transition: 'all 0.3s ease-in-out',
         }}
       >
-        {(yearLoading || boardLoading || isLoading) &&
+        {/* {(yearLoading || boardLoading || isLoading) &&
         removeLastSlash !== '/setting/academic-setup' ? (
           <LoadingScreen />
-        ) : (
-          <Scrollbar
-            sx={{
-              // maxWidth: '1440px',
-              width: '100%',
-              mx: 'auto',
-              height: '100%',
-              overflow: 'auto',
-              p: 2,
+        ) : ( */}
+        <Scrollbar
+          sx={{
+            // maxWidth: '1440px',
+            width: '100%',
+            mx: 'auto',
+            height: '100%',
+            overflow: 'auto',
+            p: 2,
 
-              // p: 1,
-              // bgcolor: (theme) => theme.palette.background.default,
-            }}
-          >
-            {children}
-          </Scrollbar>
-        )}
+            // p: 1,
+            // bgcolor: (theme) => theme.palette.background.default,
+          }}
+        >
+          {children}
+        </Scrollbar>
+        {/* )} */}
       </Box>
     </Box>
   );

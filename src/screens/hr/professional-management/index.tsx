@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 
 import { Box, Tab } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -37,7 +37,7 @@ const TABS = [
 ];
 
 const ProfessionalManagementScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'performanceReviews' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'performanceReviews' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

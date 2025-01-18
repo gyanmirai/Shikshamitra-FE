@@ -52,6 +52,7 @@ const TransportStopsSettingScreen = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="transport-stops-setting-table"
         data={stopData}
         columns={[
           {

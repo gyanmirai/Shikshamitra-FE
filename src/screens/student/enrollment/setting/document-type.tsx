@@ -88,6 +88,7 @@ const StudentDocumentType = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="student-document-type"
         isLoading={isLoading}
         columns={[
           { id: 'documentName', label: 'Document' },

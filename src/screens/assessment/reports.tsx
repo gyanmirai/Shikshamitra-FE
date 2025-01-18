@@ -87,6 +87,7 @@ const Reports = () => (
         </Box>
       </Box>
       <CustomizableTable
+        tableId="detailed-data"
         columns={[
           { id: 'studentName', label: 'Student Name' },
           { id: 'assessmentName', label: 'Assessment Name' },

@@ -19,6 +19,7 @@ const BulkStudentAddScreen = () => (
       </Button>
     </Box>
     <CustomizableTable
+      tableId="bulk-student-add"
       columns={[
         { id: 'name', label: 'Name' },
         { id: 'rollNo', label: 'Roll No' },

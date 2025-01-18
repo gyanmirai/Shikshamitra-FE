@@ -92,6 +92,7 @@ const RubricManagement = (props: TabComponentType) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="rubric-management-table"
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'subjectName', label: 'Subject Name' },

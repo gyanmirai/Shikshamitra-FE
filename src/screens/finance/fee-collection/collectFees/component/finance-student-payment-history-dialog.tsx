@@ -28,6 +28,7 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
     <CustomDialog maxWidth="md" title="Payment History" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
         <CustomizableTable
+          tableId="financeStudentPaymentHistory"
           isFilter={false}
           isScrollbar={false}
           isSearch={false}

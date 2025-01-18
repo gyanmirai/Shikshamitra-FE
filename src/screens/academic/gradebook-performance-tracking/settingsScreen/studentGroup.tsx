@@ -102,6 +102,7 @@ const StudentGroup = () => {
       </Box>
 
       <CustomizableTable
+        tableId="student-group-table"
         columns={[
           { id: 'className', label: 'Class' },
           { id: 'division', label: 'Division' },

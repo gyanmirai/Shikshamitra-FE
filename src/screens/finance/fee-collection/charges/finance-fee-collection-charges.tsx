@@ -123,6 +123,7 @@ const FinanceFeeCollectionCharges = () => {
     <>
       <Box>{/* <Typography variant="h6" gutterBottom >Charges </Typography> */}</Box>
       <CustomizableTable
+        tableId="finance-fee-collection-charges"
         // isShowedDense={false}
         // isFilter={false}
         // isSearch={false}

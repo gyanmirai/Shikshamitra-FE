@@ -225,6 +225,7 @@ const PaySlipGenerationScreen = () => {
         <Grid item xs={12} md={6}>
           <Typography variant="h5">Earning Section</Typography>
           <CustomizableTable
+            tableId="earning-table"
             columns={[
               { id: 'employeeType', label: 'Employee Type' },
               {
@@ -253,6 +254,7 @@ const PaySlipGenerationScreen = () => {
         <Grid item xs={12} md={6}>
           <Typography variant="h5">Deductions Section</Typography>
           <CustomizableTable
+            tableId="deduction-table"
             columns={[
               { id: 'deductionType', label: 'Deduction Type' },
               {

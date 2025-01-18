@@ -213,7 +213,11 @@ const TransportVehicleManagementScreen = () => {
           Vehicle Overview
         </Typography>
       </Box> */}
-      <CustomizableTable data={tableData} columns={columnTable} />
+      <CustomizableTable
+        data={tableData}
+        columns={columnTable}
+        tableId="vehicle-management-table"
+      />
       <CustomDialog
         title="Vehicle Details Modal"
         open={dialogDetailedView.value}

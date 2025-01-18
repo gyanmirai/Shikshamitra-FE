@@ -177,7 +177,6 @@ const CurriculumOverview = (props: TabComponentType) => {
     //   documents: values.documents || [],
     //   status: isDraft ? 'Unpublish' : 'Publish',
     // };
-    console.log('values----', values);
 
     if (isEdit) {
       setCurriculumTableData((prev) =>
@@ -378,6 +377,7 @@ const CurriculumOverview = (props: TabComponentType) => {
       />
     </Grid2> */}
             <CustomizableTable
+              tableId="curriculum-overview-table"
               columns={[
                 { id: 'className', label: 'Class', minWidth: '100px', align: 'left' },
                 {

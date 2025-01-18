@@ -98,6 +98,7 @@ const PastSurvey = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
+        tableId="survey-table"
         columns={[
           { id: 'surveyTitle', label: 'Survey Title' },
           {

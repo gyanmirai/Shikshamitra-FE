@@ -36,6 +36,7 @@ const BankConfiguration = () => {
         <Grid item xs={12} md={12}>
           <Box>
             <CustomizableTable
+              tableId="bank-configuration"
               isShowedDense={false}
               isPagination={false}
               isFilter={false}

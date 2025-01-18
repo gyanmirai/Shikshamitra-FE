@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
@@ -35,7 +35,7 @@ const TABS = [
 ];
 
 const TransportSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'driver' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'driver' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

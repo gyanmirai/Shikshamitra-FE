@@ -121,6 +121,7 @@ const FinanceIncomeSettingTab = () => {
         </Typography>
       </Box>
       <CustomizableTable
+        tableId="finance-income-setting-table"
         columns={[
           { id: 'categoryName', label: 'Category Name' },
           { id: 'description', label: 'Description' },

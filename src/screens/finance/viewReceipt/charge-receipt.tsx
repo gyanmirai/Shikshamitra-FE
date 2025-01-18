@@ -62,6 +62,7 @@ const ViewReceipt: React.FC<ViewReceiptProps> = ({ dialogValue, onClose }) => {
           {/* Payment Details Table */}
           <Box mt={3}>
             <CustomizableTable
+              tableId="payment-details-table"
               isSearch={false}
               isFilter={false}
               isShowedDense={false}

@@ -82,8 +82,6 @@ const GradingScale = () => {
   };
 
   const handleSubmit = (values: any) => {
-    console.log('values----', values);
-
     const startRange = Number(values.startRange);
     const endRange = Number(values.endRange);
     const { descriptiveScale } = values;
@@ -158,6 +156,7 @@ const GradingScale = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="grade-scale-table"
         columns={[
           { id: 'grade', label: 'Grade' },
           {

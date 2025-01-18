@@ -48,6 +48,7 @@ const GrNoGenerationScreen = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="gr-no-generation-table"
         columns={[
           { id: 'srNo', label: 'Sr. No.' },
           { id: 'currentGrNo', label: 'Current GR No.' },

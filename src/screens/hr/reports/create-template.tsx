@@ -817,6 +817,7 @@ const PdfBody = ({ formik, pageProps }: any) => {
         </Draggable>
       ))}
       <CustomizableTable
+        tableId="table-1"
         isFilter={false}
         isPagination={false}
         isSearch={false}

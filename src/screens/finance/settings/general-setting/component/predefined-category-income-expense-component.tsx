@@ -17,6 +17,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => (
     <Box display="flex" gap={3}>
       <Box flex={1}>
         <CustomizableTable
+          tableId="predefined-category-income-expense"
           isShowedDense={false}
           isPagination={false}
           isFilter={false}

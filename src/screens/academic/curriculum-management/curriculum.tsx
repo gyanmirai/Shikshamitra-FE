@@ -29,6 +29,7 @@ const Curriculum = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="curriculum-table"
         columns={[
           { id: 'subjectName', label: 'Subject Name' },
           { id: 'assignGradeClass', label: 'Assign Grade Class' },

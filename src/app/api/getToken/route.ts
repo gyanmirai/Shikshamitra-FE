@@ -18,7 +18,6 @@ export async function GET() {
     }
     const userInfo = file[session?.userInfo?.sub];
     await fs.writeFile('src/tokenSet.json', JSON.stringify(file));
-    // console.log(userInfo, file, '==============>');
     return NextResponse.json(userInfo || null);
   } catch (error) {
     console.log(error);

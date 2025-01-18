@@ -151,8 +151,6 @@ const Subject = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  console.log('filteredData--', filteredData);
-
   const [open, setOpen] = useState(false);
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
@@ -188,8 +186,6 @@ const Subject = (props: TabComponentType) => {
   };
 
   const handleSubmit = (values: TSubjectTable) => {
-    console.log('values---', values);
-
     if (isEdit) {
       setSubjectTableData(
         subjectTableData.map((subject) => (subject.id === values.id ? values : subject))
@@ -319,6 +315,7 @@ const Subject = (props: TabComponentType) => {
           <Grid2 container spacing={3}>
             {classes && (
               <CustomizableTable
+                tableId="subject-table"
                 columns={[
                   { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
                   // {
@@ -511,7 +508,6 @@ const AddBulk: React.FC<AddBulkProps> = ({ selectedClass }) => {
   });
 
   const [documents, setDocuments] = useState<Document[]>([]);
-  console.log('selected class----', selectedClass);
 
   const formik = useFormik({
     initialValues: {
@@ -784,7 +780,6 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSubmit, onClose, data, isEd
       });
     },
   });
-  console.log('error--', formik.errors);
 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',

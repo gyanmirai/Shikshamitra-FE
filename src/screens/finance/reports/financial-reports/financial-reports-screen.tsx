@@ -188,7 +188,11 @@ const FinancialReportsScreen = () => {
           <Typography variant="h6" sx={{ pt: '15px' }}>
             Monthly Fees Collected
           </Typography>
-          <CustomizableTable columns={columns} data={monthlyFeeCollectedData} />
+          <CustomizableTable
+            columns={columns}
+            data={monthlyFeeCollectedData}
+            tableId="monthly-fee-collected"
+          />
           <Box py="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
                     Export
@@ -206,6 +210,7 @@ const FinancialReportsScreen = () => {
           <CustomizableTable
             columns={gradeWiseFeeCollectionColumns}
             data={gradeWiseFeeCollectedData}
+            tableId="grade-wise-fee-collection"
           />
           <Box py="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
@@ -219,7 +224,11 @@ const FinancialReportsScreen = () => {
           <Typography variant="h6" sx={{ pt: '15px' }}>
             Pending Fees
           </Typography>
-          <CustomizableTable columns={pendingFeeColumns} data={pendingFeeData} />
+          <CustomizableTable
+            columns={pendingFeeColumns}
+            data={pendingFeeData}
+            tableId="pending-fee"
+          />
           <Box pt="15px" pb="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
                     Export
@@ -232,7 +241,11 @@ const FinancialReportsScreen = () => {
           <Typography variant="h6" sx={{ pt: '15px' }}>
             Overdue Payments
           </Typography>
-          <CustomizableTable columns={overduePaymentsColumns} data={overduePaymentsData} />
+          <CustomizableTable
+            columns={overduePaymentsColumns}
+            data={overduePaymentsData}
+            tableId="overdue-payments"
+          />
           <Box pt="15px" pb="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
                     Export

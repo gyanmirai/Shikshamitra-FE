@@ -85,7 +85,7 @@ const ClassSetup = ({ organizationId }: ClassSetupProps) => {
     }
   }, [organizationId, classes?.items, tabs]);
 
-  const handelAdd = async () => {
+  const handelAdd = () => {
     modal.onTrue();
   };
 

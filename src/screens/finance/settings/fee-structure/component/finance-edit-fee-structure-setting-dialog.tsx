@@ -84,6 +84,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
           Reference Table
         </Typography>
         <CustomizableTable
+          tableId="readOnlyTable"
           isSearch={false}
           isFilter={false}
           isPagination={false}
@@ -173,6 +174,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
           Editable Table
         </Typography>
         <CustomizableTable
+          tableId="editableTable"
           isSearch={false}
           isFilter={false}
           isPagination={false}

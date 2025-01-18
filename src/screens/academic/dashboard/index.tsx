@@ -170,6 +170,7 @@ const AcademicDashboardScreen = () => {
             Assignment
           </Button>
           <CustomizableTable
+            tableId="assignment-table"
             columns={[
               { id: 'assignmentTitle', label: 'Assignment Title' },
               { id: 'class', label: 'Class' },
@@ -321,6 +322,7 @@ const AcademicDashboardScreen = () => {
               />
             </Box>
             <CustomizableTable
+              tableId="class-performance-table"
               columns={[
                 { id: 'classObject', label: 'Class/Object' },
                 { id: 'averageScore', label: 'Average Score' },

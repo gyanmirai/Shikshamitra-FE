@@ -39,6 +39,7 @@ const LibraryBookAndTagsSetting = () => {
       </Box>
 
       <CustomizableTable
+        tableId="library-book-and-tags-setting"
         isFilter={false}
         isShowedDense={false}
         isSearch={false}

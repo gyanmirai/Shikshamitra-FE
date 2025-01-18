@@ -227,6 +227,7 @@ const ActivityManagement = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="activity-management-table"
         columns={[
           {
             id: 'activityName',
@@ -568,6 +569,7 @@ const AssignStudents = () => {
         </Box>
         {showStudents && (
           <CustomizableTable
+            tableId="student-table"
             columns={[
               {
                 id: 'select',

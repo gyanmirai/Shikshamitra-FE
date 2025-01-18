@@ -24,6 +24,7 @@ const ChargesViewDetails: React.FC<ChargesViewDetailsProps> = ({ dialogValue, on
   >
     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
       <CustomizableTable
+        tableId="chargesViewDetails"
         isShowedDense={false}
         isFilter={false}
         isSearch={false}

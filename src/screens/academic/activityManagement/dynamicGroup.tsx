@@ -143,6 +143,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
       />
 
       <CustomizableTable
+        tableId="dynamic-group-table"
         columns={[
           {
             id: 'name',

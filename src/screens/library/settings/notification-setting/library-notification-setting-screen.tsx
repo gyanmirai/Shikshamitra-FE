@@ -108,6 +108,7 @@ const LibraryNotificationSettingScreen = () => {
 
         {/* Customizable Table for Communication Preferences */}
         <CustomizableTable
+          tableId="communication-preferences-table"
           isFilter={false}
           isShowedDense={false}
           isSearch={false}

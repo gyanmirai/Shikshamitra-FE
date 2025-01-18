@@ -220,7 +220,11 @@ const FinancialBudgetReports = () => {
         Budget Overview
       </Typography>
 
-      <CustomizableTable columns={pendigDatacolumns} data={budgetOverviewData} />
+      <CustomizableTable
+        columns={pendigDatacolumns}
+        data={budgetOverviewData}
+        tableId="budget-overview-table"
+      />
 
       <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">

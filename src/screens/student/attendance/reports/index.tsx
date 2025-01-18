@@ -225,6 +225,7 @@ const ScheduledReports = () => (
     <CardHeader title="Scheduled Reports" />
     <CardContent>
       <CustomizableTable
+        tableId="scheduled-reports"
         columns={[
           { id: 'date', label: 'Date' },
           { id: 'name', label: 'Name' },

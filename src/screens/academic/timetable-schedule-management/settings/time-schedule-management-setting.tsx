@@ -200,6 +200,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         }}
       /> */}
       <CustomizableTable
+        tableId="time-schedule-management-setting-table"
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'noOfLecture', label: 'No of Lectures' },
@@ -251,6 +252,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="time-schedule-management-setting-table"
         columns={[
           { id: 'className', label: 'Class' },
           { id: 'periodSlots', label: 'Period Slots' },
@@ -299,6 +301,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="time-schedule-management-setting-table"
         columns={[
           { id: 'roomNumber', label: 'Room Number' },
           { id: 'buildingName', label: 'Building Name' },
@@ -568,6 +571,7 @@ const CreateNoOfLecture = () => {
             </Grid>
             <Grid item xs={12}>
               <CustomizableTable
+                tableId="table-subject-list"
                 isSearch={false}
                 isShowedDense={false}
                 isFilter={false}
@@ -758,6 +762,7 @@ const CreateSlotsForm = () => {
                 Slot Times
               </Typography>
               <CustomizableTable
+                tableId="time-schedule-management-setting"
                 isSearch={false}
                 isShowedDense={false}
                 isFilter={false}

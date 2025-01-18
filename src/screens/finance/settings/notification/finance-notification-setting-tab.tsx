@@ -79,6 +79,7 @@ const FinanceNotificationTable = () => {
   return (
     <>
       <CustomizableTable
+        tableId="finance-notification-table"
         isFilter={false}
         isPagination={false}
         isSearch={false}

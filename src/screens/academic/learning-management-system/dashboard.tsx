@@ -182,6 +182,7 @@ const Dashboard = (props: TabComponentType) => (
     <Grid item xs={12} mt={2}>
       <Typography variant="h6">Course Overview</Typography>
       <CustomizableTable
+        tableId="courseOverviewTable"
         columns={[
           { id: 'courseName', label: 'Course Name' },
           { id: 'teacher', label: 'Teacher(s)' },

@@ -11,6 +11,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 const Favorite = (props: TabComponentType) => (
   <Box>
     <CustomizableTable
+      tableId="favorite-resources"
       columns={[
         { id: 'resourceName', label: 'Resource Name' },
         { id: 'category', label: 'Category' },

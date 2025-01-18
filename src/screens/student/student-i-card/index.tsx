@@ -47,6 +47,7 @@ const StudentIcardScreen = () => {
         }
       />
       <CustomizableTable
+        tableId="student-icard"
         columns={[
           { label: 'Class', id: 'class' },
           {

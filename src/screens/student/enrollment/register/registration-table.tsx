@@ -19,6 +19,7 @@ const RegistrationTable = ({
   const a = null;
   return (
     <CustomizableTable
+      tableId="student-registration-table"
       columns={[
         { id: 'inquiryNo', label: 'Inquiry No', minWidth: '104px' },
         // { id: 'FirstName', label: 'First Name', minWidth: '110px' },

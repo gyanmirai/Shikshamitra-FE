@@ -18,6 +18,7 @@ const EnrollmentStatusTrackingScreen = () => (
       sx={{ px: 1, mb: 2 }}
     />
     <CustomizableTable
+      tableId="enrollment-status-tracking"
       columns={[
         { id: 'name', label: 'Name' },
         { id: 'organization', label: 'Organization' },

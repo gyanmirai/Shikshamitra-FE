@@ -4,13 +4,14 @@ import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import React, { useMemo, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Tab, Card, Tabs, Paper, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -33,12 +34,16 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import TeacherAttendanceTracking from './teacher-attendance-tracking';
+
 const AttendanceTrackingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'dateWise' });
+  const { userInfo } = useSelector((store: any) => store.user);
   const MAIN_TABS = [
     { value: 'dateWise', label: 'Date Wise' },
     { value: 'employeeWise', label: 'Employee Wise' },
   ];
+  const role = userInfo?.employee?.role?.name;
   return (
     <Paper sx={{ p: 1 }}>
       <CustomBreadcrumbs
@@ -46,25 +51,31 @@ const AttendanceTrackingScreen = () => {
         links={[{ name: 'HR' }, { name: 'Attendance Tracking' }]}
         sx={{ px: 1, mb: 3 }}
       />
-      <Card>
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
-        >
-          {MAIN_TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
-          ))}
-        </CustomTabs>
-      </Card>
-      <Box p={2}>
-        {searchParams.tab === 'dateWise' ? (
-          <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
-        ) : (
-          <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
-        )}
-      </Box>
+      {role === 'Teacher' ? (
+        <TeacherAttendanceTracking searchParams={searchParams} setSearchParams={setSearchParams} />
+      ) : (
+        <>
+          <Card>
+            <CustomTabs
+              value={searchParams.tab}
+              onChange={(e, value) => setSearchParams({ tab: value })}
+              variant="fullWidth"
+              slotProps={{ tab: { px: 0 } }}
+            >
+              {MAIN_TABS.map((tab) => (
+                <Tab key={tab.value} value={tab.value} label={tab.label} />
+              ))}
+            </CustomTabs>
+          </Card>
+          <Box p={2}>
+            {searchParams.tab === 'dateWise' ? (
+              <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
+            ) : (
+              <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
+            )}
+          </Box>
+        </>
+      )}
     </Paper>
   );
 };
@@ -210,6 +221,7 @@ const DateWise = ({
       </Tabs>
       <Divider />
       <CustomizableTable
+        tableId="employee-attendance-table"
         isLoading={isLoading}
         columns={[
           { id: 'employeeName', label: 'Name' },
@@ -388,6 +400,7 @@ const EmployeeWise = ({
       )}
       {searchParams?.employeeId && (
         <CustomizableTable
+          tableId="employee-wise-attendance-table"
           isLoading={attendanceLoading}
           columns={[
             {

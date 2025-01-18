@@ -154,6 +154,7 @@ const Setting = (props: TabComponentType) => {
           </Button>
         </Box>
         <CustomizableTable
+          tableId="grade-table"
           columns={[
             { id: 'grade', label: 'Grade' },
             {

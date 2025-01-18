@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Box, Tab, Card, Button } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { varAlpha } from 'src/theme/styles';
 
@@ -60,7 +60,7 @@ const TABS = [
 ];
 
 const CurriculumManagementScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'dashboard' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
@@ -68,8 +68,6 @@ const CurriculumManagementScreen = () => {
   );
 
   const handleTabChange = (newTab: string) => {
-    console.log('new tab---', newTab);
-
     setSearchParams({ tab: newTab });
   };
 

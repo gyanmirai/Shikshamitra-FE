@@ -16,6 +16,7 @@ const ConfigurePaymentStatusComponent = () => (
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <CustomizableTable
+            tableId="payment-status"
             isShowedDense={false}
             isPagination={false}
             isFilter={false}

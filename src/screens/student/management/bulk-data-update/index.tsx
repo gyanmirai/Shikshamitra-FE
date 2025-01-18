@@ -134,6 +134,7 @@ const BulkDataUpdateScreen = () => {
       </Box>
       {subCategory && (
         <CustomizableTable
+          tableId="bulk-data-update-table"
           columns={[
             { id: 'srNo', label: 'Sr. No.' },
             { id: 'grNo', label: 'GR No.' },

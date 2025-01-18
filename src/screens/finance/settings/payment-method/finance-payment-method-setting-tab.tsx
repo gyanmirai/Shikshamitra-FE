@@ -124,6 +124,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
         </Typography>
       </Box> */}
       <CustomizableTable
+        tableId="finance-payment-method-setting-table"
         columns={[
           { id: 'paymentMethodName', label: 'Payment Method Name' },
           {

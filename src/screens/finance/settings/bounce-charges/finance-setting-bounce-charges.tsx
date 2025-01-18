@@ -75,6 +75,7 @@ const FinanceSettingBounceCharges = () => {
         </Typography>
       </Box> */}
       <CustomizableTable
+        tableId="bounce-charges"
         columns={[
           { id: 'bankName', label: 'Bank' },
           { id: 'bounceReasone', label: 'Bounce Reasone' },

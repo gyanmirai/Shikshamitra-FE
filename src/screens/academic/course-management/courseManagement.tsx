@@ -244,6 +244,7 @@ const CourseManagement = (props: TabComponentType) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="course-management-table"
         columns={[
           { id: 'courseName', label: 'Course Name' },
           { id: 'className', label: 'Class' },

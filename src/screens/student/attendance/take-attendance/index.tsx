@@ -229,6 +229,7 @@ const TakeAttendanceScreen = () => {
 
       {division && (
         <CustomizableTable
+          tableId="student-attendance-table"
           columns={[
             { id: 'rollNo', label: 'Roll No' },
             { id: 'grNo', label: 'Gr No' },

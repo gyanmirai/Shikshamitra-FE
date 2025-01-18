@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 
 import { Tab, Box } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
@@ -48,7 +48,7 @@ const TABS = [
 ];
 
 const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'notification' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

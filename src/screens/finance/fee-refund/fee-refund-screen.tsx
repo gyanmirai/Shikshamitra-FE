@@ -468,6 +468,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
 
       {fromStudentDetailedView && (
         <CustomizableTable
+          tableId="student-refund-table"
           isShowedDense={false}
           isFilter={false}
           isSearch={false}
@@ -598,6 +599,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
 
       {!fromStudentDetailedView && (
         <CustomizableTable
+          tableId="student-refund-table"
           data={studentRefundData}
           columns={[
             {

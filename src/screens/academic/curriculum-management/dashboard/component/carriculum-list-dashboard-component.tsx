@@ -108,6 +108,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
     <Box>
       <Typography variant="h6">Curriculum Overview</Typography>
       <CustomizableTable
+        tableId="curriculum-table"
         columns={[
           { id: 'curriculumName', label: 'Curriculum Name' },
           { id: 'className', label: 'Class' },

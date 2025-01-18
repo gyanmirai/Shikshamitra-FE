@@ -116,7 +116,6 @@ const Subjects = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  console.log('props===', props);
 
   useEffect(() => {
     if (!classes) {
@@ -239,8 +238,6 @@ const Subjects = (props: TabComponentType) => {
   };
 
   const handleEditChapter = (chapter: any) => {
-    console.log('chapter---', chapter);
-
     setSelectedChapter(chapter);
     setIsEditMode(true);
     addChapterDialog.onTrue();
@@ -331,6 +328,7 @@ const Subjects = (props: TabComponentType) => {
       />
       {subjectTableData.length > 0 && (
         <CustomizableTable
+          tableId="subjectTable"
           columns={[
             {
               id: 'subjectName',
@@ -580,7 +578,6 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   const [documents, setDocuments] = useState<Document[]>(initialValues?.documents || []);
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
   const [editorContent, setEditorContent] = useState('');
-  console.log('initial values---', initialValues);
 
   const validationSchema = Yup.object({
     chapterName: Yup.string().required('Chapter name is required'),
@@ -768,7 +765,6 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
   onAddNewChapter,
   onEditChapter,
 }: ViewSubjectChapterProps) => {
-  console.log('chhapter data---', chapterData);
   const [subjectProgress, setSubjectProgress] = useState<number>(0);
   const [division, setDivision] = useState<string>('All');
   const [chapters, setChapters] = useState<any[]>([]); // State to hold chapter details

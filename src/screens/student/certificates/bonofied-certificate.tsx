@@ -29,6 +29,7 @@ const BonofiedCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="bonofied-certificate"
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },

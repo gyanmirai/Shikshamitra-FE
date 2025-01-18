@@ -35,7 +35,6 @@ export const ColorPicker = forwardRef<
     },
     ref
   ) => {
-    console.log('error', error, helperText);
     const singleSelect = typeof selected === 'string';
 
     const handleSelect = useCallback(

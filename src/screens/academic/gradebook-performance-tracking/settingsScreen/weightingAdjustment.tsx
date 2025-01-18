@@ -140,6 +140,7 @@ const AssignmentWeightageManagement = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="weightage-table"
         columns={[
           {
             id: 'assignmentType',

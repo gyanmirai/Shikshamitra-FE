@@ -21,6 +21,7 @@ const PermissionAccess = () => {
         </Typography>
       </Box>
       <CustomizableTable
+        tableId="permission-access-table"
         columns={[
           { id: 'roles', label: 'Roles' },
           {

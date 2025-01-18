@@ -347,11 +347,15 @@ const FinanceExpenseReports = () => {
         Generate Reports
       </Typography>
 
-      <CustomizableTable columns={columns} data={expenseData} />
+      <CustomizableTable columns={columns} data={expenseData} tableId="expense-reports" />
       <Typography variant="h6" sx={{ pt: '15px', pb: '15px' }}>
         Pending Payments
       </Typography>
-      <CustomizableTable columns={pendigDatacolumns} data={pendingData} />
+      <CustomizableTable
+        columns={pendigDatacolumns}
+        data={pendingData}
+        tableId="pending-payments"
+      />
 
       <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">

@@ -27,6 +27,7 @@ const ChangeDivisionScreen = ({ allDivision }: any) => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="change-division-table"
         columns={[
           { id: 'srNo', label: 'Sr. No.' },
           { id: 'grNo', label: 'GR No.' },

@@ -27,6 +27,7 @@ const LeavingCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="leaving-certificate"
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },

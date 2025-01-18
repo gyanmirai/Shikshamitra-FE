@@ -22,7 +22,7 @@ const LoginPage = () => {
 
   return (
     <Button
-      onClick={async () => {
+      onClick={() => {
         route.push('/auth/login');
       }}
     >

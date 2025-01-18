@@ -211,6 +211,7 @@ const CourseProgress = (props: TabComponentType) => {
             {selectedCourse.name} Details
           </Typography>
           <CustomizableTable
+            tableId="course-progress-table"
             columns={[
               { id: 'chapterName', label: 'Chapter Name' },
               { id: 'teacherName', label: 'Teacher Name' },

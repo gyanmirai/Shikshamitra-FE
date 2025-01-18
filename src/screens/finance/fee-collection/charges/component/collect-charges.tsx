@@ -234,6 +234,7 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
             {/* <Typography sx={{ pl: "20px", pt: "20px", fontWeight: "600", fontSize: "20px" }}  >Late Fee Charges</Typography> */}
             <Grid item xs={12} md={12}>
               <CustomizableTable
+                tableId="charges-table"
                 isShowedDense={false}
                 isFilter={false}
                 isSearch={false}

@@ -327,6 +327,7 @@ const Communication = (props: StudentTabsComponentType) => {
         <Typography variant="h6">Past Survey</Typography>
       </Box>
       <CustomizableTable
+        tableId="survey-table"
         columns={[
           { id: 'surveyTitle', label: 'Survey Title' },
           { id: 'description', label: 'Survey Description' },
@@ -388,6 +389,7 @@ const Communication = (props: StudentTabsComponentType) => {
         <Typography variant="h6">Previous Meetings</Typography>
       </Box>
       <CustomizableTable
+        tableId="meeting-table"
         columns={[
           { id: 'title', label: 'Title' },
           { id: 'meetingType', label: 'Meeting Type' },

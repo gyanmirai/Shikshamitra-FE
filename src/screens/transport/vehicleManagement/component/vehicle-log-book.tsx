@@ -125,7 +125,7 @@ const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicle }) => {
           Daily Vehicle Inspection
         </Button>
       </Box> */}
-      <CustomizableTable data={tableData} columns={columnData} />
+      <CustomizableTable data={tableData} columns={columnData} tableId="vehicleLogBook" />
       {dialog.value && (
         <TransportDailyVehicleDialog
           onSave={handleSave}

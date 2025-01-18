@@ -47,6 +47,7 @@ const StudentAttendanceNotificationScreen = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
+        tableId="student-attendance-notification-table"
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'date', label: 'Date' },

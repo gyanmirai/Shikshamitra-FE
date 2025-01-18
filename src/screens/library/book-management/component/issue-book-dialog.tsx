@@ -293,6 +293,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                 <Grid item xs={12}>
                   <Typography variant="h6">Books to be Issued:</Typography>
                   <CustomizableTable
+                    tableId="issue-book-table"
                     isFilter={false}
                     isSearch={false}
                     isShowedDense={false}
@@ -328,6 +329,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                         The selected member has pending charges:
                       </Typography>
                       <CustomizableTable
+                        tableId="member-charges-table"
                         isFilter={false}
                         isSearch={false}
                         isShowedDense={false}

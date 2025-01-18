@@ -143,6 +143,7 @@ const ArchievedQuiz = () => {
   return (
     <Box>
       <CustomizableTable
+        tableId="archivedQuiz"
         columns={[
           { id: 'class', label: 'Class' },
           {
@@ -354,6 +355,7 @@ export const StudentSubmissions = () => {
 
       <Scrollbar sx={{ p: 2, height: '500px' }}>
         <CustomizableTable
+          tableId="student-table"
           columns={[
             // {
             //   id: 'select',

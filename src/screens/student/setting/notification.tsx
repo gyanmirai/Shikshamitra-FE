@@ -52,6 +52,7 @@ const Notification = () => {
           }
         />
         <CustomizableTable
+          tableId="notification-template-table"
           columns={[
             { id: 'title', label: 'Title' },
             { id: 'template', label: 'Template' },

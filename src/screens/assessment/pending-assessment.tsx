@@ -4,6 +4,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const PendingAssessment = () => (
   <CustomizableTable
+    tableId="pending-assessment"
     columns={[
       { id: 'assessmentName', label: 'Assessment Name' },
       { id: 'subject', label: 'Subject' },

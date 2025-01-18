@@ -362,12 +362,16 @@ const FinanceIncomeReports = () => {
         />
       </Box>
 
-      <CustomizableTable columns={columns} data={incomeData} />
+      <CustomizableTable columns={columns} data={incomeData} tableId="income-reports-table" />
 
       <Typography variant="h6" sx={{ pt: '15px', pb: '15px' }}>
         Pending Income
       </Typography>
-      <CustomizableTable columns={pendigDatacolumns} data={pendingData} />
+      <CustomizableTable
+        columns={pendigDatacolumns}
+        data={pendingData}
+        tableId="pending-income-table"
+      />
 
       <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">

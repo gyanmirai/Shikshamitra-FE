@@ -252,10 +252,10 @@ const TransportRequestScreen = () => {
 
       <Divider />
       {searchParams.tab === 'student' && (
-        <CustomizableTable data={tableData} columns={columnData} />
+        <CustomizableTable data={tableData} columns={columnData} tableId="student" />
       )}
       {searchParams.tab === 'staff' && (
-        <CustomizableTable data={tableDataForStaff} columns={columnDataForStaff} />
+        <CustomizableTable data={tableDataForStaff} columns={columnDataForStaff} tableId="staff" />
       )}
       {assignedRouteDialog.value && (
         <TransportRouteAssignedDialog

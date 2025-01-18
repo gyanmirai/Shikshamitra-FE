@@ -102,7 +102,6 @@ const LearningResources = (props: TabComponentType) => {
   } | null>(null);
 
   const handleSave = (dataFromDialog: TResourceData) => {
-    console.log('data from dialog---', dataFromDialog);
     if (isEdit && selectedEntry) {
       setResourceData(
         resourceData.map((resource) =>
@@ -255,6 +254,7 @@ const LearningResources = (props: TabComponentType) => {
           {/* Table Section */}
           {classes && subject && (
             <CustomizableTable
+              tableId="learning-resources"
               columns={[
                 { id: 'resourceTitle', label: 'Resource Title' },
                 { id: 'typeOfResource', label: 'Type of Resource' },

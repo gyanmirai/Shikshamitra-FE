@@ -235,11 +235,8 @@ const HomeworkCreation = (props: TabComponentType) => {
 
   const [assignmentData, setAssignmentData] = useState<Assignment[]>(initialData);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  console.log('assignemnt data---', assignmentData);
 
   const handleSwitchChange = (assignment: Assignment) => {
-    console.log('handle switch change --', assignment);
-
     if (assignment.status === 'draft') {
       setSelectedAssignment(assignment);
       confirmDialog.onTrue();
@@ -252,8 +249,6 @@ const HomeworkCreation = (props: TabComponentType) => {
   };
 
   const handleConfirmStatusChange = () => {
-    console.log('handleConfirmStatusChange---');
-
     if (selectedAssignment) {
       const updatedAssignments = assignmentData.map((item) =>
         item.title === selectedAssignment.title ? { ...item, status: 'publish' } : item
@@ -265,7 +260,6 @@ const HomeworkCreation = (props: TabComponentType) => {
   };
 
   const handleSubmit = (values: Assignment, status: 'draft' | 'publish') => {
-    console.log('handle submit calls===', values, status);
     const updatedValues = {
       ...values,
       status,
@@ -575,6 +569,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       </Box>
 
       <CustomizableTable
+        tableId="homework-assignment-management"
         columns={view === 'homework' ? homeworkColumns : assignmentColumns}
         data={filteredData}
       />
@@ -1092,6 +1087,7 @@ export const StudentSubmissions = () => {
 
       <Scrollbar sx={{ p: 2, height: '500px' }}>
         <CustomizableTable
+          tableId="student-submissions"
           columns={[
             {
               id: 'select',

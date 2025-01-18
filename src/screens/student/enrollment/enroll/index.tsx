@@ -133,6 +133,7 @@ const EnrollScreen = () => {
         }
       />
       <CustomizableTable
+        tableId="student-enrollment-enroll-table"
         columns={[
           {
             id: 'checkBox',

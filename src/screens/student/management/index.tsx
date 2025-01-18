@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParams } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
@@ -72,7 +72,7 @@ const StudentManagementScreen = () => {
   }, [allClass, classes]);
 
   // const tabs = useTabs('grGeneration');
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
+  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'grGeneration' });
 
   const CurrentComponent = TABS.find((tab) => tab.value === searchParams.tab)?.component;
   return (

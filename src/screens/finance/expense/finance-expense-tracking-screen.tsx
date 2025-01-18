@@ -161,6 +161,7 @@ const FinanceExpenseTrackingScreen = () => {
         </Typography> */}
       </Box>
       <CustomizableTable
+        tableId="expenseTable"
         columns={[
           {
             id: 'expenseCategory',

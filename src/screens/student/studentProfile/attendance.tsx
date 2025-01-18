@@ -302,6 +302,7 @@ const Attendance = (props: StudentTabsComponentType) => {
         </Paper>
       </Box>
       <CustomizableTable
+        tableId="student-attendance-table"
         data={[
           {
             date: '18/07/2024',

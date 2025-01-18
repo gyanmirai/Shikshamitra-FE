@@ -376,6 +376,7 @@ const GradeEntry = (props: TabComponentType) => {
       </Box>
 
       <CustomizableTable
+        tableId="grade-entry-table"
         columns={[
           {
             id: 'select',

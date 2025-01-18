@@ -142,6 +142,7 @@ const TransportVehicleSettingScreen = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableId="vehicle-management-table"
         data={Vehicledata}
         columns={[
           {
