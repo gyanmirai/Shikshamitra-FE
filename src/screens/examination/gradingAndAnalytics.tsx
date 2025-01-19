@@ -32,11 +32,11 @@ const GradingAndAnalytics = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Grading And Analytics"
+        heading="Student Performance And Analytics"
         links={[
           { name: 'Examination and Assessment' },
           { name: 'Examination' },
-          { name: 'Grading And Analytics' },
+          { name: 'Student Performance And Analytics' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -80,20 +80,22 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           slotProps={{ textField: { size: 'small' } }}
         />
       </Box>
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <AnalyticsWebsiteVisits
-            title="Visual Performance Overview"
-            chart={{
-              categories: ['Math', 'Science', 'English', 'Gujarati', 'Hindi'],
-              series: [{ name: '', data: [68, 43, 58, 75, 60] }],
-            }}
-            sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
-          />
+          <Card sx={{ p: 2, height: '100%' }}>
+            <AnalyticsWebsiteVisits
+              title="Visual Performance Overview"
+              chart={{
+                categories: ['Math', 'Science', 'English', 'Gujarati', 'Hindi'],
+                series: [{ name: '', data: [68, 43, 58, 75, 60] }],
+              }}
+              sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
+            />
+          </Card>
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2 }}>
+          <Card sx={{ p: 2, height: '100%' }}>
             <AnalyticsCurrentVisits
               title="Analysis Chart"
               chart={{
@@ -109,7 +111,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
         </Grid>
       </Grid>
       <Box sx={{ display: 'flex', mt: 2 }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <TopPerformer
               title="Top Performer"

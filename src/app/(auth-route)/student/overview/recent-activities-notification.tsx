@@ -16,26 +16,22 @@ const RecentActivitiesNotification = () => (
     >
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ typography: 'subtitle2' }}>Recent Activities</Box>
-
-        <Scrollbar sx={{ mt: 1.5 }}>
+        <Scrollbar sx={{ mt: 1.5, height: '390px' }}>
           <Box
             component="ul"
             sx={{
               listStyle: 'none',
               width: '100%',
               padding: 0,
-              animation: 'scrollAnimation 10s linear infinite',
-              animationDelay: '1s',
-              '@keyframes scrollAnimation': {
-                '0%': { transform: 'translateY(0)' },
-                '100%': { transform: 'translateY(-100%)' },
-              },
-              '&:hover': {
-                animationPlayState: 'paused',
-              },
             }}
           >
             {[
+              'Student record updated',
+              'Student attendance updated',
+              'Student record updated',
+              'Student record updated',
+              'Student attendance updated',
+              'Student record updated',
               'Student record updated',
               'Student attendance updated',
               'Student record updated',
@@ -63,22 +59,13 @@ const RecentActivitiesNotification = () => (
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ typography: 'subtitle2' }}>Notifications</Box>
 
-        <Scrollbar sx={{ mt: 1.5, width: '100%' }}>
+        <Scrollbar sx={{ mt: 1.5, width: '100%', height: '390px' }}>
           <Box
             component="ul"
             sx={{
               listStyle: 'none',
               padding: 0,
               width: '100%',
-              animation: 'scrollAnimation 10s linear infinite',
-              animationDelay: '1s',
-              '@keyframes scrollAnimation': {
-                '0%': { transform: 'translateY(0)' },
-                '100%': { transform: 'translateY(-100%)' },
-              },
-              '&:hover': {
-                animationPlayState: 'paused',
-              },
             }}
           >
             {[

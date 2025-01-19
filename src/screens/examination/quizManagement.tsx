@@ -39,11 +39,11 @@ const QuizManagement = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Dashboard"
+        heading="Quiz Management"
         links={[
           { name: 'Examination and Assessment' },
           { name: 'Examination' },
-          { name: 'Dashboard' },
+          { name: 'Quiz Management' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

@@ -151,7 +151,11 @@ const EntranceExamScreen = () => {
           <Iconify icon="lucide:layout-list" />
         </Button>
       </ButtonGroup>
-      {searchParams.view === 'calender' && <CalendarView />}
+      {searchParams.view === 'calender' && (
+        <Box display="flex" height="700px">
+          <CalendarView />
+        </Box>
+      )}
 
       {searchParams.view === 'table' && (
         <CustomizableTable

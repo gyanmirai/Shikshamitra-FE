@@ -7,16 +7,14 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Card,
   Grid,
   Chip,
   Button,
-  MenuList,
-  MenuItem,
   TextField,
-  IconButton,
   Typography,
   DialogActions,
   DialogContent,
@@ -43,8 +41,8 @@ interface Event {
   eventVenue: string;
   organization: string[];
   className: string[];
-  eventDate: Dayjs;
-  eventTime: Dayjs;
+  eventStartDate: Dayjs;
+  eventEndDate: Dayjs;
   eventType: string;
   audience: string[];
   description: string;
@@ -59,8 +57,8 @@ const eventsData: Event[] = [
     eventVenue: 'Main Hall',
     organization: ['Secondary', 'Higher Secondary'],
     className: ['9'],
-    eventDate: dayjs('2024-11-10'),
-    eventTime: dayjs('10:00'),
+    eventStartDate: dayjs('2024-11-10T10:00'),
+    eventEndDate: dayjs('2024-11-10T14:00'),
     eventType: 'Academic',
     audience: ['Students', 'Parents'],
     description: 'A science exhibition showcasing various projects from students.',
@@ -73,8 +71,8 @@ const eventsData: Event[] = [
     eventVenue: 'Sports Ground',
     organization: ['Primary', 'Secondary'],
     className: ['5'],
-    eventDate: dayjs('2024-11-15'),
-    eventTime: dayjs('09:00'),
+    eventStartDate: dayjs('2024-11-15T09:00'),
+    eventEndDate: dayjs('2024-11-15T17:00'),
     eventType: 'Sports',
     audience: ['Students', 'Parents', 'Staff'],
     description: 'A day of various sports competitions among classes.',
@@ -87,8 +85,8 @@ const eventsData: Event[] = [
     eventVenue: 'Classroom A1',
     organization: ['Primary'],
     className: ['3'],
-    eventDate: dayjs('2024-11-20'),
-    eventTime: dayjs('14:00'),
+    eventStartDate: dayjs('2024-11-20T14:00'),
+    eventEndDate: dayjs('2024-11-20T16:00'),
     eventType: 'Parent Teacher Meeting',
     audience: ['Parents'],
     description: 'Discussion on student performance and upcoming plans for the academic year.',
@@ -101,8 +99,8 @@ const eventsData: Event[] = [
     eventVenue: 'Auditorium',
     organization: ['Secondary', 'Higher Secondary'],
     className: ['10'],
-    eventDate: dayjs('2024-12-05'),
-    eventTime: dayjs('11:00'),
+    eventStartDate: dayjs('2024-12-05T11:00'),
+    eventEndDate: dayjs('2024-12-05T18:00'),
     eventType: 'Cultural',
     audience: ['Students', 'Parents'],
     description: 'A festival celebrating diverse cultures with performances and exhibitions.',
@@ -115,8 +113,8 @@ const eventsData: Event[] = [
     eventVenue: 'Library Hall',
     organization: ['Higher Secondary'],
     className: ['12'],
-    eventDate: dayjs('2024-12-15'),
-    eventTime: dayjs('12:30'),
+    eventStartDate: dayjs('2024-12-15T12:30'),
+    eventEndDate: dayjs('2024-12-15T16:30'),
     eventType: 'Academic',
     audience: ['Students', 'Staff'],
     description: 'A workshop to enhance digital learning skills among students and teachers.',
@@ -132,7 +130,7 @@ const UpcomingEvents = (props: TabComponentType) => {
   const [deleteEvent, setDeleteEvent] = useState('');
   const openShowDialog = useBoolean();
   const confirm_dialog = useBoolean();
-  const addEventDialog = useBoolean();
+  const [open, setOpen] = useState(false);
 
   const handleEyeClick = (id: string) => {
     const data = eventTableData.find((eve: any) => eve.id === id);
@@ -166,147 +164,169 @@ const UpcomingEvents = (props: TabComponentType) => {
 
   const handleCloseDialog = () => {
     setEditingEvent(null);
-    addEventDialog.onFalse();
+    setOpen(false);
   };
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Upcoming Events"
-        links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'Upcoming Events' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            onClick={() => {
-              addEventDialog.onTrue();
-            }}
-          >
-            Event
-          </Button>
-        }
-      />
-      <CustomizableTable
-        tableId="event-table"
-        columns={[
-          { id: 'eventTitle', label: 'Event Title' },
-          { id: 'eventVenue', label: 'Event Venue' },
-          { id: 'eventType', label: 'Event Type' },
-          {
-            id: 'eventDate',
-            label: 'Date',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'eventTime',
-            label: 'Time',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('HH:mm')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'audience',
-            label: 'Audience',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip
-                    key={audience}
-                    label={audience}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'organization',
-            label: 'Organizations',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((org: string) => (
-                  <Chip key={org} label={org} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'className',
-            label: 'Class',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((className: string) => (
-                  <Chip
-                    key={className}
-                    label={className}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'details',
-            label: 'View Details',
-            render(value, row) {
-              return (
-                <IconButton
-                  onClick={() => {
-                    handleEyeClick(row.id);
-                  }}
-                >
-                  <Iconify icon="mdi:eye" />
-                </IconButton>
-              );
-            },
-          },
-          { id: 'eventOrganizer', label: 'Event Organizer' },
-          { id: 'eventBudget', label: 'Event Budget' },
-          {
-            id: 'action',
-            label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        addEventDialog.onTrue();
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Upcoming Events"
+            links={[
+              { name: 'Communication' },
+              { name: 'Events' },
+              { name: 'Upcoming Events' },
+              { name: 'Event Form' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleCloseDialog}
+              >
+                Back
+              </Button>
+            }
+          />
+          <Card>
+            <AddEvent
+              initialValues={editingEvent}
+              onSubmit={handleSubmit}
+              isEdit={!!editingEvent}
+            />
+          </Card>
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Upcoming Events"
+            links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'Upcoming Events' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Iconify icon="mdi:plus" />}
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setOpen(true);
+                }}
+              >
+                Event
+              </Button>
+            }
+          />
+          <CustomizableTable
+            tableId="event-table"
+            columns={[
+              { id: 'eventTitle', label: 'Event Title', minWidth: '180px', align: 'left' },
+              { id: 'eventVenue', label: 'Event Venue', minWidth: '180px', align: 'left' },
+              { id: 'eventType', label: 'Event Type', minWidth: '180px', align: 'left' },
+              {
+                id: 'eventStartDate',
+                label: 'Start Date',
+                minWidth: '180px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'eventEndDate',
+                label: 'End Date',
+                minWidth: '180px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'audience',
+                label: 'Audience',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((audience: string) => (
+                      <Chip
+                        key={audience}
+                        label={audience}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'organization',
+                label: 'Organizations',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((org: string) => (
+                      <Chip key={org} label={org} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'className',
+                label: 'Class',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((className: string) => (
+                      <Chip
+                        key={className}
+                        label={className}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                ),
+              },
+              { id: 'eventOrganizer', label: 'Event Organizer', minWidth: '200px', align: 'left' },
+              { id: 'eventBudget', label: 'Event Budget', minWidth: '180px', align: 'left' },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showDeleteIcon
+                      showViewIcon
+                      showThreeDots={false}
+                      handleEditClick={() => {
+                        setOpen(true);
                         setEditingEvent(row);
                       }}
-                    >
-                      <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
+                      handleDeleteClick={() => {
                         confirm_dialog.onTrue();
                         setDeleteEvent(row.id);
                       }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
-          },
-        ]}
-        data={eventTableData}
-      />
+                      handleViewClick={() => {
+                        handleEyeClick(row.id);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={eventTableData}
+          />
+        </>
+      )}
+
       <CustomDialog
         title="Event Details"
         open={openShowDialog.value}
@@ -324,10 +344,10 @@ const UpcomingEvents = (props: TabComponentType) => {
                 <strong>Organizer:</strong> {event.eventOrganizer}
               </Typography>
               <Typography variant="body1">
-                <strong>Date:</strong> {event.eventDate.format('YYYY-MM-DD')}
+                <strong>Start Date:</strong> {event.eventStartDate.format('YYYY-MM-DD')}
               </Typography>
               <Typography variant="body1">
-                <strong>Time:</strong> {event.eventTime.format('HH:mm')}
+                <strong>End Date:</strong> {event.eventEndDate.format('HH:mm')}
               </Typography>
               <Typography variant="body1">
                 <strong>Venue:</strong> {event.eventVenue}
@@ -375,14 +395,6 @@ const UpcomingEvents = (props: TabComponentType) => {
           </Button>
         </DialogActions>
       </CustomDialog>
-      <CustomDialog
-        title={editingEvent ? 'Edit Event' : 'Create Event'}
-        open={addEventDialog.value}
-        handleClose={handleCloseDialog}
-        maxWidth="md"
-      >
-        <AddEvent initialValues={editingEvent} onSubmit={handleSubmit} isEdit={!!editingEvent} />
-      </CustomDialog>
     </Box>
   );
 };
@@ -394,8 +406,8 @@ interface EventFormValues {
   eventVenue: string;
   organization: string[];
   className: string[];
-  eventDate: Dayjs | null;
-  eventTime: Dayjs | null;
+  eventStartDate: Dayjs | null;
+  eventEndDate: Dayjs | null;
   eventType: string;
   audience: string[];
   description: string;
@@ -467,8 +479,8 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
       audience: initialValues?.audience || [],
       organization: initialValues?.organization || [],
       className: initialValues?.className || [],
-      eventDate: initialValues?.eventDate ? dayjs(initialValues?.eventDate) : null,
-      eventTime: initialValues?.eventTime ? dayjs(initialValues?.eventTime) : null,
+      eventStartDate: initialValues?.eventStartDate ? dayjs(initialValues?.eventStartDate) : null,
+      eventEndDate: initialValues?.eventEndDate ? dayjs(initialValues?.eventEndDate) : null,
       eventType: initialValues?.eventType || '',
       description: initialValues?.description || '',
       eventOrganizer: initialValues?.eventOrganizer || '',
@@ -483,7 +495,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -557,12 +569,12 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Event Date"
-                name="eventDate"
-                value={formik.values.eventDate}
+              <DateTimePicker
+                label="Event Start Date"
+                name="eventStartDate"
+                value={formik.values.eventStartDate}
                 onChange={(newValue) => {
-                  formik.setFieldValue('eventDate', newValue);
+                  formik.setFieldValue('eventStartDate', newValue);
                 }}
                 slotProps={{
                   textField: {
@@ -574,16 +586,19 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TimePicker
-                label="Event Time"
-                format="HH:mm"
-                name="eventTime"
-                value={formik.values.eventTime}
+              <DateTimePicker
+                label="Event End Date"
+                name="eventEndDate"
+                value={formik.values.eventEndDate}
                 onChange={(newValue) => {
-                  formik.setFieldValue('eventTime', newValue);
+                  formik.setFieldValue('eventEndDate', newValue);
                 }}
-                views={['hours', 'minutes']}
-                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                  },
+                }}
               />
             </Grid>
 
@@ -670,7 +685,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
         </Scrollbar>
         <DialogActions>
           <Button type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'} Event
+            {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>

@@ -23,9 +23,9 @@ const BonofiedCertificate = () => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end">
-        <Button startIcon={<Create />} variant="contained" onClick={dialog.onTrue}>
-          Create Bonofied
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Button startIcon={<Create />} size="small" variant="contained" onClick={dialog.onTrue}>
+          Create Bonafide
         </Button>
       </Box>
       <CustomizableTable
@@ -36,16 +36,15 @@ const BonofiedCertificate = () => {
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
           { id: 'grNo', label: 'GR.No.' },
-          { id: 'studentName', label: 'Student Name' },
-
-          { id: 'creationDate', label: 'Creation Date' },
+          { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
+          { id: 'creationDate', label: 'Creation Date', align: 'left', minWidth: '180px' },
           { id: 'reason', label: 'Reason' },
         ]}
         data={[]}
       />
       <CustomDialog
         maxWidth="lg"
-        title="Create Bonofied"
+        title="Create Bonafide"
         open={dialog.value}
         handleClose={dialog.onFalse}
       >

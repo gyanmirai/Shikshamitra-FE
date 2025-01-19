@@ -318,11 +318,13 @@ const ListView = ({ isSaved }: any) => {
       tableId="student-attendance-list"
       isSearch={false}
       columns={[
-        { id: 'rollNo', label: 'Roll No' },
-        { id: 'grNo', label: 'Gr No' },
+        { id: 'rollNo', label: 'Roll No', align: 'left', minWidth: '100px' },
+        { id: 'grNo', label: 'Gr No', align: 'left', minWidth: '100px' },
         {
           id: 'name',
           label: 'Name',
+          align: 'left',
+          minWidth: '180px',
           render(value, row) {
             return (
               <Box display="flex" alignItems="center" gap={1}>
@@ -332,8 +334,13 @@ const ListView = ({ isSaved }: any) => {
             );
           },
         },
-        { id: 'totalPresentDays', label: 'Total Present Days' },
-        { id: 'attendancePercentage', label: 'Attendance Percentage' },
+        { id: 'totalPresentDays', label: 'Total Present Days', align: 'left', minWidth: '180px' },
+        {
+          id: 'attendancePercentage',
+          label: 'Attendance Percentage',
+          align: 'left',
+          minWidth: '200px',
+        },
         {
           id: 'attendance',
           label: 'Attendance',

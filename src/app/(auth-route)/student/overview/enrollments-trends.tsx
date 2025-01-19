@@ -51,7 +51,7 @@ const EnrollmentsTrends = () => (
           },
         ],
       }}
-      sx={{ height: '100%' }}
+      sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}
     />
   </Grid2>
 );

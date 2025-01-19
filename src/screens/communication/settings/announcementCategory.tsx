@@ -147,11 +147,12 @@ const AnnouncementCategory = () => {
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={() => {
               dialog.onTrue();
             }}
           >
-            Add Category
+            Announcement Category
           </Button>
         </Box>
       </Box>
@@ -467,19 +468,18 @@ const AnnouncementImportant = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mb={3}>
-        <Box display="flex" gap={2}>
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            onClick={() => {
-              dialog.onTrue();
-            }}
-          >
-            Add Important Level
-          </Button>
-        </Box>
+    <Box>
+      <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mb={3} mt={2}>
+        <Button
+          startIcon={<Iconify icon="mdi:plus" />}
+          variant="contained"
+          size="small"
+          onClick={() => {
+            dialog.onTrue();
+          }}
+        >
+          Announcement Important Level
+        </Button>
       </Box>
       <CustomizableTable
         tableId="important-level-table"

@@ -31,7 +31,7 @@ const AllConversation = (props: TabComponentType) => {
           setSelectedFilter(val as string);
         }}
         label="Filtered By"
-        formControlProps={{ sx: { minWidth: 180, mb: 5 } }}
+        formControlProps={{ sx: { minWidth: 180, mb: 2 } }}
       />
       <ChatView />
     </Box>

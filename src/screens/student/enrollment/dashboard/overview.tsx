@@ -43,6 +43,11 @@ export function StudentEnrollmentCard({
           // background: varAlpha(theme.palette[bgColor as keyof Palette]?.mainChannel || '', 0.08),
           cursor: 'pointer',
           height: '100%',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: 'var(--shadows-8)',
+            scale: 1.03,
+          },
         }}
         // onClick={() => props.push('/student/enrollment/inquiry')}
       >

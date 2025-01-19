@@ -264,6 +264,28 @@ const GradeEntry = (props: TabComponentType) => {
           { name: 'Grade Entry' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          <>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="mdi:pencil" />}
+              disabled={selectedStudents.length === 0}
+              onClick={bulkGradeDialog.onTrue}
+              sx={{ mr: 1 }}
+            >
+              Bulk Grade ({selectedStudents.length} selected)
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="material-symbols:upload" />}
+              onClick={() => {}}
+            >
+              Publish Marks
+            </Button>
+          </>
+        }
       />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
@@ -353,26 +375,6 @@ const GradeEntry = (props: TabComponentType) => {
             sx: { width: '100%', maxWidth: '200px' },
           }}
         />
-      </Box>
-
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon="mdi:pencil" />}
-          disabled={selectedStudents.length === 0}
-          onClick={bulkGradeDialog.onTrue}
-        >
-          Bulk Grade ({selectedStudents.length} selected)
-        </Button>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon="material-symbols:upload" />}
-          onClick={() => {}}
-        >
-          Publish Marks
-        </Button>
       </Box>
 
       <CustomizableTable

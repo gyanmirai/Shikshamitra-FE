@@ -8,13 +8,11 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
-  Card,
   Button,
-  Switch,
   MenuList,
   MenuItem,
   TextField,
@@ -163,14 +161,16 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Settings"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Time Table Management' },
-          { name: 'Settings' },
-        ]}
+        links={[{ name: 'Academic and Assignment' }, { name: 'Time Table' }, { name: 'Settings' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Box
+        display="flex"
+        gap={2}
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mt: 2, mb: 1 }}
+      >
         <Typography component="span" variant="h6" gutterBottom>
           Lectures Details
         </Typography>
@@ -238,7 +238,13 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         ]}
       />
 
-      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
+      <Box
+        display="flex"
+        gap={2}
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mt: 2, mb: 1 }}
+      >
         <Typography component="span" variant="h6" gutterBottom>
           Slot Details
         </Typography>
@@ -287,7 +293,13 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         ]}
       />
 
-      <Box display="flex" gap={2} alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
+      <Box
+        display="flex"
+        gap={2}
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mt: 2, mb: 1 }}
+      >
         <Typography component="span" variant="h6" gutterBottom>
           Room Details
         </Typography>
@@ -348,7 +360,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         )}
       </Box>
 
-      <Card sx={{ p: 2, mb: 1, mt: 3 }}>
+      {/* <Card sx={{ p: 2, mb: 1, mt: 3 }}>
         <Typography variant="h6">General Settings</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Switch />
@@ -357,40 +369,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           <Typography>Auto-scheduling of classes</Typography>
         </Box>
       </Card>
-      <Card sx={{ p: 2, mb: 1 }}>
-        <Typography variant="h6">Period Settings</Typography>
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginTop: 1 }}>
-          {periodSettings.map((setting, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                width: '200px',
-                mb: 2,
-              }}
-            >
-              <TextField
-                fullWidth
-                name="description"
-                label={setting.label}
-                size="small"
-                sx={{ mb: 1 }}
-              />
-              <CustomSelect
-                label={setting.unit}
-                options={[
-                  { value: 'hours', label: 'Hours' },
-                  { value: 'minute', label: 'Minute' },
-                ]}
-                value=""
-                onChange={() => {}}
-                formControlProps={{ sx: { width: '100%' } }}
-              />
-            </Box>
-          ))}
-        </Box>
-      </Card>
+
       <Card sx={{ p: 2, mb: 1 }}>
         <Typography variant="h6">Conflict Resolution Settings</Typography>
         <Box display="flex" sx={{ gap: 2, py: '20px' }}>
@@ -470,7 +449,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
         <Box display="flex" justifyContent="flex-end" alignItems="center">
           <Button variant="contained">Save Changes</Button>
         </Box>
-      </Card>
+      </Card> */}
       <CustomDialog
         title={isEdit ? 'Update Room' : 'Create Room'}
         open={dialog.value}
@@ -750,7 +729,12 @@ const CreateSlotsForm = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Button startIcon={<Add />} variant="contained" onClick={handleCreateSlots}>
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="contained"
+                onClick={handleCreateSlots}
+              >
                 Create Slots
               </Button>
             </Grid>

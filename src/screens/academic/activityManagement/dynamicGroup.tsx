@@ -126,7 +126,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
         heading="Dynamic Group"
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Activity Management' },
+          { name: 'Activity' },
           { name: 'Dynamic Group' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -190,7 +190,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
       <CustomDialog
         open={dialog.value}
         handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Weightage' : 'Add Weightage'}
+        title={isEdit ? 'Update Dynamic Group' : 'Add Dynamic Group'}
       >
         <DynamicGroupForm
           open={dialog.value}

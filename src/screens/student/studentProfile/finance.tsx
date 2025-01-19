@@ -409,16 +409,12 @@ const Finance = (props: StudentTabsComponentType) => {
       {selectedStudent.fees.map((feeHead: any) => (
         <Accordion key={feeHead.feeHeadId}>
           <AccordionSummary
-            expandIcon={<Iconify icon="iconamoon:arrow-up-2-thin" />}
+            expandIcon={<Iconify icon="mdi:expand-more" />}
             aria-controls={`panel-${feeHead.feeHeadId}-content`}
             id={`panel-${feeHead.feeHeadId}-header`}
           >
             <Box display="flex" flexDirection="column" gap={3} width="100%">
-              <Typography
-                variant="subtitle1"
-                component="div"
-                sx={{ fontWeight: 'bold', marginBottom: 1 }}
-              >
+              <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold' }}>
                 {feeHead.feeHead}
               </Typography>
               <div
@@ -469,7 +465,7 @@ const Finance = (props: StudentTabsComponentType) => {
           <AccordionDetails>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>
+                <tr color="">
                   <th
                     style={{
                       border: '1px solid #ccc',

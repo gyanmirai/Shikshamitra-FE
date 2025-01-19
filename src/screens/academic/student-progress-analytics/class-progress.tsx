@@ -150,6 +150,11 @@ const ClassProgress = (props: TabComponentType) => {
                 sx={{
                   backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.2),
                   height: '100%',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: 'var(--shadows-8)',
+                    scale: 1.03,
+                  },
                 }}
               >
                 <CardHeader title="Class Average" avatar={<Grade color="success" />} />
@@ -164,6 +169,11 @@ const ClassProgress = (props: TabComponentType) => {
               <Card
                 sx={{
                   backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.2),
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: 'var(--shadows-8)',
+                    scale: 1.03,
+                  },
                 }}
               >
                 <CardHeader title="Top 5 Performers" avatar={<TrendingUp color="warning" />} />
@@ -180,7 +190,14 @@ const ClassProgress = (props: TabComponentType) => {
             </Grid>
             <Grid item xs={12} md={4}>
               <Card
-                sx={{ backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.2) }}
+                sx={{
+                  backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.2),
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: 'var(--shadows-8)',
+                    scale: 1.03,
+                  },
+                }}
               >
                 <CardHeader title="Bottom 5 Performers" avatar={<Assessment color="error" />} />
                 <CardContent>

@@ -5,7 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
@@ -27,15 +27,12 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -156,13 +153,12 @@ const meetings: Meeting[] = [
 ];
 
 const AllMeetings = (props: TabComponentType) => {
-  const addNewMeetingDialog = useBoolean();
   const [meetingTableData, setMeetingTableData] = useState(meetings);
   const [selectedMeeting, setSelectedMeeting] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-
+  const [open, setOpen] = useState(false);
   const handleCloseDialog = () => {
-    addNewMeetingDialog.onFalse();
+    setOpen(false);
     setSelectedMeeting(null);
     setIsEdit(false);
   };
@@ -186,178 +182,198 @@ const AllMeetings = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  const actions = useCallback(
+    ({ popover: pop }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {/* {(row.status === 'Cancelled' || row.status === 'Scheduled') && ( */}
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
+            Notify Audience
+          </MenuItem>
+          {/* )} */}
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="All Meetings"
-        links={[{ name: 'Communication' }, { name: 'Meetings' }, { name: 'All Meetings' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            onClick={() => {
-              addNewMeetingDialog.onTrue();
-            }}
-          >
-            Meeting
-          </Button>
-        }
-      />
-
-      <CustomizableTable
-        tableId="meetingTable"
-        columns={[
-          { id: 'title', label: 'Title' },
-          { id: 'meetingType', label: 'Meeting Type' },
-          {
-            id: 'meetingDate',
-            label: 'Meeting Date',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'meetingTime',
-            label: 'Meeting Time',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('HH:mm')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'audience',
-            label: 'Audience',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip
-                    key={audience}
-                    label={audience}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'organization',
-            label: 'Organizations',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value && value.length > 0
-                  ? value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))
-                  : '-'}
-              </Box>
-            ),
-          },
-          {
-            id: 'className',
-            label: 'Class',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value && value.length > 0
-                  ? value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))
-                  : '-'}
-              </Box>
-            ),
-          },
-          {
-            id: 'division',
-            label: 'Division',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value && value.length > 0
-                  ? value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))
-                  : '-'}
-              </Box>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            render: (value: any, row: any) => (
-              <Label
-                variant="soft"
-                color={
-                  value === 'Scheduled'
-                    ? 'secondary'
-                    : value === 'Completed'
-                      ? 'primary'
-                      : value === 'Cancelled'
-                        ? 'error'
-                        : 'default'
-                }
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Meetings"
+            links={[{ name: 'Communication' }, { name: 'Meetings' }, { name: 'Meeting Form' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleCloseDialog}
               >
-                {value}
-              </Label>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render: (_: any, row: any) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {row.status === 'Completed' && (
-                      <MenuItem onClick={() => {}}>
-                        <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                        Details
-                      </MenuItem>
-                    )}
-                    {row.status === 'Scheduled' && (
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedMeeting(row);
-                          setIsEdit(true);
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-                    {row.status === 'Scheduled' && (
-                      <MenuItem onClick={() => {}}>
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Cancel
-                      </MenuItem>
-                    )}
-                    {(row.status === 'Cancelled' || row.status === 'Scheduled') && (
-                      <MenuItem onClick={() => {}}>
-                        <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
-                        Notify Audience
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
-          },
-        ]}
-        data={meetingTableData}
-      />
-
-      <CustomDialog
-        maxWidth="md"
-        open={addNewMeetingDialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? `Edit ${selectedMeeting?.title}` : `Create Meeting`}
-      >
-        <AddNewMeeting initialValues={selectedMeeting} onSubmit={handleSubmit} isEdit={isEdit} />
-      </CustomDialog>
+                Back
+              </Button>
+            }
+          />
+          <AddNewMeeting initialValues={selectedMeeting} onSubmit={handleSubmit} isEdit={isEdit} />
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Meetings"
+            links={[{ name: 'Communication' }, { name: 'Meetings' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Iconify icon="mdi:plus" />}
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setOpen(true);
+                }}
+              >
+                Meeting
+              </Button>
+            }
+          />
+          <CustomizableTable
+            tableId="meetingTable"
+            columns={[
+              { id: 'title', label: 'Title' },
+              { id: 'meetingType', label: 'Meeting Type', minWidth: '180px', align: 'left' },
+              {
+                id: 'meetingDate',
+                label: 'Meeting Date',
+                minWidth: '180px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'meetingTime',
+                label: 'Meeting Time',
+                minWidth: '180px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('HH:mm')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'audience',
+                label: 'Audience',
+                render: (value: any) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((audience: string) => (
+                      <Chip
+                        key={audience}
+                        label={audience}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'organization',
+                label: 'Organizations',
+                render: (value: any) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value && value.length > 0
+                      ? value.map((org: string) => (
+                          <Chip key={org} label={org} size="small" variant="outlined" />
+                        ))
+                      : '-'}
+                  </Box>
+                ),
+              },
+              {
+                id: 'className',
+                label: 'Class',
+                render: (value: any) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value && value.length > 0
+                      ? value.map((org: string) => (
+                          <Chip key={org} label={org} size="small" variant="outlined" />
+                        ))
+                      : '-'}
+                  </Box>
+                ),
+              },
+              {
+                id: 'division',
+                label: 'Division',
+                render: (value: any) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value && value.length > 0
+                      ? value.map((org: string) => (
+                          <Chip key={org} label={org} size="small" variant="outlined" />
+                        ))
+                      : '-'}
+                  </Box>
+                ),
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                render: (value: any, row: any) => (
+                  <Label
+                    variant="soft"
+                    color={
+                      value === 'Scheduled'
+                        ? 'secondary'
+                        : value === 'Completed'
+                          ? 'primary'
+                          : value === 'Cancelled'
+                            ? 'error'
+                            : 'default'
+                    }
+                  >
+                    {value}
+                  </Label>
+                ),
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showDeleteIcon
+                      showViewIcon
+                      handleEditClick={() => {
+                        // setOpen(true);
+                        // setEditingEvent(row);
+                      }}
+                      handleDeleteClick={() => {
+                        // confirm_dialog.onTrue();
+                        // setDeleteEvent(row.id);
+                      }}
+                      handleViewClick={() => {
+                        // handleEyeClick(row.id);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={meetingTableData}
+          />
+        </>
+      )}
     </Box>
   );
 };
@@ -619,7 +635,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -882,7 +898,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({ onSubmit, initialValues, 
         </Scrollbar>
         <DialogActions>
           <Button type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'} Meeting
+            {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>

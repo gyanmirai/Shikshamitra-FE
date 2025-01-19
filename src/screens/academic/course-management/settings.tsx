@@ -13,11 +13,7 @@ const Settings = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
       heading="Settings"
-      links={[
-        { name: 'Academic and Assignment' },
-        { name: 'Course Management' },
-        { name: 'Settings' },
-      ]}
+      links={[{ name: 'Academic and Assignment' }, { name: 'Course' }, { name: 'Settings' }]}
       sx={{ px: 1, mb: 2 }}
     />
     <Grid container spacing={2}>

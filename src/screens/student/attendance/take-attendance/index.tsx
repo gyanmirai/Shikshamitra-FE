@@ -231,8 +231,8 @@ const TakeAttendanceScreen = () => {
         <CustomizableTable
           tableId="student-attendance-table"
           columns={[
-            { id: 'rollNo', label: 'Roll No' },
-            { id: 'grNo', label: 'Gr No' },
+            { id: 'rollNo', label: 'Roll No', align: 'left', minWidth: '180px' },
+            { id: 'grNo', label: 'Gr No', align: 'left', minWidth: '180px' },
             {
               id: 'name',
               label: 'Name',
@@ -245,8 +245,18 @@ const TakeAttendanceScreen = () => {
                 );
               },
             },
-            { id: 'totalPresentDays', label: 'Total Present Days' },
-            { id: 'attendancePercentage', label: 'Attendance Percentage' },
+            {
+              id: 'totalPresentDays',
+              label: 'Total Present Days',
+              align: 'left',
+              minWidth: '200px',
+            },
+            {
+              id: 'attendancePercentage',
+              label: 'Attendance Percentage',
+              align: 'left',
+              minWidth: '200px',
+            },
             {
               id: 'attendance',
               label: 'Attendance',
@@ -294,6 +304,8 @@ const TakeAttendanceScreen = () => {
             {
               id: 'absentReason',
               label: 'Absent Reason',
+              align: 'left',
+              minWidth: '180px',
               render(value, row) {
                 return row.attendance === 'Present' ? (
                   '-'

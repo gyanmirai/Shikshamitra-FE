@@ -5,7 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import * as yup from 'yup';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -166,6 +166,48 @@ const ActiveSurvey = (props: TabComponentType) => {
     );
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              viewResponseDialog.onTrue();
+              setResponseSurvey(row);
+            }}
+          >
+            <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
+            View Responses
+          </MenuItem>
+
+          {row.status === 'Pending' && (
+            <MenuItem
+              onClick={() => {
+                //   addAnounsmentDialog.onTrue();
+                //   setEditingAnnouncement(row);
+              }}
+            >
+              <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
+              Send Reminder
+            </MenuItem>
+          )}
+          {row.status === 'Active' && (
+            <MenuItem
+              onClick={() => {
+                handleCloseSurvey(row.id);
+              }}
+            >
+              <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
+              Close Survey
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    [viewResponseDialog]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -177,7 +219,7 @@ const ActiveSurvey = (props: TabComponentType) => {
       <CustomizableTable
         tableId="survey"
         columns={[
-          { id: 'surveyTitle', label: 'Survey Title' },
+          { id: 'surveyTitle', label: 'Survey Title', minWidth: '180px', align: 'left' },
           {
             id: 'audience',
             label: 'Audience',
@@ -220,6 +262,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'startDate',
             label: 'Start Date',
+            minWidth: '180px',
+            align: 'left',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -229,6 +273,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'endDate',
             label: 'End Date',
+            minWidth: '180px',
+            align: 'left',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -238,6 +284,8 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'responseRate',
             label: 'Response Rate',
+            minWidth: '180px',
+            align: 'left',
             render(value, row) {
               return (
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -263,22 +311,10 @@ const ActiveSurvey = (props: TabComponentType) => {
             },
           },
           {
-            id: 'viewDetails',
-            label: 'View Details',
-            render: (value, row) => (
-              <IconButton
-                onClick={() => {
-                  viewDetailsDialog.onTrue();
-                  setViewSurvey(row);
-                }}
-              >
-                <Iconify icon="mdi:eye" />
-              </IconButton>
-            ),
-          },
-          {
             id: 'status',
             label: 'Response Status',
+            minWidth: '200px',
+            align: 'left',
             render: (value, row) =>
               value === 'Pending' ? (
                 <Label
@@ -305,57 +341,25 @@ const ActiveSurvey = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        viewResponseDialog.onTrue();
-                        setResponseSurvey(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      View Responses
-                    </MenuItem>
-
-                    {row.status === 'Pending' && (
-                      <>
-                        <MenuItem
-                          onClick={() => {
-                            //   addAnounsmentDialog.onTrue();
-                            //   setEditingAnnouncement(row);
-                          }}
-                        >
-                          <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                          Edit
-                        </MenuItem>
-                        <MenuItem
-                          onClick={() => {
-                            //   addAnounsmentDialog.onTrue();
-                            //   setEditingAnnouncement(row);
-                          }}
-                        >
-                          <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
-                          Send Reminder
-                        </MenuItem>
-                      </>
-                    )}
-                    {row.status === 'Active' && (
-                      <MenuItem
-                        onClick={() => {
-                          handleCloseSurvey(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Close Survey
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showViewIcon
+                  handleViewClick={() => {
+                    viewDetailsDialog.onTrue();
+                    setViewSurvey(row);
+                  }}
+                  handleEditClick={() => {
+                    // addAnounsmentDialog.onTrue();
+                    // setEditingAnnouncement(row);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={surveyTableData}

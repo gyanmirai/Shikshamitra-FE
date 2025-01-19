@@ -189,7 +189,7 @@ const ActivityManagement = (props: TabComponentType) => {
               onClick={() => {
                 assignStudentDialog.onTrue();
                 setSelectedActivity(row as Activity);
-                pop.onClose();
+                // pop.onClose();
               }}
             >
               <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
@@ -324,7 +324,7 @@ const ActivityManagement = (props: TabComponentType) => {
         maxWidth="md"
         open={assignStudentDialog.value}
         handleClose={handleCloseDialog}
-        title={`Assign Students to ${selectedActivity?.activityName}`}
+        title={`Assign Winners to ${selectedActivity?.activityName}`}
       >
         <AssignStudents />
       </CustomDialog>
@@ -526,7 +526,7 @@ const AssignStudents = () => {
   return (
     <Box>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
-        <Box display="flex" gap={1}>
+        <Box display="flex" gap={1} mb={2}>
           <CustomSelect
             label="Class"
             name="className"
@@ -584,10 +584,14 @@ const AssignStudents = () => {
               {
                 id: 'studentId',
                 label: 'Student Id',
+                align: 'left',
+                minWidth: '180px',
               },
               {
                 id: 'name',
                 label: 'Student Name',
+                align: 'left',
+                minWidth: '180px',
               },
               {
                 id: 'class',
@@ -600,6 +604,8 @@ const AssignStudents = () => {
               {
                 id: 'currentActivities',
                 label: 'Current Activities',
+                align: 'left',
+                minWidth: '200px',
                 render: (value: string[]) => (
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {value.map((field: string) => (
@@ -620,7 +626,7 @@ const AssignStudents = () => {
           disabled={selectedStudents.length === 0}
           onClick={() => {}}
         >
-          Confirm Assignment
+          Save
         </Button>
       </DialogActions>
     </Box>

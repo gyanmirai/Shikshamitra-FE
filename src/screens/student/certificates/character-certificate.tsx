@@ -21,8 +21,8 @@ const CharacterCertificate = () => {
   const dialog = useBoolean();
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end">
-        <Button startIcon={<Create />} variant="contained" onClick={dialog.onTrue}>
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Button startIcon={<Create />} size="small" variant="contained" onClick={dialog.onTrue}>
           Create Character
         </Button>
       </Box>
@@ -34,14 +34,18 @@ const CharacterCertificate = () => {
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
           { id: 'grNo', label: 'GR.No.' },
-          { id: 'studentName', label: 'Student Name' },
-
-          { id: 'creationDate', label: 'Creation Date' },
+          { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
+          { id: 'creationDate', label: 'Creation Date', align: 'left', minWidth: '180px' },
           { id: 'reason', label: 'Reason' },
         ]}
         data={[]}
       />
-      <CustomDialog title="Create Character" open={dialog.value} handleClose={dialog.onFalse}>
+      <CustomDialog
+        maxWidth="lg"
+        title="Create Character"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+      >
         <CharacterForm />
       </CustomDialog>
     </Box>
@@ -104,7 +108,7 @@ const CharacterForm = () => {
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allOrganization}
               label="Organization"
@@ -118,7 +122,7 @@ const CharacterForm = () => {
               disabled={!medium}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -132,7 +136,7 @@ const CharacterForm = () => {
               disabled={!organization}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <CustomSelect
               options={allDivision}
               label="Division"
@@ -144,7 +148,7 @@ const CharacterForm = () => {
               disabled={!classes}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <Autocomplete
               loading={false}
               noOptionsText="No Student Found"
@@ -182,7 +186,7 @@ const CharacterForm = () => {
               fullWidth
             />
           </Grid> */}
-          <Grid xs={6}>
+          <Grid xs={3}>
             <DatePicker
               label="Creation Date"
               value={values.creationDate}
@@ -197,7 +201,7 @@ const CharacterForm = () => {
               }}
             />
           </Grid>
-          <Grid xs={6}>
+          <Grid xs={3}>
             <TextField
               size="small"
               value={values.reason}

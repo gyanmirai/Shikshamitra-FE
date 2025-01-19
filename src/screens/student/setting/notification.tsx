@@ -27,11 +27,6 @@ const Notification = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end" py={2}>
-        <Button startIcon={<Save />} variant="contained">
-          Save
-        </Button>
-      </Box>
       <Card sx={{ p: 2 }}>
         <FormGroup>
           <FormControlLabel
@@ -40,16 +35,22 @@ const Notification = () => {
           />
           <FormControlLabel control={<Switch />} label="Enable SMS Notifications" />
         </FormGroup>
+        <Box display="flex" justifyContent="flex-end">
+          <Button startIcon={<Save />} variant="contained">
+            Save
+          </Button>
+        </Box>
       </Card>
 
       <Card sx={{ my: 2, p: 1 }}>
         <CardHeader
           title="Notification Templates"
           action={
-            <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue}>
+            <Button variant="contained" size="small" startIcon={<Add />} onClick={dialog.onTrue}>
               Create Template
             </Button>
           }
+          mb={5}
         />
         <CustomizableTable
           tableId="notification-template-table"

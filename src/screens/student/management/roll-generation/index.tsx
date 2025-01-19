@@ -21,40 +21,41 @@ const RollNoGenerationScreen = () => {
 
   return (
     <Box>
-      <Box display="flex" gap={2} flexWrap="wrap">
-        <CustomSelect
-          options={[
-            { id: 'mix', name: 'Mix' },
-            { id: 'boysFirst', name: 'Boys First' },
-            { id: 'girlsFirst', name: 'Girls First' },
-          ]}
-          label="Arrangement Type"
-          value={arrangementType}
-          onChange={(val) => setArrangementType(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          // disabled={!division}
-        />
-        <CustomSelect
-          options={[
-            { id: 'surname', name: 'Surname' },
-            { id: 'name', name: 'Name' },
-            { id: 'grNo', name: 'GR.No.' },
-          ]}
-          label="Arrangement By"
-          value={arrangeBy}
-          onChange={(val) => setArrangeBy(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!arrangementType}
-        />
-      </Box>
-      {arrangeBy && (
-        <>
-          {' '}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
+        {/* Left side - Dropdowns */}
+        <Box display="flex" gap={2}>
+          <CustomSelect
+            options={[
+              { id: 'mix', name: 'Mix' },
+              { id: 'boysFirst', name: 'Boys First' },
+              { id: 'girlsFirst', name: 'Girls First' },
+            ]}
+            label="Arrangement Type"
+            value={arrangementType}
+            onChange={(val) => setArrangementType(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { width: '200px' } }}
+          />
+          <CustomSelect
+            options={[
+              { id: 'surname', name: 'Surname' },
+              { id: 'name', name: 'Name' },
+              { id: 'grNo', name: 'GR.No.' },
+            ]}
+            label="Arrangement By"
+            value={arrangeBy}
+            onChange={(val) => setArrangeBy(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { width: '200px' } }}
+            disabled={!arrangementType}
+          />
+        </Box>
+
+        {/* Right side - Buttons */}
+        {arrangeBy && (
+          <Box display="flex" gap={2}>
             <Button
               startIcon={<Save />}
               variant="outlined"
@@ -75,6 +76,11 @@ const RollNoGenerationScreen = () => {
               Auto Generate
             </Button>
           </Box>
+        )}
+      </Box>
+
+      {arrangeBy && (
+        <>
           <CustomizableTable
             tableId="roll-no-generation-table"
             columns={[

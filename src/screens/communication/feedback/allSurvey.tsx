@@ -20,8 +20,6 @@ import {
   Button,
   Switch,
   Divider,
-  MenuItem,
-  MenuList,
   TableRow,
   TableCell,
   TextField,
@@ -121,13 +119,13 @@ const AllSurvey = (props: TabComponentType) => {
   const publish_modal = useBoolean();
   const [publishingSurvey, setPublishingSurvey] = useState<any | null>(null);
   const [surveyTableData, setSurveyTableData] = useState(surveyData);
-  const addNewSurveyDialog = useBoolean();
   const viewDetailsDialog = useBoolean();
   const [viewSurvey, setViewSurvey] = useState<any | null>(null);
   const viewResponseDialog = useBoolean();
   const [responseSurvey, setResponseSurvey] = useState<any | null>(null);
-
+  const [open, setOpen] = useState(false);
   const handleClose = () => {
+    setOpen(false);
     setPublishingSurvey(null);
     publish_modal.onFalse();
     setViewSurvey(null);
@@ -168,225 +166,208 @@ const AllSurvey = (props: TabComponentType) => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="All Survey"
-        links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'All Survey' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            onClick={() => {
-              addNewSurveyDialog.onTrue();
-            }}
-          >
-            Survey
-          </Button>
-        }
-      />
-
-      <CustomizableTable
-        tableId="survey-table"
-        columns={[
-          { id: 'surveyTitle', label: 'Survey Title' },
-          {
-            id: 'audience',
-            label: 'Audience',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip key={audience} label={audience} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'organization',
-            label: 'Organizations',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((org: string) => (
-                  <Chip key={org} label={org} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'classes',
-            label: 'Class',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((className: string) => (
-                  <Chip
-                    key={className}
-                    label={className}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'startDate',
-            label: 'Start Date',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'endDate',
-            label: 'End Date',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          //   {
-          //     id: 'responseRate',
-          //     label: 'Response Rate',
-          //     render(value, row) {
-          //       return (
-          //         <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-          //           <CircularProgress variant="determinate" value={value} />
-          //           <Box
-          //             sx={{
-          //               top: 0,
-          //               left: 0,
-          //               bottom: 0,
-          //               right: 0,
-          //               position: 'absolute',
-          //               display: 'flex',
-          //               alignItems: 'center',
-          //               justifyContent: 'center',
-          //             }}
-          //           >
-          //             <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-          //               {value}%
-          //             </Typography>
-          //           </Box>
-          //         </Box>
-          //       );
-          //     },
-          //   },
-          //   {
-          //     id: 'viewDetails',
-          //     label: 'View Details',
-          //     render: (value, row) => (
-          //       <IconButton
-          //         onClick={() => {
-          //           viewDetailsDialog.onTrue();
-          //           setViewSurvey(row);
-          //         }}
-          //       >
-          //         <Iconify icon="mdi:eye" />
-          //       </IconButton>
-          //     ),
-          //   },
-          //   {
-          //     id: 'status',
-          //     label: 'Response Status',
-          //     render: (value, row) =>
-          //       value === 'Pending' ? (
-          //         <Label
-          //           variant="soft"
-          //           color="warning"
-          //           onClick={() => {
-          //             publish_modal.onTrue();
-          //             setPublishingSurvey(row);
-          //           }}
-          //           sx={{ cursor: 'pointer' }}
-          //         >
-          //           {value}
-          //         </Label>
-          //       ) : value === 'Active' ? (
-          //         <Label variant="soft" color="primary">
-          //           {value}
-          //         </Label>
-          //       ) : (
-          //         <Label variant="soft" color="error">
-          //           {value}
-          //         </Label>
-          //       ),
-          //   },
-          {
-            id: 'action',
-            label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {/* <MenuItem
-                      onClick={() => {
-                        viewResponseDialog.onTrue();
-                        setResponseSurvey(row);
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Scheduled Survey"
+            links={[
+              { name: 'Communication' },
+              { name: 'Survey' },
+              { name: 'Scheduled Survey' },
+              { name: 'Survey Form' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={handleClose}
+              >
+                Back
+              </Button>
+            }
+          />
+          <AddNewSurvey />
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Scheduled Survey"
+            links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'Scheduled Survey' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Iconify icon="mdi:plus" />}
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setOpen(true);
+                }}
+              >
+                Survey
+              </Button>
+            }
+          />
+          <CustomizableTable
+            tableId="survey-table"
+            columns={[
+              { id: 'surveyTitle', label: 'Survey Title' },
+              {
+                id: 'audience',
+                label: 'Audience',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((audience: string) => (
+                      <Chip key={audience} label={audience} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'organization',
+                label: 'Organizations',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((org: string) => (
+                      <Chip key={org} label={org} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'classes',
+                label: 'Class',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((className: string) => (
+                      <Chip
+                        key={className}
+                        label={className}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                ),
+              },
+              {
+                id: 'startDate',
+                label: 'Start Date',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'endDate',
+                label: 'End Date',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              //   {
+              //     id: 'responseRate',
+              //     label: 'Response Rate',
+              //     render(value, row) {
+              //       return (
+              //         <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              //           <CircularProgress variant="determinate" value={value} />
+              //           <Box
+              //             sx={{
+              //               top: 0,
+              //               left: 0,
+              //               bottom: 0,
+              //               right: 0,
+              //               position: 'absolute',
+              //               display: 'flex',
+              //               alignItems: 'center',
+              //               justifyContent: 'center',
+              //             }}
+              //           >
+              //             <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+              //               {value}%
+              //             </Typography>
+              //           </Box>
+              //         </Box>
+              //       );
+              //     },
+              //   },
+              //   {
+              //     id: 'viewDetails',
+              //     label: 'View Details',
+              //     render: (value, row) => (
+              //       <IconButton
+              //         onClick={() => {
+              //           viewDetailsDialog.onTrue();
+              //           setViewSurvey(row);
+              //         }}
+              //       >
+              //         <Iconify icon="mdi:eye" />
+              //       </IconButton>
+              //     ),
+              //   },
+              //   {
+              //     id: 'status',
+              //     label: 'Response Status',
+              //     render: (value, row) =>
+              //       value === 'Pending' ? (
+              //         <Label
+              //           variant="soft"
+              //           color="warning"
+              //           onClick={() => {
+              //             publish_modal.onTrue();
+              //             setPublishingSurvey(row);
+              //           }}
+              //           sx={{ cursor: 'pointer' }}
+              //         >
+              //           {value}
+              //         </Label>
+              //       ) : value === 'Active' ? (
+              //         <Label variant="soft" color="primary">
+              //           {value}
+              //         </Label>
+              //       ) : (
+              //         <Label variant="soft" color="error">
+              //           {value}
+              //         </Label>
+              //       ),
+              //   },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showDeleteIcon
+                      showViewIcon
+                      showThreeDots={false}
+                      handleViewClick={() => {}}
+                      handleEditClick={() => {
+                        // addAnounsmentDialog.onTrue();
+                        // setEditingAnnouncement(row);
                       }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      View Responses
-                    </MenuItem> */}
+                      handleDeleteClick={() => {
+                        handleCloseSurvey(row.id);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={surveyTableData}
+          />
+        </>
+      )}
 
-                    <>
-                      <MenuItem
-                        onClick={() => {
-                          //   addAnounsmentDialog.onTrue();
-                          //   setEditingAnnouncement(row);
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          handleCloseSurvey(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Delete
-                      </MenuItem>
-                      {/* <MenuItem
-                          onClick={() => {
-                            //   addAnounsmentDialog.onTrue();
-                            //   setEditingAnnouncement(row);
-                          }}
-                        >
-                          <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
-                          Send Reminder
-                        </MenuItem> */}
-                    </>
-
-                    {/* {row.status === 'Active' && (
-                      <MenuItem
-                        onClick={() => {
-                          handleCloseSurvey(row.id);
-                        }}
-                      >
-                        <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                        Close Survey
-                      </MenuItem>
-                    )} */}
-                  </MenuList>
-                )}
-              />
-            ),
-          },
-        ]}
-        data={surveyTableData}
-      />
-
-      <CustomDialog
-        maxWidth="md"
-        open={addNewSurveyDialog.value}
-        handleClose={addNewSurveyDialog.onFalse}
-        title="New Survey"
-      >
-        <AddNewSurvey />
-      </CustomDialog>
       {/* 
       <CustomDialog
         title="Do you want to Active this Survey ?"
@@ -882,7 +863,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Type</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Options</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete Question</TableCell>
+              <TableCell sx={{ width: '30%', fontWeight: 'bold' }}>Action</TableCell>
             </TableRow>
           </TableHead>
           <Droppable droppableId="questions">
@@ -942,14 +923,21 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => onDeleteQuestion(index)}
-                            sx={{ ml: 1 }}
-                          >
-                            <Iconify icon="mdi:delete" />
-                          </IconButton>
+                          <ThreeDotsActions
+                            // actions={(prop) => actions({ ...props, row })}
+                            placement="right-top"
+                            showEditIcon
+                            showDeleteIcon
+                            showThreeDots={false}
+                            handleViewClick={() => {}}
+                            handleEditClick={() => {
+                              // addAnounsmentDialog.onTrue();
+                              // setEditingAnnouncement(row);
+                            }}
+                            handleDeleteClick={() => {
+                              onDeleteQuestion(index);
+                            }}
+                          />
                         </TableCell>
                       </TableRow>
                     )}
@@ -994,7 +982,12 @@ const QuestionBuilder = ({ formik }: any) => {
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">{formik.values.surveyTitle}</Typography>{' '}
-        <Button variant="contained" startIcon={<Add />} onClick={() => addQuestionDialog.onTrue()}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => addQuestionDialog.onTrue()}
+        >
           Add Question
         </Button>
       </Box>
@@ -1151,7 +1144,16 @@ const AddNewQuestion = ({ onSave }: any) => {
                   </Box>
                 </Box>
               ))}
-              {errors.options && <FormHelperText error>{errors.options}</FormHelperText>}
+              {errors.options && (
+                <FormHelperText
+                  error
+                  sx={{
+                    mb: 5, // Add margin bottom to separate from Add Option button
+                  }}
+                >
+                  {errors.options}
+                </FormHelperText>
+              )}
               <Button
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:plus" />}

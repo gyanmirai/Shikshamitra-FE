@@ -29,7 +29,7 @@ const GrNoGenerationScreen = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
         <Button
           onClick={() => {
             // router.push('/student/student-i-card');

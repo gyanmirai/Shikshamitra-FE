@@ -21,7 +21,7 @@ const ChangeDivisionScreen = ({ allDivision }: any) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
         <Button startIcon={<Save />} variant="outlined">
           Save
         </Button>

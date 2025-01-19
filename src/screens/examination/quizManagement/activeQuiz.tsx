@@ -112,7 +112,7 @@ const ActiveQuiz = () => {
   const addQuizDialog = useBoolean();
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"

@@ -505,6 +505,14 @@ export const AssignmentsList = () => {
                     }
                     placement="right"
                     arrow
+                    slotProps={{
+                      tooltip: {
+                        sx: {
+                          color: theme.palette.mode === 'dark' ? 'white' : 'black',
+                          backgroundColor: theme.palette.mode === 'dark' ? 'black' : '#FAF9F6',
+                        },
+                      },
+                    }}
                   >
                     <Card
                       sx={{

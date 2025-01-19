@@ -61,11 +61,7 @@ const Reports = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Time Table Management' },
-          { name: 'Reports' },
-        ]}
+        links={[{ name: 'Academic and Assignment' }, { name: 'Time Table' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" flexDirection="column" justifyContent="space-between">

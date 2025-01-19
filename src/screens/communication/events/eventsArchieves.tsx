@@ -6,11 +6,10 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -105,24 +104,21 @@ const EventsArchieves = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        viewEventSummaryDialog.onTrue();
-                        setEvent(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                      View Summary
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            ),
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => {
+                    viewEventSummaryDialog.onTrue();
+                    setEvent(row);
+                  }}
+                />
+              );
+            },
           },
         ]}
         data={eventTableData}

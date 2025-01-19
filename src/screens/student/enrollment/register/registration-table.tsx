@@ -1,7 +1,7 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import React from 'react';
 import { toast } from 'sonner';
+import React, { useCallback } from 'react';
 
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
 
@@ -17,6 +17,42 @@ const RegistrationTable = ({
   followUpDialog: UseBooleanReturn;
 }) => {
   const a = null;
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              if (row.progress < 50) {
+                toast.error('Please Complete Registration Form First');
+              }
+            }}
+          >
+            <Iconify icon="mdi:arrow-right" sx={{ mr: 2 }} />
+            Move To Admission
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              dialog.onTrue();
+            }}
+          >
+            <Iconify icon="mdi:calendar-clock" sx={{ mr: 2 }} />
+            Schedule Exam
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              followUpDialog.onTrue();
+            }}
+          >
+            <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
+            Follow Up
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [dialog, followUpDialog]
+  );
   return (
     <CustomizableTable
       tableId="student-registration-table"
@@ -77,36 +113,7 @@ const RegistrationTable = ({
               <ThreeDotsActions
                 showEditIcon
                 handleEditClick={() => {}}
-                actions={(props) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        if (row.progress < 50) {
-                          toast.error('Please Complete Registration Form First');
-                        }
-                      }}
-                    >
-                      <Iconify icon="mdi:arrow-right" sx={{ mr: 2 }} />
-                      Move To Admission
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        dialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:calendar-clock" sx={{ mr: 2 }} />
-                      Schedule Exam
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        followUpDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
-                      Follow Up
-                    </MenuItem>
-                  </MenuList>
-                )}
+                actions={(prop) => actions({ ...prop, row })}
                 placement="right-top"
               />
             );

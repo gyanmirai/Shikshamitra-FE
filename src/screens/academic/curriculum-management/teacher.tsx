@@ -3,7 +3,6 @@
 import { useFormik } from 'formik';
 import React, { useMemo, useState } from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Grid, Chip, Button, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -121,15 +120,11 @@ const Teacher = ({
     <Box>
       <CustomBreadcrumbs
         heading="Teacher"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Curriculum Management' },
-          { name: 'Teacher' },
-        ]}
+        links={[{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Teacher' }]}
         sx={{ px: 1, mb: 2 }}
       />
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 4, mb: 2 }}>
         <CustomSelect
           label="Class"
           name="class"
@@ -154,52 +149,51 @@ const Teacher = ({
           onChange={(value) => setSearchParams?.({ subject: value as string })}
         />
       </Box>
-      <Grid2 container spacing={3}>
-        <CustomizableTable
-          tableId="teacher-table"
-          columns={[
-            {
-              id: 'className',
-              label: 'Class',
+      <CustomizableTable
+        tableId="teacher-table"
+        columns={[
+          {
+            id: 'className',
+            label: 'Class',
+          },
+          {
+            id: 'subject',
+            label: 'Subject',
+          },
+          {
+            id: 'assignedTeacher',
+            label: 'Assigned Teacher',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((audience: string) => (
+                  <Chip key={audience} label={audience} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...props, row })}
+                  placement="right-top"
+                  showEditIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    dialog.onTrue();
+                    setSelectedTeacher(row as any);
+                  }}
+                />
+              );
             },
-            {
-              id: 'subject',
-              label: 'Subject',
-            },
-            {
-              id: 'assignedTeacher',
-              label: 'Assigned Teacher',
-              render: (value) => (
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  {value.map((audience: string) => (
-                    <Chip key={audience} label={audience} size="small" variant="outlined" />
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    // actions={(prop) => actions({ ...props, row })}
-                    placement="right-top"
-                    showEditIcon
-                    showThreeDots={false}
-                    handleEditClick={() => {
-                      dialog.onTrue();
-                      setSelectedTeacher(row as any);
-                    }}
-                  />
-                );
-              },
-            },
-          ]}
-          data={filteredData}
-        />
-      </Grid2>
+          },
+        ]}
+        data={filteredData}
+      />
+
       <CustomDialog
         title="Reassign Teacher"
         open={dialog.value}

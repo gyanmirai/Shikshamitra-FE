@@ -20,7 +20,14 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
             icon={<Iconify icon="fa6-solid:calendar-days" />}
             total="120/150"
             color="primary.main"
-            sx={{ cursor: 'pointer' }}
+            sx={{
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+            }}
             onClick={() => tabs?.setValue('attendance')}
           />
         </Grid>
@@ -31,7 +38,14 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
             icon={<Iconify icon="solar:square-academic-cap-bold" />}
             total="89%"
             color="error.main"
-            sx={{ cursor: 'pointer' }}
+            sx={{
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+            }}
             onClick={() => tabs?.setValue('academic')}
           />
         </Grid>
@@ -40,7 +54,14 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
           <AppWidgetSummary
             title="Fee status"
             icon={<Iconify icon="solar:dollar-bold" />}
-            sx={{ cursor: 'pointer' }}
+            sx={{
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+            }}
             color="secondary.main"
             onClick={() => tabs?.setValue('finance')}
             total={
@@ -61,7 +82,14 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
             title="Total documents"
             icon={<Iconify icon="solar:document-bold" />}
             total="08"
-            sx={{ cursor: 'pointer' }}
+            sx={{
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
+            }}
             onClick={() => tabs?.setValue('documents')}
           />
         </Grid>

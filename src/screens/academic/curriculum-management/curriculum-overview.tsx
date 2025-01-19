@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import {
   Box,
   Grid,
@@ -204,8 +203,9 @@ const CurriculumOverview = (props: TabComponentType) => {
             heading="Curriculum Overview"
             links={[
               { name: 'Academic and Assignment' },
-              { name: 'Curriculum Management' },
+              { name: 'Curriculum' },
               { name: 'Curriculum Overview' },
+              { name: 'Curriculum Form' },
             ]}
             sx={{ px: 1, mb: 2 }}
             action={
@@ -235,7 +235,7 @@ const CurriculumOverview = (props: TabComponentType) => {
             heading="Curriculum Overview"
             links={[
               { name: 'Academic and Assignment' },
-              { name: 'Curriculum Management' },
+              { name: 'Curriculum' },
               { name: 'Curriculum Overview' },
             ]}
             sx={{ px: 1, mb: 2 }}
@@ -254,8 +254,7 @@ const CurriculumOverview = (props: TabComponentType) => {
               </Button>
             }
           />
-          <Grid2 container spacing={3}>
-            {/* <Grid2 xs={12} md={6} lg={6}>
+          {/* <Grid2 xs={12} md={6} lg={6}>
     <Card sx={{ p: 3, height: '100%' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Typography component="span" variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
@@ -316,7 +315,7 @@ const CurriculumOverview = (props: TabComponentType) => {
       </Box>
     </Card>
   </Grid2> */}
-            {/* <Grid2 xs={12}>
+          {/* <Grid2 xs={12}>
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Typography component="span" variant="h6" gutterBottom>
           Class-wise Curriculum Grid
@@ -376,82 +375,81 @@ const CurriculumOverview = (props: TabComponentType) => {
         ]}
       />
     </Grid2> */}
-            <CustomizableTable
-              tableId="curriculum-overview-table"
-              columns={[
-                { id: 'className', label: 'Class', minWidth: '100px', align: 'left' },
-                {
-                  id: 'curriculumName',
-                  label: 'Curriculum Name',
-                  minWidth: '170px',
-                  align: 'left',
+          <CustomizableTable
+            tableId="curriculum-overview-table"
+            columns={[
+              { id: 'className', label: 'Class', minWidth: '100px', align: 'left' },
+              {
+                id: 'curriculumName',
+                label: 'Curriculum Name',
+                minWidth: '170px',
+                align: 'left',
+              },
+              {
+                id: 'startDate',
+                label: 'Start Date',
+                minWidth: '130px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'endDate',
+                label: 'End Date',
+                minWidth: '130px',
+                align: 'left',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD MMM YYYY')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'subjects',
+                label: 'Subjects',
+                render(value, row) {
+                  return row.subjects.map((data: any, index: any) => (
+                    <Chip size="small" label={data.name} variant="outlined" />
+                  ));
                 },
-                {
-                  id: 'startDate',
-                  label: 'Start Date',
-                  minWidth: '130px',
-                  align: 'left',
-                  render: (value, row) => (
-                    <Typography fontSize="12px" gutterBottom>
-                      {dayjs(value).format('DD MMM YYYY')}
-                    </Typography>
-                  ),
+              },
+              {
+                id: 'status',
+                label: 'Publish',
+                render: (value: string, row: any) => (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Switch
+                      size="small"
+                      checked={value === 'Publish'}
+                      onChange={() => handleStatusChange(row.id, value as string)}
+                    />
+                  </Box>
+                ),
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      // actions={(prop) => actions({ ...props, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showThreeDots={false}
+                      handleEditClick={() => {
+                        handleEditCurriculum(row);
+                      }}
+                    />
+                  );
                 },
-                {
-                  id: 'endDate',
-                  label: 'End Date',
-                  minWidth: '130px',
-                  align: 'left',
-                  render: (value, row) => (
-                    <Typography fontSize="12px" gutterBottom>
-                      {dayjs(value).format('DD MMM YYYY')}
-                    </Typography>
-                  ),
-                },
-                {
-                  id: 'subjects',
-                  label: 'Subjects',
-                  render(value, row) {
-                    return row.subjects.map((data: any, index: any) => (
-                      <Chip size="small" label={data.name} variant="outlined" />
-                    ));
-                  },
-                },
-                {
-                  id: 'status',
-                  label: 'Publish',
-                  render: (value: string, row: any) => (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Switch
-                        size="small"
-                        checked={value === 'Publish'}
-                        onChange={() => handleStatusChange(row.id, value as string)}
-                      />
-                    </Box>
-                  ),
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  isSort: false,
-                  render(value, row) {
-                    return (
-                      <ThreeDotsActions
-                        // actions={(prop) => actions({ ...props, row })}
-                        placement="right-top"
-                        showEditIcon
-                        showThreeDots={false}
-                        handleEditClick={() => {
-                          handleEditCurriculum(row);
-                        }}
-                      />
-                    );
-                  },
-                },
-              ]}
-              data={curriculumTableData}
-            />
-          </Grid2>
+              },
+            ]}
+            data={curriculumTableData}
+          />
         </>
       )}
 
@@ -557,13 +555,13 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '250px' }}>
+        <Scrollbar sx={{ p: 2, height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 name="curriculumName"
-                label="curriculumName"
+                label="Curriculum Name"
                 value={formik.values.curriculumName}
                 onChange={formik.handleChange}
                 size="small"
@@ -584,7 +582,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            {/* <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Predefined Template"
                 name="predefinedTemplate"
@@ -614,7 +612,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
               >
                 Add Template ?
               </Typography>
-            </Grid>
+            </Grid> */}
 
             <Grid item xs={12} md={6}>
               <CustomSelect

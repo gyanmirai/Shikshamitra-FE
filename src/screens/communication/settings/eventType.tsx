@@ -127,20 +127,19 @@ const EventType = (props: TabComponentType) => {
         heading="Event Type"
         links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'Event Type' }]}
         sx={{ px: 1, mb: 2 }}
-      />
-      <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mb={3}>
-        <Box display="flex" gap={2}>
+        action={
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
+            size="small"
             onClick={() => {
               dialog.onTrue();
             }}
           >
-            Add Event Type
+            Event Type
           </Button>
-        </Box>
-      </Box>
+        }
+      />
       <CustomizableTable
         tableId="eventTypeTable"
         columns={[

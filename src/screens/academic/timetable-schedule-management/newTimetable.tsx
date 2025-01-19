@@ -547,8 +547,8 @@ const TimeTableGrid = (props: TabComponentType) => {
         heading="New Timetable"
         links={[
           { name: 'Academic and Assignment' },
+          { name: 'Time Table' },
           { name: 'New Timetable' },
-          { name: 'Dashboard' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

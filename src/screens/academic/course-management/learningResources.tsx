@@ -173,16 +173,17 @@ const LearningResources = (props: TabComponentType) => {
   return (
     <>
       {/* Breadcrumbs Section */}
-      <CustomBreadcrumbs
-        heading="Learning Resources"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Course Management' },
-          { name: 'Learning Resources' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          open ? (
+      {open ? (
+        <CustomBreadcrumbs
+          heading="Learning Resources"
+          links={[
+            { name: 'Academic and Assignment' },
+            { name: 'Course' },
+            { name: 'Learning Resources' },
+            { name: 'Add Learning Resource' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
             <Button
               variant="contained"
               size="small"
@@ -191,7 +192,18 @@ const LearningResources = (props: TabComponentType) => {
             >
               Back
             </Button>
-          ) : (
+          }
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Learning Resources"
+          links={[
+            { name: 'Academic and Assignment' },
+            { name: 'Course' },
+            { name: 'Learning Resources' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
             <Button
               variant="contained"
               size="small"
@@ -203,9 +215,9 @@ const LearningResources = (props: TabComponentType) => {
             >
               Resource
             </Button>
-          )
-        }
-      />
+          }
+        />
+      )}
 
       {/* Dialog for Creating/Editing Resource */}
       {open && (
@@ -227,7 +239,7 @@ const LearningResources = (props: TabComponentType) => {
           <Typography variant="h6" marginBottom={3} mt={3}>
             Learning Resources For Subject
           </Typography>
-          <Box display="flex" flexDirection="row" gap={2}>
+          <Box display="flex" flexDirection="row" gap={2} mb={2}>
             <CustomSelect
               options={classData?.items || []}
               value={classes}

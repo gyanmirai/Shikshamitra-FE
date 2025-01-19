@@ -5,11 +5,11 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import { ArrowBack } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Paper, Avatar, useTheme, IconButton, Typography } from '@mui/material';
+import { Box, Grid, Paper, Avatar, Button, useTheme, Typography } from '@mui/material';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import UserHoverProfile from 'src/components/student-popover';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -287,22 +287,41 @@ const StudentAttendanceDashboardScreen = () => {
   const [selectedDivision, setSelectedDivision] = useState(null);
   return (
     <Box height="100%">
-      <CustomBreadcrumbs
-        heading="Dashboard"
-        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
       {!selectedDivision ? (
-        <Box display="flex" gap={2} flexWrap="wrap">
-          {classDummyData.map((classData) => (
-            <ClassCard classItem={classData} setSelectedDivision={setSelectedDivision} />
-          ))}
-        </Box>
+        <>
+          <CustomBreadcrumbs
+            heading="Dashboard"
+            links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
+            sx={{ px: 1, mb: 2 }}
+          />
+          <Box display="flex" gap={2} flexWrap="wrap">
+            {classDummyData.map((classData) => (
+              <ClassCard classItem={classData} setSelectedDivision={setSelectedDivision} />
+            ))}
+          </Box>
+        </>
       ) : (
-        <DivisionOverview
-          selectedDivision={selectedDivision}
-          setSelectedDivision={setSelectedDivision}
-        />
+        <>
+          <CustomBreadcrumbs
+            heading="Dashboard"
+            links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                size="small"
+                variant="soft"
+                onClick={() => setSelectedDivision(null)}
+                startIcon={<Iconify icon="mingcute:back-2-fill" />}
+              >
+                Back To Dashboard
+              </Button>
+            }
+          />
+          <DivisionOverview
+            selectedDivision={selectedDivision}
+            setSelectedDivision={setSelectedDivision}
+          />
+        </>
       )}
     </Box>
   );
@@ -366,117 +385,102 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
 
   const theme = useTheme();
   return (
-    <>
-      <IconButton
-        edge="start"
-        color="inherit"
-        aria-label="back"
-        sx={{ mr: 2 }}
-        onClick={() => setSelectedDivision(null)}
-      >
-        <ArrowBack />
-      </IconButton>
-
-      <Grid container spacing={1} height="calc(100vh - 225px)">
-        <Grid item xs={3} height="100%">
-          <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
-            >
-              <Typography component="span">
-                Class : <Label color="info">{selectedDivision?.class.name}</Label>
-              </Typography>
-              <Typography component="span">
-                <Label color="success">{selectedDivision?.percentage}</Label>
-              </Typography>
-              <Typography component="span">
-                Division : <Label color="info"> {selectedDivision?.name} </Label>
-              </Typography>
+    <Grid container spacing={1} height="calc(100vh - 225px)">
+      <Grid item xs={3} height="100%">
+        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
+          >
+            <Typography component="span">
+              Class : <Label color="info">{selectedDivision?.class.name}</Label>
+            </Typography>
+            <Typography component="span">
+              <Label color="success">{selectedDivision?.percentage}</Label>
+            </Typography>
+            <Typography component="span">
+              Division : <Label color="info"> {selectedDivision?.name} </Label>
+            </Typography>
+          </Box>
+          <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
+            <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
+              {[1, 2, 3].map((student, index) => (
+                <Paper
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 1,
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease-in-out',
+                    background:
+                      selectedStudent === student ? theme.palette.action.hover : 'initial',
+                    '&:hover': {
+                      scale: '1.03',
+                      background: theme.palette.action.hover,
+                    },
+                  }}
+                  elevation={6}
+                  onClick={() => setSelectedStudent(student)}
+                >
+                  <UserHoverProfile user={{ name: 'John Doe' }} avatarComp={<Avatar> JD</Avatar>} />
+                  <Typography variant="h6">John Doe</Typography>
+                  <Label color="success">85%</Label>
+                </Paper>
+              ))}
             </Box>
-            <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
-              <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
-                {[1, 2, 3].map((student, index) => (
-                  <Paper
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      p: 1,
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease-in-out',
-                      background:
-                        selectedStudent === student ? theme.palette.action.hover : 'initial',
-                      '&:hover': {
-                        scale: '1.03',
-                        background: theme.palette.action.hover,
-                      },
-                    }}
-                    elevation={6}
-                    onClick={() => setSelectedStudent(student)}
-                  >
-                    <UserHoverProfile
-                      user={{ name: 'John Doe' }}
-                      avatarComp={<Avatar> JD</Avatar>}
-                    />
-                    <Typography variant="h6">John Doe</Typography>
-                    <Label color="success">85%</Label>
-                  </Paper>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Paper>
-        </Grid>
-        <Grid item xs={9} height="100%">
-          <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-            <Box display="flex" gap={2}>
-              <DatePicker
-                value={startDate}
-                onChange={(value) => setStartDate(value)}
-                label="Start Date"
-                slotProps={{ textField: { size: 'small' } }}
-              />
-              <DatePicker
-                value={endDate}
-                onChange={(value) => setEndDate(value)}
-                label="End Date"
-                slotProps={{ textField: { size: 'small' } }}
-              />
-            </Box>
-            <Scrollbar sx={{ height: 'calc(100% -  60px)', p: 1 }}>
-              <Grid container spacing={1}>
-                <Grid item xs={12}>
-                  <CustomizableTable
-                    tableId="attendance-table"
-                    data={[
-                      {
-                        date: '18/07/2024',
-                        status: 'Present',
-                        reason: 'Doctors Appointment',
-                        remarks: 'Student attended half-day due to medical checkup',
-                      },
-                      {
-                        date: '17/07/2024',
-                        status: 'Absent',
-                        reason: 'Traffic',
-                        remarks: 'Student informed about heavy traffic congestion',
-                      },
-                    ]}
-                    columns={[
-                      { id: 'date', label: 'Date', minWidth: '10%' },
-                      { id: 'status', label: 'Status', minWidth: '10%' },
-                      { id: 'reason', label: 'Reason', minWidth: '10%' },
-                      { id: 'remarks', label: 'Remarks', minWidth: '20%' },
-                    ]}
-                  />
-                </Grid>
-              </Grid>
-            </Scrollbar>
-          </Paper>
-        </Grid>
+          </Scrollbar>
+        </Paper>
       </Grid>
-    </>
+      <Grid item xs={9} height="100%">
+        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
+          <Box display="flex" gap={2}>
+            <DatePicker
+              value={startDate}
+              onChange={(value) => setStartDate(value)}
+              label="Start Date"
+              slotProps={{ textField: { size: 'small' } }}
+            />
+            <DatePicker
+              value={endDate}
+              onChange={(value) => setEndDate(value)}
+              label="End Date"
+              slotProps={{ textField: { size: 'small' } }}
+            />
+          </Box>
+          <Scrollbar sx={{ height: 'calc(100% -  60px)', p: 1 }}>
+            <Grid container spacing={1}>
+              <Grid item xs={12}>
+                <CustomizableTable
+                  tableId="attendance-table"
+                  data={[
+                    {
+                      date: '18/07/2024',
+                      status: 'Present',
+                      reason: 'Doctors Appointment',
+                      remarks: 'Student attended half-day due to medical checkup',
+                    },
+                    {
+                      date: '17/07/2024',
+                      status: 'Absent',
+                      reason: 'Traffic',
+                      remarks: 'Student informed about heavy traffic congestion',
+                    },
+                  ]}
+                  columns={[
+                    { id: 'date', label: 'Date', minWidth: '10%' },
+                    { id: 'status', label: 'Status', minWidth: '10%' },
+                    { id: 'reason', label: 'Reason', minWidth: '10%' },
+                    { id: 'remarks', label: 'Remarks', minWidth: '20%' },
+                  ]}
+                />
+              </Grid>
+            </Grid>
+          </Scrollbar>
+        </Paper>
+      </Grid>
+    </Grid>
   );
 };

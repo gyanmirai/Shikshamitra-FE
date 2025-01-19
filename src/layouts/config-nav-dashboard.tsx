@@ -283,12 +283,6 @@ const studentModule = {
               path: '/student/attendance/take-attendance',
               _action: 'student-attendance-take-attendance',
             },
-
-            {
-              title: 'Reports',
-              path: '/student/attendance/reports',
-              _action: 'student-attendance-reports',
-            },
             {
               title: 'Leave & Absence',
               path: '/student/attendance/leave-absent',
@@ -298,6 +292,11 @@ const studentModule = {
               title: 'Notifications History',
               path: '/student/attendance/notification',
               _action: 'student-attendance-notification',
+            },
+            {
+              title: 'Reports',
+              path: '/student/attendance/reports',
+              _action: 'student-attendance-reports',
             },
             {
               title: 'Setting',
@@ -621,29 +620,29 @@ const academicModule = {
           ],
         },
         {
-          title: 'Activity',
+          title: 'Group Management',
           path: '',
-          _action: 'activity-management',
+          _action: 'group-management',
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/activityManagement/activityDashboard',
-              _action: 'activity-management-activityDashboard',
+              path: '/academic/groupManagement/activityDashboard',
+              _action: 'group-management-activityDashboard',
             },
             {
               title: 'Dynamic Group',
-              path: '/academic/activityManagement/dynamicGroup',
-              _action: 'activity-management-dynamicGroup',
+              path: '/academic/groupManagement/dynamicGroup',
+              _action: 'group-management-dynamicGroup',
             },
             {
               title: 'Activity Management',
-              path: '/academic/activityManagement/activityManagement',
-              _action: 'activity-management-activityManagement',
+              path: '/academic/groupManagement/activityManagement',
+              _action: 'group-management-activityManagement',
             },
             {
               title: 'Student Group',
-              path: '/academic/activityManagement/studentGroup',
-              _action: 'activity-management-studentGroup',
+              path: '/academic/groupManagement/studentGroup',
+              _action: 'group-management-studentGroup',
             },
           ],
         },
@@ -791,7 +790,7 @@ const academicModule = {
               _action: 'homework-assignment-management-homeworkDashboard',
             },
             {
-              title: 'Homework Creation',
+              title: 'Homework & Assignment Creation',
               path: '/academic/homework-assignment-management/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
             },
@@ -811,6 +810,11 @@ const academicModule = {
               _action: 'homework-assignment-management-settings',
             },
           ],
+        },
+        {
+          title: 'Assign Teacher',
+          path: '/academic/assignTeacher',
+          _action: 'assign-teacher',
         },
       ],
     },
@@ -865,14 +869,14 @@ const communicationModule = {
               _action: 'announcement-schoolWiseAnnounsement',
             },
             {
-              title: 'Class Specific Announcement',
+              title: 'Class Wise Announcement',
               path: '/communication/announcement/classSpecificAnnouncement',
               _action: 'announcement-classSpecificAnnouncement',
             },
           ],
         },
         {
-          title: 'Events & Calendar',
+          title: 'Events',
           path: '/communication/eventsAndCalendar',
           _action: 'eventsAndCalendar',
           children: [
@@ -919,13 +923,13 @@ const communicationModule = {
           title: 'Meetings',
           path: '/communication/meetings',
           _action: 'meetings',
-          children: [
-            {
-              title: 'All Meetings',
-              path: '/communication/meetings/allMeetings',
-              _action: 'meetings-allMeetings',
-            },
-          ],
+          // children: [
+          //   {
+          //     title: 'All Meetings',
+          //     path: '/communication/meetings/allMeetings',
+          //     _action: 'meetings-allMeetings',
+          //   },
+          // ],
         },
         {
           title: 'Settings',
@@ -985,7 +989,7 @@ const examinationModule = {
               _action: 'examination-gradeEntry',
             },
             {
-              title: 'Assessment Management',
+              title: 'Assessment',
               path: '/examination/assessmentManagement',
               _action: 'examination-assessmentManagement',
             },
