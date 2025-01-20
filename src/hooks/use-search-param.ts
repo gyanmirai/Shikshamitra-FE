@@ -79,20 +79,30 @@ const updateSearchParams = <T>(params: URLSearchParams, updates: T | Partial<T>)
   });
 };
 
-export const useNewSearchParams = <T>(
+export const useNewSearchParamss = <T>(
   defaultValues: T = {} as T
 ): [T, (obj: T | Partial<T> | ((params: T) => T)) => void, () => void, (key: string) => void] => {
   const originalSearchParams = useSearchParams();
+
   const pathName = usePathname();
   const router = useRouter();
   const paramsValues = useRef<T>({
     ...defaultValues,
     ...parseSearchParams(new URLSearchParams(originalSearchParams.toString())),
   });
+  console.log(
+    paramsValues.current,
+    'originalSearchParams:',
+    parseSearchParams(new URLSearchParams(originalSearchParams.toString()))
+  );
 
   const searchParams = useMemo(() => {
     const params = new URLSearchParams(originalSearchParams.toString());
+
     updateSearchParams(params, paramsValues.current);
+
+    console.log('searchhParams=====', params.toString());
+
     return params;
   }, [originalSearchParams]);
 
@@ -106,23 +116,31 @@ export const useNewSearchParams = <T>(
       const updatedParams = new URLSearchParams(searchParams.toString());
       updateSearchParams(updatedParams, newParams);
 
-      paramsValues.current = parseSearchParams<T>(updatedParams);
+      // paramsValues.current = parseSearchParams<T>(updatedParams);
+
       router.push(`${pathName}?${updatedParams.toString()}`);
+
+      console.log('setSearchParams=======');
     },
-    [allSearchParams, pathName, router, searchParams]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allSearchParams, searchParams]
   );
 
-  const removeSearchParams = useCallback(() => router.push(pathName), [pathName, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const removeSearchParams = useCallback(() => router.push(pathName), []);
 
   const removeSearchParamsByKey = useCallback(
     (key: string) => {
-      const updatedParams = new URLSearchParams(searchParams.toString());
-      updatedParams.delete(key);
-      router.push(`${pathName}?${updatedParams.toString()}`);
+      console.log(key, 'key');
+      searchParams.delete(key);
+      delete (allSearchParams as Record<string, string>)[key];
+      console.log('removeSearchParamsByKey=======', allSearchParams);
+      router.push(`${pathName}?${searchParams.toString()}`);
     },
-    [pathName, router, searchParams]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParams]
   );
-
+  console.log(allSearchParams, 'allSearchParams');
   return [allSearchParams, setSearchParams, removeSearchParams, removeSearchParamsByKey];
 };
 
@@ -142,4 +160,45 @@ export const convertNextJsParamsToObject = (param: ReadonlyURLSearchParams) => {
   }
 
   return parsedParams;
+};
+
+export const useNewSearchParams = <T>(defaultValues: T = {} as T) => {
+  const nextJsParams = useSearchParams();
+  const router = useRouter();
+
+  const exitingParams = useMemo(() => new URLSearchParams(nextJsParams.toString()), [nextJsParams]);
+
+  useMemo(() => {
+    updateSearchParams(exitingParams, {
+      ...defaultValues,
+      // ...parseSearchParams<T>(exitingParams),
+    });
+  }, [defaultValues, exitingParams]);
+
+  console.log('🚀 ~ file: use-search-param.ts:170 ~ exitingParams:', exitingParams.toString());
+  const getAllParams: () => T = useCallback(
+    () => parseSearchParams(exitingParams),
+    [exitingParams]
+  );
+
+  const setSearchParams = useCallback(
+    (obj: T | Partial<T> | ((params: T) => T)) => {
+      const newParams = typeof obj === 'function' ? (obj as (params: T) => T)(getAllParams()) : obj;
+      updateSearchParams(exitingParams, newParams);
+
+      router.push(`${window.location.pathname}?${exitingParams.toString()}`);
+    },
+    [exitingParams, getAllParams, router]
+  );
+
+  const removeSearchParamsByKey = useCallback(
+    (key: string) => {
+      exitingParams.delete(key);
+      console.log(key, 'removeSearchParamsByKey=======', exitingParams.toString());
+      router.push(`${window.location.pathname}?${exitingParams.toString()}`);
+    },
+    [exitingParams, router]
+  );
+
+  return [getAllParams(), setSearchParams, removeSearchParamsByKey] as const;
 };

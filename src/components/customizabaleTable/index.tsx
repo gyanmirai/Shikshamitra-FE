@@ -154,12 +154,34 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   dateProps,
   tableId,
 }) => {
+  console.log('🚀 ~ file: index.tsx:157 ~ tableId:', tableId);
+
   const currentParams = convertNextJsParamsToObject(useSearchParams());
 
-  const [params, setParams, _removeAllParams, removeParamsByKey] = useNewSearchParams<
-    Record<string, IParams>
-  >({
-    ...currentParams,
+  // const [params, setParams, _removeAllParams, removeParamsByKey] = useNewSearchParams<
+  //   Record<string, IParams>
+  // >({
+  //   // ...currentParams,
+  //   [tableId]: {
+  //     page: 0,
+  //     rowsPerPage: 10,
+  //     searchTerm: '',
+  //     filterColumn: '',
+  //     filterType: 'contains',
+  //     dense: true,
+  //     columnSearchTerm: '',
+  //     filters: [],
+  //     sorts: [],
+  //     dateFilter: null,
+  //     dateRangeFilter: { start: null, end: null },
+  //     filterValue: '',
+  //     columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
+  //     // ...(currentParams?.[tableId] || {}),
+  //   },
+  // });
+
+  const [params, setParams, removeParamsByKey] = useNewSearchParams<Record<string, IParams>>({
+    // ...currentParams,
     [tableId]: {
       page: 0,
       rowsPerPage: 10,
@@ -177,6 +199,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
       // ...(currentParams?.[tableId] || {}),
     },
   });
+  console.log('🚀 ~ file: index.tsx:184 ~ allPaarm[][][][]:', params);
 
   const handelChangeParams = useCallback(
     (param: Partial<IParams>) => {
