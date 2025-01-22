@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceSettingPaymentMethodDialog from './component/finance-setting-payment-method-dialog';
 
@@ -48,6 +49,7 @@ let initialData: Data[] = [
 
 const FinancePaymentMethodSettingTab: React.FC = () => {
   const dialog = useBoolean();
+  const dialogForDeleteConfirmation = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(initialData);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(initialData);
@@ -100,29 +102,26 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Payment Method"
-        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
-        <Button
-          startIcon={<Iconify icon="ic:outline-plus" />}
-          onClick={() => {
-            setIsEdit(false);
-            dialog.onTrue();
-          }}
-          variant="contained"
-          size="small"
-        >
-          Payment Method
-        </Button>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Payment Method"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
+          <Button
+            startIcon={<Iconify icon="ic:outline-plus" />}
+            onClick={() => {
+              setIsEdit(false);
+              dialog.onTrue();
+            }}
+            variant="contained"
+            size="small"
+          >
+            Payment Method
+          </Button>
+        </Box>
       </Box>
-      {/* <Box>
-        <Typography component="span" variant="h6" gutterBottom>
-          Payment Methods Overview
-        </Typography>
-      </Box> */}
       <CustomizableTable
         tableId="finance-payment-method-setting-table"
         columns={[
@@ -158,7 +157,8 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
                 showThreeDots={false}
                 showDeleteIcon
                 handleDeleteClick={() => {
-                  handleDelete(row);
+                  dialogForDeleteConfirmation.onTrue();
+                  // handleDelete(row);
                 }}
                 showEditIcon
                 handleEditClick={() => {
@@ -173,6 +173,18 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
         ]}
         data={tableData}
       />
+
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+        />
+      )}
       {dialog.value && selectedEntry && (
         <FinanceSettingPaymentMethodDialog
           onSave={handleSave}

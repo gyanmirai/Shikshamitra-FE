@@ -587,7 +587,7 @@ const FinanceStudentFeeManagement = () => {
 
             render(value, row) {
               return (
-                <Typography minWidth="100px" fontSize="12px" color="green">
+                <Typography minWidth="100px" fontSize="12px" color="#1a8877">
                   {formatNumber(row.totalPaid, 'INR')}
                 </Typography>
               );

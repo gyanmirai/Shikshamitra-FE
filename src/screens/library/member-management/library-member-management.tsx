@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import AddNewMemberDialog from './component/add-new-member-dialog';
 import CommonCtaComponent from '../component/common-cta-component';
@@ -156,6 +156,7 @@ const LibraryMemberManagementScreen = () => {
   const issueBookDialog = useBoolean();
   const returnBookDialog = useBoolean();
   const memberDetailsDialog = useBoolean(); // State for Member Details Dialog
+  const dialogForDeleteConfirmation = useBoolean();
 
   const openDialog = (dialog: any, entry: any = null, editMode = false, renew = false) => {
     setSelectedEntry(entry);
@@ -177,49 +178,20 @@ const LibraryMemberManagementScreen = () => {
 
   const renderTableActions = (row: any) => (
     <ThreeDotsActions
+      showThreeDots={false}
       placement="right-top"
-      actions={({ popover }: any) => (
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              openDialog(addMemberDialog, row, true);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
-          {row.memberStatus === 'Expired' && (
-            <MenuItem
-              onClick={() => {
-                openDialog(addMemberDialog, row, false, true);
-                popover.onClose();
-              }}
-            >
-              <Iconify icon="solar:pen-bold" />
-              Renew Membership
-            </MenuItem>
-          )}
-          <MenuItem
-            onClick={() => {
-              console.log('Delete:', row);
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
-          {/* View Details Menu Item */}
-          <MenuItem
-            onClick={() => {
-              openDialog(memberDetailsDialog, row);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:eye-bold" />
-            View Details
-          </MenuItem>
-        </MenuList>
-      )}
+      showDeleteIcon
+      showEditIcon
+      showViewIcon
+      handleDeleteClick={() => {
+        dialogForDeleteConfirmation.onTrue();
+      }}
+      handleEditClick={() => {
+        openDialog(addMemberDialog, row, true);
+      }}
+      handleViewClick={() => {
+        openDialog(memberDetailsDialog, row);
+      }}
     />
   );
 
@@ -250,7 +222,7 @@ const LibraryMemberManagementScreen = () => {
             label: 'Current Issue',
             render(value, row) {
               return (
-                <Typography fontSize="12px" textAlign="center">
+                <Typography fontSize="12px" textAlign="left" pl="30px">
                   {value}
                 </Typography>
               );
@@ -261,7 +233,7 @@ const LibraryMemberManagementScreen = () => {
             label: 'Pending Return',
             render(value, row) {
               return (
-                <Typography fontSize="12px" textAlign="center">
+                <Typography fontSize="12px" textAlign="left" pl="30px">
                   {value}
                 </Typography>
               );
@@ -272,7 +244,7 @@ const LibraryMemberManagementScreen = () => {
             label: 'Overdue Return',
             render(value, row) {
               return (
-                <Typography fontSize="12px" textAlign="center">
+                <Typography fontSize="12px" textAlign="left" pl="30px">
                   {value}
                 </Typography>
               );
@@ -283,7 +255,12 @@ const LibraryMemberManagementScreen = () => {
             label: 'Member Status',
             render(value) {
               return (
-                <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
+                <Label
+                  textAlign="left"
+                  pl="30px"
+                  variant="soft"
+                  color={value === 'Active' ? 'success' : 'error'}
+                >
                   {value}
                 </Label>
               );
@@ -293,7 +270,17 @@ const LibraryMemberManagementScreen = () => {
         ]}
         data={memberDummyData}
       />
-
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+        />
+      )}
       {addMemberDialog.value && (
         <AddNewMemberDialog
           dialogValue={addMemberDialog.value}

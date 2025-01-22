@@ -57,6 +57,10 @@ const LibraryTimingSetting: React.FC = () => {
         <Button variant="outlined">Save</Button>
       </Box>
       <CustomizableTable
+        isFilter={false}
+        isPagination={false}
+        isLoading={false}
+        isSearch={false}
         tableId="library-timing-setting"
         columns={[
           { id: 'day', label: 'Day' },

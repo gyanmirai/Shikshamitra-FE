@@ -13,6 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
 import FinanceEditFeeStructureSettingDialog from './component/finance-edit-fee-structure-setting-dialog';
@@ -98,6 +99,7 @@ const initialData: Data[] = [
 const FinanceFeeStructureSettingTab = () => {
   const dialog = useBoolean();
   const financeEditFeeStructureDialog = useBoolean();
+  const dialogForDeleteConfirmation = useBoolean();
 
   const [selectedEntry, setSelectedEntry] = useState<Data[]>(initialData);
   const [isEdit, setIsEdit] = useState(false);
@@ -268,25 +270,29 @@ const FinanceFeeStructureSettingTab = () => {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Fee Structure"
-        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-        {/* <Button variant="contained" size="small">
-          Save
-        </Button> */}
-        <Button
-          startIcon={<Iconify icon="ic:outline-plus" />}
-          onClick={dialog.onTrue}
-          variant="contained"
-          size="small"
-        >
-          New Fee Structure
-        </Button>
+      <Box
+        pb="20px"
+        display="flex"
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <CustomBreadcrumbs
+          heading="Fee Structure"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box display="flex" flexDirection="row" justifyContent="flex-end">
+          <Button
+            startIcon={<Iconify icon="ic:outline-plus" />}
+            onClick={dialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            New Fee Structure
+          </Button>
+        </Box>
       </Box>
-      <Box pb="20px" />
 
       <CustomizableTable
         tableId="finance-fee-structure-setting-tab"
@@ -294,47 +300,6 @@ const FinanceFeeStructureSettingTab = () => {
           {
             id: 'bookRecipt',
             label: 'Receipt Book',
-
-            // children(row) {
-            //   const switchState = switchStates[row.id] || [];
-            //   return (
-            //     <>
-            //       {row.feeSubCategoryList.length > 0 ? (
-            //         <Box display="flex" gap={2} alignItems="center">
-            //           {row.feeSubCategoryList.map((val: any, index: any) => (
-            //             <React.Fragment key={index}>
-            //               <Box display="flex" alignItems="center" gap={1}>
-            //                 <Paper elevation={4} sx={{ p: 2, fontSize: '13PX' }}>
-            //                   {val.name}: {formatNumber(val.amount, 'INR')}
-            //                   <Switch
-            //                     checked={switchState[index]}
-            //                     onChange={() => handleSwitchChange(row.id, index)}
-            //                   />
-            //                   <Typography fontSize="13PX">
-            //                     Monthly: {formatNumber(val.amount / 12, 'INR')}
-            //                   </Typography>
-            //                   <Typography fontSize="13PX">
-            //                     Quartly: {formatNumber(val.amount / 4, 'INR')}
-            //                   </Typography>
-            //                   <Typography fontSize="13PX">
-            //                     Bi-annual: {formatNumber(val.amount / 2, 'INR')}
-            //                   </Typography>
-            //                   <Typography fontSize="13PX">
-            //                     Yearly: {formatNumber(val.amount, 'INR')}
-            //                   </Typography>
-            //                 </Paper>
-            //               </Box>
-            //             </React.Fragment>
-            //           ))}
-            //         </Box>
-            //       ) : (
-            //         <Box>
-            //           <Typography>No data</Typography>
-            //         </Box>
-            //       )}
-            //     </>
-            //   );
-            // },
           },
           { id: 'applicableGrade', label: 'Applicable Class' },
 
@@ -399,7 +364,9 @@ const FinanceFeeStructureSettingTab = () => {
                   showThreeDots={false}
                   showDeleteIcon
                   handleDeleteClick={() => {
-                    handleDelete(row);
+                    dialogForDeleteConfirmation.onTrue();
+
+                    // handleDelete(row);
                   }}
                   showEditIcon
                   handleEditClick={() => {
@@ -408,36 +375,24 @@ const FinanceFeeStructureSettingTab = () => {
                     financeEditFeeStructureDialog.onTrue();
                   }}
                 />
-                // <ThreeDotsActions
-                //   actions={({ popover }) => (
-                //     <MenuList>
-                //       <MenuItem
-                //         onClick={() => {
-                //           setSelectedEntry(row);
-                //           dialog.onFalse();
-                //           financeEditFeeStructureDialog.onTrue();
-                //         }}
-                //       >
-                //         <Iconify icon="solar:pen-bold" />
-                //         Edit
-                //       </MenuItem>
-                //       <MenuItem
-                //         onClick={() => {
-                //           handleDelete(row);
-                //         }}
-                //       >
-                //         <Iconify icon="solar:trash-bin-trash-bold" />
-                //         Delete
-                //       </MenuItem>
-                //     </MenuList>
-                //   )}
-                // />
               );
             },
           },
         ]}
         data={tableData}
       />
+
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+        />
+      )}
       {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
           data={selectedEntry}

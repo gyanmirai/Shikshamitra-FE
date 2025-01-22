@@ -410,7 +410,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
   return (
     <>
       {!fromStudentDetailedView && (
-        <>
+        <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
           <CustomBreadcrumbs
             heading="Fee Refund"
             links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
@@ -463,7 +463,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               Create Request
             </Button>
           </Box>
-        </>
+        </Box>
       )}
 
       {fromStudentDetailedView && (

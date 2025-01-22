@@ -51,29 +51,26 @@ const FinanceSettingBounceCharges = () => {
   };
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Bounce Cheque Charges"
-        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Bounce Cheque Charges' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
-        <Button
-          startIcon={<Iconify icon="ic:outline-plus" />}
-          onClick={() => {
-            setIsEdit(false);
-            dialog.onTrue();
-          }}
-          variant="contained"
-          size="small"
-        >
-          New Charges
-        </Button>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Bounce Cheque Charges"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Bounce Cheque Charges' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
+          <Button
+            startIcon={<Iconify icon="ic:outline-plus" />}
+            onClick={() => {
+              setIsEdit(false);
+              dialog.onTrue();
+            }}
+            variant="contained"
+            size="small"
+          >
+            New Charges
+          </Button>
+        </Box>
       </Box>
-      {/* <Box>
-        <Typography component="span" variant="h6" gutterBottom>
-          Bounce Check Charges Overview
-        </Typography>
-      </Box> */}
       <CustomizableTable
         tableId="bounce-charges"
         columns={[

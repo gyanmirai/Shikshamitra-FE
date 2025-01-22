@@ -41,6 +41,7 @@ const AddNewBounceCheckChargesDialog: React.FC<AddNewBounceCheckChargesDialogPro
       title={`${isEdit ? 'Edit' : 'Create New'} Bounce Check Charges`}
       open={dialogValue}
       handleClose={onClose}
+      maxWidth="md"
     >
       <Box>
         <form onSubmit={handleSubmit}>

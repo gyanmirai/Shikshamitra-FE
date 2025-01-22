@@ -26,11 +26,7 @@ const TABS = [
     icon: <Iconify icon="carbon:license-maintenance" width={20} />,
     component: VehicleMaintenanceRecords,
   },
-  // {
-  //   value: 'route-history',
-  //   label: 'Route History',
-  //   component: VehicleRouteHistory,
-  // },
+
   {
     value: 'log-book',
     label: 'Log Book',

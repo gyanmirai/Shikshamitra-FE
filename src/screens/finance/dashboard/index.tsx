@@ -165,7 +165,7 @@ const FinanceDashboardScreen = () => {
           </Grid> */}
         </Grid>
 
-        <Grid container spacing={2} sx={{ pt: '20px' }}>
+        <Grid container spacing={2} sx={{ pt: '20px', px: '10px' }}>
           <Grid item xs={12} md={6}>
             <BankingBalanceStatistics
               title="Expense statistics"
@@ -205,7 +205,7 @@ const FinanceDashboardScreen = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} px={1}>
             <BankingBalanceStatistics
               title="Income statistics"
               // subheader="Statistics on balance over time"

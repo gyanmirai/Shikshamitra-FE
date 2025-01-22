@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceTaxSettingDialog from './component/finance-tax-setting-dialog';
 
@@ -46,6 +47,7 @@ const FinanceTaxSettingTab = () => {
   const [tableData, setTableData] = useState(data);
   const [open, setOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState([]);
+  const dialogForDeleteConfirmation = useBoolean();
   // const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   const handleViewCategories = (region: any) => {
@@ -108,17 +110,23 @@ const FinanceTaxSettingTab = () => {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Tax Settings"
-        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Tax Settings' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box
+        display="flex"
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center"
+        pb="20px"
+      >
+        <CustomBreadcrumbs
+          heading="Tax Settings"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Tax Settings' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+
         <Button onClick={dialog.onTrue} variant="contained" size="small">
           Add New Tax
         </Button>
       </Box>
-      <Box pb="20px" />
 
       <CustomizableTable
         tableId="finance-tax-setting-table"
@@ -191,6 +199,7 @@ const FinanceTaxSettingTab = () => {
                   showThreeDots={false}
                   showDeleteIcon
                   handleDeleteClick={() => {
+                    dialogForDeleteConfirmation.onTrue();
                     handleDelete(row);
                   }}
                   showEditIcon
@@ -206,6 +215,18 @@ const FinanceTaxSettingTab = () => {
         ]}
         data={tableData}
       />
+
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+        />
+      )}
       <Box>
         {dialog.value && selectedEntry && (
           <FinanceTaxSettingDialog

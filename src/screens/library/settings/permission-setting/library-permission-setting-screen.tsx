@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -33,33 +34,37 @@ const LibraryPermissionSettingScreen = () => {
   const [isEdit, setIsEdit] = useState<any>(false);
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Permission Setting"
-        links={[
-          { name: 'Library' },
-          { name: 'Setting' },
-          { name: 'Permission Setting' },
-          // {
-          //   name:
-          //     searchParams.tab !== 'Fee-structure-overview'
-          //       ? 'Student Fee Management'
-          //       : 'Fee-Structure-Overview',
-          // },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box display="flex" flexDirection="row" justifyContent="flex-end">
-        <Button
-          onClick={() => {
-            setIsEdit(false);
-            addRoleAndPermissionDialog.onTrue();
-          }}
-          variant="contained"
-          size="small"
-        >
-          Add Role And Permission
-        </Button>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Permission Setting"
+          links={[
+            { name: 'Library' },
+            { name: 'Setting' },
+            { name: 'Permission Setting' },
+            // {
+            //   name:
+            //     searchParams.tab !== 'Fee-structure-overview'
+            //       ? 'Student Fee Management'
+            //       : 'Fee-Structure-Overview',
+            // },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box display="flex" flexDirection="row" justifyContent="flex-end">
+          <Button
+            startIcon={<Add />}
+            onClick={() => {
+              setIsEdit(false);
+              addRoleAndPermissionDialog.onTrue();
+            }}
+            variant="contained"
+            size="small"
+          >
+            Add Role And Permission
+          </Button>
+        </Box>
       </Box>
+
       <CustomizableTable
         tableId="library-permission-setting-table"
         isFilter={false}

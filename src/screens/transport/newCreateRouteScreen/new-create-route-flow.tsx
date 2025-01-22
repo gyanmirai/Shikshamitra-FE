@@ -215,15 +215,23 @@ const NewCreateRouteScreen = () => {
   };
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Routes and Schedules"
-        links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-        <Button onClick={dialog.onTrue} variant="contained" size="small">
-          Create New Route
-        </Button>
+      <Box
+        pb="20px"
+        display="flex"
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <CustomBreadcrumbs
+          heading="Routes and Schedules"
+          links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box display="flex" flexDirection="row" justifyContent="flex-end">
+          <Button onClick={dialog.onTrue} variant="contained" size="small">
+            Create New Route
+          </Button>
+        </Box>
       </Box>
 
       <CustomizableTable

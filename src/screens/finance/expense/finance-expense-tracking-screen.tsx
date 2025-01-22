@@ -13,6 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceExpenseDetailsDialog from './component/finance-expense-details-dialog';
 import FinanceAddExpenseTrackingDialog from './component/finance-add-expense-tracking-dialog';
@@ -29,31 +30,6 @@ interface ExpenseData {
 }
 
 let expenseData: ExpenseData[] = [
-  // {
-  //   id: 1,
-  //   expenseCategory: 'Office Rent',
-  //   expenseAmount: '1000',
-  //   paymentMethod: 'Bank Transfer',
-  //   date: '2024-09-10',
-  //   paymentStatus: 'Paid',
-  //   action: 'View',
-  //   incomeList: [
-  //     {
-  //       incomeName: "Tuition Fees",
-  //       amount: 25000,
-  //       date: "11-10-2024"
-
-  //     },
-  //     {
-  //       incomeName: "Tuition Fees",
-  //       amount: 25000,
-  //       date: "12-10-2024"
-
-  //     },
-
-  //   ]
-  // },
-
   {
     id: 3,
     expenseCategory: 'Internet Bills',
@@ -80,6 +56,7 @@ let expenseData: ExpenseData[] = [
 const FinanceExpenseTrackingScreen = () => {
   const dialog = useBoolean();
   const dialogForDetailsInExpense = useBoolean();
+  const dialogForDeleteConfirmation = useBoolean();
   const [selectedExpense, setSelectedExpense] = useState(expenseData);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(expenseData);
@@ -134,31 +111,28 @@ const FinanceExpenseTrackingScreen = () => {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Expense Tracking"
-        links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box
-        sx={{ mr: '15px', mb: '20px' }}
-        gap={3}
-        display="flex"
-        flexDirection="row"
-        justifyContent="flex-end"
-      >
-        <Button
-          startIcon={<Iconify icon="ic:outline-plus" />}
-          onClick={dialog.onTrue}
-          variant="contained"
-          size="small"
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Expense Tracking"
+          links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box
+          sx={{ mr: '15px', mb: '20px' }}
+          gap={3}
+          display="flex"
+          flexDirection="row"
+          justifyContent="flex-end"
         >
-          New Expense
-        </Button>
-      </Box>
-      <Box>
-        {/* <Typography component="span" variant="h6" gutterBottom>
-          Expense Overview
-        </Typography> */}
+          <Button
+            startIcon={<Iconify icon="ic:outline-plus" />}
+            onClick={dialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            New Expense
+          </Button>
+        </Box>
       </Box>
       <CustomizableTable
         tableId="expenseTable"
@@ -166,29 +140,6 @@ const FinanceExpenseTrackingScreen = () => {
           {
             id: 'expenseCategory',
             label: 'Expense Category',
-            // children(row) {
-            //   return (
-            //     <CustomizableTable
-            //       isFilter={false}
-            //       isPagination={false}
-            //       isSearch={false}
-            //       columns={[
-            //         { id: 'expenseName', label: 'Expense Name' },
-            //         {
-            //           id: 'amount',
-            //           label: 'Amount',
-            //           render(value) {
-            //             return (
-            //               <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
-            //             );
-            //           },
-            //         },
-            //         { id: 'date', label: 'Received Date' },
-            //       ]}
-            //       data={row.expenseList}
-            //     />
-            //   );
-            // },
           },
           {
             id: 'expenseAmount',
@@ -236,7 +187,8 @@ const FinanceExpenseTrackingScreen = () => {
                   }}
                   showDeleteIcon
                   handleDeleteClick={() => {
-                    handleDelete(row);
+                    dialogForDeleteConfirmation.onTrue();
+                    // handleDelete(row);
                   }}
                   showEditIcon
                   handleEditClick={() => {
@@ -244,37 +196,6 @@ const FinanceExpenseTrackingScreen = () => {
                     setSelectedExpense(row);
                     dialog.onTrue();
                   }}
-                  // actions={({ popover }: any) => (
-                  //   <MenuList>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         console.log('data row', row);
-
-                  //       }}
-                  //     >
-                  //       <Iconify icon="mdi:eye" />
-                  //       View Details
-                  //     </MenuItem>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         setIsEdit(true);
-                  //         setSelectedExpense(row);
-                  //         dialog.onTrue();
-                  //       }}
-                  //     >
-                  //       <Iconify icon="solar:pen-bold" />
-                  //       Edit
-                  //     </MenuItem>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         handleDelete(row);
-                  //       }}
-                  //     >
-                  //       <Iconify icon="solar:trash-bin-trash-bold" />
-                  //       Delete
-                  //     </MenuItem>
-                  //   </MenuList>
-                  // )}
                 />
               );
             },
@@ -282,6 +203,18 @@ const FinanceExpenseTrackingScreen = () => {
         ]}
         data={tableData}
       />
+
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+        />
+      )}
       <Box>
         {dialog.value && selectedExpense && (
           <FinanceAddExpenseTrackingDialog

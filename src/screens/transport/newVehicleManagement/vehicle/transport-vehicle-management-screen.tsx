@@ -2,13 +2,11 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import IconEnum from 'src/utils/common-icon';
-
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -125,22 +123,26 @@ const TransportVehicleSettingScreen = () => {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Vehicle Management"
-        links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Vehicle Management"
+          links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
 
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          onClick={() => {
-            vehicleFormDilog.onTrue();
-          }}
-          variant="contained"
-        >
-          Add Vehicle
-        </Button>
+        <Box display="flex" justifyContent="flex-end">
+          <Button
+            startIcon={<Add />}
+            onClick={() => {
+              vehicleFormDilog.onTrue();
+            }}
+            variant="contained"
+          >
+            Add Vehicle
+          </Button>
+        </Box>
       </Box>
+
       <CustomizableTable
         tableId="vehicle-management-table"
         data={Vehicledata}
@@ -187,34 +189,17 @@ const TransportVehicleSettingScreen = () => {
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          // setIsEdit(true);
-                          setSelectedEntry(row);
+                  showThreeDots={false}
+                  showEditIcon
+                  showViewIcon
+                  handleEditClick={() => {}}
+                  handleViewClick={() => {
+                    setSelectedEntry(row);
 
-                          console.log('row', row);
+                    console.log('row', row);
 
-                          vehicleDetailsDilog.onTrue();
-                        }}
-                      >
-                        <Iconify icon={IconEnum.VIEW} />
-                        View
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          // setIsEdit(true);
-                          // setSelectedEntry(row);
-                          // driverFormDilog.onTrue();
-                        }}
-                      >
-                        <Iconify icon={IconEnum.EDIT} />
-                        Edit
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                    vehicleDetailsDilog.onTrue();
+                  }}
                 />
               );
             },
@@ -250,16 +235,6 @@ const TransportVehicleSettingScreen = () => {
           <TransportVehicleDetailView vehicleNumber={selectedEntry} />
         </Scrollbar>
       </CustomDialog>
-
-      {/* {vehicleDetailsDilog.value &&
-                <ViewVehicleDetailsDialog
-                    onClose={() => { vehicleDetailsDilog.onFalse() }}
-                    vehicle={selectedEntry}
-                    open={vehicleDetailsDilog.value}
-
-                />
-
-            } */}
     </>
   );
 };
