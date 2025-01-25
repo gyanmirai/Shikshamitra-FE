@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { Box, Tab, Card } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -308,7 +308,7 @@ const bookData = [
 ];
 
 const LibraryCirculationScreen = () => {
-  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'reservations-Management' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'reservations-Management' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

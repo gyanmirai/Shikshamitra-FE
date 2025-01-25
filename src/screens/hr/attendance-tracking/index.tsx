@@ -11,7 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Tab, Card, Tabs, Paper, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -37,7 +37,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import TeacherAttendanceTracking from './teacher-attendance-tracking';
 
 const AttendanceTrackingScreen = () => {
-  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'dateWise' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
   const { userInfo } = useSelector((store: any) => store.user);
   const MAIN_TABS = [
     { value: 'dateWise', label: 'Date Wise' },

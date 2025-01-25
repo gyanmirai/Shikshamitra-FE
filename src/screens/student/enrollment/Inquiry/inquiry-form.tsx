@@ -16,18 +16,22 @@ import {
   MenuItem,
   TextField,
   InputLabel,
+  Typography,
   FormControl,
   DialogActions,
 } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import calculateAge from 'src/utils/calculate-age';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
+import { InquiryStatusType } from 'src/enums/inquiry-status-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
 import {
   useAddStudentInquiryMutation,
@@ -36,7 +40,11 @@ import {
 
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import StandardAddress from 'src/components/stardard-address';
+
+import { InquiryPreferenceForm } from '../setting/inquiryPreference';
 
 import type { IInquiryData } from '.';
 
@@ -95,8 +103,12 @@ interface FormikValues {
   state: string;
   pinCode: number;
   medium: string;
-  formNo: string;
+  formNo: string | undefined;
   board: string;
+  country: string;
+  addressLine1: string;
+  addressLine2: string;
+  addressLine3: string;
 }
 
 const InquiryForm = ({
@@ -106,12 +118,13 @@ const InquiryForm = ({
   handleClose: () => void;
   editData: IInquiryData | null;
 }) => {
+  const dialog = useBoolean();
   const initialValues = {
     // inquiryNumber: '12345',
     // organization: '',
     medium: editData?.educationMediumId || '',
     academicYear: editData?.academicYearId || '',
-    class: editData?.standerdId || '',
+    class: editData?.standardId || '',
     lastName: editData?.lastName || '',
     city: editData?.city || '',
     state: editData?.state || '',
@@ -129,16 +142,20 @@ const InquiryForm = ({
     previousSchool: editData?.previousSchoolName || '',
     inquiryPreferences: editData?.inquiryPreferenceId || '',
     board: editData?.educationBoardId || '',
-    formNo: editData?.formNumber || '',
+    formNo: editData?.formNumber || undefined,
+    country: editData?.country || '',
+    addressLine1: editData?.addressLine1 || '',
+    addressLine2: editData?.addressLine2 || '',
+    addressLine3: editData?.addressLine3 || '',
     // organization: editData?. || '',
   };
   const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
   });
-  const { data: classes, isLoading: classLoading } = useQueryAndMutation({
+  const [getClassByOrganization, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
+    currentQueryAndMutation: useLazyGetClassByOrganizationIdQuery,
   });
   const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
@@ -186,11 +203,12 @@ const InquiryForm = ({
                   alternativeContactNumber: values.alternateContactDetails,
                   city: values.city,
                   state: values.state,
-                  pinCode: values.pinCode,
+                  pinCode: +values.pinCode,
                   address: values.address,
+                  inquiryStatusType: 0,
                   educationMediumId: values.medium,
                   academicYearId: values.academicYear,
-                  standerdId: values.class,
+                  standardId: values.class,
                   inquiryPreferenceId: values.inquiryPreferences,
 
                   educationBoardId: values.board,
@@ -211,11 +229,12 @@ const InquiryForm = ({
                 alternativeContactNumber: values.alternateContactDetails,
                 city: values.city,
                 state: values.state,
-                pinCode: values.pinCode,
+                pinCode: +values.pinCode,
                 address: values.address,
+                inquiryStatusType: InquiryStatusType.Pending,
                 educationMediumId: values.medium,
                 academicYearId: values.academicYear,
-                standerdId: values.class,
+                standardId: values.class,
                 inquiryPreferenceId: values.inquiryPreferences,
                 educationBoardId: values.board,
               });
@@ -291,7 +310,10 @@ const InquiryForm = ({
                     value={values.medium}
                     labelKey="name"
                     valueKey="id"
-                    onChange={(value) => setFieldValue('medium', value)}
+                    onChange={(value) => {
+                      getClassByOrganization(value);
+                      setFieldValue('medium', value);
+                    }}
                     error={!!(touched.medium && errors.medium) || false}
                     helperText={(touched.medium && errors.medium) || ''}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -358,10 +380,11 @@ const InquiryForm = ({
                   <CustomSelect
                     name="class"
                     label="Class"
+                    disabled={!values.medium}
                     isLoading={classLoading}
                     labelKey="name"
                     valueKey="id"
-                    options={classes?.items}
+                    options={classes || []}
                     value={values.class}
                     onChange={(value) => setFieldValue('class', value)}
                     error={!!(touched.class && errors.class) || false}
@@ -487,7 +510,7 @@ const InquiryForm = ({
 
                 <Grid item xs={6}>
                   <CustomSelect
-                    label="Enquiry Preferences"
+                    label="Inquiry Preferences"
                     name="inquiryPreferences"
                     isLoading={inquiryPrefrenceLoading}
                     options={inquiryPreference?.items || []}
@@ -502,51 +525,112 @@ const InquiryForm = ({
                       },
                     }}
                   />
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    textAlign="right"
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      dialog.onTrue();
+                    }}
+                  >
+                    add Inquiry Preferences
+                  </Typography>
                 </Grid>
-                <Grid item xs={4}>
-                  <Field
-                    as={TextField}
+                <Grid item xs={12} md={4}>
+                  <StandardAddress.RenderAddressField
+                    name="addressLine1"
+                    label="Address Line 1"
+                    value={values.addressLine1}
+                    onChange={handleChange}
+                    error={touched.addressLine1 && Boolean(errors.addressLine1)}
+                    helperText={touched.addressLine1 && errors.addressLine1}
                     fullWidth
+                    placeholder="Address Line 1"
                     size="small"
-                    name="city"
-                    label="City"
-                    error={touched.city && errors.city}
-                    helperText={touched.city && errors.city}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <StandardAddress.RenderAddressField
+                    name="addressLine2"
+                    label="Address Line 2"
+                    value={values.addressLine2}
+                    onChange={handleChange}
+                    error={touched.addressLine2 && Boolean(errors.addressLine2)}
+                    helperText={(touched.addressLine2 && errors.addressLine2) || ''}
+                    fullWidth
+                    placeholder="Address Line 2"
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <StandardAddress.RenderAddressField
+                    name="addressLine3"
+                    label="Address Line 3"
+                    value={values.addressLine3}
+                    onChange={handleChange}
+                    error={touched.addressLine3 && Boolean(errors.addressLine3)}
+                    helperText={(touched.addressLine3 && errors.addressLine3) || ''}
+                    fullWidth
+                    placeholder="Address Line 3"
+                    size="small"
                   />
                 </Grid>
                 <Grid item xs={4}>
-                  <Field
-                    as={TextField}
+                  <StandardAddress.RenderCountry
+                    name="country"
+                    value={values.country}
+                    onChange={(value) => setFieldValue('country', value)}
+                    error={touched.country && Boolean(errors.country)}
+                    helperText={(touched.country && errors.country) || ''}
                     fullWidth
+                    placeholder="Country"
                     size="small"
+                    label="Country"
+                    options={[]}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <StandardAddress.RenderState
                     name="state"
+                    value={values.state}
+                    onChange={handleChange}
+                    error={touched.state && Boolean(errors.state)}
+                    helperText={(touched.state && errors.state) || ''}
+                    fullWidth
+                    placeholder="State"
+                    size="small"
                     label="State"
-                    error={touched.state && errors.state}
-                    helperText={touched.state && errors.state}
+                    options={[]}
                   />
                 </Grid>
                 <Grid item xs={4}>
-                  <Field
-                    as={TextField}
+                  <StandardAddress.RenderCity
+                    name="city"
+                    value={values.city}
+                    onChange={handleChange}
+                    error={touched.city && Boolean(errors.city)}
+                    helperText={(touched.city && errors.city) || ''}
                     fullWidth
+                    placeholder="City"
                     size="small"
-                    name="pinCode"
-                    label="Pincode"
-                    error={touched.pinCode && errors.pinCode}
-                    helperText={touched.pinCode && errors.pinCode}
+                    label="City"
+                    options={[]}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <Field
-                    as={TextField}
+                <Grid item xs={4}>
+                  <StandardAddress.RenderPincode
+                    name="pinCode"
+                    value={values.pinCode}
+                    onChange={handleChange}
+                    error={touched.pinCode && Boolean(errors.pinCode)}
+                    helperText={touched.pinCode && errors.pinCode}
                     fullWidth
+                    placeholder="Pincode"
                     size="small"
-                    name="address"
-                    label="Address"
-                    error={touched.address && errors.address}
-                    helperText={touched.address && errors.address}
-                    multiline
-                    rows={4}
+                    label="Pincode"
                   />
                 </Grid>
               </Grid>
@@ -560,6 +644,9 @@ const InquiryForm = ({
           </Box>
         )}
       </Formik>
+      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
+        <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
+      </CustomDialog>
     </Card>
   );
 };

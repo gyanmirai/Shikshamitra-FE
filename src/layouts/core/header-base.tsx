@@ -21,12 +21,15 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import GlobalAcademicSearch from '../components/global-academic-search';
 import { type WorkspacesPopoverProps } from '../components/workspaces-popover';
+import {
+  NotificationsDrawer,
+  type NotificationsDrawerProps,
+} from '../components/notifications-drawer';
 
 import type { HeaderSectionProps } from './header-section';
 import type { AccountDrawerProps } from '../components/account-drawer';
 import type { ContactsPopoverProps } from '../components/contacts-popover';
 import type { LanguagePopoverProps } from '../components/language-popover';
-import type { NotificationsDrawerProps } from '../components/notifications-drawer';
 
 // ----------------------------------------------------------------------
 
@@ -265,9 +268,9 @@ export function HeaderBase({
               {/* {localization && <LanguagePopover data-slot="localization" data={data?.langs} />} */}
 
               {/* -- Notifications popover -- */}
-              {/* {notifications && (
+              {notifications && (
                 <NotificationsDrawer data-slot="notifications" data={data?.notifications} />
-              )} */}
+              )}
 
               {/* -- Contacts popover -- */}
               {/* {contacts && <ContactsPopover data-slot="contacts" data={data?.contacts} />} */}
