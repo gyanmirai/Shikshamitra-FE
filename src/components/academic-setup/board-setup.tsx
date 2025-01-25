@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import {
   Tab,
   Box,
@@ -12,7 +13,6 @@ import {
   Button,
   MenuList,
   MenuItem,
-  TextField,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
@@ -20,6 +20,7 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { BoardList } from 'src/enums/board';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetBoardsQuery,
@@ -31,6 +32,7 @@ import {
 import { Iconify } from '../iconify';
 import MediumSetup from './medium-setup';
 import CustomDialog from '../customDialog';
+import CustomSelect from '../custom-select';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 
@@ -85,9 +87,9 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
     }
   }, [academicYearId, boards?.items, tabs]);
 
-  // const handelAddBoard = async () => {
-  //   modal.onTrue();
-  // };
+  const handelAddBoard = async () => {
+    modal.onTrue();
+  };
 
   const handleSetTeb = (value: Record<string, any>) => {
     tabs.setValue(value?.data?.id);
@@ -213,7 +215,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
             <CircularProgress size={20} />
           )}
         </Box>
-        {/* <Button
+        <Button
           variant="outlined"
           startIcon={<Add />}
           sx={{ maxWidth: '15%', width: '100%' }}
@@ -221,7 +223,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
           onClick={handelAddBoard}
         >
           Board
-        </Button> */}
+        </Button>
       </Box>
       {tabs.value && <MediumSetup boardId={tabs.value} />}
     </Box>
@@ -266,7 +268,7 @@ const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoa
         const res = await updateBoard({
           id: editData.id,
           body: {
-            name: values.board,
+            type: +values.board,
             academicYearId,
           },
         });
@@ -275,7 +277,7 @@ const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoa
         }
       } else {
         const res = await addBoard({
-          name: values.board,
+          type: +values.board,
           academicYearId,
         });
         if (!res.error) {
@@ -288,18 +290,25 @@ const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoa
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <TextField
+      <CustomSelect
         fullWidth
         id="board"
         name="board"
         label="Board Name"
         value={formik.values.board}
-        onChange={formik.handleChange}
+        onChange={(val) => formik.setFieldValue('board', val)}
         error={formik.touched.board && Boolean(formik.errors.board)}
-        // @ts-ignore
-        helperText={formik.touched.board && formik.errors.board}
+        helperText={((formik.touched.board && formik.errors.board) || '') as string}
         size="small"
+        options={BoardList}
+        formControlProps={{
+          fullWidth: true,
+          sx: {
+            maxWidth: 'unset',
+          },
+        }}
       />
+
       <DialogActions>
         <Button variant="outlined" size="small" onClick={handleClose}>
           Cancel

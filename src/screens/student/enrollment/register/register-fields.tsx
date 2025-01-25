@@ -1706,6 +1706,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="fatherPassOutYear"
                 label="Father Pass out Year"
+                type="number"
                 value={formik.values.fatherPassOutYear}
                 onChange={formik.handleChange}
                 error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
@@ -1889,6 +1890,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherPassOutYear"
                 label="Mother Pass out Year"
+                type="number"
                 value={formik.values.motherPassOutYear}
                 onChange={formik.handleChange}
                 error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
@@ -2076,6 +2078,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianPassOutYear"
                 label="Guardian Pass out Year"
+                type="number"
                 value={formik.values.guardianPassOutYear}
                 onChange={formik.handleChange}
                 error={
