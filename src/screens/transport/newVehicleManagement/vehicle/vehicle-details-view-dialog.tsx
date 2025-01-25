@@ -62,10 +62,10 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
     // },
   ];
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={3} alignItems="stretch">
       {/* General Information */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#dfced4' }}>
+        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Avatar style={{ backgroundColor: '#54182d' }}>
@@ -79,31 +79,25 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
             <Typography color="#5e3241" variant="body1">
               <strong>Name:</strong> {vehicle.name}
             </Typography>
-
             <Typography color="#5e3241" variant="body1">
               <strong>Type:</strong> {vehicle.type}
             </Typography>
-
             <Typography color="#5e3241" variant="body1">
               <strong>Capacity:</strong> {vehicle.capacity}
             </Typography>
-
             <Typography color="#5e3241" variant="body1">
               <strong>Occupied Seats:</strong> {vehicle.occupied}
             </Typography>
-
             <Typography color="#5e3241" variant="body1">
               <strong>Fuel Type:</strong> {vehicle.fuelType}
             </Typography>
-
-            {/* <Chip label={vehicle.currentStatus} color={vehicle.currentStatus === 'Active' ? 'success' : 'default'} size="small" sx={{ mt: 1 }} /> */}
           </CardContent>
         </Card>
       </Grid>
 
       {/* Insurance Details */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#dfced4' }}>
+        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Avatar style={{ backgroundColor: '#54182d' }}>
@@ -121,8 +115,7 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
               <strong>Provider:</strong> {vehicle.insurance.provider}
             </Typography>
             <Typography color="#5e3241">
-              <strong>Expiry Date: </strong>
-              {vehicle.insurance.expiryDate}
+              <strong>Expiry Date:</strong> {vehicle.insurance.expiryDate}
             </Typography>
             <Typography color="#5e3241">
               <strong>Coverage:</strong> {vehicle.insurance.coverageDetails}
@@ -133,7 +126,7 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
 
       {/* Registration Details */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#dfced4' }}>
+        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Avatar style={{ backgroundColor: '#54182d' }}>
@@ -145,8 +138,7 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
             </Stack>
             <Divider sx={{ my: 1 }} />
             <Typography color="#5e3241">
-              <strong>Number: </strong>
-              {vehicle.registrationNumber}
+              <strong>Number:</strong> {vehicle.registrationNumber}
             </Typography>
             <Typography color="#5e3241">
               <strong>Registration Date:</strong> {vehicle.registrationDate}
@@ -160,7 +152,7 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
 
       {/* Assigned Details */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ height: '100%', backgroundColor: '#dfced4' }}>
+        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Avatar style={{ backgroundColor: '#54182d' }}>
@@ -175,24 +167,23 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
               <strong>Driver:</strong> {vehicle.assignedDriver?.name || 'N/A'}
             </Typography>
             <Typography color="#5e3241">
-              <strong>Route: </strong>
-              {vehicle.assignedRoute?.name || 'N/A'}
+              <strong>Route:</strong> {vehicle.assignedRoute?.name || 'N/A'}
             </Typography>
-            <Typography />
           </CardContent>
         </Card>
       </Grid>
-      {/* <Grid item xs={12} md={12}> <RouteUI vehicleName="School Bus 1" stops={stops} /></Grid> */}
-      {/* <Grid item xs={12} md={12}> <RouteWithStops vehicleName="School Bus 1" stops={stops} /></Grid> */}
+
       {/* Assigned Students */}
       <Grid item xs={12}>
-        <Card sx={{ height: '100%' }}>
+        <Card elevation={3} style={{ backgroundColor: '#f8f4f6' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar>
+              <Avatar style={{ backgroundColor: '#54182d' }}>
                 <RouteIcon />
               </Avatar>
-              <Typography variant="h6">Assigned Students</Typography>
+              <Typography variant="h6" color="#5e3241">
+                Assigned Students
+              </Typography>
             </Stack>
             <Divider sx={{ my: 1 }} />
             <CustomizableTable
@@ -218,20 +209,6 @@ const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ veh
                 { id: 'role', label: 'Role' },
               ]}
             />
-            {/* {vehicle.studentList && vehicle.studentList.length > 0 ? (
-                                    <List>
-                                        {vehicle.studentList.map((student: any, index: number) => (
-                                            <ListItem key={index}>
-                                                <ListItemText
-                                                    primary={student.name}
-                                                    secondary={`ID: ${student.id}`}
-                                                />
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                ) : (
-                                    <Typography>No students assigned.</Typography>
-                                )} */}
           </CardContent>
         </Card>
       </Grid>

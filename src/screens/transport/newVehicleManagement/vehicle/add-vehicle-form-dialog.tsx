@@ -59,7 +59,7 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
 
   return (
     <CustomDialog
-      maxWidth="sm"
+      maxWidth="md"
       title={isEdit ? 'Edit Vehicle' : 'Add Vehicle'}
       handleClose={onClose}
       open={dialogValue}

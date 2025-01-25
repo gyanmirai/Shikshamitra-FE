@@ -13,6 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceExpenseDetailsDialog from './component/finance-expense-details-dialog';
 import FinanceAddExpenseTrackingDialog from './component/finance-add-expense-tracking-dialog';
@@ -28,32 +29,7 @@ interface ExpenseData {
   expenseList?: any;
 }
 
-let expenseData: ExpenseData[] = [
-  // {
-  //   id: 1,
-  //   expenseCategory: 'Office Rent',
-  //   expenseAmount: '1000',
-  //   paymentMethod: 'Bank Transfer',
-  //   date: '2024-09-10',
-  //   paymentStatus: 'Paid',
-  //   action: 'View',
-  //   incomeList: [
-  //     {
-  //       incomeName: "Tuition Fees",
-  //       amount: 25000,
-  //       date: "11-10-2024"
-
-  //     },
-  //     {
-  //       incomeName: "Tuition Fees",
-  //       amount: 25000,
-  //       date: "12-10-2024"
-
-  //     },
-
-  //   ]
-  // },
-
+const expenseData: ExpenseData[] = [
   {
     id: 3,
     expenseCategory: 'Internet Bills',
@@ -80,9 +56,11 @@ let expenseData: ExpenseData[] = [
 const FinanceExpenseTrackingScreen = () => {
   const dialog = useBoolean();
   const dialogForDetailsInExpense = useBoolean();
+  const dialogForDeleteConfirmation = useBoolean();
   const [selectedExpense, setSelectedExpense] = useState(expenseData);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(expenseData);
+  const [open, setOpen] = useState(false);
 
   const closeDialog = () => {
     setIsEdit(false);
@@ -127,173 +105,139 @@ const FinanceExpenseTrackingScreen = () => {
     console.log('Updated Data:', dataFromDialog);
   };
 
-  const handleDelete = (item: any) => {
-    expenseData = expenseData.filter((val) => val.id !== item.id);
-    setTableData([...expenseData]);
-  };
+  // const handleDelete = (item: any) => {
+  //   expenseData = expenseData.filter((val) => val.id !== item.id);
+  //   setTableData([...expenseData]);
+  // };
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Expense Tracking"
-        links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box
-        sx={{ mr: '15px', mb: '20px' }}
-        gap={3}
-        display="flex"
-        flexDirection="row"
-        justifyContent="flex-end"
-      >
-        <Button
-          startIcon={<Iconify icon="ic:outline-plus" />}
-          onClick={dialog.onTrue}
-          variant="contained"
-          size="small"
-        >
-          New Expense
-        </Button>
-      </Box>
-      <Box>
-        {/* <Typography component="span" variant="h6" gutterBottom>
-          Expense Overview
-        </Typography> */}
-      </Box>
-      <CustomizableTable
-        tableId="expenseTable"
-        columns={[
-          {
-            id: 'expenseCategory',
-            label: 'Expense Category',
-            // children(row) {
-            //   return (
-            //     <CustomizableTable
-            //       isFilter={false}
-            //       isPagination={false}
-            //       isSearch={false}
-            //       columns={[
-            //         { id: 'expenseName', label: 'Expense Name' },
-            //         {
-            //           id: 'amount',
-            //           label: 'Amount',
-            //           render(value) {
-            //             return (
-            //               <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
-            //             );
-            //           },
-            //         },
-            //         { id: 'date', label: 'Received Date' },
-            //       ]}
-            //       data={row.expenseList}
-            //     />
-            //   );
-            // },
-          },
-          {
-            id: 'expenseAmount',
-            label: 'Expense Amount',
-            render(value) {
-              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
-            },
-          },
-          { id: 'paymentMethod', label: 'Payment Method' },
-          { id: 'date', label: 'Date' },
-          {
-            id: 'paymentStatus',
-            label: 'Payment Status',
-            render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showThreeDots={false}
-                  showViewIcon
-                  handleViewClick={() => {
-                    dialogForDetailsInExpense.onTrue();
-                    setSelectedExpense(row);
-                  }}
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    handleDelete(row);
-                  }}
-                  showEditIcon
-                  handleEditClick={() => {
-                    setIsEdit(true);
-                    setSelectedExpense(row);
-                    dialog.onTrue();
-                  }}
-                  // actions={({ popover }: any) => (
-                  //   <MenuList>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         console.log('data row', row);
-
-                  //       }}
-                  //     >
-                  //       <Iconify icon="mdi:eye" />
-                  //       View Details
-                  //     </MenuItem>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         setIsEdit(true);
-                  //         setSelectedExpense(row);
-                  //         dialog.onTrue();
-                  //       }}
-                  //     >
-                  //       <Iconify icon="solar:pen-bold" />
-                  //       Edit
-                  //     </MenuItem>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         handleDelete(row);
-                  //       }}
-                  //     >
-                  //       <Iconify icon="solar:trash-bin-trash-bold" />
-                  //       Delete
-                  //     </MenuItem>
-                  //   </MenuList>
-                  // )}
-                />
-              );
-            },
-          },
-        ]}
-        data={tableData}
-      />
-      <Box>
-        {dialog.value && selectedExpense && (
-          <FinanceAddExpenseTrackingDialog
-            onSave={handleSave}
-            dialogValue={dialog.value}
-            onClose={closeDialog}
-            data={selectedExpense}
-            isEdit={isEdit}
-            allData={tableData}
+      {open ? (
+        <FinanceAddExpenseTrackingDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={() => {
+            setOpen(false);
+          }}
+          data={selectedExpense}
+          isEdit={isEdit}
+          allData={tableData}
+        />
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <CustomBreadcrumbs
+              heading="Expense Tracking"
+              links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box
+              sx={{ mr: '15px', mb: '20px' }}
+              gap={3}
+              display="flex"
+              flexDirection="row"
+              justifyContent="flex-end"
+            >
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => {
+                  setOpen(true);
+                }}
+                variant="contained"
+                size="small"
+              >
+                New Expense
+              </Button>
+            </Box>
+          </Box>
+          <CustomizableTable
+            tableId="expenseTable"
+            columns={[
+              {
+                id: 'expenseCategory',
+                label: 'Expense Category',
+              },
+              {
+                id: 'expenseAmount',
+                label: 'Expense Amount',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              { id: 'paymentMethod', label: 'Payment Method' },
+              { id: 'date', label: 'Date' },
+              {
+                id: 'paymentStatus',
+                label: 'Payment Status',
+                render(value, row) {
+                  return (
+                    <Label
+                      variant="soft"
+                      color={
+                        value === 'Overdue'
+                          ? 'error'
+                          : value === 'Unpaid'
+                            ? 'warning'
+                            : value === 'Paid'
+                              ? 'success'
+                              : 'default'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row: any) {
+                  return (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      showThreeDots={false}
+                      showViewIcon
+                      handleViewClick={() => {
+                        dialogForDetailsInExpense.onTrue();
+                        setSelectedExpense(row);
+                      }}
+                      showDeleteIcon
+                      handleDeleteClick={() => {
+                        dialogForDeleteConfirmation.onTrue();
+                        // handleDelete(row);
+                      }}
+                      showEditIcon
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        setSelectedExpense(row);
+                        setOpen(true);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={tableData}
           />
-        )}
-      </Box>
+        </>
+      )}
+
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+        />
+      )}
 
       {dialogForDetailsInExpense.value && (
         <FinanceExpenseDetailsDialog

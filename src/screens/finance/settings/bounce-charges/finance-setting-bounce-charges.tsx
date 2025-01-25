@@ -49,58 +49,71 @@ const FinanceSettingBounceCharges = () => {
   const handleSave = (dataFromDialog: any) => {
     closeDialog();
   };
+
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
+
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Bounce Cheque Charges"
-        links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Bounce Cheque Charges' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
-        <Button
-          startIcon={<Iconify icon="ic:outline-plus" />}
-          onClick={() => {
-            setIsEdit(false);
-            dialog.onTrue();
-          }}
-          variant="contained"
-          size="small"
-        >
-          New Charges
-        </Button>
-      </Box>
-      {/* <Box>
-        <Typography component="span" variant="h6" gutterBottom>
-          Bounce Check Charges Overview
-        </Typography>
-      </Box> */}
-      <CustomizableTable
-        tableId="bounce-charges"
-        columns={[
-          { id: 'bankName', label: 'Bank' },
-          { id: 'bounceReasone', label: 'Bounce Reasone' },
-          { id: 'bounceAmount', label: 'Bounce Amount' },
-          {
-            id: 'charges',
-            label: 'Charges',
-            render(value, row) {
-              return formatNumber(value, 'INR');
-            },
-          },
-          // { id: "gst", label: "GST" }
-        ]}
-        data={bounceBankChargesData}
-      />
-
-      {dialog.value && selectedEntry && (
+      {open ? (
         <AddNewBounceCheckChargesDialog
           onSave={handleSave}
           dialogValue={dialog.value}
-          onClose={closeDialog}
+          onClose={closeHandler}
           data={selectedEntry}
           isEdit={isEdit}
           allData={tableData}
         />
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <CustomBreadcrumbs
+              heading="Bounce Cheque Charges"
+              links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Bounce Cheque Charges' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => {
+                  setIsEdit(false);
+                  setOpen(true);
+                  // dialog.onTrue();
+                }}
+                variant="contained"
+                size="small"
+              >
+                New Charges
+              </Button>
+            </Box>
+          </Box>
+          <CustomizableTable
+            tableId="bounce-charges"
+            columns={[
+              { id: 'bankName', label: 'Bank' },
+              { id: 'bounceReasone', label: 'Bounce Reasone' },
+              { id: 'bounceAmount', label: 'Bounce Amount' },
+              {
+                id: 'charges',
+                label: 'Charges',
+                render(value, row) {
+                  return formatNumber(value, 'INR');
+                },
+              },
+              // { id: "gst", label: "GST" }
+            ]}
+            data={bounceBankChargesData}
+          />
+        </>
       )}
     </>
   );

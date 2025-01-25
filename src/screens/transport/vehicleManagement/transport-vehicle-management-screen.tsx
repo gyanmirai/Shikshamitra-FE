@@ -115,14 +115,14 @@ const TransportVehicleManagementScreen = () => {
     closeDialog();
   };
 
-  const handleDelete = (data: any) => {
-    const deletedEntry = tableData.filter((val) => val.id !== data.id);
-    setTableData(deletedEntry);
-  };
+  // const handleDelete = (data: any) => {
+  //   const deletedEntry = tableData.filter((val) => val.id !== data.id);
+  //   setTableData(deletedEntry);
+  // };
 
-  const handleDetaildDialogClick = () => {
-    dialogDetailedView.onFalse();
-  };
+  // const handleDetaildDialogClick = () => {
+  //   dialogDetailedView.onFalse();
+  // };
 
   const columnTable = [
     {

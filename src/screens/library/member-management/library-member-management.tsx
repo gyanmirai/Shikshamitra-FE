@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import AddNewMemberDialog from './component/add-new-member-dialog';
 import CommonCtaComponent from '../component/common-cta-component';
@@ -156,6 +156,7 @@ const LibraryMemberManagementScreen = () => {
   const issueBookDialog = useBoolean();
   const returnBookDialog = useBoolean();
   const memberDetailsDialog = useBoolean(); // State for Member Details Dialog
+  const dialogForDeleteConfirmation = useBoolean();
 
   const openDialog = (dialog: any, entry: any = null, editMode = false, renew = false) => {
     setSelectedEntry(entry);
@@ -177,123 +178,127 @@ const LibraryMemberManagementScreen = () => {
 
   const renderTableActions = (row: any) => (
     <ThreeDotsActions
+      showThreeDots={false}
       placement="right-top"
-      actions={({ popover }: any) => (
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              openDialog(addMemberDialog, row, true);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
-          {row.memberStatus === 'Expired' && (
-            <MenuItem
-              onClick={() => {
-                openDialog(addMemberDialog, row, false, true);
-                popover.onClose();
-              }}
-            >
-              <Iconify icon="solar:pen-bold" />
-              Renew Membership
-            </MenuItem>
-          )}
-          <MenuItem
-            onClick={() => {
-              console.log('Delete:', row);
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
-          {/* View Details Menu Item */}
-          <MenuItem
-            onClick={() => {
-              openDialog(memberDetailsDialog, row);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:eye-bold" />
-            View Details
-          </MenuItem>
-        </MenuList>
-      )}
+      showDeleteIcon
+      showEditIcon
+      showViewIcon
+      handleDeleteClick={() => {
+        dialogForDeleteConfirmation.onTrue();
+      }}
+      handleEditClick={() => {
+        openDialog(addMemberDialog, row, true);
+      }}
+      handleViewClick={() => {
+        openDialog(memberDetailsDialog, row);
+      }}
     />
   );
+  const [open, setOpen] = useState(false);
 
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
   return (
     <>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Member Management"
-          links={[{ name: 'Library' }, { name: 'Member Management' }]}
-          sx={{ px: 1, mb: 2 }}
+      {open ? (
+        <AddNewBookDialog
+          dialogValue={addNewBookDialog.value}
+          data={selectedEntry}
+          onSave={saveHandler}
+          onClose={closeHandler}
+          isEdit={isEdit}
         />
-        <CommonCtaComponent
-          bookHandler={() => openDialog(addNewBookDialog)}
-          issueBookHandler={() => openDialog(issueBookDialog)}
-          returnBookHandler={() => openDialog(returnBookDialog)}
-          createReservationHandler={() => openDialog(addMemberDialog)}
+      ) : (
+        <>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <CustomBreadcrumbs
+              heading="Member Management"
+              links={[{ name: 'Library' }, { name: 'Member Management' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <CommonCtaComponent
+              bookHandler={() => setOpen(true)}
+              issueBookHandler={() => openDialog(issueBookDialog)}
+              returnBookHandler={() => openDialog(returnBookDialog)}
+              createReservationHandler={() => openDialog(addMemberDialog)}
+            />
+          </Box>
+
+          <CustomizableTable
+            tableId="member-management"
+            columns={[
+              { id: 'memberId', label: 'Member Id' },
+              { id: 'role', label: 'Role' },
+              { id: 'name', label: 'Name' },
+              {
+                id: 'currentIssue',
+                label: 'Current Issue',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px" textAlign="left" pl="30px">
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'pendingReturn',
+                label: 'Pending Return',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px" textAlign="left" pl="30px">
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'overdueReturn',
+                label: 'Overdue Return',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px" textAlign="left" pl="30px">
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'memberStatus',
+                label: 'Member Status',
+                render(value) {
+                  return (
+                    <Label
+                      textAlign="left"
+                      pl="30px"
+                      variant="soft"
+                      color={value === 'Active' ? 'success' : 'error'}
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
+            ]}
+            data={memberDummyData}
+          />
+        </>
+      )}
+
+      {dialogForDeleteConfirmation.value && (
+        <DeleteConfirmationDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          onConfirm={() => {}}
+          title="Delete Item"
+          description="Are you sure you want to delete this item? This action cannot be undone."
         />
-      </Box>
-
-      <CustomizableTable
-        tableId="member-management"
-        columns={[
-          { id: 'memberId', label: 'Member Id' },
-          { id: 'role', label: 'Role' },
-          { id: 'name', label: 'Name' },
-          {
-            id: 'currentIssue',
-            label: 'Current Issue',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px" textAlign="center">
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'pendingReturn',
-            label: 'Pending Return',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px" textAlign="center">
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'overdueReturn',
-            label: 'Overdue Return',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px" textAlign="center">
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'memberStatus',
-            label: 'Member Status',
-            render(value) {
-              return (
-                <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
-                  {value}
-                </Label>
-              );
-            },
-          },
-          { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-        ]}
-        data={memberDummyData}
-      />
-
+      )}
       {addMemberDialog.value && (
         <AddNewMemberDialog
           dialogValue={addMemberDialog.value}
@@ -302,16 +307,6 @@ const LibraryMemberManagementScreen = () => {
           onClose={() => closeDialog(addMemberDialog)}
           isEdit={isEdit}
           isRenewMembership={isRenewMembership}
-        />
-      )}
-
-      {addNewBookDialog.value && (
-        <AddNewBookDialog
-          dialogValue={addNewBookDialog.value}
-          data={selectedEntry}
-          onSave={saveHandler}
-          onClose={() => closeDialog(addNewBookDialog)}
-          isEdit={isEdit}
         />
       )}
 

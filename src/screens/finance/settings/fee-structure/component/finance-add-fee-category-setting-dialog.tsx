@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState, useEffect } from 'react';
+import isEqual from 'lodash/isEqual';
+import { useDispatch, useSelector } from 'react-redux';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid2 from '@mui/material/Unstable_Grid2';
@@ -15,11 +19,12 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceAddFeeCategorySettingDialogProps {
@@ -127,8 +132,21 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     }
   }, [data.feeSubCategoryList, isEdit]);
 
-  const formik = useFormik<FormikValue>({
-    initialValues: {
+  const [isBulkEdit, setIsBulkEdit] = useState(false);
+
+  const calculateTotal = () =>
+    formik.values.feeType.reduce((total, feeType) => {
+      // @ts-ignore
+      const amount = parseFloat(formik.values[feeType]) || 0;
+      return total + amount;
+    }, 0);
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const dispatch = useDispatch();
+
+  const initialValues = useMemo<FormikValue>(
+    () => ({
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
       feeName: isEdit ? (data.feeCategoryName ?? '') : '',
       totalAmount: isEdit ? data.amount : totalAmount,
@@ -148,7 +166,22 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       finalFee: 0,
       chargesType: '',
       enterChargesAmount: 0,
-    },
+    }),
+    [
+      data.amount,
+      data.applicableGrade,
+      data.bookRecipt,
+      data.feeCategoryName,
+      data.feeSubCategoryList,
+      data.id,
+      data.paymentDueDate,
+      isEdit,
+      totalAmount,
+    ]
+  );
+
+  const formik = useFormik<FormikValue>({
+    initialValues,
     validationSchema,
     onSubmit: (values) => {
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
@@ -202,152 +235,171 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     },
   });
 
-  const [isBulkEdit, setIsBulkEdit] = useState(false);
+  useEffect(() => {
+    const isChanged = !isEqual(formik.values, initialValues);
+    dispatch(setIsChanges(isChanged));
+  }, [dispatch, formik.values, initialValues]);
 
-  const calculateTotal = () =>
-    formik.values.feeType.reduce((total, feeType) => {
-      // @ts-ignore
-      const amount = parseFloat(formik.values[feeType]) || 0;
-      return total + amount;
-    }, 0);
-
+  const handleCloseDialog = () => {
+    if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+      onClose();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      onClose();
+    }
+  };
   return (
-    <CustomDialog maxWidth="md" title="Add Fee Structure" open={dialogValue} handleClose={onClose}>
+    <>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Fee Structure"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
+          <Button
+            startIcon={<Iconify icon="eva:arrow-back-fill" />}
+            onClick={handleCloseDialog}
+            variant="contained"
+            size="small"
+          >
+            Back
+          </Button>
+        </Box>
+      </Box>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-          <Box>
-            <Box display="flex" gap={2} flexDirection="row">
-              <FormControlLabel
-                control={
-                  <Switch
-                    disabled={isEdit}
-                    checked={isBulkEdit}
-                    onChange={() => setIsBulkEdit(!isBulkEdit)}
-                  />
-                }
-                label="Switch to Bulk Update"
-              />
+        <Box>
+          <Box display="flex" gap={2} flexDirection="row">
+            <FormControlLabel
+              control={
+                <Switch
+                  disabled={isEdit}
+                  checked={isBulkEdit}
+                  onChange={() => setIsBulkEdit(!isBulkEdit)}
+                />
+              }
+              label="Switch to Bulk Update"
+            />
 
-              {/* <FormControlLabel
+            {/* <FormControlLabel
                 control={<Checkbox size="small" checked onChange={() => { }} />}
                 label="Set Rule For Late Fees"
               /> */}
-            </Box>
+          </Box>
 
-            <Box py="13px" display="flex" flexDirection="row" gap={4}>
+          <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            <CustomSelect
+              label="Receipt Book"
+              options={bookReciptList}
+              value={formik.values.bookRecipt}
+              onChange={(e) => formik.setFieldValue('bookRecipt', e)}
+              formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
+              error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
+              // helperText={formik.touched.bookRecipt && formik.errors.bookRecipt}
+              disabled={isEdit}
+            />
+
+            {isBulkEdit ? (
               <CustomSelect
-                label="Receipt Book"
-                options={bookReciptList}
-                value={formik.values.bookRecipt}
-                onChange={(e) => formik.setFieldValue('bookRecipt', e)}
+                multiple
+                label="Applicable Class"
+                options={[
+                  { value: '1', label: '1' },
+                  { value: '2', label: '2' },
+                  { value: '3', label: '3' },
+                ]}
+                value={formik.values.multipleApplicableGrade}
+                onChange={(selectedValues) =>
+                  formik.setFieldValue('multipleApplicableGrade', selectedValues as string[])
+                }
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
-                error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-                // helperText={formik.touched.bookRecipt && formik.errors.bookRecipt}
                 disabled={isEdit}
+                error={
+                  formik.touched.multipleApplicableGrade &&
+                  Boolean(formik.errors.multipleApplicableGrade)
+                }
+                // helperText={
+                //   formik.touched.multipleApplicableGrade &&
+                //   formik.errors.multipleApplicableGrade
+                // }
               />
-
-              {isBulkEdit ? (
-                <CustomSelect
-                  multiple
-                  label="Applicable Class"
-                  options={[
-                    { value: '1', label: '1' },
-                    { value: '2', label: '2' },
-                    { value: '3', label: '3' },
-                  ]}
-                  value={formik.values.multipleApplicableGrade}
-                  onChange={(selectedValues) =>
-                    formik.setFieldValue('multipleApplicableGrade', selectedValues as string[])
-                  }
-                  formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
-                  disabled={isEdit}
-                  error={
-                    formik.touched.multipleApplicableGrade &&
-                    Boolean(formik.errors.multipleApplicableGrade)
-                  }
-                  // helperText={
-                  //   formik.touched.multipleApplicableGrade &&
-                  //   formik.errors.multipleApplicableGrade
-                  // }
-                />
-              ) : (
-                <CustomSelect
-                  label="Applicable Class"
-                  options={[
-                    { value: '1', label: '1' },
-                    { value: '2', label: '2' },
-                    { value: '3', label: '3' },
-                  ]}
-                  value={formik.values.applicableGrade}
-                  onChange={(e) => formik.setFieldValue('applicableGrade', e)}
-                  formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
-                  disabled={isEdit}
-                  error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-                  // helperText={formik.touched.applicableGrade && formik.errors.applicableGrade}
-                />
-              )}
-            </Box>
-
-            <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            ) : (
               <CustomSelect
-                label="Fee Type"
-                options={isEdit ? availableFeeHeadList : feeHeadList}
-                value={formik.values.feeHead}
-                onChange={(selectedValues) => {
-                  formik.setFieldValue('feeHead', selectedValues);
-                  if (isEdit) {
-                    const selectedFeeHead: any = availableFeeSubCategoryList.find(
-                      (item: any) => item.value === selectedValues
-                    );
-                    if (selectedFeeHead) {
-                      formik.setFieldValue('feeAmountForAvailbleHead', selectedFeeHead.amount || 0);
-                    }
-                  }
-                }}
+                label="Applicable Class"
+                options={[
+                  { value: '1', label: '1' },
+                  { value: '2', label: '2' },
+                  { value: '3', label: '3' },
+                ]}
+                value={formik.values.applicableGrade}
+                onChange={(e) => formik.setFieldValue('applicableGrade', e)}
                 formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
-                error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-                // helperText={formik.touched.feeHead && formik.errors.feeHead}
+                disabled={isEdit}
+                error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
+                // helperText={formik.touched.applicableGrade && formik.errors.applicableGrade}
               />
+            )}
+          </Box>
 
-              {isEdit ? (
-                <TextField
-                  name="feeAmountForAvailbleHead"
-                  label="Fee Amount"
-                  value={formik.values.feeAmountForAvailbleHead}
-                  onChange={formik.handleChange}
-                  size="small"
-                  fullWidth
-                  sx={{ flex: 1 }}
-                  error={
-                    formik.touched.feeAmountForAvailbleHead &&
-                    Boolean(formik.errors.feeAmountForAvailbleHead)
+          <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            <CustomSelect
+              label="Fee Type"
+              options={isEdit ? availableFeeHeadList : feeHeadList}
+              value={formik.values.feeHead}
+              onChange={(selectedValues) => {
+                formik.setFieldValue('feeHead', selectedValues);
+                if (isEdit) {
+                  const selectedFeeHead: any = availableFeeSubCategoryList.find(
+                    (item: any) => item.value === selectedValues
+                  );
+                  if (selectedFeeHead) {
+                    formik.setFieldValue('feeAmountForAvailbleHead', selectedFeeHead.amount || 0);
                   }
-                  helperText={
-                    formik.touched.feeAmountForAvailbleHead &&
-                    formik.errors.feeAmountForAvailbleHead
-                  }
-                />
-              ) : (
-                <FormattedAmountInput
-                  label="Gross Fee"
-                  value={feeAmountState}
-                  onChange={handleFeeAmountChange}
-                  sx={{ flex: 1 }}
-                />
-              )}
-            </Box>
+                }
+              }}
+              formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
+              error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
+              // helperText={formik.touched.feeHead && formik.errors.feeHead}
+            />
 
-            <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            {isEdit ? (
               <TextField
-                name="Discount"
-                label="Discount Category"
-                value={formik.values.finalFee}
+                name="feeAmountForAvailbleHead"
+                label="Fee Amount"
+                value={formik.values.feeAmountForAvailbleHead}
+                onChange={formik.handleChange}
                 size="small"
                 fullWidth
                 sx={{ flex: 1 }}
-                disabled
+                error={
+                  formik.touched.feeAmountForAvailbleHead &&
+                  Boolean(formik.errors.feeAmountForAvailbleHead)
+                }
+                helperText={
+                  formik.touched.feeAmountForAvailbleHead && formik.errors.feeAmountForAvailbleHead
+                }
               />
-              {/* <CustomSelect
+            ) : (
+              <FormattedAmountInput
+                label="Gross Fee"
+                value={feeAmountState}
+                onChange={handleFeeAmountChange}
+                sx={{ flex: 1 }}
+              />
+            )}
+          </Box>
+
+          <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            <TextField
+              name="Discount"
+              label="Discount Category"
+              value={formik.values.finalFee}
+              size="small"
+              fullWidth
+              sx={{ flex: 1 }}
+              disabled
+            />
+            {/* <CustomSelect
                 label="Discount Category"
                 options={availableFeeHeadList}
                 value={formik.values.feeHead}
@@ -365,93 +417,93 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
               // helperText={formik.touched.feeHead && formik.errors.feeHead}
               /> */}
 
-              <FormattedAmountInput
-                label="Discount Amount"
-                value={discountAmount}
-                onChange={handleFeeDiscountAmountChange}
-                sx={{ flex: 1 }}
-              />
-            </Box>
+            <FormattedAmountInput
+              label="Discount Amount"
+              value={discountAmount}
+              onChange={handleFeeDiscountAmountChange}
+              sx={{ flex: 1 }}
+            />
+          </Box>
 
-            <Box py="13px" display="flex" flexDirection="row" gap={4}>
-              <TextField
-                name="finalAmount"
-                label="Payable Fee"
-                value={formik.values.finalFee}
-                size="small"
-                fullWidth
-                sx={{ flex: 1 }}
-                disabled
-              />
-              <CustomSelect
-                multiple
-                label="Payment Method"
-                options={[
-                  { value: 'cash', label: 'Cash' },
-                  { value: 'check', label: 'Check' },
-                ]}
-                value={formik.values.paymentMethod}
-                onChange={(e) => formik.setFieldValue('paymentMethod', e)}
-                formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
-                error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
-              />
-            </Box>
-            <Box py="13px" display="flex" flexDirection="row" gap={4}>
-              <DatePicker
-                minDate={dayjs()}
-                label="Total Fees Due Date"
-                value={formik.values.paymentDueDate}
-                onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
-                format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small' } }}
-                sx={{ width: '48%' }}
-              />
-              <CustomSelect
-                label="Late Fees Charges Type"
-                options={chargesTypeList}
-                value={formik.values.chargesType}
-                onChange={(e) => formik.setFieldValue('chargesType', e)}
-                formControlProps={{ sx: { flex: 1 } }}
-                error={formik.touched.chargesType && Boolean(formik.errors.chargesType)}
-                disabled={isEdit}
-                fullWidth
-              />
-            </Box>
+          <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            <TextField
+              name="finalAmount"
+              label="Payable Fee"
+              value={formik.values.finalFee}
+              size="small"
+              fullWidth
+              sx={{ flex: 1 }}
+              disabled
+            />
+            <CustomSelect
+              multiple
+              label="Payment Method"
+              options={[
+                { value: 'cash', label: 'Cash' },
+                { value: 'check', label: 'Check' },
+              ]}
+              value={formik.values.paymentMethod}
+              onChange={(e) => formik.setFieldValue('paymentMethod', e)}
+              formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
+              error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+              // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
+            />
+          </Box>
+          <Box py="13px" display="flex" flexDirection="row" gap={4}>
+            <DatePicker
+              minDate={dayjs()}
+              label="Total Fees Due Date"
+              value={formik.values.paymentDueDate}
+              onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
+              format="DD-MM-YYYY"
+              slotProps={{ textField: { size: 'small' } }}
+              sx={{ width: '48%' }}
+            />
+            <CustomSelect
+              label="Late Fees Charges Type"
+              options={chargesTypeList}
+              value={formik.values.chargesType}
+              onChange={(e) => formik.setFieldValue('chargesType', e)}
+              formControlProps={{ sx: { flex: 1 } }}
+              error={formik.touched.chargesType && Boolean(formik.errors.chargesType)}
+              disabled={isEdit}
+              fullWidth
+            />
+          </Box>
 
-            <Grid2 xs={12} md={6} sx={{ pt: '10px' }}>
-              <NumericFormatCustom
-                size="small"
-                label="Enter Charges Amount"
-                name="enterChargesAmount"
-                value={formik.values.enterChargesAmount}
-                onChange={formik.handleChange}
-              />
-            </Grid2>
+          <Grid2 xs={12} md={6} sx={{ pt: '10px' }}>
+            <NumericFormatCustom
+              size="small"
+              label="Enter Charges Amount"
+              name="enterChargesAmount"
+              value={formik.values.enterChargesAmount}
+              onChange={formik.handleChange}
+            />
+          </Grid2>
 
-            {/* <FormattedAmountInput
+          {/* <FormattedAmountInput
                 label="Fixed Reduction"
                 value={fixedReductionAmountState}
                 onChange={handlefixedReductionAmountChange}
                 sx={{ flex: 1 }}
               /> */}
 
-            <Box>
-              {showExistingEntryMessage && (
-                <Typography component="span" fontSize="13px" color="red">
-                  This Fee Structure Already Exists
-                </Typography>
-              )}
-            </Box>
+          <Box>
+            {showExistingEntryMessage && (
+              <Typography component="span" fontSize="13px" color="red">
+                This Fee Structure Already Exists
+              </Typography>
+            )}
           </Box>
-        </Scrollbar>
+        </Box>
+
         <DialogActions>
           <Button type="submit" variant="contained" size="small">
             Save
           </Button>
         </DialogActions>
       </form>
-    </CustomDialog>
+    </>
 
     // <CustomDialog maxWidth="md" title="Add/Edit Fee Structure" open={dialogValue} handleClose={onClose}>
     //   <form onSubmit={formik.handleSubmit}>

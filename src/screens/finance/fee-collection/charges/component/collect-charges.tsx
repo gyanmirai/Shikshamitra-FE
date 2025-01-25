@@ -46,10 +46,10 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
     },
   });
 
-  const ChargesHeadList = [
-    { value: 'latefee', label: 'Late Fee' },
-    { value: 'bouncecheck', label: 'Check Bounce' },
-  ];
+  // const ChargesHeadList = [
+  //   { value: 'latefee', label: 'Late Fee' },
+  //   { value: 'bouncecheck', label: 'Check Bounce' },
+  // ];
   const chargesList = [
     { value: 'lateFeeJan', label: 'Tuition-Jan ₹ 150', type: 'latefee' },
     { value: 'lateFeeFeb', label: 'Tuition-Feb ₹ 150', type: 'latefee' },
@@ -59,9 +59,9 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
   ];
 
   // Filter the charges based on selected fee type
-  const filteredCharges = chargesList.filter((charge) =>
-    formik.values.feeType.includes(charge.type)
-  );
+  // const filteredCharges = chargesList.filter((charge) =>
+  //   formik.values.feeType.includes(charge.type)
+  // );
 
   const chargesData = [
     {
@@ -181,6 +181,7 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
     // },
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [charges, setCharges] = useState(chargesData);
   const filteredChargesData = charges.filter((charge) =>
     formik.values.feeType.includes(charge.chargeType)

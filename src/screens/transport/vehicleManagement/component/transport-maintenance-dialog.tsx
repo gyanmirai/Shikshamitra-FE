@@ -34,6 +34,7 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
   onSave,
   onClose,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
   const formik = useFormik<FormikValue>({

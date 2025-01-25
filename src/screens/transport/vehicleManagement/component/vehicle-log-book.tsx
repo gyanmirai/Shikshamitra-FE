@@ -97,7 +97,11 @@ interface VehicleLogBookProps {
 const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicle }) => {
   const dialog = useBoolean();
   const [isEdit, setIsEdit] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tableData, setTableData] = useState(vehicleLogBook);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null);
 
   const closeDialog = () => {
