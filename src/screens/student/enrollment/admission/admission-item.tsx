@@ -23,7 +23,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import { kanbanClasses } from 'src/sections/kanban/classes';
 
-import RegisterForm from '../register/RegisterForm';
+import RegisterForm from '../register/register-form';
 
 // ----------------------------------------------------------------------
 
@@ -197,7 +197,7 @@ const AdmissionItem = forwardRef<HTMLLIElement, ItemBaseProps>(
           handleClose={() => setOpen(false)}
           title="Registration"
         >
-          <RegisterForm />
+          <RegisterForm editData={null} handleClose={() => {}} />
         </CustomDialog>
         <CustomDialog
           open={divisionDialog.value}

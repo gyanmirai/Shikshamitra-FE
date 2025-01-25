@@ -117,7 +117,7 @@ const InquiryPreference = () => {
 
 export default InquiryPreference;
 
-const InquiryPreferenceForm = ({
+export const InquiryPreferenceForm = ({
   editData,
   handleClose,
 }: {

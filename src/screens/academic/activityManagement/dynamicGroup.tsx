@@ -148,6 +148,8 @@ const DynamicGroupManagement = (props: TabComponentType) => {
           {
             id: 'name',
             label: 'Group Name',
+            minWidth: '180px',
+            align: 'left',
           },
           {
             id: 'fields',
@@ -162,7 +164,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             render(value, row) {
               return (

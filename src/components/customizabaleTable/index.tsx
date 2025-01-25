@@ -52,7 +52,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useNewSearchParams, convertNextJsParamsToObject } from 'src/hooks/use-search-param';
+import { convertNextJsParamsToObject } from 'src/hooks/use-search-param';
 
 import debounce from 'src/utils/debounce';
 
@@ -158,7 +158,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
 
   const currentParams = convertNextJsParamsToObject(useSearchParams());
 
-  // const [params, setParams, _removeAllParams, removeParamsByKey] = useNewSearchParams<
+  // const [params, setParams, _removeAllParams, removeParamsByKey] = useSearchParam<
   //   Record<string, IParams>
   // >({
   //   // ...currentParams,
@@ -180,59 +180,69 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   //   },
   // });
 
-  const [params, setParams, removeParamsByKey] = useNewSearchParams<Record<string, IParams>>({
-    // ...currentParams,
-    [tableId]: {
-      page: 0,
-      rowsPerPage: 10,
-      searchTerm: '',
-      filterColumn: '',
-      filterType: 'contains',
-      dense: true,
-      columnSearchTerm: '',
-      filters: [],
-      sorts: [],
-      dateFilter: null,
-      dateRangeFilter: { start: null, end: null },
-      filterValue: '',
-      columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
-      // ...(currentParams?.[tableId] || {}),
-    },
+  const [tableConfig, setTableConfig] = useState<IParams>({
+    page: 0,
+    rowsPerPage: 10,
+    searchTerm: '',
+    filterColumn: '',
+    filterType: 'contains',
+    dense: true,
+    columnSearchTerm: '',
+    filters: [],
+    sorts: [],
+    dateFilter: null,
+    dateRangeFilter: { start: null, end: null },
+    filterValue: '',
+    columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
   });
-  console.log('🚀 ~ file: index.tsx:184 ~ allPaarm[][][][]:', params);
+
+  // const [params, setParams, removeParamsByKey] = useSearchParam<Record<string, IParams>>({
+  //   ...currentParams,
+  //   [tableId]: {
+  //     page: 0,
+  //     rowsPerPage: 10,
+  //     searchTerm: '',
+  //     filterColumn: '',
+  //     filterType: 'contains',
+  //     dense: true,
+  //     columnSearchTerm: '',
+  //     filters: [],
+  //     sorts: [],
+  //     dateFilter: null,
+  //     dateRangeFilter: { start: null, end: null },
+  //     filterValue: '',
+  //     columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
+  //     // ...(currentParams?.[tableId] || {}),
+  //   },
+  // });
+  // console.log('🚀 ~ file: index.tsx:184 ~ allPaarm[][][][]:', params);
 
   const handelChangeParams = useCallback(
     (param: Partial<IParams>) => {
-      setParams((pre) => ({
-        ...pre,
-        [tableId]: {
-          ...pre[tableId],
-          ...param,
-        },
-      }));
+      setTableConfig((pre) => ({ ...pre, ...param }));
     },
-    [setParams, tableId]
+    [setTableConfig]
   );
 
   // const [page, setPage] = useState(0);
-  const { page } = params[tableId];
+  const { page } = tableConfig;
   // const [rowsPerPage, setRowsPerPage] = useState(10);
-  const { rowsPerPage } = params[tableId];
+  const { rowsPerPage } = tableConfig;
   // const [searchTerm, setSearchTerm] = useState('');
-  const { searchTerm } = params[tableId];
+  const { searchTerm } = tableConfig;
 
   // const [columnVisibility, setColumnVisibility] = useState<{ [key: string]: boolean }>(
   //   columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {})
   // );
-  const { columnVisibility } = params[tableId];
+  const { columnVisibility } = tableConfig;
   // const [filterColumn, setFilterColumn] = useState('');
-  const { filterColumn } = params[tableId];
+  const { filterColumn } = tableConfig;
 
   // const [filterType, setFilterType] = useState('contains');
-  const { filterType } = params[tableId];
+  const { filterType } = tableConfig;
 
   // const [filterValue, setFilterValue] = useState('');
-  const { filterValue } = params[tableId];
+  const { filterValue } = tableConfig;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -241,25 +251,25 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
 
   // const [dense, setDense] = useState(true);
-  const { dense } = params[tableId];
+  const { dense } = tableConfig;
 
   const [expandedRows, setExpandedRows] = useState<{ [key: number]: boolean }>({});
   const [searchValue, setSearchValue] = useState(searchTerm);
 
   // const [columnSearchTerm, setColumnSearchTerm] = useState<string>('');
-  const { columnSearchTerm } = params[tableId];
+  const { columnSearchTerm } = tableConfig;
 
   // const [filters, setFilters] = useState<Array<{ column: string; type: string; value: string }>>(
   //   []
   // );
-  const { filters } = params[tableId];
+  const { filters } = tableConfig;
 
   // const [sorts, setSorts] = useState<Array<{ column: string; direction: 'asc' | 'desc' }>>([]);
-  const { sorts } = params[tableId];
+  const { sorts } = tableConfig;
 
   const [filterAnchorEl, setFilterAnchorEl] = useState<ColumnFilterAnchor | null>(null);
 
-  // const { dateRangeFilter } = params[tableId][paramsKey.current];
+  // const { dateRangeFilter } = tableConfig[paramsKey.current];
 
   const handleChangePage = useCallback(
     (event: unknown, newPage: number) => {
@@ -287,13 +297,13 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     }, 500);
   }, [handelChangeParams, searchValue]);
 
-  useEffect(
-    () => () => {
-      removeParamsByKey(tableId);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tableId]
-  );
+  // useEffect(
+  //   () => () => {
+  //     removeParamsByKey(tableId);
+  //   },
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   [tableId]
+  // );
 
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -779,20 +789,13 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell rowSpan={columns.length + 1} colSpan={columns.length + 1}>
+                  <TableCell
+                    rowSpan={columns.length + 1}
+                    colSpan={columns.length + 1}
+                    sx={{ height: '50px' }}
+                  >
                     {/* <CircularProgress color="primary" size={24} /> */}
-                    <Box
-                      sx={{
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        // height: '300px',
-                        alignItems: 'center',
-                      }}
-                    >
-                      {/* <LoadingScreen /> */}
-                      <div className="loader" />
-                    </Box>
+                    <Box className="loader" height={24} />
                   </TableCell>
                 </TableRow>
               ) : paginatedData.length > 0 ? (

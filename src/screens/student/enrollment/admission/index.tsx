@@ -39,7 +39,9 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import RegisterForm from '../register/RegisterForm';
+import RegisterForm from '../register/register-form';
+
+import type { IInquiryData } from '../Inquiry';
 
 const cssVars = {
   '--item-gap': '16px',
@@ -517,6 +519,7 @@ const AdmissionScreen = () => {
   const openDetails = useBoolean();
   const [open, setOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [editData, setEditData] = useState<IInquiryData | null>(null);
 
   const counts = useMemo(
     () => ({
@@ -655,6 +658,7 @@ const AdmissionScreen = () => {
                   showEditIcon
                   showViewIcon
                   handleEditClick={() => {
+                    setEditData(row as IInquiryData);
                     setOpen(true);
                   }}
                   handleViewClick={() => {
@@ -686,10 +690,19 @@ const AdmissionScreen = () => {
       <CustomDialog
         maxWidth="xl"
         open={open}
-        handleClose={() => setOpen(false)}
+        handleClose={() => {
+          setEditData(null);
+          setOpen(false);
+        }}
         title="Registration"
       >
-        <RegisterForm />
+        <RegisterForm
+          editData={editData}
+          handleClose={() => {
+            setEditData(null);
+            setOpen(false);
+          }}
+        />
       </CustomDialog>
       <CustomDialog
         open={divisionDialog.value}

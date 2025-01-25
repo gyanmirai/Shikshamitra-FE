@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { useMemo, useEffect } from 'react';
+import { useEffect } from 'react';
 
 interface IQueryAndMutation<T> {
   type: 'query' | 'mutation';
@@ -47,15 +47,6 @@ function useQueryAndMutation<T>({
     }
   }, [isSuccess, popupConfig.success, popupConfig.successMessage]);
 
-  const response = useMemo(() => {
-    if (isThrowError && error) {
-      const rtkError = new Error(error?.data?.error?.message);
-      // @ts-ignore
-      rtkError.data = error;
-      throw rtkError;
-    }
-    return resp;
-  }, [error, isThrowError, resp]);
-  return response;
+  return resp;
 }
 export default useQueryAndMutation;

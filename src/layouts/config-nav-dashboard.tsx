@@ -378,6 +378,11 @@ const hrModule = {
           _action: 'dashboard',
         },
         {
+          title: 'Profile',
+          path: '/hr/profile',
+          _action: 'hr-profile',
+        },
+        {
           title: 'Employee',
           path: '',
           _action: 'employee',
@@ -495,8 +500,20 @@ const hrModule = {
         },
         {
           title: 'Events & Holidays',
-          path: '/hr/events-holidays',
+          path: '',
           _action: 'events-holidays',
+          children: [
+            {
+              title: 'Create Events & Holidays',
+              path: '/hr/events-holidays',
+              _action: 'events-holidays',
+            },
+            {
+              title: 'Requests',
+              path: '/hr/events-holidays/request',
+              _action: 'events-holidays-request',
+            },
+          ],
         },
         {
           title: 'Setting',

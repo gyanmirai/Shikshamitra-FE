@@ -1,8 +1,16 @@
 'use client';
 
-import React from 'react';
+import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
+
+import calculateAge from 'src/utils/calculate-age';
+
+import { GenderType } from 'src/enums/gender';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
+import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registration-form/registration-form-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -10,153 +18,147 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const RegistrationFormScreen = () => (
-  <Box>
-    <CustomBreadcrumbs
-      heading="Registration Form Details"
-      links={[
-        { name: 'Student' },
-        { name: 'Student Enroll' },
-        { name: 'Registration Form Details' },
-      ]}
-      sx={{ px: 1, mb: 2 }}
-    />
-    <CustomizableTable
-      tableId="student-registration-form-table"
-      columns={[
-        { id: 'inquiryNo', label: 'Inquiry No', minWidth: '104px' },
-        { id: 'formNo', label: 'Form No', minWidth: '90px' },
-        // { id: 'FirstName', label: 'First Name' },
-        // { id: 'MiddleName', label: 'Middle Name' },
-        { id: 'Name', label: 'Name' },
-        { id: 'Code', label: 'Code' },
-        { id: 'class', label: 'Class' },
-        { id: 'Organization', label: 'Organization' },
-        { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
-        // { id: 'EmployeeDesignation', label: 'Role' },
+import type { IInquiryData } from '../Inquiry';
 
-        {
-          id: 'StatusName',
-          label: 'Status',
-          render(value, row) {
-            return (
-              <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
-                {value}
-              </Label>
-            );
+const RegistrationFormScreen = () => {
+  const {
+    data: inquiryFormData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentRegistrationFormQuery,
+  });
+
+  const [moveToRegistration] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useMoveToRegistrationMutation,
+    popupConfig: {
+      successMessage: 'Student moved to registration successfully',
+      success: true,
+    },
+  });
+
+  const tableData = useMemo(
+    () =>
+      inquiryFormData?.items.map((item: IInquiryData) => ({
+        ...item,
+        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+        doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        genderValue: GenderType[item?.genderType],
+      })),
+    [inquiryFormData?.items]
+  );
+
+  return (
+    <Box>
+      <CustomBreadcrumbs
+        heading="Registration Form Details"
+        links={[
+          { name: 'Student' },
+          { name: 'Student Enroll' },
+          { name: 'Registration Form Details' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
+      <CustomizableTable
+        isLoading={isLoading}
+        tableId="student-registration-form-table"
+        columns={[
+          { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+          {
+            id: 'inquiryNumber',
+            label: 'Inquiry Number',
+
+            minWidth: '162px',
+            isFilter: true,
+            filterType: 'string',
           },
-        },
-        {
-          id: 'actions',
-          label: 'Actions',
-          isSort: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={(e) => {
-                        // dialog.onTrue();
-                        e.stopPropagation();
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-                      Move to Registration
-                    </MenuItem>
-                    <MenuItem
-                      onClick={(e) => {
-                        // followUpDialog.onTrue();
-                        e.stopPropagation();
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
-                      Follow Up
-                    </MenuItem>
-                  </MenuList>
-                )}
-                placement="right-top"
-              />
-            );
+          { id: 'standard.name', label: 'Class' },
+          { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+          {
+            id: 'dobValue',
+            label: 'DOB',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'date',
           },
-        },
-      ]}
-      data={[
-        {
-          Organization: 'primary',
-          Code: 'REG001',
-          Name: 'Sarah Anderson',
-          FirstName: 'Sarah',
-          MiddleName: 'Marie',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Pending',
-          parentContactNo: '+91-555-0101',
-          class: '5',
-          inquiryNo: 'INQ001',
-          progress: '100',
-          formNo: 'F001',
-        },
-        {
-          Organization: 'pre-primary',
-          Code: 'REG002',
-          Name: 'Michael Chen',
-          FirstName: 'Michael',
-          MiddleName: 'James',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Pending',
-          parentContactNo: '+91-555-0102',
-          class: 'KG-2',
-          inquiryNo: 'INQ002',
-          progress: '75',
-          formNo: 'F002',
-        },
-        {
-          Organization: 'primary',
-          Code: 'REG003',
-          Name: 'Emily Rodriguez',
-          FirstName: 'Emily',
-          MiddleName: 'Sofia',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Pending',
-          parentContactNo: '+91-555-0103',
-          class: '3',
-          inquiryNo: 'INQ003',
-          progress: '50',
-          formNo: 'F003',
-        },
-        {
-          Organization: 'secondary',
-          Code: 'REG004',
-          Name: 'David Thompson',
-          FirstName: 'David',
-          MiddleName: 'Alexander',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Pending',
-          parentContactNo: '+91-555-0104',
-          class: '9',
-          inquiryNo: 'INQ004',
-          progress: '25',
-          formNo: 'F004',
-        },
-        {
-          Organization: 'higher secondary',
-          Code: 'REG005',
-          Name: 'Lisa Wong',
-          FirstName: 'Lisa',
-          MiddleName: 'Grace',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Pending',
-          parentContactNo: '+91-555-0105',
-          class: '11',
-          inquiryNo: 'INQ005',
-          progress: '0',
-          formNo: 'F005',
-        },
-      ]}
-    />
-  </Box>
-);
+          { id: 'ageValue', label: 'Age' },
+          {
+            id: 'doiValue',
+            label: 'DOI',
+            minWidth: '120px',
+            align: 'left',
+            isDateRangeFilter: true,
+          },
+          { id: 'genderValue', label: 'Gender' },
+          { id: 'address', label: 'Address', minWidth: '120px' },
+          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
+          { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+          {
+            id: 'inquiryPreference.preferenceName',
+            label: 'Enquiry Preferences',
+            minWidth: '200px',
+          },
+
+          {
+            id: 'StatusName',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
+                  {value}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={({ popover }) => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={async (e) => {
+                          // dialog.onTrue();
+                          e.stopPropagation();
+                          popover.onClose();
+                          await moveToRegistration(row.id);
+                          refetch();
+                        }}
+                      >
+                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+                        Move to Registration
+                      </MenuItem>
+                      <MenuItem
+                        onClick={(e) => {
+                          // followUpDialog.onTrue();
+                          e.stopPropagation();
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
+                        Follow Up
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                  placement="right-top"
+                />
+              );
+            },
+          },
+        ]}
+        data={tableData || []}
+      />
+    </Box>
+  );
+};
 
 export default RegistrationFormScreen;

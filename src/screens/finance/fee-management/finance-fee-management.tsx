@@ -4,7 +4,7 @@ import React, { useMemo, useEffect } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -29,7 +29,7 @@ const TABS = [
 ];
 
 const FinanceFeeManagementScreen = () => {
-  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'Fee-structure-overview' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'Fee-structure-overview' });
 
   useEffect(() => {
     if (!searchParams.tab) {

@@ -1,6 +1,7 @@
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 import axios from 'axios';
+import { toast } from 'sonner';
 
 import { isTokenExpired } from 'src/utils/client';
 
@@ -93,6 +94,8 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
         switch (error.response.status) {
           case 401:
             // Handle unauthorized access here, if needed
+            toast.error('Unauthorized access');
+            handleLogout();
             break;
           case 404:
             // Handle not found

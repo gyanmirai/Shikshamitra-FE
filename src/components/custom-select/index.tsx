@@ -14,12 +14,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-type CustomSelectProps<T extends string, J extends boolean> = Omit<
+export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   SelectProps<J extends true ? string[] | number[] : string | number>,
   'onChange' | 'value'
 > & {
   options: { [K in T]: string | number }[];
-  label: string;
+  label?: string;
   multiple?: J;
   value: J extends true ? string[] | number[] : string | number;
   onChange: (value: J extends true ? string[] | number[] : string | number) => void;
@@ -101,7 +101,7 @@ const CustomSelect = <T extends string, J extends boolean>({
           <MenuItem disabled>
             <CircularProgress size={24} />
           </MenuItem>
-        ) : options.length === 0 ? (
+        ) : options?.length === 0 ? (
           <MenuItem disabled>{noOptionsMessage}</MenuItem>
         ) : (
           options.map((option) => (

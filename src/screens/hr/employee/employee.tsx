@@ -7,7 +7,7 @@ import Add from '@mui/icons-material/Add';
 import { Box, Grid, Card, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
@@ -30,7 +30,7 @@ import ChangeStatusForm from './chnage-status-form';
 
 const HrEmployee = () => {
   const statusDialog = useBoolean();
-  const [searchParams, setSearchParams] = useNewSearchParams<{ employee: string }>();
+  const [searchParams, setSearchParams] = useSearchParam();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
