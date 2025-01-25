@@ -13,11 +13,14 @@ import Drawer from '@mui/material/Drawer';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import { Button, TextField, DialogActions } from '@mui/material';
+import { Button, MenuItem, TextField, DialogActions } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { varAlpha } from 'src/theme/styles';
+import HrProfile from 'src/screens/hr/profile';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
 
 import { Label } from 'src/components/label';
@@ -43,6 +46,7 @@ export type AccountDrawerProps = IconButtonProps & {
 
 export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
   const theme = useTheme();
+  const profileDialog = useBoolean();
 
   // const router = useRouter();
 
@@ -160,7 +164,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
               </IconButton>
             </Tooltip>
           </Stack> */}
-          {/* 
+
           <Stack
             sx={{
               py: 3,
@@ -169,42 +173,60 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
               borderBottom: `dashed 1px ${theme.vars.palette.divider}`,
             }}
           >
-            {data.map((option) => {
-              const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
+            {[
+              {
+                label: 'Profile',
+                icon: <Iconify icon="mdi:user-box" />,
+                info: null,
+                onClick: () => {
+                  profileDialog.onTrue();
+                },
+              },
+            ].map((option) => (
+              // const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
 
-              const rootHref = pathname.includes('/dashboard') ? '/' : dashboardPath;
+              // const rootHref = pathname.includes('/dashboard') ? '/' : dashboardPath;
+              // sdadsadsad
+              <MenuItem
+                key={option.label}
+                onClick={option.onClick}
+                sx={{
+                  py: 1,
+                  color: 'text.secondary',
+                  '& svg': { width: 24, height: 24 },
+                  '&:hover': { color: 'text.primary' },
+                }}
+              >
+                {option.icon}
 
-              return (
-                <MenuItem
-                  key={option.label}
-                  onClick={() => handleClickItem(option.label === 'Home' ? rootHref : option.href)}
-                  sx={{
-                    py: 1,
-                    color: 'text.secondary',
-                    '& svg': { width: 24, height: 24 },
-                    '&:hover': { color: 'text.primary' },
-                  }}
-                >
-                  {option.icon}
+                <Box component="span" sx={{ ml: 2 }}>
+                  {option.label}
+                </Box>
 
-                  <Box component="span" sx={{ ml: 2 }}>
-                    {option.label === 'Home' ? rootLabel : option.label}
-                  </Box>
-
-                  {option.info && (
-                    <Label color="error" sx={{ ml: 1 }}>
-                      {option.info}
-                    </Label>
-                  )}
-                </MenuItem>
-              );
-            })}
-          </Stack> */}
+                {option?.info && (
+                  <Label color="error" sx={{ ml: 1 }}>
+                    {option?.info}
+                  </Label>
+                )}
+              </MenuItem>
+            ))}
+          </Stack>
 
           {/* <Box sx={{ px: 2.5, py: 3 }}>
             <UpgradeBlock />
           </Box> */}
         </Scrollbar>
+
+        <CustomDialog
+          title="User Profile"
+          open={profileDialog.value}
+          handleClose={profileDialog.onFalse}
+          maxWidth="lg"
+        >
+          <Scrollbar sx={{ p: 2 }}>
+            <HrProfile />
+          </Scrollbar>
+        </CustomDialog>
 
         <Box sx={{ p: 2.5 }}>
           <Button sx={{ mb: 2 }} variant="contained" fullWidth onClick={() => setOpenDialog(true)}>
