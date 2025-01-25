@@ -29,7 +29,7 @@ interface ExpenseData {
   expenseList?: any;
 }
 
-let expenseData: ExpenseData[] = [
+const expenseData: ExpenseData[] = [
   {
     id: 3,
     expenseCategory: 'Internet Bills',
@@ -105,10 +105,10 @@ const FinanceExpenseTrackingScreen = () => {
     console.log('Updated Data:', dataFromDialog);
   };
 
-  const handleDelete = (item: any) => {
-    expenseData = expenseData.filter((val) => val.id !== item.id);
-    setTableData([...expenseData]);
-  };
+  // const handleDelete = (item: any) => {
+  //   expenseData = expenseData.filter((val) => val.id !== item.id);
+  //   setTableData([...expenseData]);
+  // };
 
   return (
     <>

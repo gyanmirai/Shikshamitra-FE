@@ -45,7 +45,10 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
   const [chequeAmountState, setChequeAmountState] = useState('');
   const [bankAmountState, setBankAmountState] = useState('');
   const [cardAmountState, setCardAmountState] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [onlineAmountState, setOnlineAmountState] = useState('');
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cashAmountState, setCashAmountState] = useState('');
   const handleBankAmountChange = (formattedValue: string, numericValue: number) => {
     setBankAmountState(formattedValue);
@@ -56,12 +59,12 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
   const handleCardAmountChange = (formattedValue: string, numericValue: number) => {
     setCardAmountState(formattedValue);
   };
-  const handleOnlineAmountChange = (formattedValue: string, numericValue: number) => {
-    setOnlineAmountState(formattedValue);
-  };
-  const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
-    setCashAmountState(formattedValue);
-  };
+  // const handleOnlineAmountChange = (formattedValue: string, numericValue: number) => {
+  //   setOnlineAmountState(formattedValue);
+  // };
+  // const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
+  //   setCashAmountState(formattedValue);
+  // };
   return (
     <CustomDialog
       maxWidth="md"

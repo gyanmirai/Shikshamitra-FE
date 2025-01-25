@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Grid } from '@mui/material';
 
@@ -30,37 +30,33 @@ const FinanceBudgetAllocationDialog: React.FC<FinanceBudgetAllocationDialogProps
   onClose,
   isEdit,
   allData,
-}) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
-
-  return (
-    <CustomDialog
-      title="Budget Allocation Panel"
-      open={dialogValue}
-      handleClose={onClose}
-      maxWidth="lg"
-    >
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <AnalyticsCurrentVisits
-            chart={{
-              series: [
-                { label: 'Software License', value: 3500 },
-                { label: 'Hardware', value: 2500 },
-                { label: 'Project funding', value: 1500 },
-              ],
-            }}
-            sx={{ height: '100%' }}
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Grid xs={12} md={6} lg={8}>
-            <EcommerceSalesOverview title="" data={_ecommerceSalesOverview} />
-          </Grid>
+}) => (
+  <CustomDialog
+    title="Budget Allocation Panel"
+    open={dialogValue}
+    handleClose={onClose}
+    maxWidth="lg"
+  >
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={6}>
+        <AnalyticsCurrentVisits
+          chart={{
+            series: [
+              { label: 'Software License', value: 3500 },
+              { label: 'Hardware', value: 2500 },
+              { label: 'Project funding', value: 1500 },
+            ],
+          }}
+          sx={{ height: '100%' }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6} lg={8}>
+          <EcommerceSalesOverview title="" data={_ecommerceSalesOverview} />
         </Grid>
       </Grid>
-    </CustomDialog>
-  );
-};
+    </Grid>
+  </CustomDialog>
+);
 
 export default FinanceBudgetAllocationDialog;

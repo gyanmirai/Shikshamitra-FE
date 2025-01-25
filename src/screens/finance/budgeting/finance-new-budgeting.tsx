@@ -17,8 +17,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceNewBudgetCreateDialog from './component/finance-new-budget-create-dialog';
 
-const getExpenseColor = (amount: any) => (amount > 0 ? 'red' : 'green');
-const getIncomeColor = (amount: any) => (amount > 0 ? 'green' : 'red');
+// const getExpenseColor = (amount: any) => (amount > 0 ? 'red' : 'green');
+// const getIncomeColor = (amount: any) => (amount > 0 ? 'green' : 'red');
 const FinanceNewBudgetingScreen = () => {
   const budgetDummyData = {
     expenseCategoryId: '345',
@@ -84,6 +84,8 @@ const FinanceNewBudgetingScreen = () => {
     return totalIncome - totalExpenses;
   };
   const [budgetData, setNewBudgetData] = useState<any>(budgetDummyData);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [netBudget, setNetBudget] = useState(calculateNetBudget(budgetDummyData));
   const [isEdit, setIsEdit] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<any>();
