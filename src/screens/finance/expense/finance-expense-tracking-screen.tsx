@@ -60,6 +60,7 @@ const FinanceExpenseTrackingScreen = () => {
   const [selectedExpense, setSelectedExpense] = useState(expenseData);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(expenseData);
+  const [open, setOpen] = useState(false);
 
   const closeDialog = () => {
     setIsEdit(false);
@@ -111,98 +112,120 @@ const FinanceExpenseTrackingScreen = () => {
 
   return (
     <>
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Expense Tracking"
-          links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
-          sx={{ px: 1, mb: 2 }}
+      {open ? (
+        <FinanceAddExpenseTrackingDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={() => {
+            setOpen(false);
+          }}
+          data={selectedExpense}
+          isEdit={isEdit}
+          allData={tableData}
         />
-        <Box
-          sx={{ mr: '15px', mb: '20px' }}
-          gap={3}
-          display="flex"
-          flexDirection="row"
-          justifyContent="flex-end"
-        >
-          <Button
-            startIcon={<Iconify icon="ic:outline-plus" />}
-            onClick={dialog.onTrue}
-            variant="contained"
-            size="small"
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            New Expense
-          </Button>
-        </Box>
-      </Box>
-      <CustomizableTable
-        tableId="expenseTable"
-        columns={[
-          {
-            id: 'expenseCategory',
-            label: 'Expense Category',
-          },
-          {
-            id: 'expenseAmount',
-            label: 'Expense Amount',
-            render(value) {
-              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
-            },
-          },
-          { id: 'paymentMethod', label: 'Payment Method' },
-          { id: 'date', label: 'Date' },
-          {
-            id: 'paymentStatus',
-            label: 'Payment Status',
-            render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showThreeDots={false}
-                  showViewIcon
-                  handleViewClick={() => {
-                    dialogForDetailsInExpense.onTrue();
-                    setSelectedExpense(row);
-                  }}
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    dialogForDeleteConfirmation.onTrue();
-                    // handleDelete(row);
-                  }}
-                  showEditIcon
-                  handleEditClick={() => {
-                    setIsEdit(true);
-                    setSelectedExpense(row);
-                    dialog.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
-        data={tableData}
-      />
+            <CustomBreadcrumbs
+              heading="Expense Tracking"
+              links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box
+              sx={{ mr: '15px', mb: '20px' }}
+              gap={3}
+              display="flex"
+              flexDirection="row"
+              justifyContent="flex-end"
+            >
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => {
+                  setOpen(true);
+                }}
+                variant="contained"
+                size="small"
+              >
+                New Expense
+              </Button>
+            </Box>
+          </Box>
+          <CustomizableTable
+            tableId="expenseTable"
+            columns={[
+              {
+                id: 'expenseCategory',
+                label: 'Expense Category',
+              },
+              {
+                id: 'expenseAmount',
+                label: 'Expense Amount',
+                render(value) {
+                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                },
+              },
+              { id: 'paymentMethod', label: 'Payment Method' },
+              { id: 'date', label: 'Date' },
+              {
+                id: 'paymentStatus',
+                label: 'Payment Status',
+                render(value, row) {
+                  return (
+                    <Label
+                      variant="soft"
+                      color={
+                        value === 'Overdue'
+                          ? 'error'
+                          : value === 'Unpaid'
+                            ? 'warning'
+                            : value === 'Paid'
+                              ? 'success'
+                              : 'default'
+                      }
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row: any) {
+                  return (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      showThreeDots={false}
+                      showViewIcon
+                      handleViewClick={() => {
+                        dialogForDetailsInExpense.onTrue();
+                        setSelectedExpense(row);
+                      }}
+                      showDeleteIcon
+                      handleDeleteClick={() => {
+                        dialogForDeleteConfirmation.onTrue();
+                        // handleDelete(row);
+                      }}
+                      showEditIcon
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        setSelectedExpense(row);
+                        setOpen(true);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={tableData}
+          />
+        </>
+      )}
 
       {dialogForDeleteConfirmation.value && (
         <DeleteConfirmationDialog
@@ -215,18 +238,6 @@ const FinanceExpenseTrackingScreen = () => {
           description="Are you sure you want to delete this item? This action cannot be undone."
         />
       )}
-      <Box>
-        {dialog.value && selectedExpense && (
-          <FinanceAddExpenseTrackingDialog
-            onSave={handleSave}
-            dialogValue={dialog.value}
-            onClose={closeDialog}
-            data={selectedExpense}
-            isEdit={isEdit}
-            allData={tableData}
-          />
-        )}
-      </Box>
 
       {dialogForDetailsInExpense.value && (
         <FinanceExpenseDetailsDialog

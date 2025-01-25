@@ -417,67 +417,253 @@ const LibraryBookManagementScreen = () => {
   };
 
   const theme = useTheme();
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Book Management"
-        links={[{ name: 'Library' }, { name: 'Book Management' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <Box
-        pb="20px"
-        display="flex"
-        flexDirection="row"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <TextField
-          // fullWidth
-          placeholder="Search by book name , category , status"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Iconify
-                  icon="eva:search-fill"
-                  sx={{ color: 'text.disabled', width: 20, height: 20 }}
-                />
-              </InputAdornment>
-            ),
-          }}
-          size="small"
-          value=""
-          onChange={() => {}}
-          sx={{ '& input': { fontSize: '12px' }, width: '400px' }}
-        />
-        <CommonCtaComponent
-          bookHandler={() => openDialog(addNewBookDialog)}
-          issueBookHandler={() => openDialog(issueBookDialog)}
-          returnBookHandler={() => openDialog(returnBookDialog)}
-          createReservationHandler={() => openDialog(addMemberDialog)}
-        />
-      </Box>
-      {/* <CustomizableTable
-        columns={[
-          { id: 'bookId', label: 'Book Id' },
-          { id: 'title', label: 'Title' },
-          { id: 'author', label: 'Author' },
-          { id: 'isbn', label: 'ISBN' },
-          { id: 'category', label: 'Category' },
-          { id: 'availability', label: 'Availability' },
-          { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-        ]}
-        data={data}
-      /> */}
-
-      {/* Add/Edit Book Dialog */}
-      {addNewBookDialog.value && (
+      {open ? (
         <AddNewBookDialog
           dialogValue={addNewBookDialog.value}
           data={selectedEntry}
           onSave={saveHandler}
-          onClose={() => closeDialog(addNewBookDialog)}
+          onClose={closeHandler}
           isEdit={isEdit}
         />
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Book Management"
+            links={[{ name: 'Library' }, { name: 'Book Management' }]}
+            sx={{ px: 1, mb: 2 }}
+          />
+          <Box
+            pb="20px"
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <TextField
+              // fullWidth
+              placeholder="Search by book name , category , status"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify
+                      icon="eva:search-fill"
+                      sx={{ color: 'text.disabled', width: 20, height: 20 }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+              value=""
+              onChange={() => {}}
+              sx={{ '& input': { fontSize: '12px' }, width: '400px' }}
+            />
+            <CommonCtaComponent
+              bookHandler={() => setOpen(true)}
+              issueBookHandler={() => openDialog(issueBookDialog)}
+              returnBookHandler={() => openDialog(returnBookDialog)}
+              createReservationHandler={() => openDialog(addMemberDialog)}
+            />
+          </Box>
+          <div>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ ...headerCellStyle, width: '30px' }}>ISBN</TableCell>
+                    <TableCell sx={{ ...headerCellStyle, width: '330px' }}>Name</TableCell>
+                    {/* <TableCell sx={headerCellStyle}>Role</TableCell> */}
+                    <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Borrowed</TableCell>
+                    <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Overdue</TableCell>
+                    <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Reserved</TableCell>
+                    <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {books.map((book) => (
+                    <TableRow key={book.id}>
+                      <TableCell sx={cellStyle}>{book.id}</TableCell>
+                      <TableCell sx={cellStyle}>{book.title}</TableCell>
+                      {/* <TableCell sx={cellStyle}>Author</TableCell> */}
+                      <TableCell sx={cellStyle}>
+                        {book.editions.reduce(
+                          (acc, edition) => acc + edition.currentIssuers.length,
+                          0
+                        )}
+                      </TableCell>
+                      <TableCell sx={cellStyle}>
+                        {/* Example logic for overdue */}
+                        {book.editions.reduce(
+                          (acc, edition) =>
+                            acc +
+                            edition.currentIssuers.filter(
+                              (issuer) => new Date(issuer.dueDate) < new Date()
+                            ).length,
+                          0
+                        )}
+                      </TableCell>
+                      <TableCell sx={cellStyle}>
+                        {book.editions.reduce(
+                          (acc, edition) => acc + edition.reservedList.length,
+                          0
+                        )}
+                      </TableCell>
+                      <TableCell sx={cellStyle}>
+                        <ThreeDotsActions
+                          placement="right-top"
+                          showThreeDots={false}
+                          showViewIcon
+                          handleViewClick={() => {
+                            handleViewDetails(book);
+                          }}
+                          showDeleteIcon
+                          handleDeleteClick={() => {
+                            console.log('delete');
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Dialog for Book Details */}
+            {selectedBook && (
+              <CustomDialog
+                title={`${selectedBook.title}`}
+                open={!!selectedBook}
+                handleClose={handleCloseDialog}
+                maxWidth="xl"
+              >
+                <Scrollbar sx={{ overflow: 'auto', maxHeight: '550px' }}>
+                  <DialogContent>
+                    {/* Current Issuers Table */}
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                      Current Issuers
+                    </Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={headerCellStyle}>Name</TableCell>
+                            <TableCell sx={headerCellStyle}>ID</TableCell>
+                            <TableCell sx={headerCellStyle}>Role</TableCell>
+                            <TableCell sx={headerCellStyle}>Issue Date</TableCell>
+                            <TableCell sx={headerCellStyle}>Due Date</TableCell>
+                            <TableCell sx={headerCellStyle}>Year</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {selectedBook.editions.flatMap((edition: any) =>
+                            edition.currentIssuers.map((issuer: any) => ({
+                              ...issuer,
+                              year: edition.year,
+                            }))
+                          ).length > 0 ? (
+                            selectedBook.editions.flatMap((edition: any) =>
+                              edition.currentIssuers.map((issuer: any) => (
+                                <TableRow key={issuer.userId}>
+                                  <TableCell sx={cellStyle}>{issuer.name}</TableCell>
+                                  <TableCell sx={cellStyle}>{issuer.userId}</TableCell>
+                                  <TableCell sx={cellStyle}>{issuer.role}</TableCell>
+                                  <TableCell sx={cellStyle}>{issuer.issueDate}</TableCell>
+                                  <TableCell sx={cellStyle}>{issuer.dueDate}</TableCell>
+                                  <TableCell sx={cellStyle}>{edition.year}</TableCell>
+                                </TableRow>
+                              ))
+                            )
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={6} sx={{ textAlign: 'center', padding: '16px' }}>
+                                No current issuers available
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+
+                    {/* Reserved List Table */}
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 4, mb: 2 }}>
+                      Reserved List
+                    </Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={headerCellStyle}>Name</TableCell>
+                            <TableCell sx={headerCellStyle}>ID</TableCell>
+                            <TableCell sx={headerCellStyle}>Role</TableCell>
+                            <TableCell sx={headerCellStyle}>Reservation Date</TableCell>
+                            <TableCell sx={headerCellStyle}>Year</TableCell>
+                            <TableCell sx={headerCellStyle}>Action</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {selectedBook.editions.flatMap((edition: any) =>
+                            edition.reservedList.map((reservation: any) => ({
+                              ...reservation,
+                              year: edition.year,
+                            }))
+                          ).length > 0 ? (
+                            selectedBook.editions.flatMap((edition: any) =>
+                              edition.reservedList.map((reservation: any) => (
+                                <TableRow key={reservation.userId}>
+                                  <TableCell sx={cellStyle}>{reservation.name}</TableCell>
+                                  <TableCell sx={cellStyle}>{reservation.userId}</TableCell>
+                                  <TableCell sx={cellStyle}>{reservation.role}</TableCell>
+                                  <TableCell sx={cellStyle}>
+                                    {reservation.reservationDate}
+                                  </TableCell>
+                                  <TableCell sx={cellStyle}>{edition.year}</TableCell>
+                                  <TableCell sx={cellStyle}>
+                                    {/* Actions Dropdown */}
+                                    <ThreeDotsActions
+                                      placement="right-top"
+                                      actions={({ popover }) => (
+                                        <MenuList>
+                                          <MenuItem
+                                            onClick={() => {
+                                              // handleDelete(reservation);
+                                            }}
+                                          >
+                                            <Iconify icon="solar:trash-bin-trash-bold" />
+                                            Delete
+                                          </MenuItem>
+                                        </MenuList>
+                                      )}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={6} sx={{ textAlign: 'center', padding: '16px' }}>
+                                No reservations made yet
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </DialogContent>
+                </Scrollbar>
+                {/* <DialogActions>
+              <Button onClick={handleCloseDialog}>Close</Button>
+            </DialogActions> */}
+              </CustomDialog>
+            )}
+          </div>
+        </>
       )}
 
       {/* Issue Book Dialog */}
@@ -511,222 +697,6 @@ const LibraryBookManagementScreen = () => {
           isRenewMembership={false}
         />
       )}
-
-      <div>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>ISBN</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: '330px' }}>Name</TableCell>
-                {/* <TableCell sx={headerCellStyle}>Role</TableCell> */}
-                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Borrowed</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Overdue</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Reserved</TableCell>
-                <TableCell sx={{ ...headerCellStyle, width: '30px' }}>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {books.map((book) => (
-                <TableRow key={book.id}>
-                  <TableCell sx={cellStyle}>{book.id}</TableCell>
-                  <TableCell sx={cellStyle}>{book.title}</TableCell>
-                  {/* <TableCell sx={cellStyle}>Author</TableCell> */}
-                  <TableCell sx={cellStyle}>
-                    {book.editions.reduce((acc, edition) => acc + edition.currentIssuers.length, 0)}
-                  </TableCell>
-                  <TableCell sx={cellStyle}>
-                    {/* Example logic for overdue */}
-                    {book.editions.reduce(
-                      (acc, edition) =>
-                        acc +
-                        edition.currentIssuers.filter(
-                          (issuer) => new Date(issuer.dueDate) < new Date()
-                        ).length,
-                      0
-                    )}
-                  </TableCell>
-                  <TableCell sx={cellStyle}>
-                    {book.editions.reduce((acc, edition) => acc + edition.reservedList.length, 0)}
-                  </TableCell>
-                  <TableCell sx={cellStyle}>
-                    <ThreeDotsActions
-                      placement="right-top"
-                      actions={({ popover }) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={() => {
-                              // handleDelete(book);
-                              handleViewDetails(book);
-                            }}
-                          >
-                            <Iconify icon="mdi:eye" />
-                            View Details
-                          </MenuItem>
-                          {/* <MenuItem
-                            onClick={() => {
-                              setIsEdit(true);
-                              console.log('data row', book);
-                              addNewBookDialog.onTrue();
-                              setSelectedEntry(book);
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" />
-                            Edit
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedEntry(book);
-                              issueBookDialog.onTrue();
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" />
-                            Issue Book
-                          </MenuItem> */}
-                          <MenuItem
-                            onClick={() => {
-                              // handleDelete(book);
-                            }}
-                          >
-                            <Iconify icon="solar:trash-bin-trash-bold" />
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      )}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Dialog for Book Details */}
-        {selectedBook && (
-          <CustomDialog
-            title={`${selectedBook.title}`}
-            open={!!selectedBook}
-            handleClose={handleCloseDialog}
-            maxWidth="xl"
-          >
-            <Scrollbar sx={{ overflow: 'auto', maxHeight: '550px' }}>
-              <DialogContent>
-                {/* Current Issuers Table */}
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                  Current Issuers
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={headerCellStyle}>Name</TableCell>
-                        <TableCell sx={headerCellStyle}>ID</TableCell>
-                        <TableCell sx={headerCellStyle}>Role</TableCell>
-                        <TableCell sx={headerCellStyle}>Issue Date</TableCell>
-                        <TableCell sx={headerCellStyle}>Due Date</TableCell>
-                        <TableCell sx={headerCellStyle}>Year</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {selectedBook.editions.flatMap((edition: any) =>
-                        edition.currentIssuers.map((issuer: any) => ({
-                          ...issuer,
-                          year: edition.year,
-                        }))
-                      ).length > 0 ? (
-                        selectedBook.editions.flatMap((edition: any) =>
-                          edition.currentIssuers.map((issuer: any) => (
-                            <TableRow key={issuer.userId}>
-                              <TableCell sx={cellStyle}>{issuer.name}</TableCell>
-                              <TableCell sx={cellStyle}>{issuer.userId}</TableCell>
-                              <TableCell sx={cellStyle}>{issuer.role}</TableCell>
-                              <TableCell sx={cellStyle}>{issuer.issueDate}</TableCell>
-                              <TableCell sx={cellStyle}>{issuer.dueDate}</TableCell>
-                              <TableCell sx={cellStyle}>{edition.year}</TableCell>
-                            </TableRow>
-                          ))
-                        )
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} sx={{ textAlign: 'center', padding: '16px' }}>
-                            No current issuers available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {/* Reserved List Table */}
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 4, mb: 2 }}>
-                  Reserved List
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={headerCellStyle}>Name</TableCell>
-                        <TableCell sx={headerCellStyle}>ID</TableCell>
-                        <TableCell sx={headerCellStyle}>Role</TableCell>
-                        <TableCell sx={headerCellStyle}>Reservation Date</TableCell>
-                        <TableCell sx={headerCellStyle}>Year</TableCell>
-                        <TableCell sx={headerCellStyle}>Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {selectedBook.editions.flatMap((edition: any) =>
-                        edition.reservedList.map((reservation: any) => ({
-                          ...reservation,
-                          year: edition.year,
-                        }))
-                      ).length > 0 ? (
-                        selectedBook.editions.flatMap((edition: any) =>
-                          edition.reservedList.map((reservation: any) => (
-                            <TableRow key={reservation.userId}>
-                              <TableCell sx={cellStyle}>{reservation.name}</TableCell>
-                              <TableCell sx={cellStyle}>{reservation.userId}</TableCell>
-                              <TableCell sx={cellStyle}>{reservation.role}</TableCell>
-                              <TableCell sx={cellStyle}>{reservation.reservationDate}</TableCell>
-                              <TableCell sx={cellStyle}>{edition.year}</TableCell>
-                              <TableCell sx={cellStyle}>
-                                {/* Actions Dropdown */}
-                                <ThreeDotsActions
-                                  placement="right-top"
-                                  actions={({ popover }) => (
-                                    <MenuList>
-                                      <MenuItem
-                                        onClick={() => {
-                                          // handleDelete(reservation);
-                                        }}
-                                      >
-                                        <Iconify icon="solar:trash-bin-trash-bold" />
-                                        Delete
-                                      </MenuItem>
-                                    </MenuList>
-                                  )}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} sx={{ textAlign: 'center', padding: '16px' }}>
-                            No reservations made yet
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </DialogContent>
-            </Scrollbar>
-            {/* <DialogActions>
-              <Button onClick={handleCloseDialog}>Close</Button>
-            </DialogActions> */}
-          </CustomDialog>
-        )}
-      </div>
     </>
   );
 };

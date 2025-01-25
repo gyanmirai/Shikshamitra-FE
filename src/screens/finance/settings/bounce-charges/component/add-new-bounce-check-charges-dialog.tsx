@@ -1,10 +1,15 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
 
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 interface AddNewBounceCheckChargesDialogProps {
   dialogValue: boolean;
@@ -36,54 +41,83 @@ const AddNewBounceCheckChargesDialog: React.FC<AddNewBounceCheckChargesDialogPro
   const handleSave = () => {
     console.log('Selected Amount Range:', range);
   };
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const dispatch = useDispatch();
+
+  // useEffect(() => {
+  //   const isChanged = !isEqual(formik.values, initialValues);
+  //   dispatch(setIsChanges(isChanged));
+  // }, [dispatch, formik.values, initialValues]);
+
+  const handleCloseDialog = () => {
+    if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+      onClose();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      onClose();
+    }
+  };
   return (
-    <CustomDialog
-      title={`${isEdit ? 'Edit' : 'Create New'} Bounce Check Charges`}
-      open={dialogValue}
-      handleClose={onClose}
-      maxWidth="md"
-    >
+    <>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Bounce Cheque Charges"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Bounce Cheque Charges' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
+          <Button
+            startIcon={<Iconify icon="eva:arrow-back-fill" />}
+            onClick={handleCloseDialog}
+            variant="contained"
+            size="small"
+          >
+            Back
+          </Button>
+        </Box>
+      </Box>
       <Box>
         <form onSubmit={handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-            <Box display="flex" flexDirection="column" gap={3}>
-              {/* First Row */}
-              <Box display="flex" flexDirection="row" gap={2}>
-                <CustomSelect
-                  fullWidth
-                  label="Bank Name"
-                  options={[]}
-                  value=""
-                  onChange={() => {}}
-                  sx={{
-                    minHeight: 40,
-                    '& .MuiOutlinedInput-root': {
-                      padding: '7px 14px',
-                    },
-                  }}
-                />
-                <TextField
-                  fullWidth
-                  name="bounceReason"
-                  label="Bounce Reason"
-                  value=""
-                  onChange={() => {}}
-                  size="small"
-                />
-              </Box>
+          <Box display="flex" flexDirection="column" gap={3}>
+            {/* First Row */}
+            <Box display="flex" flexDirection="row" gap={2}>
+              <CustomSelect
+                fullWidth
+                label="Bank Name"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                sx={{
+                  minHeight: 40,
+                  '& .MuiOutlinedInput-root': {
+                    padding: '7px 14px',
+                  },
+                }}
+              />
+              <TextField
+                fullWidth
+                name="bounceReason"
+                label="Bounce Reason"
+                value=""
+                onChange={() => {}}
+                size="small"
+              />
+            </Box>
 
-              {/* Second Row */}
-              <Box display="flex" flexDirection="row" gap={2}>
-                <TextField
-                  fullWidth
-                  name="charges"
-                  label="Charges"
-                  value=""
-                  onChange={() => {}}
-                  type="number"
-                  size="small"
-                />
-                {/* <TextField
+            {/* Second Row */}
+            <Box display="flex" flexDirection="row" gap={2}>
+              <TextField
+                fullWidth
+                name="charges"
+                label="Charges"
+                value=""
+                onChange={() => {}}
+                type="number"
+                size="small"
+              />
+              {/* <TextField
                                     fullWidth
                                     name="gstCharges"
                                     label="GST Charges"
@@ -92,48 +126,47 @@ const AddNewBounceCheckChargesDialog: React.FC<AddNewBounceCheckChargesDialogPro
                                     type="number"
                                     size="small"
                                 /> */}
+            </Box>
+            <Box display="flex" flexDirection="column" gap={2} width="100%">
+              <Typography fontSize="15px">Select Amount Range</Typography>
+
+              <Box width="90%">
+                <Slider
+                  value={range}
+                  onChange={handleChange}
+                  valueLabelDisplay="auto"
+                  min={500}
+                  max={10000}
+                  step={100}
+                  marks={[
+                    { value: 500, label: '500' },
+                    { value: 2500, label: '2.5K' },
+                    { value: 5000, label: '5K' },
+                    { value: 7500, label: '7.5K' },
+                    { value: 10000, label: '10K' },
+                  ]}
+                  sx={{
+                    mx: 2, // Add horizontal margin to give some space on the sides
+                  }}
+                />
               </Box>
-              <Box display="flex" flexDirection="column" gap={2} width="100%">
-                <Typography fontSize="15px">Select Amount Range</Typography>
 
-                <Box width="90%">
-                  <Slider
-                    value={range}
-                    onChange={handleChange}
-                    valueLabelDisplay="auto"
-                    min={500}
-                    max={10000}
-                    step={100}
-                    marks={[
-                      { value: 500, label: '500' },
-                      { value: 2500, label: '2.5K' },
-                      { value: 5000, label: '5K' },
-                      { value: 7500, label: '7.5K' },
-                      { value: 10000, label: '10K' },
-                    ]}
-                    sx={{
-                      mx: 2, // Add horizontal margin to give some space on the sides
-                    }}
-                  />
-                </Box>
-
-                {/* Min and Max Labels */}
-                <Box display="flex" justifyContent="space-between" alignItems="center" mt={-2}>
-                  <Typography variant="body2">Min: ₹ {range[0]}</Typography>
-                  <Typography variant="body2">Max: ₹ {range[1]}</Typography>
-                </Box>
+              {/* Min and Max Labels */}
+              <Box display="flex" justifyContent="space-between" alignItems="center" mt={-2}>
+                <Typography variant="body2">Min: ₹ {range[0]}</Typography>
+                <Typography variant="body2">Max: ₹ {range[1]}</Typography>
               </Box>
             </Box>
-          </Scrollbar>
+          </Box>
 
           <DialogActions>
-            <Button type="submit" variant="contained" size="small">
+            <Button type="submit" variant="outlined" size="small">
               Save
             </Button>
           </DialogActions>
         </form>
       </Box>
-    </CustomDialog>
+    </>
   );
 };
 

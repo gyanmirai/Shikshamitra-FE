@@ -267,120 +267,145 @@ const FinanceFeeStructureSettingTab = () => {
     setTableData(updatedData);
   };
   const [data, setData] = useState(initialData);
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
+
+  const newEntryHandler = () => {
+    setIsEdit(false);
+    setOpen(true);
+  };
 
   return (
     <>
-      <Box
-        pb="20px"
-        display="flex"
-        flexDirection="row"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <CustomBreadcrumbs
-          heading="Fee Structure"
-          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
-          sx={{ px: 1, mb: 2 }}
+      {open ? (
+        <FinanceAddFeeCategorySettingDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={closeHandler}
+          data={selectedEntry}
+          isEdit={isEdit}
+          allData={tableData}
         />
-        <Box display="flex" flexDirection="row" justifyContent="flex-end">
-          <Button
-            startIcon={<Iconify icon="ic:outline-plus" />}
-            onClick={dialog.onTrue}
-            variant="contained"
-            size="small"
+      ) : (
+        <>
+          <Box
+            pb="20px"
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            New Fee Structure
-          </Button>
-        </Box>
-      </Box>
+            <CustomBreadcrumbs
+              heading="Fee Structure"
+              links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box display="flex" flexDirection="row" justifyContent="flex-end">
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={newEntryHandler}
+                variant="contained"
+                size="small"
+              >
+                New Fee Structure
+              </Button>
+            </Box>
+          </Box>
 
-      <CustomizableTable
-        tableId="finance-fee-structure-setting-tab"
-        columns={[
-          {
-            id: 'bookRecipt',
-            label: 'Receipt Book',
-          },
-          { id: 'applicableGrade', label: 'Applicable Class' },
+          <CustomizableTable
+            tableId="finance-fee-structure-setting-tab"
+            columns={[
+              {
+                id: 'bookRecipt',
+                label: 'Receipt Book',
+              },
+              { id: 'applicableGrade', label: 'Applicable Class' },
 
-          {
-            id: 'grossFee',
-            label: 'Gross Fees',
-            render(value, row) {
-              return (
-                <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
-              );
-            },
-          },
-          {
-            id: 'totaldiscountAmount',
-            label: 'General Discount',
-            render(value, row) {
-              return (
-                <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
-              );
-            },
-          },
-          {
-            id: 'amount',
-            label: 'Payable Fees',
-            render(value, row) {
-              const totalAmount = row.feeSubCategoryList.reduce(
-                (total: any, val: any, index: any) =>
-                  switchStates[row.id] && switchStates[row.id][index]
-                    ? total + Number(val.amount)
-                    : total,
-                0
-              );
+              {
+                id: 'grossFee',
+                label: 'Gross Fees',
+                render(value, row) {
+                  return (
+                    <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
+                  );
+                },
+              },
+              {
+                id: 'totaldiscountAmount',
+                label: 'General Discount',
+                render(value, row) {
+                  return (
+                    <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
+                  );
+                },
+              },
+              {
+                id: 'amount',
+                label: 'Payable Fees',
+                render(value, row) {
+                  const totalAmount = row.feeSubCategoryList.reduce(
+                    (total: any, val: any, index: any) =>
+                      switchStates[row.id] && switchStates[row.id][index]
+                        ? total + Number(val.amount)
+                        : total,
+                    0
+                  );
 
-              console.log('Row data:', row);
-              console.log('Total amount:', totalAmount);
+                  console.log('Row data:', row);
+                  console.log('Total amount:', totalAmount);
 
-              return (
-                <Typography sx={{ fontSize: '12px' }}>
-                  {formatNumber(totalAmount, 'INR')}
-                </Typography>
-              );
-            },
-          },
+                  return (
+                    <Typography sx={{ fontSize: '12px' }}>
+                      {formatNumber(totalAmount, 'INR')}
+                    </Typography>
+                  );
+                },
+              },
 
-          {
-            id: 'paymentDueDate',
-            label: 'Payment Due Date',
-          },
-          {
-            id: 'statustoggle',
-            label: 'InActive/Active',
-            render(statusToggle) {
-              return <Switch value={statusToggle} />;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  showThreeDots={false}
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    dialogForDeleteConfirmation.onTrue();
+              {
+                id: 'paymentDueDate',
+                label: 'Payment Due Date',
+              },
+              {
+                id: 'statustoggle',
+                label: 'InActive/Active',
+                render(statusToggle) {
+                  return <Switch value={statusToggle} />;
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row: any) {
+                  return (
+                    <ThreeDotsActions
+                      showThreeDots={false}
+                      showDeleteIcon
+                      handleDeleteClick={() => {
+                        dialogForDeleteConfirmation.onTrue();
 
-                    // handleDelete(row);
-                  }}
-                  showEditIcon
-                  handleEditClick={() => {
-                    setSelectedEntry(row);
-                    dialog.onFalse();
-                    financeEditFeeStructureDialog.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
-        data={tableData}
-      />
+                        // handleDelete(row);
+                      }}
+                      showEditIcon
+                      handleEditClick={() => {
+                        setSelectedEntry(row);
+
+                        dialog.onFalse();
+                        financeEditFeeStructureDialog.onTrue();
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={tableData}
+          />
+        </>
+      )}
 
       {dialogForDeleteConfirmation.value && (
         <DeleteConfirmationDialog
@@ -400,16 +425,6 @@ const FinanceFeeStructureSettingTab = () => {
           onClose={() => {
             financeEditFeeStructureDialog.onFalse();
           }}
-        />
-      )}
-      {dialog.value && selectedEntry && (
-        <FinanceAddFeeCategorySettingDialog
-          onSave={handleSave}
-          dialogValue={dialog.value}
-          onClose={closeDialog}
-          data={selectedEntry}
-          isEdit={isEdit}
-          allData={tableData}
         />
       )}
     </>

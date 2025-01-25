@@ -87,76 +87,96 @@ const FinanceReceiptBookSetting = () => {
     closeDialog();
   };
 
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
+
   return (
     <>
-      <Box
-        pb="20px"
-        display="flex"
-        flexDirection="row"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <CustomBreadcrumbs
-          heading="Receipt Book"
-          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Receipt Book' }]}
-          sx={{ px: 1, mb: 2 }}
+      {open ? (
+        <FinanceSettingReceiptbookDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={closeHandler}
+          data={selectedEntry}
+          isEdit={isEdit}
+          allData={tableData}
         />
-        <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
-          <Button
-            startIcon={<Iconify icon="ic:outline-plus" />}
-            onClick={() => {
-              setIsEdit(false);
-              dialog.onTrue();
-            }}
-            variant="contained"
-            size="small"
+      ) : (
+        <>
+          <Box
+            pb="20px"
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            New Receipt Book
-          </Button>
-        </Box>
-      </Box>
-
-      <CustomizableTable
-        tableId="finance-receipt-book-setting-table"
-        isShowedDense={false}
-        isPagination={false}
-        isFilter={false}
-        isSearch={false}
-        columns={[
-          { id: 'receiptBookName', label: 'Receipt Book' },
-          { id: 'receiptBookCode', label: 'R-Book Code' },
-
-          {
-            id: 'toggle',
-            label: 'InActive/Active',
-            render() {
-              return <Switch />;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render: (value, row: any) => (
-              <ThreeDotsActions
-                showThreeDots={false}
-                showDeleteIcon
-                handleDeleteClick={() => {
-                  dialogForDeleteConfirmation.onTrue();
-                  // handleDelete(row);
+            <CustomBreadcrumbs
+              heading="Receipt Book"
+              links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Receipt Book' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => {
+                  setIsEdit(false);
+                  setOpen(true);
                 }}
-                showEditIcon
-                handleEditClick={() => {
-                  setIsEdit(true);
+                variant="contained"
+                size="small"
+              >
+                New Receipt Book
+              </Button>
+            </Box>
+          </Box>
 
-                  setSelectedEntry(row);
-                  dialog.onTrue();
-                }}
-              />
-            ),
-          },
-        ]}
-        data={tableData}
-      />
+          <CustomizableTable
+            tableId="finance-receipt-book-setting-table"
+            isShowedDense={false}
+            isPagination={false}
+            isFilter={false}
+            isSearch={false}
+            columns={[
+              { id: 'receiptBookName', label: 'Receipt Book' },
+              { id: 'receiptBookCode', label: 'R-Book Code' },
+
+              {
+                id: 'toggle',
+                label: 'InActive/Active',
+                render() {
+                  return <Switch />;
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render: (value, row: any) => (
+                  <ThreeDotsActions
+                    showThreeDots={false}
+                    showDeleteIcon
+                    handleDeleteClick={() => {
+                      dialogForDeleteConfirmation.onTrue();
+                      // handleDelete(row);
+                    }}
+                    showEditIcon
+                    handleEditClick={() => {
+                      setIsEdit(true);
+
+                      setSelectedEntry(row);
+                      setOpen(true);
+                    }}
+                  />
+                ),
+              },
+            ]}
+            data={tableData}
+          />
+        </>
+      )}
 
       {dialogForDeleteConfirmation.value && (
         <DeleteConfirmationDialog
@@ -169,16 +189,7 @@ const FinanceReceiptBookSetting = () => {
           description="Are you sure you want to delete this item? This action cannot be undone."
         />
       )}
-      {dialog.value && selectedEntry && (
-        <FinanceSettingReceiptbookDialog
-          onSave={handleSave}
-          dialogValue={dialog.value}
-          onClose={closeDialog}
-          data={selectedEntry}
-          isEdit={isEdit}
-          allData={tableData}
-        />
-      )}
+
       <Box pb="20px" />
     </>
   );

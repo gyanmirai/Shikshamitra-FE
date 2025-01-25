@@ -392,382 +392,350 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
     },
   ];
 
-  // const [selectedEntry, setSelectedEntry] = useState(dummyUser);
-  // const [isEdit, setIsEdit] = useState(false);
-  // const [tableData, setTableData] = useState(dummyUser);
   const dialog = useBoolean();
   const dialogForCreateRequest = useBoolean();
   const dialogForApprovalRequest = useBoolean();
   const dialogForFeeRefundedView = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [open, setOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
 
   const closeDialog = () => {
-    dialog.onFalse();
+    setOpen(false);
+    setEditData(null);
   };
-
-  const handleSave = () => {};
+  const handleClose = () => {
+    setOpen(false);
+    setEditData(null);
+  };
 
   return (
     <>
-      {!fromStudentDetailedView && (
-        <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-          <CustomBreadcrumbs
-            heading="Fee Refund"
-            links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
-            sx={{ px: 1, mb: 2 }}
-          />
-
-          {/* Header Section */}
-          <Box
-            pt={2} // Consistent padding
-            pb={5}
-            display="flex"
-            justifyContent="flex-end"
-            alignItems="center"
-          >
-            {/* Filters Section */}
-            {/* <Box display="flex" gap={3} alignItems="center">
-              <CustomSelect
-                label="Standard"
-                options={[]}
-                value=""
-                onChange={() => {}}
-                formControlProps={{ sx: { minWidth: 140 } }}
-              />
-              <CustomSelect
-                label="Division"
-                options={[]}
-                value=""
-                onChange={() => {}}
-                formControlProps={{ sx: { minWidth: 140 } }}
-              />
-              <TextField
-                label="Search by student name"
-                variant="outlined"
-                size="small"
-                value=""
-                onChange={(e) => {
-                  console.log(e.target.value);
-                }}
-              />
-            </Box> */}
-
-            {/* Action Button */}
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                dialogForCreateRequest.onTrue();
-              }}
+      {open ? (
+        <FeeRefundRequestDialog onClose={handleClose} />
+      ) : (
+        <>
+          {!fromStudentDetailedView && (
+            <Box
+              display="flex"
+              flexDirection="row"
+              justifyContent="space-between"
+              alignItems="center"
             >
-              Create Request
-            </Button>
-          </Box>
-        </Box>
+              <CustomBreadcrumbs
+                heading="Fee Refund"
+                links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
+                sx={{ px: 1, mb: 2 }}
+              />
+
+              {/* Header Section */}
+              <Box pt={2} pb={5} display="flex" justifyContent="flex-end" alignItems="center">
+                <Button variant="contained" size="small" onClick={() => setOpen(true)}>
+                  Create Request
+                </Button>
+              </Box>
+            </Box>
+          )}
+
+          {fromStudentDetailedView && (
+            <CustomizableTable
+              tableId="student-refund-table"
+              isShowedDense={false}
+              isFilter={false}
+              isSearch={false}
+              data={studentRefundData}
+              columns={[
+                {
+                  id: 'requestedOn',
+                  label: 'Requested On',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="150px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'reason',
+                  label: 'Reason',
+                  render(value, row) {
+                    return (
+                      <Tooltip title={value} arrow>
+                        <Typography minWidth="200px" fontSize="12px" noWrap>
+                          {value}
+                        </Typography>
+                      </Tooltip>
+                    );
+                  },
+                },
+                {
+                  id: 'reasonForRejection',
+                  label: 'Reason For Rejection',
+                  render(value, row) {
+                    return (
+                      <Tooltip title={value} arrow>
+                        <Typography minWidth="200px" fontSize="12px" noWrap>
+                          {value}
+                        </Typography>
+                      </Tooltip>
+                    );
+                  },
+                },
+                {
+                  id: 'askForRefund',
+                  label: 'Ask For Refund',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="100px" fontSize="12px" textAlign="center">
+                        {formatNumber(value, 'INR')}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'approvedAmount',
+                  label: 'Approved Amount',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="100px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'status',
+                  label: 'Status',
+                  render(value, row) {
+                    return (
+                      <Label
+                        variant="soft"
+                        color={
+                          value === 'Rejected'
+                            ? 'error'
+                            : value === 'Pending'
+                              ? 'warning'
+                              : value === 'Approved'
+                                ? 'success'
+                                : 'default'
+                        }
+                      >
+                        {value}
+                      </Label>
+                    );
+                  },
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  render: (row: any, popover) => (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={() => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              dialogForApprovalRequest.onTrue();
+                              // popover.onClose();
+                            }}
+                          >
+                            <Iconify icon="mdi:check" />
+                            Approved
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              setSelectedStudent(studentRefundData[0]);
+                              dialog.onTrue();
+                              // popover.onClose();
+                            }}
+                          >
+                            <Iconify icon="uil:process" />
+                            Proceed For Refund
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  ),
+                },
+              ]}
+            />
+          )}
+
+          {!fromStudentDetailedView && (
+            <CustomizableTable
+              tableId="student-refund-table"
+              data={studentRefundData}
+              columns={[
+                {
+                  id: 'rollNo',
+                  label: 'Roll No',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="120px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'studentName',
+                  label: 'Student Name',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="180px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'standard',
+                  label: 'Standard',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="100px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'class',
+                  label: 'Class',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="100px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'requestedOn',
+                  label: 'Requested On',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="150px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'reason',
+                  label: 'Reason',
+                  render(value, row) {
+                    return (
+                      <Tooltip title={value} arrow>
+                        <Typography minWidth="200px" fontSize="12px" noWrap>
+                          {value}
+                        </Typography>
+                      </Tooltip>
+                    );
+                  },
+                },
+                {
+                  id: 'reasonForRejection',
+                  label: 'Reason For Rejection',
+                  render(value, row) {
+                    return (
+                      <Tooltip title={value} arrow>
+                        <Typography minWidth="200px" fontSize="12px" noWrap>
+                          {value}
+                        </Typography>
+                      </Tooltip>
+                    );
+                  },
+                },
+                {
+                  id: 'askForRefund',
+                  label: 'Ask For Refund',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="100px" fontSize="12px" textAlign="left">
+                        {formatNumber(value, 'INR')}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'approvedAmount',
+                  label: 'Approved Amount',
+                  render(value, row) {
+                    return (
+                      <Typography minWidth="100px" fontSize="12px">
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'status',
+                  label: 'Status',
+                  render(value, row) {
+                    return (
+                      <Label
+                        variant="soft"
+                        color={
+                          value === 'Rejected'
+                            ? 'error'
+                            : value === 'Pending'
+                              ? 'warning'
+                              : value === 'Approved'
+                                ? 'success'
+                                : 'default'
+                        }
+                      >
+                        {value}
+                      </Label>
+                    );
+                  },
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  render: (row: any, popover) => (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      showViewIcon
+                      handleViewClick={() => {
+                        setSelectedStudent(studentRefundData[0]);
+
+                        dialogForFeeRefundedView.onTrue();
+                      }}
+                      actions={() => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              dialogForApprovalRequest.onTrue();
+                              // popover.onClose();
+                            }}
+                          >
+                            <Iconify icon="mdi:check" />
+                            Approved
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              setSelectedStudent(studentRefundData[0]);
+                              dialog.onTrue();
+                              // popover.onClose();
+                            }}
+                          >
+                            <Iconify icon="uil:process" />
+                            Proceed For Refund
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  ),
+                },
+              ]}
+            />
+          )}
+        </>
       )}
 
-      {fromStudentDetailedView && (
-        <CustomizableTable
-          tableId="student-refund-table"
-          isShowedDense={false}
-          isFilter={false}
-          isSearch={false}
-          data={studentRefundData}
-          columns={[
-            {
-              id: 'requestedOn',
-              label: 'Requested On',
-              render(value, row) {
-                return (
-                  <Typography minWidth="150px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'reason',
-              label: 'Reason',
-              render(value, row) {
-                return (
-                  <Tooltip title={value} arrow>
-                    <Typography minWidth="200px" fontSize="12px" noWrap>
-                      {value}
-                    </Typography>
-                  </Tooltip>
-                );
-              },
-            },
-            {
-              id: 'reasonForRejection',
-              label: 'Reason For Rejection',
-              render(value, row) {
-                return (
-                  <Tooltip title={value} arrow>
-                    <Typography minWidth="200px" fontSize="12px" noWrap>
-                      {value}
-                    </Typography>
-                  </Tooltip>
-                );
-              },
-            },
-            {
-              id: 'askForRefund',
-              label: 'Ask For Refund',
-              render(value, row) {
-                return (
-                  <Typography minWidth="100px" fontSize="12px" textAlign="center">
-                    {formatNumber(value, 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'approvedAmount',
-              label: 'Approved Amount',
-              render(value, row) {
-                return (
-                  <Typography minWidth="100px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              render(value, row) {
-                return (
-                  <Label
-                    variant="soft"
-                    color={
-                      value === 'Rejected'
-                        ? 'error'
-                        : value === 'Pending'
-                          ? 'warning'
-                          : value === 'Approved'
-                            ? 'success'
-                            : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                );
-              },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              render: (row: any, popover) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  // showViewIcon
-                  // handleViewClick={() => {
-                  //   setSelectedStudent(studentRefundData[0]);
-
-                  //   dialogForFeeRefundedView.onTrue();
-                  // }}
-                  actions={() => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          dialogForApprovalRequest.onTrue();
-                          // popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:check" />
-                        Approved
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedStudent(studentRefundData[0]);
-                          dialog.onTrue();
-                          // popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="uil:process" />
-                        Proceed For Refund
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              ),
-            },
-          ]}
-        />
-      )}
-
-      {!fromStudentDetailedView && (
-        <CustomizableTable
-          tableId="student-refund-table"
-          data={studentRefundData}
-          columns={[
-            {
-              id: 'rollNo',
-              label: 'Roll No',
-              render(value, row) {
-                return (
-                  <Typography minWidth="120px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'studentName',
-              label: 'Student Name',
-              render(value, row) {
-                return (
-                  <Typography minWidth="180px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'standard',
-              label: 'Standard',
-              render(value, row) {
-                return (
-                  <Typography minWidth="100px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'class',
-              label: 'Class',
-              render(value, row) {
-                return (
-                  <Typography minWidth="100px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'requestedOn',
-              label: 'Requested On',
-              render(value, row) {
-                return (
-                  <Typography minWidth="150px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'reason',
-              label: 'Reason',
-              render(value, row) {
-                return (
-                  <Tooltip title={value} arrow>
-                    <Typography minWidth="200px" fontSize="12px" noWrap>
-                      {value}
-                    </Typography>
-                  </Tooltip>
-                );
-              },
-            },
-            {
-              id: 'reasonForRejection',
-              label: 'Reason For Rejection',
-              render(value, row) {
-                return (
-                  <Tooltip title={value} arrow>
-                    <Typography minWidth="200px" fontSize="12px" noWrap>
-                      {value}
-                    </Typography>
-                  </Tooltip>
-                );
-              },
-            },
-            {
-              id: 'askForRefund',
-              label: 'Ask For Refund',
-              render(value, row) {
-                return (
-                  <Typography minWidth="100px" fontSize="12px" textAlign="left">
-                    {formatNumber(value, 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'approvedAmount',
-              label: 'Approved Amount',
-              render(value, row) {
-                return (
-                  <Typography minWidth="100px" fontSize="12px">
-                    {value}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              render(value, row) {
-                return (
-                  <Label
-                    variant="soft"
-                    color={
-                      value === 'Rejected'
-                        ? 'error'
-                        : value === 'Pending'
-                          ? 'warning'
-                          : value === 'Approved'
-                            ? 'success'
-                            : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                );
-              },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              render: (row: any, popover) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showViewIcon
-                  handleViewClick={() => {
-                    setSelectedStudent(studentRefundData[0]);
-
-                    dialogForFeeRefundedView.onTrue();
-                  }}
-                  actions={() => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          dialogForApprovalRequest.onTrue();
-                          // popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:check" />
-                        Approved
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setSelectedStudent(studentRefundData[0]);
-                          dialog.onTrue();
-                          // popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="uil:process" />
-                        Proceed For Refund
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              ),
-            },
-          ]}
-        />
-      )}
       {dialogForApprovalRequest.value && (
         <FinanceFeeCollectionRefundApprovedDialog
           dialogValue={dialogForApprovalRequest.value}
@@ -778,14 +746,6 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
         />
       )}
 
-      {dialogForCreateRequest.value && (
-        <FeeRefundRequestDialog
-          dialogValue={dialogForCreateRequest.value}
-          onClose={() => {
-            dialogForCreateRequest.onFalse();
-          }}
-        />
-      )}
       {dialog.value && (
         <FinanceFeeRefundAllocationDialog
           dialogValue={dialog.value}

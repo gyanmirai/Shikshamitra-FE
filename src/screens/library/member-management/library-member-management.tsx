@@ -194,82 +194,100 @@ const LibraryMemberManagementScreen = () => {
       }}
     />
   );
+  const [open, setOpen] = useState(false);
 
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
   return (
     <>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Member Management"
-          links={[{ name: 'Library' }, { name: 'Member Management' }]}
-          sx={{ px: 1, mb: 2 }}
+      {open ? (
+        <AddNewBookDialog
+          dialogValue={addNewBookDialog.value}
+          data={selectedEntry}
+          onSave={saveHandler}
+          onClose={closeHandler}
+          isEdit={isEdit}
         />
-        <CommonCtaComponent
-          bookHandler={() => openDialog(addNewBookDialog)}
-          issueBookHandler={() => openDialog(issueBookDialog)}
-          returnBookHandler={() => openDialog(returnBookDialog)}
-          createReservationHandler={() => openDialog(addMemberDialog)}
-        />
-      </Box>
+      ) : (
+        <>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <CustomBreadcrumbs
+              heading="Member Management"
+              links={[{ name: 'Library' }, { name: 'Member Management' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <CommonCtaComponent
+              bookHandler={() => setOpen(true)}
+              issueBookHandler={() => openDialog(issueBookDialog)}
+              returnBookHandler={() => openDialog(returnBookDialog)}
+              createReservationHandler={() => openDialog(addMemberDialog)}
+            />
+          </Box>
 
-      <CustomizableTable
-        tableId="member-management"
-        columns={[
-          { id: 'memberId', label: 'Member Id' },
-          { id: 'role', label: 'Role' },
-          { id: 'name', label: 'Name' },
-          {
-            id: 'currentIssue',
-            label: 'Current Issue',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px" textAlign="left" pl="30px">
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'pendingReturn',
-            label: 'Pending Return',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px" textAlign="left" pl="30px">
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'overdueReturn',
-            label: 'Overdue Return',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px" textAlign="left" pl="30px">
-                  {value}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'memberStatus',
-            label: 'Member Status',
-            render(value) {
-              return (
-                <Label
-                  textAlign="left"
-                  pl="30px"
-                  variant="soft"
-                  color={value === 'Active' ? 'success' : 'error'}
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-        ]}
-        data={memberDummyData}
-      />
+          <CustomizableTable
+            tableId="member-management"
+            columns={[
+              { id: 'memberId', label: 'Member Id' },
+              { id: 'role', label: 'Role' },
+              { id: 'name', label: 'Name' },
+              {
+                id: 'currentIssue',
+                label: 'Current Issue',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px" textAlign="left" pl="30px">
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'pendingReturn',
+                label: 'Pending Return',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px" textAlign="left" pl="30px">
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'overdueReturn',
+                label: 'Overdue Return',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px" textAlign="left" pl="30px">
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
+                id: 'memberStatus',
+                label: 'Member Status',
+                render(value) {
+                  return (
+                    <Label
+                      textAlign="left"
+                      pl="30px"
+                      variant="soft"
+                      color={value === 'Active' ? 'success' : 'error'}
+                    >
+                      {value}
+                    </Label>
+                  );
+                },
+              },
+              { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
+            ]}
+            data={memberDummyData}
+          />
+        </>
+      )}
+
       {dialogForDeleteConfirmation.value && (
         <DeleteConfirmationDialog
           open={dialogForDeleteConfirmation.value}
@@ -289,16 +307,6 @@ const LibraryMemberManagementScreen = () => {
           onClose={() => closeDialog(addMemberDialog)}
           isEdit={isEdit}
           isRenewMembership={isRenewMembership}
-        />
-      )}
-
-      {addNewBookDialog.value && (
-        <AddNewBookDialog
-          dialogValue={addNewBookDialog.value}
-          data={selectedEntry}
-          onSave={saveHandler}
-          onClose={() => closeDialog(addNewBookDialog)}
-          isEdit={isEdit}
         />
       )}
 

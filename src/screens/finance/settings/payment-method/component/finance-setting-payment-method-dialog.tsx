@@ -1,11 +1,17 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import isEqual from 'lodash/isEqual';
+import { useSelector, useDispatch } from 'react-redux';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
+import { Iconify } from 'src/components/iconify/iconify';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 interface FinanceSettingPaymentMethodDialogProps {
   dialogValue: boolean;
@@ -46,9 +52,12 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
   isEdit,
 }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  const formik = useFormik<FormikValue>({
-    initialValues: {
+  const dispatch = useDispatch();
+
+  const initialValues = useMemo(
+    () => ({
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
       paymentMethodName: isEdit ? (data.paymentMethodName ?? '') : '',
       serviceProviderDetail: {
@@ -58,7 +67,18 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
           : '',
       },
       integrationKey: isEdit ? (data.integrationKey ?? '') : '',
-    },
+    }),
+    [
+      data.id,
+      data.integrationKey,
+      data.paymentMethodName,
+      data.serviceProviderDetail?.serviceProviderMobile,
+      data.serviceProviderDetail?.serviceProviderName,
+      isEdit,
+    ]
+  );
+  const formik = useFormik<FormikValue>({
+    initialValues,
     validationSchema,
     onSubmit: (values) => {
       const existingEntryIndex = allData.findIndex(
@@ -76,14 +96,38 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
       console.log('Form Submitted:', values);
     },
   });
+  useEffect(() => {
+    const isChanged = !isEqual(formik.values, initialValues);
+    dispatch(setIsChanges(isChanged));
+  }, [dispatch, formik.values, initialValues]);
 
+  const handleCloseDialog = () => {
+    if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+      onClose();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      onClose();
+    }
+  };
   return (
-    <CustomDialog
-      title={`${isEdit ? 'Edit' : 'Create New'} Payment Method`}
-      open={dialogValue}
-      handleClose={onClose}
-      maxWidth="md"
-    >
+    <>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <CustomBreadcrumbs
+          heading="Payment Method"
+          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
+          <Button
+            startIcon={<Iconify icon="eva:arrow-back-fill" />}
+            onClick={handleCloseDialog}
+            variant="contained"
+            size="small"
+          >
+            Back
+          </Button>
+        </Box>
+      </Box>
       <Box px="15px">
         {showExistingEntryMessage ? (
           <Typography component="span" variant="h6">
@@ -93,73 +137,73 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
           <Box height="25px" />
         )}
       </Box>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
-        <Box px="15px">
-          <form onSubmit={formik.handleSubmit}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <TextField
-                size="small"
-                fullWidth
-                name="paymentMethodName"
-                label="Payment Method Name"
-                value={formik.values.paymentMethodName}
-                onChange={formik.handleChange}
-                error={formik.touched.paymentMethodName && Boolean(formik.errors.paymentMethodName)}
-                helperText={formik.touched.paymentMethodName && formik.errors.paymentMethodName}
-              />
-              <TextField
-                size="small"
-                fullWidth
-                name="serviceProviderDetail.serviceProviderName"
-                label="Service Provider Name"
-                value={formik.values.serviceProviderDetail.serviceProviderName}
-                onChange={formik.handleChange}
-                error={
-                  formik.touched.serviceProviderDetail?.serviceProviderName &&
-                  Boolean(formik.errors.serviceProviderDetail?.serviceProviderName)
-                }
-                helperText={
-                  formik.touched.serviceProviderDetail?.serviceProviderName &&
-                  formik.errors.serviceProviderDetail?.serviceProviderName
-                }
-              />
-              <TextField
-                size="small"
-                fullWidth
-                name="serviceProviderDetail.serviceProviderMobile"
-                label="Service Provider Mobile"
-                value={formik.values.serviceProviderDetail.serviceProviderMobile}
-                onChange={formik.handleChange}
-                error={
-                  formik.touched.serviceProviderDetail?.serviceProviderMobile &&
-                  Boolean(formik.errors.serviceProviderDetail?.serviceProviderMobile)
-                }
-                helperText={
-                  formik.touched.serviceProviderDetail?.serviceProviderMobile &&
-                  formik.errors.serviceProviderDetail?.serviceProviderMobile
-                }
-              />
-              <TextField
-                size="small"
-                fullWidth
-                name="integrationKey"
-                label="Integration Key"
-                value={formik.values.integrationKey}
-                onChange={formik.handleChange}
-                error={formik.touched.integrationKey && Boolean(formik.errors.integrationKey)}
-                helperText={formik.touched.integrationKey && formik.errors.integrationKey}
-              />
-            </Box>
-          </form>
-          {showExistingEntryMessage && <Typography color="error">Entry already exists</Typography>}
-        </Box>
-      </Scrollbar>
+
+      <Box px="15px">
+        <form onSubmit={formik.handleSubmit}>
+          <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+            <TextField
+              size="small"
+              fullWidth
+              name="paymentMethodName"
+              label="Payment Method Name"
+              value={formik.values.paymentMethodName}
+              onChange={formik.handleChange}
+              error={formik.touched.paymentMethodName && Boolean(formik.errors.paymentMethodName)}
+              helperText={formik.touched.paymentMethodName && formik.errors.paymentMethodName}
+            />
+            <TextField
+              size="small"
+              fullWidth
+              name="serviceProviderDetail.serviceProviderName"
+              label="Service Provider Name"
+              value={formik.values.serviceProviderDetail.serviceProviderName}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.serviceProviderDetail?.serviceProviderName &&
+                Boolean(formik.errors.serviceProviderDetail?.serviceProviderName)
+              }
+              helperText={
+                formik.touched.serviceProviderDetail?.serviceProviderName &&
+                formik.errors.serviceProviderDetail?.serviceProviderName
+              }
+            />
+            <TextField
+              size="small"
+              fullWidth
+              name="serviceProviderDetail.serviceProviderMobile"
+              label="Service Provider Mobile"
+              value={formik.values.serviceProviderDetail.serviceProviderMobile}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.serviceProviderDetail?.serviceProviderMobile &&
+                Boolean(formik.errors.serviceProviderDetail?.serviceProviderMobile)
+              }
+              helperText={
+                formik.touched.serviceProviderDetail?.serviceProviderMobile &&
+                formik.errors.serviceProviderDetail?.serviceProviderMobile
+              }
+            />
+            <TextField
+              size="small"
+              fullWidth
+              name="integrationKey"
+              label="Integration Key"
+              value={formik.values.integrationKey}
+              onChange={formik.handleChange}
+              error={formik.touched.integrationKey && Boolean(formik.errors.integrationKey)}
+              helperText={formik.touched.integrationKey && formik.errors.integrationKey}
+            />
+          </Box>
+        </form>
+        {showExistingEntryMessage && <Typography color="error">Entry already exists</Typography>}
+      </Box>
+
       <DialogActions>
-        <Button type="submit" variant="contained" size="small">
+        <Button type="submit" variant="outlined" size="small">
           Save
         </Button>
       </DialogActions>
-    </CustomDialog>
+    </>
   );
 };
 

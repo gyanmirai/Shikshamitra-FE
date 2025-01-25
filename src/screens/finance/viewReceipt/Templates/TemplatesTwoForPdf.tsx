@@ -97,12 +97,6 @@ const TemplateTwoPDF = () => (
           <Text style={styles.centerAligned}>Dealdva Road, Dindoli Surat-394210</Text>
           <Text style={styles.centerAligned}>Mo: 98250 33150</Text>
 
-          {/* Render key-value pairs with bold styling */}
-          <View style={styles.container}>
-            <Text style={styles.text}>Hello</Text>
-            <Text style={styles.textBold}>World</Text>
-            <Text style={styles.text}>. Again, I am not bold, WOW</Text>
-          </View>
           <View style={styles.row}>
             <View>
               <Text style={styles.keyValue}>
@@ -129,9 +123,6 @@ const TemplateTwoPDF = () => (
               <Text style={styles.keyValue}>
                 <Text style={styles.boldText}>Roll No</Text>: 98
               </Text>
-              {/* <Text style={styles.keyValue}>
-                                <Text style={styles.boldText}>Class</Text>:
-                            </Text> */}
             </View>
           </View>
 

@@ -80,11 +80,7 @@ const FinanceIncomeTrackingScreen = () => {
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(data);
-
-  const closeDialog = () => {
-    setIsEdit(false);
-    dialog.onFalse();
-  };
+  const [open, setOpen] = useState(false);
 
   const closeDialogForDetailsInSource = () => {
     dialogForDetailsInSource.onFalse();
@@ -119,7 +115,6 @@ const FinanceIncomeTrackingScreen = () => {
       setTableData(updatedData);
     }
 
-    closeDialog();
     console.log('Updated Data:', dataFromDialog);
   };
 
@@ -129,117 +124,105 @@ const FinanceIncomeTrackingScreen = () => {
     setTableData([...data]);
   };
 
-  // const handleConfirm = () => {
-  //   console.log('Item deleted');
-  //   setOpen(false);
-  // };
+  const handleClose = () => {
+    setOpen(false);
+    setIsEdit(false);
+  };
 
   return (
     <>
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Income Tracking"
-          links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
-          sx={{ px: 1, mb: 2 }}
+      {open ? (
+        <FinanceAddNewIncomeDialog
+          onSave={handleSave}
+          dialogValue={dialog.value}
+          onClose={handleClose}
+          data={selectedEntry}
+          isEdit={isEdit}
+          allData={tableData}
         />
-        <Box
-          sx={{ mr: '15px', mb: '20px' }}
-          gap={3}
-          display="flex"
-          flexDirection="row"
-          justifyContent="flex-end"
-        >
-          <Button
-            startIcon={<Iconify icon="ic:outline-plus" />}
-            onClick={dialog.onTrue}
-            variant="contained"
-            size="small"
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            New Income
-          </Button>
-        </Box>
-      </Box>
+            <CustomBreadcrumbs
+              heading="Income Tracking"
+              links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box
+              sx={{ mr: '15px', mb: '20px' }}
+              gap={3}
+              display="flex"
+              flexDirection="row"
+              justifyContent="flex-end"
+            >
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => setOpen(true)}
+                variant="contained"
+                size="small"
+              >
+                New Income
+              </Button>
+            </Box>
+          </Box>
 
-      <CustomizableTable
-        tableId="income-tracking-table"
-        isScrollbar={false}
-        columns={[
-          {
-            id: 'incomeSource',
-            label: 'Income Source',
-          },
-          {
-            id: 'incomeAmount',
-            label: 'Income Amount',
-            render(value, row) {
-              return (
-                <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
-              );
-            },
-          },
+          <CustomizableTable
+            tableId="income-tracking-table"
+            isScrollbar={false}
+            columns={[
+              {
+                id: 'incomeSource',
+                label: 'Income Source',
+              },
+              {
+                id: 'incomeAmount',
+                label: 'Income Amount',
+                render(value, row) {
+                  return (
+                    <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
+                  );
+                },
+              },
 
-          { id: 'date', label: `Today / Received Date` },
+              { id: 'date', label: `Today / Received Date` },
 
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  showThreeDots={false}
-                  placement="right-top"
-                  showViewIcon
-                  handleViewClick={() => {
-                    dialogForDetailsInSource.onTrue();
-                    setSelectedEntry(row);
-                  }}
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    dialogForDeleteConfirmation.onTrue();
-                  }}
-                  showEditIcon
-                  handleEditClick={() => {
-                    setIsEdit(true);
-                    setSelectedEntry(row);
-
-                    dialog.onTrue();
-                  }}
-                  // actions={({ popover }: any) => (
-                  //   <MenuList>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         console.log('data row', row);
-
-                  //       }}
-                  //     >
-                  //       <Iconify icon="mdi:eye" />
-                  //       View Details
-                  //     </MenuItem>
-                  //     <MenuItem
-                  //       onClick={() => {
-
-                  //       }}
-                  //     >
-                  //       <Iconify icon="solar:pen-bold" />
-                  //       Edit
-                  //     </MenuItem>
-                  //     <MenuItem
-                  //       onClick={() => {
-                  //         handleDelete(row);
-                  //       }}
-                  //     >
-                  //       <Iconify icon="solar:trash-bin-trash-bold" />
-                  //       Delete
-                  //     </MenuItem>
-                  //   </MenuList>
-                  // )}
-                />
-              );
-            },
-          },
-        ]}
-        data={tableData}
-      />
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row: any) {
+                  return (
+                    <ThreeDotsActions
+                      showThreeDots={false}
+                      placement="right-top"
+                      showViewIcon
+                      handleViewClick={() => {
+                        dialogForDetailsInSource.onTrue();
+                        setSelectedEntry(row);
+                      }}
+                      showDeleteIcon
+                      handleDeleteClick={() => {
+                        dialogForDeleteConfirmation.onTrue();
+                      }}
+                      showEditIcon
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        setSelectedEntry(row);
+                        setOpen(true);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={tableData}
+          />
+        </>
+      )}
 
       {dialogForDeleteConfirmation.value && (
         <DeleteConfirmationDialog
@@ -252,18 +235,6 @@ const FinanceIncomeTrackingScreen = () => {
           description="Are you sure you want to delete this item? This action cannot be undone."
         />
       )}
-      <Box>
-        {dialog.value && selectedEntry && (
-          <FinanceAddNewIncomeDialog
-            onSave={handleSave}
-            dialogValue={dialog.value}
-            onClose={closeDialog}
-            data={selectedEntry}
-            isEdit={isEdit}
-            allData={tableData}
-          />
-        )}
-      </Box>
 
       {dialogForDetailsInSource.value && (
         <FinanceIncomeDetailsDialog

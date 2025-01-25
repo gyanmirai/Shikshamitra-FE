@@ -99,101 +99,115 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
   };
 
   useEffect(() => {}, [selectedEntry, isEdit]);
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    setIsEdit(false);
+    setOpen(false);
+  };
 
   return (
     <>
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Payment Method"
-          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
-          sx={{ px: 1, mb: 2 }}
-        />
-        <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
-          <Button
-            startIcon={<Iconify icon="ic:outline-plus" />}
-            onClick={() => {
-              setIsEdit(false);
-              dialog.onTrue();
-            }}
-            variant="contained"
-            size="small"
-          >
-            Payment Method
-          </Button>
-        </Box>
-      </Box>
-      <CustomizableTable
-        tableId="finance-payment-method-setting-table"
-        columns={[
-          { id: 'paymentMethodName', label: 'Payment Method Name' },
-          {
-            id: 'serviceProviderDetail',
-            label: 'Service Provider Details',
-            render(value, row) {
-              return (
-                <Box>
-                  <Typography fontSize="12px">
-                    {row.serviceProviderDetail.serviceProviderName}
-                  </Typography>
-                  <Typography fontSize="12px">
-                    {row.serviceProviderDetail.serviceProviderMobile}
-                  </Typography>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'toggle',
-            label: 'InActive/Active',
-            render() {
-              return <Switch />;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render: (value, row: any) => (
-              <ThreeDotsActions
-                showThreeDots={false}
-                showDeleteIcon
-                handleDeleteClick={() => {
-                  dialogForDeleteConfirmation.onTrue();
-                  // handleDelete(row);
-                }}
-                showEditIcon
-                handleEditClick={() => {
-                  setIsEdit(true);
-
-                  setSelectedEntry(row);
-                  dialog.onTrue();
-                }}
-              />
-            ),
-          },
-        ]}
-        data={tableData}
-      />
-
-      {dialogForDeleteConfirmation.value && (
-        <DeleteConfirmationDialog
-          open={dialogForDeleteConfirmation.value}
-          onClose={() => {
-            dialogForDeleteConfirmation.onFalse();
-          }}
-          onConfirm={() => {}}
-          title="Delete Item"
-          description="Are you sure you want to delete this item? This action cannot be undone."
-        />
-      )}
-      {dialog.value && selectedEntry && (
+      {open ? (
         <FinanceSettingPaymentMethodDialog
           onSave={handleSave}
           dialogValue={dialog.value}
-          onClose={closeDialog}
+          onClose={closeHandler}
           data={selectedEntry}
           isEdit={isEdit}
           allData={tableData}
         />
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <CustomBreadcrumbs
+              heading="Payment Method"
+              links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
+              <Button
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => {
+                  setIsEdit(false);
+                  setOpen(true);
+                }}
+                variant="contained"
+                size="small"
+              >
+                Payment Method
+              </Button>
+            </Box>
+          </Box>
+          <CustomizableTable
+            tableId="finance-payment-method-setting-table"
+            columns={[
+              { id: 'paymentMethodName', label: 'Payment Method Name' },
+              {
+                id: 'serviceProviderDetail',
+                label: 'Service Provider Details',
+                render(value, row) {
+                  return (
+                    <Box>
+                      <Typography fontSize="12px">
+                        {row.serviceProviderDetail.serviceProviderName}
+                      </Typography>
+                      <Typography fontSize="12px">
+                        {row.serviceProviderDetail.serviceProviderMobile}
+                      </Typography>
+                    </Box>
+                  );
+                },
+              },
+              {
+                id: 'toggle',
+                label: 'InActive/Active',
+                render() {
+                  return <Switch />;
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render: (value, row: any) => (
+                  <ThreeDotsActions
+                    showThreeDots={false}
+                    showDeleteIcon
+                    handleDeleteClick={() => {
+                      dialogForDeleteConfirmation.onTrue();
+                      // handleDelete(row);
+                    }}
+                    showEditIcon
+                    handleEditClick={() => {
+                      setIsEdit(true);
+
+                      setSelectedEntry(row);
+                      setOpen(true);
+                    }}
+                  />
+                ),
+              },
+            ]}
+            data={tableData}
+          />
+
+          {dialogForDeleteConfirmation.value && (
+            <DeleteConfirmationDialog
+              open={dialogForDeleteConfirmation.value}
+              onClose={() => {
+                dialogForDeleteConfirmation.onFalse();
+              }}
+              onConfirm={() => {}}
+              title="Delete Item"
+              description="Are you sure you want to delete this item? This action cannot be undone."
+            />
+          )}
+        </>
       )}
     </>
   );
