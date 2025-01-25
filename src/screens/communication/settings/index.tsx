@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Tab, Box, Card } from '@mui/material';
 
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -40,7 +40,7 @@ const TABS = [
 ];
 
 const Setting = () => {
-  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'notificationSetting' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notificationSetting' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

@@ -11,7 +11,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Tab, Card, Tabs, Paper, Button, Avatar, Typography, IconButton } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -190,11 +190,7 @@ export function StudentProfile() {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  const [searchParams, setSearchParams] = useNewSearchParams<{
-    isSearch: string;
-    student: string;
-    searchValue: string;
-  }>({
+  const [searchParams, setSearchParams] = useSearchParam({
     isSearch: '',
     student: '',
     searchValue: '',

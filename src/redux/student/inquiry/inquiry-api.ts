@@ -11,7 +11,7 @@ export const StudentInquiryApi = createApi({
   endpoints: (builder) => ({
     getStudentInquiry: builder.query({
       query: (params) => ({
-        url: '/app/student-inquiry',
+        url: '/app/student-enrollment/student-inquiry',
         method: 'GET',
         params,
       }),
@@ -19,7 +19,7 @@ export const StudentInquiryApi = createApi({
     }),
     addStudentInquiry: builder.mutation({
       query: (body) => ({
-        url: '/app/student-inquiry',
+        url: '/app/student-enrollment/student-inquiry',
         method: 'POST',
         data: body,
       }),
@@ -27,7 +27,7 @@ export const StudentInquiryApi = createApi({
     }),
     updateStudentInquiry: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-inquiry/${id}`,
+        url: `/app/student-enrollment/student-inquiry/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -36,7 +36,7 @@ export const StudentInquiryApi = createApi({
 
     deleteStudentInquiry: builder.mutation({
       query: (id) => ({
-        url: `/app/student-inquiry/${id}`,
+        url: `/app/student-enrollment/student-inquiry/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Student-Inquiry'],

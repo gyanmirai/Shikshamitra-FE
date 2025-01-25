@@ -80,6 +80,149 @@ interface EmployeeViewProps {
   searchParams: any;
 }
 
+export function EmployeeCard({ employee }: any) {
+  const tabs = useTabs('personalInformation');
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === tabs.value),
+    [tabs.value]
+  );
+  return (
+    <>
+      <Card
+        sx={{
+          mb: 3,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          boxShadow: 'var(--shadows-4)',
+        }}
+      >
+        <Paper
+          sx={{
+            p: 1,
+            borderBottom: '1px dashed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderLeft: (theme) =>
+              employee?.employeeStatusType === EmployeeStatusType.Active
+                ? `4px solid ${theme.palette.success.main}`
+                : `4px solid ${theme.palette.error.main}`,
+            borderRadius: 1,
+          }}
+        >
+          <Box display="flex" gap={2} alignItems="center">
+            <Avatar
+              src={
+                employee?.profilePicture
+                  ? convertBase64Format(employee?.profilePicture)
+                  : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
+              }
+              sx={{
+                width: 64,
+                height: 64,
+              }}
+            />
+            <Label
+              variant="filled"
+              color="primary"
+              sx={{
+                fontSize: '12px',
+              }}
+            >
+              {employee?.employeeName}
+            </Label>
+            <Label
+              variant="filled"
+              color="info"
+              sx={{
+                fontSize: '12px',
+              }}
+            >
+              {employee?.employeeCode}
+            </Label>
+            <Label
+              variant="filled"
+              color="secondary"
+              sx={{
+                fontSize: '12px',
+              }}
+            >
+              {employee?.role?.name}
+            </Label>
+            <Label
+              variant="filled"
+              color="warning"
+              sx={{
+                fontSize: '12px',
+              }}
+            >
+              Primary
+            </Label>
+          </Box>
+          <Box display="flex" gap={2} alignItems="center">
+            <Button size="small" variant="outlined">
+              View I-card
+            </Button>
+            {/* <CustomTooltip
+         arrow
+         title={
+           <Box p={1}>
+             <Label variant="soft" color="success">
+               Volunteer
+             </Label>
+             <Label variant="soft" color="warning" sx={{ ml: 1 }}>
+               New
+             </Label>
+             <Label variant="soft" color="info" sx={{ ml: 1 }}>
+               VIP
+             </Label>
+             <Label variant="soft" color="error" sx={{ ml: 1 }}>
+               Good Listener
+             </Label>
+           </Box>
+         }
+        >
+         <IconButton sx={{ color: 'primary.main' }}>
+           <Iconify
+             icon="iconamoon:certificate-badge-fill"
+             sx={{ height: '24px', width: '24px' }}
+           />
+         </IconButton>
+        </CustomTooltip> */}
+          </Box>
+        </Paper>
+        <Tabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{
+            px: 2,
+            '& .MuiTabs-flexContainer': {
+              gap: 1.5,
+            },
+          }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{
+                fontSize: '12px',
+              }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+              role="tab"
+            />
+          ))}
+        </Tabs>
+      </Card>
+      {currentActiveComponent?.component && (
+        <currentActiveComponent.component tabs={tabs} employee={employee} />
+      )}
+    </>
+  );
+}
+
 const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   const tabs = useTabs('personalInformation');
   const currentActiveComponent = useMemo(
@@ -120,104 +263,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
           )
         }
       />
-      <Card
-        sx={{
-          mb: 3,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          boxShadow: 'var(--shadows-4)',
-        }}
-      >
-        <Paper
-          sx={{
-            p: 1,
-            borderBottom: '1px dashed',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderLeft: (theme) =>
-              employee?.employeeStatusType === EmployeeStatusType.Active
-                ? `4px solid ${theme.palette.success.main}`
-                : `4px solid ${theme.palette.error.main}`,
-            borderRadius: 1,
-          }}
-        >
-          <Box display="flex" gap={2} alignItems="center">
-            <Avatar
-              src={
-                employee?.profilePicture
-                  ? convertBase64Format(employee?.profilePicture)
-                  : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
-              }
-              sx={{ width: 64, height: 64 }}
-            />
-            <Label variant="filled" color="primary" sx={{ fontSize: '12px' }}>
-              {employee?.employeeName}
-            </Label>
-            <Label variant="filled" color="info" sx={{ fontSize: '12px' }}>
-              {employee?.employeeCode}
-            </Label>
-            <Label variant="filled" color="secondary" sx={{ fontSize: '12px' }}>
-              {employee?.role?.name}
-            </Label>
-            <Label variant="filled" color="warning" sx={{ fontSize: '12px' }}>
-              Primary
-            </Label>
-          </Box>
-          <Box display="flex" gap={2} alignItems="center">
-            <Button size="small" variant="outlined">
-              View I-card
-            </Button>
-            {/* <CustomTooltip
-              arrow
-              title={
-                <Box p={1}>
-                  <Label variant="soft" color="success">
-                    Volunteer
-                  </Label>
-                  <Label variant="soft" color="warning" sx={{ ml: 1 }}>
-                    New
-                  </Label>
-                  <Label variant="soft" color="info" sx={{ ml: 1 }}>
-                    VIP
-                  </Label>
-                  <Label variant="soft" color="error" sx={{ ml: 1 }}>
-                    Good Listener
-                  </Label>
-                </Box>
-              }
-            >
-              <IconButton sx={{ color: 'primary.main' }}>
-                <Iconify
-                  icon="iconamoon:certificate-badge-fill"
-                  sx={{ height: '24px', width: '24px' }}
-                />
-              </IconButton>
-            </CustomTooltip> */}
-          </Box>
-        </Paper>
-        <Tabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              value={tab.value}
-              icon={tab.icon}
-              label={tab.label}
-              role="tab"
-            />
-          ))}
-        </Tabs>
-      </Card>
-      {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
-      {currentActiveComponent?.component && (
-        <currentActiveComponent.component tabs={tabs} employee={employee} />
-      )}
+      <EmployeeCard employee={employee} />
       {/* </Scrollbar> */}
     </>
   );

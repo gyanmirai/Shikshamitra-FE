@@ -1,22 +1,34 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import dayjs from 'dayjs';
 import { toast } from 'sonner';
-import React, { useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
+
+import calculateAge from 'src/utils/calculate-age';
+
+import { GenderType } from 'src/enums/gender';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetStudentRegistrationQuery } from 'src/redux/student/registration/registration-api';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import type { IInquiryData } from '../Inquiry';
+
 const RegistrationTable = ({
   dialog,
   followUpDialog,
+  setEditData,
+  formDialog,
 }: {
   dialog: UseBooleanReturn;
+  formDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
+  setEditData: (data: null | IInquiryData) => void;
 }) => {
-  const a = null;
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -53,18 +65,70 @@ const RegistrationTable = ({
     ),
     [dialog, followUpDialog]
   );
+
+  const { data: registrationData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentRegistrationQuery,
+  });
+
+  const tableData = useMemo(
+    () =>
+      registrationData?.items.map((item: IInquiryData) => ({
+        ...item,
+        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+        doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        genderValue: GenderType[item?.genderType],
+      })),
+    [registrationData?.items]
+  );
+
   return (
     <CustomizableTable
       tableId="student-registration-table"
+      isLoading={isLoading}
       columns={[
-        { id: 'inquiryNo', label: 'Inquiry No', minWidth: '104px' },
-        // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
-        // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
-        { id: 'Name', label: 'Name' },
-        { id: 'Code', label: 'Code' },
-        { id: 'class', label: 'Class' },
-        { id: 'Organization', label: 'Organization' },
-        { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
+        { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+        {
+          id: 'inquiryNumber',
+          label: 'Inquiry Number',
+
+          minWidth: '162px',
+          isFilter: true,
+          filterType: 'string',
+        },
+        { id: 'standard.name', label: 'Class' },
+        { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+        {
+          id: 'dobValue',
+          label: 'DOB',
+          minWidth: '120px',
+          align: 'left',
+          isFilter: true,
+          filterType: 'date',
+        },
+        { id: 'ageValue', label: 'Age' },
+        {
+          id: 'doiValue',
+          label: 'DOI',
+          minWidth: '120px',
+          align: 'left',
+          isDateRangeFilter: true,
+        },
+        { id: 'genderValue', label: 'Gender' },
+        { id: 'address', label: 'Address', minWidth: '120px' },
+        { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
+        { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
+        { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+        {
+          id: 'inquiryPreference.preferenceName',
+          label: 'Enquiry Preferences',
+          minWidth: '200px',
+        },
+
+        { id: 'educationMedium.name', label: 'Organization' },
+
         // { id: 'EmployeeDesignation', label: 'Role' },
         {
           id: 'progress',
@@ -112,7 +176,10 @@ const RegistrationTable = ({
             return (
               <ThreeDotsActions
                 showEditIcon
-                handleEditClick={() => {}}
+                handleEditClick={() => {
+                  setEditData(row as IInquiryData);
+                  formDialog.onTrue();
+                }}
                 actions={(prop) => actions({ ...prop, row })}
                 placement="right-top"
               />
@@ -120,73 +187,7 @@ const RegistrationTable = ({
           },
         },
       ]}
-      data={[
-        {
-          Organization: 'primary',
-          Code: 'REG001',
-          Name: 'Sarah Anderson',
-          FirstName: 'Sarah',
-          MiddleName: 'Marie',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Active',
-          parentContactNo: '+91-555-0101',
-          class: '5',
-          inquiryNo: 'INQ001',
-          progress: '100',
-        },
-        {
-          Organization: 'pre-primary',
-          Code: 'REG002',
-          Name: 'Michael Chen',
-          FirstName: 'Michael',
-          MiddleName: 'James',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Inactive',
-          parentContactNo: '+91-555-0102',
-          class: 'KG-2',
-          inquiryNo: 'INQ002',
-          progress: '75',
-        },
-        {
-          Organization: 'primary',
-          Code: 'REG003',
-          Name: 'Emily Rodriguez',
-          FirstName: 'Emily',
-          MiddleName: 'Sofia',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Active',
-          parentContactNo: '+91-555-0103',
-          class: '3',
-          inquiryNo: 'INQ003',
-          progress: '50',
-        },
-        {
-          Organization: 'secondary',
-          Code: 'REG004',
-          Name: 'David Thompson',
-          FirstName: 'David',
-          MiddleName: 'Alexander',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Active',
-          parentContactNo: '+91-555-0104',
-          class: '9',
-          inquiryNo: 'INQ004',
-          progress: '25',
-        },
-        {
-          Organization: 'higher secondary',
-          Code: 'REG005',
-          Name: 'Lisa Wong',
-          FirstName: 'Lisa',
-          MiddleName: 'Grace',
-          EmployeeDesignation: 'Student',
-          StatusName: 'Inactive',
-          parentContactNo: '+91-555-0105',
-          class: '11',
-          inquiryNo: 'INQ005',
-          progress: '0',
-        },
-      ]}
+      data={tableData || []}
     />
   );
 };

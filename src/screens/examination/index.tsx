@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
 import { Tab, Box, Card, Button } from '@mui/material';
 
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { varAlpha } from 'src/theme/styles';
 
@@ -63,7 +63,7 @@ const TABS = [
 ];
 
 const ExaminationPageScreen = () => {
-  const [searchParams, setSearchParams] = useNewSearchParams({ tab: 'dashboard' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

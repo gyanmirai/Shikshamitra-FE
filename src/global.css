@@ -97,33 +97,45 @@ html {
 }
 
 /* HTML: <div class="loader"></div> */
-/* HTML: <div class="loader"></div> */
 .loader {
-  width: 30px;
-  aspect-ratio: 1;
-  display: grid;
-  border-radius: 50%;
+  width: 40px;
+  aspect-ratio: 2;
+  --_g: no-repeat
+    radial-gradient(
+      circle closest-side,
+      rgba(var(--palette-primary-mainChannel) / 1) 90%,
+      rgba(var(--palette-primary-mainChannel) / 0)
+    );
   background:
-    linear-gradient(0deg, rgb(0 0 0/50%) 30%, #0000 0 70%, rgb(0 0 0/100%) 0) 50%/8% 100%,
-    linear-gradient(90deg, rgb(0 0 0/25%) 30%, #0000 0 70%, rgb(0 0 0/75%) 0) 50%/100% 8%;
-  background-repeat: no-repeat;
-  animation: l23 1s infinite steps(12);
+    var(--_g) 0% 50%,
+    var(--_g) 50% 50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 50%;
+  animation: l3 1s infinite linear;
 }
-.loader::before,
-.loader::after {
-  content: '';
-  grid-area: 1/1;
-  border-radius: 50%;
-  background: inherit;
-  opacity: 0.915;
-  transform: rotate(30deg);
-}
-.loader::after {
-  opacity: 0.83;
-  transform: rotate(60deg);
-}
-@keyframes l23 {
-  100% {
-    transform: rotate(1turn);
+@keyframes l3 {
+  20% {
+    background-position:
+      0% 0%,
+      50% 50%,
+      100% 50%;
+  }
+  40% {
+    background-position:
+      0% 100%,
+      50% 0%,
+      100% 50%;
+  }
+  60% {
+    background-position:
+      0% 50%,
+      50% 100%,
+      100% 0%;
+  }
+  80% {
+    background-position:
+      0% 50%,
+      50% 50%,
+      100% 100%;
   }
 }

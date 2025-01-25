@@ -1,7 +1,9 @@
+import type { Board } from 'src/types/school';
 import type { SxProps, GridProps } from '@mui/material';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { toast } from 'sonner';
+import { useMemo, useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -12,25 +14,49 @@ import {
   Divider,
   Checkbox,
   MenuItem,
+  Collapse,
+  Skeleton,
   TextField,
   Typography,
   InputLabel,
   IconButton,
   FormControl,
   Autocomplete,
-  FormControlLabel,
 } from '@mui/material';
 
-import calculateAge from 'src/utils/calculate-age';
+import { useBoolean } from 'src/hooks/use-boolean';
 
+import calculateAge from 'src/utils/calculate-age';
+import { convertBase64Format } from 'src/utils/base64Formate';
+
+import { YesNoArray } from 'src/enums/yes-no';
+import { DocumentType } from 'src/enums/documnet-type';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Category, CategoryArray } from 'src/enums/studnet-category';
+import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
+import {
+  useUploadDocumentsMutation,
+  useGetStudentDocumentsQuery,
+  useGetStudentDocumentByIdQuery,
+  useStudentUpdateDocumentMutation,
+} from 'src/redux/student/registration/registration-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
+import { Subheader } from 'src/components/nav-section';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import UploadButton from 'src/components/upload-button';
+import StandardAddress from 'src/components/stardard-address';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import type { IInquiryData } from '../Inquiry';
 
 export interface FieldsType {
   type: string;
@@ -42,13 +68,368 @@ export interface FieldsType {
   renderComp?: (props: any) => React.ReactNode;
   gridProps?: GridProps;
 }
+export const RenderDocuments = (props: any) => {
+  const { id } = props;
+  const viewDialog = useBoolean();
+  const [docId, setDocId] = useState<null | string>(null);
+
+  const [uploadDocument] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadDocumentsMutation,
+  });
+
+  const [updateDocument] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useStudentUpdateDocumentMutation,
+  });
+
+  const { data: documents, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentDocumentTypeQuery,
+  });
+
+  const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentDocumentsQuery,
+    params: id,
+  });
+
+  const tableData = useMemo(
+    () =>
+      documents?.items?.map((item: any) => ({
+        ...item,
+        statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+          ? 'Uploaded'
+          : 'Not Uploaded',
+        docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
+        statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+          ? 'success'
+          : 'warning',
+        uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
+      })) || [],
+    [documents?.items, employeeDocuments]
+  );
+  return (
+    <>
+      <CustomizableTable
+        isLoading={isLoading || isEmployeeDocLoading}
+        tableId="documents"
+        columns={[
+          { id: 'documentName', label: 'Name' },
+          {
+            id: 'docType',
+            label: 'Document Type',
+            isSort: false,
+          },
+          {
+            id: 'statusVal',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label color={row.uploadDocument ? 'success' : 'warning'}>
+                  {row.uploadDocument ? 'Uploaded' : 'Pending'}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'upload',
+            label: 'Upload',
+            render(value, row) {
+              return (
+                <UploadButton
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    const myNewFile = new File([file], row.documentName, { type: file.type });
+                    const formData = new FormData();
+                    formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
+
+                    toast.promise(
+                      row.uploadDocument
+                        ? updateDocument({
+                            documentId: row.uploadDocument.id,
+                            id,
+                            body: formData,
+                          })
+                        : uploadDocument({ id, body: formData }),
+                      {
+                        loading: `Uploading Document ${row.documentName} `,
+                        success: () => `Upload Successfully!`,
+                        error: 'Error',
+                        closeButton: false,
+                      }
+                    );
+                  }}
+                >
+                  <Iconify icon="ri:file-upload-fill" />
+                </UploadButton>
+              );
+            },
+          },
+          {
+            id: 'view',
+            label: 'View',
+            render(value, row) {
+              return (
+                <IconButton
+                  disabled={!row.uploadDocument}
+                  onClick={() => {
+                    setDocId(row.uploadDocument.id);
+                    viewDialog.onTrue();
+                  }}
+                >
+                  <Iconify icon="carbon:view-filled" />
+                </IconButton>
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />
+      <CustomDialog
+        title="Preview Document"
+        open={viewDialog.value}
+        handleClose={viewDialog.onFalse}
+        maxWidth="lg"
+      >
+        <Box p={2}>
+          <ViewDocuments id={id} docId={docId} />
+        </Box>
+      </CustomDialog>
+    </>
+  );
+};
+
+const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
+  const { data: documents, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentDocumentByIdQuery,
+    params: { id, documentId: docId },
+  });
+
+  return (
+    <Box>
+      {isLoading ? (
+        <Skeleton variant="rectangular" height={300} />
+      ) : (
+        <iframe
+          src={convertBase64Format(documents.content)}
+          style={{ width: '100%', height: 500 }}
+          title="Employee Document"
+        />
+      )}
+    </Box>
+  );
+};
+
+const RenderAcademicYear = (props: any) => {
+  const { formik } = props;
+  const { values, setFieldValue, touched, errors } = formik;
+  const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetYearQuery,
+  });
+  return (
+    <CustomSelect
+      name="academicYear"
+      label="Academic Year"
+      isLoading={yearLoading}
+      options={academicYear?.items || []}
+      value={values.academicYear}
+      labelKey="name"
+      valueKey="id"
+      onChange={(value) => setFieldValue('academicYear', value)}
+      error={!!(touched.academicYear && errors.academicYear) || false}
+      helperText={(touched.academicYear && errors.academicYear) || ''}
+      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+    />
+  );
+};
+
+const RenderBoard = (props: any) => {
+  const { formik } = props;
+  const { values, setFieldValue, touched, errors } = formik;
+  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  return (
+    <CustomSelect
+      name="board"
+      label="Board"
+      isLoading={boardLoading}
+      options={board?.items || []}
+      disabled={!values.academicYear}
+      labelKey="name"
+      valueKey="id"
+      value={values.board}
+      onChange={(value) => setFieldValue('board', value)}
+      error={!!(touched.board && errors.board) || false}
+      helperText={(touched.board && errors.board) || ''}
+      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+    />
+  );
+};
+const RenderMedium = (props: any) => {
+  const { formik } = props;
+  const { values, setFieldValue, touched, errors } = formik;
+  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  return (
+    <CustomSelect
+      name="medium"
+      label="Medium"
+      disabled={!values.board}
+      options={
+        board?.items?.find((item: Board) => item.id === values.board)?.educationMediums || []
+      }
+      value={values.medium}
+      labelKey="name"
+      valueKey="id"
+      onChange={(value) => setFieldValue('medium', value)}
+      error={!!(touched.medium && errors.medium) || false}
+      helperText={(touched.medium && errors.medium) || ''}
+      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+    />
+  );
+};
+
+const RenderClass = (props: any) => {
+  const { formik } = props;
+  const { values, setFieldValue, touched, errors } = formik;
+  const { data: classes, isLoading: classLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassByOrganizationIdQuery,
+    options: {
+      skip: !values.medium,
+    },
+    params: values.medium,
+  });
+  return (
+    <CustomSelect
+      name="class"
+      label="Class"
+      isLoading={classLoading}
+      disabled={!values.medium}
+      labelKey="name"
+      valueKey="id"
+      options={classes || []}
+      value={values.class}
+      onChange={(value) => setFieldValue('class', value)}
+      error={!!(touched.class && errors.class) || false}
+      helperText={(touched.class && errors.class) || ''}
+      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+    />
+  );
+};
 
 export const generalFormFields: FieldsType[] = [
   { name: 'inquiryNo', label: 'Inquiry No', type: 'text', otherProps: { disabled: true } },
   { name: 'formNo', label: 'Form No', type: 'text' },
-  { name: 'surname', label: 'Surname', type: 'text', otherProps: {} },
-  { name: 'name', label: 'Name', type: 'text', otherProps: {} },
+  {
+    name: 'year',
+    label: 'year',
+    type: 'text',
+    renderComp(props) {
+      return <RenderAcademicYear {...props} />;
+    },
+  },
+  {
+    name: 'board',
+    label: 'board',
+    type: 'text',
+    renderComp(props) {
+      return <RenderBoard {...props} />;
+    },
+  },
+  {
+    name: 'medium',
+    label: 'medium',
+    type: 'text',
+    renderComp(props) {
+      return <RenderMedium {...props} />;
+    },
+  },
+  {
+    name: 'class',
+    label: 'class',
+    type: 'text',
+    renderComp(props) {
+      return <RenderClass {...props} />;
+    },
+  },
+  { name: 'previousSchool', label: 'Previous School', type: 'text', otherProps: {} },
+  { name: 'firstName', label: 'First Name', type: 'text', otherProps: {} },
+  { name: 'lastName', label: 'last Name', type: 'text', otherProps: {} },
   { name: 'middleName', label: 'Middle Name', type: 'text', otherProps: {} },
+  {
+    name: 'mobileNo',
+    label: 'Contact Number',
+    type: 'text',
+    renderComp(props) {
+      const { formik } = props;
+      return (
+        <PhoneInput
+          name="mobileNo"
+          value={formik.values.mobileNo}
+          onChange={(value) => {
+            formik.setFieldValue('mobileNo', value);
+          }}
+          placeholder="Contact No."
+          label="Contact Number"
+          error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
+          helperText={formik.touched.mobileNo && formik.errors.mobileNo}
+          variant="outlined"
+          size="small"
+        />
+      );
+    },
+  },
+  {
+    name: 'alternativeContactNumber',
+    label: 'Contact Number',
+    type: 'text',
+    renderComp(props) {
+      const { formik } = props;
+      return (
+        <PhoneInput
+          name="alternativeContactNumber"
+          value={formik.values.alternativeContactNumber}
+          onChange={(value) => {
+            formik.setFieldValue('alternativeContactNumber', value);
+          }}
+          placeholder="Alternative Contact Number"
+          label="Alternative Contact Number"
+          error={
+            formik.touched.alternativeContactNumber &&
+            Boolean(formik.errors.alternativeContactNumber)
+          }
+          helperText={
+            formik.touched.alternativeContactNumber && formik.errors.alternativeContactNumber
+          }
+          variant="outlined"
+          size="small"
+        />
+      );
+    },
+  },
+  {
+    name: 'email',
+    label: 'Email',
+    type: 'email',
+    otherProps: {
+      InputProps: {
+        startAdornment: (
+          <>
+            <Iconify icon="mdi-light:email" />{' '}
+            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+          </>
+        ),
+      },
+    },
+  },
   {
     name: 'dob',
     label: 'Date of Birth',
@@ -160,97 +541,7 @@ export const documentFields: FieldsType[] = [
     placeholder: 'Enter Certificate Name',
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
-      return (
-        <CustomizableTable
-          tableId="certificate-table"
-          columns={[
-            { id: 'name', label: 'Name' },
-            {
-              id: 'status',
-              label: 'Status',
-              render(value, row) {
-                return (
-                  <Label color={row.status === 'Uploaded' ? 'success' : 'warning'}>
-                    {row.status}
-                  </Label>
-                );
-              },
-            },
-            {
-              id: 'upload',
-              label: 'Upload',
-              render(value, row) {
-                return (
-                  <IconButton>
-                    <Iconify icon="ri:file-upload-fill" />
-                  </IconButton>
-                );
-              },
-            },
-            {
-              id: 'view',
-              label: 'View',
-              render(value, row) {
-                return (
-                  <IconButton>
-                    <Iconify icon="carbon:view-filled" />
-                  </IconButton>
-                );
-              },
-            },
-          ]}
-          data={[
-            {
-              name: 'Certificate_BonafiedTabular.pdf',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'Certificate_Bonafied_Double.pdf',
-              status: 'Uploaded',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'Certificate_Bonafied_LetterHead.pdf',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'Certificate_Bonafied_WithAddress.pdf',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'Certificate_Bonafied_WithPreviousDetai',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'Certificate_CBSETransfer.pdf',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'Certificate_Transfer_CBSE.pdf',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-            {
-              name: 'First Trial Certificates.pdf',
-              status: 'Pending',
-              upload: 'Upload',
-              view: 'View',
-            },
-          ]}
-        />
-      );
+      return <RenderDocuments id={props.formik.values.id} />;
     },
   },
 ];
@@ -282,6 +573,7 @@ export const communicationFields: FieldsType[] = [
           onChange={(value) => {
             formik.setFieldValue('primaryContactNumber', value);
           }}
+          label="Primary Contact Number"
           placeholder="Primary Contact Number"
           error={formik.touched.primaryContactNumber && Boolean(formik.errors.primaryContactNumber)}
         />
@@ -303,6 +595,7 @@ export const communicationFields: FieldsType[] = [
           onChange={(value) => {
             formik.setFieldValue('parentContactNumber', value);
           }}
+          label="Parent Contact Number"
           placeholder="Parent Contact Number"
           error={formik.touched.parentContactNumber && Boolean(formik.errors.parentContactNumber)}
         />
@@ -340,6 +633,7 @@ export const communicationFields: FieldsType[] = [
             console.log(value, 'value====>');
             formik.setFieldValue('studentContactNo', value);
           }}
+          label="Student Contact Number"
           placeholder="Student Contact Number"
           error={formik.touched.studentContactNo && Boolean(formik.errors.studentContactNo)}
         />
@@ -374,9 +668,9 @@ export const communicationFields: FieldsType[] = [
           name="whatsAppContactNo"
           value={formik.values.whatsAppContactNo}
           onChange={(value) => {
-            console.log(value, 'value====>');
             formik.setFieldValue('whatsAppContactNo', value);
           }}
+          label="Whatsapp Number"
           placeholder="Whatsapp Number"
           error={formik.touched.whatsAppContactNo && Boolean(formik.errors.whatsAppContactNo)}
         />
@@ -392,60 +686,124 @@ export const communicationFields: FieldsType[] = [
     renderComp(props) {
       const { formik } = props;
       return (
-        <Box>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="localAddress"
-                value={formik.values.localAddress}
-                onChange={formik.handleChange}
-                error={formik.touched.localAddress && Boolean(formik.errors.localAddress)}
-                helperText={formik.touched.localAddress && formik.errors.localAddress}
-                fullWidth
-                placeholder="Local Address"
-                multiline
-                rows={3}
-                size="small"
-              />
+        <>
+          <Subheader
+            data-title="Local Address"
+            open={formik.values.isOpenLocalAddress}
+            onClick={() => {
+              formik.setFieldValue('isOpenLocalAddress', !formik.values.isOpenLocalAddress);
+            }}
+            sx={{ pt: 0, fontWeight: 600 }}
+          >
+            Local Address
+          </Subheader>
+
+          <Collapse in={formik.values.isOpenLocalAddress}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="localAddressLine1"
+                  label="Address Line 1"
+                  value={formik.values.localAddressLine1}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.localAddressLine1 && Boolean(formik.errors.localAddressLine1)
+                  }
+                  helperText={formik.touched.localAddressLine1 && formik.errors.localAddressLine1}
+                  fullWidth
+                  placeholder="Address Line 1"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="localAddressLine2"
+                  label="Address Line 2"
+                  value={formik.values.localAddressLine2}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.localAddressLine2 && Boolean(formik.errors.localAddressLine2)
+                  }
+                  helperText={formik.touched.localAddressLine2 && formik.errors.localAddressLine2}
+                  fullWidth
+                  placeholder="Address Line 2"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="localAddressLine3"
+                  label="Address Line 3"
+                  value={formik.values.localAddressLine3}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.localAddressLine3 && Boolean(formik.errors.localAddressLine3)
+                  }
+                  helperText={formik.touched.localAddressLine3 && formik.errors.localAddressLine3}
+                  fullWidth
+                  placeholder="Address Line 3"
+                  size="small"
+                />
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderCountry
+                  name="localCountry"
+                  value={formik.values.localCountry}
+                  onChange={(value) => formik.setFieldValue('localCountry', value)}
+                  error={formik.touched.localCountry && Boolean(formik.errors.localCountry)}
+                  helperText={formik.touched.localCountry && formik.errors.localCountry}
+                  fullWidth
+                  placeholder="Country"
+                  size="small"
+                  label="Country"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderState
+                  name="localState"
+                  value={formik.values.localState}
+                  onChange={formik.handleChange}
+                  error={formik.touched.state && Boolean(formik.errors.localState)}
+                  helperText={formik.touched.localState && formik.errors.localState}
+                  fullWidth
+                  placeholder="State"
+                  size="small"
+                  label="State"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderCity
+                  name="localCity"
+                  value={formik.values.localCity}
+                  onChange={formik.handleChange}
+                  error={formik.touched.localCity && Boolean(formik.errors.localCity)}
+                  helperText={formik.touched.localCity && formik.errors.localCity}
+                  fullWidth
+                  placeholder="City"
+                  size="small"
+                  label="City"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderPincode
+                  name="localPincode"
+                  value={formik.values.localPincode}
+                  onChange={formik.handleChange}
+                  error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
+                  helperText={formik.touched.localPincode && formik.errors.localPincode}
+                  fullWidth
+                  placeholder="Pincode"
+                  size="small"
+                  label="Pincode"
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="localState"
-                value={formik.values.localState}
-                onChange={formik.handleChange}
-                error={formik.touched.state && Boolean(formik.errors.localState)}
-                helperText={formik.touched.localState && formik.errors.localState}
-                fullWidth
-                placeholder="State"
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="localCity"
-                value={formik.values.localCity}
-                onChange={formik.handleChange}
-                error={formik.touched.localCity && Boolean(formik.errors.localCity)}
-                helperText={formik.touched.localCity && formik.errors.localCity}
-                fullWidth
-                placeholder="City"
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="localPincode"
-                value={formik.values.localPincode}
-                onChange={formik.handleChange}
-                error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
-                helperText={formik.touched.localPincode && formik.errors.localPincode}
-                fullWidth
-                placeholder="Pincode"
-                size="small"
-              />
-            </Grid>
-          </Grid>
-        </Box>
+          </Collapse>
+        </>
       );
     },
   },
@@ -458,84 +816,152 @@ export const communicationFields: FieldsType[] = [
     renderComp(props) {
       const { formik } = props;
       return (
-        <Box>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formik.values.sameAsLocalForPermanent}
-                    onChange={(e) => {
-                      formik.setFieldValue('sameAsLocalForPermanent', e.target.checked);
-                      if (e.target.checked) {
-                        formik.setFieldValue('permanentAddress', formik.values.localAddress);
-                        formik.setFieldValue('permanentState', formik.values.localState);
-                        formik.setFieldValue('permanentCity', formik.values.localCity);
-                        formik.setFieldValue('permanentPincode', formik.values.localPincode);
-                      }
-                    }}
-                    name="sameAsLocal"
-                  />
+        <>
+          <Subheader
+            data-title="Permanent Address"
+            open={formik.values.isOpenPermanentAddress}
+            onClick={() => {}}
+            sx={{ pt: 0, fontWeight: 600 }}
+          >
+            <Checkbox
+              checked={formik.values.sameAsLocalForPermanent}
+              size="small"
+              sx={{ p: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              onChange={(e) => {
+                formik.setFieldValue('sameAsLocalForPermanent', e.target.checked);
+                formik.setFieldValue('isOpenPermanentAddress', !e.target.checked);
+                if (e.target.checked) {
+                  formik.setFieldValue('permanentAddressLine1', formik.values.localAddressLine1);
+                  formik.setFieldValue('permanentAddressLine2', formik.values.localAddressLine2);
+                  formik.setFieldValue('permanentAddressLine3', formik.values.localAddressLine3);
+                  formik.setFieldValue('permanentCountry', formik.values.localCountry);
+                  formik.setFieldValue('permanentState', formik.values.localState);
+                  formik.setFieldValue('permanentCity', formik.values.localCity);
+                  formik.setFieldValue('permanentPincode', formik.values.localPincode);
                 }
-                label="Same as Local Address"
-              />
+              }}
+              name="sameAsLocal"
+            />{' '}
+            Permanent Address Same as Local Address{' '}
+          </Subheader>
+          <Collapse in={formik.values.isOpenPermanentAddress}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="permanentAddressLine1"
+                  label="Address Line 1"
+                  value={formik.values.permanentAddressLine1}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.permanentAddressLine1 &&
+                    Boolean(formik.errors.permanentAddressLine1)
+                  }
+                  helperText={
+                    formik.touched.permanentAddressLine1 && formik.errors.permanentAddressLine1
+                  }
+                  fullWidth
+                  placeholder="Address Line 1"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="permanentAddressLine2"
+                  label="Address Line 2"
+                  value={formik.values.permanentAddressLine2}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.permanentAddressLine2 &&
+                    Boolean(formik.errors.permanentAddressLine2)
+                  }
+                  helperText={
+                    formik.touched.permanentAddressLine2 && formik.errors.permanentAddressLine2
+                  }
+                  fullWidth
+                  placeholder="Address Line 2"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="permanentAddressLine3"
+                  label="Address Line 3"
+                  value={formik.values.permanentAddressLine3}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.permanentAddressLine3 &&
+                    Boolean(formik.errors.permanentAddressLine3)
+                  }
+                  helperText={
+                    formik.touched.permanentAddressLine3 && formik.errors.permanentAddressLine3
+                  }
+                  fullWidth
+                  placeholder="Address Line 3"
+                  size="small"
+                />
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderCountry
+                  name="permanentCountry"
+                  value={formik.values.permanentCountry}
+                  onChange={(value) => formik.setFieldValue('permanentCountry', value)}
+                  error={formik.touched.permanentCountry && Boolean(formik.errors.permanentCountry)}
+                  helperText={formik.touched.permanentCountry && formik.errors.permanentCountry}
+                  fullWidth
+                  placeholder="Country"
+                  size="small"
+                  label="Country"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderState
+                  name="permanentState"
+                  value={formik.values.permanentState}
+                  onChange={formik.handleChange}
+                  error={formik.touched.state && Boolean(formik.errors.permanentState)}
+                  helperText={formik.touched.permanentState && formik.errors.permanentState}
+                  fullWidth
+                  placeholder="State"
+                  size="small"
+                  label="State"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderCity
+                  name="permanentCity"
+                  value={formik.values.permanentCity}
+                  onChange={formik.handleChange}
+                  error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
+                  helperText={formik.touched.permanentCity && formik.errors.permanentCity}
+                  fullWidth
+                  placeholder="City"
+                  size="small"
+                  label="City"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderPincode
+                  name="permanentPincode"
+                  value={formik.values.permanentPincode}
+                  onChange={formik.handleChange}
+                  error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
+                  helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
+                  fullWidth
+                  placeholder="Pincode"
+                  size="small"
+                  label="Pincode"
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="permanentAddress"
-                value={formik.values.permanentAddress}
-                onChange={formik.handleChange}
-                error={formik.touched.permanentAddress && Boolean(formik.errors.permanentAddress)}
-                helperText={formik.touched.permanentAddress && formik.errors.permanentAddress}
-                fullWidth
-                placeholder="Permanent Address"
-                multiline
-                rows={3}
-                size="small"
-                disabled={formik.values.sameAsLocalForPermanent}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="permanentState"
-                value={formik.values.permanentState}
-                onChange={formik.handleChange}
-                error={formik.touched.state && Boolean(formik.errors.permanentState)}
-                helperText={formik.touched.permanentState && formik.errors.permanentState}
-                fullWidth
-                placeholder="State"
-                size="small"
-                disabled={formik.values.sameAsLocalForPermanent}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="permanentCity"
-                value={formik.values.permanentCity}
-                onChange={formik.handleChange}
-                error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
-                helperText={formik.touched.permanentCity && formik.errors.permanentCity}
-                fullWidth
-                placeholder="City"
-                size="small"
-                disabled={formik.values.sameAsLocalForPermanent}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="permanentPincode"
-                value={formik.values.permanentPincode}
-                onChange={formik.handleChange}
-                error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
-                helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
-                fullWidth
-                placeholder="Pincode"
-                size="small"
-                disabled={formik.values.sameAsLocalForPermanent}
-              />
-            </Grid>
-          </Grid>
-        </Box>
+          </Collapse>
+        </>
       );
     },
   },
@@ -548,83 +974,152 @@ export const communicationFields: FieldsType[] = [
     renderComp(props) {
       const { formik } = props;
       return (
-        <Box>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formik.values.emergencySameAsLocal}
-                    onChange={(e) => {
-                      formik.setFieldValue('emergencySameAsLocal', e.target.checked);
-                      if (e.target.checked) {
-                        formik.setFieldValue('emergencyAddress', formik.values.localAddress);
-                        formik.setFieldValue('emergencyState', formik.values.localState);
-                        formik.setFieldValue('emergencyCity', formik.values.localCity);
-                        formik.setFieldValue('emergencyPincode', formik.values.localPincode);
-                      }
-                    }}
-                  />
+        <>
+          <Subheader
+            data-title="Emergency Address"
+            open={formik.values.isOpenEmergencyAddress}
+            // onClick={() => {
+            //   formik.setFieldValue('isOpenEmergencyAddress', !formik.values.isOpenEmergencyAddress);
+            // }}
+            sx={{ pt: 0, fontWeight: 600 }}
+          >
+            <Checkbox
+              checked={formik.values.emergencySameAsLocal}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              onChange={(e) => {
+                formik.setFieldValue('emergencySameAsLocal', e.target.checked);
+                formik.setFieldValue('isOpenEmergencyAddress', !e.target.checked);
+                if (e.target.checked) {
+                  formik.setFieldValue('emergencyAddressLine1', formik.values.localAddressLine1);
+                  formik.setFieldValue('emergencyAddressLine2', formik.values.localAddressLine2);
+                  formik.setFieldValue('emergencyAddressLine3', formik.values.localAddressLine3);
+                  formik.setFieldValue('emergencyCountry', formik.values.localCountry);
+                  formik.setFieldValue('emergencyState', formik.values.localState);
+                  formik.setFieldValue('emergencyCity', formik.values.localCity);
+                  formik.setFieldValue('emergencyPincode', formik.values.localPincode);
                 }
-                label="Same as Local Address"
-              />
+              }}
+              sx={{ p: 0 }}
+            />{' '}
+            Emergency Address Same as Local Address{' '}
+          </Subheader>
+          <Collapse in={formik.values.isOpenEmergencyAddress}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="emergencyAddressLine1"
+                  label="Address Line 1"
+                  value={formik.values.emergencyAddressLine1}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.emergencyAddressLine1 &&
+                    Boolean(formik.errors.emergencyAddressLine1)
+                  }
+                  helperText={
+                    formik.touched.emergencyAddressLine1 && formik.errors.emergencyAddressLine1
+                  }
+                  fullWidth
+                  placeholder="Address Line 1"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="emergencyAddressLine2"
+                  label="Address Line 2"
+                  value={formik.values.emergencyAddressLine2}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.emergencyAddressLine2 &&
+                    Boolean(formik.errors.emergencyAddressLine2)
+                  }
+                  helperText={
+                    formik.touched.emergencyAddressLine2 && formik.errors.emergencyAddressLine2
+                  }
+                  fullWidth
+                  placeholder="Address Line 2"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderAddressField
+                  name="emergencyAddressLine3"
+                  label="Address Line 3"
+                  value={formik.values.emergencyAddressLine3}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.emergencyAddressLine3 &&
+                    Boolean(formik.errors.emergencyAddressLine3)
+                  }
+                  helperText={
+                    formik.touched.emergencyAddressLine3 && formik.errors.emergencyAddressLine3
+                  }
+                  fullWidth
+                  placeholder="Address Line 3"
+                  size="small"
+                />
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderCountry
+                  name="emergencyCountry"
+                  value={formik.values.emergencyCountry}
+                  onChange={(value) => formik.setFieldValue('emergencyCountry', value)}
+                  error={formik.touched.emergencyCountry && Boolean(formik.errors.emergencyCountry)}
+                  helperText={formik.touched.emergencyCountry && formik.errors.emergencyCountry}
+                  fullWidth
+                  placeholder="Country"
+                  size="small"
+                  label="Country"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderState
+                  name="emergencyState"
+                  value={formik.values.emergencyState}
+                  onChange={formik.handleChange}
+                  error={formik.touched.state && Boolean(formik.errors.emergencyState)}
+                  helperText={formik.touched.emergencyState && formik.errors.emergencyState}
+                  fullWidth
+                  placeholder="State"
+                  size="small"
+                  label="State"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderCity
+                  name="emergencyCity"
+                  value={formik.values.emergencyCity}
+                  onChange={formik.handleChange}
+                  error={formik.touched.emergencyCity && Boolean(formik.errors.emergencyCity)}
+                  helperText={formik.touched.emergencyCity && formik.errors.emergencyCity}
+                  fullWidth
+                  placeholder="City"
+                  size="small"
+                  label="City"
+                  options={[]}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StandardAddress.RenderPincode
+                  name="emergencyPincode"
+                  value={formik.values.emergencyPincode}
+                  onChange={formik.handleChange}
+                  error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
+                  helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
+                  fullWidth
+                  placeholder="Pincode"
+                  size="small"
+                  label="Pincode"
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="emergencyAddress"
-                value={formik.values.emergencyAddress}
-                onChange={formik.handleChange}
-                error={formik.touched.emergencyAddress && Boolean(formik.errors.emergencyAddress)}
-                helperText={formik.touched.emergencyAddress && formik.errors.emergencyAddress}
-                fullWidth
-                placeholder="Emergency Address"
-                multiline
-                rows={3}
-                size="small"
-                disabled={formik.values.emergencySameAsLocal}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="emergencyState"
-                value={formik.values.emergencyState}
-                onChange={formik.handleChange}
-                error={formik.touched.state && Boolean(formik.errors.emergencyState)}
-                helperText={formik.touched.emergencyState && formik.errors.emergencyState}
-                fullWidth
-                placeholder="State"
-                size="small"
-                disabled={formik.values.emergencySameAsLocal}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="emergencyCity"
-                value={formik.values.emergencyCity}
-                onChange={formik.handleChange}
-                error={formik.touched.emergencyCity && Boolean(formik.errors.emergencyCity)}
-                helperText={formik.touched.emergencyCity && formik.errors.emergencyCity}
-                fullWidth
-                placeholder="City"
-                size="small"
-                disabled={formik.values.emergencySameAsLocal}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                name="emergencyPincode"
-                value={formik.values.emergencyPincode}
-                onChange={formik.handleChange}
-                error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
-                helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
-                fullWidth
-                placeholder="Pincode"
-                size="small"
-                disabled={formik.values.emergencySameAsLocal}
-              />
-            </Grid>
-          </Grid>
-        </Box>
+          </Collapse>
+        </>
       );
     },
   },
@@ -646,7 +1141,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={[]}
+          options={CategoryArray}
           label="Category"
           value={props.formik.values.category}
           onChange={(value) => {
@@ -665,10 +1160,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={[
-            { label: 'Yes', value: 'Yes' },
-            { label: 'No', value: 'No' },
-          ]}
+          options={YesNoArray}
           label="Right to Education"
           value={props.formik.values.RTE}
           onChange={(value) => {
@@ -687,10 +1179,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={[
-            { label: 'Yes', value: 'Yes' },
-            { label: 'No', value: 'No' },
-          ]}
+          options={YesNoArray}
           label="BPL Student"
           value={props.formik.values.bplStudent}
           onChange={(value) => {
@@ -715,10 +1204,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={[
-            { label: 'Yes', value: 'Yes' },
-            { label: 'No', value: 'No' },
-          ]}
+          options={YesNoArray}
           label="Person With Disability"
           value={props.formik.values.personWithDisability}
           onChange={(value) => {
@@ -749,10 +1235,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={[
-            { label: 'Yes', value: 'Yes' },
-            { label: 'No', value: 'No' },
-          ]}
+          options={YesNoArray}
           label="Single Parent Child"
           value={props.formik.values.singleParentChild}
           onChange={(value) => {
@@ -771,10 +1254,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={[
-            { label: 'Yes', value: 'Yes' },
-            { label: 'No', value: 'No' },
-          ]}
+          options={YesNoArray}
           label="Single Child"
           value={props.formik.values.singleChild}
           onChange={(value) => {
@@ -856,7 +1336,7 @@ export const medicalFields: FieldsType[] = [
   {
     name: 'haemoglobin',
     label: 'Haemoglobin (hb)',
-    type: 'number',
+    type: 'string',
     otherProps: {},
   },
   {
@@ -925,7 +1405,7 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'percentage',
     label: 'Percentage',
-    type: 'text',
+    type: 'number',
     otherProps: {},
   },
 ];
@@ -963,145 +1443,173 @@ export const bankDetailsFields: FieldsType[] = [
   },
 ];
 
-export const generalFieldsInitialValues = (editData?: any) => ({
-  inquiryNo: editData?.inquiryNo || '',
-  formNo: editData?.formNo || '',
-  surname: editData?.surname || '',
-  name: editData?.name || '',
+export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  inquiryNo: editData?.inquiryNumber || '',
+  formNo: editData?.formNumber || '',
+  firstName: editData?.firstName || '',
+  lastName: editData?.lastName || '',
   middleName: editData?.middleName || '',
-  dob: null,
-  age: '',
-  gender: editData?.gender || '',
-  adharNo: editData?.adharNo || '',
-  religion: editData?.religion || '',
-  familyCast: editData ? editData.familyCast : '',
-  castCategory: editData ? editData.castCategory : '',
-  motherTongue: editData?.motherTongue || '',
-  nationality: editData?.nationality || '',
-  birthPlace: editData?.birthPlace || '',
-  temporaryGr: editData?.temporaryGr || '',
-  remarks: editData?.remarks || '',
+  dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
+  age: calculateAge(dayjs(editData?.dateOfBirth).format()),
+  gender: editData?.genderType || GenderType.Male,
+  adharNo: editData?.studentBasicDetails.aadhaarNo || '',
+  religion: editData?.studentBasicDetails.religion || '',
+  familyCast: editData ? editData?.studentBasicDetails.familyCast : '',
+  castCategory: editData ? editData?.studentBasicDetails.castType : null,
+  motherTongue: editData?.studentBasicDetails?.motherTongue || '',
+  nationality: editData?.studentBasicDetails?.nationality || '',
+  birthPlace: editData?.studentBasicDetails?.birthPlace || '',
+  temporaryGr: editData?.studentBasicDetails?.temporaryGr || '',
+  remarks: editData?.studentBasicDetails?.remarks || '',
+  mobileNo: editData?.parentContactNumber || '',
+  alternativeContactNumber: editData?.alternativeContactNumber || '',
+  email: editData?.email || '',
+  userId: editData?.studentBasicDetails?.userId || null,
+  id: editData?.id || null,
+  medium: editData?.educationMediumId || '',
+  board: editData?.educationBoardId || '',
+  academicYear: editData?.academicYearId || '',
+  class: editData?.standardId || '',
+  previousSchool: editData?.previousSchoolName || '',
 });
 
-export const documentFieldsInitialValues = (editData?: any) => ({
-  documents: editData?.documents || [],
+export const documentFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  documents: [],
 });
 
-export const familyFieldsInitialValues = (editData?: any) => ({
-  fatherName: editData?.fatherName || '',
-  fatherDob: editData?.fatherDob ? dayjs(editData.fatherDob) : null,
-  fatherOccupation: editData?.fatherOccupation || '',
-  fatherQualification: editData?.fatherQualification || '',
-  fatherContactNo: editData?.fatherContactNo || '',
-  fatherEmail: editData?.fatherEmail || '',
-  fatherPassOutYear: editData?.fatherPassOutYear || '',
-  fatherOfficeNo: editData?.fatherOfficeNo || '',
-  fatherOfficeAddress: editData?.fatherOfficeAddress || '',
-  fatherDesignation: editData?.fatherDesignation || '',
-  fatherOrganization: editData?.fatherOrganization || '',
-  fatherAadharNo: editData?.fatherAadharNo || '',
-  fatherRemarks: editData?.fatherRemarks || '',
-  fatherAddress: editData?.fatherAddress || '',
-  motherName: editData?.motherName || '',
-  motherDob: editData?.motherDob ? dayjs(editData.motherDob) : null,
-  motherOccupation: editData?.motherOccupation || '',
-  motherQualification: editData?.motherQualification || '',
-  motherContactNo: editData?.motherContactNo || '',
-  motherEmail: editData?.motherEmail || '',
-  motherPassOutYear: editData?.motherPassOutYear || '',
-  motherOfficeNo: editData?.motherOfficeNo || '',
-  motherOfficeAddress: editData?.motherOfficeAddress || '',
-  motherDesignation: editData?.motherDesignation || '',
-  motherOrganization: editData?.motherOrganization || '',
-  motherAadharNo: editData?.motherAadharNo || '',
-  motherRemarks: editData?.motherRemarks || '',
-  motherAddress: editData?.motherAddress || '',
-  guardianName: editData?.guardianName || '',
-  guardianDob: editData?.guardianDob ? dayjs(editData.guardianDob) : null,
-  guardianOccupation: editData?.guardianOccupation || '',
-  guardianQualification: editData?.guardianQualification || '',
-  guardianContactNo: editData?.guardianContactNo || '',
-  guardianEmail: editData?.guardianEmail || '',
-  guardianPassOutYear: editData?.guardianPassOutYear || '',
-  guardianOfficeNo: editData?.guardianOfficeNo || '',
-  guardianOfficeAddress: editData?.guardianOfficeAddress || '',
-  guardianDesignation: editData?.guardianDesignation || '',
-  guardianOrganization: editData?.guardianOrganization || '',
-  guardianAadharNo: editData?.guardianAadharNo || '',
-  guardianRemarks: editData?.guardianRemarks || '',
-  guardianAddress: editData?.guardianAddress || '',
+export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  fatherName: editData?.fatherDetails?.name || '',
+  fatherDob: editData?.fatherDetails?.dateOfBirth
+    ? dayjs(editData?.fatherDetails.dateOfBirth)
+    : null,
+  fatherOccupation: editData?.fatherDetails?.occupation || '',
+  fatherQualification: editData?.fatherDetails?.qualification || '',
+  fatherContactNo: editData?.fatherDetails?.contactNo || '',
+  fatherEmail: editData?.fatherDetails?.email || '',
+  fatherPassOutYear: editData?.fatherDetails?.passOutYear || '',
+  fatherOfficeNo: editData?.fatherDetails?.officeNo || '',
+  fatherOfficeAddress: editData?.fatherDetails?.officeAddress || '',
+  fatherDesignation: editData?.fatherDetails?.designation || '',
+  fatherOrganization: editData?.fatherDetails?.organisation || '',
+  fatherAadharNo: editData?.fatherDetails?.aadhaarNo || '',
+  fatherRemarks: editData?.fatherDetails?.remarks || '',
+  fatherAddress: editData?.fatherDetails?.address || '',
+  motherName: editData?.motherDetails?.name || '',
+  motherDob: editData?.motherDetails?.dateOfBirth
+    ? dayjs(editData?.motherDetails.dateOfBirth)
+    : null,
+  motherOccupation: editData?.motherDetails?.occupation || '',
+  motherQualification: editData?.motherDetails?.qualification || '',
+  motherContactNo: editData?.motherDetails?.contactNo || '',
+  motherEmail: editData?.motherDetails?.email || '',
+  motherPassOutYear: editData?.motherDetails?.passOutYear || '',
+  motherOfficeNo: editData?.motherDetails?.officeNo || '',
+  motherOfficeAddress: editData?.motherDetails?.officeAddress || '',
+  motherDesignation: editData?.motherDetails?.designation || '',
+  motherOrganization: editData?.motherDetails?.organisation || '',
+  motherAadharNo: editData?.motherDetails?.aadhaarNo || '',
+  motherRemarks: editData?.motherDetails?.remarks || '',
+  motherAddress: editData?.motherDetails?.address || '',
+  guardianName: editData?.guardianDetails?.name || '',
+  guardianDob: editData?.guardianDetails?.dateOfBirth
+    ? dayjs(editData?.guardianDetails.dateOfBirth)
+    : null,
+  guardianOccupation: editData?.guardianDetails?.occupation || '',
+  guardianQualification: editData?.guardianDetails?.qualification || '',
+  guardianContactNo: editData?.guardianDetails?.contactNo || '',
+  guardianEmail: editData?.guardianDetails?.email || '',
+  guardianPassOutYear: editData?.guardianDetails?.passOutYear || '',
+  guardianOfficeNo: editData?.guardianDetails?.officeNo || '',
+  guardianOfficeAddress: editData?.guardianDetails?.officeAddress || '',
+  guardianDesignation: editData?.guardianDetails?.designation || '',
+  guardianOrganization: editData?.guardianDetails?.organisation || '',
+  guardianAadharNo: editData?.guardianDetails?.aadhaarNo || '',
+  guardianRemarks: editData?.guardianDetails?.remarks || '',
+  guardianAddress: editData?.guardianDetails?.address || '',
 });
 
-export const CommunicationFieldsInitialValues = (editData?: any) => ({
-  primaryContactNumber: editData?.primaryContactNumber || '',
-  parentContactNumber: editData?.parentContactNumber || '',
-  parentEmail: editData?.parentEmail || '',
-  studentContactNo: editData?.studentContactNo || '',
-  studentEmail: editData?.studentEmail || '',
-  whatsAppContactNo: editData?.whatsAppContactNo || '',
+export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  primaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
+  parentContactNumber: editData?.studentCommunicationDetails?.parentContactNo || '',
+  parentEmail: editData?.studentCommunicationDetails?.parentEmail || '',
+  studentContactNo: editData?.studentCommunicationDetails?.studentContactNo || '',
+  studentEmail: editData?.studentCommunicationDetails?.studentEmail || '',
+  whatsAppContactNo: editData?.studentCommunicationDetails?.whatsAppNo || '',
 
-  localState: editData?.localState || '',
-  localCity: editData?.localCity || '',
-  localPincode: editData?.localPincode || '',
-  localAddress: editData?.localAddress || '',
+  localCountry: editData?.studentCommunicationDetails?.localCountry || '',
+  localState: editData?.studentCommunicationDetails?.localState || '',
+  localCity: editData?.studentCommunicationDetails?.localCity || '',
+  localPincode: editData?.studentCommunicationDetails?.localPinCode || '',
+  localAddressLine1: editData?.studentCommunicationDetails?.localAddressLine1 || '',
+  localAddressLine2: editData?.studentCommunicationDetails?.localAddressLine2 || '',
+  localAddressLine3: editData?.studentCommunicationDetails?.localAddressLine3 || '',
+  isOpenLocalAddress: true,
 
-  emergencyState: editData?.emergencyState || '',
-  emergencyCity: editData?.emergencyCity || '',
-  emergencyPincode: editData?.emergencyPincode || '',
-  emergencyAddress: editData?.emergencyAddress || '',
-  emergencySameAsLocal: editData?.emergencySameAsLocal || false,
+  emergencyCountry: editData?.studentCommunicationDetails?.emergencyCountry || '',
+  emergencyState: editData?.studentCommunicationDetails?.emergencyState || '',
+  emergencyCity: editData?.studentCommunicationDetails?.emergencyCity || '',
+  emergencyPincode: editData?.studentCommunicationDetails?.emergencyPinCode || '',
+  emergencyAddressLine1: editData?.studentCommunicationDetails?.emergencyAddressLine1 || '',
+  emergencyAddressLine2: editData?.studentCommunicationDetails?.emergencyAddressLine2 || '',
+  emergencyAddressLine3: editData?.studentCommunicationDetails?.emergencyAddressLine3 || '',
+  emergencySameAsLocal: false,
+  isOpenEmergencyAddress: true,
 
-  permanentAddress: editData?.permanentAddress || '',
-  permanentState: editData?.permanentState || '',
-  permanentCity: editData?.permanentCity || '',
-  permanentPincode: editData?.permanentPincode || '',
-  sameAsLocalForPermanent: editData?.sameAsLocalForPermanent || false,
+  permanentAddress: editData?.studentCommunicationDetails?.permanentAddressLine1 || '',
+  permanentAddressLine2: editData?.studentCommunicationDetails?.permanentAddressLine2 || '',
+  permanentAddressLine3: editData?.studentCommunicationDetails?.permanentAddressLine3 || '',
+  permanentCountry: editData?.studentCommunicationDetails?.permanentCountry || '',
+  permanentState: editData?.studentCommunicationDetails?.permanentState || '',
+  permanentCity: editData?.studentCommunicationDetails?.permanentCity || '',
+  permanentPincode: editData?.studentCommunicationDetails?.permanentPinCode || '',
+  sameAsLocalForPermanent: false,
+  isOpenPermanentAddress: true,
 
-  remarks: editData?.remarks || '',
+  remarks: editData?.studentCommunicationDetails?.remarks || '',
 });
 
-export const additionalDetailsInitialValues = (editData?: any) => ({
-  category: editData?.category || '',
-  RTE: editData?.RTE || '',
-  bplStudent: editData?.bplStudent || '',
-  bplCardNo: editData?.bplCardNo || '',
-  personWithDisability: editData?.personWithDisability || '',
-  secondLanguage: editData?.secondLanguage || '',
-  emergencyContactNo: editData?.emergencyContactNo || '',
-  singleParentChild: editData?.singleParentChild || '',
-  singleChild: editData?.singleChild || '',
-  sponsorStudent: editData?.sponsorStudent || '',
-  sponsorName: editData?.sponsorName || '',
+export const additionalDetailsInitialValues = (editData?: IInquiryData | null) => ({
+  category: editData?.studentAdditionalDetails?.category || Category.General,
+  RTE: editData?.studentAdditionalDetails?.rightToEducation || '',
+  bplStudent: editData?.studentAdditionalDetails?.bplStudent || null,
+  bplCardNo: editData?.studentAdditionalDetails?.bplCardNo || '',
+  personWithDisability: editData?.studentAdditionalDetails?.personWithDisability || null,
+  secondLanguage: editData?.studentAdditionalDetails?.secondLanguage || '',
+  emergencyContactNo: editData?.studentAdditionalDetails?.emergencyContactNo || '',
+  singleParentChild: editData?.studentAdditionalDetails?.singleParentChild || null,
+  singleChild: editData?.studentAdditionalDetails?.singleChild || null,
+  sponsorStudent: '',
+  sponsorName: editData?.studentAdditionalDetails?.sponsorName || '',
 });
 
-export const medicalFieldsInitialValues = (editData?: any) => ({
-  weight: editData?.weight || '',
-  height: editData?.height || '',
-  bmi: editData?.bmi || '',
-  pulseRate: editData?.pulseRate || '',
-  haemoglobin: editData?.haemoglobin || '',
-  allergies: editData?.allergies || '',
-  covidVaccination: editData?.covidVaccination || '',
-  childImmunisation: editData?.childImmunisation || '',
-  immunisationRemarks: editData?.immunisationRemarks || '',
+export const medicalFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  weight: editData?.studentMedicalRecords?.weight || '',
+  height: editData?.studentMedicalRecords?.height || '',
+  bmi: editData?.studentMedicalRecords?.bodyMassIndex || '',
+  pulseRate: '',
+  haemoglobin: editData?.studentMedicalRecords?.haemoglobin || '',
+  allergies: editData?.studentMedicalRecords?.allergies || '',
+  covidVaccination: editData?.studentMedicalRecords?.covidVaccination || '',
+  childImmunisation: editData?.studentMedicalRecords?.childImmunisation || '',
+  immunisationRemarks: editData?.studentMedicalRecords?.immunisationRemarks || '',
 });
 
-export const previousSchoolFieldsInitialValues = (editData?: any) => ({
-  schoolName: editData?.schoolName || '',
-  schoolAddress: editData?.schoolAddress || '',
-  schoolBoard: editData?.schoolBoard || '',
-  schoolMedium: editData?.schoolMedium || '',
-  tcNumber: editData?.tcNumber || '',
-  lastClassPassed: editData?.lastClassPassed || '',
-  percentage: editData?.percentage || '',
+export const previousSchoolFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  schoolName: editData?.previousSchoolDetails?.previousSchoolName || '',
+  schoolAddress: editData?.previousSchoolDetails?.previousSchoolAddress || '',
+  schoolBoard: editData?.previousSchoolDetails?.previousSchoolBoard || '',
+  schoolMedium: editData?.previousSchoolDetails?.previousSchoolMedium || '',
+  tcNumber: editData?.previousSchoolDetails?.tcNo || '',
+  lastClassPassed: editData?.previousSchoolDetails?.lastClassPassed || '',
+  percentage: editData?.previousSchoolDetails?.percentage || '',
 });
 
-export const bankDetailsInitialValues = (editData?: any) => ({
-  bankName: editData?.bankName || '',
-  accountNo: editData?.accountNo || '',
-  ifscCode: editData?.ifscCode || '',
-  branchName: editData?.branchName || '',
-  accountHolderName: editData?.accountHolderName || '',
+export const bankDetailsInitialValues = (editData?: IInquiryData | null) => ({
+  bankName: editData?.parentBankDetails?.bankName || '',
+  accountNo: editData?.parentBankDetails?.accountNumber || '',
+  ifscCode: editData?.parentBankDetails?.ifscCode || '',
+  branchName: editData?.parentBankDetails?.branchName || '',
+  accountHolderName: editData?.parentBankDetails?.accountHolderName || '',
 });
 
 function RenderFamilyInformation(props: any) {
@@ -1116,7 +1624,7 @@ function RenderFamilyInformation(props: any) {
             <Typography variant="h6" gutterBottom>
               Father Details
             </Typography>
-            <Stack spacing={1}>
+            <Stack spacing={2}>
               <TextField
                 name="fatherName"
                 label="Father Name"
@@ -1172,6 +1680,7 @@ function RenderFamilyInformation(props: any) {
                   formik.setFieldValue('fatherContactNo', value);
                 }}
                 placeholder="Enter Father Contact No."
+                label="Father Contact No."
                 error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
               />
 
@@ -1211,6 +1720,7 @@ function RenderFamilyInformation(props: any) {
                 onChange={(value) => {
                   formik.setFieldValue('fatherOfficeNo', value);
                 }}
+                label="Father Office No."
                 placeholder="Enter Father Office No."
                 error={formik.touched.fatherOfficeNo && Boolean(formik.errors.fatherOfficeNo)}
               />
@@ -1297,7 +1807,7 @@ function RenderFamilyInformation(props: any) {
             <Typography variant="h6" gutterBottom>
               Mother Details
             </Typography>
-            <Stack spacing={1}>
+            <Stack spacing={2}>
               <TextField
                 name="motherName"
                 label="Mother Name"
@@ -1352,6 +1862,7 @@ function RenderFamilyInformation(props: any) {
                 onChange={(value) => {
                   formik.setFieldValue('motherContactNo', value);
                 }}
+                label="Mother Contact No."
                 placeholder="Enter Mother Contact No."
                 error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
               />
@@ -1393,6 +1904,7 @@ function RenderFamilyInformation(props: any) {
                   formik.setFieldValue('motherOfficeNo', value);
                 }}
                 placeholder="Enter Mother Office No."
+                label="Mother Office No."
                 error={formik.touched.motherOfficeNo && Boolean(formik.errors.motherOfficeNo)}
               />
 
@@ -1478,7 +1990,7 @@ function RenderFamilyInformation(props: any) {
             <Typography variant="h6" gutterBottom>
               Guardian Details
             </Typography>
-            <Stack spacing={1}>
+            <Stack spacing={2}>
               <TextField
                 name="guardianName"
                 label="Guardian Name"
@@ -1538,6 +2050,7 @@ function RenderFamilyInformation(props: any) {
                 onChange={(value) => {
                   formik.setFieldValue('guardianContactNo', value);
                 }}
+                label="Guardian Contact No."
                 placeholder="Enter Spouse Contact No."
                 error={formik.touched.guardianContactNo && Boolean(formik.errors.guardianContactNo)}
               />
@@ -1579,7 +2092,8 @@ function RenderFamilyInformation(props: any) {
                 onChange={(value) => {
                   formik.setFieldValue('guardianOfficeNo', value);
                 }}
-                placeholder="Enter Mother Office No."
+                label="Guardian Office No."
+                placeholder="Enter Guardian Office No."
                 error={formik.touched.guardianOfficeNo && Boolean(formik.errors.guardianOfficeNo)}
               />
 

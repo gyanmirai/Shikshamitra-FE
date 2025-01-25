@@ -79,9 +79,9 @@ const updateSearchParams = <T>(params: URLSearchParams, updates: T | Partial<T>)
   });
 };
 
-export const useNewSearchParamss = <T>(
+export const useNewSearchParam = <T>(
   defaultValues: T = {} as T
-): [T, (obj: T | Partial<T> | ((params: T) => T)) => void, () => void, (key: string) => void] => {
+): [T, (obj: T | Partial<T> | ((params: T) => T)) => void, (key: string) => void, () => void] => {
   const originalSearchParams = useSearchParams();
 
   const pathName = usePathname();
@@ -141,7 +141,7 @@ export const useNewSearchParamss = <T>(
     [searchParams]
   );
   console.log(allSearchParams, 'allSearchParams');
-  return [allSearchParams, setSearchParams, removeSearchParams, removeSearchParamsByKey];
+  return [allSearchParams, setSearchParams, removeSearchParamsByKey, removeSearchParams];
 };
 
 export const convertNextJsParamsToObject = (param: ReadonlyURLSearchParams) => {
@@ -162,43 +162,45 @@ export const convertNextJsParamsToObject = (param: ReadonlyURLSearchParams) => {
   return parsedParams;
 };
 
-export const useNewSearchParams = <T>(defaultValues: T = {} as T) => {
-  const nextJsParams = useSearchParams();
-  const router = useRouter();
+// export const useSearchParam = <T>(defaultValues: T = {} as T) => {
+//   const nextJsParams = useSearchParams();
+//   const router = useRouter();
 
-  const exitingParams = useMemo(() => new URLSearchParams(nextJsParams.toString()), [nextJsParams]);
+//   const exitingParams = useMemo(() => new URLSearchParams(nextJsParams.toString()), [nextJsParams]);
 
-  useMemo(() => {
-    updateSearchParams(exitingParams, {
-      ...defaultValues,
-      // ...parseSearchParams<T>(exitingParams),
-    });
-  }, [defaultValues, exitingParams]);
+//   console.log(exitingParams, 'exitingParams');
 
-  console.log('🚀 ~ file: use-search-param.ts:170 ~ exitingParams:', exitingParams.toString());
-  const getAllParams: () => T = useCallback(
-    () => parseSearchParams(exitingParams),
-    [exitingParams]
-  );
+//   useMemo(() => {
+//     updateSearchParams(exitingParams, {
+//       ...defaultValues,
+//       // ...parseSearchParams<T>(exitingParams),
+//     });
+//   }, [defaultValues, exitingParams]);
 
-  const setSearchParams = useCallback(
-    (obj: T | Partial<T> | ((params: T) => T)) => {
-      const newParams = typeof obj === 'function' ? (obj as (params: T) => T)(getAllParams()) : obj;
-      updateSearchParams(exitingParams, newParams);
+//   console.log('🚀 ~ file: use-search-param.ts:170 ~ exitingParams:', exitingParams.toString());
+//   const getAllParams: () => T = useCallback(
+//     () => parseSearchParams(exitingParams),
+//     [exitingParams]
+//   );
 
-      router.push(`${window.location.pathname}?${exitingParams.toString()}`);
-    },
-    [exitingParams, getAllParams, router]
-  );
+//   const setSearchParams = useCallback(
+//     (obj: T | Partial<T> | ((params: T) => T)) => {
+//       const newParams = typeof obj === 'function' ? (obj as (params: T) => T)(getAllParams()) : obj;
+//       updateSearchParams(exitingParams, newParams);
 
-  const removeSearchParamsByKey = useCallback(
-    (key: string) => {
-      exitingParams.delete(key);
-      console.log(key, 'removeSearchParamsByKey=======', exitingParams.toString());
-      router.push(`${window.location.pathname}?${exitingParams.toString()}`);
-    },
-    [exitingParams, router]
-  );
+//       router.push(`${window.location.pathname}?${exitingParams.toString()}`);
+//     },
+//     [exitingParams, getAllParams, router]
+//   );
 
-  return [getAllParams(), setSearchParams, removeSearchParamsByKey] as const;
-};
+//   const removeSearchParamsByKey = useCallback(
+//     (key: string) => {
+//       exitingParams.delete(key);
+//       console.log(key, 'removeSearchParamsByKey=======', exitingParams.toString());
+//       router.push(`${window.location.pathname}?${exitingParams.toString()}`);
+//     },
+//     [exitingParams, router]
+//   );
+
+//   return [getAllParams(), setSearchParams, removeSearchParamsByKey] as const;
+// };

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -11,16 +11,19 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import RegisterForm from './RegisterForm';
+import RegisterForm from './register-form';
 import { ExamForm } from '../entrance-exam';
 import { CommunicationForm } from '../follow-up';
 import RegistrationTable from './registration-table';
 
+import type { IInquiryData } from '../Inquiry';
+
 const RegisterScreen = () => {
-  const [open, setOpen] = useState(false);
+  const [editData, setEditData] = useState<null | IInquiryData>(null);
+  const formDialog = useBoolean();
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
-  const links = open
+  const links = formDialog.value
     ? [
         { name: 'Student' },
         { name: 'Student Enroll' },
@@ -38,17 +41,30 @@ const RegisterScreen = () => {
           <Button
             variant="contained"
             size="small"
-            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            onClick={() => setOpen(!open)}
+            startIcon={formDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            onClick={formDialog.onToggle}
           >
-            {open ? 'Back' : 'Registration'}
+            {formDialog.value ? 'Back' : 'Registration'}
           </Button>
         }
       />
-      {open ? (
-        <RegisterForm />
+      {formDialog.value ? (
+        <Card sx={{ height: '100%', mt: 1 }}>
+          <RegisterForm
+            editData={editData}
+            handleClose={() => {
+              setEditData(null);
+              formDialog.onFalse();
+            }}
+          />
+        </Card>
       ) : (
-        <RegistrationTable dialog={dialog} followUpDialog={followUpDialog} />
+        <RegistrationTable
+          dialog={dialog}
+          followUpDialog={followUpDialog}
+          setEditData={setEditData}
+          formDialog={formDialog}
+        />
       )}
 
       <CustomDialog

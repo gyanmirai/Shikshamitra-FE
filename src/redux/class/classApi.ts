@@ -40,6 +40,10 @@ export const classApi = createApi({
       }),
       invalidatesTags: ['Class'],
     }),
+    getClassByOrganizationId: builder.query({
+      query: (id) => ({ url: `/education-medium/${id}/standards` }),
+      providesTags: ['Class'],
+    }),
   }),
 });
 
@@ -50,4 +54,6 @@ export const {
   useAddClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
+  useGetClassByOrganizationIdQuery,
+  useLazyGetClassByOrganizationIdQuery,
 } = classApi;

@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useNewSearchParams } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -37,7 +37,7 @@ import { CalendarView } from 'src/sections/calendar/view';
 
 const EntranceExamScreen = () => {
   // const [view, setView] = React.useState('calender');
-  const [searchParams, setSearchParam] = useNewSearchParams({ view: 'calender' });
+  const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
   const dialog = useBoolean();
   const resultDialog = useBoolean();
   const dummyData = [
