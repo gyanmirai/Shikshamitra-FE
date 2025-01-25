@@ -6,11 +6,9 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
 
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -102,8 +100,10 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         </Box>
       </Box>
-      <CalendarView />
-      <Grid2 container spacing={3}>
+      <Box display="flex" width="1215px" height="700px" ml="-40px">
+        <CalendarView />
+      </Box>
+      {/* <Grid2 container spacing={3}>
         <Grid2 xs={12} md={6} lg={6}>
           <ScrollableCard
             filterLabel="Subject"
@@ -135,7 +135,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
             content={UpcomingScheduleAlerts}
           />
         </Grid2>
-      </Grid2>
+      </Grid2> */}
     </Box>
   );
 };

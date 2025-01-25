@@ -124,7 +124,7 @@ const Teacher = ({
         sx={{ px: 1, mb: 2 }}
       />
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 4, mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <CustomSelect
           label="Class"
           name="class"
@@ -173,7 +173,7 @@ const Teacher = ({
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             render(value, row) {
               return (

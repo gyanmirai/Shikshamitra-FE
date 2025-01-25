@@ -382,7 +382,7 @@ const CurriculumOverview = (props: TabComponentType) => {
               {
                 id: 'curriculumName',
                 label: 'Curriculum Name',
-                minWidth: '170px',
+                minWidth: '200px',
                 align: 'left',
               },
               {
@@ -412,7 +412,7 @@ const CurriculumOverview = (props: TabComponentType) => {
                 label: 'Subjects',
                 render(value, row) {
                   return row.subjects.map((data: any, index: any) => (
-                    <Chip size="small" label={data.name} variant="outlined" />
+                    <Chip size="small" label={data.name} variant="outlined" sx={{ m: 0.1 }} />
                   ));
                 },
               },
@@ -431,7 +431,7 @@ const CurriculumOverview = (props: TabComponentType) => {
               },
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isSort: false,
                 render(value, row) {
                   return (

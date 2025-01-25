@@ -236,9 +236,6 @@ const LearningResources = (props: TabComponentType) => {
       {!open && (
         <>
           {/* Filters Section */}
-          <Typography variant="h6" marginBottom={3} mt={3}>
-            Learning Resources For Subject
-          </Typography>
           <Box display="flex" flexDirection="row" gap={2} mb={2}>
             <CustomSelect
               options={classData?.items || []}
@@ -268,11 +265,16 @@ const LearningResources = (props: TabComponentType) => {
             <CustomizableTable
               tableId="learning-resources"
               columns={[
-                { id: 'resourceTitle', label: 'Resource Title' },
-                { id: 'typeOfResource', label: 'Type of Resource' },
+                { id: 'resourceTitle', label: 'Resource Title', minWidth: '180px', align: 'left' },
+                {
+                  id: 'typeOfResource',
+                  label: 'Type of Resource',
+                  minWidth: '180px',
+                  align: 'left',
+                },
                 { id: 'className', label: 'Class' },
                 { id: 'subject', label: 'Subject' },
-                { id: 'dateUploaded', label: 'Date Uploaded' },
+                { id: 'dateUploaded', label: 'Date Uploaded', minWidth: '180px', align: 'left' },
                 {
                   id: 'status',
                   label: 'Publish',
@@ -378,7 +380,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '350px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2} marginTop={1}>
             <Grid item xs={12} md={6}>
               <CustomSelect

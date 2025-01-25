@@ -151,17 +151,19 @@ const StudentGroup = (props: TabComponentType) => {
           columns={[
             { id: 'className', label: 'Class' },
             { id: 'division', label: 'Division' },
-            { id: 'groupName', label: 'Group Name' },
-            { id: 'groupType', label: 'Group Type' },
+            { id: 'groupName', label: 'Group Name', minWidth: '180px', align: 'left' },
+            { id: 'groupType', label: 'Group Type', minWidth: '180px', align: 'left' },
             {
               id: 'dynamicGroup',
               label: 'Dynamic Group Type',
+              minWidth: '200px',
+              align: 'left',
               render: (value) => value || '-',
             },
-            { id: 'totalStudents', label: 'Total Students' },
+            { id: 'totalStudents', label: 'Total Students', minWidth: '180px', align: 'left' },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               render(value, row) {
                 return (
@@ -450,7 +452,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '300px' }}>
+        <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <CustomSelect

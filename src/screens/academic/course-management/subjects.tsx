@@ -311,9 +311,6 @@ const Subjects = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Typography variant="h6" marginBottom={3} mt={3}>
-        Subject&apos;s Content Management
-      </Typography>
       <CustomSelect
         options={classData?.items || []}
         value={classes}
@@ -333,14 +330,14 @@ const Subjects = (props: TabComponentType) => {
             {
               id: 'subjectName',
               label: 'Subject Name',
-              minWidth: '140px',
+              minWidth: '180px',
               align: 'left',
             },
-            { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '150px', align: 'left' },
+            { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '200px', align: 'left' },
             {
               id: 'secondaryTeacher',
               label: 'Secondary Teacher',
-              minWidth: '170px',
+              minWidth: '200px',
               align: 'left',
               render: (value) => (
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -804,30 +801,41 @@ const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-        <Box sx={{ display: 'flex', gap: 6, flexGrow: 1 }}>
-          <CustomSelect
-            label="Division"
-            options={[
-              { value: 'All', label: 'All' },
-              { value: 'A', label: 'A' },
-              { value: 'B', label: 'B' },
-            ]}
-            value={division}
-            onChange={(e) => {
-              setDivision(e as string);
-            }}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
-          />
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            size="small"
-            onClick={onAddNewChapter}
-          >
-            New Chapter
-          </Button>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          {/* Left side content */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              label="Division"
+              options={[
+                { value: 'All', label: 'All' },
+                { value: 'A', label: 'A' },
+                { value: 'B', label: 'B' },
+              ]}
+              value={division}
+              onChange={(e) => {
+                setDivision(e as string);
+              }}
+              formControlProps={{ sx: { width: '200px' } }}
+            />
+            <Button
+              startIcon={<Iconify icon="mdi:plus" />}
+              variant="contained"
+              onClick={onAddNewChapter}
+            >
+              Chapter
+            </Button>
+          </Box>
+
+          {/* Right side content */}
           {division === 'All' && (
-            <Label variant="soft" color={subjectProgress < 50 ? 'error' : 'success'} marginTop={1}>
+            <Label variant="soft" color={subjectProgress < 50 ? 'error' : 'success'}>
               Subject Progress : {subjectProgress}% Completed
             </Label>
           )}

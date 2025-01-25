@@ -82,7 +82,7 @@ const Dashboard = (props: TabComponentType) => {
           />
         }
       />
-      <Grid2 container spacing={3} mt={2}>
+      <Grid2 container spacing={2} mt={2}>
         <Grid2 xs={12} md={4}>
           <Card
             sx={{
@@ -202,7 +202,7 @@ const Dashboard = (props: TabComponentType) => {
           </Card>
         </Grid2>
       </Grid2>
-      <Grid2 container spacing={3}>
+      <Grid2 container spacing={2} mt={1}>
         <Grid2 xs={12} sm={6}>
           <Card
             sx={{
@@ -235,7 +235,7 @@ const Dashboard = (props: TabComponentType) => {
             />
           </Card>
         </Grid2>
-        <Grid2 xs={12} md={6}>
+        <Grid2 xs={12} sm={6}>
           <Card
             sx={{
               alignItems: 'center',
@@ -273,37 +273,29 @@ const Dashboard = (props: TabComponentType) => {
           </Card>
         </Grid2>
         <Grid2 xs={12}>
-          <Card
-            sx={{
-              p: 3,
-              height: '100%',
-              backgroundColor: varAlpha(theme.palette.secondary.mainChannel, 0.1),
+          <CourseHoursSpent
+            title="Student Performance Trends Across Different Subjects"
+            selected="Class1"
+            chart={{
+              series: [
+                {
+                  name: 'Class1',
+                  categories: ['Eng', 'GUj', 'Hin', 'Maths', 'Sci'],
+                  data: [{ data: [10, 41, 35, 151, 49] }],
+                },
+                {
+                  name: 'Class2',
+                  categories: ['Eng', 'GUj', 'Hin', 'Maths', 'Sci'],
+                  data: [{ data: [83, 112, 119, 88, 103] }],
+                },
+                {
+                  name: 'Class3',
+                  categories: ['Eng', 'GUj', 'Hin', 'Maths', 'Sci'],
+                  data: [{ data: [24, 72, 64, 96, 76] }],
+                },
+              ],
             }}
-          >
-            <CourseHoursSpent
-              title="Student Performance Trends Across Different Subjects"
-              selected="Class1"
-              chart={{
-                series: [
-                  {
-                    name: 'Class1',
-                    categories: ['Eng', 'GUj', 'Hin', 'Maths', 'Sci'],
-                    data: [{ data: [10, 41, 35, 151, 49] }],
-                  },
-                  {
-                    name: 'Class2',
-                    categories: ['Eng', 'GUj', 'Hin', 'Maths', 'Sci'],
-                    data: [{ data: [83, 112, 119, 88, 103] }],
-                  },
-                  {
-                    name: 'Class3',
-                    categories: ['Eng', 'GUj', 'Hin', 'Maths', 'Sci'],
-                    data: [{ data: [24, 72, 64, 96, 76] }],
-                  },
-                ],
-              }}
-            />
-          </Card>
+          />
         </Grid2>
       </Grid2>
     </Box>
