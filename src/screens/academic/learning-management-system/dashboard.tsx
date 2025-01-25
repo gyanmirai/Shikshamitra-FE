@@ -291,13 +291,12 @@ const Dashboard = (props: TabComponentType) => (
                   offsetX: 0,
                   offsetY: 0,
                   tools: {
-                    download: true,
+                    download: false,
                     selection: false,
                     zoom: false,
                     zoomin: false,
                     zoomout: false,
                     pan: false,
-
                     customIcons: [],
                   },
                 },

@@ -291,8 +291,11 @@ const CourseProgress = (props: TabComponentType) => {
                       placement="right-top"
                       actions={({ popover }: any) => (
                         <MenuList>
-                          <Iconify icon="mdi:bell" />
-                          <MenuItem onClick={() => {}}>Reminder</MenuItem>
+                          <MenuItem onClick={() => {}}>
+                            {' '}
+                            <Iconify icon="mdi:bell" />
+                            Reminder
+                          </MenuItem>
                         </MenuList>
                       )}
                     />

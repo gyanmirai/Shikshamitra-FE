@@ -109,27 +109,29 @@ const Dashboard = (props: TabComponentType) => {
         </Grid>
       </Grid>
       <Grid item xs={12} sx={{ mt: 2 }}>
-        <AnalyticsWebsiteVisits
-          title="Student Enrollment in Different Activities"
-          subheader=""
-          chart={{
-            categories: ['Cricket', 'Dance', 'Drawing', 'Essay Writing', 'Singing'],
-            series: [{ name: 'Payroll', data: [5, 75, 35, 60, 25, 100] }],
-            options: {
-              yaxis: {
-                labels: {
-                  formatter: (value: number) => `${formatNumber(value)}`,
+        <Card sx={{ p: 2 }}>
+          <AnalyticsWebsiteVisits
+            title="Student Enrollment in Different Activities"
+            subheader=""
+            chart={{
+              categories: ['Cricket', 'Dance', 'Drawing', 'Essay Writing', 'Singing'],
+              series: [{ name: 'Payroll', data: [5, 75, 35, 60, 25, 100] }],
+              options: {
+                yaxis: {
+                  labels: {
+                    formatter: (value: number) => `${formatNumber(value)}`,
+                  },
+                },
+                tooltip: {
+                  y: {
+                    formatter: (value: number) => `${formatCurrency(value)}`,
+                  },
                 },
               },
-              tooltip: {
-                y: {
-                  formatter: (value: number) => `${formatCurrency(value)}`,
-                },
-              },
-            },
-          }}
-          sx={{ height: '100%' }}
-        />
+            }}
+            sx={{ height: '100%' }}
+          />
+        </Card>
       </Grid>
 
       <Grid item xs={12} md={12} sx={{ mt: 2 }}>

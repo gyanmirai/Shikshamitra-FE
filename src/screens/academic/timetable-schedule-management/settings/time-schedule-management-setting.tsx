@@ -9,16 +9,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -72,7 +63,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
   const { searchParams, setSearchParams } = props;
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
-  const [selectedEntry, setSelectedEntry] = useState(tableData);
+  const [selectedEntry, setSelectedEntry] = useState<any>(tableData);
   const [isEdit, setIsEdit] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [roomData, setRoomData] = useState(tableData);
@@ -180,7 +171,7 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           size="small"
           onClick={createLectureNumberDialog.onTrue}
         >
-          Create Number of Lectures
+          Create Number Of Lectures
         </Button>
       </Box>
       {/* <CustomSelect
@@ -205,35 +196,42 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           { id: 'class', label: 'Class' },
           { id: 'noOfLecture', label: 'No of Lectures' },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  showEditIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {}}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={[
           {
             class: 'Class 1',
             noOfLecture: 8,
-            action: 'Edit',
           },
           {
             class: 'Class 2',
             noOfLecture: 9,
-            action: 'Edit',
           },
           {
             class: 'Class 3',
             noOfLecture: 6,
-            action: 'Edit',
           },
           {
             class: 'Class 4',
             noOfLecture: 7,
-            action: 'Edit',
           },
           {
             class: 'Class 5',
             noOfLecture: 5,
-            action: 'Edit',
           },
         ]}
       />
@@ -264,8 +262,20 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           { id: 'periodSlots', label: 'Period Slots' },
           { id: 'breakSlots', label: 'Break Slots' },
           {
-            id: 'action',
-            label: 'Action',
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  // actions={(prop) => actions({ ...prop, row })}
+                  showEditIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {}}
+                  placement="right-top"
+                />
+              );
+            },
           },
         ]}
         data={[
@@ -274,21 +284,18 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
             className: 'Class 1',
             periodSlots: 6, // Number of periods
             breakSlots: 2, // Number of breaks
-            action: 'Edit',
           },
           {
             id: 2,
             className: 'Class 2',
             periodSlots: 5,
             breakSlots: 1,
-            action: 'Edit',
           },
           {
             id: 3,
             className: 'Class 3',
             periodSlots: 7,
             breakSlots: 2,
-            action: 'Edit',
           },
         ]}
       />
@@ -320,26 +327,21 @@ const TimeScheduleManagementSetting = (props: TabComponentType) => {
           { id: 'floor', label: 'Floor' },
           { id: 'capacity', label: 'Capacity' },
           {
-            id: 'action',
-            label: 'Action',
-            render(value: any, row: any) {
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
               return (
                 <ThreeDotsActions
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setIsEdit(true);
-                          setSelectedEntry(row);
-
-                          dialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="solar:pen-bold" />
-                        Edit
-                      </MenuItem>
-                    </MenuList>
-                  )}
+                  // actions={(prop) => actions({ ...prop, row })}
+                  showEditIcon
+                  showThreeDots={false}
+                  handleEditClick={() => {
+                    setIsEdit(true);
+                    setSelectedEntry(row);
+                    dialog.onTrue();
+                  }}
+                  placement="right-top"
                 />
               );
             },
@@ -529,7 +531,7 @@ const CreateNoOfLecture = () => {
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={() => {}}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <CustomSelect
@@ -887,8 +889,8 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-        <form onSubmit={formik.handleSubmit}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -934,13 +936,13 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
               />
             </Grid>
           </Grid>
-          <DialogActions>
-            <Button type="submit" variant="contained">
-              {isEdit ? 'Update' : 'Save'}
-            </Button>
-          </DialogActions>
-        </form>
-      </Scrollbar>
+        </Scrollbar>
+        <DialogActions>
+          <Button type="submit" variant="contained">
+            {isEdit ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </form>
     </Box>
   );
 };

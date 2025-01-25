@@ -316,7 +316,7 @@ const Subject = (props: TabComponentType) => {
             <CustomizableTable
               tableId="subject-table"
               columns={[
-                { id: 'subjectCode', label: 'Subject Code', minWidth: '128px', align: 'left' },
+                { id: 'subjectCode', label: 'Subject Code', minWidth: '150px', align: 'left' },
                 // {
                 //   id: 'subjectColor',
                 //   label: 'Subject Color',
@@ -337,7 +337,7 @@ const Subject = (props: TabComponentType) => {
                 {
                   id: 'subjectName',
                   label: 'Subject Name',
-                  minWidth: '135px',
+                  minWidth: '180px',
                   align: 'left',
                   render(value, row) {
                     return (
@@ -350,13 +350,13 @@ const Subject = (props: TabComponentType) => {
                 {
                   id: 'primaryTeacher',
                   label: 'Primary Teacher',
-                  minWidth: '150px',
+                  minWidth: '180px',
                   align: 'left',
                 },
                 {
                   id: 'secondaryTeacher',
                   label: 'Secondary Teacher',
-                  minWidth: '170px',
+                  minWidth: '200px',
                   align: 'left',
                   render: (value) => (
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -411,7 +411,7 @@ const Subject = (props: TabComponentType) => {
                 },
                 {
                   id: 'action',
-                  label: 'Action',
+                  label: 'Actions',
                   isSort: false,
                   render(value, row) {
                     const subject = subjectTableData.find((s) => s.id === row.id);
