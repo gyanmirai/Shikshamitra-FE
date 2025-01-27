@@ -180,6 +180,13 @@ const RoutesAndSchedulesScreen = () => {
     setTableData(updatedData);
   };
 
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    // setIsEdit(false);
+    setOpen(false);
+  };
+
   return (
     <>
       <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
