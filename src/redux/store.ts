@@ -11,6 +11,7 @@ import { boardApi } from './board/boardApi';
 import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
+import { feeHeadApi } from './feeHead/feeHeadApi';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
@@ -25,6 +26,7 @@ import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
+import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
@@ -64,6 +66,8 @@ const reducers = combineReducers({
   [StudentInquiryApi.reducerPath]: StudentInquiryApi.reducer,
   [StudentRegistrationFormApi.reducerPath]: StudentRegistrationFormApi.reducer,
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
+  [feeHeadApi.reducerPath]: feeHeadApi.reducer,
+  [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
 });
 
 const store = configureStore({
@@ -93,7 +97,9 @@ const store = configureStore({
       .concat(inquiryPreferenceApi.middleware)
       .concat(StudentInquiryApi.middleware)
       .concat(StudentRegistrationFormApi.middleware)
-      .concat(StudentRegistrationApi.middleware),
+      .concat(StudentRegistrationApi.middleware)
+      .concat(feeHeadApi.middleware)
+      .concat(paymentStatusOptionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
