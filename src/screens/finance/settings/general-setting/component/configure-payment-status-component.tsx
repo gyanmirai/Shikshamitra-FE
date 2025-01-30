@@ -197,10 +197,10 @@ const ConfigurePaymentStatusComponent = () => {
 
                         dialogForDeleteConfirmation.onTrue();
                       }}
-                      // showEditIcon
-                      // handleEditClick={() => {
-                      //   handleEditClick(value)
-                      // }}
+                      showEditIcon
+                      handleEditClick={() => {
+                        handleEditClick(value);
+                      }}
                     />
                   );
                 },
