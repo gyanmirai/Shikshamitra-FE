@@ -62,7 +62,7 @@ const validationSchema = Yup.object().shape({
   gender: Yup.string()
     // .oneOf(['male', 'female', 'other'], 'Invalid gender')
     .required('Gender is required'),
-  address: Yup.string().required('Address is required'),
+  address: Yup.string(),
   parentsContactNo: Yup.string()
     .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
       matchIsValidTel((value || '') as string)
@@ -76,8 +76,8 @@ const validationSchema = Yup.object().shape({
   pinCode: Yup.number()
     .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('Pin code is required'),
-  state: Yup.string().required('State is required'),
-  city: Yup.string().required('City is required'),
+  state: Yup.string(),
+  city: Yup.string(),
   // board: Yup.string().required('Board is required'),
   // medium: Yup.string().required('Medium is required'),
 });
@@ -203,7 +203,7 @@ const InquiryForm = ({
                   alternativeContactNumber: values.alternateContactDetails,
                   city: values.city,
                   state: values.state,
-                  pinCode: +values.pinCode,
+                  pinCode: values.pinCode,
                   address: values.address,
                   inquiryStatusType: 0,
                   educationMediumId: values.medium,
@@ -213,7 +213,7 @@ const InquiryForm = ({
 
                   educationBoardId: values.board,
                 },
-              });
+              }).unwrap();
             } else {
               await addInquiry({
                 firstName: values.firstName,
@@ -229,7 +229,7 @@ const InquiryForm = ({
                 alternativeContactNumber: values.alternateContactDetails,
                 city: values.city,
                 state: values.state,
-                pinCode: +values.pinCode,
+                pinCode: values.pinCode,
                 address: values.address,
                 inquiryStatusType: InquiryStatusType.Pending,
                 educationMediumId: values.medium,
@@ -237,7 +237,7 @@ const InquiryForm = ({
                 standardId: values.class,
                 inquiryPreferenceId: values.inquiryPreferences,
                 educationBoardId: values.board,
-              });
+              }).unwrap();
             }
             handleClose();
           } catch (error) {

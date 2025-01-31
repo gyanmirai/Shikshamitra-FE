@@ -108,7 +108,7 @@ export const StudentRegistrationApi = createApi({
     // document
     uploadDocuments: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/StudentEnrollment/${id}/documents`,
+        url: `/student-enrollment/${id}/documents`,
         method: 'PUT',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -119,7 +119,7 @@ export const StudentRegistrationApi = createApi({
     }),
     studentUpdateDocument: builder.mutation({
       query: ({ id, documentId, body }) => ({
-        url: `/StudentEnrollment/${id}/documents/${documentId}`,
+        url: `/student-enrollment/${id}/documents/${documentId}`,
         method: 'PUT',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -130,13 +130,13 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentDocuments: builder.query({
       query: (id) => ({
-        url: `/StudentEnrollment/${id}/documents`,
+        url: `/student-enrollment/${id}/documents`,
       }),
       providesTags: ['Student-Document'],
     }),
     getStudentDocumentById: builder.query({
       query: ({ id, documentId }) => ({
-        url: `/StudentEnrollment/${id}/documents/${documentId}`,
+        url: `/student-enrollment/${id}/documents/${documentId}`,
       }),
       providesTags: ['Student-Document'],
     }),

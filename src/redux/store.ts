@@ -25,6 +25,7 @@ import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
+import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
@@ -70,6 +71,7 @@ const reducers = combineReducers({
   [feeHeadApi.reducerPath]: feeHeadApi.reducer,
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
   [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
+  [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
 });
 
 const store = configureStore({
@@ -102,7 +104,8 @@ const store = configureStore({
       .concat(StudentRegistrationApi.middleware)
       .concat(feeHeadApi.middleware)
       .concat(paymentStatusOptionApi.middleware)
-      .concat(budgetCategoryApi.middleware),
+      .concat(budgetCategoryApi.middleware)
+      .concat(organizationUnitApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
