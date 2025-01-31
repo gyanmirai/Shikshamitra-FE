@@ -11,7 +11,6 @@ import {
   Card,
   Grid,
   Button,
-  Switch,
   TextField,
   Typography,
   DialogActions,
@@ -21,15 +20,13 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { CONFIG } from 'src/config-global';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { FileStorageOverview } from 'src/sections/file-manager/file-storage-overview';
+import NotificationSetting from './settings/component/notificationSetting';
 
 interface TCategory {
   id: number;
@@ -51,7 +48,6 @@ const initialCategories: TCategory[] = [
   },
 ];
 
-const GB = 1000000000 * 24;
 const Setting = (props: TabComponentType) => {
   const [categories, setCategories] = useState(initialCategories);
   const [selectedCategory, setSelectedCategory] = useState<TCategory | null>(null);
@@ -131,7 +127,7 @@ const Setting = (props: TabComponentType) => {
                 onChange={() => {}}
               />
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, gap: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 6, gap: 1 }}>
               <Button variant="outlined">Reset</Button>
               <Button variant="contained">Save</Button>
             </Box>
@@ -207,6 +203,7 @@ const Setting = (props: TabComponentType) => {
           </Card>
         </Grid>
       </Grid>
+      <NotificationSetting />
       <CustomDialog
         open={dialog.value}
         handleClose={handleCloseDialog}
@@ -233,65 +230,6 @@ const Setting = (props: TabComponentType) => {
           </Button>
         </DialogActions>
       </CustomDialog>
-
-      <Card sx={{ p: 2, mt: 1 }}>
-        <Typography variant="h6">Notifications</Typography>
-        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Switch />
-            <Typography>New Resources</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Switch />
-            <Typography>Content Updates</Typography>
-          </Box>
-        </Box>
-      </Card>
-      <FileStorageOverview
-        total={GB}
-        chart={{ series: 76 }}
-        data={[
-          {
-            name: 'Images',
-            usedStorage: GB / 2,
-            filesCount: 223,
-            icon: (
-              <Box component="img" src={`${CONFIG.site.basePath}/assets/icons/files/ic-img.svg`} />
-            ),
-          },
-          {
-            name: 'Media',
-            usedStorage: GB / 5,
-            filesCount: 223,
-            icon: (
-              <Box
-                component="img"
-                src={`${CONFIG.site.basePath}/assets/icons/files/ic-video.svg`}
-              />
-            ),
-          },
-          {
-            name: 'Documents',
-            usedStorage: GB / 5,
-            filesCount: 223,
-            icon: (
-              <Box
-                component="img"
-                src={`${CONFIG.site.basePath}/assets/icons/files/ic-document.svg`}
-              />
-            ),
-          },
-          {
-            name: 'Other',
-            usedStorage: GB / 10,
-            filesCount: 223,
-            icon: (
-              <Box component="img" src={`${CONFIG.site.basePath}/assets/icons/files/ic-file.svg`} />
-            ),
-          },
-        ]}
-        sx={{ mt: 2 }}
-      />
     </Box>
   );
 };

@@ -12,11 +12,11 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Reports from './reports';
-import Dashboard from './dashboard';
 import ClassProgress from './class-progress';
-import ComparativeAnalytics from './comparative-analytics';
-import IndividualStudentProgress from './Individual-student-progress';
+import Dashboard from './dashboard/dashboard';
+import ComparativeAnalytics from './comparativeAnalytics/comparative-analytics';
 import StudentProgressAnalyticsSetting from './settings/student-progress-analytics-setting';
+import IndividualStudentProgress from './individualStudentPerformance/Individual-student-progress';
 
 const TABS = [
   {

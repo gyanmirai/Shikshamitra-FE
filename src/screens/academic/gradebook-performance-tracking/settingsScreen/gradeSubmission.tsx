@@ -177,6 +177,9 @@ const GradeSubmission = () => {
         ]}
         data={assignments}
       />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+        <Button variant="contained">Save</Button>
+      </Box>
 
       <CustomDialog
         open={dialog.value}

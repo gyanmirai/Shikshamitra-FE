@@ -12,9 +12,9 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
-import Dashboard from './dashboard';
-import AllResources from './all-resources';
 import SharedWithMe from './shared-with-me';
+import Dashboard from './dashboard/dashboard';
+import AllResources from './allResources/all-resources';
 
 const TABS = [
   {

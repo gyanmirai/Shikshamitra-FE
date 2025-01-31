@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Box, Switch, Typography } from '@mui/material';
+import { Box, Switch, Button } from '@mui/material';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -15,11 +15,6 @@ const PermissionAccess = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" my={1}>
-          Permission Access
-        </Typography>
-      </Box>
       <CustomizableTable
         tableId="permission-access-table"
         columns={[
@@ -87,6 +82,9 @@ const PermissionAccess = () => {
         ]}
         data={tableData}
       />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+        <Button variant="contained">Save</Button>
+      </Box>
     </Box>
   );
 };
