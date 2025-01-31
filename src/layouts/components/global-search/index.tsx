@@ -4,23 +4,13 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { Search } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import {
-  Box,
-  Grid,
-  Button,
-  SvgIcon,
-  Popover,
-  TextField,
-  IconButton,
-  Typography,
-  Autocomplete,
-} from '@mui/material';
+import { Box, Grid, Button, SvgIcon, Popover, TextField, IconButton } from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 
 import { Label } from 'src/components/label';
-import CustomSelect from 'src/components/custom-select';
 import { usePopover } from 'src/components/custom-popover';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const GlobalSearch = () => {
   const theme = useTheme();
@@ -91,14 +81,14 @@ const GlobalSearch = () => {
             sx: {
               p: 1.5,
               mt: 0.5,
-              width: { xs: 1, sm: 380 },
+              width: { xs: 1, sm: 450 },
               border: `1px solid ${theme.vars.palette.grey[300]}`,
             },
           },
         }}
       >
         <Grid container spacing={1}>
-          <Grid item xs={12} md={6}>
+          {/* <Grid item xs={12} md={6}>
             <CustomSelect
               options={[]}
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -153,6 +143,46 @@ const GlobalSearch = () => {
               )}
               slotProps={{}}
             />
+          </Grid> */}
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              size="small"
+              label="First Name"
+              placeholder="Enter First Name"
+              variant="filled"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Middle Name"
+              placeholder="Enter Middle Name"
+              variant="filled"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Last Name"
+              placeholder="Enter Last Name"
+              variant="filled"
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Contact Number"
+              placeholder="Enter Contact Number"
+              variant="filled"
+              inputProps={{ maxLength: 10 }}
+            />
           </Grid>
           <Grid item xs={12}>
             <Box display="flex" justifyContent="flex-end" gap={1}>
@@ -175,6 +205,19 @@ const GlobalSearch = () => {
             </Box>
           </Grid>
         </Grid>
+
+        <CustomizableTable
+          tableId="global-search-table"
+          data={[]}
+          columns={[
+            { label: 'Name', id: 'name' },
+            { label: 'Class', id: 'class' },
+            { label: 'GrNo', id: 'grNo' },
+            { label: 'Batch', id: 'batch' },
+            { label: 'Organization', id: 'organization' },
+            { label: 'Status', id: 'status' },
+          ]}
+        />
       </Popover>
       {/* <CustomPopover
         open={popover.open}

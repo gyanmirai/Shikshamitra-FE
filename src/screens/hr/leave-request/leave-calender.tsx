@@ -34,7 +34,7 @@ const LeaveCalender = (props: TabComponentType) => {
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const theme = useTheme();
 
-  const { userInfo } = useSelector((state: any) => state.user);
+  const { user, employee } = useSelector((state: any) => state.auth);
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -52,9 +52,9 @@ const LeaveCalender = (props: TabComponentType) => {
         textColor: i.leavePolicy.color,
         title: `${i.leavePolicy.leaveType} [${i.employee.firstName} ${i.employee.lastName}]`,
         description: i.description.replace(/<[^>]+>/g, ''),
-        ...(i.employeeId === userInfo?.employee?.id ? { className: 'ownEvent' } : {}),
+        ...(i.employeeId === employee?.id ? { className: 'ownEvent' } : {}),
       })) || [],
-    [data?.items, userInfo?.employee?.id]
+    [data?.items, employee?.id]
   );
   const editData = useMemo(() => {
     if (currentDateClick) {

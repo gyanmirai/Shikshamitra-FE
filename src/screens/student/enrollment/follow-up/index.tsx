@@ -1,10 +1,16 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 
-import { Add, Send } from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -14,14 +20,21 @@ import {
   IconButton,
   Typography,
   DialogActions,
-  InputAdornment,
 } from '@mui/material';
 
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
 import { varAlpha } from 'src/theme/styles';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
+import { InquiryStatusType, InquiryStatusTypeOptions } from 'src/enums/inquiry-status-type';
+import {
+  useGetFollowUpQuery,
+  useAddFollowUpMutation,
+} from 'src/redux/student/follow-up/follow-up-api';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -154,139 +167,172 @@ const FollowUpScreen: React.FC = () => {
         data={dummyData}
       />
 
-      <CustomDialog open={openDialog} handleClose={handleCloseDialog} title="Communication History">
+      {/* <CustomDialog open={openDialog} handleClose={handleCloseDialog} title="Communication History">
         <CommunicationForm handleCloseDialog={handleCloseDialog} />
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };
 
 export default FollowUpScreen;
 
-export const CommunicationForm = ({ handleCloseDialog }: any) => (
-  <Box>
-    <Scrollbar
-      sx={{
-        bgcolor: 'background.neutral',
+interface IFollowUpResponse {
+  followUps: {
+    message: string;
+    author: string;
+    timestamp: string;
+  }[];
+  inquiryStatusType: number;
+  dueDate: string;
+}
+export const CommunicationForm = ({
+  handleCloseDialog,
+  studentEnrollmentId,
+}: {
+  handleCloseDialog: () => void;
+  studentEnrollmentId: string;
+}) => {
+  const [addFollowUp, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddFollowUpMutation,
+  });
+  const dispatch = useDispatch();
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFollowUpQuery,
+    params: studentEnrollmentId,
+    options: {
+      skip: !studentEnrollmentId,
+    },
+  });
+  const formik = useFormik<{
+    msg: string;
+    status: InquiryStatusType;
+    dueDate: Dayjs | null;
+  }>({
+    initialValues: {
+      msg: '',
+      status: data?.inquiryStatusType ?? InquiryStatusType.Pending,
+      dueDate: data?.dueDate ? dayjs(data?.dueDate) : null,
+    },
+    validationSchema: Yup.object({
+      msg: Yup.string().required('Message is required'),
+      status: Yup.string().required('Status is required'),
+      dueDate: Yup.string().required('Due Date is required'),
+    }),
+    enableReinitialize: true,
+    onSubmit: async (values) => {
+      console.log('Form values:', values);
+      try {
+        await addFollowUp({
+          studentEnrollmentId,
+          body: {
+            message: values.msg,
+            inquiryStatusType: values.status,
+            dueDate: dateConvertor((values.dueDate as Dayjs).format(dateFormat)),
+          },
+        }).unwrap();
+        dispatch(StudentInquiryApi.util.invalidateTags(['Student-Inquiry']));
+        handleCloseDialog();
+      } catch (error) {
+        console.log('Error submitting form:', error);
+      }
+    },
+  });
 
-        position: 'relative',
-        height: '350px',
-        p: 2,
-      }}
-    >
-      <Box>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Avatar />
-          <Box display="flex" flexDirection="column">
-            <Typography variant="subtitle1">John Doe</Typography>
-            <Typography component="span" variant="subtitle2" color="text.secondary">
-              06-01-2025 12:30 PM
-            </Typography>
-          </Box>
-        </Box>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
-          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
-          laboriosam dolores illo molestiae. Dolores, eaque.
-        </Typography>
-      </Box>
-      <Box>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Avatar />
-          <Box display="flex" flexDirection="column">
-            <Typography variant="subtitle1">John Doe</Typography>
-            <Typography component="span" variant="subtitle2" color="text.secondary">
-              06-01-2025 12:30 PM
-            </Typography>
-          </Box>
-        </Box>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
-          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
-          laboriosam dolores illo molestiae. Dolores, eaque.
-        </Typography>
-      </Box>
-      <Box>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Avatar />
-          <Box display="flex" flexDirection="column">
-            <Typography variant="subtitle1">John Doe</Typography>
-            <Typography component="span" variant="subtitle2" color="text.secondary">
-              06-01-2025 12:30 PM
-            </Typography>
-          </Box>
-        </Box>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
-          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
-          laboriosam dolores illo molestiae. Dolores, eaque.
-        </Typography>
-      </Box>
-      <Box>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Avatar />
-          <Box display="flex" flexDirection="column">
-            <Typography variant="subtitle1">John Doe</Typography>
-            <Typography component="span" variant="subtitle2" color="text.secondary">
-              06-01-2025 12:30 PM
-            </Typography>
-          </Box>
-        </Box>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quas, sit dolores delectus quae
-          culpa iste harum placeat facere, dicta quod tempora? Dicta necessitatibus laudantium
-          laboriosam dolores illo molestiae. Dolores, eaque.
-        </Typography>
-      </Box>
-    </Scrollbar>
-    <Box
-      sx={{
-        // position: 'absolute',
-        // bottom: 16,
-        // right: 16,
-        // left: 16,
-        // zIndex: 1000,
-        p: 2,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        flexDirection: 'column',
-      }}
-    >
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Follow Up Message"
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton>
-                <Send />
-              </IconButton>
-            </InputAdornment>
-          ),
+  return (
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <Scrollbar
+        sx={{
+          bgcolor: 'background.neutral',
+
+          position: 'relative',
+          height: '350px',
+          p: 2,
         }}
-      />
-      <DatePicker label="Due Date" slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-      <CustomSelect
-        options={[
-          { label: 'Interested', value: 'interested' },
-          { label: 'Not Interested', value: 'notInterested' },
-          { label: 'Pending', value: 'pending' },
-        ]}
-        value=""
-        onChange={() => {}}
-        label="Change Status"
-        formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
-      />
+      >
+        {isLoading ? (
+          <Box className="loader" />
+        ) : (
+          data?.followUps?.map((followUp: IFollowUpResponse['followUps'][0], index: number) => (
+            <Box key={index} py={1} borderBottom={1} borderColor="divider">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Avatar />
+                <Box display="flex" flexDirection="column">
+                  <Typography variant="subtitle1">{followUp?.author}</Typography>
+                  <Typography component="span" variant="subtitle2" color="text.secondary">
+                    {dayjs(followUp?.timestamp).format('DD-MM-YYYY')}
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                {followUp?.message}
+              </Typography>
+            </Box>
+          ))
+        )}
+      </Scrollbar>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          flexDirection: 'column',
+        }}
+      >
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Follow Up Message"
+          size="small"
+          value={formik.values.msg}
+          name="msg"
+          onChange={formik.handleChange}
+          multiline
+          rows={2}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              formik.handleSubmit();
+            }
+          }}
+          error={!!formik.errors.msg && formik.touched.msg}
+          helperText={formik.touched.msg && formik.errors.msg}
+        />
+        <DatePicker
+          label="Due Date"
+          slotProps={{
+            textField: {
+              size: 'small',
+              fullWidth: true,
+              helperText:
+                formik.touched.dueDate && formik.errors.dueDate ? formik.errors.dueDate : '',
+              error: formik.touched.dueDate && !!formik.errors.dueDate,
+            },
+          }}
+          value={formik.values.dueDate}
+          format="DD-MM-YYYY"
+          onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
+        />
+        <CustomSelect
+          options={InquiryStatusTypeOptions}
+          value={formik.values.status}
+          onChange={(val) => {
+            formik.setFieldValue('status', val);
+          }}
+          label="Change Status"
+          formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
+        />
+      </Box>
+      <DialogActions>
+        <Button onClick={handleCloseDialog} variant="outlined" color="error">
+          Close
+        </Button>
+        <LoadingButton loading={isAddLoading} type="submit" variant="contained">
+          Submit
+        </LoadingButton>
+      </DialogActions>
     </Box>
-    <DialogActions>
-      <Button onClick={handleCloseDialog} variant="outlined" color="error">
-        Close
-      </Button>
-      <Button onClick={handleCloseDialog} variant="contained">
-        Submit
-      </Button>
-    </DialogActions>
-  </Box>
-);
+  );
+};

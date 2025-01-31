@@ -1,16 +1,8 @@
 import type React from 'react';
 
-import { redirect } from 'next/navigation';
+import NormalRouteLayout from 'src/components/normal-route-layout';
 
-import { getSession } from 'src/lib';
-
-const NormalLayout: React.FC<any> = async ({ children }) => {
-  const session = await getSession();
-
-  if (session.isLoggedIn) {
-    redirect('/dashboard');
-  }
-  return children;
-};
-
+const NormalLayout: React.FC<any> = ({ children }) => (
+  <NormalRouteLayout>{children}</NormalRouteLayout>
+);
 export default NormalLayout;

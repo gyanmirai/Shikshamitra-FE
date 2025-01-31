@@ -60,7 +60,6 @@ const RenderRole = (props: any) => {
     currentQueryAndMutation: useGetRolesQuery,
   });
   const { formik, disabled } = props;
-  console.log('🚀 ~ file: employee-form-fields.tsx:63 ~ RenderRole ~ disabled:', disabled);
 
   return (
     <FormControl

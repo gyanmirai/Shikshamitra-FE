@@ -13,6 +13,7 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
+import { InquiryStatusType, InquiryStatusTypeColors } from 'src/enums/inquiry-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -87,20 +88,14 @@ const InquiryTable = ({
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px' },
         { id: 'inquiryPreference.preferenceName', label: 'Enquiry Preferences', minWidth: '180px' },
         {
-          id: 'status',
+          id: 'inquiryStatusType',
           label: 'Status',
           minWidth: '180px',
           align: 'left',
           render(value, row) {
-            let color: LabelColor = 'info';
-            if (row.status === 'Pending') {
-              color = 'warning';
-            } else if (row.status === 'Interested') {
-              color = 'success';
-            } else {
-              color = 'error';
-            }
-            return <Label color={color}>{value}</Label>;
+            const color = InquiryStatusTypeColors[value as InquiryStatusType] as LabelColor;
+
+            return <Label color={color}>{InquiryStatusType[value]}</Label>;
           },
         },
         {
@@ -115,11 +110,13 @@ const InquiryTable = ({
                   dialog.onTrue();
                   setEditData(row as IInquiryData);
                 }}
-                actions={() => (
+                actions={({ popover }) => (
                   <MenuList>
                     <MenuItem
                       onClick={() => {
                         followUpDialog.onTrue();
+                        setEditData(row as IInquiryData);
+                        popover.onClose();
                       }}
                     >
                       <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />

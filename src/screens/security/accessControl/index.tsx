@@ -13,7 +13,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery, useAddAccessControlMutation } from 'src/redux/employee/employeeApi';
+import {
+  useGetEmployeeQuery,
+  useGetAccessControlQuery,
+  useAddAccessControlMutation,
+} from 'src/redux/employee/employeeApi';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -73,6 +77,10 @@ const initialValues = {
 
 const AccessControlScreen = () => {
   const dialog = useBoolean();
+  const { data } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAccessControlQuery,
+  });
   return (
     <Box>
       <CustomBreadcrumbs

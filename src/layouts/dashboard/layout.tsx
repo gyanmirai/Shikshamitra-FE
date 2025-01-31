@@ -57,13 +57,6 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
 
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
 
-  // const user = useSelector((state: RootState) => state.user);
-  // const router = useRouter();
-  // if (user.userInfo === null) {
-  //   router.replace('/auth/login');
-  //   return null;
-  // }
-
   return (
     <>
       <NavMobile

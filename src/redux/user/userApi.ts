@@ -22,7 +22,13 @@ export const userApi = createApi({
         data: body,
       }),
     }),
+    getUser: builder.query({
+      query: (id) => ({ url: `/identity/users/${id}` }),
+    }),
+    getUsers: builder.query({
+      query: () => ({ url: `/identity/users` }),
+    }),
   }),
 });
 
-export const { useChangePasswordMutation, useAddUserMutation } = userApi;
+export const { useChangePasswordMutation, useAddUserMutation, useGetUsersQuery } = userApi;

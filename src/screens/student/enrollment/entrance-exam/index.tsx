@@ -1,9 +1,11 @@
 'use client';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Upload } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
@@ -24,6 +26,16 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { ScheduleType, scheduleTypeOptions } from 'src/enums/schedule-type';
+import { useGetEntranceExamSlotQuery } from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
+import {
+  useGetEntranceExamQuery,
+  useAddEntranceExamMutation,
+} from 'src/redux/student/entrance-exam/entrance-exam-api';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -40,58 +52,27 @@ const EntranceExamScreen = () => {
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
   const dialog = useBoolean();
   const resultDialog = useBoolean();
-  const dummyData = [
-    {
-      id: 1,
-      name: 'John Doe',
-      class: '10th',
-      medium: 'English',
-      date: '2023-06-01',
-      totalMarks: 100,
-      obtainedMarks: 85,
-      status: 'Pass',
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      class: '11th',
-      medium: 'Spanish',
-      date: '2023-06-02',
-      totalMarks: 100,
-      obtainedMarks: 92,
-      status: 'Pass',
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      class: '9th',
-      medium: 'French',
-      date: '2023-06-03',
-      totalMarks: 100,
-      obtainedMarks: '-',
-      status: 'Pending',
-    },
-    {
-      id: 4,
-      name: 'Alice Williams',
-      class: '12th',
-      medium: 'German',
-      date: '2023-06-04',
-      totalMarks: 100,
-      obtainedMarks: 95,
-      status: 'Pass',
-    },
-    {
-      id: 5,
-      name: 'Charlie Brown',
-      class: '8th',
-      medium: 'Mandarin',
-      date: '2023-06-05',
-      totalMarks: 100,
-      obtainedMarks: 68,
-      status: 'Fail',
-    },
-  ];
+  const { data: entranceExamData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEntranceExamQuery,
+  });
+
+  const tableData = useMemo(
+    () =>
+      entranceExamData?.items?.map((item: any) => ({
+        ...item,
+        date: dayjs(item.examDate).format('DD-MM-YYYY'),
+        examTime: `${dayjs(item.entranceExamSlot.startDate).format('hh:mm A')} to ${dayjs(
+          item.entranceExamSlot.endDate
+        ).format('hh:mm A')}`,
+        name: `${item.studentEnrollment.firstName} ${item.studentEnrollment.lastName}`,
+        medium: item.studentEnrollment.educationMedium.name,
+        class: item.studentEnrollment.standard.name,
+        status: item?.obtainedMarks ? 'Pass' : 'Pending',
+      })),
+    [entranceExamData]
+  );
+
   const actions = useCallback(
     ({ popover }: any) => (
       <MenuList>
@@ -162,6 +143,7 @@ const EntranceExamScreen = () => {
           tableId="entrance-exam-table"
           columns={[
             { id: 'date', label: 'Date' },
+            { id: 'examTime', label: 'Exam Time' },
             {
               id: 'name',
               label: 'Student',
@@ -186,7 +168,7 @@ const EntranceExamScreen = () => {
               id: 'percentage',
               label: 'Percentage',
               render(value, row) {
-                return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
+                return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100 || 0).toFixed(2)}%`;
               },
             },
             {
@@ -220,7 +202,7 @@ const EntranceExamScreen = () => {
               render: (value, row) => <ThreeDotsActions placement="right-top" actions={actions} />,
             },
           ]}
-          data={dummyData}
+          data={tableData || []}
         />
       )}
       <CustomDialog title="Result" handleClose={resultDialog.onFalse} open={resultDialog.value}>
@@ -232,29 +214,64 @@ const EntranceExamScreen = () => {
 
 export default EntranceExamScreen;
 
-export const ExamForm = () => {
+export const ExamForm = ({
+  studentEnrollmentId,
+  handleClose,
+}: {
+  studentEnrollmentId: string;
+  handleClose: () => void;
+}) => {
   const validationSchema = Yup.object({
-    examDate: Yup.date().required('Exam date is required'),
-    selectedStudents: Yup.string().required('Students are required'),
+    // examDate: Yup.date().required('Exam date is required'),
+    // selectedStudents: Yup.string().required('Students are required'),
   });
 
+  const { data: slots } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEntranceExamSlotQuery,
+  });
+
+  const [scheduleExam, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEntranceExamMutation,
+  });
+
+  const allSlots = useMemo(
+    () =>
+      slots?.items?.map((slot: any) => ({
+        ...slot,
+        label: `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`,
+        value: slot.id,
+      })),
+    [slots]
+  );
+
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       examDate: null,
-      scheduleType: '',
-      totalMarks: '',
+      examType: '',
+      scheduleType: ScheduleType.Individual,
+      totalMarks: 0,
       isConfirmed: false,
-      slots: [
-        { label: '8:00 to 9:00 (6)', value: false },
-        { label: '9:00 to 10:00 (10)', value: false },
-        { label: '10:00 to 11:00 (5)', value: false },
-        { label: '11:00 to 12:00 (2)', value: false },
-        { label: '14:00 to 15:00 (6)', value: false },
-        { label: '15:00 to 16:00 (4)', value: false },
-      ],
+      slots: allSlots || [],
+      slot: '',
     },
     validationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      try {
+        await scheduleExam({
+          entranceExamSlotId: values.slot,
+          studentEnrollmentId,
+          examDate: dateConvertor(dayjs(values.examDate).format(dateFormat)),
+          examType: values.examType,
+          totalMarks: values.totalMarks,
+          examScheduleType: values.scheduleType,
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
       console.log(values);
     },
   });
@@ -294,17 +311,29 @@ export const ExamForm = () => {
             <Paper sx={{ p: 1, height: '100%' }}>
               <Grid container spacing={2}>
                 <Grid xs={4}>
-                  <TextField name="examType" label="Exam Type" size="small" fullWidth />
+                  <TextField
+                    name="examType"
+                    value={formik.values.examType}
+                    onChange={formik.handleChange}
+                    label="Exam Type"
+                    size="small"
+                    fullWidth
+                  />
                 </Grid>
                 <Grid xs={4}>
-                  <TextField name="totalMarks" label="Total Marks" size="small" fullWidth />
+                  <TextField
+                    name="totalMarks"
+                    type="number"
+                    value={formik.values.totalMarks}
+                    onChange={formik.handleChange}
+                    label="Total Marks"
+                    size="small"
+                    fullWidth
+                  />
                 </Grid>
                 <Grid xs={4}>
                   <CustomSelect
-                    options={[
-                      { name: 'Individual', id: 'individual' },
-                      { name: 'Group', id: 'group' },
-                    ]}
+                    options={scheduleTypeOptions}
                     label="Schedule Type"
                     labelKey="name"
                     valueKey="id"
@@ -318,18 +347,21 @@ export const ExamForm = () => {
                 <Grid xs={12}>
                   <Box>
                     <Typography variant="subtitle1">Slots</Typography>
+
                     <Grid container spacing={2}>
-                      {formik.values.slots.map((slot, index) => (
+                      {formik.values.slots.map((slot: any, index: number) => (
                         <Grid xs={6} key={index}>
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={slot.value}
+                                checked={slot.value === formik.values.slot}
                                 size="small"
                                 onChange={(e) => {
-                                  const updatedSlots = [...formik.values.slots];
-                                  updatedSlots[index].value = e.target.checked;
-                                  formik.setFieldValue('slots', updatedSlots);
+                                  if (e.target.checked) {
+                                    formik.setFieldValue('slot', slot.value);
+                                  } else {
+                                    formik.setFieldValue('slot', '');
+                                  }
                                 }}
                               />
                             }
@@ -346,9 +378,15 @@ export const ExamForm = () => {
         </Grid>
       </Scrollbar>
       <DialogActions sx={{ flexShrink: 0 }}>
-        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>
+        <LoadingButton
+          loading={isAddLoading}
+          type="submit"
+          variant="contained"
+          color="primary"
+          style={{ marginTop: '1rem' }}
+        >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </form>
   );
