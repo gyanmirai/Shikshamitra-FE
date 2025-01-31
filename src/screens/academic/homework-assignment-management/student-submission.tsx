@@ -15,7 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { StudentSubmissions } from './homework-creation';
+import { StudentSubmissions } from './homeworkCreation/homework-creation';
 
 const StudentSubmission = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -161,84 +161,6 @@ const StudentSubmission = (props: TabComponentType) => {
         />
       </Box>
       <StudentSubmissions />
-      {/* <CustomizableTable
-        columns={[
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'assignmentTitle', label: 'Assignment Title' },
-          { id: 'grade', label: 'Grade' },
-          { id: 'submissionStatus', label: 'Submission Status' },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={() => (
-                    <MenuList>
-                      <MenuItem>
-                        <Iconify icon="mdi:eye" />
-                        View Submission
-                      </MenuItem>
-                      <MenuItem>
-                        <Iconify icon="mdi:file-document-edit" />
-                        Grade Assignment
-                      </MenuItem>
-                      <MenuItem onClick={dialog.onTrue}>
-                        <Iconify icon="mdi:comment-text" />
-                        Provide Feedback
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
-            },
-          },
-        ]}
-        data={dummyData}
-      />
-      <CustomDialog title="Grade" open={dialog.value} handleClose={dialog.onFalse}>
-        <Box>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
-              <TextField label="Assignment Title" fullWidth />
-              <TextField label="Student Name" fullWidth />
-              <TextField label="Write your feedback here" fullWidth multiline rows={4} />
-
-              <UploadBox
-                onDrop={() => {}}
-                placeholder={
-                  <Box
-                    sx={{
-                      gap: 0.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Attach Resource</Typography>
-                  </Box>
-                }
-                sx={{
-                  py: 2.5,
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
-              />
-            </Box>
-          </Scrollbar>
-          <DialogActions>
-            <Button color="error" variant="outlined" onClick={dialog.onFalse}>
-              Cancel
-            </Button>
-            <Button variant="contained" onClick={dialog.onFalse}>
-              Submit
-            </Button>
-          </DialogActions>
-        </Box>
-      </CustomDialog> */}
     </Box>
   );
 };

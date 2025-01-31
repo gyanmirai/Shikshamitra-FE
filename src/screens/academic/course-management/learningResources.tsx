@@ -133,27 +133,9 @@ const LearningResources = (props: TabComponentType) => {
     confirm_dialog.onTrue(); // Open confirmation dialog
   };
 
-  const confirmStatusChange = () => {
-    if (pendingStatusChange) {
-      const { id, newStatus } = pendingStatusChange;
-      setResourceData((prevCourse) =>
-        prevCourse.map((resource) =>
-          resource.id === id ? { ...resource, status: newStatus } : resource
-        )
-      );
-    }
-    confirm_dialog.onFalse();
-    setPendingStatusChange(null);
-  };
-
   const filteredData = resourceData.filter(
     (item) => (!classes || item.className === classes) && (!subject || item.subject === subject)
   );
-
-  const cancelStatusChange = () => {
-    confirm_dialog.onFalse();
-    setPendingStatusChange(null);
-  };
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (

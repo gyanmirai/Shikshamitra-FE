@@ -5,7 +5,7 @@ import { Box, Card, Grid, Button, Checkbox, TextField, Typography } from '@mui/m
 import CustomSelect from 'src/components/custom-select';
 
 const NotificationAlert = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={2}>
     <Grid item xs={12}>
       <Typography variant="h6" my={1}>
         Notifications & Alerts

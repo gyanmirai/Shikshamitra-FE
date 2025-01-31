@@ -11,8 +11,8 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Dashboard from './dashboard';
 import StudentGroup from './studentGroup';
+import Dashboard from './dashboard/dashboard';
 import DynamicGroupManagement from './dynamicGroup';
 import ActivityManagement from './activityManagement';
 

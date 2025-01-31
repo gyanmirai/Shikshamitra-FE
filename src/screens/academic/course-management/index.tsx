@@ -13,8 +13,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Settings from './settings';
 import Subjects from './subjects';
-import Dashboard from './dashboard';
 import Reports from './reportsAndAnalyics';
+import Dashboard from './dashboard/dashboard';
 import CourseProgress from './courseProgress';
 import LearningResources from './learningResources';
 

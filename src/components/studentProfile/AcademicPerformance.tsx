@@ -5,11 +5,11 @@ import { Box, Grid, Typography } from '@mui/material';
 import {
   ExamsList,
   AssignmentsList,
-} from 'src/screens/academic/student-progress-analytics/Individual-student-progress';
+} from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/Individual-student-progress';
 import {
   StudentPerformance,
   StudentSubjectPerformace,
-} from 'src/screens/academic/student-progress-analytics/comparative-analytics';
+} from 'src/screens/academic/student-progress-analytics/comparativeAnalytics/comparative-analytics';
 
 const AcademicPerformance = () => (
   <Box>

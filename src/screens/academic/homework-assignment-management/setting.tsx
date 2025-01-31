@@ -283,109 +283,153 @@ const Setting = (props: TabComponentType) => {
             </Card>
           </Grid>
         </Grid>
-        <Card sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Assignment Preferences
-          </Typography>
-          <Grid container spacing={2} alignItems="center">
-            <CustomDialog
-              open={homeworkDialog.value}
-              handleClose={handleCloseDialog}
-              title={isEdit ? 'Update Type' : 'Add Type'}
+        <CustomDialog
+          open={homeworkDialog.value}
+          handleClose={handleCloseDialog}
+          title={isEdit ? 'Update Type' : 'Add Type'}
+        >
+          <AddCategory
+            onSubmit={handleHomeworkSubmit}
+            data={selectedHomeworkType}
+            isEdit={isEdit}
+          />
+        </CustomDialog>
+
+        <CustomDialog
+          open={homeworkDialog.value}
+          handleClose={handleCloseDialog}
+          title={isEdit ? 'Update Category' : 'Add Category'}
+        >
+          <AddCategory
+            onSubmit={handleAssignmentSubmit}
+            data={selectedAssignmentType}
+            isEdit={isEdit}
+          />
+        </CustomDialog>
+        <Grid container spacing={2} alignItems="stretch">
+          <Grid item xs={12} md={6}>
+            <Card
+              sx={{
+                p: 2,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
             >
-              <AddCategory
-                onSubmit={handleHomeworkSubmit}
-                data={selectedHomeworkType}
-                isEdit={isEdit}
-              />
-            </CustomDialog>
-
-            <CustomDialog
-              open={homeworkDialog.value}
-              handleClose={handleCloseDialog}
-              title={isEdit ? 'Update Category' : 'Add Category'}
-            >
-              <AddCategory
-                onSubmit={handleAssignmentSubmit}
-                data={selectedAssignmentType}
-                isEdit={isEdit}
-              />
-            </CustomDialog>
-
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>
-                Default Deadlines
+              <Typography variant="h6" gutterBottom>
+                Assignment Preferences
               </Typography>
-              <DatePicker
-                label="Select the Default Deadline"
-                format="DD/MM/YYYY"
-                sx={{}}
-                slotProps={{ textField: { size: 'small' } }}
-              />
-            </Grid>
 
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>
-                Reminder Schedules
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch />
-                <Typography>24 hours before</Typography>
-                <Switch />
-                <Typography>1 hour before</Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Card>
-        <Card sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Custom Notifications
-          </Typography>
-          <Grid container spacing={2} alignItems="flex-start">
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>
-                Choose Notifications
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
-                  <Typography>New Assignments</Typography>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ mb: 5 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Default Deadlines
+                  </Typography>
+                  <DatePicker
+                    label="Select the Default Deadline"
+                    format="DD/MM/YYYY"
+                    sx={{ maxWidth: '250px' }}
+                    slotProps={{ textField: { size: 'small' } }}
+                  />
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
-                  <Typography>Grading Updates</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
-                  <Typography>Upcoming Deadlines</Typography>
+
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Reminder Schedules
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Switch />
+                      <Typography>24 hours before</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Switch />
+                      <Typography>1 hour before</Typography>
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>
-                Notification Frequency
-              </Typography>
-              <CustomSelect
-                label="Frequency Options"
-                options={[
-                  { value: 'Immediately', label: 'Immediately' },
-                  { value: 'Daily', label: 'Daily' },
-                  { value: 'Weekly', label: 'Weekly' },
-                ]}
-                value=""
-                onChange={() => {}}
-              />
-            </Grid>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button size="small" variant="contained" onClick={() => {}}>
+                  Save
+                </Button>
+              </Box>
+            </Card>
           </Grid>
-          <Button
-            color="secondary"
-            variant="contained"
-            size="small"
-            sx={{ maxWidth: '200px', width: '100%', marginLeft: '80%' }}
-          >
-            Save Changes
-          </Button>
-        </Card>
+
+          <Grid item xs={12} md={6}>
+            <Card
+              sx={{
+                p: 2,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Custom Notifications
+              </Typography>
+
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Choose Notifications
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 2,
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+                      <Typography>New Assignments</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+                      <Typography>Grading Updates</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
+                      <Typography>Upcoming Deadlines</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Notification Frequency
+                  </Typography>
+                  <CustomSelect
+                    label="Frequency Options"
+                    options={[
+                      { value: 'Immediately', label: 'Immediately' },
+                      { value: 'Daily', label: 'Daily' },
+                      { value: 'Weekly', label: 'Weekly' },
+                    ]}
+                    value=""
+                    onChange={() => {}}
+                    formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  />
+                </Box>
+              </Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button size="small" variant="contained" onClick={() => {}}>
+                  Save
+                </Button>
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );
@@ -430,7 +474,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ onSubmit, data, isEdit }) => 
         </Scrollbar>
         <DialogActions>
           <Button type="submit" color="primary" variant="contained">
-            {isEdit ? 'Update' : 'Add'}
+            {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>
