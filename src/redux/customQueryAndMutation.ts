@@ -33,7 +33,12 @@ function useQueryAndMutation<T>({
     successMessage: 'Fetch Success',
     ...popupConfig,
   };
-  const resp = currentQueryAndMutation(params, options);
+  const resp = currentQueryAndMutation(params, {
+    refetchOnMountOrArgChange: true, // Refetch on every component mount
+    refetchOnFocus: true, // Refetch when the window/tab regains focus
+    refetchOnReconnect: true, // Refetch when internet connection is restored
+    ...options,
+  });
   const { isSuccess, isError, error } = type === 'query' ? resp : resp[1];
 
   useEffect(() => {

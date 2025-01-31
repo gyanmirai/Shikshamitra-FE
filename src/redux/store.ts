@@ -6,7 +6,7 @@ import { PFApi } from './PF/PFApi';
 import { userApi } from './user/userApi';
 import { roleApi } from './role/roleApi';
 import { yearApi } from './year/yearApi';
-import userReducer from './user/userSlice';
+import authReducer from './auth/authSlice';
 import { boardApi } from './board/boardApi';
 import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
@@ -18,27 +18,30 @@ import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { organizationApi } from './oraganization/oraganization';
+import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
+import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
+import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['globalState', 'user'],
+  whitelist: ['globalState'],
 };
 
 const reducers = combineReducers({
-  user: userReducer,
+  auth: authReducer,
   globalState: globalStateReducer,
   confirmPopup: confirmPopupReducer,
   [userApi.reducerPath]: userApi.reducer,
@@ -66,6 +69,9 @@ const reducers = combineReducers({
   [StudentRegistrationFormApi.reducerPath]: StudentRegistrationFormApi.reducer,
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
+  [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
+  [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
+  [FollowUpApi.reducerPath]: FollowUpApi.reducer,
 });
 
 const store = configureStore({
@@ -96,7 +102,10 @@ const store = configureStore({
       .concat(StudentInquiryApi.middleware)
       .concat(StudentRegistrationFormApi.middleware)
       .concat(StudentRegistrationApi.middleware)
-      .concat(organizationUnitApi.middleware),
+      .concat(organizationUnitApi.middleware)
+      .concat(EntranceExamSlotApi.middleware)
+      .concat(EntranceExamApi.middleware)
+      .concat(FollowUpApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -52,7 +52,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   // const pathname = usePathname();
 
-  const { userInfo } = useSelector((state: any) => state.user);
+  const { user, employee } = useSelector((state: any) => state.auth);
 
   const [open, setOpen] = useState(false);
 
@@ -80,7 +80,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
     <AnimateAvatar
       width={96}
       slotProps={{
-        avatar: { src: convertBase64Format(userInfo?.employee?.profilePicture || ''), alt: '' },
+        avatar: { src: convertBase64Format(employee?.profilePicture || ''), alt: '' },
         overlay: {
           border: 2,
           spacing: 3,
@@ -88,7 +88,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         },
       }}
     >
-      {userInfo?.employee?.shortName}
+      {employee?.shortName}
     </AnimateAvatar>
   );
 
@@ -128,14 +128,14 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
           <Stack alignItems="center" sx={{ pt: 8 }}>
             {renderAvatar}
             <Label sx={{ mt: 1 }} color="primary">
-              {userInfo?.employee?.role?.name}
+              {employee?.role?.name}
             </Label>
             <Typography variant="subtitle1" noWrap sx={{ mt: 1 }}>
-              {userInfo?.employee?.employeeName}
+              {employee?.employeeName}
             </Typography>
 
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
-              {userInfo?.email}
+              {employee?.email}
             </Typography>
           </Stack>
 

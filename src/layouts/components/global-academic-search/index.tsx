@@ -1,12 +1,16 @@
 import type { RootState } from 'src/redux/store';
+import type { Board, AcademicYear } from 'src/types/school';
 
 import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { Stack, Button, Popover, useTheme } from '@mui/material';
 import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
 
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   setCurrentYear,
   setCurrentBoard,
@@ -23,87 +27,6 @@ import {
   navSectionCssVars,
 } from 'src/components/nav-section';
 
-const data = [
-  {
-    name: '2025-2026',
-    startDate: '2025-03-01T05:06:27+00:00',
-    endDate: '2026-02-28T18:29:59+00:00',
-    lastModificationTime: null,
-    lastModifierId: null,
-    creationTime: '2025-01-10T05:06:38.09634+00:00',
-    creatorId: '3a173edc-8065-a190-a7d1-b180244339bb',
-    id: '3a1760c8-4a49-6ce2-8d2e-cfedb3265f38',
-    boards: [],
-  },
-  {
-    name: '2024-2025',
-    startDate: '2024-04-01T00:00:00+00:00',
-    endDate: '2025-03-31T00:00:00+00:00',
-    lastModificationTime: null,
-    lastModifierId: null,
-    creationTime: '2025-01-03T20:31:41.98783+00:00',
-    creatorId: null,
-    id: '3a173edc-93cd-670d-596f-7ab1acf664c9',
-    boards: [
-      {
-        type: 0,
-        name: 'CBSE',
-        academicYearId: '3a173edc-93cd-670d-596f-7ab1acf664c9',
-        educationMediums: [
-          {
-            name: 'English',
-            educationBoardId: '3a173edc-93e3-d474-e303-e4215c1bce35',
-            educationMediumStages: [
-              {
-                educationMediumId: '3a173edc-93fc-ac24-8daa-059cf396dbc4',
-                name: 'Primary',
-                standards: [
-                  {
-                    name: '1',
-                    divisions: [
-                      {
-                        name: 'A',
-                        strength: 30,
-                        standardId: '3a173edc-9425-7d0e-f553-cc8236cb3ba8',
-                        lastModificationTime: null,
-                        lastModifierId: null,
-                        creationTime: '2025-01-03T20:31:42.094013+00:00',
-                        creatorId: null,
-                        id: '3a173edc-9439-d7e7-3aef-c0e925aafa02',
-                      },
-                    ],
-                    educationMediumStageId: '3a173edc-940f-2792-46d4-bf9fdec22d67',
-                    lastModificationTime: null,
-                    lastModifierId: null,
-                    creationTime: '2025-01-03T20:31:42.073809+00:00',
-                    creatorId: null,
-                    id: '3a173edc-9425-7d0e-f553-cc8236cb3ba8',
-                  },
-                ],
-                lastModificationTime: '2025-01-07T03:52:29.555108+00:00',
-                lastModifierId: '3a173edc-8065-a190-a7d1-b180244339bb',
-                creationTime: '2025-01-03T20:31:42.053294+00:00',
-                creatorId: null,
-                id: '3a173edc-940f-2792-46d4-bf9fdec22d67',
-              },
-            ],
-            lastModificationTime: null,
-            lastModifierId: null,
-            creationTime: '2025-01-03T20:31:42.031475+00:00',
-            creatorId: null,
-            id: '3a173edc-93fc-ac24-8daa-059cf396dbc4',
-          },
-        ],
-        lastModificationTime: null,
-        lastModifierId: null,
-        creationTime: '2025-01-03T20:31:42.012004+00:00',
-        creatorId: null,
-        id: '3a173edc-93e3-d474-e303-e4215c1bce35',
-      },
-    ],
-  },
-];
-
 const GlobalAcademicSearch = () => {
   const popover = usePopover();
   const theme = useTheme();
@@ -113,14 +36,33 @@ const GlobalAcademicSearch = () => {
 
   const dispatch = useDispatch();
 
-  const [currentItem, setCurrentItem] = useState<any>(null);
+  // const [currentItem, setCurrentItem] = useState<any>(null);
 
   const { currentYear, currentBoard, currentMedium } = useSelector(
     (state: RootState) => state.globalState
   );
 
+  const { data: years } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetYearQuery,
+  });
+
+  const { data: boardData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+
+  const allData = useMemo(() => {
+    if (!years?.items?.length) return [];
+    const mergedData = years?.items?.map((year: AcademicYear) => ({
+      ...year,
+      boards: boardData?.items?.filter((board: Board) => board.academicYearId === year.id) || [],
+    }));
+    return mergedData || [];
+  }, [boardData?.items, years?.items]);
+
   useEffect(() => {
-    if (currentItem) {
+    if (allData.length && currentMedium?.id) {
       const findValues = (items: any[], id: string): any =>
         items.find(
           (item: any) =>
@@ -129,19 +71,23 @@ const GlobalAcademicSearch = () => {
               findValues(item?.boards || item?.educationMediums, id))
         );
 
-      const values = findValues(data, currentItem?.id);
+      const values = findValues(allData, currentMedium?.id);
 
       if (values) {
         const { boards, ...year } = values;
         const selectedBoard = boards.find((item: any) =>
-          item.educationMediums.find((i: any) => i.id === currentItem?.id)
+          item.educationMediums.find((i: any) => i.id === currentMedium?.id)
         );
         dispatch(setCurrentYear(year));
-        dispatch(setCurrentMedium(currentItem));
         dispatch(setCurrentBoard(selectedBoard));
+        // dispatch(setCurrentMedium(currentMedium));
+      } else {
+        dispatch(setCurrentYear(null));
+        dispatch(setCurrentBoard(null));
+        dispatch(setCurrentMedium(null));
       }
     }
-  }, [currentItem, dispatch]);
+  }, [allData, currentMedium, dispatch]);
 
   return (
     <>
@@ -152,7 +98,7 @@ const GlobalAcademicSearch = () => {
         // sx={{ border: `dashed 1px ${theme.vars.palette.primary.main}` }}
         endIcon={popover.open ? <ArrowDropDown /> : <ArrowDropUp />}
       >
-        {currentYear?.name
+        {currentYear?.name && currentBoard.name && currentMedium?.name
           ? `${currentYear.name} > ${currentBoard.name} > ${currentMedium.name}`
           : 'Select Academic Year, Board and Medium'}
       </Button>
@@ -185,12 +131,7 @@ const GlobalAcademicSearch = () => {
           sx={{ p: 0.5, ...cssVars }}
         >
           <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-            <Group1
-              items={data}
-              currentItem={currentItem}
-              setCurrentItem={setCurrentItem}
-              popover={popover}
-            />
+            <Group1 items={allData} popover={popover} />
           </NavUl>
         </Stack>
       </Popover>
@@ -199,7 +140,7 @@ const GlobalAcademicSearch = () => {
 };
 export default GlobalAcademicSearch;
 
-function Group1({ items, depth = 1, currentItem, setCurrentItem, popover }: any) {
+function Group1({ items, depth = 1, popover }: any) {
   return (
     <NavUl sx={{ gap: 'var(--nav-item-gap)' }}>
       {items?.map((group: any) => (
@@ -209,8 +150,6 @@ function Group1({ items, depth = 1, currentItem, setCurrentItem, popover }: any)
           id={group.id}
           group={group}
           depth={depth}
-          currentItem={currentItem}
-          setCurrentItem={setCurrentItem}
           popover={popover}
         />
       ))}
@@ -218,14 +157,15 @@ function Group1({ items, depth = 1, currentItem, setCurrentItem, popover }: any)
   );
 }
 
-function Group({ items, group, depth, currentItem, setCurrentItem, popover }: any) {
+function Group({ items, group, depth, popover }: any) {
   const [currentOpenMenu, setCurrentOpenMenu] = useState('');
+  const dispatch = useDispatch();
   const handleToggleMenu = useCallback(
     (e: any) => {
       if (items.length) {
         setCurrentOpenMenu(currentOpenMenu === group.id ? '' : (group.id as string)); // setOpenMenu((prev) => !prev);
       } else if (depth === 3) {
-        setCurrentItem(group);
+        dispatch(setCurrentMedium(group));
         popover.onClose();
       } else if (depth === 2) {
         toast.error('Please create a medium');
@@ -233,7 +173,7 @@ function Group({ items, group, depth, currentItem, setCurrentItem, popover }: an
         toast.error('Please create a board');
       }
     },
-    [currentOpenMenu, depth, group, items.length, popover, setCurrentItem]
+    [currentOpenMenu, depth, dispatch, group, items.length, popover]
   );
   if (items.length)
     return (
@@ -261,13 +201,7 @@ function Group({ items, group, depth, currentItem, setCurrentItem, popover }: an
           unmountOnExit
           mountOnEnter
         >
-          <Group1
-            items={items}
-            depth={depth + 1}
-            currentItem={currentItem}
-            setCurrentItem={setCurrentItem}
-            popover={popover}
-          />
+          <Group1 items={items} depth={depth + 1} popover={popover} />
         </NavCollapse>
       </NavLi>
     );

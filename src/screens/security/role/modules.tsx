@@ -24,6 +24,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 
 const AssignModule = () => {
   const data = navData.flatMap((item) => item.items);
+  console.log('🚀 ~ file: modules.tsx:27 ~ AssignModule ~ data:', data);
+
   const stackRef = useRef<any>();
   const [selectSubModule, setSelectSubModule] = useState<any>(null);
 

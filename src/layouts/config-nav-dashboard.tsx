@@ -326,12 +326,17 @@ const securityModule = {
               _action: 'role',
             },
             {
-              title: 'Role Assignment',
-              path: '/security/permission',
-              _action: 'permission',
+              title: 'User Management',
+              path: '/security/user',
+              _action: 'user-management',
             },
             {
-              title: 'Access Control',
+              title: 'Department',
+              path: '/security/department',
+              _action: 'department',
+            },
+            {
+              title: 'Academic Access Control',
               path: '/security/access-control',
               _action: 'access-control',
             },
