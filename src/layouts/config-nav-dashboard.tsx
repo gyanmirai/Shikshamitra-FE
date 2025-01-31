@@ -949,6 +949,11 @@ const communicationModule = {
           // ],
         },
         {
+          title: 'Notification',
+          path: '/communication/notification',
+          _action: 'notification',
+        },
+        {
           title: 'Settings',
           path: '/communication/settings',
           _action: 'settings',
