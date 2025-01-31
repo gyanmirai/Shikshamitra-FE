@@ -2,14 +2,10 @@ import React from 'react';
 
 import { Box, Grid, Typography } from '@mui/material';
 
-import {
-  ExamsList,
-  AssignmentsList,
-} from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/Individual-student-progress';
-import {
-  StudentPerformance,
-  StudentSubjectPerformace,
-} from 'src/screens/academic/student-progress-analytics/comparativeAnalytics/comparative-analytics';
+import ExamsList from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/component/examList';
+import StudentPerformance from 'src/screens/academic/student-progress-analytics/comparativeAnalytics/component/studentPerformance';
+import AssignmentsList from 'src/screens/academic/student-progress-analytics/individualStudentPerformance/component/assignmentList';
+import { StudentSubjectPerformace } from 'src/screens/academic/student-progress-analytics/comparativeAnalytics/component/studentSubjectPerformance';
 
 const AcademicPerformance = () => (
   <Box>
