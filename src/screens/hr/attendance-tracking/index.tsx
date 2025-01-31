@@ -38,12 +38,12 @@ import TeacherAttendanceTracking from './teacher-attendance-tracking';
 
 const AttendanceTrackingScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
-  const { userInfo } = useSelector((store: any) => store.user);
+  const { employee } = useSelector((store: any) => store.auth);
   const MAIN_TABS = [
     { value: 'dateWise', label: 'Date Wise' },
     { value: 'employeeWise', label: 'Employee Wise' },
   ];
-  const role = userInfo?.employee?.role?.name;
+  const role = employee?.role?.name;
   return (
     <Paper sx={{ p: 1 }}>
       <CustomBreadcrumbs

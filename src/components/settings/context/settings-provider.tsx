@@ -1,15 +1,9 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
-import { usePathname } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
-import { useMemo, useState, useEffect, useCallback, createContext } from 'react';
+import { useMemo, useState, useCallback, createContext } from 'react';
 
 import { useCookies } from 'src/hooks/use-cookies';
 import { useLocalStorage } from 'src/hooks/use-local-storage';
-
-import { getUser } from 'src/redux/user/userSlice';
 
 import { STORAGE_KEY, defaultSettings } from '../config-settings';
 
@@ -34,18 +28,7 @@ export function SettingsProvider({
 
   const values = caches === 'cookie' ? cookies : customLocalstorage;
 
-  const pathname = usePathname();
-
   const [openDrawer, setOpenDrawer] = useState(false);
-
-  const dispatch = useDispatch();
-  const { userInfo, lastAction } = useSelector((state: RootState) => state.user);
-
-  useEffect(() => {
-    if (userInfo === null && !userInfo?.sub && !['/login'].includes(pathname.replace(/\/$/, ''))) {
-      dispatch(getUser() as any);
-    }
-  }, [dispatch, lastAction, pathname, userInfo]);
 
   const onToggleDrawer = useCallback(() => {
     setOpenDrawer((prev) => !prev);

@@ -32,7 +32,7 @@ const SubLayout = ({ children }: any) => {
     (state: RootState) => boardApi.endpoints.getBoards.select(undefined)(state)?.isLoading
   );
 
-  const { isLoading } = useSelector((state: RootState) => state.user);
+  const { loading } = useSelector((state: RootState) => state.auth);
   return (
     <Box
       display="flex"

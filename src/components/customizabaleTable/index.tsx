@@ -154,8 +154,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   dateProps,
   tableId,
 }) => {
-  console.log('🚀 ~ file: index.tsx:157 ~ tableId:', tableId);
-
   const currentParams = convertNextJsParamsToObject(useSearchParams());
 
   // const [params, setParams, _removeAllParams, removeParamsByKey] = useSearchParam<
@@ -997,8 +995,6 @@ const ColumnFilterMenu: React.FC<{
     if (anchorEl.column.filterType === 'date') {
       value = (value as Dayjs).format('DD-MM-YYYY');
     }
-
-    console.log(value, 'value', anchorEl.column.id);
 
     onApplyFilter(anchorEl.column.id, filterType, value, anchorEl.column.filterType as string);
     setFilterType('');

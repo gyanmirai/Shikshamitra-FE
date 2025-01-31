@@ -1,21 +1,51 @@
+import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
 import { Box, Stack, Button, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  useGetEntranceExamSlotQuery,
+  useAddEntranceExamSlotMutation,
+  useUpdateEntranceExamSlotMutation,
+  useDeleteEntranceExamSlotMutation,
+} from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const EntranceExamSlots = () => {
   const dialog = useBoolean();
+  const confirm = useBoolean();
+  const [editData, setEditData] = useState<any>(null);
 
-  const [editData, setEditData] = useState(null);
+  const { data: slots, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEntranceExamSlotQuery,
+  });
+
+  const [deleteSlot, { isLoading: isDeleteSlotLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEntranceExamSlotMutation,
+  });
+
+  const tableData = slots?.items?.map((item: any) => ({
+    ...item,
+    startTime: dayjs(item.startDate).format('hh:mm A'),
+    endTime: dayjs(item.endDate).format('hh:mm A'),
+  }));
 
   const handleClose = () => {
     dialog.onFalse();
@@ -23,12 +53,36 @@ const EntranceExamSlots = () => {
   };
   return (
     <Box>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={() => {
+          confirm.onFalse();
+          setEditData(null);
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <LoadingButton
+            loading={isDeleteSlotLoading}
+            variant="contained"
+            color="error"
+            onClick={async () => {
+              await deleteSlot(editData?.id);
+              confirm.onFalse();
+              setEditData(null);
+            }}
+          >
+            Delete
+          </LoadingButton>
+        }
+      />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
         <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue}>
           Slot
         </Button>
       </Box>
       <CustomizableTable
+        isLoading={isLoading}
         tableId="entrance-exam-slots"
         columns={[
           { label: 'Start Time', id: 'startTime' },
@@ -44,6 +98,7 @@ const EntranceExamSlots = () => {
                   showThreeDots={false}
                   handleDeleteClick={() => {
                     setEditData(row as any);
+                    confirm.onTrue();
                   }}
                   handleEditClick={() => {
                     dialog.onTrue();
@@ -54,11 +109,11 @@ const EntranceExamSlots = () => {
             },
           },
         ]}
-        data={[]}
+        data={tableData || []}
       />
 
       <CustomDialog title="Slots" open={dialog.value} handleClose={handleClose}>
-        <SlotsForm handleClose={handleClose} />
+        <SlotsForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>
   );
@@ -66,13 +121,62 @@ const EntranceExamSlots = () => {
 
 export default EntranceExamSlots;
 
-const SlotsForm = ({ handleClose }: { handleClose?: () => void }) => {
+const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editData: any }) => {
+  const [addSlot, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEntranceExamSlotMutation,
+  });
+  const [updateSlot, { isLoading: isUpdateSlotLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEntranceExamSlotMutation,
+  });
+
   const formik = useFormik({
     initialValues: {
-      startTime: null,
-      endTime: null,
+      startTime: editData?.startDate ? dayjs(editData?.startDate) : null,
+      endTime: editData?.endDate ? dayjs(editData?.endDate) : null,
     },
-    onSubmit(values, formikHelpers) {},
+    validationSchema: Yup.object().shape({
+      startTime: Yup.date()
+        .test('startTime', '', (value, context) => {
+          console.log('🚀 ~ file: entrance-exam-slots.tsx:142 ~ context:', context, value);
+
+          if (context.parent.endTime && dayjs(context.parent.endTime).isBefore(dayjs(value))) {
+            return context.createError({ message: 'Start time must be before end time' });
+          }
+          return true;
+        })
+        .required('Start Time is required'),
+      endTime: Yup.date()
+        .test('endtime', '', (value, context) => {
+          if (dayjs(context.parent.startTime).isAfter(dayjs(value))) {
+            return context.createError({ message: 'End time must be after start time' });
+          }
+          return true;
+        })
+        .required('End Time is required'),
+    }),
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        if (editData) {
+          await updateSlot({
+            id: editData.id,
+            body: {
+              startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
+              endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+            },
+          }).unwrap();
+        } else {
+          await addSlot({
+            startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
+            endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+          }).unwrap();
+        }
+        handleClose?.();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
@@ -81,22 +185,38 @@ const SlotsForm = ({ handleClose }: { handleClose?: () => void }) => {
           <MobileTimePicker
             label="Start Time"
             value={formik.values.startTime}
+            format="hh:mm A"
             onChange={(date) => formik.setFieldValue('startTime', date)}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            slotProps={{
+              textField: {
+                size: 'small',
+                fullWidth: true,
+                helperText: formik.touched.startTime && formik.errors.startTime,
+                error: !!formik.errors.startTime && formik.touched.startTime,
+              },
+            }}
           />
           <MobileTimePicker
             label="End Time"
+            format="hh:mm A"
             value={formik.values.endTime}
             onChange={(date) => formik.setFieldValue('endTime', date)}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            slotProps={{
+              textField: {
+                size: 'small',
+                fullWidth: true,
+                helperText: formik.touched.endTime && formik.errors.endTime,
+                error: !!formik.errors.endTime && formik.touched.endTime,
+              },
+            }}
           />
         </Stack>
       </Scrollbar>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button type="submit" variant="contained">
+        <LoadingButton loading={isLoading || isUpdateSlotLoading} type="submit" variant="contained">
           Save
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

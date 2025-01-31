@@ -12,8 +12,6 @@ import {
   Checkbox,
   TableRow,
   Collapse,
-  MenuList,
-  MenuItem,
   TableCell,
   TableHead,
   TableBody,
@@ -21,7 +19,6 @@ import {
   IconButton,
   DialogActions,
   TableContainer,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -31,7 +28,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import _ from 'lodash';
 import * as Yup from 'yup';
 
-import { organizePermissions } from 'src/utils/permissionConvertData';
+import { Add } from '@mui/icons-material';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -47,11 +44,14 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import DataTable from 'src/components/commonTable';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import AssignModule from './modules';
 
 const RoleScreen = () => {
   const confirm = useBoolean();
@@ -84,13 +84,22 @@ const RoleScreen = () => {
 
   return (
     <Box p={1}>
-      <Box
-        sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
-      >
-        <Button variant="contained" onClick={() => setOpen(true)} size="small">
-          Add Role
-        </Button>
-      </Box>
+      <CustomBreadcrumbs
+        heading="Role Management"
+        links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'Role Management' }]}
+        sx={{ px: 1, mb: 3 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => setOpen(true)}
+            size="small"
+          >
+            Role
+          </Button>
+        }
+      />
+
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -109,43 +118,26 @@ const RoleScreen = () => {
           </Button>
         }
       />
-      <DataTable
+      <CustomizableTable
+        tableId="role-table"
         columns={[
-          { key: 'name', label: 'Role' },
+          { id: 'name', label: 'Role' },
           {
             label: 'Action',
-            key: 'action',
-            render: (data) => (
+            id: 'action',
+            render: (value, data) => (
               <ThreeDotsActions
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        setDeleteInformation(data);
-                        confirm.onTrue();
-                        popover.onClose();
-                      }}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Iconify
-                        icon="solar:trash-bin-trash-bold"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Delete
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => {
-                        setEditData(data);
-                        setOpen(true);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                      Edit
-                    </MenuItem>
-                  </MenuList>
-                )}
+                showDeleteIcon
+                showEditIcon
+                handleDeleteClick={() => {
+                  setDeleteInformation(data);
+                  confirm.onTrue();
+                }}
+                handleEditClick={() => {
+                  setEditData(data);
+                  setOpen(true);
+                }}
+                showThreeDots={false}
               />
             ),
           },
@@ -279,7 +271,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
             />
           </Box>
 
-          <FormControlLabel
+          {/* <FormControlLabel
             control={
               <Checkbox
                 checked={allPermissions.every((item: any) => item.isGranted)}
@@ -297,13 +289,14 @@ const RoleForm = ({ handleClose, editData }: any) => {
               />
             }
             label="Give All Permission"
-          />
+          /> */}
 
-          <ModuleTable
+          {/* <ModuleTable
             data={organizePermissions(modulePermissionData)}
             allPermissions={allPermissions}
             setAllPermissions={setAllPermissions}
-          />
+          /> */}
+          <AssignModule />
         </Scrollbar>
         <DialogActions sx={{ flexShrink: 0 }}>
           <Button onClick={handleClose}>Cancel</Button>

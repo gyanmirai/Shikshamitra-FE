@@ -82,7 +82,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
 
-  const { userInfo } = useSelector((state: RootState) => state.user);
+  const { employee } = useSelector((state: RootState) => state.auth);
 
   const [addLeave, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -184,7 +184,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           } else {
             await addLeave({
               // userId: userInfo.sub,
-              employeeId: userInfo.employee.id,
+              employeeId: employee.id,
               leaveTypeId: values.leaveType,
 
               halfDay: values.isHalfDay,

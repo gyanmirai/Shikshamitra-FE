@@ -5,10 +5,7 @@ import {
   Card,
   Chip,
   Stack,
-  Avatar,
   Button,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   Autocomplete,
@@ -20,13 +17,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 
-function StandardNode({ name, avatarUrl, role, sx, count, assignDialog }: any) {
+import Modules from '../role/modules';
+
+function ModuleNode({ title, sx, icon }: any) {
   const dialog = useBoolean();
+  const assignDialog = useBoolean();
   return (
     <Card
       sx={{
@@ -43,7 +41,7 @@ function StandardNode({ name, avatarUrl, role, sx, count, assignDialog }: any) {
         ...sx,
       }}
     >
-      <ThreeDotsActions
+      {/* <ThreeDotsActions
         sx={{ position: 'absolute', top: 8, right: 8 }}
         actions={({ popover }) => (
           <MenuList>
@@ -66,34 +64,30 @@ function StandardNode({ name, avatarUrl, role, sx, count, assignDialog }: any) {
             </MenuItem>
           </MenuList>
         )}
-      />
+      /> */}
 
-      <Avatar
-        alt={name}
-        src="https://assets.minimals.cc/public/assets/images/mock/avatar/avatar-2.webp"
-        sx={{ mr: 2, mb: 2, width: 48, height: 48 }}
-      />
+      {icon}
 
       <Typography variant="subtitle2" noWrap sx={{ mb: 0.5 }}>
-        {name} ({count})
+        {title}
       </Typography>
 
       <CustomDialog title="Assign user" open={dialog.value} handleClose={dialog.onFalse}>
         <AssignUserForm />
       </CustomDialog>
-      {/* <CustomDialog
+      <CustomDialog
         title="Assign Module"
         open={assignDialog.value}
         handleClose={assignDialog.onFalse}
         fullScreen
       >
         <Modules />
-      </CustomDialog> */}
+      </CustomDialog>
     </Card>
   );
 }
 
-export default StandardNode;
+export default ModuleNode;
 
 const AssignUserForm = () => {
   const formik = useFormik({

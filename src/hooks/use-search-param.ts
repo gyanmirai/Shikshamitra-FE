@@ -90,18 +90,11 @@ export const useNewSearchParam = <T>(
     ...defaultValues,
     ...parseSearchParams(new URLSearchParams(originalSearchParams.toString())),
   });
-  console.log(
-    paramsValues.current,
-    'originalSearchParams:',
-    parseSearchParams(new URLSearchParams(originalSearchParams.toString()))
-  );
 
   const searchParams = useMemo(() => {
     const params = new URLSearchParams(originalSearchParams.toString());
 
     updateSearchParams(params, paramsValues.current);
-
-    console.log('searchhParams=====', params.toString());
 
     return params;
   }, [originalSearchParams]);
@@ -119,8 +112,6 @@ export const useNewSearchParam = <T>(
       // paramsValues.current = parseSearchParams<T>(updatedParams);
 
       router.push(`${pathName}?${updatedParams.toString()}`);
-
-      console.log('setSearchParams=======');
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allSearchParams, searchParams]
@@ -131,16 +122,13 @@ export const useNewSearchParam = <T>(
 
   const removeSearchParamsByKey = useCallback(
     (key: string) => {
-      console.log(key, 'key');
       searchParams.delete(key);
       delete (allSearchParams as Record<string, string>)[key];
-      console.log('removeSearchParamsByKey=======', allSearchParams);
       router.push(`${pathName}?${searchParams.toString()}`);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchParams]
   );
-  console.log(allSearchParams, 'allSearchParams');
   return [allSearchParams, setSearchParams, removeSearchParamsByKey, removeSearchParams];
 };
 
