@@ -12,9 +12,10 @@ type DeleteConfirmationDialogProps = {
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
-  description?: string;
+  description?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
+  isDeleteLoading?: boolean;
 };
 
 export function DeleteConfirmationDialog({
@@ -25,6 +26,7 @@ export function DeleteConfirmationDialog({
   description = 'Are you sure you want to delete this item? This action cannot be undone.',
   confirmText = 'Delete',
   cancelText = 'Cancel',
+  isDeleteLoading = false,
 }: DeleteConfirmationDialogProps) {
   return (
     <Dialog
@@ -41,9 +43,15 @@ export function DeleteConfirmationDialog({
         <Button onClick={onClose} color="inherit">
           {cancelText}
         </Button>
-        <Button onClick={onConfirm} color="error" variant="outlined" autoFocus>
-          {confirmText}
-        </Button>
+        {isDeleteLoading ? (
+          <Button color="error" variant="outlined" disabled>
+            Deleting...
+          </Button>
+        ) : (
+          <Button onClick={onConfirm} color="error" variant="outlined" autoFocus>
+            {confirmText}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

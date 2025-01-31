@@ -120,121 +120,135 @@ const TransportVehicleSettingScreen = () => {
   const vehicleFormDilog = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState<any>();
   const [isEdit, setIsEdit] = useState<any>(false);
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    // setIsEdit(false);
+    setOpen(false);
+  };
 
   return (
     <>
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Vehicle Management"
-          links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
-          sx={{ px: 1, mb: 2 }}
-        />
-
-        <Box display="flex" justifyContent="flex-end">
-          <Button
-            startIcon={<Add />}
-            onClick={() => {
-              vehicleFormDilog.onTrue();
-            }}
-            variant="contained"
-          >
-            Add Vehicle
-          </Button>
-        </Box>
-      </Box>
-
-      <CustomizableTable
-        tableId="vehicle-management-table"
-        data={Vehicledata}
-        columns={[
-          {
-            id: 'name',
-            label: 'Name',
-          },
-
-          {
-            id: 'capacity',
-            label: 'Capacity',
-          },
-          {
-            id: 'occupied',
-            label: 'Occupied',
-          },
-          {
-            id: 'fuelType',
-            label: 'Fule Type',
-          },
-          {
-            id: 'registrationNumber',
-            label: 'Registration Number',
-          },
-
-          {
-            id: 'assignedRoute',
-            label: 'Assigned Route',
-            render(value, row) {
-              return <Typography fontSize="12px">{row.assignedRoute.name}</Typography>;
-            },
-          },
-          {
-            id: 'assignedDriver',
-            label: 'Assigned Driver',
-            render(value, row) {
-              return <Typography fontSize="12px">{row.assignedDriver.name}</Typography>;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showThreeDots={false}
-                  showEditIcon
-                  showViewIcon
-                  handleEditClick={() => {}}
-                  handleViewClick={() => {
-                    setSelectedEntry(row);
-
-                    console.log('row', row);
-
-                    vehicleDetailsDilog.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
-      />
-      {vehicleFormDilog && (
+      {open ? (
         <VehicleFormDialog
-          onClose={() => {
-            vehicleFormDilog.onFalse();
-          }}
+          onClose={closeHandler}
           vehicle={selectedEntry}
           dialogValue={vehicleFormDilog.value}
           isEdit={isEdit}
         />
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <CustomBreadcrumbs
+              heading="Vehicle Management"
+              links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+
+            <Box display="flex" justifyContent="flex-end">
+              <Button
+                startIcon={<Add />}
+                onClick={() => {
+                  setOpen(true);
+                  // vehicleFormDilog.onTrue();
+                }}
+                variant="contained"
+              >
+                Add Vehicle
+              </Button>
+            </Box>
+          </Box>
+
+          <CustomizableTable
+            tableId="vehicle-management-table"
+            data={Vehicledata}
+            columns={[
+              {
+                id: 'name',
+                label: 'Name',
+              },
+
+              {
+                id: 'capacity',
+                label: 'Capacity',
+              },
+              {
+                id: 'occupied',
+                label: 'Occupied',
+              },
+              {
+                id: 'fuelType',
+                label: 'Fule Type',
+              },
+              {
+                id: 'registrationNumber',
+                label: 'Registration Number',
+              },
+
+              {
+                id: 'assignedRoute',
+                label: 'Assigned Route',
+                render(value, row) {
+                  return <Typography fontSize="12px">{row.assignedRoute.name}</Typography>;
+                },
+              },
+              {
+                id: 'assignedDriver',
+                label: 'Assigned Driver',
+                render(value, row) {
+                  return <Typography fontSize="12px">{row.assignedDriver.name}</Typography>;
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      showThreeDots={false}
+                      showEditIcon
+                      showViewIcon
+                      handleEditClick={() => {}}
+                      handleViewClick={() => {
+                        setSelectedEntry(row);
+
+                        console.log('row', row);
+
+                        vehicleDetailsDilog.onTrue();
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+          />
+
+          <CustomDialog
+            title="Vehicle Details"
+            open={vehicleDetailsDilog.value}
+            handleClose={vehicleDetailsDilog.onFalse}
+            maxWidth="xl"
+            fullWidth
+            PaperProps={{
+              sx: {
+                padding: 2,
+                margin: '16px',
+                borderRadius: '8px',
+                height: '100vh',
+              },
+            }}
+          >
+            <Scrollbar sx={{ p: 3 }}>
+              <TransportVehicleDetailView vehicleNumber={selectedEntry} />
+            </Scrollbar>
+          </CustomDialog>
+        </>
       )}
-      <CustomDialog
-        title="Vehicle Details"
-        open={vehicleDetailsDilog.value}
-        handleClose={vehicleDetailsDilog.onFalse}
-        maxWidth="xl"
-        fullWidth
-        PaperProps={{
-          sx: {
-            padding: 2,
-            margin: '16px',
-            borderRadius: '8px',
-            height: '100vh',
-          },
-        }}
-      >
-        <Scrollbar sx={{ p: 3 }}>
-          <TransportVehicleDetailView vehicleNumber={selectedEntry} />
-        </Scrollbar>
-      </CustomDialog>
     </>
   );
 };

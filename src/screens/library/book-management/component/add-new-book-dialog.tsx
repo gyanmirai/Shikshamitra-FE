@@ -52,7 +52,7 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
   );
 
   const formik = useFormik<any>({
-    initialValues: {},
+    initialValues,
     onSubmit: (values: any) => {
       console.log('Form Submitted:', values);
       onSave(values);
@@ -78,7 +78,7 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <CustomBreadcrumbs
           heading="Book Management"
-          links={[{ name: 'Library' }, { name: 'Book Management' }]}
+          links={[{ name: 'Library' }, { name: 'Book Management' }, { name: 'Form' }]}
           sx={{ px: 1, mb: 2 }}
         />
         <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">

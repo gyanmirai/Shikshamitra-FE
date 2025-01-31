@@ -213,93 +213,112 @@ const NewCreateRouteScreen = () => {
     setMapDialogOpen(false);
     setMapData(null);
   };
+
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    // setIsEdit(false);
+    setOpen(false);
+  };
   return (
     <>
-      <Box
-        pb="20px"
-        display="flex"
-        flexDirection="row"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <CustomBreadcrumbs
-          heading="Routes and Schedules"
-          links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }]}
-          sx={{ px: 1, mb: 2 }}
-        />
-        <Box display="flex" flexDirection="row" justifyContent="flex-end">
-          <Button onClick={dialog.onTrue} variant="contained" size="small">
-            Create New Route
-          </Button>
+      {open ? (
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Box display="flex" justifyContent="space-between">
+            <CustomBreadcrumbs
+              heading="Routes and Schedules"
+              links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }, { name: 'Form' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
+              <Button
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={closeHandler}
+                variant="contained"
+                size="small"
+              >
+                Back
+              </Button>
+            </Box>
+          </Box>
+          <CreateRoutesForm onClose={closeHandler} />
         </Box>
-      </Box>
+      ) : (
+        <>
+          {/* Breadcrumbs and Create Button */}
+          <Box
+            pb="20px"
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <CustomBreadcrumbs
+              heading="Routes and Schedules"
+              links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }]}
+              sx={{ px: 1, mb: 2 }}
+            />
+            <Box display="flex" flexDirection="row" justifyContent="flex-end">
+              <Button
+                onClick={() => {
+                  setOpen(true);
+                }}
+                variant="contained"
+                size="small"
+              >
+                Create New Route
+              </Button>
+            </Box>
+          </Box>
 
-      <CustomizableTable
-        tableId="routes-table"
-        data={routesData}
-        columns={[
-          { id: 'routeName', label: 'Route Name' },
-          { id: 'vehicle', label: 'Assigned Vehicle' },
-          { id: 'driver', label: 'Assigned Driver' },
-          { id: 'totalStops', label: 'Total Stop' },
-          { id: 'totalRiders', label: 'Total Riders' },
-          {
-            id: 'action',
-            label: 'Action',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover }) => (
-                    <MenuList>
-                      {/* <MenuItem
-                    onClick={() => {
-                      setSelectedRoute(row)
+          {/* Routes Table */}
+          <CustomizableTable
+            tableId="routes-table"
+            data={routesData}
+            columns={[
+              { id: 'routeName', label: 'Route Name' },
+              { id: 'vehicle', label: 'Assigned Vehicle' },
+              { id: 'driver', label: 'Assigned Driver' },
+              { id: 'totalStops', label: 'Total Stops' },
+              { id: 'totalRiders', label: 'Total Riders' },
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={({ popover }) => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              handleViewOnMap(row);
+                            }}
+                          >
+                            <Iconify icon={IconEnum.VIEW} sx={{ mr: 1 }} />
+                            View on Map
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
+            ]}
+          />
+        </>
+      )}
 
-                      ViewRouteDetailsdialog.onTrue()
-                      // viewEventSummaryDialog.onTrue();
-                      // setEvent(row);
-                    }}
-                  >
-                    <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-                    View
-                  </MenuItem> */}
-                      <MenuItem
-                        onClick={() => {
-                          handleViewOnMap(row);
-                        }}
-                      >
-                        <Iconify icon={IconEnum.VIEW} sx={{ mr: 1 }} />
-                        View on Map
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
-            },
-          },
-        ]}
-      />
-      <CustomDialog
-        // fullScreen
-        maxWidth="xl"
-        open={dialog.value}
-        handleClose={dialog.onFalse}
-        title="Create New Route"
-      >
-        <CreateRoutesForm onClose={dialog.onFalse} />
-      </CustomDialog>
-
+      {/* View Route Details Dialog */}
       {ViewRouteDetailsdialog.value && (
         <ViewRouteDetailsDialog
-          onClose={() => {
-            ViewRouteDetailsdialog.onFalse();
-          }}
+          onClose={ViewRouteDetailsdialog.onFalse}
           dialogValue={ViewRouteDetailsdialog.value}
           data={selectedRoute}
         />
       )}
 
+      {/* Map Dialog */}
       {mapDialogOpen && (
         <CustomDialog fullScreen title="R102" open={mapDialogOpen} handleClose={mapDialogClose}>
           <TransportMap

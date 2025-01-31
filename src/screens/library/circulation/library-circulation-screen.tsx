@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
@@ -330,61 +330,84 @@ const LibraryCirculationScreen = () => {
   };
   const saveHandler = () => {};
 
+  const [open, setOpen] = useState(false);
+
+  const closeHandler = () => {
+    // setIsEdit(false);
+    setOpen(false);
+  };
+
   return (
-    <Box>
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Circulation"
-          links={[
-            { name: 'Library' },
-            { name: 'Circulation' },
-            // {
-            //   name:
-            //     searchParams.tab === 'reservations-Management'
-            //       ? 'Reservations Management'
-            //       : 'Fines Management',
-            // },
-          ]}
-          sx={{ px: 1, mb: 2 }}
+    <>
+      {open ? (
+        <AddNewBookDialog
+          dialogValue={addNewBookDialog.value}
+          data={[]}
+          onSave={saveHandler}
+          onClose={closeHandler}
+          isEdit={false}
         />
-        <Box display="flex" alignItems="center">
-          <CommonCtaComponent
-            bookHandler={() => openDialog(addNewBookDialog)}
-            issueBookHandler={() => openDialog(issueBookDialog)}
-            returnBookHandler={() => openDialog(returnBookDialog)}
-            createReservationHandler={() => openDialog(addMemberDialog)}
-          />
-        </Box>
-      </Box>
-
-      <Box pb="20px" />
-
-      <Card>
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              icon={tab.icon}
-              key={tab.value}
-              value={tab.value}
-              label={tab.label}
+      ) : (
+        <>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <CustomBreadcrumbs
+              heading="Circulation"
+              links={[
+                { name: 'Library' },
+                { name: 'Circulation' },
+                // Uncomment below if conditional breadcrumb is needed
+                // {
+                //   name:
+                //     searchParams.tab === 'reservations-Management'
+                //       ? 'Reservations Management'
+                //       : 'Fines Management',
+                // },
+              ]}
+              sx={{ px: 1, mb: 2 }}
             />
-          ))}
-        </CustomTabs>
-      </Card>
-      <Box px={1} pt={2}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-          // searchParams={searchParams}
-          // setSearchParams={setSearchParams}
-          />
-        )}
-      </Box>
+            <Box display="flex" alignItems="center">
+              <CommonCtaComponent
+                bookHandler={() => setOpen(true)}
+                issueBookHandler={() => openDialog(issueBookDialog)}
+                returnBookHandler={() => openDialog(returnBookDialog)}
+                createReservationHandler={() => openDialog(addMemberDialog)}
+              />
+            </Box>
+          </Box>
+
+          <Box pb="20px" />
+
+          <Card>
+            <CustomTabs
+              value={searchParams.tab}
+              onChange={(e, value) => setSearchParams({ tab: value })}
+              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+              role="tablist"
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={tab.label}
+                  icon={tab.icon}
+                  sx={{ fontSize: '12px' }}
+                />
+              ))}
+            </CustomTabs>
+          </Card>
+
+          <Box px={1} pt={2}>
+            {currentActiveComponent?.component && <currentActiveComponent.component />}
+          </Box>
+        </>
+      )}
+
+      {/* Add Member Dialog */}
       {addMemberDialog && (
         <AddNewMemberDialog
           dialogValue={addMemberDialog.value}
@@ -393,16 +416,6 @@ const LibraryCirculationScreen = () => {
           onClose={() => closeDialog(addMemberDialog)}
           isEdit={false}
           isRenewMembership={false}
-        />
-      )}
-      {/* Add/Edit Book Dialog */}
-      {addNewBookDialog.value && (
-        <AddNewBookDialog
-          dialogValue={addNewBookDialog.value}
-          data={[]}
-          onSave={saveHandler}
-          onClose={() => closeDialog(addNewBookDialog)}
-          isEdit={false}
         />
       )}
 
@@ -427,7 +440,7 @@ const LibraryCirculationScreen = () => {
           onClose={() => closeDialog(returnBookDialog)}
         />
       )}
-    </Box>
+    </>
   );
 };
 
