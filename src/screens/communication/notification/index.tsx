@@ -75,25 +75,26 @@ const NotificationScreen = () => {
           links={[{ name: 'Communication' }, { name: 'Notification' }, { name: breadcrumbTabName }]}
           sx={{ px: 1, mb: 2 }}
         />
-        {openForNotificationCategory || openForTemplates ? (
-          <Button
-            startIcon={<Iconify icon="eva:arrow-back-fill" />}
-            onClick={closeHandler}
-            variant="contained"
-            size="small"
-          >
-            Back
-          </Button>
-        ) : (
-          <Button
-            startIcon={<Iconify icon="ic:outline-plus" />}
-            onClick={addHandler}
-            variant="contained"
-            size="small"
-          >
-            {breadcrumbTabName}
-          </Button>
-        )}
+        {breadcrumbTabName !== 'Send Notification' &&
+          (openForNotificationCategory || openForTemplates ? (
+            <Button
+              startIcon={<Iconify icon="eva:arrow-back-fill" />}
+              onClick={closeHandler}
+              variant="contained"
+              size="small"
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              startIcon={<Iconify icon="ic:outline-plus" />}
+              onClick={addHandler}
+              variant="contained"
+              size="small"
+            >
+              {breadcrumbTabName}
+            </Button>
+          ))}
       </Box>
       <Card>
         <CustomTabs

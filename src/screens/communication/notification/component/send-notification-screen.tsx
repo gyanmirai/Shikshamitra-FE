@@ -1,214 +1,203 @@
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-import {
-  Grid,
-  Button,
-  Select,
-  MenuItem,
-  Checkbox,
-  InputLabel,
-  FormControl,
-  DialogContent,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
+import { Grid, Button, Checkbox, DialogContent, DialogActions } from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select'; // Custom select component
-import { CheckBox } from '@mui/icons-material';
-
+import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
-// Assuming the Editor component is pre-built
 
-// Placeholder options
+// Placeholder options for dynamic message formatting
 const placeholderOptions = [
-  { label: 'Fee Type', value: '[Fee Type]' },
-  { label: 'Month/Term', value: '[Month/Term]' },
+  { label: 'Student Name', value: '[Student Name]' },
   { label: 'Due Date', value: '[Due Date]' },
-  { label: 'Amount', value: '[Amount]' },
+  { label: 'Fee Amount', value: '[Amount]' },
+];
+
+// Sample templates for different categories
+const templates = {
+  overdueFee: 'Dear [Student Name], your fee of [Amount] is overdue. Please pay before [Due Date].',
+  feeReminder: 'Hello [Student Name], kindly pay your fee amount [Amount] before [Due Date].',
+};
+
+// Sample student data
+const allStudents = [
+  { id: 1, name: 'Alice Johnson', class: 'Class 1', division: 'A', organization: 'Org 1' },
+  { id: 2, name: 'Bob Smith', class: 'Class 2', division: 'B', organization: 'Org 2' },
+  { id: 3, name: 'Charlie Brown', class: 'Class 1', division: 'A', organization: 'Org 1' },
+  { id: 4, name: 'David Williams', class: 'Class 3', division: 'C', organization: 'Org 3' },
+  { id: 5, name: 'Emma Davis', class: 'Class 2', division: 'B', organization: 'Org 2' },
 ];
 
 const SendNotificationScreen = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [recipient, setRecipient] = useState<string>(''); // For recipient
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [filters, setFilters] = useState<any>({
-    organization: '',
-    class: '',
-    division: '',
-    absentWithoutNotice: false,
-    lateFee: false,
-    overdueFee: false,
-    library: false,
-    transport: false,
-    homework: false,
-  });
-
-  // Sample data for filters
-  const organizations = ['Org 1', 'Org 2', 'Org 3'];
-  const classes = ['Class 1', 'Class 2', 'Class 3'];
-  const divisions = ['Division A', 'Division B', 'Division C'];
+  const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+  const [messageTemplate, setMessageTemplate] = useState<string>('');
 
   const formik = useFormik({
     initialValues: {
-      category: '',
-      templateName: '',
-      content: '',
       organization: '',
+      class: '',
+      division: '',
+      category: '',
+      template: '',
     },
     onSubmit: (values) => {
-      console.log('Sending Notification with values:', values);
+      console.log('Sending Notification:', selectedStudents, messageTemplate);
     },
   });
 
-  // Insert placeholder into the editor content
-  const handleInsertPlaceholder = (value: string) => {
-    if (formik.values.content) {
-      const newText = `${formik.values.content} ${value}`;
-      formik.setFieldValue('content', newText);
-    }
-    setAnchorEl(null); // Close dropdown
-  };
+  // **Filter students based on selected filters**
+  useEffect(() => {
+    const { organization, class: selectedClass, division } = formik.values;
 
-  // Handle change for the filters
-  const handleFilterChange = (field: string, value: any) => {
-    setFilters((prevFilters: any) => ({
-      ...prevFilters,
-      [field]: value,
-    }));
+    const filtered = allStudents.filter(
+      (student) =>
+        (!organization || student.organization === organization) &&
+        (!selectedClass || student.class === selectedClass) &&
+        (!division || student.division === division)
+    );
+
+    setFilteredStudents(filtered);
+  }, [formik.values.organization, formik.values.class, formik.values.division, formik.values]);
+
+  type TemplateKeys = 'overdueFee' | 'feeReminder';
+
+  useEffect(() => {
+    const templateKey = formik.values.template as TemplateKeys;
+
+    if (templateKey in templates) {
+      setMessageTemplate(templates[templateKey]);
+    } else {
+      setMessageTemplate('');
+    }
+  }, [formik.values.template]);
+
+  // **Select or Deselect Students**
+  const toggleStudentSelection = (id: number) => {
+    setSelectedStudents((prev) =>
+      prev.includes(id) ? prev.filter((studentId) => studentId !== id) : [...prev, id]
+    );
   };
 
   return (
     <>
       <form onSubmit={formik.handleSubmit}>
         <DialogContent>
-          <Grid container spacing={2}>
-            {/* Filters Section */}
-            <Grid item xs={12}>
-              <Grid container spacing={2}>
-                {/* Select Organization */}
-                <Grid item xs={12} md={4}>
-                  <CustomSelect
-                    label="Select Organization"
-                    options={[{ label: 'Fee Reminders', value: 'feeReminder' }]}
-                    value={formik.values.organization}
-                    onChange={(value) => formik.setFieldValue('organization', value)}
-                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                  />
-                  {/* <CustomSelect
-                                        label="Select Organization"
-                                        options={organizations.map((org) => ({ label: org, value: org }))}
-                                        value={filters.organization}
-                                        onChange={(value) => handleFilterChange('organization', value)}
-                                        formControlProps={{ fullWidth: true }}
-                                    /> */}
-                </Grid>
-
-                {/* Select Class */}
-                <Grid item xs={12} md={4}>
-                  <CustomSelect
-                    label="Select Class"
-                    options={classes.map((cls) => ({ label: cls, value: cls }))}
-                    value={filters.class}
-                    onChange={(value) => handleFilterChange('class', value)}
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </Grid>
-
-                {/* Select Division */}
-                <Grid item xs={12} md={4}>
-                  <CustomSelect
-                    label="Select Division"
-                    options={divisions.map((div) => ({ label: div, value: div }))}
-                    value={filters.division}
-                    onChange={(value) => handleFilterChange('division', value)}
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={2}>
-                {/* Additional Filters */}
-                <Grid item xs={12} md={4}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={filters.absentWithoutNotice}
-                        onChange={(e) =>
-                          handleFilterChange('absentWithoutNotice', e.target.checked)
-                        }
-                      />
-                    }
-                    label="Absent without Notice"
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={filters.lateFee}
-                        onChange={(e) => handleFilterChange('lateFee', e.target.checked)}
-                      />
-                    }
-                    label="Late Fee"
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={filters.overdueFee}
-                        onChange={(e) => handleFilterChange('overdueFee', e.target.checked)}
-                      />
-                    }
-                    label="Overdue Fee"
-                  />
-                </Grid>
-
-                {/* More checkboxes for library, transport, homework can be added here */}
-              </Grid>
+          <Grid container spacing={2} pt="20px">
+            {/* Select Organization */}
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Organization"
+                options={[
+                  { label: 'Org 1', value: 'Org 1' },
+                  { label: 'Org 2', value: 'Org 2' },
+                  { label: 'Org 3', value: 'Org 3' },
+                ]}
+                value={formik.values.organization}
+                onChange={(val) => formik.setFieldValue('organization', val)}
+                formControlProps={{ fullWidth: true }}
+              />
             </Grid>
 
-            {/* Select Template */}
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Select Template</InputLabel>
-                <Select
-                  value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(e.target.value)}
-                  label="Select Template"
-                >
-                  <MenuItem value="feeReminder">Fee Reminder</MenuItem>
-                  <MenuItem value="overdueFeeReminder">Overdue Fee Reminder</MenuItem>
-                  {/* More templates can be added here */}
-                </Select>
-              </FormControl>
+            {/* Select Class */}
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Class"
+                options={[
+                  { label: 'Class 1', value: 'Class 1' },
+                  { label: 'Class 2', value: 'Class 2' },
+                  { label: 'Class 3', value: 'Class 3' },
+                ]}
+                value={formik.values.class}
+                onChange={(val) => formik.setFieldValue('class', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+
+            {/* Select Division */}
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Division"
+                options={[
+                  { label: 'A', value: 'A' },
+                  { label: 'B', value: 'B' },
+                  { label: 'C', value: 'C' },
+                ]}
+                value={formik.values.division}
+                onChange={(val) => formik.setFieldValue('division', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Category & Template Selection */}
+          <Grid container spacing={2} pt="20px">
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Category"
+                options={[
+                  { label: 'Overdue Fee', value: 'overdueFee' },
+                  { label: 'Fee Reminder', value: 'feeReminder' },
+                ]}
+                value={formik.values.category}
+                onChange={(val) => formik.setFieldValue('category', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Template"
+                options={
+                  formik.values.category
+                    ? [
+                        { label: 'Overdue Fee Template', value: 'overdueFee' },
+                        { label: 'Fee Reminder Template', value: 'feeReminder' },
+                      ]
+                    : []
+                }
+                value={formik.values.template}
+                onChange={(val) => formik.setFieldValue('template', val)}
+                formControlProps={{ fullWidth: true }}
+              />
             </Grid>
           </Grid>
         </DialogContent>
 
         <DialogActions>
-          <Button type="submit" variant="outlined" color="primary">
+          <Button type="submit" variant="contained" color="primary">
             Send Notification
           </Button>
         </DialogActions>
       </form>
 
+      {/* Students Table */}
       <CustomizableTable
         columns={[
           {
             id: 'select',
             label: '',
-            render(value, row) {
-              return <CheckBox />;
+            render: (_, row) => (
+              <Checkbox
+                checked={selectedStudents.includes(row.id)}
+                onChange={() => toggleStudentSelection(row.id)}
+              />
+            ),
+          },
+          { id: 'name', label: 'Student Name' },
+          {
+            id: 'message',
+            label: 'Message',
+            render: (_, row) => {
+              if (!formik.values.template) return '';
+              return messageTemplate
+                .replace('[Student Name]', row.name)
+                .replace('[Amount]', '5000') // Placeholder amount
+                .replace('[Due Date]', '15th Feb'); // Placeholder date
             },
           },
-          { id: 'student', label: 'Name' },
-          { id: 'message', label: 'Message' },
         ]}
-        data={[]}
+        data={filteredStudents}
         tableId="send-notification-table"
       />
     </>
