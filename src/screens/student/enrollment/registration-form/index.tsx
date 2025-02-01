@@ -1,9 +1,11 @@
 'use client';
 
 import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import calculateAge from 'src/utils/calculate-age';
 
@@ -12,15 +14,19 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
 import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registration-form/registration-form-api';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { CommunicationForm } from '../follow-up';
+
 import type { IInquiryData } from '../Inquiry';
 
 const RegistrationFormScreen = () => {
+  const [editData, setEditData] = useState<IInquiryData | null>(null);
+  const followUpDialog = useBoolean();
   const {
     data: inquiryFormData,
     isLoading,
@@ -101,20 +107,8 @@ const RegistrationFormScreen = () => {
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Enquiry Preferences',
+            label: 'Inquiry Preferences',
             minWidth: '200px',
-          },
-
-          {
-            id: 'StatusName',
-            label: 'Status',
-            render(value, row) {
-              return (
-                <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
-                  {value}
-                </Label>
-              );
-            },
           },
           {
             id: 'actions',
@@ -139,7 +133,8 @@ const RegistrationFormScreen = () => {
                       </MenuItem>
                       <MenuItem
                         onClick={(e) => {
-                          // followUpDialog.onTrue();
+                          setEditData(row as IInquiryData);
+                          followUpDialog.onTrue();
                           e.stopPropagation();
                           popover.onClose();
                         }}
@@ -157,6 +152,22 @@ const RegistrationFormScreen = () => {
         ]}
         data={tableData || []}
       />
+      <CustomDialog
+        open={followUpDialog.value}
+        handleClose={() => {
+          setEditData(null);
+          followUpDialog.onFalse();
+        }}
+        title="Follow Up"
+      >
+        <CommunicationForm
+          handleCloseDialog={() => {
+            setEditData(null);
+            followUpDialog.onFalse();
+          }}
+          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+        />{' '}
+      </CustomDialog>
     </Box>
   );
 };

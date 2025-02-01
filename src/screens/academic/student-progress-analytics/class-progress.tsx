@@ -12,7 +12,6 @@ import {
   List,
   Card,
   Grid,
-  Checkbox,
   ListItem,
   CardHeader,
   Typography,
@@ -284,16 +283,6 @@ const ClassProgress = (props: TabComponentType) => {
           <CustomizableTable
             tableId="student-progress-table"
             columns={[
-              {
-                id: 'select',
-                label: 'Select',
-                render: (value, row: any) => (
-                  <Checkbox
-                  // checked={selectedStudents.includes(row.id)}
-                  // onChange={() => handleSelectStudent(row.id)}
-                  />
-                ),
-              },
               { id: 'studentName', label: 'Student Name' },
               { id: 'overallProgress', label: 'Overall Progress' },
               { id: 'attendanceRecord', label: 'Attendance Record' },

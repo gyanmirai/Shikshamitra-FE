@@ -444,90 +444,6 @@ const Subjects = (props: TabComponentType) => {
           isEdit={isEditMode}
         />
       </CustomDialog>
-
-      {/* {selectedSubject && (
-        <Box mt={2}>
-          <Typography variant="h6" gutterBottom>
-            {selectedSubject.subjectName} Details
-          </Typography>
-          {selectedSubject.chapters.map((chapter) => (
-            <Accordion
-              key={chapter.id}
-              expanded={expandedAccordion === chapter.chapterName}
-              onChange={() => handleAccordionToggle(chapter.chapterName)}
-            >
-              <AccordionSummary
-                expandIcon={<GridExpandMoreIcon />}
-                aria-controls={`panel${chapter.id}-content`}
-                id={`panel${chapter.id}-header`}
-              >
-                <Typography>{chapter.chapterName}</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography>{chapter.content}</Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-      )} */}
-
-      {/* <Grid container spacing={2} marginTop={2}>
-        <Grid item xs={12}>
-          <Card
-            sx={{
-              p: 2,
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <AppWidget
-              title="Videos"
-              total={38566}
-              icon="solar:user-rounded-bold"
-              chart={{ series: 48 }}
-            />
-            <AppWidget
-              title="PDFs/Notes"
-              total={38566}
-              icon="solar:user-rounded-bold"
-              chart={{
-                series: 75,
-                colors: [theme.palette.secondary.light, theme.palette.secondary.main],
-              }}
-            />
-          </Card>
-        </Grid>
-      </Grid>
-
-      <CustomizableTable
-        columns={[
-          { id: 'title', label: 'Title' },
-          { id: 'dueDate', label: 'Due Date' },
-          {
-            id: 'status',
-            label: 'Status',
-            render: (value: string) => (
-              <Label
-                variant="soft"
-                color={
-                  value === 'Pending' ? 'warning' : value === 'Received' ? 'success' : 'default'
-                }
-              >
-                {value}
-              </Label>
-            ),
-          },
-        ]}
-        data={assignmentData}
-      />
-
-      <TextField
-        placeholder="Teachers to leave comments/notes on subject"
-        multiline
-        rows={5}
-        sx={{ marginTop: 2, width: '50%' }}
-      /> */}
     </Box>
   );
 };
@@ -629,7 +545,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -643,14 +559,14 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
             </Grid>
             <Grid item xs={12} md={6}>
               <DatePicker
-                label="Chapter timeLine"
+                label="Chapter timeline"
                 value={formik.values.timeLine}
                 onChange={(newValue) => {
                   formik.setFieldValue('timeLine', newValue);
                 }}
+                sx={{ minWidth: 180, width: '100%' }}
                 slotProps={{
                   textField: {
-                    sx: { width: '100%', maxWidth: '200px' },
                     size: 'small',
                   },
                 }}

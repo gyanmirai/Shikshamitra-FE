@@ -70,17 +70,35 @@ const RegisterScreen = () => {
       <CustomDialog
         maxWidth="lg"
         open={dialog.value}
-        handleClose={dialog.onFalse}
+        handleClose={() => {
+          setEditData(null);
+          dialog.onFalse();
+        }}
         title="Schedule Exam"
       >
-        <ExamForm />{' '}
+        <ExamForm
+          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          handleClose={() => {
+            setEditData(null);
+            dialog.onFalse();
+          }}
+        />{' '}
       </CustomDialog>
       <CustomDialog
         open={followUpDialog.value}
-        handleClose={followUpDialog.onFalse}
+        handleClose={() => {
+          setEditData(null);
+          followUpDialog.onFalse();
+        }}
         title="Follow Up"
       >
-        <CommunicationForm handleCloseDialog={followUpDialog.onFalse} />{' '}
+        <CommunicationForm
+          handleCloseDialog={() => {
+            setEditData(null);
+            followUpDialog.onFalse();
+          }}
+          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+        />{' '}
       </CustomDialog>
     </Box>
   );

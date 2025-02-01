@@ -118,7 +118,7 @@ export function HeaderBase({
   const { currentYear, currentBoard, currentMedium } = useSelector(
     (state: RootState) => state.globalState
   );
-  const { userInfo } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // const { data: yearData, isLoading } = useQueryAndMutation({
   //   type: 'query',

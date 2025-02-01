@@ -47,6 +47,8 @@ const RegistrationTable = ({
           <MenuItem
             onClick={() => {
               dialog.onTrue();
+              setEditData(row);
+              pop.onClose();
             }}
           >
             <Iconify icon="mdi:calendar-clock" sx={{ mr: 2 }} />
@@ -55,15 +57,17 @@ const RegistrationTable = ({
           <MenuItem
             onClick={() => {
               followUpDialog.onTrue();
+              setEditData(row);
+              pop.onClose();
             }}
           >
-            <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
+            <Iconify icon="icon-park:follow-up-date-sort" color="default.main" sx={{ mr: 2 }} />
             Follow Up
           </MenuItem>
         </MenuList>
       </>
     ),
-    [dialog, followUpDialog]
+    [dialog, followUpDialog, setEditData]
   );
 
   const { data: registrationData, isLoading } = useQueryAndMutation({

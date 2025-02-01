@@ -2,6 +2,8 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
+import { boardApi } from '../board/boardApi';
+
 export const mediumApi = createApi({
   reducerPath: 'mediumApi',
   baseQuery: axiosBaseQuery({
@@ -24,6 +26,16 @@ export const mediumApi = createApi({
         data: body,
       }),
       invalidatesTags: ['Medium', 'Board'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          // ✅ Example: Refetch user list after adding a user
+          dispatch(boardApi.util.invalidateTags(['Board']));
+        } catch (error) {
+          console.error('Mutation failed', error);
+        }
+      },
     }),
     updateMedium: builder.mutation({
       query: ({ id, body }) => ({
@@ -32,6 +44,16 @@ export const mediumApi = createApi({
         data: body,
       }),
       invalidatesTags: ['Medium'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          // ✅ Example: Refetch user list after adding a user
+          dispatch(boardApi.util.invalidateTags(['Board']));
+        } catch (error) {
+          console.error('Mutation failed', error);
+        }
+      },
     }),
     deleteMedium: builder.mutation({
       query: (id) => ({
@@ -39,6 +61,16 @@ export const mediumApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Medium'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          // ✅ Example: Refetch user list after adding a user
+          dispatch(boardApi.util.invalidateTags(['Board']));
+        } catch (error) {
+          console.error('Mutation failed', error);
+        }
+      },
     }),
   }),
 });

@@ -326,12 +326,17 @@ const securityModule = {
               _action: 'role',
             },
             {
-              title: 'Role Assignment',
-              path: '/security/permission',
-              _action: 'permission',
+              title: 'User Management',
+              path: '/security/user',
+              _action: 'user-management',
             },
             {
-              title: 'Access Control',
+              title: 'Department',
+              path: '/security/department',
+              _action: 'department',
+            },
+            {
+              title: 'Academic Access Control',
               path: '/security/access-control',
               _action: 'access-control',
             },
@@ -542,32 +547,32 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/curriculum-management/curriculumDashboard',
+              path: '/academic/curriculumDashboard',
               _action: 'curriculum-management-dashboard',
             },
             {
               title: 'Subject',
-              path: '/academic/curriculum-management/subjects',
+              path: '/academic/curriculumSubjects',
               _action: 'curriculum-management-subjects',
             },
             {
               title: 'Curriculum Overview',
-              path: '/academic/curriculum-management/curriculumOverview',
+              path: '/academic/curriculumOverview',
               _action: 'student-enrollment-curriculumOverview',
             },
             {
               title: 'Teacher',
-              path: '/academic/curriculum-management/teacher',
+              path: '/academic/teacher',
               _action: 'student-enrollment-teacher',
             },
             {
               title: 'Reports',
-              path: '/academic/curriculum-management/reports',
+              path: '/academic/curriculumReports',
               _action: 'student-enrollment-reports',
             },
             {
               title: 'Settings',
-              path: '/academic/curriculum-management/settings',
+              path: '/academic/curriculumSettings',
               _action: 'student-enrollment-settings',
             },
           ],
@@ -579,32 +584,32 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/course-management/courseDashboard',
+              path: '/academic/courseDashboard',
               _action: 'course-management-dashboard',
             },
             {
               title: 'Content Management',
-              path: '/academic/course-management/subjects',
+              path: '/academic/courseSubjects',
               _action: 'course-management-subjects',
             },
             {
               title: 'Learning Resources',
-              path: '/academic/course-management/learningResources',
+              path: '/academic/learningResources',
               _action: 'course-management-learningResources',
             },
             {
               title: 'Course Progress',
-              path: '/academic/course-management/courseProgress',
+              path: '/academic/courseProgress',
               _action: 'course-management-courseProgress',
             },
             {
               title: 'Reports',
-              path: '/academic/course-management/reports',
+              path: '/academic/courseReports',
               _action: 'course-management-reports',
             },
             {
               title: 'Settings',
-              path: '/academic/course-management/settings',
+              path: '/academic/courseSettings',
               _action: 'course-management-settings',
             },
           ],
@@ -616,22 +621,22 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/timetable-schedule-management/timeTableDashboard',
+              path: '/academic/timeTableDashboard',
               _action: 'timetable-schedule-management',
             },
             {
               title: 'New Timetable',
-              path: '/academic/timetable-schedule-management/newTimetable',
+              path: '/academic/newTimetable',
               _action: 'timetable-schedule-management',
             },
             {
               title: 'Reports',
-              path: '/academic/timetable-schedule-management/reports',
+              path: '/academic/timetableReports',
               _action: 'timetable-schedule-management',
             },
             {
               title: 'Settings',
-              path: '/academic/timetable-schedule-management/settings',
+              path: '/academic/timetableSettings',
               _action: 'timetable-schedule-management',
             },
           ],
@@ -643,22 +648,22 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/groupManagement/activityDashboard',
+              path: '/academic/activityDashboard',
               _action: 'group-management-activityDashboard',
             },
             {
               title: 'Dynamic Group',
-              path: '/academic/groupManagement/dynamicGroup',
+              path: '/academic/dynamicGroup',
               _action: 'group-management-dynamicGroup',
             },
             {
               title: 'Activity Management',
-              path: '/academic/groupManagement/activityManagement',
+              path: '/academic/activityManagement',
               _action: 'group-management-activityManagement',
             },
             {
               title: 'Student Group',
-              path: '/academic/groupManagement/studentGroup',
+              path: '/academic/studentGroup',
               _action: 'group-management-studentGroup',
             },
           ],
@@ -670,32 +675,32 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/learning-management-system/lmsDashboard',
+              path: '/academic/lmsDashboard',
               _action: 'learning-management-system-lmsDashboard',
             },
             {
               title: 'Course',
-              path: '/academic/learning-management-system/course',
+              path: '/academic/course',
               _action: 'learning-management-system-course',
             },
             {
               title: 'Student Progress Tracking',
-              path: '/academic/learning-management-system/studentProgressTracking',
+              path: '/academic/studentProgressTracking',
               _action: 'learning-management-system-studentProgressTracking',
             },
             {
               title: 'Content Library',
-              path: '/academic/learning-management-system/contentLibrary',
+              path: '/academic/contentLibrary',
               _action: 'learning-management-system-contentLibrary',
             },
             {
               title: 'Reports And Analytics',
-              path: '/academic/learning-management-system/reportsAndAnalytics',
+              path: '/academic/reportsAndAnalytics',
               _action: 'learning-management-system-reportsAndAnalytics',
             },
             {
               title: 'Settings',
-              path: '/academic/learning-management-system/settings',
+              path: '/academic/lmsSettings',
               _action: 'learning-management-system-settings',
             },
           ],
@@ -707,27 +712,27 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/gradebook-performance-tracking/gradebookDashboard',
+              path: '/academic/gradebookDashboard',
               _action: 'gradebook-performance-tracking-gradebookDashboard',
             },
             {
               title: 'Gradebook',
-              path: '/academic/gradebook-performance-tracking/gradebook',
+              path: '/academic/gradebook',
               _action: 'gradebook-performance-tracking-gradebook',
             },
             {
               title: 'Performance Analysis',
-              path: '/academic/gradebook-performance-tracking/performanceAnalysis',
+              path: '/academic/performanceAnalysis',
               _action: 'gradebook-performance-tracking-performanceAnalysis',
             },
             {
               title: 'Reports',
-              path: '/academic/gradebook-performance-tracking/reports',
+              path: '/academic/gradebookReports',
               _action: 'gradebook-performance-tracking-reports',
             },
             {
               title: 'Settings',
-              path: '/academic/gradebook-performance-tracking/settings',
+              path: '/academic/gradebookSettings',
               _action: 'gradebook-performance-tracking-settings',
             },
           ],
@@ -739,32 +744,32 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/student-progress-analytics/progressDashboard',
+              path: '/academic/progressDashboard',
               _action: 'student-progress-analytics-progressDashboard',
             },
             {
               title: 'Class Progress',
-              path: '/academic/student-progress-analytics/classProgress',
+              path: '/academic/classProgress',
               _action: 'student-progress-analytics-classProgress',
             },
             {
               title: 'Individual Student Progress',
-              path: '/academic/student-progress-analytics/individualStudentProgress',
+              path: '/academic/individualStudentProgress',
               _action: 'student-progress-analytics-individualStudentProgress',
             },
             {
               title: 'Comparative Analytics',
-              path: '/academic/student-progress-analytics/comparativeAnalytics',
+              path: '/academic/comparativeAnalytics',
               _action: 'student-progress-analytics-comparativeAnalytics',
             },
             {
               title: 'Reports',
-              path: '/academic/student-progress-analytics/reports',
+              path: '/academic/studentProgressReports',
               _action: 'student-progress-analytics-reports',
             },
             {
               title: 'Settings',
-              path: '/academic/student-progress-analytics/settings',
+              path: '/academic/studentProgressSettings',
               _action: 'student-progress-analytics-settings',
             },
           ],
@@ -776,22 +781,22 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/resources-content-library/resourceDashboard',
+              path: '/academic/resourceDashboard',
               _action: 'resources-content-library-resourceDashboard',
             },
             {
               title: 'All Resources',
-              path: '/academic/resources-content-library/allResources',
+              path: '/academic/allResources',
               _action: 'resources-content-library-allResources',
             },
             {
               title: 'Shared With Me',
-              path: '/academic/resources-content-library/sharedWithMe',
+              path: '/academic/sharedWithMe',
               _action: 'resources-content-library-sharedWithMe',
             },
             {
               title: 'Settings',
-              path: '/academic/resources-content-library/settings',
+              path: '/academic/resourceSettings',
               _action: 'resources-content-library-settings',
             },
           ],
@@ -803,27 +808,27 @@ const academicModule = {
           children: [
             {
               title: 'Dashboard',
-              path: '/academic/homework-assignment-management/homeworkDashboard',
+              path: '/academic/homeworkDashboard',
               _action: 'homework-assignment-management-homeworkDashboard',
             },
             {
               title: 'Homework & Assignment Creation',
-              path: '/academic/homework-assignment-management/homeworkCreation',
+              path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
             },
             {
               title: 'Student Submissions',
-              path: '/academic/homework-assignment-management/studentSubmissions',
+              path: '/academic/studentSubmissions',
               _action: 'homework-assignment-management-studentSubmissions',
             },
             {
               title: 'Grading And Feedback',
-              path: '/academic/homework-assignment-management/gradingAndFeedback',
+              path: '/academic/gradingAndFeedback',
               _action: 'homework-assignment-management-gradingAndFeedback',
             },
             {
               title: 'Settings',
-              path: '/academic/homework-assignment-management/settings',
+              path: '/academic/homeworkSettings',
               _action: 'homework-assignment-management-settings',
             },
           ],

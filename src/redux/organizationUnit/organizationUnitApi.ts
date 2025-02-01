@@ -10,71 +10,83 @@ export const organizationUnitApi = createApi({
   tagTypes: ['OrganizationUnit'],
   endpoints: (builder) => ({
     getOrganizationUnits: builder.query({
-      query: () => ({ url: '/organization-unit/tree' }),
+      query: () => ({ url: '/organization-units/tree' }),
       providesTags: ['OrganizationUnit'],
     }),
     addOrganizationUnit: builder.mutation({
-      query: (body) => ({
-        url: '/organization-unit/create',
+      query: ({ title, parentId }) => ({
+        url: `/organization-units/create?DisplayName=${title}${parentId ? `&ParentId=${parentId}` : ''}`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['OrganizationUnit'],
     }),
     updateOrganizationUnit: builder.mutation({
-      query: (body) => ({
-        url: `/organization-unit/update`,
+      query: ({ title, id }) => ({
+        url: `/organization-units/update?DisplayName=${title}${id ? `&id=${id}` : ''}`,
         method: 'PUT',
-        data: body,
       }),
       invalidatesTags: ['OrganizationUnit'],
     }),
     deleteOrganizationUnit: builder.mutation({
       query: (id) => ({
-        url: `/organization-unit/delete`,
+        url: `/organization-units/delete/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['OrganizationUnit'],
     }),
     addRoleToOrganizationUnit: builder.mutation({
-      query: (body) => ({
-        url: `/organization-unit/add-role-to-organization-unit`,
-        method: 'POST',
-        data: body,
-      }),
+      query: ({ roleId, organizationUnitId }) => {
+        let roleIdString = '';
+        roleId.forEach((role: any) => {
+          roleIdString += `&RoleId=${role}`;
+        });
+        return {
+          url: `/organization-units/roles/add?OrganizationUnitId=${organizationUnitId}${roleIdString}`,
+          method: 'POST',
+        };
+      },
       invalidatesTags: ['OrganizationUnit'],
     }),
     removeRoleFromOrganizationUnit: builder.mutation({
-      query: (body) => ({
-        url: `/organization-unit/remove-role-from-organization-unit`,
+      query: ({ roleId, organizationUnitId }) => ({
+        url: `/organization-units/roles/remove?RoleId=${roleId}&OrganizationUnitId=${organizationUnitId}`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['OrganizationUnit'],
     }),
     addUserToOrganizationUnit: builder.mutation({
-      query: (body) => ({
-        url: `/organization-unit/add-user-to-organization-unit`,
-        method: 'POST',
-        data: body,
-      }),
+      query: ({ userId, organizationUnitId }) => {
+        let userIdString = '';
+        userId.forEach((user: any) => {
+          userIdString += `&UserId=${user}`;
+        });
+        return {
+          url: `/organization-units/users/add?OrganizationUnitId=${organizationUnitId}${userIdString}`,
+          method: 'POST',
+        };
+      },
       invalidatesTags: ['OrganizationUnit'],
     }),
     removeUserFromOrganizationUnit: builder.mutation({
-      query: (body) => ({
-        url: `/organization-unit/remove-user-from-organization-unit`,
+      query: ({ userId, organizationUnitId }) => ({
+        url: `/organization-units/users/remove?UserId=${userId}&OrganizationUnitId=${organizationUnitId}`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['OrganizationUnit'],
     }),
-    getOrganizationUnitUser: builder.mutation({
-      query: (body) => ({ url: `/organization-unit/getUsers`, method: 'POST', data: body }),
-      invalidatesTags: ['OrganizationUnit'],
+    getOrganizationUnitUser: builder.query({
+      query: (id) => ({
+        url: `/organization-units/users?OrganizationUnitId=${id}`,
+        method: 'GET',
+      }),
+      providesTags: ['OrganizationUnit'],
     }),
-    getOrganizationUnitRole: builder.mutation({
-      query: (body) => ({ url: `/organization-unit/getRoles`, method: 'POST', data: body }),
-      invalidatesTags: ['OrganizationUnit'],
+    getOrganizationUnitRole: builder.query({
+      query: (id) => ({
+        url: `/organization-units/roles?OrganizationUnitId=${id}`,
+        method: 'GET',
+      }),
+      providesTags: ['OrganizationUnit'],
     }),
   }),
 });
@@ -89,5 +101,6 @@ export const {
   useRemoveRoleFromOrganizationUnitMutation,
   useAddUserToOrganizationUnitMutation,
   useRemoveUserFromOrganizationUnitMutation,
-  useGetOrganizationUnitUserMutation,
+  useGetOrganizationUnitUserQuery,
+  useGetOrganizationUnitRoleQuery,
 } = organizationUnitApi;

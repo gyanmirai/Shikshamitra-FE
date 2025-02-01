@@ -213,6 +213,13 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    getAccessControl: builder.query({
+      query: () => ({
+        url: '/app/academic-setup-permission/assign-permissions',
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
     getEmployeeNotificationHistory: builder.query({
       query: () => ({
         url: `/app/notification-info`,
@@ -264,6 +271,7 @@ export const {
   useGetEmployeeQuery,
   useUpdateEmployeeMutation,
   useAddAccessControlMutation,
+  useGetAccessControlQuery,
   useGetAttendanceByEmployeeIdQuery,
   useGetEmployeeAttendanceByDateQuery,
   useLazyGetEmployeeAttendanceByDateQuery,

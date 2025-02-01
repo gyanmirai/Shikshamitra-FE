@@ -1,12 +1,14 @@
 import type { ButtonProps } from '@mui/material/Button';
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { useState, useCallback } from 'react';
 
-import Button from '@mui/material/Button';
+import { LoadingButton } from '@mui/lab';
 
 import { useRouter } from 'src/routes/hooks';
+
+import { signOutUser } from 'src/redux/auth/authActions';
 
 // ----------------------------------------------------------------------
 
@@ -17,26 +19,33 @@ type Props = ButtonProps & {
 
 export function SignOutButton({ onClose, ...other }: Props) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   // const { checkUserSession } = useAuthContext();
   const dispatch = useDispatch();
   const handleLogout = useCallback(async () => {
     try {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('persist:root');
-      router.push('/auth/logout');
-      // dispatch(logout());
-
+      setLoading(true);
+      await dispatch(signOutUser() as any).unwrap();
+      setLoading(false);
       onClose?.();
+      router.push('/login');
     } catch (error) {
       console.error(error);
     }
-  }, [onClose, router]);
+  }, [dispatch, onClose, router]);
 
   return (
-    <Button fullWidth variant="soft" size="large" color="error" onClick={handleLogout} {...other}>
+    <LoadingButton
+      loading={loading}
+      fullWidth
+      variant="soft"
+      size="large"
+      color="error"
+      onClick={handleLogout}
+      {...other}
+    >
       Logout
-    </Button>
+    </LoadingButton>
   );
 }

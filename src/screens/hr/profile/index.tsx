@@ -10,7 +10,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeCard } from '../employee/employee-view';
 
 const HrProfile = () => {
-  const { userInfo } = useSelector((store: any) => store.user);
+  const { employee } = useSelector((store: any) => store.auth);
   return (
     <Box>
       <CustomBreadcrumbs
@@ -18,7 +18,7 @@ const HrProfile = () => {
         links={[{ name: 'HR' }, { name: 'Profile' }]}
         sx={{ px: 1, pb: 1 }}
       />
-      <EmployeeCard employee={userInfo?.employee || {}} />
+      <EmployeeCard employee={employee || {}} />
     </Box>
   );
 };

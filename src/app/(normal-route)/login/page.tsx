@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
+import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@mui/material';
+
+import { signInUser } from 'src/redux/auth/authActions';
 
 // const validationSchema = Yup.object({
 //   email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -12,6 +15,7 @@ import { Button } from '@mui/material';
 
 const LoginPage = () => {
   const route = useRouter();
+  const dispatch = useDispatch();
   // const initialValues: ILogin = {
   //   email: '',
   //   password: '',
@@ -23,7 +27,7 @@ const LoginPage = () => {
   return (
     <Button
       onClick={() => {
-        route.push('/auth/login');
+        dispatch(signInUser() as any);
       }}
     >
       Login

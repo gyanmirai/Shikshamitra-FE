@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
 import { matchIsValidTel } from 'mui-tel-input';
 
+import { LoadingButton } from '@mui/lab';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -153,8 +154,9 @@ const InquiryForm = ({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
   });
+
   const [getClassByOrganization, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
-    type: 'query',
+    type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByOrganizationIdQuery,
   });
   const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
@@ -166,11 +168,11 @@ const InquiryForm = ({
     currentQueryAndMutation: useGetBoardsQuery,
   });
 
-  const [addInquiry] = useQueryAndMutation({
+  const [addInquiry, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentInquiryMutation,
   });
-  const [updateInquiry] = useQueryAndMutation({
+  const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentInquiryMutation,
   });
@@ -637,9 +639,13 @@ const InquiryForm = ({
             </Scrollbar>
             <DialogActions sx={{ flexShrink: 0, p: 2 }}>
               <Button onClick={handleClose}>Cancel</Button>
-              <Button type="submit" variant="contained">
+              <LoadingButton
+                loading={isAddLoading || isUpdateLoading}
+                type="submit"
+                variant="contained"
+              >
                 Submit
-              </Button>
+              </LoadingButton>
             </DialogActions>
           </Box>
         )}

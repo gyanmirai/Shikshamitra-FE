@@ -4,8 +4,10 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 import { isTokenExpired } from 'src/utils/client';
+import { oidcService } from 'src/utils/oidcClient';
 
 import store from 'src/redux/store';
+import { setUser, clearUser } from 'src/redux/auth/authSlice';
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -25,32 +27,29 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
       if (typeof window !== 'undefined') {
         const reduxStore = store.getState();
         const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
-        const cookieHeader = `currentYear=${currentYear?.id};currentBoard=${currentBoard.id};currentMedium=${currentMedium.id}`;
+        const cookieHeader = `currentYear=${currentYear?.id};currentBoard=${currentBoard?.id};currentMedium=${currentMedium?.id}`;
         document.cookie = cookieHeader;
         // Add values to cookie
 
-        const token = localStorage.getItem('access_token');
+        const token = store.getState().auth.user?.access_token;
+
         if (token) {
           if (isTokenExpired(token)) {
             // If the token is expired, handle refresh token logic
             if (!isRefreshing) {
               isRefreshing = true;
-              const refreshToken = localStorage.getItem('refresh_token');
+              // const refreshToken = store.getState().auth.user?.refresh_token;
               try {
-                const newTokenSet = await axios.post(`/auth/refresh-token`, {
-                  token: refreshToken,
-                });
+                const refreshedUser = await oidcService.renewToken();
+                store.dispatch(setUser(JSON.parse(JSON.stringify(refreshedUser))));
 
-                if (newTokenSet?.data) {
-                  localStorage.setItem('access_token', newTokenSet.data.access_token);
-                  localStorage.setItem('refresh_token', newTokenSet.data.refresh_token);
-
+                if (refreshedUser?.access_token) {
                   // Notify all waiting requests that the new token is available
-                  refreshSubscribers.forEach((callback) => callback(newTokenSet.data.access_token));
+                  refreshSubscribers.forEach((callback) => callback(refreshedUser?.access_token));
                   refreshSubscribers = []; // Clear the queue after processing
 
                   config.headers = config.headers || {};
-                  config.headers.Authorization = `Bearer ${newTokenSet.data.access_token}`;
+                  config.headers.Authorization = `Bearer ${refreshedUser?.access_token}`;
                   config.headers.Cookie = cookieHeader;
                 } else {
                   handleLogout();
@@ -112,14 +111,8 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
 };
 
 function handleLogout() {
-  // Handle logout functionality (clear cookies, session storage, etc.)
-  document.cookie.split(';').forEach((c) => {
-    document.cookie = c
-      .replace(/^ +/, '')
-      .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
-  });
-  sessionStorage.clear();
-  window.location.href = '/auth/login';
+  store.dispatch(clearUser());
+  window.location.href = '/login';
 }
 
 export default createAxiosInstance;
