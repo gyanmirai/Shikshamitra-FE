@@ -22,7 +22,7 @@ const placeholderOptions = [
 
 const AddNotificationTemplateDialog = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const editorRef = useRef<any>(null); // Reference for the editor
+  const editorRef = useRef<HTMLTextAreaElement | null>(null); // Reference for the editor
 
   const formik = useFormik({
     initialValues: {
@@ -39,8 +39,6 @@ const AddNotificationTemplateDialog = () => {
   const handleInsertPlaceholder = (value: string) => {
     if (editorRef.current) {
       const textarea = editorRef.current; // Reference to the text editor
-
-      // Get current cursor position
       const startPos = textarea.selectionStart;
       const endPos = textarea.selectionEnd;
 
@@ -55,8 +53,7 @@ const AddNotificationTemplateDialog = () => {
 
       // Restore the cursor position after inserting text
       setTimeout(() => {
-        textarea.selectionStart = startPos + value.length;
-        textarea.selectionEnd = startPos + value.length;
+        textarea.setSelectionRange(startPos + value.length, startPos + value.length);
       }, 0);
     }
 
@@ -68,10 +65,10 @@ const AddNotificationTemplateDialog = () => {
       <DialogContent>
         <Grid container spacing={2}>
           {/* Category Selection */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <CustomSelect
               label="Select Category"
-              options={[{ label: 'Fee Reminders', value: 'feeReminder' }]}
+              options={[{ label: 'Fees', value: 'feeReminder' }]}
               value={formik.values.category}
               onChange={(value) => formik.setFieldValue('category', value)}
               formControlProps={{ fullWidth: true }}
@@ -79,7 +76,7 @@ const AddNotificationTemplateDialog = () => {
           </Grid>
 
           {/* Template Name Field */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <TextField
               name="templateName"
               label="Template Name"
@@ -102,17 +99,8 @@ const AddNotificationTemplateDialog = () => {
               Insert Placeholder
             </Button>
 
-            {/* Editor */}
-            {/* <Editor
-                            ref={editorRef} // Attach reference to Editor
-                            value={formik.values.content}
-                            onChange={(value) => formik.setFieldValue('content', value)}
-                            placeholder="Type your message here..."
-                            sx={{ width: '100%' }}
-                        /> */}
-
             <TextField
-              ref={editorRef}
+              inputRef={editorRef} // Use inputRef instead of ref
               value={formik.values.content}
               onChange={(e) => formik.setFieldValue('content', e.target.value)}
               multiline

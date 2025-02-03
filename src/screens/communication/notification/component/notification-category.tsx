@@ -5,7 +5,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const NotificationCategory = () => {
   const notificationData = [
-    { id: 1, categoryName: 'Fee Reminders' },
+    { id: 1, categoryName: 'Fees ' },
     { id: 2, categoryName: 'Event Alerts' },
   ];
   return (

@@ -1,7 +1,15 @@
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
-import { Grid, Button, Checkbox, DialogContent, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Button,
+  Checkbox,
+  Typography,
+  DialogContent,
+  FormControlLabel,
+} from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -135,10 +143,7 @@ const SendNotificationScreen = () => {
             <Grid item xs={12} md={4}>
               <CustomSelect
                 label="Select Category"
-                options={[
-                  { label: 'Overdue Fee', value: 'overdueFee' },
-                  { label: 'Fee Reminder', value: 'feeReminder' },
-                ]}
+                options={[{ label: 'Fees', value: 'Fees' }]}
                 value={formik.values.category}
                 onChange={(val) => formik.setFieldValue('category', val)}
                 formControlProps={{ fullWidth: true }}
@@ -151,8 +156,25 @@ const SendNotificationScreen = () => {
                 options={
                   formik.values.category
                     ? [
-                        { label: 'Overdue Fee Template', value: 'overdueFee' },
-                        { label: 'Fee Reminder Template', value: 'feeReminder' },
+                        { label: 'Overdue Fee Reminder', value: 'overdueFee' },
+                        { label: 'General Fee Reminder', value: 'feeReminder' },
+                      ]
+                    : []
+                }
+                value={formik.values.template}
+                onChange={(val) => formik.setFieldValue('template', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Role"
+                options={
+                  formik.values.category
+                    ? [
+                        { label: 'Parent', value: 'parent' },
+                        { label: 'Teacher', value: 'teacher' },
                       ]
                     : []
                 }
@@ -162,13 +184,37 @@ const SendNotificationScreen = () => {
               />
             </Grid>
           </Grid>
-        </DialogContent>
 
-        <DialogActions>
-          <Button type="submit" variant="contained" color="primary">
-            Send Notification
-          </Button>
-        </DialogActions>
+          <Box
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box display="flex" flexDirection="column">
+              <Typography sx={{ pt: '20px' }} variant="h6">
+                Select a Communication Channel
+              </Typography>
+              <Box display="flex" gap={2} flexDirection="row">
+                <FormControlLabel
+                  control={<Checkbox checked onChange={(e) => console.log(e)} />}
+                  label="Email"
+                />
+                <FormControlLabel
+                  control={<Checkbox checked onChange={(e) => console.log(e)} />}
+                  label="Whatsapp"
+                />
+                <FormControlLabel
+                  control={<Checkbox checked onChange={(e) => console.log(e)} />}
+                  label="Message"
+                />
+              </Box>
+            </Box>
+            <Button type="submit" variant="outlined" color="primary" size="small">
+              Send Notification
+            </Button>
+          </Box>
+        </DialogContent>
       </form>
 
       {/* Students Table */}
@@ -177,6 +223,27 @@ const SendNotificationScreen = () => {
           {
             id: 'select',
             label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={
+                    selectedStudents.length === filteredStudents.length &&
+                    filteredStudents.length > 0
+                  }
+                  indeterminate={
+                    selectedStudents.length > 0 && selectedStudents.length < filteredStudents.length
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(filteredStudents.map((student) => student.id)); // Select all
+                    } else {
+                      setSelectedStudents([]); // Deselect all
+                    }
+                  }}
+                />
+              );
+            },
+
             render: (_, row) => (
               <Checkbox
                 checked={selectedStudents.includes(row.id)}
@@ -192,8 +259,8 @@ const SendNotificationScreen = () => {
               if (!formik.values.template) return '';
               return messageTemplate
                 .replace('[Student Name]', row.name)
-                .replace('[Amount]', '5000') // Placeholder amount
-                .replace('[Due Date]', '15th Feb'); // Placeholder date
+                .replace('[Amount]', '5000')
+                .replace('[Due Date]', '15th Feb');
             },
           },
         ]}
