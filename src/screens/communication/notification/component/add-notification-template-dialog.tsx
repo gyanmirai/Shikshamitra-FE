@@ -29,6 +29,9 @@ const AddNotificationTemplateDialog = () => {
       category: '',
       templateName: '',
       content: '',
+      notificationType: '',
+      subCategory: '',
+      role: '',
     },
     onSubmit: (values) => {
       console.log('Submitted values:', values);
@@ -63,9 +66,9 @@ const AddNotificationTemplateDialog = () => {
   return (
     <form onSubmit={formik.handleSubmit}>
       <DialogContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={2} pt="20px">
           {/* Category Selection */}
-          <Grid item xs={12}>
+          <Grid item xs={6}>
             <CustomSelect
               label="Select Category"
               options={[{ label: 'Fees', value: 'feeReminder' }]}
@@ -74,9 +77,47 @@ const AddNotificationTemplateDialog = () => {
               formControlProps={{ fullWidth: true }}
             />
           </Grid>
+          <Grid item xs={6}>
+            <CustomSelect
+              label="Select Sub Category"
+              options={[{ label: 'Overdue', value: 'overdue' }]}
+              value={formik.values.subCategory}
+              onChange={(value) => formik.setFieldValue('subCategory', value)}
+              formControlProps={{ fullWidth: true }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <CustomSelect
+              label="Select Type"
+              options={[
+                { label: 'Manual', value: 'manual' },
+                { label: 'Auto', value: 'auto' },
+              ]}
+              value={formik.values.notificationType}
+              onChange={(value) => formik.setFieldValue('notificationType', value)}
+              formControlProps={{ fullWidth: true }}
+            />
+          </Grid>
 
+          <Grid item xs={6}>
+            <CustomSelect
+              label="Select Role"
+              options={
+                formik.values.category
+                  ? [
+                      { label: 'Parent', value: 'parent' },
+                      { label: 'Teacher', value: 'teacher' },
+                    ]
+                  : []
+              }
+              value={formik.values.role}
+              onChange={(val) => formik.setFieldValue('role', val)}
+              formControlProps={{ fullWidth: true }}
+            />
+          </Grid>
           {/* Template Name Field */}
-          <Grid item xs={12}>
+
+          <Grid item xs={6}>
             <TextField
               name="templateName"
               label="Template Name"
@@ -85,6 +126,7 @@ const AddNotificationTemplateDialog = () => {
               size="small"
               fullWidth
               margin="dense"
+              sx={{ margin: 0, padding: 0 }}
             />
           </Grid>
 

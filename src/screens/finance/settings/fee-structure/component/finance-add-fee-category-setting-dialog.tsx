@@ -390,37 +390,18 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
           </Box>
 
           <Box py="13px" display="flex" flexDirection="row" gap={4}>
-            <TextField
-              name="Discount"
-              label="Discount Category"
-              value={formik.values.finalFee}
-              size="small"
-              fullWidth
-              sx={{ flex: 1 }}
-              disabled
-            />
-            {/* <CustomSelect
-                label="Discount Category"
-                options={availableFeeHeadList}
-                value={formik.values.feeHead}
-                onChange={(selectedValues) => {
-                  formik.setFieldValue('feeHead', selectedValues);
-                  const selectedFeeHead: any = availableFeeSubCategoryList.find(
-                    (item: any) => item.value === selectedValues
-                  );
-                  if (selectedFeeHead) {
-                    formik.setFieldValue('feeAmountForAvailbleHead', selectedFeeHead.amount || 0);
-                  }
-                }}
-                formControlProps={{ sx: { minWidth: 195, flex: 1 } }}
-                error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-              // helperText={formik.touched.feeHead && formik.errors.feeHead}
-              /> */}
-
             <FormattedAmountInput
               label="Discount Amount"
               value={discountAmount}
               onChange={handleFeeDiscountAmountChange}
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              name="Discount"
+              label="Discount Remark"
+              value={formik.values.finalFee}
+              size="small"
+              fullWidth
               sx={{ flex: 1 }}
             />
           </Box>

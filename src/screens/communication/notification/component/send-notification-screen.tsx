@@ -23,17 +23,58 @@ const placeholderOptions = [
 
 // Sample templates for different categories
 const templates = {
-  overdueFee: 'Dear [Student Name], your fee of [Amount] is overdue. Please pay before [Due Date].',
+  overdueFee:
+    'Dear [Student Name], your fee of [Amount] is overdue. Please pay before [Due Date]. check check check check check check',
   feeReminder: 'Hello [Student Name], kindly pay your fee amount [Amount] before [Due Date].',
 };
 
 // Sample student data
 const allStudents = [
-  { id: 1, name: 'Alice Johnson', class: 'Class 1', division: 'A', organization: 'Org 1' },
-  { id: 2, name: 'Bob Smith', class: 'Class 2', division: 'B', organization: 'Org 2' },
-  { id: 3, name: 'Charlie Brown', class: 'Class 1', division: 'A', organization: 'Org 1' },
-  { id: 4, name: 'David Williams', class: 'Class 3', division: 'C', organization: 'Org 3' },
-  { id: 5, name: 'Emma Davis', class: 'Class 2', division: 'B', organization: 'Org 2' },
+  {
+    id: 1,
+    name: 'Alice Johnson',
+    class: 'Class 1',
+    division: 'A',
+    organization: 'Org 1',
+    contactNumber: '9187654576',
+    email: 'abc@gmail.com',
+  },
+  {
+    id: 2,
+    name: 'Bob Smith',
+    class: 'Class 2',
+    division: 'B',
+    organization: 'Org 2',
+    contactNumber: '9187654576',
+    email: 'abc@gmail.com',
+  },
+  {
+    id: 3,
+    name: 'Charlie Brown',
+    class: 'Class 1',
+    division: 'A',
+    organization: 'Org 1',
+    contactNumber: '9187654576',
+    email: 'abc@gmail.com',
+  },
+  {
+    id: 4,
+    name: 'David Williams',
+    class: 'Class 3',
+    division: 'C',
+    organization: 'Org 3',
+    contactNumber: '9187654576',
+    email: 'abc@gmail.com',
+  },
+  {
+    id: 5,
+    name: 'Emma Davis',
+    class: 'Class 2',
+    division: 'B',
+    organization: 'Org 2',
+    contactNumber: '9187654576',
+    email: 'abc@gmail.com',
+  },
 ];
 
 const SendNotificationScreen = () => {
@@ -92,21 +133,6 @@ const SendNotificationScreen = () => {
       <form onSubmit={formik.handleSubmit}>
         <DialogContent>
           <Grid container spacing={2} pt="20px">
-            {/* Select Organization */}
-            <Grid item xs={12} md={4}>
-              <CustomSelect
-                label="Select Organization"
-                options={[
-                  { label: 'Org 1', value: 'Org 1' },
-                  { label: 'Org 2', value: 'Org 2' },
-                  { label: 'Org 3', value: 'Org 3' },
-                ]}
-                value={formik.values.organization}
-                onChange={(val) => formik.setFieldValue('organization', val)}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>
-
             {/* Select Class */}
             <Grid item xs={12} md={4}>
               <CustomSelect
@@ -136,13 +162,29 @@ const SendNotificationScreen = () => {
                 formControlProps={{ fullWidth: true }}
               />
             </Grid>
+            <Grid item xs={12} md={4}>
+              <CustomSelect
+                label="Select Role"
+                options={
+                  formik.values.category
+                    ? [
+                        { label: 'Parent', value: 'parent' },
+                        { label: 'Teacher', value: 'teacher' },
+                      ]
+                    : []
+                }
+                value={formik.values.template}
+                onChange={(val) => formik.setFieldValue('template', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
           </Grid>
 
           {/* Category & Template Selection */}
           <Grid container spacing={2} pt="20px">
             <Grid item xs={12} md={4}>
               <CustomSelect
-                label="Select Category"
+                label="Select Event"
                 options={[{ label: 'Fees', value: 'Fees' }]}
                 value={formik.values.category}
                 onChange={(val) => formik.setFieldValue('category', val)}
@@ -158,23 +200,6 @@ const SendNotificationScreen = () => {
                     ? [
                         { label: 'Overdue Fee Reminder', value: 'overdueFee' },
                         { label: 'General Fee Reminder', value: 'feeReminder' },
-                      ]
-                    : []
-                }
-                value={formik.values.template}
-                onChange={(val) => formik.setFieldValue('template', val)}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <CustomSelect
-                label="Select Role"
-                options={
-                  formik.values.category
-                    ? [
-                        { label: 'Parent', value: 'parent' },
-                        { label: 'Teacher', value: 'teacher' },
                       ]
                     : []
                 }
@@ -210,9 +235,17 @@ const SendNotificationScreen = () => {
                 />
               </Box>
             </Box>
-            <Button type="submit" variant="outlined" color="primary" size="small">
-              Send Notification
-            </Button>
+            <Box display="flex" flexDirection="row" gap={2}>
+              <Button type="submit" variant="outlined" color="primary" size="small">
+                Reset Filter
+              </Button>
+              <Button type="submit" variant="outlined" color="primary" size="small">
+                Apply Filter
+              </Button>
+              <Button type="submit" variant="outlined" color="primary" size="small">
+                Send Notification
+              </Button>
+            </Box>
           </Box>
         </DialogContent>
       </form>
@@ -252,6 +285,9 @@ const SendNotificationScreen = () => {
             ),
           },
           { id: 'name', label: 'Student Name' },
+          { id: 'contactNumber', label: 'Contact Number' },
+          { id: 'email', label: 'Email' },
+
           {
             id: 'message',
             label: 'Message',

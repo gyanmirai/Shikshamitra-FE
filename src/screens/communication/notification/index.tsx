@@ -10,6 +10,8 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import SendCustomAlert from './component/send-custom-alert';
+import SendAlertToOthers from './component/send-alert-to-others';
 import NotificationCategory from './component/notification-category';
 import CreateNotificationTemplates from './component/create-templates';
 import SendNotificationScreen from './component/send-notification-screen';
@@ -21,12 +23,16 @@ const COMPONENTS: any = {
   'send-notification': SendNotificationScreen,
   'notification-templates': CreateNotificationTemplates,
   'notification-category': NotificationCategory,
+  'send-alert-others': SendAlertToOthers,
+  'send-custom-alert': SendCustomAlert,
 };
 
 const TABS = [
   { value: 'send-notification', label: 'Send Notification' },
   { value: 'notification-templates', label: 'Notification Templates' },
   { value: 'notification-category', label: 'Category' },
+  { value: 'send-alert-others', label: 'Send Alert to Others' },
+  { value: 'send-custom-alert', label: 'Send Custom Alert' },
 ];
 
 const NotificationScreen = () => {
@@ -76,6 +82,8 @@ const NotificationScreen = () => {
           sx={{ px: 1, mb: 2 }}
         />
         {breadcrumbTabName !== 'Send Notification' &&
+          breadcrumbTabName !== 'Send Alert to Others' &&
+          breadcrumbTabName !== 'Send Custom Alert' &&
           (openForNotificationCategory || openForTemplates ? (
             <Button
               startIcon={<Iconify icon="eva:arrow-back-fill" />}

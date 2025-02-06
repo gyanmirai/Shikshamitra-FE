@@ -14,6 +14,7 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
     initialValues: {
       categoryName: '',
       categoryDescription: '',
+      subCategoyName: '',
     },
     onSubmit: (values) => {
       console.log('Submitted values:', values);
@@ -30,6 +31,16 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
           name="categoryName"
           label="Category Name"
           value={formik.values.categoryName}
+          onChange={formik.handleChange}
+          size="small"
+          fullWidth
+          margin="dense"
+        />
+
+        <TextField
+          name="subCategoryName"
+          label="Sub Category Name"
+          value={formik.values.subCategoyName}
           onChange={formik.handleChange}
           size="small"
           fullWidth

@@ -5,8 +5,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const NotificationCategory = () => {
   const notificationData = [
-    { id: 1, categoryName: 'Fees ' },
-    { id: 2, categoryName: 'Event Alerts' },
+    { id: 1, categoryName: 'Fees ', subCategoryName: 'Overdue' },
+    { id: 2, categoryName: 'Fees ', subCategoryName: 'General Reminder' },
+    { id: 3, categoryName: 'Fees ', subCategoryName: 'Pending' },
   ];
   return (
     <CustomizableTable
@@ -17,6 +18,7 @@ const NotificationCategory = () => {
       tableId="notification-category-table"
       columns={[
         { id: 'categoryName', label: 'Category' },
+        { id: 'subCategoryName', label: 'Sub-Category' },
         {
           id: 'action',
           label: 'Action',
