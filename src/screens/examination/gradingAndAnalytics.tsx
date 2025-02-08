@@ -53,7 +53,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
             setClasses(val as string);
             setDivisionOptions(selectedClass?.divisions || []);
           }}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
         />
         <CustomSelect
           options={divisionOptions || []}
@@ -66,17 +66,19 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           onChange={(val) => {
             setDivision(val as string);
           }}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
           size="small"
         />
         <DatePicker
           label="Start Date"
           format="DD-MM-YYYY"
+          sx={{ maxWidth: '180px', width: '100%' }}
           slotProps={{ textField: { size: 'small' } }}
         />
         <DatePicker
           label="End Date"
           format="DD-MM-YYYY"
+          sx={{ maxWidth: '180px', width: '100%' }}
           slotProps={{ textField: { size: 'small' } }}
         />
       </Box>

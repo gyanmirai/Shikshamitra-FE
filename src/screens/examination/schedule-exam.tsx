@@ -11,8 +11,11 @@ import {
   Box,
   Card,
   Grid,
+  Radio,
   Button,
   TextField,
+  RadioGroup,
+  Typography,
   DialogContent,
   DialogActions,
   FormHelperText,
@@ -36,9 +39,62 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import type { TabComponentType } from '../hr/leave-request';
 
+const initialExamData = [
+  {
+    id: 1, // Unique ID for each row (optional if not required by the table)
+    class: '10',
+    subjectName: 'Mathematics',
+    examType: 'Unit Test',
+    examName: 'Maths Unit Test - Chapter 1',
+    examDate: '2024-12-20',
+    examTime: '10:00 AM',
+    examDuration: '2 Hours',
+    totalMarks: 50,
+    status: 'Pending',
+  },
+  {
+    id: 2,
+    class: '9',
+    subjectName: 'Science',
+    examType: 'Mid-term Exam',
+    examName: 'Science Mid-Term Examination',
+    examDate: '2024-12-22',
+    examTime: '12:00 PM',
+    examDuration: '3 Hours',
+    totalMarks: 100,
+    status: 'Completed',
+  },
+  {
+    id: 3,
+    class: '8',
+    subjectName: 'History',
+    examType: 'Final Exam',
+    examName: 'History Final Exam',
+    examDate: '2024-12-25',
+    examTime: '9:00 AM',
+    examDuration: '2.5 Hours',
+    totalMarks: 80,
+    status: 'Pending',
+  },
+  {
+    id: 4,
+    class: '11',
+    subjectName: 'Physics',
+    examType: 'Practical Exam',
+    examName: 'Physics Practical - Semester 1',
+    examDate: '2024-12-18',
+    examTime: '1:00 PM',
+    examDuration: '1.5 Hours',
+    totalMarks: 30,
+    status: 'Completed',
+  },
+];
+
 const ScheduleExam = (props: TabComponentType) => {
-  // const dialog = useBoolean();
+  const [examData, setExamData] = useState(initialExamData);
   const [open, setOpen] = useState(false);
+  const dialog = useBoolean();
+
   return (
     <Box>
       {open ? (
@@ -66,7 +122,12 @@ const ScheduleExam = (props: TabComponentType) => {
             }
           />
           <Card>
-            <NewExamForm />
+            <NewExamForm
+              // onSubmit={handleSubmit}
+              onClose={() => {
+                setOpen(false);
+              }}
+            />
           </Card>
         </>
       ) : (
@@ -82,24 +143,27 @@ const ScheduleExam = (props: TabComponentType) => {
             action={
               <Button
                 variant="contained"
-                startIcon={<Add />}
                 size="small"
+                startIcon={<Add />}
                 onClick={() => {
                   setOpen(true);
                 }}
               >
-                Schedule Exam
+                Exam
               </Button>
             }
           />
           <CustomizableTable
-            tableId="schedule-exam"
+            tableId="schedule-exam-table"
             columns={[
               { id: 'class', label: 'Class' },
-              { id: 'subjectName', label: 'Subject Name' },
-              { id: 'examName', label: 'Exam Name' },
-              { id: 'marksEntry', label: 'Marks Entry' },
-              { id: 'grade', label: 'Grade' },
+              { id: 'subjectName', label: 'Subject Name', align: 'left', minWidth: '180px' },
+              { id: 'examType', label: 'Exam Type', align: 'left', minWidth: '180px' },
+              { id: 'examName', label: 'Exam Name', align: 'left', minWidth: '180px' },
+              { id: 'examDate', label: 'Exam Date', align: 'left', minWidth: '180px' },
+              { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '180px' },
+              { id: 'examDuration', label: 'Exam Duration', align: 'left', minWidth: '200px' },
+              { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: '200px' },
               {
                 id: 'status',
                 label: 'Status',
@@ -108,71 +172,26 @@ const ScheduleExam = (props: TabComponentType) => {
                 ),
               },
               {
-                id: 'actions',
+                id: 'action',
                 label: 'Actions',
                 isSort: false,
                 render(value, row) {
                   return (
                     <ThreeDotsActions
-                      // actions={(prop) => actions({ ...prop, row })}
-                      showThreeDots={false}
                       placement="right-top"
-                      showEditIcon
+                      showThreeDots={false}
+                      showViewIcon
                       showDeleteIcon
-                      handleEditClick={() => {}}
+                      showEditIcon
                       handleDeleteClick={() => {}}
+                      handleEditClick={() => {}}
+                      handleViewClick={() => {}}
                     />
                   );
                 },
               },
             ]}
-            data={[
-              {
-                class: '10th Grade',
-                subjectName: 'Mathematics',
-                examName: 'Mid-Term Exam',
-                marksEntry: '50/100',
-                grade: 'B',
-                status: 'Completed',
-                action: 'View',
-              },
-              {
-                class: '11th Grade',
-                subjectName: 'Physics',
-                examName: 'Final Exam',
-                marksEntry: '85/100',
-                grade: 'A',
-                status: 'Completed',
-                action: 'View',
-              },
-              {
-                class: '9th Grade',
-                subjectName: 'English',
-                examName: 'Quiz 1',
-                marksEntry: '18/20',
-                grade: 'A-',
-                status: 'Pending',
-                action: 'Edit',
-              },
-              {
-                class: '12th Grade',
-                subjectName: 'Chemistry',
-                examName: 'Lab Test',
-                marksEntry: '28/30',
-                grade: 'A+',
-                status: 'Pending',
-                action: 'Review',
-              },
-              {
-                class: '10th Grade',
-                subjectName: 'History',
-                examName: 'Term Paper',
-                marksEntry: 'Not Available',
-                grade: 'Pending',
-                status: 'Scheduled',
-                action: 'Cancel',
-              },
-            ]}
+            data={[]}
           />
         </>
       )}
@@ -188,29 +207,22 @@ const SelectExam = ({ formik }: any) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  const divisionOption = [
-    { value: 'A', label: 'A' },
-    { value: 'B', label: 'B' },
-    { value: 'C', label: 'C' },
-    { value: 'D', label: 'D' },
-  ];
-
-  const [isAllSelected, setIsAllSelected] = useState(
-    formik.initialValues?.division?.length === divisionOption.length
+  const [isAllClassesSelected, setIsAllClassesSelected] = useState(
+    formik.values?.className?.length === classData?.items?.length
   );
 
-  const handleDivisionChange = (selectedValues: string[]) => {
+  const handleClass = (selectedValues: string[]) => {
+    const allClassesValues = classData?.items?.map((org: any) => org.name);
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
-      const allDivision = divisionOption.map((org) => org.value);
-      if (isAllSelected) {
-        formik.setFieldValue('division', []);
+      if (isAllClassesSelected) {
+        formik.setFieldValue('className', []);
       } else {
-        formik.setFieldValue('division', allDivision);
+        formik.setFieldValue('className', allClassesValues);
       }
-      setIsAllSelected(!isAllSelected);
+      setIsAllClassesSelected(!isAllClassesSelected);
     } else {
-      formik.setFieldValue('division', selectedValues);
-      setIsAllSelected(selectedValues.length === divisionOption.length);
+      formik.setFieldValue('className', selectedValues);
+      setIsAllClassesSelected(selectedValues.length === allClassesValues.length);
     }
   };
 
@@ -249,43 +261,28 @@ const SelectExam = ({ formik }: any) => {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} md={6}>
           <CustomSelect
-            options={classData?.items || []}
+            options={[
+              {
+                id: isAllClassesSelected ? 'deselectAll' : 'all',
+                name: isAllClassesSelected ? 'Deselect All' : 'All',
+              },
+              ...(classData?.items || []),
+            ]}
             value={formik.values.className}
             onChange={(val) => {
-              formik.setFieldValue('className', val);
+              handleClass(val as string[]);
             }}
             label="Class"
             isLoading={isLoading}
+            multiple
             labelKey="name"
             valueKey="name"
             formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
           />
           {formik.touched.className && formik.errors.className && (
             <FormHelperText error>{formik.errors.className}</FormHelperText>
-          )}
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <CustomSelect
-            label="Select Divisions"
-            options={[
-              {
-                value: isAllSelected ? 'deselectAll' : 'all',
-                label: isAllSelected ? 'Deselect All' : 'All',
-              },
-              ...divisionOption,
-            ]}
-            value={formik.values.division || []}
-            onChange={(val) => {
-              handleDivisionChange(val as string[]);
-            }}
-            multiple
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.division && formik.errors.division && (
-            <FormHelperText error>{String(formik.errors.division)}</FormHelperText>
           )}
         </Grid>
 
@@ -325,6 +322,7 @@ const ExamDetails = ({ formik }: any) => (
           onChange={(newValue) => formik.setFieldValue('examDate', newValue)}
           slotProps={{
             textField: {
+              sx: { width: '100%', minWidth: '200px' },
               size: 'small',
               helperText: formik.touched.examDate && (formik.errors.examDate as string),
               error: formik.touched.examDate && Boolean(formik.errors.examDate),
@@ -342,6 +340,7 @@ const ExamDetails = ({ formik }: any) => (
           onChange={(newValue) => formik.setFieldValue('examTime', newValue)}
           slotProps={{
             textField: {
+              sx: { width: '100%', minWidth: '200px' },
               size: 'small',
               helperText: formik.touched.examTime && (formik.errors.examTime as string),
               error: formik.touched.examTime && Boolean(formik.errors.examTime),
@@ -379,19 +378,6 @@ const ExamDetails = ({ formik }: any) => (
       <Grid item xs={12} md={6}>
         <TextField
           fullWidth
-          label="Passing Marks"
-          name="passingMarks"
-          value={formik.values.passingMarks}
-          onChange={formik.handleChange}
-          error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
-          helperText={formik.touched.passingMarks && formik.errors.passingMarks}
-          size="small"
-        />
-      </Grid>
-
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
           label="Exam Description"
           name="description"
           value={formik.values.description}
@@ -399,6 +385,8 @@ const ExamDetails = ({ formik }: any) => (
           error={formik.touched.description && Boolean(formik.errors.description)}
           helperText={formik.touched.description && formik.errors.description}
           size="small"
+          multiline
+          rows={3}
         />
       </Grid>
     </Grid>
@@ -481,26 +469,45 @@ const SelectDateAndTime = ({ scheduledExams }: any) => {
   );
 };
 
-const AssignInvigilators = () => (
-  <Box display="flex" gap={2}>
-    <CustomSelect
-      options={[]}
-      label="teacher"
-      value=""
-      onChange={() => {}}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
-    <CustomSelect
-      options={[]}
-      label="teacher availability status"
-      value=""
-      onChange={() => {}}
-      formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
-    />
-  </Box>
-);
+const EvaluationCriteria = ({ formik }: any) => {
+  const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom>
+            Rubric Selection
+          </Typography>
+          <RadioGroup
+            row
+            value={rubricType}
+            onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+          >
+            <FormControlLabel value="predefined" control={<Radio />} label="Predefined Rubric" />
+            <FormControlLabel value="custom" control={<Radio />} label="Custom Rubric" />
+          </RadioGroup>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {rubricType === 'predefined' ? (
+            <CustomSelect
+              options={[]}
+              label="Predefined Rubrics"
+              value=""
+              onChange={() => {}}
+              formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
+            />
+          ) : (
+            <Button variant="contained" startIcon={<Add />}>
+              Create New Rubric
+            </Button>
+          )}
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
 
-const InputEvaluationCriteria = () => (
+const InputEvaluationCriteria = ({ formik }: any) => (
   <Box display="flex" flexDirection="column" gap={2}>
     <Box display="flex" gap={2} flexWrap="wrap">
       <TextField label="Organization Name" size="small" />
@@ -533,115 +540,26 @@ const InputEvaluationCriteria = () => (
 );
 
 const AssignTeachers = ({ formik }: any) => (
-  <Box display="flex" flexDirection="column" gap={2}>
-    <CustomizableTable
-      tableId="assignTeachersTable"
-      isShowedDense={false}
-      isSearch={false}
-      isFilter={false}
-      columns={[
-        {
-          id: 'division',
-          label: 'Division',
-        },
-        {
-          id: 'gradingTeacher',
-          label: 'Grading Teacher',
-          render: (value: string) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              <CustomSelect
-                options={[
-                  { value: 'abc', label: 'ABC' },
-                  { value: 'pqr', label: 'PQR' },
-                  { value: 'xyz', label: 'XYZ' },
-                ]}
-                value=""
-                onChange={(val) => {}}
-                label="Grading Teacher"
-                formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
-              />
-            </Box>
-          ),
-        },
-        {
-          id: 'invigilationTeacher',
-          label: 'Invigilation Teacher',
-          render: (value: string) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              <CustomSelect
-                options={[
-                  { value: 'abv', label: 'ABC' },
-                  { value: 'pqr', label: 'PQR' },
-                  { value: 'xyz', label: 'XYZ' },
-                ]}
-                value=""
-                onChange={(val) => {}}
-                label="Invigilation Teacher"
-                formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
-              />
-            </Box>
-          ),
-        },
-        {
-          id: 'classRoom',
-          label: 'ClassRoom',
-          render: (value: string) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              <CustomSelect
-                options={[
-                  { value: 'A101', label: 'A101' },
-                  { value: 'B102', label: 'B102' },
-                  { value: 'B103', label: 'B103' },
-                ]}
-                value=""
-                onChange={(val) => {}}
-                label="Classroom"
-                formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
-              />
-            </Box>
-          ),
-        },
-      ]}
-      data={[
-        {
-          division: 'A',
-          gradingTeacher: '',
-          invigilationTeacher: '',
-          classRoom: '',
-        },
-        {
-          division: 'B',
-          gradingTeacher: '',
-          invigilationTeacher: '',
-          classRoom: '',
-        },
-        {
-          division: 'C',
-          gradingTeacher: '',
-          invigilationTeacher: '',
-          classRoom: '',
-        },
-        {
-          division: 'D',
-          gradingTeacher: '',
-          invigilationTeacher: '',
-          classRoom: '',
-        },
-        {
-          division: 'E',
-          gradingTeacher: '',
-          invigilationTeacher: '',
-          classRoom: '',
-        },
-        {
-          division: 'F',
-          gradingTeacher: '',
-          invigilationTeacher: '',
-          classRoom: '',
-        },
-      ]}
-    />
-  </Box>
+  <Grid container spacing={2}>
+    <Grid item xs={12} md={6}>
+      <CustomSelect
+        options={[]}
+        label="Teachers"
+        value=""
+        onChange={() => {}}
+        formControlProps={{ sx: { minWidth: '180px', width: '100%' } }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <CustomSelect
+        options={[]}
+        label="Invigilation Teachers"
+        value=""
+        onChange={() => {}}
+        formControlProps={{ sx: { minWidth: '180px', width: '100%' } }}
+      />
+    </Grid>
+  </Grid>
 );
 
 const Exams = [
@@ -649,7 +567,7 @@ const Exams = [
   { subject: 'Physics', date: '15-10-2024', time: '14:00' },
 ];
 
-const NewExamForm = () => {
+const NewExamForm = ({ onClose }: any) => {
   const [activeStep, setActiveStep] = useState(0);
   const [scheduledExams, setScheduledExams] = useState(Exams);
 
@@ -657,8 +575,8 @@ const NewExamForm = () => {
     SelectExam,
     ExamDetails,
     // () => <SelectDateAndTime scheduledExams={scheduledExams} />,
-    AssignInvigilators,
-    InputEvaluationCriteria,
+    EvaluationCriteria,
+    AssignTeachers,
   ];
 
   return (
@@ -666,8 +584,7 @@ const NewExamForm = () => {
       initialValues={{
         examType: '',
         examName: '',
-        className: '',
-        division: [],
+        className: [],
         subject: '',
         examDate: null,
         examTime: null,

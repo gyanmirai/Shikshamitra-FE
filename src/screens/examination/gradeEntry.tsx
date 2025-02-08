@@ -304,7 +304,7 @@ const GradeEntry = (props: TabComponentType) => {
           }}
           value={classes}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '180px' },
           }}
         />
         <CustomSelect
@@ -320,7 +320,7 @@ const GradeEntry = (props: TabComponentType) => {
             setDivision(val as string);
           }}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '180px' },
           }}
         />
         <CustomSelect
@@ -336,7 +336,7 @@ const GradeEntry = (props: TabComponentType) => {
           }}
           value={subject}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '180px' },
           }}
         />
         <CustomSelect
@@ -352,7 +352,7 @@ const GradeEntry = (props: TabComponentType) => {
           }}
           value={assignmentType}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '180px' },
           }}
         />
         <CustomSelect
@@ -372,7 +372,7 @@ const GradeEntry = (props: TabComponentType) => {
           }}
           value={assignmentTitle}
           formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+            sx: { width: '100%', maxWidth: '180px' },
           }}
         />
       </Box>
