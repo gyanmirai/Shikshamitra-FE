@@ -430,6 +430,7 @@ export interface ChapterFormValues {
   content: string;
   startTime: string | undefined;
   endTime: string | undefined;
+  timeLine: string | undefined;
   documents: Document[];
 }
 
@@ -443,6 +444,7 @@ interface AddNewChapterProps {
     content: string;
     startTime: Dayjs | null;
     endTime: Dayjs | null;
+    timeLine: Dayjs | null;
     documents?: Array<{
       id: string;
       name: string;
@@ -476,6 +478,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
       content: initialValues?.content || '',
       startTime: initialValues?.startTime ? dayjs(initialValues.startTime) : null,
       endTime: initialValues?.endTime ? dayjs(initialValues.endTime) : null,
+      timeLine: initialValues?.timeLine ? dayjs(initialValues.timeLine) : null,
     },
     validationSchema,
     onSubmit: (values) => {
@@ -483,6 +486,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
         ...values,
         startTime: values.startTime?.toISOString(),
         endTime: values.endTime?.toISOString(),
+        timeLine: values.timeLine?.toISOString(),
         documents,
       });
     },
