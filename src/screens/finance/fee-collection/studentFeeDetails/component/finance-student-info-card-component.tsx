@@ -64,7 +64,8 @@ const students = [
         feeHead: 'Tuition',
         totalFees: 60000,
         amount: 5000,
-        paymentDates: [
+        payableFee: 5000,
+        paymentDueDateList: [
           {
             month: 'June-2024',
             date: '15-01-2024',
@@ -225,7 +226,8 @@ const students = [
         feeHead: 'Library',
         totalFees: 18000,
         amount: 1500,
-        paymentDates: [
+        payableFee: 5000,
+        paymentDueDateList: [
           {
             month: 'June-2024',
             date: '15-01-2024',
@@ -363,6 +365,28 @@ const students = [
             date: '15-03-2024',
             status: 'Unpaid',
             amount: 1500,
+            paymentHistory: [],
+          },
+        ],
+      },
+      {
+        feeHeadId: 231,
+        feeHead: 'Admission',
+        grossFee: 1000,
+        payableFee: 1000,
+        generalDiscount: 0,
+        AcceptedpaymentMethod: ['cash'],
+        lateFeeChargesType: 'fixed',
+        lateFeeChargesAmount: '1000',
+        isActive: true,
+        status: 'Unpaid', // Partially Paid, Unpaid, Paid
+        paymentDueDate: '20-04-2024',
+        paymentDueDateList: [
+          {
+            month: 'June-2024',
+            date: '20-04-2024',
+            status: 'Unpaid',
+            amount: 1000,
             paymentHistory: [],
           },
         ],
@@ -611,12 +635,11 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
         //   onClose={closeDialog}
         // />
         <FinanceNewCollectFeeDialog
+          isFromStudentAdmission={false}
           onSave={() => {}}
           dialogValue={dialog.value}
           onClose={closeDialog}
           data={selectedStudent}
-          isEdit={false}
-          allData={tableData}
         />
       )}
 

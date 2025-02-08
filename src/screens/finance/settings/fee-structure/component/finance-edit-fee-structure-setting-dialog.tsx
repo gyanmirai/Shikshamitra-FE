@@ -1,75 +1,77 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Button, Switch, TextField, Typography, DialogActions } from '@mui/material';
+import { Tab } from '@mui/material';
 
-import { formatNumber } from 'src/utils/formate_number';
+import { useTabs } from 'src/hooks/use-tabs';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
+
+import EditableFeeStructureTable from './editable-fee-structure-table';
+import ReadOnlyFeeStructureTable from './read-only-fee-structure-table';
 
 interface FinanceEditFeeStructureSettingDialogProps {
   dialogValue: boolean;
   onClose: () => void;
-  data: any;
+  data: any; // Data passed to the dialog (likely a list of fee structures)
 }
 
 const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSettingDialogProps> = ({
+  dialogValue,
   onClose,
   data,
-  dialogValue,
 }) => {
   const dummyData = [
+    {
+      feeHead: 'Admission',
+      grossFee: 1000,
+      payableFee: 1000,
+      generalDiscount: 0,
+      paymentMethod: ['cash'],
+      lateFeeChargesType: 'fixed',
+      lateFeeChargesAmount: '1000',
+      isActive: true,
+    },
     {
       feeHead: 'Tuition',
       grossFee: 5000,
       payableFee: 4500,
       generalDiscount: 500,
+      paymentMethod: ['cash', 'online'],
+      lateFeeChargesType: 'perDay',
+      lateFeeChargesAmount: '1',
+      isActive: true,
     },
     {
       feeHead: 'Sports',
       grossFee: 5000,
       payableFee: 4500,
       generalDiscount: 500,
+      paymentMethod: ['cash'],
+      lateFeeChargesType: 'perDay',
+      lateFeeChargesAmount: '1',
+      isActive: false,
     },
     {
       feeHead: 'Transport',
       grossFee: 5000,
       payableFee: 4500,
       generalDiscount: 500,
-    },
-    {
-      feeHead: 'Admission',
-      grossFee: 1000,
-      payableFee: 1000,
-      generalDiscount: 0,
+      paymentMethod: ['cash'],
+      lateFeeChargesType: 'fixed',
+      lateFeeChargesAmount: '1000',
+      isActive: false,
     },
   ];
 
-  const [editableData, setEditableData] = useState(
-    dummyData.reduce(
-      (acc, row) => {
-        acc[row.feeHead] = { ...row };
-        return acc;
-      },
-      {} as Record<string, (typeof dummyData)[number]>
-    )
-  );
+  // Define tab options
+  const TABS = [
+    { value: 'reference', label: 'Reference' },
+    { value: 'editable', label: 'Editable' },
+  ];
 
-  // Handle changes in editable fields
-  const handleFieldChange = (value: string | number, field: string, feeHead: string) => {
-    setEditableData((prev) => {
-      const updatedRow = { ...prev[feeHead], [field]: Number(value) };
-
-      // Recalculate Payable Fee dynamically
-      updatedRow.payableFee = updatedRow.grossFee - updatedRow.generalDiscount;
-
-      return {
-        ...prev,
-        [feeHead]: updatedRow,
-      };
-    });
-  };
+  const tabs = useTabs('editable'); // Initialize tabs with default value
 
   return (
     <CustomDialog
@@ -78,203 +80,21 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
       open={dialogValue}
       handleClose={onClose}
     >
+      <CustomTabs
+        value={tabs.value}
+        onChange={tabs.onChange}
+        variant="fullWidth"
+        slotProps={{ tab: { px: 0 } }}
+      >
+        {TABS.map((tab) => (
+          <Tab key={tab.value} value={tab.value} label={tab.label} />
+        ))}
+      </CustomTabs>
+
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '600px' }}>
-        {/* Read-only table */}
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Reference Table
-        </Typography>
-        <CustomizableTable
-          tableId="readOnlyTable"
-          isSearch={false}
-          isFilter={false}
-          isPagination={false}
-          isShowedDense={false}
-          columns={[
-            { id: 'feeHead', label: 'Fee Head' },
-            {
-              id: 'grossFee',
-              label: 'Gross Fee',
-              render(value) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(value), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'generalDiscount',
-              label: 'General Discount',
-              render(value) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(value), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'payableFee',
-              label: 'Payable Fee',
-              render(value) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(value), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'monthly',
-              label: 'Monthly Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(row.payableFee / 12), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'quartly',
-              label: 'Quartely Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(row.payableFee / 4), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-
-            {
-              id: 'bi-annual',
-              label: 'Bi-Annually Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(row.payableFee / 2), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'active',
-              label: 'Active/In Active',
-              render(value, row) {
-                return <Switch name="creditcard" checked onChange={() => {}} />;
-              },
-            },
-          ]}
-          data={dummyData}
-        />
-
-        {/* Editable table */}
-        <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-          Editable Table
-        </Typography>
-        <CustomizableTable
-          tableId="editableTable"
-          isSearch={false}
-          isFilter={false}
-          isPagination={false}
-          isShowedDense={false}
-          columns={[
-            { id: 'feeHead', label: 'Fee Head' },
-            {
-              id: 'grossFee',
-              label: 'Gross Fee',
-              render: (value, row) => (
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={editableData[row.feeHead].grossFee}
-                  onChange={(e) => handleFieldChange(e.target.value, 'grossFee', row.feeHead)}
-                />
-              ),
-            },
-            {
-              id: 'generalDiscount',
-              label: 'General Discount',
-              render: (value, row) => (
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={editableData[row.feeHead].generalDiscount}
-                  onChange={(e) =>
-                    handleFieldChange(e.target.value, 'generalDiscount', row.feeHead)
-                  }
-                />
-              ),
-            },
-            {
-              id: 'payableFee',
-              label: 'Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography fontSize="12px">
-                    {formatNumber(editableData[row.feeHead].payableFee, 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'monthly',
-              label: 'Monthly Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(row.payableFee / 12), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'quartly',
-              label: 'Quartely Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(row.payableFee / 4), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-
-            {
-              id: 'bi-annual',
-              label: 'Bi-Annually Payable Fee',
-              render(value, row) {
-                return (
-                  <Typography sx={{ fontSize: '12px' }}>
-                    {formatNumber(Number(row.payableFee / 2), 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'active',
-              label: 'Active/In Active',
-              render(value, row) {
-                return <Switch name="creditcard" checked onChange={() => {}} />;
-              },
-            },
-          ]}
-          data={Object.values(editableData)}
-        />
+        {tabs.value === 'editable' && <EditableFeeStructureTable data={dummyData} />}
+        {tabs.value === 'reference' && <ReadOnlyFeeStructureTable data={dummyData} />}
       </Scrollbar>
-
-      <DialogActions sx={{ flexShrink: 0 }}>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={() => {
-            console.log('Updated Data:', Object.values(editableData));
-            onClose();
-          }}
-        >
-          Save
-        </Button>
-      </DialogActions>
     </CustomDialog>
   );
 };

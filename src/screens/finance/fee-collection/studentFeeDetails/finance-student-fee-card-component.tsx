@@ -1,16 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Box, TextField } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import CustomSelect from 'src/components/custom-select';
-
-import FinanceCollectCharges from '../charges/component/collect-charges';
-import FinanceStudentAdditionalDiscountDialog from './component/student-additional-discount';
 import FinanceStudentInfoCardComponent from './component/finance-student-info-card-component';
-import FinanceNewCollectFeeDialog from '../collectFees/component/finance-new-fee-collect-dialog';
-import FinanceFeeRefundAllocationDialog from '../../fee-refund/component/finance-fee-refund-allocated';
 
 import type { IUserCard } from './component/finance-student-info-card-component';
 
@@ -47,7 +37,7 @@ const students = [
         feeHead: 'Tuition',
         totalFees: 60000,
         amount: 5000,
-        paymentDates: [
+        paymentDueDateList: [
           {
             month: 'June-2024',
             date: '15-01-2024',
@@ -208,7 +198,7 @@ const students = [
         feeHead: 'Library',
         totalFees: 18000,
         amount: 1500,
-        paymentDates: [
+        paymentDueDateList: [
           {
             month: 'June-2024',
             date: '15-01-2024',
@@ -350,6 +340,28 @@ const students = [
           },
         ],
       },
+      {
+        feeHeadId: 230,
+        feeHead: 'Admission',
+        grossFee: 1000,
+        payableFee: 1000,
+        generalDiscount: 0,
+        AcceptedpaymentMethod: ['cash'],
+        lateFeeChargesType: 'fixed',
+        lateFeeChargesAmount: '1000',
+        isActive: true,
+        status: 'Unpaid', // Partially Paid, Unpaid, Paid
+        paymentDueDate: '20-04-2024',
+        paymentDueDateList: [
+          {
+            month: 'June-2024',
+            date: '20-04-2024',
+            status: 'Unpaid',
+            amount: 1000,
+            paymentHistory: [],
+          },
+        ],
+      },
     ],
   },
 ];
@@ -360,92 +372,6 @@ interface FinanceStudentFeeCardComponentProps {
 
 const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentProps> = ({
   studentId,
-}) => {
-  const dialog = useBoolean();
-  const feeRefundDialog = useBoolean();
-  const financeStudentAdditionalDiscountDialog = useBoolean();
-  const collectChargesDialog = useBoolean();
-
-  const [tableData, setTableData] = useState(dummyUser);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
-
-  const closeDialog = () => {
-    dialog.onFalse();
-  };
-
-  const feeRefundCloseDialog = () => {
-    feeRefundDialog.onFalse();
-  };
-
-  const additionalDiscountCloseDialog = () => {
-    financeStudentAdditionalDiscountDialog.onFalse();
-  };
-  const handleSave = () => {};
-  return (
-    <>
-      <Box display="flex" flexDirection="row" justifyContent="space-between">
-        <Box py="15px" display="flex" flexDirection="row" gap={3}>
-          <CustomSelect
-            label="Standard"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <CustomSelect
-            label="Division"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <TextField
-            label="Search by student name"
-            variant="outlined"
-            size="small"
-            value=""
-            onChange={(e) => {}}
-          />
-        </Box>
-      </Box>
-      <FinanceStudentInfoCardComponent user={dummyUser} />
-      {financeStudentAdditionalDiscountDialog.value && (
-        <FinanceStudentAdditionalDiscountDialog
-          dialogValue={financeStudentAdditionalDiscountDialog.value}
-          onClose={additionalDiscountCloseDialog}
-          selectedData={selectedStudent}
-        />
-      )}
-
-      {feeRefundDialog.value && (
-        <FinanceFeeRefundAllocationDialog
-          dialogValue={feeRefundDialog.value}
-          onClose={feeRefundCloseDialog}
-          selectedData={selectedStudent}
-        />
-      )}
-
-      {dialog.value && (
-        <FinanceNewCollectFeeDialog
-          onSave={handleSave}
-          dialogValue={dialog.value}
-          onClose={closeDialog}
-          data={selectedStudent}
-          isEdit={false}
-          allData={tableData}
-        />
-      )}
-      {collectChargesDialog.value && (
-        <FinanceCollectCharges
-          dialogValue={collectChargesDialog.value}
-          onClose={() => {
-            collectChargesDialog.onFalse();
-          }}
-          data={selectedStudent}
-        />
-      )}
-    </>
-  );
-};
+}) => <FinanceStudentInfoCardComponent user={dummyUser} />;
 
 export default FinanceStudentFeeCardComponent;
