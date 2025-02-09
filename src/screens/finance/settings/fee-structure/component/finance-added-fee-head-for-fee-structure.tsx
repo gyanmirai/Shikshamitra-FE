@@ -5,10 +5,14 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 interface FinanceAddedFeeHeadForFeeStructureProps {
   data: any;
+  onDelete: (data: any) => void;
+  onEdit: (data: any) => void;
 }
 
 const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStructureProps> = ({
   data,
+  onDelete,
+  onEdit,
 }) => (
   <CustomizableTable
     isFilter={false}
@@ -25,13 +29,23 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       { id: 'paymentMethod', label: 'Payment Method' },
       { id: 'lateFeeChargesType', label: 'Late Fee Type' },
       { id: 'lateFeeChargesAmount', label: 'Late Fee Amount (₹)' },
-      { id: 'paymentDueDate', label: 'Payment Due Date' },
+      // { id: 'paymentDueDate', label: 'Payment Due Date' },
       {
         id: 'action',
         label: 'Action',
         render(value, row) {
           return (
-            <ThreeDotsActions showDeleteIcon handleDeleteClick={() => {}} showThreeDots={false} />
+            <ThreeDotsActions
+              showThreeDots={false}
+              showDeleteIcon
+              handleDeleteClick={() => {
+                onDelete(row);
+              }}
+              showEditIcon
+              handleEditClick={() => {
+                onEdit(row);
+              }}
+            />
           );
         },
       },
