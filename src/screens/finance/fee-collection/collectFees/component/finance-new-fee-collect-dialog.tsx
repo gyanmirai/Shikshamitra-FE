@@ -8,7 +8,6 @@ import { Box, Grid, Button, Divider, TextField, Typography, DialogActions } from
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import ViewReceipt from 'src/screens/finance/viewReceipt/view-receipt';
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -23,13 +22,13 @@ interface FinanceNewCollectFeeDialogProps {
   data: any;
   onSave: (values: any) => void;
   onClose: () => void;
-  isEdit: boolean;
-  allData: any;
+
+  isFromStudentAdmission: boolean;
 }
 
 interface FormikValues {
   selectStudent: string;
-  feeType: number[];
+  feeType: string;
   amount: number;
   paymentMode: string[];
   transactionId: string;
@@ -41,14 +40,16 @@ interface FormikValues {
   bankName: string;
   receivedPayment: 0;
   chequeNumber: string;
-  chequeAmount: number;
-  cardAmount: number;
-  onlineAmount: number;
-  cashAmount: number;
+
   charges: number;
   chargesDetails: string;
-  amountDue: any;
-  receivedAmount: any;
+
+  amountDue: string;
+  receivedAmount: string;
+  cashAmount: string;
+  onlineAmount: string;
+  cardAmount: string;
+  chequeAmount: string;
 }
 
 const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
@@ -56,8 +57,8 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   data,
   onClose,
   onSave,
-  isEdit,
-  allData,
+
+  isFromStudentAdmission,
 }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
   const [feeOptions, setFeeOptions] = useState<any[]>([]);
@@ -66,7 +67,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   const formik = useFormik<FormikValues>({
     initialValues: {
       selectStudent: data.name,
-      feeType: [],
+      feeType: '',
       receivedPayment: 0,
       paymentMode: [],
       transactionId: '',
@@ -78,14 +79,14 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       bankName: '',
       amount: 0,
       chequeNumber: '',
-      chequeAmount: 0,
-      cardAmount: 0,
-      onlineAmount: 0,
-      cashAmount: 0,
       charges: data.previousCharges,
       chargesDetails: data.chargesDetails,
       amountDue: '',
       receivedAmount: '',
+      cashAmount: '',
+      cardAmount: '',
+      chequeAmount: '',
+      onlineAmount: '',
     },
     onSubmit: (values) => {
       console.log('here values', values);
@@ -94,31 +95,51 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   });
 
   useEffect(() => {
-    const options = data.fees.map((fee: any) => ({
-      value: fee.feeHeadId,
-      label: fee.feeHead,
-    }));
+    // Initialize options
+    let options = [];
+
+    // If it's from student admission, filter only the "Admission" feeHead
+    if (isFromStudentAdmission) {
+      options = data.fees
+        .filter((fee: any) => fee.feeHead === 'Admission') // Only add Admission fee
+        .map((fee: any) => ({
+          value: fee.feeHeadId,
+          label: fee.feeHead,
+        }));
+    } else {
+      // Otherwise, map all fee heads
+      options = data.fees.map((fee: any) => ({
+        value: fee.feeHeadId,
+        label: fee.feeHead,
+      }));
+    }
+
+    // Set the fee options
     setFeeOptions(options);
-  }, [data]);
+  }, [data, isFromStudentAdmission]);
 
   useEffect(() => {
-    // Ensure that formik.values.feeType is an array before calling includes
     const unpaidTerms = data.fees
-      .filter(
-        (fee: any) =>
-          Array.isArray(formik.values.feeType) && formik.values.feeType.includes(fee.feeHeadId)
-      )
+      .filter((fee: any) => {
+        // If isFromAdmission is true, only include "Admission" fee head
+        if (isFromStudentAdmission) {
+          return fee.feeHead === 'Admission' && formik.values.feeType === fee.feeHeadId;
+        }
+
+        return formik.values.feeType === fee.feeHeadId;
+      })
       .flatMap((fee: any) =>
-        fee.paymentDates
+        fee.paymentDueDateList
           .filter((status: any) => status.status === 'Unpaid')
           .map((status: any) => ({
             value: `${fee.feeHead}-${status.month}`,
-            label: `${fee.feeHead} - ${status.month} - ${fee.amount}`,
-            amount: fee.amount,
+            label: `${fee.feeHead} - ${status.month} - ${fee.payableFee}`,
+            amount: fee.payableFee,
           }))
       );
+
     setTermOptions(unpaidTerms);
-  }, [formik.values.feeType, data]);
+  }, [formik.values.feeType, data, isFromStudentAdmission]);
 
   const handleTermSelection = (selectedTerms: any) => {
     formik.setFieldValue('selectedTerms', selectedTerms);
@@ -128,36 +149,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       .reduce((sum, term) => sum + term.amount, 0);
 
     formik.setFieldValue('amount', totalAmount);
-  };
-
-  const [chequeAmountState, setChequeAmountState] = useState('');
-  const [cardAmountState, setCardAmountState] = useState('');
-  const [onlineAmountState, setOnlineAmountState] = useState('');
-  const [cashAmountState, setCashAmountState] = useState('');
-  const [amountDueState, setAmountDueState] = useState('');
-  const [receivedAmountState, setReceivedAmountState] = useState('');
-  function parseNumber(value: string): number {
-    return parseFloat(value.replace(/,/g, ''));
-  }
-
-  const handleAmountDueChange = (formattedValue: string, numericValue: number) => {
-    setAmountDueState(formattedValue);
-  };
-  const handleReceivedAmountChange = (formattedValue: string, numericValue: number) => {
-    setReceivedAmountState(formattedValue);
-  };
-
-  const handleChequeAmountChange = (formattedValue: string, numericValue: number) => {
-    setChequeAmountState(formattedValue);
-  };
-  const handleCardAmountChange = (formattedValue: string, numericValue: number) => {
-    setCardAmountState(formattedValue);
-  };
-  const handleOnlineAmountChange = (formattedValue: string, numericValue: number) => {
-    setOnlineAmountState(formattedValue);
-  };
-  const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
-    setCashAmountState(formattedValue);
   };
 
   const dialog = useBoolean();
@@ -210,12 +201,10 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                       // @ts-ignore
                       value={formik.values.feeType}
                       onChange={(selectedValues) => {
-                        if (Array.isArray(selectedValues)) {
-                          formik.setFieldValue('feeType', selectedValues);
-                        }
+                        formik.setFieldValue('feeType', selectedValues);
+                        formik.setFieldValue('selectedTerms', []);
                       }}
                       formControlProps={{ sx: { width: '100%' } }}
-                      multiple
                     />
                   </Grid>
                   <Grid item xs={12} md={3}>
@@ -228,7 +217,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                       multiple
                     />
                   </Grid>
-                  <Grid item xs={12} md={3}>
+                  {/* <Grid item xs={12} md={3}>
                     <DatePicker
                       label="Date"
                       slotProps={{
@@ -238,7 +227,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         },
                       }}
                     />
-                  </Grid>
+                  </Grid> */}
                   <Grid item xs={12} md={3}>
                     <CustomSelect
                       multiple
@@ -255,7 +244,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         formik.setFieldValue('paymentMode', selectedValues)
                       }
                       formControlProps={{ sx: { width: '100%' } }}
-                      disabled={isEdit}
                     />
                   </Grid>
                 </Grid>
@@ -278,10 +266,12 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                             size="small"
                             fullWidth
                           />
-                          <FormattedAmountInput
+                          <NumericFormatCustom
+                            size="small"
+                            fullWidth
                             label="Online Amount"
-                            value={onlineAmountState}
-                            onChange={handleOnlineAmountChange}
+                            value={formik.values.onlineAmount}
+                            onChange={(e) => formik.setFieldValue('onlineAmount', e)}
                           />
                         </Box>
                         <Divider sx={{ py: '12px' }} />
@@ -304,10 +294,12 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                             fullWidth
                           />
 
-                          <FormattedAmountInput
+                          <NumericFormatCustom
+                            size="small"
+                            fullWidth
                             label="Card Amount"
-                            value={cardAmountState}
-                            onChange={handleCardAmountChange}
+                            value={formik.values.cardAmount}
+                            onChange={(e) => formik.setFieldValue('cardAmount', e)}
                           />
                         </Box>
                         <Divider sx={{ py: '12px' }} />
@@ -355,10 +347,12 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                             />
                           </Grid>
                           <Grid item xs={12} md={3}>
-                            <FormattedAmountInput
-                              label="chequeAmount"
-                              value={chequeAmountState}
-                              onChange={handleChequeAmountChange}
+                            <NumericFormatCustom
+                              label="Cheque Amount"
+                              value={formik.values.chequeAmount}
+                              onChange={(e) => formik.setFieldValue('chequeAmount', e)}
+                              size="small"
+                              fullWidth
                             />
                           </Grid>
                         </Grid>
@@ -373,10 +367,14 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                           Cash Details
                         </Typography>
 
-                        <FormattedAmountInput
+                        <NumericFormatCustom
                           label="Cash Amount"
-                          value={cashAmountState}
-                          onChange={handleCashAmountChange}
+                          value={formik.values.cashAmount}
+                          onChange={(e) => {
+                            formik.setFieldValue('cashAmount', e);
+                          }}
+                          size="small"
+                          fullWidth
                         />
                       </Grid>
                     )}
@@ -419,15 +417,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                       value={formik.values.amountDue}
                       onChange={formik.handleChange}
                       fullWidth
-
-                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
-                    {/* <FormattedAmountInput
-                      label="Amount Due"
-                      value={amountDueState}
-                      onChange={handleAmountDueChange}
-                    /> */}
 
                     <NumericFormatCustom
                       size="small"
@@ -436,30 +426,9 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                       value={formik.values.receivedAmount}
                       onChange={formik.handleChange}
                       fullWidth
-                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                     />
-                    {/* <FormattedAmountInput
-                      label="Received Payment"
-                      value={receivedAmountState}
-                      onChange={handleReceivedAmountChange}
-                    /> */}
                   </Grid>
                 </Grid>
-
-                {/* <Grid container spacing={2} justifyContent="flex-end">
-                <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
-                  <TextField
-                    name="amount"
-                    label="Amount"
-                    value={formik.values.amount}
-                    size="small"
-                    InputProps={{ readOnly: true }}
-
-                  />
-                </Grid>
-
-              </Grid> */}
 
                 <TextField
                   multiline
@@ -474,40 +443,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
             </Scrollbar>
 
             <DialogActions>
-              <Box pr="15px" display="flex" gap={2}>
-                {/* <TextField
-              name="amount"
-              label="Amount"
-              value={formik.values.amount}
-              size="small"
-              InputProps={{ readOnly: true }}
-              sx={{width:"140px"}}
-
-            /> */}
-                {/* <TextField
-              name="amount"
-              label="Amount Due"
-              value={formik.values.amount}
-              size="small"
-              InputProps={{ readOnly: true }}
-              sx={{width:"140px"}}
-
-            />
-             <TextField
-              name="receivedPayment"
-              label="Received Payment"
-              value={formik.values.receivedPayment}
-              size="small"
-              sx={{width:"140px"}}
-              onChange={formik.handleChange}
-
-            
-             
-            /> */}
-              </Box>
-              {/* <Button onClick={onClose} variant="contained" size="small">
-            Cancel
-          </Button> */}
               <Button
                 // disabled={formik.values.receivedPayment < 1}
                 onClick={() => {

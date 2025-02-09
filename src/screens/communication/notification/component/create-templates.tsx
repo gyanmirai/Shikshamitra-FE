@@ -11,17 +11,23 @@ import CustomizableTable from 'src/components/customizabaleTable';
 const CreateNotificationTemplates = () => {
   const templateData = [
     {
+      role: 'Teacher',
+      templateType: 'Auto',
       id: '1',
-      templateName: 'Fee Reminder',
+      templateName: 'General 1',
       category: 'Fees',
+      subCategory: 'General',
       description:
         'This is a friendly reminder that the [Fee Type] fee for [Month/Term] is due on [Due Date]. Kindly make the payment of ₹[Amount] to avoid any late fees.',
     },
 
     {
+      role: 'Parent',
+      templateType: 'Manual',
       id: '2',
-      templateName: 'Overdue Fee Reminder',
+      templateName: 'Overdue 1',
       category: 'Fees',
+      subCategory: 'Overdue',
       description:
         'We noticed that your [Fee Type] fee of ₹[Amount] for [Month/Term] was due on [Due Date] and is still pending. Please clear the payment at the earliest to avoid additional late fees or service disruptions',
     },
@@ -37,8 +43,21 @@ const CreateNotificationTemplates = () => {
         isShowedDense={false}
         tableId="notification-template-table"
         columns={[
-          { id: 'templateName', label: 'Name' },
+          {
+            id: 'templateName',
+            label: 'Name',
+            render(value, row) {
+              return <Typography fontSize="12px">{value}</Typography>;
+            },
+          },
+          // {
+          //   id: 'templateType', label: 'Template Type', render(value, row) {
+          //     return <Typography fontSize="12px">{value}</Typography>
+          //   },
+          // },
           { id: 'category', label: 'Category' },
+          { id: 'subCategory', label: 'Sub-Category' },
+          { id: 'role', label: 'Role' },
           {
             id: 'description',
             label: 'Description',
@@ -47,7 +66,7 @@ const CreateNotificationTemplates = () => {
                 sx={{
                   display: '-webkit-box',
                   WebkitBoxOrient: 'vertical',
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: 4,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}

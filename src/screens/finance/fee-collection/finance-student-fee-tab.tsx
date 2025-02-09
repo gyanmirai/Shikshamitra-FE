@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
-import { useSearchParams } from 'src/routes/hooks';
+import { Box, TextField } from '@mui/material';
 
+import { useSearchParam } from 'src/hooks/use-search-param';
+
+import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceStudentFeeCardComponent from './studentFeeDetails/finance-student-fee-card-component';
@@ -20,14 +23,13 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({
   studentClass,
   division,
 }) => {
-  const searchParams = useSearchParams();
+  // Get and set search params (studentId, class, division)
+  const [searchParams, setSearchParams] = useSearchParam({ studentId: '1' });
 
-  const selectedStudentd = searchParams.get('id') || '';
-
-  useEffect(() => {
-    // Example of how you can use the params for fetching data or logic
-    console.log('Student ID:', studentId);
-  }, [studentId]);
+  // Update studentId in the URL
+  const handleStudentChange = (newStudentId: string) => {
+    setSearchParams({ studentId: newStudentId });
+  };
 
   return (
     <>
@@ -36,9 +38,37 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({
         links={[{ name: 'Finance' }, { name: 'Fee Collection' }]}
         sx={{ px: 1, mb: 2 }}
       />
-      <FinanceStudentFeeCardComponent studentId={selectedStudentd} />
 
-      <FinanceStudentDetailedFeeComponent studentId={selectedStudentd} />
+      {/* Student Selection */}
+      <Box display="flex" flexDirection="row" justifyContent="space-between">
+        <Box py="15px" display="flex" flexDirection="row" gap={3}>
+          <CustomSelect
+            label="Standard"
+            options={[]} // Add class options
+            value={studentClass || ''}
+            onChange={(value) => setSearchParams({ studentClass: value })}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <CustomSelect
+            label="Division"
+            options={[]} // Add division options
+            value={division || ''}
+            onChange={(value) => setSearchParams({ division: value })}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+          <TextField
+            label="Search by student name"
+            variant="outlined"
+            size="small"
+            value={searchParams.studentId || ''}
+            onChange={(e) => handleStudentChange(e.target.value)}
+          />
+        </Box>
+      </Box>
+
+      {/* Fee Components */}
+      <FinanceStudentFeeCardComponent studentId={searchParams.studentId} />
+      <FinanceStudentDetailedFeeComponent studentId={searchParams.studentId} />
     </>
   );
 };

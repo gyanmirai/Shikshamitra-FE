@@ -6,7 +6,6 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -18,7 +17,6 @@ import {
   Chip,
   Button,
   MenuItem,
-  useTheme,
   MenuList,
   ListItem,
   TextField,
@@ -68,43 +66,10 @@ interface AssignmentRow {
   status: string;
 }
 
-interface Chapter {
-  id: number;
-  chapterName: string;
-  teacher: string;
-  content: string;
-}
-
-const assignmentData: AssignmentRow[] = [
-  {
-    title: 'Assignment 1',
-    dueDate: '01-01-24',
-    status: 'Pending',
-  },
-  {
-    title: 'Assignment 2',
-    dueDate: '01-01-24',
-    status: 'Received',
-  },
-  {
-    title: 'Assignment 3',
-    dueDate: '01-01-24',
-    status: 'Pending',
-  },
-  {
-    title: 'Assignment 4',
-    dueDate: '01-01-24',
-    status: 'Received',
-  },
-];
-
 const Subjects = (props: TabComponentType) => {
-  const { searchParams, setSearchParams } = props;
-  const router = useRouter();
   const [classes, setClasses] = useState<string>('');
   const chapterDialog = useBoolean();
   const addChapterDialog = useBoolean();
-  const theme = useTheme();
   const [subjectData, setSubjectData] = useState<any>(subjectTempData);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [subjectTableData, setSubjectTableData] = useState<TableRow[]>([]);
@@ -189,7 +154,8 @@ const Subjects = (props: TabComponentType) => {
                 chapterName: values.chapterName,
                 assignedTeacher: values.assignedTeacher,
                 content: values.content,
-                timeLine: values.timeLine,
+                startTime: values.startTime,
+                endTime: values.endTime,
                 documents: newDocuments,
                 progress: subject.chapters[chapterIndex].progress,
                 assignments: subject.chapters[chapterIndex].assignments,
@@ -210,7 +176,8 @@ const Subjects = (props: TabComponentType) => {
           chapterName: values.chapterName,
           assignedTeacher: values.assignedTeacher,
           content: values.content,
-          timeLine: values.timeLine,
+          startTime: values.startTime,
+          endTime: values.endTime,
           documents: newDocuments,
           progress: 0,
           assignments: [],
@@ -461,6 +428,8 @@ export interface ChapterFormValues {
   chapterName: string;
   assignedTeacher: string;
   content: string;
+  startTime: string | undefined;
+  endTime: string | undefined;
   timeLine: string | undefined;
   documents: Document[];
 }
@@ -473,6 +442,8 @@ interface AddNewChapterProps {
     chapterName: string;
     assignedTeacher: string;
     content: string;
+    startTime: Dayjs | null;
+    endTime: Dayjs | null;
     timeLine: Dayjs | null;
     documents?: Array<{
       id: string;
@@ -496,7 +467,8 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
     chapterName: Yup.string().required('Chapter name is required'),
     assignedTeacher: Yup.string().required('Assigned Teacher is Required'),
     content: Yup.string().required('Chapter description is required'),
-    timeLine: Yup.string().required('Select the timeline for chapter'),
+    startTime: Yup.string().required('Select the startTime for chapter'),
+    endTime: Yup.string().required('Select the endTime for chapter'),
   });
 
   const formik = useFormik({
@@ -504,12 +476,16 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
       chapterName: initialValues?.chapterName || '',
       assignedTeacher: initialValues?.assignedTeacher || '',
       content: initialValues?.content || '',
+      startTime: initialValues?.startTime ? dayjs(initialValues.startTime) : null,
+      endTime: initialValues?.endTime ? dayjs(initialValues.endTime) : null,
       timeLine: initialValues?.timeLine ? dayjs(initialValues.timeLine) : null,
     },
     validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
+        startTime: values.startTime?.toISOString(),
+        endTime: values.endTime?.toISOString(),
         timeLine: values.timeLine?.toISOString(),
         documents,
       });
@@ -521,9 +497,11 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
       setEditorContent(initialValues.content);
       setDocuments(initialValues.documents || []);
       formik.setFieldValue(
-        'timeLine',
-        initialValues.timeLine ? dayjs(initialValues.timeLine) : null
+        'startTime',
+        initialValues.startTime ? dayjs(initialValues.startTime) : null
       );
+
+      formik.setFieldValue('endTime', initialValues.endTime ? dayjs(initialValues.endTime) : null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues]);
@@ -559,10 +537,26 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
             </Grid>
             <Grid item xs={12} md={6}>
               <DatePicker
-                label="Chapter timeline"
-                value={formik.values.timeLine}
+                label="Chapter StartTime"
+                value={formik.values.startTime}
                 onChange={(newValue) => {
-                  formik.setFieldValue('timeLine', newValue);
+                  formik.setFieldValue('startTime', newValue);
+                }}
+                sx={{ minWidth: 180, width: '100%' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Chapter EndTime"
+                value={formik.values.endTime}
+                onChange={(newValue) => {
+                  formik.setFieldValue('endTime', newValue);
                 }}
                 sx={{ minWidth: 180, width: '100%' }}
                 slotProps={{

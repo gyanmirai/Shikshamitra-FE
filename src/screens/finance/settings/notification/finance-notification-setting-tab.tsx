@@ -4,9 +4,14 @@ import React, { useState } from 'react';
 
 import { Box, Switch, Button, TextField, DialogActions, DialogContent } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import FinanceCategoryNotificationDialog from './component/finance-category-notification-dialog';
 
 const FinanceNotificationTable = () => {
   const [open, setOpen] = useState(false); // State to manage dialog visibility
@@ -15,47 +20,48 @@ const FinanceNotificationTable = () => {
 
   const cardData = [
     {
-      cardTitle: 'Overdue Fee Payments',
+      cardTitle: 'Overdue Fee Alert',
       switchLabel: 'Enable Overdue Alerts',
-      textFieldLabel: '7 days overdue',
+      textFieldLabel:
+        'We noticed that your [Fee Type] fee of ₹[Amount] for [Month/Term] was due on [Due Date] and is still pending. Please clear the payment at the earliest to avoid additional late fees or service disruptions',
       showOptionalSwitch: false,
     },
+    // {
+    //   cardTitle: 'Low Department Budgets',
+    //   switchLabel: 'Enable alerts for low budget',
+    //   textFieldLabel: 'Alert when utilization reaches 80%',
+    //   showOptionalSwitch: false,
+    // },
+    // {
+    //   cardTitle: 'Unpaid Salary Alerts',
+    //   switchLabel: 'Enable Unpaid Salary Alerts',
+    //   textFieldLabel: '2 Days after salary unpaid',
+    //   showOptionalSwitch: false,
+    // },
     {
-      cardTitle: 'Low Department Budgets',
-      switchLabel: 'Enable alerts for low budget',
-      textFieldLabel: 'Alert when utilization reaches 80%',
-      showOptionalSwitch: false,
-    },
-    {
-      cardTitle: 'Unpaid Salary Alerts',
-      switchLabel: 'Enable Unpaid Salary Alerts',
-      textFieldLabel: '2 Days after salary unpaid',
-      showOptionalSwitch: false,
-    },
-    {
-      cardTitle: 'Fee Reminders',
+      cardTitle: 'General Fee Reminders',
       switchLabel: 'Enable Fee Reminders',
       textFieldLabel: 'Send reminder X days before due date',
       showOptionalSwitch: false,
     },
-    {
-      cardTitle: 'Overdue Alerts',
-      switchLabel: 'Enable Overdue Alerts',
-      textFieldLabel: 'Send overdue alert after X days',
-      showOptionalSwitch: false,
-    },
-    {
-      cardTitle: 'Upcoming Expenses',
-      switchLabel: 'Activate or deactivate notifications for upcoming expenses',
-      textFieldLabel: 'To enter specific dates or conditions',
-      showOptionalSwitch: true,
-    },
-    {
-      cardTitle: 'Pending Income',
-      switchLabel: 'Activate or deactivate notifications for pending income',
-      textFieldLabel: 'To enter specific dates or conditions',
-      showOptionalSwitch: true,
-    },
+    // {
+    //   cardTitle: 'Overdue Alerts',
+    //   switchLabel: 'Enable Overdue Alerts',
+    //   textFieldLabel: 'Send overdue alert after X days',
+    //   showOptionalSwitch: false,
+    // },
+    // {
+    //   cardTitle: 'Upcoming Expenses',
+    //   switchLabel: 'Activate or deactivate notifications for upcoming expenses',
+    //   textFieldLabel: 'To enter specific dates or conditions',
+    //   showOptionalSwitch: true,
+    // },
+    // {
+    //   cardTitle: 'Pending Income',
+    //   switchLabel: 'Activate or deactivate notifications for pending income',
+    //   textFieldLabel: 'To enter specific dates or conditions',
+    //   showOptionalSwitch: true,
+    // },
   ];
 
   const handleOpenDialog = (row: any) => {
@@ -76,6 +82,7 @@ const FinanceNotificationTable = () => {
     handleCloseDialog();
   };
 
+  const financeCategoryNotificationDialogBoolean = useBoolean();
   return (
     <>
       <CustomizableTable
@@ -98,37 +105,36 @@ const FinanceNotificationTable = () => {
               );
             },
           },
-          {
-            id: 'textFieldLabel',
-            label: 'Details',
-            render(value, row) {
-              return (
-                <TextField
-                  value={value}
-                  size="small"
-                  onClick={() => handleOpenDialog(row)}
-                  inputProps={{
-                    readOnly: true, // Make the input field non-editable directly
-                  }}
-                />
-              );
-            },
-          },
+
           {
             id: 'action',
             label: 'Action',
             render(value, row) {
               return (
-                <Button variant="contained" size="small">
-                  Save
-                </Button>
+                <ThreeDotsActions
+                  showThreeDots={false}
+                  showEditIcon
+                  showViewIcon
+                  handleEditClick={() => {
+                    // setCurrentRow(row)
+                    financeCategoryNotificationDialogBoolean.onTrue();
+                  }}
+                />
               );
             },
           },
         ]}
         data={cardData}
       />
-
+      {financeCategoryNotificationDialogBoolean && (
+        <FinanceCategoryNotificationDialog
+          open={financeCategoryNotificationDialogBoolean.value}
+          onClose={() => {
+            financeCategoryNotificationDialogBoolean.onFalse();
+          }}
+          selectedCategory={[]}
+        />
+      )}
       {/* Dialog for editing details */}
       <CustomDialog
         title={`Edit Details For ${currentRow !== null ? currentRow!.cardTitle : ''}`}

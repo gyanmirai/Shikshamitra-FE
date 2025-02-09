@@ -1,18 +1,23 @@
 import React from 'react';
 
-import { Box, Grid, Divider, Typography } from '@mui/material';
+import { Box, Grid, Radio, Divider, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
 
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
 
-const TemplateOne = () => (
+interface TemplateOneProps {
+  selectedTemplate: string;
+  onSelectTemplate: (data: any) => void;
+}
+
+const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate }) => (
   <Grid container spacing={2} mb={3} justifyContent="flex-start">
-    {/* Template Card in 1 column for small view */}
-    <Grid item xs={4} sx={{ maxWidth: '300px', height: '500px' }}>
+    <Grid item xs={12} md={12}>
       <Box
         sx={{
+          position: 'relative', // For absolute positioning of radio button
           border: '1px solid #ddd',
           borderRadius: '8px',
           p: 1.5,
@@ -25,6 +30,14 @@ const TemplateOne = () => (
           },
         }}
       >
+        {/* Radio Button at Top Right */}
+        <Radio
+          checked={selectedTemplate === 'TemplateOne'}
+          onChange={() => onSelectTemplate('TemplateOne')}
+          value="TemplateOne"
+          sx={{ position: 'absolute', top: 8, right: 8 }}
+        />
+
         <Typography variant="subtitle2" noWrap sx={{ fontSize: '0.9rem', mb: 5 }}>
           Template 1
         </Typography>
@@ -72,7 +85,6 @@ const TemplateOne = () => (
           pb="10px"
           sx={{ fontSize: '0.75rem' }}
         >
-          {/* First row */}
           <Box display="flex" justifyContent="space-between">
             <Typography fontSize="10px">
               <strong>Payment Mode :</strong> Payment Gateway
@@ -82,7 +94,6 @@ const TemplateOne = () => (
             </Typography>
           </Box>
 
-          {/* Second row */}
           <Box display="flex" justifyContent="space-between">
             <Typography fontSize="10px">
               <strong>Ref:</strong> 09788nhgh679jlk
@@ -106,7 +117,7 @@ const TemplateOne = () => (
             { feeHead: 'Sports Fee', amount: 800, feeHeadMonth: 'March' },
           ]}
         />
-        <Box mt={3} display="flex" justifyContent="space-between" sx={{ fontSize: '0.65rem' }}>
+        <Box mt={7} display="flex" justifyContent="space-between" sx={{ fontSize: '0.65rem' }}>
           <Box>
             <Typography fontSize="10px">
               <strong>Pending Fees:</strong> {formatNumber(900, 'INR')}
