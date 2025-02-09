@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
@@ -57,6 +57,7 @@ interface TCurriculum {
   subjects: TSubject[];
   startDate: Dayjs | null;
   endDate: Dayjs | null;
+  scheduleDate: Dayjs | null;
   // documents?: Document[];
   status: string;
 }
@@ -74,6 +75,7 @@ const CurriculumData: TCurriculum[] = [
     ],
     startDate: dayjs('2024-10-28'),
     endDate: dayjs('2024-12-28'),
+    scheduleDate: dayjs('2024-10-28'),
     status: 'Unpublish',
   },
   {
@@ -88,6 +90,7 @@ const CurriculumData: TCurriculum[] = [
     ],
     startDate: dayjs('2023-10-28'),
     endDate: dayjs('2024-10-20'),
+    scheduleDate: dayjs('2024-10-28'),
     status: 'Publish',
   },
   {
@@ -102,6 +105,7 @@ const CurriculumData: TCurriculum[] = [
     ],
     startDate: dayjs('2024-10-11'),
     endDate: dayjs('2024-10-28'),
+    scheduleDate: dayjs('2024-10-28'),
     status: 'Unpublish',
   },
 ];
@@ -397,6 +401,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
       subjects: data?.subjects.map((subject) => subject.name) || [],
       startDate: data?.startDate ? dayjs(data?.startDate) : dayjs(),
       endDate: data?.endDate ? dayjs(data?.endDate) : null,
+      scheduleDate: data?.startDate ? dayjs(data?.startDate) : dayjs(),
       status: data?.status || 'Unpublish',
     },
     onSubmit: (values) => {
@@ -525,6 +530,22 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 onChange={(value) => formik.setFieldValue('endDate', value)}
                 format="DD-MM-YYYY"
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <DateTimePicker
+                label="Schedule Date"
+                value={formik.values.scheduleDate}
+                onChange={(value) => {
+                  formik.setFieldValue('scheduleDate', value);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                  },
+                }}
+                disablePast
               />
             </Grid>
             {/* <Grid item xs={12}>

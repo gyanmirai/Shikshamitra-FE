@@ -15,13 +15,17 @@ import {
   MenuList,
   TextField,
   Typography,
+  CardActions,
+  ToggleButton,
   DialogActions,
+  ToggleButtonGroup,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -77,6 +81,7 @@ const resourceInitialData: TResourceData[] = [
 
 const LearningResources = (props: TabComponentType) => {
   const { searchParams } = props;
+  const [view, setView] = useState('list');
 
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
@@ -143,12 +148,25 @@ const LearningResources = (props: TabComponentType) => {
         {' '}
         <MenuList>
           <MenuItem onClick={() => {}}>
+            <Iconify icon="mdi:download" />
+            Download
+          </MenuItem>
+          <MenuItem onClick={() => {}}>
             <Iconify icon="solar:share-bold" />
             Share with classes/teachers
           </MenuItem>
         </MenuList>
       </>
     ),
+    []
+  );
+
+  const handleChangeView = useCallback(
+    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+      if (newView !== null) {
+        setView(newView);
+      }
+    },
     []
   );
 
@@ -243,58 +261,100 @@ const LearningResources = (props: TabComponentType) => {
           </Box>
 
           {/* Table Section */}
-          {classes && subject && (
-            <CustomizableTable
-              tableId="learning-resources"
-              columns={[
-                { id: 'resourceTitle', label: 'Resource Title', minWidth: '180px', align: 'left' },
-                {
-                  id: 'typeOfResource',
-                  label: 'Type of Resource',
-                  minWidth: '180px',
-                  align: 'left',
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+          >
+            <ToggleButtonGroup
+              size="small"
+              value={view}
+              exclusive
+              onChange={handleChangeView}
+              sx={{
+                '& .Mui-selected': {
+                  backgroundColor: 'black',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'black',
+                  },
                 },
-                { id: 'className', label: 'Class' },
-                { id: 'subject', label: 'Subject' },
-                { id: 'dateUploaded', label: 'Date Uploaded', minWidth: '180px', align: 'left' },
-                {
-                  id: 'status',
-                  label: 'Publish',
-                  render: (value, row) => (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Switch
-                        size="small"
-                        checked={value === 'Publish'}
-                        onChange={() => handleStatusChange(row.id, value)}
+              }}
+            >
+              <ToggleButton value="grid">
+                <Iconify icon="mdi:view-grid" />
+              </ToggleButton>
+              <ToggleButton value="list">
+                <Iconify icon="lucide:layout-list" />
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          {classes &&
+            subject &&
+            (view === 'list' ? (
+              <CustomizableTable
+                tableId="learning-resources"
+                columns={[
+                  {
+                    id: 'resourceTitle',
+                    label: 'Resource Title',
+                    minWidth: '180px',
+                    align: 'left',
+                  },
+                  {
+                    id: 'typeOfResource',
+                    label: 'Type of Resource',
+                    minWidth: '180px',
+                    align: 'left',
+                  },
+                  { id: 'className', label: 'Class' },
+                  { id: 'subject', label: 'Subject' },
+                  { id: 'dateUploaded', label: 'Date Uploaded', minWidth: '180px', align: 'left' },
+                  {
+                    id: 'status',
+                    label: 'Publish',
+                    render: (value, row) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Switch
+                          size="small"
+                          checked={value === 'Publish'}
+                          onChange={() => handleStatusChange(row.id, value)}
+                        />
+                      </Box>
+                    ),
+                  },
+                  {
+                    id: 'action',
+                    label: 'Action',
+                    isSort: false,
+                    render: (value, row) => (
+                      <ThreeDotsActions
+                        actions={(prop) => actions({ ...prop, row })}
+                        placement="right-top"
+                        showEditIcon
+                        showDeleteIcon
+                        showViewIcon
+                        handleViewClick={() => {}}
+                        handleDeleteClick={() => {}}
+                        handleEditClick={() => {
+                          setIsEdit(true);
+                          setSelectedEntry(row);
+                          setOpen(true);
+                        }}
                       />
-                    </Box>
-                  ),
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  isSort: false,
-                  render: (value, row) => (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                      showEditIcon
-                      showDeleteIcon
-                      showViewIcon
-                      handleViewClick={() => {}}
-                      handleDeleteClick={() => {}}
-                      handleEditClick={() => {
-                        setIsEdit(true);
-                        setSelectedEntry(row);
-                        setOpen(true);
-                      }}
-                    />
-                  ),
-                },
-              ]}
-              data={filteredData}
-            />
-          )}
+                    ),
+                  },
+                ]}
+                data={filteredData}
+              />
+            ) : (
+              <LearningResourceCard
+                resourceTitle="abc"
+                resourceType=".doc"
+                className="5"
+                subject="Math"
+                dateUploaded="01-Jan-2024"
+              />
+            ))}
         </>
       )}
     </>
@@ -302,6 +362,43 @@ const LearningResources = (props: TabComponentType) => {
 };
 
 export default LearningResources;
+
+interface LearningResourceCardProps {
+  resourceTitle: string;
+  resourceType: string;
+  className: string;
+  subject: string;
+  dateUploaded: string;
+}
+
+const LearningResourceCard: React.FC<LearningResourceCardProps> = ({
+  resourceTitle,
+  resourceType,
+  className,
+  subject,
+  dateUploaded,
+}) => (
+  <Card sx={{ maxWidth: '300px', width: '100%', p: 2, mt: 2 }}>
+    <DetailRow icon="mdi:format-title" label="Resource Title" value={resourceTitle} />
+    <DetailRow icon="mdi:merge-type" label="Resource Type" value={resourceType} />
+    <DetailRow icon="mdi:class" label="Class" value={className} />
+    <DetailRow icon="mdi:text-subject" label="Subject" value={subject} />
+    <DetailRow icon="mdi:upload" label="Date Uploaded" value={dateUploaded} />
+    <CardActions sx={{ justifyContent: 'flex-end' }}>
+      <Button variant="contained" size="small" startIcon={<Iconify icon="mdi:download" />}>
+        Download
+      </Button>
+      <Button
+        variant="contained"
+        size="small"
+        color="error"
+        startIcon={<Iconify icon="mdi:share" />}
+      >
+        Share
+      </Button>
+    </CardActions>
+  </Card>
+);
 
 interface CreateLearningResourcesProps {
   onSave: (values: TResourceData) => void;

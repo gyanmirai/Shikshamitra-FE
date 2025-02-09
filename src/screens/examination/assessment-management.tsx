@@ -328,7 +328,7 @@ const AssessmentManagement = (props: TabComponentType) => {
                 }}
                 value={classes}
                 formControlProps={{
-                  sx: { width: '100%', minWidth: '150px' },
+                  sx: { width: '100%', minWidth: '180px' },
                 }}
               />
               <CustomSelect
@@ -342,7 +342,7 @@ const AssessmentManagement = (props: TabComponentType) => {
                   setDivision(val as string);
                 }}
                 formControlProps={{
-                  sx: { width: '100%', minWidth: '150px' },
+                  sx: { width: '100%', minWidth: '180px' },
                 }}
               />
             </Box>

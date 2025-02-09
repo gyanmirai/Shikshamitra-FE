@@ -3,14 +3,17 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Box,
   Paper,
   Table,
+  Button,
   useTheme,
   TableRow,
+  MenuList,
+  MenuItem,
   TableBody,
   TableCell,
   TableHead,
@@ -21,7 +24,11 @@ import {
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import SubjectList from './component/subjectList';
@@ -59,6 +66,7 @@ const TimeTableGrid = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  const [open, setOpen] = useState(false);
   const { searchParams, setSearchParams } = props;
   const classes = searchParams?.classId ? searchParams?.classId : '';
   const [division, setDivision] = useState('');
@@ -235,103 +243,227 @@ const TimeTableGrid = (props: TabComponentType) => {
 
   const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {row.status === 'Not Create' && (
+            <MenuItem
+              onClick={() => {
+                // uploadPictureDialog.onTrue();
+                setOpen(true);
+              }}
+            >
+              <Iconify icon="mdi:add" sx={{ height: '16px', width: '16px' }} />
+              Timetable
+            </MenuItem>
+          )}
+          {(row.status === 'Pending' || row.status === 'Complete') && (
+            <MenuItem
+              onClick={() => {
+                // assignStudentDialog.onTrue();
+                // setSelectedActivity(row as Activity);
+                // pop.onClose();
+              }}
+            >
+              <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
+              Update
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="New Timetable"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Time Table' },
-          { name: 'New Timetable' },
-        ]}
+        heading="Timetable"
+        links={[{ name: 'Academic and Assignment' }, { name: 'Time Table' }]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          open && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="eva:arrow-back-fill" />}
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              Back
+            </Button>
+          )
+        }
       />
-      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-        <CustomSelect
-          label="Class"
-          options={classData?.items || []}
-          labelKey="name"
-          valueKey="id"
-          onChange={(val) => {
-            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-            setSearchParams?.({
-              classId: val as string,
-            });
-            setDivisionOptions(selectedClass?.divisions || []);
-          }}
-          value={classes}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
-        />
-        <CustomSelect
-          label="Division"
-          disabled={!classes}
-          labelKey="name"
-          valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            setDivision(val as string);
-          }}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
-        />
-      </Box>
-      <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
-        <Paper
-          elevation={2}
-          sx={{
-            width: 200,
-            height: 'fit-content',
-          }}
-        >
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-            <Typography variant="h6">Subjects</Typography>
+      {open && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <CustomSelect
+              label="Class"
+              options={classData?.items || []}
+              labelKey="name"
+              valueKey="id"
+              onChange={(val) => {
+                const selectedClass: Standards = classData.items.find(
+                  (i: Standards) => i.id === val
+                );
+                setSearchParams?.({
+                  classId: val as string,
+                });
+                setDivisionOptions(selectedClass?.divisions || []);
+              }}
+              value={classes}
+              formControlProps={{
+                sx: { width: '100%', minWidth: '180px' },
+              }}
+            />
+            <CustomSelect
+              label="Division"
+              disabled={!classes}
+              labelKey="name"
+              valueKey="id"
+              options={divisionOptions}
+              value={division}
+              onChange={(val) => {
+                const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
+                setDivision(val as string);
+              }}
+              formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
+            />
           </Box>
-          <Box sx={{ p: 1 }}>
-            <SubjectList onDragStart={handleDragStart} remainingLectures={remainingLectures} />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="contained" color="warning" size="small">
+              Draft
+            </Button>
+            <Button variant="contained" size="small">
+              Publish
+            </Button>
           </Box>
-        </Paper>
+        </Box>
+      )}
+      {!open && (
+        <CustomizableTable
+          tableId="timetable-table"
+          columns={[
+            { id: 'className', label: 'Class' },
+            { id: 'division', label: 'Division' },
+            {
+              id: 'status',
+              label: 'Status',
+              render: (value, row) => (
+                <Label
+                  color={
+                    value === 'Not Create'
+                      ? 'error'
+                      : value === 'Pending'
+                        ? 'warning'
+                        : value === 'Complete'
+                          ? 'primary'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              render: (value, row) => (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              ),
+            },
+          ]}
+          data={[
+            {
+              id: 1,
+              className: 'Class 10',
+              division: 'A',
+              status: 'Complete',
+            },
+            {
+              id: 2,
+              className: 'Class 9',
+              division: 'B',
+              status: 'Pending',
+            },
+            {
+              id: 3,
+              className: 'Class 8',
+              division: 'C',
+              status: 'Not Create',
+            },
+            {
+              id: 4,
+              className: 'Class 7',
+              division: 'D',
+              status: 'Complete',
+            },
+          ]}
+        />
+      )}
+      {open && (
+        <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
+          <Paper
+            elevation={2}
+            sx={{
+              width: 200,
+              height: 'fit-content',
+            }}
+          >
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="h6">Subjects</Typography>
+            </Box>
+            <Box sx={{ p: 1 }}>
+              <SubjectList onDragStart={handleDragStart} remainingLectures={remainingLectures} />
+            </Box>
+          </Paper>
 
-        <Paper elevation={2} sx={{ flexGrow: 1 }}>
-          <TableContainer>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
-                  {weekDays.map((day) => (
-                    <TableCell key={day} align="center">
-                      {day}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {timeSlots.map((timeSlot, timeSlotIndex) => (
-                  <TableRow key={timeSlot}>
-                    <TableCell>{timeSlot}</TableCell>
-                    {weekDays.map((day, dayIndex) => (
-                      <TimeTableCell
-                        key={`${timeSlot}-${day}`}
-                        timeSlot={timeSlot}
-                        day={day}
-                        slotData={timetable[timeSlotIndex][dayIndex]}
-                        isBreak={isBreak(timeSlot)}
-                        onDrop={handleDrop}
-                        onTeacherSelect={handleTeacherSelect}
-                        onRoomSelect={handleRoomSelect}
-                        onDeleteSlot={handleDeleteSlot}
-                      />
+          <Paper elevation={2} sx={{ flexGrow: 1 }}>
+            <TableContainer>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
+                    {weekDays.map((day) => (
+                      <TableCell key={day} align="center">
+                        {day}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      </Box>
+                </TableHead>
+                <TableBody>
+                  {timeSlots.map((timeSlot, timeSlotIndex) => (
+                    <TableRow key={timeSlot}>
+                      <TableCell>{timeSlot}</TableCell>
+                      {weekDays.map((day, dayIndex) => (
+                        <TimeTableCell
+                          key={`${timeSlot}-${day}`}
+                          timeSlot={timeSlot}
+                          day={day}
+                          slotData={timetable[timeSlotIndex][dayIndex]}
+                          isBreak={isBreak(timeSlot)}
+                          onDrop={handleDrop}
+                          onTeacherSelect={handleTeacherSelect}
+                          onRoomSelect={handleRoomSelect}
+                          onDeleteSlot={handleDeleteSlot}
+                        />
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -63,42 +63,40 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         }
       />
-      <Box display="flex" flexDirection="row" justifyContent="space-between">
-        <Box display="flex" flexDirection="row" gap={2}>
-          <CustomSelect
-            label="Organization"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <CustomSelect
-            label="Class"
-            options={classData?.items || []}
-            value={classes}
-            isLoading={isLoading}
-            labelKey="name"
-            valueKey="id"
-            onChange={(val) => {
-              const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              setClasses(val as string);
-              setDivisionOptions(selectedClass?.divisions || []);
-            }}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <CustomSelect
-            label="Division"
-            disabled={!classes}
-            labelKey="name"
-            valueKey="id"
-            options={divisionOptions}
-            value={division}
-            onChange={(val) => {
-              setDivision(val as string);
-            }}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-        </Box>
+      <Box display="flex" flexDirection="row" gap={2}>
+        <CustomSelect
+          label="Organization"
+          options={[]}
+          value=""
+          onChange={() => {}}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        <CustomSelect
+          label="Class"
+          options={classData?.items || []}
+          value={classes}
+          isLoading={isLoading}
+          labelKey="name"
+          valueKey="id"
+          onChange={(val) => {
+            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+            setClasses(val as string);
+            setDivisionOptions(selectedClass?.divisions || []);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
+        <CustomSelect
+          label="Division"
+          disabled={!classes}
+          labelKey="name"
+          valueKey="id"
+          options={divisionOptions}
+          value={division}
+          onChange={(val) => {
+            setDivision(val as string);
+          }}
+          formControlProps={{ sx: { minWidth: 140 } }}
+        />
       </Box>
       <Box display="flex" width="1215px" height="700px" ml="-40px">
         <CalendarView />

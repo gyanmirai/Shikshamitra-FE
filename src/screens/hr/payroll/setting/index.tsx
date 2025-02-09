@@ -10,14 +10,20 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PF from './pf';
-import AddPayElement from './add-pay-element';
 import ProfessionalTax from './professional-tax';
+import SalaryComponent from './salary-component';
+import StatutaryTemplate from './statutaryTemplate/statutaryTemplate';
 
 const TABS = [
   {
-    value: 'addPayElement',
-    label: 'Add Pay Element',
-    component: () => <AddPayElement />,
+    value: 'statutoryTemplate',
+    label: 'Statutory Template',
+    component: () => <StatutaryTemplate />,
+  },
+  {
+    value: 'salaryComponent',
+    label: 'Salary Component',
+    component: () => <SalaryComponent />,
   },
   {
     value: 'pf',
@@ -29,7 +35,7 @@ const TABS = [
 ];
 
 const PayrollSettingScreen = () => {
-  const tabs = useTabs('addPayElement');
+  const tabs = useTabs('statutoryTemplate');
 
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 

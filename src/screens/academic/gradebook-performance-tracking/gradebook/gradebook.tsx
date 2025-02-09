@@ -1,8 +1,10 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import dayjs from 'dayjs';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Box, Chip, Button, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
@@ -33,6 +35,7 @@ export interface StudentGrade {
   feedback: string;
   weightedAverage: string;
   status: string;
+  submissionDate: Dayjs | null;
 }
 
 export const dummyData = [
@@ -41,50 +44,88 @@ export const dummyData = [
     studentName: 'John Smith',
     assignments: 'Math Quiz 1',
     subject: 'Mathematics',
-    grade: '',
-    feedback: '',
+    grade: 'A',
+    feedback: 'Well done!',
     weightedAverage: '85%',
     status: 'Submitted',
+    submissionDate: dayjs('2024-10-25'),
   },
   {
     id: '2',
     studentName: 'Emma Wilson',
     assignments: 'Science Project',
     subject: 'Science',
-    grade: '',
-    feedback: '',
+    grade: 'B+',
+    feedback: 'Good effort!',
     weightedAverage: '92%',
     status: 'Pending',
+    submissionDate: dayjs('2024-10-28'),
   },
   {
     id: '3',
     studentName: 'Michael Brown',
     assignments: 'English Essay',
     subject: 'English',
-    grade: '',
-    feedback: '',
+    grade: 'B',
+    feedback: 'Needs improvement in structure.',
     weightedAverage: '75%',
     status: 'Overdue',
+    submissionDate: dayjs('2024-10-20'),
   },
   {
     id: '4',
     studentName: 'Sarah Davis',
     assignments: 'Math Homework',
     subject: 'Mathematics',
-    grade: '',
-    feedback: '',
+    grade: 'A-',
+    feedback: 'Great work!',
     weightedAverage: '88%',
     status: 'Submitted',
+    submissionDate: dayjs('2024-10-27'),
   },
   {
     id: '5',
     studentName: 'James Johnson',
     assignments: 'Science Quiz',
     subject: 'Science',
-    grade: '',
-    feedback: '',
+    grade: 'A',
+    feedback: 'Excellent!',
     weightedAverage: '87%',
     status: 'Submitted',
+    submissionDate: dayjs('2024-10-24'),
+  },
+  {
+    id: '6',
+    studentName: 'Olivia Martinez',
+    assignments: 'History Presentation',
+    subject: 'History',
+    grade: 'B+',
+    feedback: 'Good research!',
+    weightedAverage: '82%',
+    status: 'Pending',
+    submissionDate: dayjs('2024-10-30'),
+  },
+  {
+    id: '7',
+    studentName: 'William Anderson',
+    assignments: 'Geography Report',
+    subject: 'Geography',
+    grade: '',
+    feedback: '',
+    weightedAverage: '78%',
+    status: 'Not Submitted',
+    submissionDate: null, // No submission
+  },
+  {
+    id: '8',
+    studentName: 'Sophia Thomas',
+    assignments: 'Computer Science Project',
+    subject: 'Computer Science',
+    grade: 'A+',
+    feedback: 'Outstanding work!',
+    weightedAverage: '95%',
+    status: 'Submitted',
+    submissionDate: dayjs('2024-10-22'),
   },
 ];
 
@@ -381,7 +422,24 @@ const Gradebook = (props: TabComponentType) => {
             },
             { id: 'studentName', label: 'Student Name' },
             { id: 'assignments', label: 'Assignments' },
-            { id: 'subject', label: 'Subject' },
+            {
+              id: 'submissionDate',
+              label: 'Submission Date',
+              render: (value, row) => (
+                <Typography fontSize="12px" gutterBottom>
+                  {dayjs(value).format('DD MMM YYYY')}
+                </Typography>
+              ),
+            },
+            {
+              id: 'subject',
+              label: 'Subject',
+              render: (value, row) => (
+                <Typography fontSize="12px" gutterBottom>
+                  {dayjs(value).format('DD MMM YYYY')}
+                </Typography>
+              ),
+            },
             {
               id: 'grade',
               label: 'Grade',

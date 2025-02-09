@@ -135,19 +135,6 @@ const Teacher = ({
             setSearchParams?.({ classId: value as string });
           }}
         />
-        <CustomSelect
-          label="Subject"
-          name="subject"
-          options={[
-            { value: 'All', label: 'All' },
-            { value: 'Math', label: 'Math' },
-            { value: 'English', label: 'English' },
-            { value: 'Science', label: 'Science' },
-          ]}
-          formControlProps={{ sx: { width: '150px' } }}
-          value={selectedSubject}
-          onChange={(value) => setSearchParams?.({ subject: value as string })}
-        />
       </Box>
       <CustomizableTable
         tableId="teacher-table"
