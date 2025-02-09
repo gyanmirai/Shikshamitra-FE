@@ -1,7 +1,6 @@
 import React from 'react';
 
-import FinanceFeeStructureSettingTab from 'src/screens/finance/settings/fee-structure/finance-fee-structure-setting-tab';
+import FinanceNewFeeStructureSetting from 'src/screens/finance/settings/fee-structure/finance-new-fee-structure-setting';
 
-const FeeStructureSetting = () => <FinanceFeeStructureSettingTab />;
-
+const FeeStructureSetting = () => <FinanceNewFeeStructureSetting />;
 export default FeeStructureSetting;

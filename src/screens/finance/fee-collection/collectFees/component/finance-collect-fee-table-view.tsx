@@ -1,20 +1,15 @@
+import dayjs from 'dayjs';
 import { Form, Formik } from 'formik';
 import React, { useState } from 'react';
 
-import {
-  Box,
-  Table,
-  Button,
-  Checkbox,
-  TableRow,
-  TableCell,
-  TableHead,
-  TableBody,
-  Typography,
-} from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 // Define the types
 interface Fee {
@@ -25,10 +20,22 @@ interface Fee {
 }
 
 interface FormValues {
-  selectedFees: number[]; // Array of fee IDs
+  selectedFees: number[];
+  paymentMode: string[];
+  transactionId: string;
+  transactionIdOnline: string;
+  note: string;
+  chequeDate: any;
+  bankName: string;
+  chequeNumber: string;
+  amountDue: string;
+  receivedAmount: string;
+  cashAmount: string;
+  onlineAmount: string;
+  cardAmount: string;
+  chequeAmount: string;
 }
 
-// Example pending fees
 const pendingFees: Fee[] = [
   { id: 1, feeHead: 'Library', month: 'Month-1', amount: 5100 },
   { id: 2, feeHead: 'Tuition', month: 'Month-2', amount: 5200 },
@@ -70,113 +77,252 @@ interface FeeCollectionFormProps {
 const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Handle search functionality
   const filteredFees = pendingFees.filter(
     (fee) =>
       fee.feeHead.toLowerCase().includes(searchQuery.toLowerCase()) ||
       fee.month.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const cellStyle = {
-    alignItems: 'center',
-    fontSize: '12px',
-    position: 'static',
-    left: 0,
-    zIndex: 2,
-    backgroundColor: 'transparent',
-    boxShadow: 'none',
-  };
-
   return (
     <CustomDialog fullScreen title="Fee Collection" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <Formik<FormValues>
-          initialValues={{ selectedFees: [] }}
-          onSubmit={(values) => {
-            console.log('Selected Fees:', values.selectedFees);
+          initialValues={{
+            selectedFees: [],
+            paymentMode: [],
+            transactionId: '',
+            transactionIdOnline: '',
+            note: '',
+            chequeDate: dayjs(),
+            bankName: '',
+            chequeNumber: '',
+            amountDue: '',
+            receivedAmount: '',
+            cashAmount: '',
+            cardAmount: '',
+            chequeAmount: '',
+            onlineAmount: '',
           }}
+          onSubmit={(values) => console.log('Selected Fees:', values)}
         >
-          {({ values, setFieldValue }) => {
-            // Handle checkbox changes
-            const handleCheckboxChange = (feeId: number) => {
-              const updatedFees = values.selectedFees.includes(feeId)
-                ? values.selectedFees.filter((id) => id !== feeId)
-                : [...values.selectedFees, feeId];
-              setFieldValue('selectedFees', updatedFees);
-            };
+          {({ values, setFieldValue }) => (
+            <Form>
+              <Box>
+                <Scrollbar sx={{ p: 2, bgcolor: 'white', maxHeight: '600px' }}>
+                  <CustomizableTable
+                    columns={[
+                      {
+                        id: 'select',
+                        label: 'Select',
+                        render: (value, row) => (
+                          <Checkbox checked onChange={(e) => console.log(e)} />
+                        ),
+                      },
+                      { id: 'feeHead', label: 'Fee Head' },
+                      { id: 'month', label: 'Month' },
+                      { id: 'amount', label: 'Amount' },
+                    ]}
+                    data={filteredFees}
+                    tableId="fee-collect-table"
+                  />
+                  <Grid container pt="15px" gap={3}>
+                    <Grid item xs={12} md={3}>
+                      <CustomSelect
+                        multiple
+                        label="Payment Mode"
+                        options={[
+                          { value: 'Cash', label: 'Cash' },
+                          { value: 'Card', label: 'Card' },
+                          { value: 'Online', label: 'Online' },
+                          { value: 'Cheque', label: 'Cheque' },
+                        ]}
+                        value={values.paymentMode}
+                        onChange={(selectedValues) => setFieldValue('paymentMode', selectedValues)}
+                        formControlProps={{ sx: { width: '100%' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <NumericFormatCustom
+                        size="small"
+                        label="Amount Due"
+                        name="amountDue"
+                        value={values.amountDue}
+                        onChange={(e) => {
+                          setFieldValue('Amount Due', e);
+                        }}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <NumericFormatCustom
+                        size="small"
+                        label="Received Payment"
+                        name="receivedPayment"
+                        value={values.receivedAmount}
+                        onChange={(e) => {
+                          setFieldValue('receivedPayment', e);
+                        }}
+                        fullWidth
+                      />
+                    </Grid>
+                  </Grid>
 
-            // Calculate total amount
-            const calculateTotal = () =>
-              pendingFees
-                .filter((fee) => values.selectedFees.includes(fee.id))
-                .reduce((sum, fee) => sum + fee.amount, 0);
+                  {values.paymentMode.length > 0 && (
+                    <Grid container spacing={2} p={2}>
+                      {values.paymentMode.includes('Cash') && (
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Cash Details
+                          </Typography>
 
-            return (
-              <Form>
-                {/* <CustomizableTable
-                                    isScrollbar
-                                    isPagination={false}
-                                    columns={[
-                                        {
-                                            id: "id", label: "Select", render(value, row) {
-                                                return <CheckBox />
-                                            },
-                                        },
-                                        { id: "feeHead", label: "Fee Head", },
+                          <NumericFormatCustom
+                            label="Cash Amount"
+                            value={values.cashAmount}
+                            onChange={(e) => {
+                              setFieldValue('cashAmount', e);
+                            }}
+                            size="small"
+                            fullWidth
+                          />
+                        </Grid>
+                      )}
+                      {values.paymentMode.includes('Online') && (
+                        <Grid item xs={12} md={12}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Online Details
+                          </Typography>
+                          <Box display="flex" gap={2} flexDirection="row">
+                            <TextField
+                              name="transactionIdForOnline"
+                              label="Transaction ID"
+                              value={values.transactionIdOnline}
+                              onChange={(e) => setFieldValue('transactionIdOnline', e.target.value)}
+                              size="small"
+                              fullWidth
+                            />
+                            <NumericFormatCustom
+                              size="small"
+                              fullWidth
+                              label="Online Amount"
+                              value={values.onlineAmount}
+                              onChange={(e) => setFieldValue('onlineAmount', e)}
+                            />
+                          </Box>
+                        </Grid>
+                      )}
 
+                      {values.paymentMode.includes('Card') && (
+                        <Grid item xs={12} md={12}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Card Details
+                          </Typography>
+                          <Box display="flex" gap={2} flexDirection="row">
+                            <TextField
+                              name="transactionId"
+                              label="Transaction ID"
+                              value={values.transactionId}
+                              onChange={(e) => setFieldValue('transactionId', e.target.value)}
+                              size="small"
+                              fullWidth
+                            />
+                            <NumericFormatCustom
+                              size="small"
+                              fullWidth
+                              label="Card Amount"
+                              value={values.cardAmount}
+                              onChange={(e) => setFieldValue('cardAmount', e)}
+                            />
+                          </Box>
+                        </Grid>
+                      )}
 
-                                        { id: "month", label: "Pending For" },
-                                        { id: "amount", label: "Amount" },
-
-                                    ]} data={pendingFees} /> */}
-
-                <Box>
-                  {/* <TextField
-                                        variant="outlined"
-                                        label="Search Fees"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        fullWidth
-                                    /> */}
-                  <Scrollbar sx={{ p: 2, bgcolor: 'white', maxHeight: '400px' }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Select</TableCell>
-                          <TableCell>Fee Head</TableCell>
-                          <TableCell>Month</TableCell>
-                          <TableCell>Amount</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {filteredFees.map((fee) => (
-                          <TableRow key={fee.id}>
-                            <TableCell>
-                              <Checkbox
-                                checked={values.selectedFees.includes(fee.id)}
-                                onChange={() => handleCheckboxChange(fee.id)}
+                      {values.paymentMode.includes('Cheque') && (
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Cheque Details
+                          </Typography>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} md={3}>
+                              <TextField
+                                name="chequeNumber"
+                                label="Cheque Number"
+                                value={values.chequeNumber}
+                                onChange={(e) => setFieldValue('chequeNumber', e.target.value)}
+                                size="small"
+                                fullWidth
                               />
-                            </TableCell>
-                            <TableCell sx={cellStyle}>{fee.feeHead}</TableCell>
-                            <TableCell sx={cellStyle}>{fee.month}</TableCell>
-                            <TableCell sx={cellStyle}>{fee.amount}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </Scrollbar>
-                  <Typography variant="body1" sx={{ marginTop: 2 }}>
-                    <strong>Total Amount Due: </strong> {calculateTotal()}
-                  </Typography>
-                  <Button type="submit" variant="contained" color="primary" sx={{ marginTop: 2 }}>
-                    Submit
-                  </Button>
-                </Box>
-              </Form>
-            );
-          }}
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                              <DatePicker
+                                label="Cheque Date"
+                                value={values.chequeDate}
+                                onChange={(date) => setFieldValue('chequeDate', date)}
+                                slotProps={{
+                                  textField: {
+                                    fullWidth: true,
+                                    size: 'small',
+                                  },
+                                }}
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} md={3}>
+                              <TextField
+                                name="bankName"
+                                label="Bank Name"
+                                value={values.bankName}
+                                onChange={(e) => setFieldValue('bankName', e.target.value)}
+                                size="small"
+                                fullWidth
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} md={3}>
+                              <NumericFormatCustom
+                                label="Cheque Amount"
+                                value={values.chequeAmount}
+                                onChange={(e) => setFieldValue('chequeAmount', e)}
+                                size="small"
+                                fullWidth
+                              />
+                            </Grid>
+                          </Grid>
+                        </Grid>
+                      )}
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12} pt="20px">
+                    <TextField
+                      multiline
+                      rows={6}
+                      name="note"
+                      label="Note"
+                      value={values.note}
+                      onChange={(e) => setFieldValue('note', e.target.value)}
+                      size="small"
+                      fullWidth
+                    />
+                  </Grid>
+                </Scrollbar>
+              </Box>
+            </Form>
+          )}
         </Formik>
       </Scrollbar>
+      <DialogActions>
+        <Box display="flex" justifyContent="flex-end">
+          <Button
+            size="small"
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{ marginTop: 2 }}
+          >
+            Submit
+          </Button>
+        </Box>
+      </DialogActions>
     </CustomDialog>
   );
 };
