@@ -3,9 +3,11 @@
 import type { BoxProps } from '@mui/material/Box';
 import type { NavSectionProps } from 'src/components/nav-section';
 
+import Link from 'next/link';
 import { useState, useCallback } from 'react';
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import Box from '@mui/material/Box';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -19,7 +21,6 @@ import { useRouter } from 'src/routes/hooks';
 import { isExternalLink } from 'src/routes/utils';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useEventListener } from 'src/hooks/use-event-listener';
 
 import { varAlpha } from 'src/theme/styles';
 
@@ -51,14 +52,20 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
     setSearchQuery('');
   }, [search]);
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'k' && event.metaKey) {
-      search.onToggle();
-      setSearchQuery('');
-    }
-  };
+  // const handleKeyDown = (event: KeyboardEvent) => {
+  //   if (event.key === 'k' && event.metaKey) {
+  //     search.onToggle();
+  //     setSearchQuery('');
+  //   }
+  // };
 
-  useEventListener('keydown', handleKeyDown);
+  // useEventListener('keydown', handleKeyDown);
+
+  useHotkeys('ctrl+shift+k', (e) => {
+    e.preventDefault();
+    search.onToggle();
+    setSearchQuery('');
+  });
 
   const handleClick = useCallback(
     (path: string) => {
@@ -98,13 +105,19 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
             const partsPath = parse(path, match(path, searchQuery));
 
             return (
-              <Box component="li" key={`${title}${path}`} sx={{ display: 'flex' }}>
-                <ResultItem
-                  path={partsPath}
-                  title={partsTitle}
-                  groupLabel={searchQuery && group}
-                  onClickItem={() => handleClick(path)}
-                />
+              <Box
+                component="li"
+                key={`${title}${path}`}
+                sx={{ display: 'flex' }}
+                onClick={handleClose}
+              >
+                <Box component={Link} href={path} sx={{ flexGrow: 1 }}>
+                  <ResultItem
+                    path={partsPath}
+                    title={partsTitle}
+                    groupLabel={searchQuery && group}
+                  />
+                </Box>
               </Box>
             );
           })}
@@ -145,7 +158,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
           display: { xs: 'none', sm: 'inline-flex' },
         }}
       >
-        ⌘K
+        Search Module (ctrl + shift + K)
       </Label>
     </Box>
   );

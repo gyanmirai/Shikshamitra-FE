@@ -14,6 +14,7 @@ import { RouterLink } from 'src/routes/components';
 import { Logo } from 'src/components/logo';
 
 import { HeaderSection } from './header-section';
+import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
 import GlobalSearch from '../components/global-search';
 import { SignInButton } from '../components/sign-in-button';
@@ -204,7 +205,7 @@ export function HeaderBase({
         rightArea: (
           <>
             {slots?.rightAreaStart}
-
+            {searchbar && <GlobalSearch />}
             <Box
               data-area="right"
               sx={{
@@ -226,43 +227,9 @@ export function HeaderBase({
                 </Link>
               )}
 
-              {/* {workspaces &&
-                (!isLoading ? (
-                  <WorkspacesPopover
-                    data-slot="workspaces"
-                    workspace={currentYear || {}}
-                    setWorkspace={(value) => dispatch(setCurrentYear(value))}
-                    data={yearData?.items || []}
-                  />
-                ) : (
-                  <CircularProgress size={16} />
-                ))}
-
-              {workspaces &&
-                (!isBoardsLoading ? (
-                  <BoardPopover
-                    data-slot="boards"
-                    board={currentBoard || {}}
-                    setBoard={(value) => dispatch(setCurrentBoard(value))}
-                    data={boards || []}
-                  />
-                ) : (
-                  <CircularProgress size={16} />
-                ))}
-
-              {workspaces && (
-                <MediumPopover
-                  data-slot="medium"
-                  medium={currentMedium || {}}
-                  setMedium={(value) => dispatch(setCurrentMedium(value))}
-                  data={currentBoard?.educationMediums || []}
-                />
-              )} */}
-
               {workspaces && <GlobalAcademicSearch />}
               {/* -- Searchbar -- */}
-              {/* {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />} */}
-              {searchbar && <GlobalSearch />}
+              {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />}
 
               {/* -- Language popover -- */}
               {/* {localization && <LanguagePopover data-slot="localization" data={data?.langs} />} */}
