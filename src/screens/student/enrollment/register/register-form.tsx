@@ -8,7 +8,6 @@ import { fileToBase64 } from 'src/utils/file-to-base64';
 import { getBase64String } from 'src/utils/get-base64-string';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
-import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useUpdateBasicDetailsMutation,
@@ -60,11 +59,11 @@ const RegisterForm = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
 
-  const [addUser] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddUserMutation,
-    isThrowError: true,
-  });
+  // const [addUser] = useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useAddUserMutation,
+  //   isThrowError: true,
+  // });
 
   const [addRegistration] = useQueryAndMutation({
     type: 'mutation',
@@ -102,28 +101,28 @@ const RegisterForm = ({
   const handleGeneralFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
-        let res = null;
+        // let res = null;
 
-        if (!values.userId && !editData?.studentBasicDetails?.userId) {
-          res = await addUser({
-            userName: `${values.firstName}${values.lastName}`,
-            name: values.firstName,
-            surname: values.lastName,
-            email: values.email,
-            phoneNumber: values.mobileNo,
-            isActive: true,
-            lockoutEnabled: true,
-            roleNames: [],
-            password: 'Test@123',
-          }).unwrap();
+        // if (!values.userId && !editData?.studentBasicDetails?.userId) {
+        //   res = await addUser({
+        //     userName: `${values.firstName}${values.lastName}`,
+        //     name: values.firstName,
+        //     surname: values.lastName,
+        //     email: values.email,
+        //     phoneNumber: values.mobileNo,
+        //     isActive: true,
+        //     lockoutEnabled: true,
+        //     roleNames: [],
+        //     password: 'Test@123',
+        //   }).unwrap();
 
-          formik.setFieldValue('userId', res?.id);
-        }
+        //   formik.setFieldValue('userId', res?.id);
+        // }
         if (editData || values?.id) {
           await updateBasicDetails({
             id: editData?.id || values?.id,
             body: {
-              userId: editData?.studentBasicDetails?.userId || values.userId || res?.id,
+              // userId: editData?.studentBasicDetails?.userId || values.userId || res?.id,
               profilePicture: values.photo ? getBase64String(values.photo) : '',
               aadhaarNo: values.adharNo,
               religion: values.religion,
@@ -153,7 +152,7 @@ const RegisterForm = ({
             educationBoardId: values.board,
             educationMediumId: values.medium,
             standardId: values.class,
-            userId: values.userId || res?.id,
+            // userId: values.userId || res?.id,
             profilePicture: values.photo ? getBase64String(values.photo) : '',
             mobileNo: values.mobileNo,
             email: values.email,
@@ -173,7 +172,7 @@ const RegisterForm = ({
         throw new Error(error);
       }
     },
-    [addRegistration, addUser, editData, updateBasicDetails]
+    [addRegistration, editData, updateBasicDetails]
   );
   const handleFamilyFormSubmit = useCallback(
     async (values: any, formik: any) => {

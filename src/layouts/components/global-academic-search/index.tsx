@@ -42,12 +42,12 @@ const GlobalAcademicSearch = () => {
     (state: RootState) => state.globalState
   );
 
-  const { data: years } = useQueryAndMutation({
+  const { data: years, isLoading: isYearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
   });
 
-  const { data: boardData } = useQueryAndMutation({
+  const { data: boardData, isLoading: isBoardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
@@ -62,7 +62,7 @@ const GlobalAcademicSearch = () => {
   }, [boardData?.items, years?.items]);
 
   useEffect(() => {
-    if (allData.length && currentMedium?.id) {
+    if (!isYearLoading && !isBoardLoading && allData.length && currentMedium?.id) {
       const findValues = (items: any[], id: string): any =>
         items.find(
           (item: any) =>
@@ -87,7 +87,7 @@ const GlobalAcademicSearch = () => {
         dispatch(setCurrentMedium(null));
       }
     }
-  }, [allData, currentMedium, dispatch]);
+  }, [allData, currentMedium, dispatch, isBoardLoading, isYearLoading]);
 
   return (
     <>

@@ -18,10 +18,10 @@ type Props = {
     highlight: boolean;
   }[];
   groupLabel: string;
-  onClickItem: () => void;
+  onClickItem?: () => void;
 };
 
-export function ResultItem({ title, path, groupLabel, onClickItem }: Props) {
+export function ResultItem({ title, path, groupLabel, onClickItem = () => {} }: Props) {
   return (
     <ListItemButton
       onClick={onClickItem}

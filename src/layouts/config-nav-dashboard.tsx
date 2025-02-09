@@ -167,6 +167,8 @@ const studentModule = {
               title: 'Student I-Card',
               path: '/student/student-i-card',
               _action: 'student-i-card',
+              disabled: true,
+              caption: 'Coming Soon',
             },
             // {
             //   title: 'Student Sibling',
@@ -292,6 +294,8 @@ const studentModule = {
               title: 'Notifications History',
               path: '/student/attendance/notification',
               _action: 'student-attendance-notification',
+              disabled: true,
+              caption: 'Coming Soon',
             },
             {
               title: 'Reports',
@@ -362,6 +366,11 @@ const settingModule = {
           path: '/setting/academic-setup',
           _action: 'academic-year-setup',
         },
+        {
+          title: 'Shift Management',
+          path: '/setting/shift-management',
+          _action: 'shift-management',
+        },
         // {
         //   title: 'Curriculum Setup',
         //   path: '/setting/curriculum-setup',
@@ -382,11 +391,11 @@ const hrModule = {
           path: '/hr/dashboard',
           _action: 'dashboard',
         },
-        {
-          title: 'Profile',
-          path: '/hr/profile',
-          _action: 'hr-profile',
-        },
+        // {
+        //   title: 'Profile',
+        //   path: '/hr/profile',
+        //   _action: 'hr-profile',
+        // },
         {
           title: 'Employee',
           path: '',
@@ -401,6 +410,8 @@ const hrModule = {
               title: 'I-card',
               path: '/hr/i-card',
               _action: 'i-card',
+              disabled: true,
+              caption: 'Coming Soon',
             },
             // {
             //   title: 'Personal Information',
@@ -502,6 +513,8 @@ const hrModule = {
           title: 'Professional Management',
           path: '/hr/professional-management',
           _action: 'professional-management',
+          disabled: true,
+          caption: 'Coming Soon',
         },
         {
           title: 'Reports',
@@ -1327,6 +1340,8 @@ export const navData = [
         icon: ICONS.communication,
         _action: 'communication',
         submodule: communicationModule[communicationPath].flatMap((list) => list.items),
+        disabled: true,
+        // caption: 'Coming Soon',
       },
       {
         title: 'Library',
@@ -1334,6 +1349,8 @@ export const navData = [
         icon: ICONS.library,
         _action: 'library',
         submodule: libraryModule[libraryPath].flatMap((list) => list.items),
+        disabled: true,
+        // caption: 'Coming Soon',
       },
       {
         title: 'Transport',
@@ -1341,6 +1358,8 @@ export const navData = [
         icon: ICONS.transport,
         _action: 'transport',
         submodule: transportModule[transportPath].flatMap((list) => list.items),
+        disabled: true,
+        // caption: 'Coming Soon',
       },
       {
         title: 'Hostel',
@@ -1348,6 +1367,8 @@ export const navData = [
         icon: ICONS.hostel,
         _action: 'hostel',
         submodule: [],
+        disabled: true,
+        caption: 'Coming Soon',
       },
       {
         title: 'Security',

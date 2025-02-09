@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -87,6 +87,9 @@ const EntranceExamSlots = () => {
         columns={[
           { label: 'Start Time', id: 'startTime' },
           { label: 'End Time', id: 'endTime' },
+          { label: 'Student Limit', id: 'studentLimit' },
+          { label: 'Room No', id: 'roomNo' },
+
           {
             label: 'Action',
             id: 'action',
@@ -135,26 +138,29 @@ const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editDa
     initialValues: {
       startTime: editData?.startDate ? dayjs(editData?.startDate) : null,
       endTime: editData?.endDate ? dayjs(editData?.endDate) : null,
+      studentLimit: editData?.studentLimit || null,
+      roomNo: editData?.roomNo || null,
     },
+    enableReinitialize: true,
     validationSchema: Yup.object().shape({
       startTime: Yup.date()
-        .test('startTime', '', (value, context) => {
-          console.log('🚀 ~ file: entrance-exam-slots.tsx:142 ~ context:', context, value);
-
+        .test('startTime', 'Start time must be before end time', (value, context) => {
           if (context.parent.endTime && dayjs(context.parent.endTime).isBefore(dayjs(value))) {
-            return context.createError({ message: 'Start time must be before end time' });
+            return false;
           }
           return true;
         })
         .required('Start Time is required'),
       endTime: Yup.date()
-        .test('endtime', '', (value, context) => {
+        .test('endtime', 'End time must be after start time', (value, context) => {
           if (dayjs(context.parent.startTime).isAfter(dayjs(value))) {
-            return context.createError({ message: 'End time must be after start time' });
+            return false;
           }
           return true;
         })
         .required('End Time is required'),
+      studentLimit: Yup.number().min(1, 'Student Limit must be greater than 0'),
+      roomNo: Yup.string().required('Room No is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
       try {
@@ -164,12 +170,16 @@ const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editDa
             body: {
               startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
               endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+              studentLimit: values.studentLimit,
+              roomNo: values.roomNo,
             },
           }).unwrap();
         } else {
           await addSlot({
             startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
             endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+            studentLimit: values.studentLimit,
+            roomNo: values.roomNo,
           }).unwrap();
         }
         handleClose?.();
@@ -178,6 +188,7 @@ const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editDa
       }
     },
   });
+  console.log(formik);
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
@@ -191,7 +202,12 @@ const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editDa
               textField: {
                 size: 'small',
                 fullWidth: true,
-                helperText: formik.touched.startTime && formik.errors.startTime,
+                name: 'startTime',
+
+                helperText:
+                  formik.touched.startTime && formik.errors.startTime
+                    ? String(formik.errors.startTime)
+                    : undefined,
                 error: !!formik.errors.startTime && formik.touched.startTime,
               },
             }}
@@ -205,10 +221,46 @@ const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editDa
               textField: {
                 size: 'small',
                 fullWidth: true,
-                helperText: formik.touched.endTime && formik.errors.endTime,
+                name: 'endTime',
+
+                helperText:
+                  formik.touched.endTime && formik.errors.endTime
+                    ? String(formik.errors.endTime)
+                    : undefined,
                 error: !!formik.errors.endTime && formik.touched.endTime,
               },
             }}
+          />
+
+          <TextField
+            name="studentLimit"
+            label="Student Limit"
+            type="number"
+            value={formik.values.studentLimit}
+            onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
+            onBlur={formik.handleBlur}
+            size="small"
+            fullWidth
+            helperText={
+              formik.touched.studentLimit && formik.errors.studentLimit
+                ? String(formik.errors.studentLimit)
+                : ''
+            }
+            error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
+          />
+          <TextField
+            name="roomNo"
+            label="Room No"
+            type="number"
+            onBlur={formik.handleBlur}
+            value={formik.values.roomNo}
+            onChange={(e) => formik.setFieldValue('roomNo', e.target.value)}
+            size="small"
+            fullWidth
+            helperText={
+              formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
+            }
+            error={formik.touched.roomNo && !!formik.errors.roomNo}
           />
         </Stack>
       </Scrollbar>

@@ -4,7 +4,16 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { Search } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { Box, Grid, Button, SvgIcon, Popover, TextField, IconButton } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Button,
+  SvgIcon,
+  Popover,
+  TextField,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 import { varAlpha } from 'src/theme/styles';
 
@@ -39,18 +48,28 @@ const GlobalSearch = () => {
           borderRadius: { sm: 1.5 },
           cursor: { sm: 'pointer' },
           bgcolor: { sm: varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
+          maxWidth: { sm: 250 },
+          width: { sm: '100%' },
+          mr: 1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}
       >
-        <IconButton disableRipple>
-          {/* https://icon-sets.iconify.design/eva/search-fill/ */}
-          <SvgIcon sx={{ width: 20, height: 20 }}>
-            <path
-              fill="currentColor"
-              d="m20.71 19.29l-3.4-3.39A7.92 7.92 0 0 0 19 11a8 8 0 1 0-8 8a7.92 7.92 0 0 0 4.9-1.69l3.39 3.4a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42M5 11a6 6 0 1 1 6 6a6 6 0 0 1-6-6"
-            />
-          </SvgIcon>
-        </IconButton>
-
+        <Box display="flex" alignItems="center">
+          <IconButton disableRipple>
+            {/* https://icon-sets.iconify.design/eva/search-fill/ */}
+            <SvgIcon sx={{ width: 20, height: 20 }}>
+              <path
+                fill="currentColor"
+                d="m20.71 19.29l-3.4-3.39A7.92 7.92 0 0 0 19 11a8 8 0 1 0-8 8a7.92 7.92 0 0 0 4.9-1.69l3.39 3.4a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42M5 11a6 6 0 1 1 6 6a6 6 0 0 1-6-6"
+              />
+            </SvgIcon>
+          </IconButton>
+          <Typography variant="subtitle2" sx={{ ml: 1, fontWeight: 500 }}>
+            Search Student
+          </Typography>
+        </Box>
         <Label
           sx={{
             fontSize: 12,
