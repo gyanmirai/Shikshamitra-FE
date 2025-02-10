@@ -214,8 +214,8 @@ export const employeeApi = createApi({
       invalidatesTags: ['Employee'],
     }),
     getAccessControl: builder.query({
-      query: () => ({
-        url: '/app/academic-setup-permission/assign-permissions',
+      query: (userId) => ({
+        url: `/app/academic-setup-permission/permissions-by-user-id/${userId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],

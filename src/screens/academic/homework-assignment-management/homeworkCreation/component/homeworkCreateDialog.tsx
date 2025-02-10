@@ -11,6 +11,7 @@ import {
   Grid,
   Radio,
   Button,
+  Switch,
   Checkbox,
   TextField,
   RadioGroup,
@@ -53,11 +54,12 @@ const assignmentInitialValues: Assignment = {
   parentAcknowledgement: false,
   isRecurring: false,
   recurringFrequency: '',
-
+  scheduleDate: null,
   assignmentType: '',
   evaluationCriteria: '',
   assignedResources: '',
   customRubric: '',
+  isScheduled: false,
 };
 
 const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
@@ -89,9 +91,51 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
 
   return (
     <Box>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+      <Scrollbar sx={{ p: 2, height: '450px' }}>
         <Box display="flex" flexDirection="column" gap={2}>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Title"
+                name="title"
+                size="small"
+                value={formik.values.title}
+                onChange={formik.handleChange}
+                error={formik.touched.title && Boolean(formik.errors.title)}
+                helperText={formik.touched.title && formik.errors.title}
+              />
+            </Grid>
+            {view === 'homework' && (
+              <Grid item xs={12} md={6}>
+                <CustomSelect
+                  label="Homework Type"
+                  options={[
+                    { value: 'practice', label: 'Practice Questions' },
+                    { value: 'reading', label: 'Reading Material' },
+                    { value: 'revision', label: 'Revision' },
+                  ]}
+                  value={formik.values.homeworkType || ''}
+                  onChange={(val) => formik.setFieldValue('homeworkType', val)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+            {view === 'assignment' && (
+              <Grid item xs={12} md={6}>
+                <CustomSelect
+                  label="Assignment Type"
+                  options={[
+                    { value: 'research', label: 'Research-Based' },
+                    { value: 'practical', label: 'Practical' },
+                    { value: 'group_work', label: 'Group Work' },
+                  ]}
+                  value={formik.values.assignmentType || ''}
+                  onChange={(val) => formik.setFieldValue('assignmentType', val)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Class"
@@ -144,61 +188,17 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
               />
             </Grid>
             {view === 'homework' && (
-              <>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    label="Topic/Chapter"
-                    name="topic"
-                    value={formik.values.topic}
-                    onChange={formik.handleChange}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <CustomSelect
-                    label="Homework Type"
-                    options={[
-                      { value: 'practice', label: 'Practice Questions' },
-                      { value: 'reading', label: 'Reading Material' },
-                      { value: 'revision', label: 'Revision' },
-                    ]}
-                    value={formik.values.homeworkType || ''}
-                    onChange={(val) => formik.setFieldValue('homeworkType', val)}
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </Grid>
-              </>
-            )}
-
-            {view === 'assignment' && (
               <Grid item xs={12} md={6}>
-                <CustomSelect
-                  label="Assignment Type"
-                  options={[
-                    { value: 'research', label: 'Research-Based' },
-                    { value: 'practical', label: 'Practical' },
-                    { value: 'group_work', label: 'Group Work' },
-                  ]}
-                  value={formik.values.assignmentType || ''}
-                  onChange={(val) => formik.setFieldValue('assignmentType', val)}
-                  formControlProps={{ fullWidth: true }}
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Topic/Chapter"
+                  name="topic"
+                  value={formik.values.topic}
+                  onChange={formik.handleChange}
                 />
               </Grid>
             )}
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Title"
-                name="title"
-                size="small"
-                value={formik.values.title}
-                onChange={formik.handleChange}
-                error={formik.touched.title && Boolean(formik.errors.title)}
-                helperText={formik.touched.title && formik.errors.title}
-              />
-            </Grid>
 
             {view === 'assignment' && (
               <>
@@ -365,7 +365,42 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
               </Grid>
             )}
 
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.isScheduled}
+                    onChange={(e) => {
+                      formik.setFieldValue('isScheduled', e.target.checked);
+                    }}
+                  />
+                }
+                label={view === 'homework' ? 'Schedule Homework' : 'Schedule Assignment'}
+              />
+            </Grid>
+
+            {formik.values.isScheduled && (
+              <Grid item xs={12} md={6}>
+                <DatePicker
+                  label="Schedule Date"
+                  value={formik.values.scheduleDate}
+                  onChange={(date) => formik.setFieldValue('scheduleDate', date)}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
+                      helperText: formik.touched.scheduleDate && formik.errors.scheduleDate,
+                    },
+                  }}
+                />
+              </Grid>
+            )}
+
             {/* Submission Type */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2">Submission Type</Typography>
+            </Grid>
             <Grid item xs={12}>
               <RadioGroup
                 row

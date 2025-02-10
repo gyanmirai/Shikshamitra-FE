@@ -14,6 +14,7 @@ import {
   Box,
   Grid,
   Chip,
+  Card,
   Button,
   Switch,
   MenuList,
@@ -67,12 +68,13 @@ export interface Assignment {
   recurringFrequency?: string;
   dayOfSubmission?: string;
   endDate?: Dayjs | null;
-
+  scheduleDate?: Dayjs | null;
   // Assignment-Specific Fields
   assignmentType?: string;
   evaluationCriteria?: string;
   assignedResources?: string;
   customRubric?: string;
+  isScheduled: boolean;
 }
 
 const initialData: Assignment[] = [
@@ -99,6 +101,7 @@ const initialData: Assignment[] = [
     attachments: [],
     createdBy: '',
     endDate: dayjs('2024-12-10'),
+    isScheduled: false,
   },
   {
     class: '9',
@@ -122,6 +125,7 @@ const initialData: Assignment[] = [
     homeworkType: '',
     attachments: [],
     createdBy: '',
+    isScheduled: false,
   },
   {
     class: '8',
@@ -145,6 +149,7 @@ const initialData: Assignment[] = [
     homeworkType: '',
     attachments: [],
     createdBy: '',
+    isScheduled: false,
   },
   {
     class: '7',
@@ -168,6 +173,7 @@ const initialData: Assignment[] = [
     assignmentType: '',
     attachments: [],
     createdBy: '',
+    isScheduled: false,
   },
   {
     class: '6',
@@ -191,12 +197,14 @@ const initialData: Assignment[] = [
     assignmentType: '',
     attachments: [],
     createdBy: '',
-    endDate: dayjs('2024-12-08'),
+    endDate: null,
+    isScheduled: false,
   },
 ];
 
 const HomeworkCreation = (props: TabComponentType) => {
   const [view, setView] = useState('homework');
+  const [open, setOpen] = useState(false);
   // const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
   const dialog = useBoolean();
   const confirmDialog = useBoolean();
@@ -269,25 +277,9 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Subject',
     },
     {
-      id: 'topic',
-      label: 'Topic',
-    },
-    {
-      id: 'homeworkType',
-      label: 'Homework Type',
-      minWidth: 170,
-      align: 'left',
-    },
-    {
       id: 'title',
       label: 'Homework Title',
       minWidth: 170,
-      align: 'left',
-    },
-    {
-      id: 'description',
-      label: 'Homework Description',
-      minWidth: 200,
       align: 'left',
     },
     {
@@ -299,48 +291,6 @@ const HomeworkCreation = (props: TabComponentType) => {
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
       ),
-    },
-    {
-      id: 'dueTime',
-      label: 'Time',
-      render: (value: any, row: any) => (
-        <Typography fontSize="12px" gutterBottom>
-          {value ? dayjs(value).format('HH:mm') : '-'}
-        </Typography>
-      ),
-    },
-    {
-      id: 'isDailyTask',
-      label: 'Daily Task',
-      minWidth: 150,
-      align: 'left',
-      render: (value: any, row: any) =>
-        value ? (
-          <Iconify icon="healthicons:yes" sx={{ color: 'green' }} />
-        ) : (
-          <Iconify icon="healthicons:no" sx={{ color: 'red' }} />
-        ),
-    },
-    {
-      id: 'dayOfSubmission',
-      label: 'Day of Submission',
-      minWidth: 180,
-      align: 'left',
-    },
-    {
-      id: 'endDate',
-      label: 'End Date',
-      render: (value: any, row: any) => (
-        <Typography fontSize="12px" gutterBottom>
-          {value ? dayjs(value).format('DD MMM YYYY') : '-'}
-        </Typography>
-      ),
-    },
-    {
-      id: 'submissionType',
-      label: 'Submission Type',
-      minWidth: 180,
-      align: 'left',
     },
     {
       id: 'status',
@@ -357,7 +307,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
-      id: 'actions',
+      id: 'action',
       label: 'Actions',
       isSort: false,
       render: (value: any, row: any) => (
@@ -399,12 +349,6 @@ const HomeworkCreation = (props: TabComponentType) => {
     {
       id: 'title',
       label: 'Assignment Title',
-      minWidth: 170,
-      align: 'left',
-    },
-    {
-      id: 'description',
-      label: 'Assignment Description',
       minWidth: 200,
       align: 'left',
     },
@@ -416,49 +360,6 @@ const HomeworkCreation = (props: TabComponentType) => {
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
       ),
-    },
-    {
-      id: 'dueTime',
-      label: 'Time',
-      render: (value: any, row: any) => (
-        <Typography fontSize="12px" gutterBottom>
-          {value ? dayjs(value).format('HH:mm') : '-'}
-        </Typography>
-      ),
-    },
-    {
-      id: 'submissionType',
-      label: 'Submission Type',
-      minWidth: 180,
-      align: 'left',
-    },
-    {
-      id: 'assignmentType',
-      label: 'Assignment Type',
-      minWidth: 200,
-      align: 'left',
-    },
-    {
-      id: 'topic',
-      label: 'Topic',
-    },
-    {
-      id: 'assignedResources',
-      label: 'Assigned Resources',
-      minWidth: 200,
-      align: 'left',
-    },
-    {
-      id: 'evaluationCriteria',
-      label: 'Evaluation Criteria',
-      minWidth: 200,
-      align: 'left',
-    },
-    {
-      id: 'customRubric',
-      label: 'Custom Rubric',
-      minWidth: 150,
-      align: 'left',
     },
     {
       id: 'status',
@@ -501,56 +402,81 @@ const HomeworkCreation = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Homework Creation"
+        heading={view === 'homework' ? 'Homework Creation' : 'Assignment Creation'}
         links={[
           { name: 'Academic and Assignment' },
           { name: 'Homework And Assignment' },
-          { name: 'Homework Creation' },
+          { name: view === 'homework' ? 'Homework Creation' : 'Assignment Creation' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          open ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="eva:arrow-back-fill" />}
+              onClick={() => {
+                dialog.onFalse();
+                setOpen(false);
+              }}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={() => {
+                dialog.onTrue();
+                setOpen(true);
+              }}
+            >
+              {view === 'homework' ? 'Homework' : 'Assignment'}
+            </Button>
+          )
+        }
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <ToggleButtonGroup
-          size="small"
-          value={view}
-          exclusive
-          onChange={handleChangeView}
-          sx={{
-            '& .Mui-selected': {
-              backgroundColor: 'black',
-              color: 'white',
-              '&:hover': {
+      {!open && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <ToggleButtonGroup
+            size="small"
+            value={view}
+            exclusive
+            onChange={handleChangeView}
+            sx={{
+              '& .Mui-selected': {
                 backgroundColor: 'black',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'black',
+                },
               },
-            },
-          }}
-        >
-          <ToggleButton value="homework">
-            <Typography variant="subtitle2">Homework</Typography>
-          </ToggleButton>
-          <ToggleButton value="assignment">
-            <Typography variant="subtitle2">Assignment</Typography>
-          </ToggleButton>
-        </ToggleButtonGroup>
-        <Button variant="contained" size="small" startIcon={<Add />} onClick={dialog.onTrue}>
-          {view === 'homework' ? 'Homework' : 'Assignment'}
-        </Button>
-      </Box>
+            }}
+          >
+            <ToggleButton value="homework">
+              <Typography variant="subtitle2">Homework</Typography>
+            </ToggleButton>
+            <ToggleButton value="assignment">
+              <Typography variant="subtitle2">Assignment</Typography>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+      )}
 
-      <CustomizableTable
-        tableId="homework-assignment-management"
-        columns={view === 'homework' ? homeworkColumns : assignmentColumns}
-        data={filteredData}
-      />
+      {!open && (
+        <CustomizableTable
+          tableId="homework-assignment-management"
+          columns={view === 'homework' ? homeworkColumns : assignmentColumns}
+          data={filteredData}
+        />
+      )}
 
-      <CustomDialog
-        title={view === 'homework' ? 'Create Homework' : 'Create Assignment'}
-        open={dialog.value}
-        handleClose={dialog.onFalse}
-        maxWidth="sm"
-      >
-        <HomeworkAssignmentCreationForm onsubmit={handleSubmit} view={view} />
-      </CustomDialog>
+      {open && (
+        <Card>
+          <HomeworkAssignmentCreationForm onsubmit={handleSubmit} view={view} />
+        </Card>
+      )}
 
       <CustomDialog
         title="Confirm Publication"
@@ -661,112 +587,120 @@ export const StudentSubmissions = () => {
           Bulk Grade ({selectedStudents.length} selected)
         </Button>
       </Box>
-
-      <Scrollbar sx={{ height: '500px' }}>
-        <CustomizableTable
-          tableId="student-submissions"
-          columns={[
-            {
-              id: 'select',
-              label: 'Select',
-              render: (value, row: any) => (
-                <Checkbox
-                  checked={selectedStudents.includes(row.id)}
-                  onChange={() => handleSelectStudent(row.id)}
-                />
-              ),
-            },
-            { id: 'studentName', label: 'Student Name', minWidth: '180px', align: 'left' },
-            { id: 'assignments', label: 'Assignments' },
-            { id: 'subject', label: 'Subject' },
-            {
-              id: 'grade',
-              label: 'Grade',
-              render: (value, row) =>
-                value === '' ? (
-                  <Typography variant="subtitle2" color="textSecondary">
-                    -
-                  </Typography>
-                ) : (
-                  <Typography variant="caption" gutterBottom>
-                    {value}
-                  </Typography>
-                ),
-            },
-            {
-              id: 'feedback',
-              label: 'Feedback',
-              render: (value, row) =>
-                value === '' ? (
-                  <Typography variant="subtitle2" color="textSecondary">
-                    -
-                  </Typography>
-                ) : (
-                  <Typography variant="caption" gutterBottom>
-                    {value}
-                  </Typography>
-                ),
-            },
-            { id: 'weightedAverage', label: 'Weighted Average', minWidth: '180px', align: 'left' },
-            {
-              id: 'status',
-              label: 'Status',
-              render: (value, row) => (
-                <Label
-                  color={
-                    value === 'Submitted'
-                      ? 'primary'
-                      : value === 'Pending'
-                        ? 'warning'
-                        : value === 'Overdue'
-                          ? 'error'
-                          : 'default'
-                  }
-                >
+      <CustomizableTable
+        tableId="student-submissions"
+        columns={[
+          {
+            id: 'select',
+            label: 'Select',
+            render: (value, row: any) => (
+              <Checkbox
+                checked={selectedStudents.includes(row.id)}
+                onChange={() => handleSelectStudent(row.id)}
+              />
+            ),
+          },
+          { id: 'studentName', label: 'Student Name', minWidth: '180px', align: 'left' },
+          { id: 'assignments', label: 'Assignments' },
+          { id: 'subject', label: 'Subject' },
+          {
+            id: 'submissionDate',
+            label: 'Submission Date',
+            minWidth: '180px',
+            align: 'left',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('DD MMM YYYY')}
+              </Typography>
+            ),
+          },
+          {
+            id: 'grade',
+            label: 'Grade',
+            render: (value, row) =>
+              value === '' ? (
+                <Typography variant="subtitle2" color="textSecondary">
+                  -
+                </Typography>
+              ) : (
+                <Typography variant="caption" gutterBottom>
                   {value}
-                </Label>
+                </Typography>
               ),
+          },
+          {
+            id: 'feedback',
+            label: 'Feedback',
+            render: (value, row) =>
+              value === '' ? (
+                <Typography variant="subtitle2" color="textSecondary">
+                  -
+                </Typography>
+              ) : (
+                <Typography variant="caption" gutterBottom>
+                  {value}
+                </Typography>
+              ),
+          },
+          { id: 'weightedAverage', label: 'Weighted Average', minWidth: '180px', align: 'left' },
+          {
+            id: 'status',
+            label: 'Status',
+            render: (value, row) => (
+              <Label
+                color={
+                  value === 'Submitted'
+                    ? 'primary'
+                    : value === 'Pending'
+                      ? 'warning'
+                      : value === 'Overdue'
+                        ? 'error'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            ),
+          },
+          {
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                  showViewIcon
+                  handleViewClick={() => {
+                    viewSubmissionDialog.onTrue();
+                    setSelectedStudent(row);
+                  }}
+                />
+              );
             },
-            {
-              id: 'actions',
-              label: 'Actions',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    placement="right-top"
-                    showViewIcon
-                    handleViewClick={() => {
-                      viewSubmissionDialog.onTrue();
-                      setSelectedStudent(row);
-                    }}
-                  />
-                );
-              },
-            },
-          ]}
-          data={tableData}
-        />
+          },
+        ]}
+        data={tableData}
+      />
 
-        <CustomDialog
-          open={viewSubmissionDialog.value}
-          handleClose={handleCloseDialog}
-          title="Assign Grade"
-          maxWidth="md"
-        >
-          <AssignGrade data={selectedStudent} onSubmit={handleSingleGradeAssignment} />
-        </CustomDialog>
+      <CustomDialog
+        open={viewSubmissionDialog.value}
+        handleClose={handleCloseDialog}
+        title="Assign Grade"
+        maxWidth="md"
+      >
+        <AssignGrade data={selectedStudent} onSubmit={handleSingleGradeAssignment} />
+      </CustomDialog>
 
-        <CustomDialog
-          open={bulkGradeDialog.value}
-          handleClose={bulkGradeDialog.onFalse}
-          title={`Assign Grade to ${selectedStudents.length} Students`}
-          maxWidth="md"
-        >
-          <AssignGrade onSubmit={handleBulkGradeAssignment} />
-        </CustomDialog>
-      </Scrollbar>
+      <CustomDialog
+        open={bulkGradeDialog.value}
+        handleClose={bulkGradeDialog.onFalse}
+        title={`Assign Grade to ${selectedStudents.length} Students`}
+        maxWidth="md"
+      >
+        <AssignGrade onSubmit={handleBulkGradeAssignment} />
+      </CustomDialog>
     </Box>
   );
 };

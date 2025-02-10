@@ -1,7 +1,7 @@
 import React from 'react';
 
-import TimeScheduleManagementSetting from 'src/screens/academic/timetable-schedule-management/settings/time-schedule-management-setting';
+import TimetableSettingScreen from 'src/screens/academic/timetable-schedule-management/settings';
 
-const SettingsScreen = () => <TimeScheduleManagementSetting />;
+const SettingsScreen = () => <TimetableSettingScreen />;
 
 export default SettingsScreen;

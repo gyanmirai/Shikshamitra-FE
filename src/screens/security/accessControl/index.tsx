@@ -25,21 +25,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 const renderItem = {
-  0: (props: any) => <UserScreenStep {...props} />,
-  1: (props: any) => <BoardScreenStep {...props} />,
-  2: (props: any) => <MediumScreenStep {...props} />,
-  3: (props: any) => <OrganizationScreenStep {...props} />,
-  4: (props: any) => <ClassScreenStep {...props} />,
-  5: (props: any) => <DivisionScreenStep {...props} />,
-};
-
-const initialValues = {
-  user: null,
-  board: [],
-  medium: {},
-  organization: {},
-  class: {},
-  division: {},
+  // 0: (props: any) => <UserScreenStep {...props} />,
+  0: (props: any) => <BoardScreenStep {...props} />,
+  1: (props: any) => <MediumScreenStep {...props} />,
+  2: (props: any) => <OrganizationScreenStep {...props} />,
+  3: (props: any) => <ClassScreenStep {...props} />,
+  4: (props: any) => <DivisionScreenStep {...props} />,
 };
 
 // const validationSchema = {
@@ -113,7 +104,7 @@ const AccessControlScreen = () => {
   );
 };
 
-const AccessControlForm = () => {
+export const AccessControlForm = ({ user }: any) => {
   const [activeStep, setActiveStep] = React.useState(0);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -125,11 +116,72 @@ const AccessControlForm = () => {
       successMessage: 'Access Control added successfully',
     },
   });
+  const { data: accessControl, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAccessControlQuery,
+    params: user?.id,
+    options: {
+      skip: !user?.id,
+    },
+  });
+
+  // const initial = useMemo(() => {
+  //   if (!isLoading && accessControl) {
+  //     const board = accessControl.educationBoards;
+  //     const medium = accessControl.educationMediums.reduce((acc: any, curr: any) => {
+  //       const findBoard = board.find((boar: any) => boar.id === curr.educationBoardId);
+  //       acc[findBoard.id] = [...(acc[findBoard.id] || []), curr];
+  //       return acc;
+  //     }, {});
+  //     console.log(accessControl, '🚀 ~ medium ~ medium:', medium);
+
+  //     const organization = accessControl.educationMediumStages.reduce((acc: any, curr: any) => {
+  //       const findMedium = medium[curr.educationMediumId];
+  //       acc[findMedium.id] = [...(acc[findMedium.id] || []), curr];
+  //       return acc;
+  //     }, {});
+  //     console.log('🚀 ~ organization ~ organization:', organization);
+
+  //     const standard = accessControl.standards.reduce((acc: any, curr: any) => {
+  //       const findOrganization = organization[curr.educationMediumStageId];
+  //       acc[findOrganization.id] = [...(acc[findOrganization.id] || []), curr];
+  //       return acc;
+  //     }, {});
+  //     console.log('🚀 ~ standard ~ standard:', standard);
+
+  //     const division = accessControl.divisions.reduce((acc: any, curr: any) => {
+  //       const findStandard = standard[curr.standardId];
+  //       acc[findStandard.id] = [...(acc[findStandard.id] || []), curr];
+  //       return acc;
+  //     }, {});
+  //     console.log('🚀 ~ division ~ division:', division);
+
+  //     return {
+  //       board,
+  //       medium,
+  //       organization,
+  //       class: standard,
+  //       division,
+  //     };
+  //   }
+  //   return { board: [], medium: {}, organization: {}, class: {}, division: {} };
+  // }, [accessControl, isLoading]);
+
+  // console.log(initial, 'initial');
+
+  const initialValues = {
+    user,
+    board: [],
+    medium: {},
+    organization: {},
+    class: {},
+    division: {},
+  };
   return (
     <CustomStepperWithFormik
       initialValues={initialValues}
       steps={[
-        'Select User',
+        // 'Select User',
         'Select Board',
         'Select Medium',
         'Select Organization',
@@ -144,6 +196,7 @@ const AccessControlForm = () => {
       validationSchema={yup.object().shape({})}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) {
+          // eslint-disable-next-line @typescript-eslint/no-shadow
           const { user, organization, medium, division, class: classes, board } = _values;
           const payload = {
             academicYearIds: [currentYear.id],
@@ -156,7 +209,7 @@ const AccessControlForm = () => {
             ),
             standardIds: Object.values(classes).flatMap((i: any) => i.map((m: Standards) => m.id)),
             divisionIds: Object.values(division).flatMap((i: any) => i.map((m: Division) => m.id)),
-            userId: user.userId,
+            userId: user.id,
           };
           addAccessControl(payload);
           return;

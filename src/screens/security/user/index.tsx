@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 
@@ -8,9 +8,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
+import { useGetUsersQuery } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EmployeeStatusType } from 'src/enums/employee-status-type';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -19,18 +18,20 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssignModule from '../role/modules';
+import { AccessControlForm } from '../accessControl';
 
 const UserManagementScreen = () => {
   const dialog = useBoolean();
-  const { data: employee, isLoading } = useQueryAndMutation({
+  const [user, setUser] = useState(null);
+  const academicDialog = useBoolean();
+  const { data: users, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
+    currentQueryAndMutation: useGetUsersQuery,
   });
-  const tableData = employee?.items?.map((item: any) => ({
+  const tableData = users?.items?.map((item: any) => ({
     ...item,
 
-    roleValue: item?.role?.name || 'Not Assigned',
-    statusValue: EmployeeStatusType[item?.employeeStatusType],
+    userName: `${item?.name} ${item?.surname || ''}`,
   }));
   return (
     <Box>
@@ -46,14 +47,14 @@ const UserManagementScreen = () => {
         data={tableData || []}
         columns={[
           {
-            id: 'employeeName',
+            id: 'userName',
             label: 'Full Name',
             render(value, row) {
               return (
                 <Box display="flex" alignItems="center" gap={1}>
                   <Avatar
                     alt={value}
-                    src={convertBase64Format(row.profilePicture)}
+                    src={row.profilePicture ? convertBase64Format(row.profilePicture) : ''}
                     sx={{ height: 32, width: 32 }}
                   />{' '}
                   {value}
@@ -77,6 +78,16 @@ const UserManagementScreen = () => {
                       <Iconify icon="fluent-mdl2:permissions" />
                       Permissions
                     </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setUser(data as any);
+                        popover.onClose();
+                        academicDialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="material-symbols:beenhere-outline" />
+                      Academic Permission
+                    </MenuItem>
                   </MenuList>
                 )}
               />
@@ -86,6 +97,14 @@ const UserManagementScreen = () => {
       />
       <CustomDialog fullScreen title="Permissions" open={dialog.value} handleClose={dialog.onFalse}>
         <UserPermission />
+      </CustomDialog>
+      <CustomDialog
+        maxWidth="md"
+        title="Academic Permission"
+        open={academicDialog.value}
+        handleClose={academicDialog.onFalse}
+      >
+        <AccessControlForm user={user} />
       </CustomDialog>
     </Box>
   );
