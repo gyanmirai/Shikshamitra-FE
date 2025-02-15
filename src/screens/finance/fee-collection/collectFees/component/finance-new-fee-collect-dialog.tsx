@@ -1,13 +1,10 @@
-import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
   Button,
-  TextField,
   Accordion,
   Typography,
   DialogActions,
@@ -75,29 +72,59 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   const [feeOptions, setFeeOptions] = useState<any[]>([]);
   const [termOptions, setTermOptions] = useState<any[]>([]);
 
-  const formik = useFormik<FormikValues>({
+  const formik = useFormik({
     initialValues: {
       selectStudent: data.name,
       feeType: '',
       receivedPayment: 0,
       paymentMode: [],
-      transactionId: '',
-      transactionIdOnline: '',
       note: '',
       selectedTerms: [],
       receiptNumber: '',
-      chequeDate: dayjs(),
-      bankName: '',
       amount: 0,
-      chequeNumber: '',
       charges: data.previousCharges,
       chargesDetails: data.chargesDetails,
-      amountDue: '',
-      receivedAmount: '',
-      cashAmount: '',
-      cardAmount: '',
-      chequeAmount: '',
-      onlineAmount: '',
+      feeDetails: [
+        {
+          feeType: '',
+          pendingTerm: '',
+          paymentMode: [
+            {
+              cash: {
+                amount: '',
+                totalAmountDue: '',
+                totalAmountReceived: '',
+              },
+            },
+            {
+              online: {
+                amount: '',
+                transactionId: '',
+                totalAmountDue: '',
+                totalAmountReceived: '',
+              },
+            },
+            {
+              card: {
+                amount: '',
+                transactionId: '',
+                totalAmountDue: '',
+                totalAmountReceived: '',
+              },
+            },
+            {
+              cheque: {
+                amount: '',
+                chequeNumber: '',
+                bankName: '',
+                chequeDate: '',
+                totalAmountDue: '',
+                totalAmountReceived: '',
+              },
+            },
+          ],
+        },
+      ],
     },
     onSubmit: (values) => {
       console.log('here values', values);
@@ -202,6 +229,17 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
     }
 
     // Create new fee entry
+    formik.setFieldValue(`feeDetails.${feeType}`, {
+      amountDue: '',
+      receivedAmount: '',
+      paymentMode: [],
+      paymentModes: {
+        cash: { amount: '' },
+        online: { amount: '', transactionId: '' },
+        card: { amount: '', transactionId: '' },
+        cheque: { amount: '', chequeNumber: '', bankName: '', chequeDate: '' },
+      },
+    });
     const newFee = {
       feeType,
       pendingTerm,
@@ -219,8 +257,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       feeType: '',
       selectedTerms: [],
       paymentMode: [],
-      amountDue: '',
-      receivedAmount: '',
     });
 
     console.log('Updated selectedFees:', [...selectedFees, newFee]);
@@ -246,9 +282,14 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
           </Box>
           <Box>
             {selectedFees.length > 1 &&
-              selectedFees.map(
-                (fee: any, index: number) =>
-                  index !== 0 && (
+              selectedFees.map((fee: any, index: number) => {
+                const feeIndex = formik.values.feeDetails.findIndex(
+                  (f) => f.feeType === fee.feeType
+                );
+
+                return (
+                  index !== 0 &&
+                  feeIndex !== -1 && (
                     <Accordion key={index} sx={{ mt: 2 }}>
                       <AccordionSummary expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}>
                         <Box
@@ -286,166 +327,53 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         <Typography sx={{ pt: '15px' }} variant="subtitle1">
                           Payment Details
                         </Typography>
+
                         {fee.paymentMode.length > 0 && (
                           <Grid container spacing={2} px={2} pt={3}>
-                            {/* Online Payment Details */}
-
-                            {fee.paymentMode.includes('Online') && (
-                              <Grid item xs={12} md={12}>
-                                <Typography variant="subtitle2" gutterBottom>
-                                  Online Details
-                                </Typography>
-                                <Box display="flex" gap={2} flexDirection="row">
-                                  <TextField
-                                    name="transactionIdForOnline"
-                                    label="Transaction ID"
-                                    value={fee.transactionIdOnline}
-                                    onChange={formik.handleChange}
-                                    size="small"
-                                    fullWidth
-                                  />
-                                  <NumericFormatCustom
-                                    size="small"
-                                    fullWidth
-                                    label="Online Amount"
-                                    value={fee.onlineAmount}
-                                    onChange={(e) => formik.setFieldValue('onlineAmount', e)}
-                                  />
-                                </Box>
-                              </Grid>
-                            )}
-
-                            {/* Card Payment Details */}
-                            {fee.paymentMode.includes('Card') && (
-                              <Grid item xs={12} md={12}>
-                                <Typography variant="subtitle2" gutterBottom>
-                                  Card Details
-                                </Typography>
-                                <Box display="flex" gap={2} flexDirection="row">
-                                  <TextField
-                                    name="transactionId"
-                                    label="Transaction ID"
-                                    value={fee.transactionId}
-                                    onChange={formik.handleChange}
-                                    size="small"
-                                    fullWidth
-                                  />
-
-                                  <NumericFormatCustom
-                                    size="small"
-                                    fullWidth
-                                    label="Card Amount"
-                                    value={fee.cardAmount}
-                                    onChange={(e) => formik.setFieldValue('cardAmount', e)}
-                                  />
-                                </Box>
-                              </Grid>
-                            )}
-
-                            {/* Cheque Payment Details */}
-                            {fee.paymentMode.includes('Cheque') && (
-                              <Grid item xs={12}>
-                                <Typography variant="subtitle2" gutterBottom>
-                                  Cheque Details
-                                </Typography>
-                                <Grid container spacing={2}>
-                                  <Grid item xs={12} md={3}>
-                                    <TextField
-                                      name="chequeId"
-                                      label="Cheque Number"
-                                      value={fee.chequeNumber}
-                                      onChange={formik.handleChange}
-                                      size="small"
-                                      fullWidth
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} md={3}>
-                                    <DatePicker
-                                      label="Cheque Date"
-                                      value={fee.chequeDate}
-                                      onChange={(date) => formik.setFieldValue('chequeDate', date)}
-                                      slotProps={{
-                                        textField: {
-                                          fullWidth: true,
-                                          size: 'small',
-                                        },
-                                      }}
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} md={3}>
-                                    <TextField
-                                      name="bankName"
-                                      label="Bank Name"
-                                      value={fee.bankName}
-                                      onChange={formik.handleChange}
-                                      size="small"
-                                      fullWidth
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} md={3}>
-                                    <NumericFormatCustom
-                                      label="Cheque Amount"
-                                      value={fee.chequeAmount}
-                                      onChange={(e) => formik.setFieldValue('chequeAmount', e)}
-                                      size="small"
-                                      fullWidth
-                                    />
-                                  </Grid>
-                                </Grid>
-                              </Grid>
-                            )}
-
-                            {fee.paymentMode.includes('Cash') && (
+                            {fee.paymentMode.includes('Cash') && feeIndex !== -1 && (
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" gutterBottom>
                                   Cash Details
                                 </Typography>
 
-                                <NumericFormatCustom
-                                  label="Cash Amount"
-                                  value={formik.values.cashAmount}
-                                  onChange={(e) => {
-                                    formik.setFieldValue('cashAmount', e);
-                                  }}
-                                  size="small"
-                                  fullWidth
-                                />
+                                {/** 🔥 Find paymentModeIndex dynamically before using it */}
+                                {(() => {
+                                  const paymentModeIndex = formik.values.feeDetails[
+                                    feeIndex
+                                  ]?.paymentMode.findIndex(
+                                    (mode) => Object.keys(mode)[0] === 'cash'
+                                  );
+
+                                  return (
+                                    paymentModeIndex !== -1 && (
+                                      <NumericFormatCustom
+                                        label="Cash Amount"
+                                        value={
+                                          formik.values.feeDetails[feeIndex]?.paymentMode[
+                                            paymentModeIndex
+                                          ]?.cash?.amount || ''
+                                        }
+                                        onChange={(e) => {
+                                          formik.setFieldValue(
+                                            `feeDetails[${feeIndex}].paymentMode[${paymentModeIndex}].cash.amount`,
+                                            e
+                                          );
+                                        }}
+                                        size="small"
+                                        fullWidth
+                                      />
+                                    )
+                                  );
+                                })()}
                               </Grid>
                             )}
                           </Grid>
                         )}
-
-                        <Grid
-                          container
-                          spacing={2}
-                          display="flex"
-                          flexDirection="row"
-                          justifyContent="flex-end"
-                        >
-                          <Grid item xs={12} md={6} sx={{ mt: '20px' }} display="flex" gap={2}>
-                            <NumericFormatCustom
-                              size="small"
-                              label={`${fee.feeType || 'Fee'} Amount Due`} // Dynamic Label
-                              name={`${fee.feeType || 'Fee'} Amount Due`} // Dynamic Label
-                              value={formik.values.amountDue}
-                              onChange={formik.handleChange}
-                              fullWidth
-                            />
-
-                            <NumericFormatCustom
-                              size="small"
-                              label={`${fee.feeType || 'Fee'} Received Payment`} // Dynamic Label
-                              name={`${fee.feeType || 'Fee'} Received Payment`}
-                              value={formik.values.receivedAmount}
-                              onChange={formik.handleChange}
-                              fullWidth
-                            />
-                          </Grid>
-                        </Grid>
                       </AccordionDetails>
                     </Accordion>
                   )
-              )}
+                );
+              })}
           </Box>
           <Box>
             <form onSubmit={formik.handleSubmit}>

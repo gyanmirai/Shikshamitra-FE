@@ -20,7 +20,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
     isSearch={false}
     tableId="added-fee-head-for-fee-structure-table"
     columns={[
-      // { id: "receiptBook", label: "Receipt Book" },
+      { id: 'bookRecipt', label: 'Receipt Book' },
+      { id: 'applicableGrade', label: 'Applicable Class' },
       { id: 'feeHead', label: 'Fee Head' },
       { id: 'grossFee', label: 'Gross Fee (₹)' },
       { id: 'payableFee', label: 'Payable Fee (₹)' },

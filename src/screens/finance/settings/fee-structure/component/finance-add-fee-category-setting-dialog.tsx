@@ -12,6 +12,7 @@ import { Box, Grid, Button, TextField } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -100,10 +101,13 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     initialValues,
     // validationSchema,
     onSubmit: (values) => {
-      console.log('Form submitted');
+      console.log('Form submitted', values);
 
       const isDuplicate = feeHeadListForFeeStructure.some(
-        (item) => item.feeHead === values.feeHead
+        (item) =>
+          item.feeHead === values.feeHead &&
+          item.applicableGrade === values.applicableGrade &&
+          item.bookRecipt === values.bookRecipt
       );
       if (isDuplicate) {
         alert('This Fee Head is already added.');
@@ -111,7 +115,22 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       }
 
       setFeeHeadListForFeeStructure((prev) => [...prev, values]);
-      setIsFieldsDisabled(true); // Disable receipt book & grade after first entry
+      setIsFieldsDisabled(true);
+      formik.setValues({
+        ...values, // Keep existing values
+        feeHead: '',
+        grossFee: '',
+        discountAmount: '',
+        discountRemark: '',
+        payableFee: '',
+        paymentMethod: [],
+        lateFeeChargesAmount: '',
+        lateFeeChargesType: '',
+
+        // Fields you want to keep unchanged
+        applicableGrade: values.applicableGrade,
+        bookRecipt: values.bookRecipt,
+      });
     },
   });
 
@@ -120,7 +139,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   }, [dispatch, formik.values, initialValues]);
 
   const handleClear = () => {
-    setFeeHeadListForFeeStructure([]);
+    // setFeeHeadListForFeeStructure([]);
     formik.resetForm();
     setIsFieldsDisabled(false);
   };
@@ -152,11 +171,24 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
           />
           <Box display="flex" gap={2}>
-            <Button type="submit" variant="contained" size="small">
+            <Button
+              startIcon={<Iconify icon="bx:arrow-back" />}
+              variant="contained"
+              size="small"
+              onClick={handleCloseDialog}
+            >
+              Back
+            </Button>
+            <Button
+              startIcon={<Iconify icon="si:add-duotone" />}
+              type="submit"
+              variant="contained"
+              size="small"
+            >
               Add
             </Button>
-
             <Button
+              startIcon={<Iconify icon="icon-park-twotone:clear-format" />}
               variant="contained"
               size="small"
               onClick={handleClear}
@@ -165,12 +197,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
               Clear
             </Button>
             <Button variant="contained" size="small" onClick={handleCloseDialog}>
-              Back
+              Submit
             </Button>
           </Box>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} py="30px">
           <Grid item xs={12} md={6}>
             <CustomSelect
               label="Receipt Book"
