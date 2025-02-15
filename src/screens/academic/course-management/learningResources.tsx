@@ -144,19 +144,16 @@ const LearningResources = (props: TabComponentType) => {
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="mdi:download" />
-            Download
-          </MenuItem>
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="solar:share-bold" />
-            Share with classes/teachers
-          </MenuItem>
-        </MenuList>
-      </>
+      <MenuList>
+        <MenuItem onClick={() => {}}>
+          <Iconify icon="mdi:download" />
+          Download
+        </MenuItem>
+        <MenuItem onClick={() => {}}>
+          <Iconify icon="solar:share-bold" />
+          Share with classes/teachers
+        </MenuItem>
+      </MenuList>
     ),
     []
   );
@@ -329,7 +326,6 @@ const LearningResources = (props: TabComponentType) => {
                     render: (value, row) => (
                       <ThreeDotsActions
                         actions={(prop) => actions({ ...prop, row })}
-                        placement="right-top"
                         showEditIcon
                         showDeleteIcon
                         showViewIcon

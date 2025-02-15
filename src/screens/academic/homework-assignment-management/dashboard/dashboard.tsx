@@ -5,7 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -24,6 +24,7 @@ const Dashboard = (props: TabComponentType) => {
   const { searchParams, setSearchParams } = props;
   const classes = searchParams?.classId ? searchParams?.classId : '';
   const [division, setDivision] = useState('');
+  const [subject, setSubject] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const [hoveredResource, setHoveredResource] = useState<string | null>(null);
 
@@ -90,42 +91,62 @@ const Dashboard = (props: TabComponentType) => {
           />
         }
       />
-      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-        <CustomSelect
-          label="Class"
-          options={classData?.items || []}
-          labelKey="name"
-          valueKey="id"
-          onChange={(val) => {
-            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-            // formik.setFieldValue('class', selectedClass?.name || '');
-            setSearchParams?.({
-              classId: val as string,
-            });
-            setDivisionOptions(selectedClass?.divisions || []);
-          }}
-          value={classes}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
-        />
-        <CustomSelect
-          label="Division"
-          disabled={!classes}
-          labelKey="name"
-          valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-            // formik.setFieldValue('division', selectedDivision?.name || '');
-            setDivision(val as string);
-          }}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
-        />
-      </Box>
+      <Card sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <CustomSelect
+            label="Class"
+            options={classData?.items || []}
+            labelKey="name"
+            valueKey="id"
+            onChange={(val) => {
+              const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
+              // formik.setFieldValue('class', selectedClass?.name || '');
+              setSearchParams?.({
+                classId: val as string,
+              });
+              setDivisionOptions(selectedClass?.divisions || []);
+            }}
+            value={classes}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '150px' },
+            }}
+          />
+          <CustomSelect
+            label="Division"
+            disabled={!classes}
+            labelKey="name"
+            valueKey="id"
+            options={divisionOptions}
+            value={division}
+            onChange={(val) => {
+              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
+              // formik.setFieldValue('division', selectedDivision?.name || '');
+              setDivision(val as string);
+            }}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '150px' },
+            }}
+          />
+          <CustomSelect
+            label="Subject"
+            disabled={!division}
+            options={[
+              { value: 'math', label: 'Math' },
+              { value: 'science', label: 'Science' },
+              { value: 'english', label: 'English' },
+            ]}
+            value={subject}
+            onChange={(val) => {
+              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
+              // formik.setFieldValue('division', selectedDivision?.name || '');
+              setSubject(val as string);
+            }}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '150px' },
+            }}
+          />
+        </Box>
+      </Card>
       <Grid container spacing={2} mt={1}>
         <DashboardCards />
         <HomeworkAssignmentCards />
@@ -134,9 +155,12 @@ const Dashboard = (props: TabComponentType) => {
         Welcome, [John Doe]
       </Typography>
       <HomeworkPendingCards />
-      <Box display="flex" width="1215px" height="700px" ml="-40px">
-        <CalendarView />
-      </Box>
+      <Card sx={{ mt: 2 }}>
+        <CardContent>
+          <Typography variant="h6">Assignments & Homeworks</Typography>
+          <CalendarView />
+        </CardContent>
+      </Card>
     </Box>
   );
 };

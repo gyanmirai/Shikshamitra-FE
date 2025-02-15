@@ -17,6 +17,7 @@ const VerifyPayrollComponent = ({ onClose }: any) => {
 
   return (
     <CustomStepperWithFormik
+      scrollbarHeight="400px"
       initialValues={{}}
       steps={['Attendance', 'Salary']}
       activeStep={activeStep}
