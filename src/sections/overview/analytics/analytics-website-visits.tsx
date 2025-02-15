@@ -22,11 +22,10 @@ type Props = CardProps & {
     }[];
     options?: ChartOptions;
   };
-  firstDropdownOptions: { value: string; label: string }[];
-
-  firstDropdownValue: string;
-  firstDropdownOnChange: (value: string) => void;
-  firstDropdownLabel: string;
+  firstDropdownOptions?: { value: string; label: string }[];
+  firstDropdownValue?: string;
+  firstDropdownOnChange?: (value: string) => void;
+  firstDropdownLabel?: string;
 };
 
 export function AnalyticsWebsiteVisits({
@@ -35,7 +34,7 @@ export function AnalyticsWebsiteVisits({
   chart,
   firstDropdownLabel,
   firstDropdownOnChange,
-  firstDropdownOptions,
+  firstDropdownOptions = [],
   firstDropdownValue,
   ...other
 }: Props) {
@@ -71,12 +70,12 @@ export function AnalyticsWebsiteVisits({
     <Box>
       <Box display="flex" alignItems="center" justifyContent="space-between" pr="20px" pt="10px">
         <CardHeader title={title} subheader={subheader} />
-        {firstDropdownOptions.length > 0 && (
+        {firstDropdownOptions.length > 0 && firstDropdownOnChange && (
           <CustomSelect
             label={firstDropdownLabel}
             options={firstDropdownOptions}
             onChange={(e) => firstDropdownOnChange(e as string)}
-            value={firstDropdownValue}
+            value={firstDropdownValue ?? ''}
             formControlProps={{
               sx: { width: '100%', maxWidth: '200px' },
             }}
