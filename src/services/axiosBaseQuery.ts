@@ -1,10 +1,10 @@
-import { apiClient } from './httpService';
+import createAxiosInstance from './httpService';
 
 export const axiosBaseQuery =
-  ({ baseUrl } = { baseUrl: '' }) =>
+  ({ baseUrl }: any) =>
   async ({ url, method = 'get', data, params, headers, ...props }: any) => {
     try {
-      const result = await apiClient({
+      const result = await createAxiosInstance(process.env.NEXT_PUBLIC_API_URL as string)({
         url: baseUrl + url,
         method,
         data,

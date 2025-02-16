@@ -31,6 +31,7 @@ import { InquiryStatusType, InquiryStatusTypeOptions } from 'src/enums/inquiry-s
 import {
   useGetFollowUpQuery,
   useAddFollowUpMutation,
+  useGetAllFollowUpQuery,
 } from 'src/redux/student/follow-up/follow-up-api';
 
 import { Label } from 'src/components/label';
@@ -42,6 +43,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const FollowUpScreen: React.FC = () => {
   const [, setSelectedInquiry] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
+
+  const { data } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllFollowUpQuery,
+  });
+  console.log('🚀 ~ data:', data);
 
   // Dummy data
   const dummyData = [

@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import axios from 'axios';
 import { User } from 'oidc-client-ts';
 import { oidcService } from 'src/utils/oidcClient';
 

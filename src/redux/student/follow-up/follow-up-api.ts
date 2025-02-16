@@ -16,6 +16,13 @@ export const FollowUpApi = createApi({
       }),
       providesTags: ['Follow-Up'],
     }),
+    getAllFollowUp: builder.query({
+      query: () => ({
+        url: `/student-enrollment/follow-ups`,
+        method: 'GET',
+      }),
+      providesTags: ['Follow-Up'],
+    }),
     addFollowUp: builder.mutation({
       query: ({ studentEnrollmentId, body }) => ({
         url: `/student-enrollment/${studentEnrollmentId}/add-follow-up`,
@@ -27,4 +34,4 @@ export const FollowUpApi = createApi({
   }),
 });
 
-export const { useGetFollowUpQuery, useAddFollowUpMutation } = FollowUpApi;
+export const { useGetFollowUpQuery, useAddFollowUpMutation, useGetAllFollowUpQuery } = FollowUpApi;

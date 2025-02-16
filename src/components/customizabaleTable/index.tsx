@@ -9,10 +9,9 @@ import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
-import { useSearchParams } from 'next/navigation';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, Fragment, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
@@ -51,8 +50,6 @@ import {
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
-
-import { convertNextJsParamsToObject } from 'src/hooks/use-search-param';
 
 import debounce from 'src/utils/debounce';
 
@@ -154,7 +151,11 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   dateProps,
   tableId,
 }) => {
-  const currentParams = convertNextJsParamsToObject(useSearchParams());
+  // const currentParams = convertNextJsParamsToObject(useSearchParams());
+  columns = useMemo(
+    () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
+    [columns]
+  );
 
   // const [params, setParams, _removeAllParams, removeParamsByKey] = useSearchParam<
   //   Record<string, IParams>
@@ -706,11 +707,12 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                         sx={{
                           fontSize: '14px',
                           width: column.minWidth,
-                          position: column.sticky ? 'sticky' : 'static',
+                          position: column.sticky ? 'sticky' : 'relative',
                           left: column.sticky ? 0 : 'auto',
                           zIndex: column.sticky ? 2 : 'auto',
                           backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                           boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+
                           ...(column.sticky ? { backgroundImage: 'none' } : {}),
                           '& .column-filter-icon': {
                             opacity: 0,
@@ -718,6 +720,20 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           },
                           '&:hover .column-filter-icon': {
                             opacity: 1,
+                          },
+                          '&::after': {
+                            borderRight: (theme) =>
+                              !column.sticky ? `1px solid ${theme.palette.grey[400]}` : 'none',
+                            content: '""',
+                            position: 'absolute',
+                            right: '0',
+                            bottom: '0',
+                            height: '40%',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                          },
+                          '&:last-child::after': {
+                            borderRight: 'none',
                           },
                         }}
                       >
@@ -744,12 +760,22 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             {column.label} {column?.renderColumn?.(column)}
                           </Box>
 
-                          <Iconify
-                            icon="eva:more-vertical-fill"
-                            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                            onClick={(e) => handleColumnFilterClick(e, column)}
-                            className="column-filter-icon"
-                          />
+                          {column.isFilter && (
+                            <Iconify
+                              icon="lucide:list-filter"
+                              sx={{
+                                height: '16px',
+                                width: '16px',
+                                cursor: 'pointer',
+                                position: 'absolute',
+                                right: '4px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                              }}
+                              onClick={(e) => handleColumnFilterClick(e, column)}
+                              // className="column-filter-icon"
+                            />
+                          )}
 
                           {column.isSort !== false && (
                             <Box
@@ -757,9 +783,16 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                               display="flex"
                               justifyContent="center"
                               alignItems="center"
+                              // sx={{
+                              //   position: 'absolute',
+                              //   left: '10px',
+                              //   top: '50%',
+                              //   transform: 'translateY(-50%)',
+                              //   mr: 0.5,
+                              // }}
                             >
                               {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                                <Box component="span" sx={{ ml: 0.5, fontSize: '0.75em' }}>
+                                <Box component="span" sx={{ fontSize: '0.75em' }}>
                                   {sorts.findIndex((sort) => sort.column === column.id) + 1}
                                 </Box>
                               )}
@@ -779,6 +812,15 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             </Box>
                           )}
                         </Box>
+                        {/* <Divider
+                          orientation="vertical"
+                          sx={{
+                            width: column.sticky ? '0px' : '2px',
+                            background: (theme) => theme.palette.divider,
+                            height: '20px',
+                            margin: '10px 2px',
+                          }}
+                        /> */}
                       </TableCell>
                     )
                 )}
@@ -853,7 +895,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length + 1}>
+                  <TableCell colSpan={5}>
                     <EmptyContent />
                   </TableCell>
                 </TableRow>
@@ -881,7 +923,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
             {isPagination && (
               <TablePagination
                 rowsPerPageOptions={[10, 25, 100]}
-                component="div"
+                component={Scrollbar}
                 count={serverSide ? totalCount || 0 : filteredData.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
@@ -1004,7 +1046,7 @@ const ColumnFilterMenu: React.FC<{
 
   return (
     <Menu anchorEl={anchorEl?.element} open={Boolean(anchorEl)} onClose={onClose}>
-      <Box sx={{ p: 2, minWidth: 250 }}>
+      <Box sx={{ p: 2, maxWidth: 250 }}>
         <FormControl fullWidth size="small" sx={{ mb: 2 }}>
           <InputLabel>Filter Type</InputLabel>
           <Select

@@ -2,6 +2,7 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 
 import axios from 'axios';
 import { toast } from 'sonner';
+import Cookies from 'js-cookie';
 
 import { isTokenExpired } from 'src/utils/client';
 import { oidcService } from 'src/utils/oidcClient';
@@ -16,9 +17,10 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
   const instance = axios.create({
     baseURL,
     headers: {
-      'Content-Type': 'application/json;charset=utf8 ',
+      'Content-Type': 'application/json;charset=utf8',
       accept: '*/*',
     },
+    withCredentials: true, // Ensure credentials (cookies) are sent with the request
   });
 
   // Request interceptor
@@ -27,9 +29,23 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
       if (typeof window !== 'undefined') {
         const reduxStore = store.getState();
         const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
-        const cookieHeader = `currentYear=${currentYear?.id};currentBoard=${currentBoard?.id};currentMedium=${currentMedium?.id}`;
-        document.cookie = cookieHeader;
-        // Add values to cookie
+
+        // Set cookies using js-cookie library
+        Cookies.set('academicYearId', currentYear?.id, {
+          path: '/',
+          sameSite: 'Lax', // Adjust as needed ('Lax', 'Strict', or 'None' with 'Secure' for cross-origin)
+          // Set to true if using HTTPS
+        });
+        Cookies.set('educationBoardId', currentBoard?.id, {
+          path: '/',
+          sameSite: 'Lax',
+        });
+        Cookies.set('educationMediumId', currentMedium?.id, {
+          path: '/',
+          sameSite: 'Lax',
+        });
+
+        console.log('Cookies set:', document.cookie);
 
         const token = store.getState().auth.user?.access_token;
 
@@ -38,7 +54,6 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
             // If the token is expired, handle refresh token logic
             if (!isRefreshing) {
               isRefreshing = true;
-              // const refreshToken = store.getState().auth.user?.refresh_token;
               try {
                 const refreshedUser = await oidcService.renewToken();
                 store.dispatch(setUser(JSON.parse(JSON.stringify(refreshedUser))));
@@ -50,7 +65,6 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
 
                   config.headers = config.headers || {};
                   config.headers.Authorization = `Bearer ${refreshedUser?.access_token}`;
-                  config.headers.Cookie = cookieHeader;
                 } else {
                   handleLogout();
                 }
@@ -66,7 +80,6 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
                 refreshSubscribers.push((tokens: string) => {
                   config.headers = config.headers || {};
                   config.headers.Authorization = `Bearer ${tokens}`;
-                  config.headers.Cookie = document.cookie;
                   resolve();
                 });
               });
@@ -75,7 +88,6 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
             // Token is valid, attach to the request
             config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
-            config.headers.Cookie = document.cookie;
           }
         }
       }
@@ -117,4 +129,4 @@ function handleLogout() {
 
 export default createAxiosInstance;
 
-export const apiClient = createAxiosInstance(process.env.NEXT_PUBLIC_API_URL || '');
+// createAxiosInstance(process.env.NEXT_PUBLIC_API_URL || '');

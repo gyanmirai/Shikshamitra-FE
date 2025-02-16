@@ -5,6 +5,7 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import type { Theme, SxProps, CSSObject, Breakpoint } from '@mui/material/styles';
 
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
@@ -39,6 +40,9 @@ export type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
+  const { user } = useSelector((state: any) => state.auth);
+  console.log('🚀 ~ DashboardLayout ~ user:', user);
+
   const theme = useTheme();
 
   const mobileNavOpen = useBoolean();
@@ -49,7 +53,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
 
   const layoutQuery: Breakpoint = 'lg';
 
-  const navData = data?.nav ?? dashboardNavData;
+  const navData = data?.nav ?? dashboardNavData(user?.profile?.email === 'ddvs@gmail.com');
 
   const isNavMini = settings.navLayout === 'mini';
 

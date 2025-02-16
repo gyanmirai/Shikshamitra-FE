@@ -124,7 +124,13 @@ const EntranceExamSlots = () => {
 
 export default EntranceExamSlots;
 
-const SlotsForm = ({ handleClose, editData }: { handleClose?: () => void; editData: any }) => {
+export const SlotsForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose?: () => void;
+  editData: any;
+}) => {
   const [addSlot, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEntranceExamSlotMutation,

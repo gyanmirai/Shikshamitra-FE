@@ -1,8 +1,16 @@
-const Layout = ({ children }: { children: React.ReactNode }) =>
-  // const { user } = useSelector((store: any) => store.auth);
+'use client';
 
-  // if (userInfo?.employee?.role?.name === 'Teacher') {
-  //   return <Typography>You are not authorized to access this page</Typography>;
-  // }
-  children;
-export default Layout;
+import React from 'react';
+import { useSelector } from 'react-redux';
+
+import { View403 } from 'src/sections/error';
+
+const HrSettingLayout = ({ children }: any) => {
+  const { employee } = useSelector((state: any) => state.auth);
+  const role = employee?.role?.name;
+
+  if (role === 'Teacher') return <View403 />;
+  return children;
+};
+
+export default HrSettingLayout;
