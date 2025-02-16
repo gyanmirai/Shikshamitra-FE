@@ -189,8 +189,17 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
               //   subheader="(+43%) than last year"
               chart={{
                 categories: ['Math', 'Science', 'History', 'ENG', 'Social Science', 'Gujarati'],
-                series: [{ name: '', data: [43, 33, 22, 37, 10, 16] }],
-                colors: [alpha(theme.palette.primary.dark, 0.8)],
+                series: [
+                  { name: 'PDF', data: [43, 33, 22, 37, 10, 16] },
+                  { name: 'Video', data: [20, 45, 15, 65, 80, 5] },
+                  { name: 'Audio', data: [10, 30, 29, 24, 8, 65] },
+                ],
+
+                colors: [
+                  alpha(theme.palette.primary.dark, 0.8),
+                  alpha(theme.palette.warning.main, 0.8),
+                  alpha(theme.palette.error.main, 0.8),
+                ],
                 options: {
                   legend: {
                     show: false,

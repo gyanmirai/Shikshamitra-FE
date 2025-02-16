@@ -476,11 +476,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                           <Typography variant="body2">{question.correctAnswer}</Typography>
                         </TableCell>
                         <TableCell>
-                          <IconButton
-                            color="primary"
-                            size="small"
-                            onClick={() => onEditQuestion(index)}
-                          >
+                          <IconButton size="small" onClick={() => onEditQuestion(index)}>
                             <Iconify icon="mdi:pencil" />
                           </IconButton>
                         </TableCell>
@@ -885,7 +881,12 @@ const QuizBuilder = ({ formik }: any) => {
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">{formik.values.quizTitle}</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => addQuestionDialog.onTrue()}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => addQuestionDialog.onTrue()}
+        >
           Add Question
         </Button>
       </Box>
@@ -994,6 +995,11 @@ const QuizSetting = ({ formik }: any) => {
         </Grid>
       </Grid>
       <CustomizableTable
+        isFilter={false}
+        isSearch={false}
+        isPagination={false}
+        isShowedDense={false}
+        isScrollbar={false}
         tableId="quiz-questions"
         columns={[
           { id: 'question', label: 'Question' },

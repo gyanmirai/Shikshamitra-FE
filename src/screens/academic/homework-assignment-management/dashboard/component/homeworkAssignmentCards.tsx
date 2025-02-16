@@ -1,246 +1,209 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
-import { Box, Grid, Card, Button, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Grid,
+  MenuList,
+  MenuItem,
+  Typography,
+  ListItemText,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-
-import { assignmentData } from './homeworkPendingCards';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 const HomeworkAssignmentCards = () => {
   const [hoveredResource, setHoveredResource] = useState<string | null>(null);
+  const [view, setView] = useState('assignment');
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem>
+            <Iconify icon="mdi:bell" />
+            <ListItemText>Send Notification</ListItemText>
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
+  const handleChangeView = useCallback(
+    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+      if (newView !== null) {
+        setView(newView);
+      }
+    },
+    []
+  );
 
   return (
-    <>
-      <Grid item xs={12} md={6}>
-        <Card
+    <Grid item xs={12}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <ToggleButtonGroup
+          size="small"
+          value={view}
+          exclusive
+          onChange={handleChangeView}
           sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
+            '& .Mui-selected': {
+              backgroundColor: 'black',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'black',
+              },
+            },
           }}
         >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Pending Assignment Submissions</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Button
-                    key={index}
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      mb: 1,
-                    }}
-                    onMouseEnter={() => setHoveredResource(assignment.title)}
-                    onMouseLeave={() => setHoveredResource(null)}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography>{assignment.title}</Typography>{' '}
-                      <Label color="warning" sx={{ ml: 1, px: 1, py: 0.5 }}>
-                        {`${assignment.pending}`}
-                      </Label>{' '}
-                      {hoveredResource === assignment.title && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            ml: 2,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Last Date : {assignment.lastDate}
-                        </Typography>
-                      )}
-                    </Box>
-                    {hoveredResource === assignment.title && (
-                      <Tooltip title="Send Reminder">
-                        <Iconify
-                          icon="mdi:bell"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          sx={{
-                            position: 'absolute',
-                            right: 10,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                  </Button>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>{' '}
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Pending Homeworks</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Button
-                    key={index}
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      mb: 1,
-                    }}
-                    onMouseEnter={() => setHoveredResource(assignment.title)}
-                    onMouseLeave={() => setHoveredResource(null)}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography>{assignment.title}</Typography>
-                      <Label color="warning" sx={{ ml: 1, px: 1, py: 0.5 }}>
-                        {`${assignment.pending}`}
-                      </Label>{' '}
-                      {hoveredResource === assignment.title && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            ml: 2,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Last Date : {assignment.lastDate}
-                        </Typography>
-                      )}
-                    </Box>
-                    {hoveredResource === assignment.title && (
-                      <Tooltip title="Send Reminder">
-                        <Iconify
-                          icon="mdi:bell"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          sx={{
-                            position: 'absolute',
-                            right: 10,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                  </Button>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>{' '}
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Pending Grade Assign</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Button
-                    key={index}
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      mb: 1,
-                    }}
-                    onMouseEnter={() => setHoveredResource(assignment.title)}
-                    onMouseLeave={() => setHoveredResource(null)}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography>{assignment.title}</Typography>
-                      <Label color="warning" sx={{ ml: 1, px: 1, py: 0.5 }}>
-                        {`${assignment.pending}`}
-                      </Label>{' '}
-                      {hoveredResource === assignment.title && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            ml: 2,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Publish Date : {assignment.lastDate}
-                        </Typography>
-                      )}
-                    </Box>
-                    {hoveredResource === assignment.title && (
-                      <Tooltip title="Send Reminder">
-                        <Iconify
-                          icon="mdi:bell"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          sx={{
-                            position: 'absolute',
-                            right: 10,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                  </Button>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>{' '}
-        </Card>
-      </Grid>
-    </>
+          <ToggleButton value="assignment">
+            <Typography variant="subtitle2">Assignment</Typography>
+          </ToggleButton>
+          <ToggleButton value="homework">
+            <Typography variant="subtitle2">Homework</Typography>
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+      {view === 'homework' ? (
+        <>
+          <Typography variant="h6">Pending Homework Submission</Typography>
+          <CustomizableTable
+            tableId="pendingHomework-table"
+            columns={[
+              { id: 'homeworkTitle', label: 'Homework Title', minWidth: '180px', align: 'left' },
+              { id: 'publishedDate', label: 'Published Date', minWidth: '180px', align: 'left' },
+              {
+                id: 'pendingStudents',
+                label: 'Pending Students',
+                minWidth: '180px',
+                align: 'left',
+              },
+              { id: 'dueDate', label: 'Due Date', minWidth: '150px', align: 'left' },
+              {
+                id: 'actions',
+                label: 'Actions',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                    />
+                  );
+                },
+              },
+            ]}
+            data={[
+              {
+                homeworkTitle: 'Math Homework 1',
+                publishedDate: '2024-02-01',
+                pendingStudents: 5,
+                dueDate: '2024-02-10',
+              },
+              {
+                homeworkTitle: 'Science Project',
+                publishedDate: '2024-02-03',
+                pendingStudents: 8,
+                dueDate: '2024-02-12',
+              },
+              {
+                homeworkTitle: 'History Essay',
+                publishedDate: '2024-02-05',
+                pendingStudents: 3,
+                dueDate: '2024-02-15',
+              },
+              {
+                homeworkTitle: 'English Literature Review',
+                publishedDate: '2024-02-07',
+                pendingStudents: 10,
+                dueDate: '2024-02-18',
+              },
+              {
+                homeworkTitle: 'Physics Lab Report',
+                publishedDate: '2024-02-08',
+                pendingStudents: 6,
+                dueDate: '2024-02-20',
+              },
+            ]}
+          />
+        </>
+      ) : (
+        <>
+          <Typography variant="h6">Pending Assignment Submission</Typography>
+          <CustomizableTable
+            tableId="pendingAssignment-table"
+            columns={[
+              {
+                id: 'assignmentTitle',
+                label: 'Assignment Title',
+                minWidth: '180px',
+                align: 'left',
+              },
+              { id: 'publishedDate', label: 'Published Date', minWidth: '180px', align: 'left' },
+              {
+                id: 'pendingStudents',
+                label: 'Pending Students',
+                minWidth: '180px',
+                align: 'left',
+              },
+              { id: 'dueDate', label: 'Due Date', minWidth: '150px', align: 'left' },
+              {
+                id: 'actions',
+                label: 'Actions',
+                isSort: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                    />
+                  );
+                },
+              },
+            ]}
+            data={[
+              {
+                assignmentTitle: 'Math Homework 1',
+                publishedDate: '2024-02-01',
+                pendingStudents: 5,
+                dueDate: '2024-02-10',
+              },
+              {
+                assignmentTitle: 'Science Project',
+                publishedDate: '2024-02-03',
+                pendingStudents: 8,
+                dueDate: '2024-02-12',
+              },
+              {
+                assignmentTitle: 'History Essay',
+                publishedDate: '2024-02-05',
+                pendingStudents: 3,
+                dueDate: '2024-02-15',
+              },
+              {
+                assignmentTitle: 'English Literature Review',
+                publishedDate: '2024-02-07',
+                pendingStudents: 10,
+                dueDate: '2024-02-18',
+              },
+              {
+                assignmentTitle: 'Physics Lab Report',
+                publishedDate: '2024-02-08',
+                pendingStudents: 6,
+                dueDate: '2024-02-20',
+              },
+            ]}
+          />
+        </>
+      )}
+    </Grid>
   );
 };
 

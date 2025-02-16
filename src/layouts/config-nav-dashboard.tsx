@@ -440,36 +440,41 @@ const hrModule = {
               path: '/hr/payroll/dashboard',
               _action: 'payroll-dashboard',
             },
-            {
-              title: 'Payroll Structure',
-              path: '/hr/payroll/structure',
-              _action: 'payroll-structure',
-            },
-            {
-              title: 'Import Attendance',
-              path: '/hr/payroll/import-attendance',
-              _action: 'payroll-import-attendance',
-            },
+            // {
+            //   title: 'Payroll Structure',
+            //   path: '/hr/payroll/structure',
+            //   _action: 'payroll-structure',
+            // },
+            // {
+            //   title: 'Import Attendance',
+            //   path: '/hr/payroll/import-attendance',
+            //   _action: 'payroll-import-attendance',
+            // },
             {
               title: 'Run Payroll',
               path: '/hr/payroll/run-payroll',
               _action: 'run-payroll',
             },
             {
-              title: 'Pay Process',
-              path: '/hr/payroll/pay-process',
-              _action: 'pay-process',
+              title: 'Generate Salary Slip',
+              path: '/hr/payroll/generate-salary-slip',
+              _action: 'generate-salary-slip',
             },
+            // {
+            //   title: 'Pay Process',
+            //   path: '/hr/payroll/pay-process',
+            //   _action: 'pay-process',
+            // },
             // {
             //   title: 'Pay Process Preview',
             //   path: '/hr/payroll/pay-process-preview',
             //   _action: 'pay-process-preview',
             // },
-            {
-              title: 'Payslip Generation',
-              path: '/hr/payroll/payslip-generation',
-              _action: 'payslip-generation',
-            },
+            // {
+            //   title: 'Payslip Generation',
+            //   path: '/hr/payroll/payslip-generation',
+            //   _action: 'payslip-generation',
+            // },
             {
               title: 'Settings',
               path: '/hr/payroll/setting',
@@ -659,70 +664,72 @@ const academicModule = {
             },
           ],
         },
-        // {
-        //   title: 'Group Management',
-        //   path: '',
-        //   _action: 'group-management',
-        //   children: [
-        //     {
-        //       title: 'Dashboard',
-        //       path: '/academic/activityDashboard',
-        //       _action: 'group-management-activityDashboard',
-        //     },
-        //     {
-        //       title: 'Dynamic Group',
-        //       path: '/academic/dynamicGroup',
-        //       _action: 'group-management-dynamicGroup',
-        //     },
-        //     {
-        //       title: 'Activity Management',
-        //       path: '/academic/activityManagement',
-        //       _action: 'group-management-activityManagement',
-        //     },
-        //     {
-        //       title: 'Student Group',
-        //       path: '/academic/studentGroup',
-        //       _action: 'group-management-studentGroup',
-        //     },
-        //   ],
-        // },
-        // {
-        //   title: 'Learning Management System (LMS)',
-        //   path: '/academic/learning-management-system',
-        //   _action: 'learning-management-system',
-        //   children: [
-        //     {
-        //       title: 'Dashboard',
-        //       path: '/academic/lmsDashboard',
-        //       _action: 'learning-management-system-lmsDashboard',
-        //     },
-        //     {
-        //       title: 'Course',
-        //       path: '/academic/course',
-        //       _action: 'learning-management-system-course',
-        //     },
-        //     {
-        //       title: 'Student Progress Tracking',
-        //       path: '/academic/studentProgressTracking',
-        //       _action: 'learning-management-system-studentProgressTracking',
-        //     },
-        //     {
-        //       title: 'Content Library',
-        //       path: '/academic/contentLibrary',
-        //       _action: 'learning-management-system-contentLibrary',
-        //     },
-        //     {
-        //       title: 'Reports And Analytics',
-        //       path: '/academic/reportsAndAnalytics',
-        //       _action: 'learning-management-system-reportsAndAnalytics',
-        //     },
-        //     {
-        //       title: 'Settings',
-        //       path: '/academic/lmsSettings',
-        //       _action: 'learning-management-system-settings',
-        //     },
-        //   ],
-        // },
+        {
+          title: 'Group Management',
+          path: '',
+          _action: 'group-management',
+          disabled: true,
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/activityDashboard',
+              _action: 'group-management-activityDashboard',
+            },
+            {
+              title: 'Dynamic Group',
+              path: '/academic/dynamicGroup',
+              _action: 'group-management-dynamicGroup',
+            },
+            {
+              title: 'Activity Management',
+              path: '/academic/activityManagement',
+              _action: 'group-management-activityManagement',
+            },
+            {
+              title: 'Student Group',
+              path: '/academic/studentGroup',
+              _action: 'group-management-studentGroup',
+            },
+          ],
+        },
+        {
+          title: 'Learning Management System (LMS)',
+          path: '/academic/learning-management-system',
+          _action: 'learning-management-system',
+          disabled: true,
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/academic/lmsDashboard',
+              _action: 'learning-management-system-lmsDashboard',
+            },
+            {
+              title: 'Course',
+              path: '/academic/course',
+              _action: 'learning-management-system-course',
+            },
+            {
+              title: 'Student Progress Tracking',
+              path: '/academic/studentProgressTracking',
+              _action: 'learning-management-system-studentProgressTracking',
+            },
+            {
+              title: 'Content Library',
+              path: '/academic/contentLibrary',
+              _action: 'learning-management-system-contentLibrary',
+            },
+            {
+              title: 'Reports And Analytics',
+              path: '/academic/reportsAndAnalytics',
+              _action: 'learning-management-system-reportsAndAnalytics',
+            },
+            {
+              title: 'Settings',
+              path: '/academic/lmsSettings',
+              _action: 'learning-management-system-settings',
+            },
+          ],
+        },
         // {
         //   title: 'Gradebook & Performance Tracking',
         //   path: '',
@@ -834,11 +841,11 @@ const academicModule = {
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
             },
-            {
-              title: 'Student Submissions',
-              path: '/academic/studentSubmissions',
-              _action: 'homework-assignment-management-studentSubmissions',
-            },
+            // {
+            //   title: 'Student Submissions',
+            //   path: '/academic/studentSubmissions',
+            //   _action: 'homework-assignment-management-studentSubmissions',
+            // },
             {
               title: 'Grading And Feedback',
               path: '/academic/gradingAndFeedback',

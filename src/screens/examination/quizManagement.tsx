@@ -17,7 +17,7 @@ import ArchievedQuiz from './quizManagement/archievedQuiz';
 const TABS = [
   {
     value: 'activeQuiz',
-    label: 'Active',
+    label: 'Scheduled',
     component: () => <ActiveQuiz />,
   },
   {

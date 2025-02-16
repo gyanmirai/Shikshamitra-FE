@@ -20,6 +20,8 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
   const { setSearchParams } = props;
 
   const [classes, setClasses] = useState<string>('');
+  const [role, setRole] = useState('');
+  const [teacher, setTeacher] = useState('');
   const [division, setDivision] = useState<any>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -72,31 +74,64 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           formControlProps={{ sx: { minWidth: 140 } }}
         />
         <CustomSelect
-          label="Class"
-          options={classData?.items || []}
-          value={classes}
-          isLoading={isLoading}
-          labelKey="name"
-          valueKey="id"
+          label="Role"
+          options={[
+            { value: 'teacher', label: 'Teacher' },
+            { value: 'student', label: 'Student' },
+          ]}
+          value={role}
           onChange={(val) => {
-            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-            setClasses(val as string);
-            setDivisionOptions(selectedClass?.divisions || []);
+            setRole(val as string);
           }}
           formControlProps={{ sx: { minWidth: 140 } }}
         />
-        <CustomSelect
-          label="Division"
-          disabled={!classes}
-          labelKey="name"
-          valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            setDivision(val as string);
-          }}
-          formControlProps={{ sx: { minWidth: 140 } }}
-        />
+        {role === 'student' && (
+          <>
+            <CustomSelect
+              label="Class"
+              options={classData?.items || []}
+              value={classes}
+              isLoading={isLoading}
+              labelKey="name"
+              valueKey="id"
+              onChange={(val) => {
+                const selectedClass: Standards = classData.items.find(
+                  (i: Standards) => i.id === val
+                );
+                setClasses(val as string);
+                setDivisionOptions(selectedClass?.divisions || []);
+              }}
+              formControlProps={{ sx: { minWidth: 140 } }}
+            />
+            <CustomSelect
+              label="Division"
+              disabled={!classes}
+              labelKey="name"
+              valueKey="id"
+              options={divisionOptions}
+              value={division}
+              onChange={(val) => {
+                setDivision(val as string);
+              }}
+              formControlProps={{ sx: { minWidth: 140 } }}
+            />
+          </>
+        )}
+        {role === 'teacher' && (
+          <CustomSelect
+            label="Teacher"
+            options={[
+              { value: 'abc', label: 'ABC' },
+              { value: 'xyz', label: 'XYZ' },
+              { value: 'pqr', label: 'PQR' },
+            ]}
+            value={teacher}
+            onChange={(val) => {
+              setTeacher(val as string);
+            }}
+            formControlProps={{ sx: { minWidth: 140 } }}
+          />
+        )}
       </Box>
       <Box display="flex" width="1215px" height="700px" ml="-40px">
         <CalendarView />

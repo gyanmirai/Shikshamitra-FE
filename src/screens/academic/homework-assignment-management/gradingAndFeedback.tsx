@@ -3,20 +3,28 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import React, { useState, useEffect, useCallback } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, MenuItem, MenuList, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { StudentSubmissions } from './homeworkCreation/homework-creation';
+import { dummyData } from '../gradebook-performance-tracking/gradebook/gradebook';
+import AssignGrade from '../gradebook-performance-tracking/gradebook/component/assignGradePopup';
+
+import type { StudentGrade } from '../gradebook-performance-tracking/gradebook/gradebook';
 
 const GradingAndFeedback = (props: TabComponentType) => {
   const dialog = useBoolean();
@@ -161,9 +169,87 @@ const GradingAndFeedback = (props: TabComponentType) => {
           }}
         />
       </Box>
+    </Box>
+  );
+};
 
-      <StudentSubmissions />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mb: 5 }}>
+export default GradingAndFeedback;
+
+const StudentSubmissions = () => {
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+
+  const dialog = useBoolean();
+  const viewSubmissionDialog = useBoolean();
+  const bulkGradeDialog = useBoolean();
+
+  const handleSelectStudent = (studentId: string) => {
+    setSelectedStudents((prev) => {
+      if (prev.includes(studentId)) {
+        return prev.filter((id) => id !== studentId);
+      }
+      return [...prev, studentId];
+    });
+  };
+
+  const handleBulkGradeAssignment = (values: { grade: string }) => {
+    setTableData((prevData) =>
+      prevData.map((student) =>
+        selectedStudents.includes(student.id) ? { ...student, grade: values.grade } : student
+      )
+    );
+    bulkGradeDialog.onFalse();
+    setSelectedStudents([]);
+  };
+
+  const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
+    setTableData((prevData) =>
+      prevData.map((student) =>
+        student.id === selectedStudent?.id
+          ? { ...student, grade: values.grade, feedback: values.feedback }
+          : student
+      )
+    );
+    dialog.onFalse();
+    setSelectedStudent(null);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedStudent(null);
+    viewSubmissionDialog.onFalse();
+  };
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {(row.status === 'Pending' || row.status === 'Overdue') && (
+            <MenuItem onClick={() => {}}>
+              {' '}
+              <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
+              Send Reminder
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Iconify icon="mdi:pencil" />}
+          disabled={selectedStudents.length === 0}
+          onClick={bulkGradeDialog.onTrue}
+        >
+          Bulk Grade ({selectedStudents.length} selected)
+        </Button>
         <Button
           variant="contained"
           startIcon={<Iconify icon="material-symbols:upload" />}
@@ -173,8 +259,120 @@ const GradingAndFeedback = (props: TabComponentType) => {
           Publish Marks
         </Button>
       </Box>
+      <CustomizableTable
+        tableId="student-submissions"
+        columns={[
+          {
+            id: 'select',
+            label: 'Select',
+            render: (value, row: any) => (
+              <Checkbox
+                checked={selectedStudents.includes(row.id)}
+                onChange={() => handleSelectStudent(row.id)}
+              />
+            ),
+          },
+          { id: 'studentName', label: 'Student Name', minWidth: '180px', align: 'left' },
+          { id: 'assignments', label: 'Assignments' },
+          { id: 'subject', label: 'Subject' },
+          {
+            id: 'submissionDate',
+            label: 'Submission Date',
+            minWidth: '180px',
+            align: 'left',
+            render: (value, row) => (
+              <Typography fontSize="12px" gutterBottom>
+                {dayjs(value).format('DD MMM YYYY')}
+              </Typography>
+            ),
+          },
+          {
+            id: 'grade',
+            label: 'Grade',
+            render: (value, row) =>
+              value === '' ? (
+                <Typography variant="subtitle2" color="textSecondary">
+                  -
+                </Typography>
+              ) : (
+                <Typography variant="caption" gutterBottom>
+                  {value}
+                </Typography>
+              ),
+          },
+          {
+            id: 'feedback',
+            label: 'Feedback',
+            render: (value, row) =>
+              value === '' ? (
+                <Typography variant="subtitle2" color="textSecondary">
+                  -
+                </Typography>
+              ) : (
+                <Typography variant="caption" gutterBottom>
+                  {value}
+                </Typography>
+              ),
+          },
+          { id: 'weightedAverage', label: 'Weighted Average', minWidth: '180px', align: 'left' },
+          {
+            id: 'status',
+            label: 'Status',
+            render: (value, row) => (
+              <Label
+                color={
+                  value === 'Submitted'
+                    ? 'primary'
+                    : value === 'Pending'
+                      ? 'warning'
+                      : value === 'Overdue'
+                        ? 'error'
+                        : 'default'
+                }
+              >
+                {value}
+              </Label>
+            ),
+          },
+          {
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                  showViewIcon
+                  handleViewClick={() => {
+                    viewSubmissionDialog.onTrue();
+                    setSelectedStudent(row);
+                  }}
+                />
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />
+
+      <CustomDialog
+        open={viewSubmissionDialog.value}
+        handleClose={handleCloseDialog}
+        title="Assign Grade"
+        maxWidth="md"
+      >
+        <AssignGrade data={selectedStudent} onSubmit={handleSingleGradeAssignment} />
+      </CustomDialog>
+
+      <CustomDialog
+        open={bulkGradeDialog.value}
+        handleClose={bulkGradeDialog.onFalse}
+        title={`Assign Grade to ${selectedStudents.length} Students`}
+        maxWidth="md"
+      >
+        <AssignGrade onSubmit={handleBulkGradeAssignment} />
+      </CustomDialog>
     </Box>
   );
 };
-
-export default GradingAndFeedback;

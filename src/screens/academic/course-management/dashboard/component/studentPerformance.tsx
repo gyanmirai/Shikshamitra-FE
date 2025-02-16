@@ -48,6 +48,7 @@ const StudentPerformance = () => {
               scale: 1.03,
             },
             cursor: 'pointer',
+            height: '100%',
           }}
         >
           <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -103,11 +104,12 @@ const StudentPerformance = () => {
               scale: 1.03,
             },
             cursor: 'pointer',
+            height: '100%',
           }}
         >
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Typography component="span" sx={{ fontSize: '18px', fontWeight: '600' }} gutterBottom>
-              Active Courses
+              Total Chapters
             </Typography>
             <CustomSelect
               label="Class"
@@ -123,6 +125,62 @@ const StudentPerformance = () => {
           <Box display="flex" alignItems="flex-start" mt={2}>
             <Typography variant="h4" gutterBottom>
               30
+            </Typography>
+          </Box>
+
+          <SvgColor
+            src={`${CONFIG.site.basePath}/assets/background/shape-square.svg`}
+            sx={{
+              top: 0,
+              left: -20,
+              width: 240,
+              zIndex: -1,
+              height: 240,
+              opacity: 0.24,
+              position: 'absolute',
+              color: `${color}.main`,
+            }}
+          />
+        </Card>
+      </Grid2>
+      <Grid2 xs={12} md={4}>
+        <Card
+          sx={{
+            ...bgGradient({
+              color: `135deg, ${varAlpha(theme.vars.palette.warning.lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette.warning.lightChannel, 0.48)}`,
+            }),
+            p: 3,
+            boxShadow: 'none',
+            position: 'relative',
+            color: `${color}.darker`,
+            backgroundColor: 'common.white',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              boxShadow: 'var(--shadows-8)',
+              scale: 1.03,
+            },
+            cursor: 'pointer',
+            height: '100%',
+          }}
+        >
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Typography component="span" sx={{ fontSize: '18px', fontWeight: '600' }} gutterBottom>
+              Total Learning Resources
+            </Typography>
+            <CustomSelect
+              label="Class"
+              name="className"
+              options={classOptions}
+              labelKey="name"
+              valueKey="name"
+              value={classes2}
+              onChange={(value) => setClasses2(value as string)}
+              formControlProps={{ sx: { minWidth: 120 } }}
+            />
+          </Box>
+          <Box display="flex" alignItems="flex-start" mt={2}>
+            <Typography variant="h4" gutterBottom>
+              45
             </Typography>
           </Box>
 

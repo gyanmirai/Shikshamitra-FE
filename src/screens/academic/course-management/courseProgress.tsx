@@ -5,14 +5,31 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect } from 'react';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import React, { useState, useEffect, useCallback } from 'react';
 
-import { Box, Card, Grid, MenuList, MenuItem, Typography, CircularProgress } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import {
+  Box,
+  Card,
+  Grid,
+  Button,
+  MenuList,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -125,7 +142,7 @@ const courses: Course[] = [
 const CourseProgress = (props: TabComponentType) => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { searchParams, setSearchParams } = props;
-
+  const updateProgressDialog = useBoolean();
   const handleCardDetails = (course: Course) => {
     setSelectedCourse(course);
   };
@@ -157,6 +174,35 @@ const CourseProgress = (props: TabComponentType) => {
       }
     }
   }, [classData, classes]);
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <MenuList>
+        <MenuItem onClick={() => {}}>
+          {' '}
+          <Iconify icon="mdi:bell" />
+          Reminder
+        </MenuItem>
+        <MenuItem onClick={() => {}}>
+          {' '}
+          <Iconify icon="mdi:tick" />
+          Mark As Complete
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            console.log('updateProgressDialog ---onclick');
+            updateProgressDialog.onTrue();
+            pop.onClose();
+          }}
+        >
+          {' '}
+          <Iconify icon="solar:pen-bold" />
+          Update Progress
+        </MenuItem>
+      </MenuList>
+    ),
+    [updateProgressDialog]
+  );
 
   return (
     <Box>
@@ -283,21 +329,13 @@ const CourseProgress = (props: TabComponentType) => {
                 ),
               },
               {
-                id: 'action',
-                label: 'Action',
+                id: 'actions',
+                label: 'Actions',
                 render(value: any, row: any) {
                   return (
                     <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
                       placement="right-top"
-                      actions={({ popover }: any) => (
-                        <MenuList>
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:bell" />
-                            Reminder
-                          </MenuItem>
-                        </MenuList>
-                      )}
                     />
                   );
                 },
@@ -307,8 +345,65 @@ const CourseProgress = (props: TabComponentType) => {
           />
         </Box>
       )}
+      <CustomDialog
+        open={updateProgressDialog.value}
+        handleClose={updateProgressDialog.onFalse}
+        title="Update Progress"
+      >
+        <UpdateProgress />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default CourseProgress;
+
+const UpdateProgress = () => {
+  console.log('update progress called');
+
+  const formik = useFormik({
+    initialValues: {
+      completePercentage: '', // Adjusted field name to match the input ID
+    },
+    validationSchema: Yup.object({
+      completePercentage: Yup.number()
+        .min(0, 'Percentage cannot be negative')
+        .max(100, 'Percentage cannot exceed 100')
+        .required('Complete Percentage is required'),
+    }),
+    onSubmit: (values) => {
+      console.log('Submitting:', values);
+      // Add submission logic here
+    },
+  });
+
+  return (
+    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+      <TextField
+        fullWidth
+        id="completePercentage"
+        name="Complete Percentage"
+        label="Add Complete Percentage"
+        value={formik.values.completePercentage}
+        onChange={formik.handleChange}
+        error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
+        // @ts-ignore
+        helperText={formik.touched.completePercentage && formik.errors.completePercentage}
+        size="small"
+      />
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={() => {}}>
+          Cancel
+        </Button>
+        <LoadingButton
+          // loading={isLoading || isUpdateLoading}
+          type="submit"
+          variant="contained"
+          size="small"
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </Box>
+  );
+};
