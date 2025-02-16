@@ -6,6 +6,7 @@ import CardHeader from '@mui/material/CardHeader';
 import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 import { Chart, useChart } from 'src/components/chart';
+import CustomSelect from 'src/components/custom-select';
 
 // ----------------------------------------------------------------------
 
@@ -17,18 +18,32 @@ type Props = CardProps & {
     categories?: string[];
     series: {
       name: string;
-      data: number[];
+      data: number[] | string[];
     }[];
     options?: ChartOptions;
   };
+  firstDropdownOptions?: { value: string; label: string }[];
+  firstDropdownValue?: string;
+  firstDropdownOnChange?: (value: string) => void;
+  firstDropdownLabel?: string;
 };
 
-export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Props) {
+export function AnalyticsWebsiteVisits({
+  title,
+  subheader,
+  chart,
+  firstDropdownLabel,
+  firstDropdownOnChange,
+  firstDropdownOptions = [],
+  firstDropdownValue,
+  ...other
+}: Props) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
     hexAlpha(theme.palette.primary.dark, 0.8),
     hexAlpha(theme.palette.warning.main, 0.8),
+    hexAlpha(theme.palette.error.main, 0.8),
   ];
 
   const chartOptions = useChart({
@@ -53,7 +68,20 @@ export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Pr
 
   return (
     <Box>
-      <CardHeader title={title} subheader={subheader} />
+      <Box display="flex" alignItems="center" justifyContent="space-between" pr="20px" pt="10px">
+        <CardHeader title={title} subheader={subheader} />
+        {firstDropdownOptions.length > 0 && firstDropdownOnChange && (
+          <CustomSelect
+            label={firstDropdownLabel}
+            options={firstDropdownOptions}
+            onChange={(e) => firstDropdownOnChange(e as string)}
+            value={firstDropdownValue ?? ''}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '200px' },
+            }}
+          />
+        )}
+      </Box>
 
       <Chart
         type="bar"

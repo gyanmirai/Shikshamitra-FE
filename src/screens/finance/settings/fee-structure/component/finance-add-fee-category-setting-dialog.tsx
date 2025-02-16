@@ -8,13 +8,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Grid, Button, TextField } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+
+import FinanceAddedFeeHeadForFeeStructure from './finance-added-fee-head-for-fee-structure';
 
 interface FinanceAddFeeCategorySettingDialogProps {
   dialogValue: boolean;
@@ -39,6 +42,8 @@ interface FormikValue {
   multipleApplicableGrade: string[];
   chargesType: string;
   enterChargesAmount: string;
+  lateFeeChargesType: string;
+  lateFeeChargesAmount: string;
 }
 
 const validationSchema = Yup.object({
@@ -53,6 +58,8 @@ const validationSchema = Yup.object({
   paymentDueDate: Yup.date().required('Payment Due Date is required').nullable(),
   chargesType: Yup.string().required('Charges Type is required'),
   enterChargesAmount: Yup.string().required('Charges Amount is required'),
+  lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
+  lateFeeChargesAmount: Yup.string().required('Late Fee Charges Amount is required'),
 });
 
 const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingDialogProps> = ({
@@ -84,19 +91,23 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       multipleApplicableGrade: [],
       chargesType: '',
       enterChargesAmount: '',
+      lateFeeChargesType: '',
+      lateFeeChargesAmount: '',
     }),
     []
   );
 
   const formik = useFormik<FormikValue>({
     initialValues,
-    validationSchema,
+    // validationSchema,
     onSubmit: (values) => {
-      console.log('Form submitted');
-      formik.handleSubmit();
+      console.log('Form submitted', values);
 
       const isDuplicate = feeHeadListForFeeStructure.some(
-        (item) => item.feeHead === values.feeHead
+        (item) =>
+          item.feeHead === values.feeHead &&
+          item.applicableGrade === values.applicableGrade &&
+          item.bookRecipt === values.bookRecipt
       );
       if (isDuplicate) {
         alert('This Fee Head is already added.');
@@ -104,7 +115,22 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       }
 
       setFeeHeadListForFeeStructure((prev) => [...prev, values]);
-      setIsFieldsDisabled(true); // Disable receipt book & grade after first entry
+      setIsFieldsDisabled(true);
+      formik.setValues({
+        ...values, // Keep existing values
+        feeHead: '',
+        grossFee: '',
+        discountAmount: '',
+        discountRemark: '',
+        payableFee: '',
+        paymentMethod: [],
+        lateFeeChargesAmount: '',
+        lateFeeChargesType: '',
+
+        // Fields you want to keep unchanged
+        applicableGrade: values.applicableGrade,
+        bookRecipt: values.bookRecipt,
+      });
     },
   });
 
@@ -113,7 +139,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   }, [dispatch, formik.values, initialValues]);
 
   const handleClear = () => {
-    setFeeHeadListForFeeStructure([]);
+    // setFeeHeadListForFeeStructure([]);
     formik.resetForm();
     setIsFieldsDisabled(false);
   };
@@ -127,139 +153,224 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     }
   };
 
-  useEffect(() => {
-    // Convert values to numbers (handle empty cases gracefully)
-    const grossFee = Number(formik.values.grossFee) || 0;
-    const discountAmount = Number(formik.values.discountAmount) || 0;
-
-    // Calculate payable fee
-    const payableFee = Math.max(grossFee - discountAmount, 0); // Ensure it doesn't go negative
-
-    // Set the calculated payable fee
-    formik.setFieldValue('payableFee', payableFee);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.grossFee, formik.values.discountAmount]); // Runs whenever grossFee or discountAmount changes
+  const handleDelete = (index: number) => {
+    const updatedFeeHeadList = [...feeHeadListForFeeStructure];
+    updatedFeeHeadList.splice(index, 1);
+    setFeeHeadListForFeeStructure(updatedFeeHeadList);
+  };
+  const handleEdit = (row: any) => {
+    formik.setValues(row);
+  };
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <Box display="flex" justifyContent="space-between">
-        <CustomBreadcrumbs
-          heading="Fee Structure"
-          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
-        />
-        <Box display="flex" gap={2}>
-          <Button
-            type="submit"
-            onClick={() => formik.handleSubmit()}
-            variant="contained"
-            size="small"
-            disabled={feeHeadListForFeeStructure.length > 0}
-          >
-            Add
-          </Button>
-
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleClear}
-            disabled={feeHeadListForFeeStructure.length === 0}
-          >
-            Clear
-          </Button>
-          <Button variant="contained" size="small" onClick={handleCloseDialog}>
-            Back
-          </Button>
+    <>
+      <form onSubmit={formik.handleSubmit}>
+        <Box display="flex" justifyContent="space-between">
+          <CustomBreadcrumbs
+            heading="Fee Structure"
+            links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
+          />
+          <Box display="flex" gap={2}>
+            <Button
+              startIcon={<Iconify icon="bx:arrow-back" />}
+              variant="contained"
+              size="small"
+              onClick={handleCloseDialog}
+            >
+              Back
+            </Button>
+            <Button
+              startIcon={<Iconify icon="si:add-duotone" />}
+              type="submit"
+              variant="contained"
+              size="small"
+            >
+              Add
+            </Button>
+            <Button
+              startIcon={<Iconify icon="icon-park-twotone:clear-format" />}
+              variant="contained"
+              size="small"
+              onClick={handleClear}
+              disabled={feeHeadListForFeeStructure.length === 0}
+            >
+              Clear
+            </Button>
+            <Button variant="contained" size="small" onClick={handleCloseDialog}>
+              Submit
+            </Button>
+          </Box>
         </Box>
-      </Box>
 
-      <Box py={2} display="flex" flexDirection="column" gap={3}>
-        <CustomSelect
-          label="Receipt Book"
-          options={[
-            { value: 'cbse', label: 'CBSE' },
-            { value: 'gseb', label: 'GSEB' },
-          ]}
-          value={formik.values.bookRecipt}
-          onChange={(e) => formik.setFieldValue('bookRecipt', e)}
-          disabled={isFieldsDisabled}
-          error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-        />
+        <Grid container spacing={3} py="30px">
+          <Grid item xs={12} md={6}>
+            <CustomSelect
+              label="Receipt Book"
+              options={[
+                { value: 'cbse', label: 'CBSE' },
+                { value: 'gseb', label: 'GSEB' },
+              ]}
+              value={formik.values.bookRecipt}
+              onChange={(e) => formik.setFieldValue('bookRecipt', e)}
+              disabled={isFieldsDisabled}
+              error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <CustomSelect
+              label="Applicable Class"
+              options={[
+                { value: '1', label: '1' },
+                { value: '2', label: '2' },
+                { value: '3', label: '3' },
+              ]}
+              value={formik.values.applicableGrade}
+              onChange={(e) => formik.setFieldValue('applicableGrade', e)}
+              disabled={isFieldsDisabled}
+              error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <CustomSelect
+              label="Fee Type"
+              options={[
+                { value: 'tuitionFee', label: 'Tuition Fee' },
+                { value: 'sportsFee', label: 'Sports Fee' },
+                { value: 'transportFee', label: 'Transport Fee' },
+              ]}
+              value={formik.values.feeHead}
+              onChange={(e) => formik.setFieldValue('feeHead', e)}
+              error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <NumericFormatCustom
+              size="small"
+              fullWidth
+              label="Gross Fee"
+              name="grossFee"
+              value={formik.values.grossFee}
+              onChange={(e) => {
+                console.log(e.target.value);
+                const grossFees = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
+                const discountAmount = +(
+                  formik.values.discountAmount?.match(/\d/g)?.join('') ?? '0'
+                );
 
-        <CustomSelect
-          label="Applicable Class"
-          options={[
-            { value: '1', label: '1' },
-            { value: '2', label: '2' },
-            { value: '3', label: '3' },
-          ]}
-          value={formik.values.applicableGrade}
-          onChange={(e) => formik.setFieldValue('applicableGrade', e)}
-          disabled={isFieldsDisabled}
-          error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-        />
+                // Calculate payable fee
+                const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
 
-        <CustomSelect
-          label="Fee Type"
-          options={[
-            { value: 'tuitionFee', label: 'Tuition Fee' },
-            { value: 'sportsFee', label: 'Sports Fee' },
-            { value: 'transportFee', label: 'Transport Fee' },
-          ]}
-          value={formik.values.feeHead}
-          onChange={(e) => formik.setFieldValue('feeHead', e)}
-          error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-        />
+                // Set the calculated payable fee
+                formik.setFieldValue('payableFee', payableFee);
+                formik.handleChange(e);
+              }}
+              error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
+              helperText={formik.touched.grossFee && formik.errors.grossFee}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <NumericFormatCustom
+              size="small"
+              fullWidth
+              label="Discount Amount"
+              name="discountAmount"
+              value={formik.values.discountAmount}
+              onChange={(e) => {
+                const discountAmount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
+                const grossFees = +(formik.values.grossFee?.match(/\d/g)?.join('') ?? '0');
+                // Calculate payable fee
+                const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
 
-        <NumericFormatCustom
-          label="Gross Fee"
-          name="grossFee"
-          value={formik.values.grossFee}
-          onChange={formik.handleChange}
-          error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
-          helperText={formik.touched.grossFee && formik.errors.grossFee}
-        />
+                // Set the calculated payable fee
+                formik.setFieldValue('payableFee', payableFee);
+                formik.handleChange(e);
+              }}
+              error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
+              helperText={formik.touched.discountAmount && formik.errors.discountAmount}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              size="small"
+              fullWidth
+              label="Discount Remark"
+              name="discountRemark"
+              value={formik.values.discountRemark}
+              onChange={formik.handleChange}
+              error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
+              helperText={formik.touched.discountRemark && formik.errors.discountRemark}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              size="small"
+              fullWidth
+              label="Payable Fee"
+              name="payableFee"
+              value={formik.values.payableFee}
+              disabled
+              error={formik.touched.payableFee && Boolean(formik.errors.payableFee)}
+              helperText={formik.touched.payableFee && formik.errors.payableFee}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <CustomSelect
+              multiple
+              label="Payment Method"
+              options={[
+                { value: 'cash', label: 'Cash' },
+                { value: 'check', label: 'Check' },
+              ]}
+              value={formik.values.paymentMethod}
+              onChange={(e) => formik.setFieldValue('paymentMethod', e)}
+              error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+              // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <CustomSelect
+              label="Late Fee Charges Type"
+              options={[
+                { value: 'perDay', label: 'Per Day' },
 
-        <NumericFormatCustom
-          label="Discount Amount"
-          name="discountAmount"
-          value={formik.values.discountAmount}
-          onChange={formik.handleChange}
-          error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
-          helperText={formik.touched.discountAmount && formik.errors.discountAmount}
-        />
+                { value: 'none', label: 'None' },
+              ]}
+              value={formik.values.lateFeeChargesType}
+              onChange={(e) => formik.setFieldValue('lateFeeChargesType', e)}
+              error={formik.touched.lateFeeChargesType && Boolean(formik.errors.lateFeeChargesType)}
+            />
+          </Grid>
 
-        <TextField
-          label="Discount Remark"
-          name="discountRemark"
-          value={formik.values.discountRemark}
-          onChange={formik.handleChange}
-          error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
-          helperText={formik.touched.discountRemark && formik.errors.discountRemark}
-        />
-
-        <TextField
-          label="Payable Fee"
-          name="payableFee"
-          value={formik.values.payableFee}
-          disabled
-          error={formik.touched.payableFee && Boolean(formik.errors.payableFee)}
-          helperText={formik.touched.payableFee && formik.errors.payableFee}
-        />
-
-        <DatePicker
-          label="Fees Due Date"
-          value={formik.values.paymentDueDate}
-          onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
-          slotProps={{
-            textField: {
-              error: formik.touched.paymentDueDate && Boolean(formik.errors.paymentDueDate),
-            },
-          }}
-        />
-
-        {/* <FinanceAddedFeeHeadForFeeStructure data={feeHeadListForFeeStructure} /> */}
-      </Box>
-    </form>
+          <Grid item xs={12} md={6}>
+            <NumericFormatCustom
+              size="small"
+              fullWidth
+              label="Late Fee Charges Amount"
+              name="lateFeeChargesAmount"
+              value={formik.values.lateFeeChargesAmount}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.lateFeeChargesAmount && Boolean(formik.errors.lateFeeChargesAmount)
+              }
+              helperText={formik.touched.lateFeeChargesAmount && formik.errors.lateFeeChargesAmount}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <DatePicker
+              label="Fees Due Date"
+              value={formik.values.paymentDueDate}
+              onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </Grid>
+        </Grid>
+      </form>
+      <FinanceAddedFeeHeadForFeeStructure
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+        data={feeHeadListForFeeStructure}
+      />
+    </>
   );
 };
 

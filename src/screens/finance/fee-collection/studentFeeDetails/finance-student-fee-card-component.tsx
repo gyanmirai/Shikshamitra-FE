@@ -33,7 +33,7 @@ const students = [
     chargesDetails: 'The payment of 500 made by cheque in June 2024 was bounced. Cheque No: H8749.',
     fees: [
       {
-        feeHeadId: 198,
+        feeHeadId: 'Tuition',
         feeHead: 'Tuition',
         totalFees: 60000,
         amount: 5000,
@@ -194,7 +194,7 @@ const students = [
         ],
       },
       {
-        feeHeadId: 230,
+        feeHeadId: 'Library',
         feeHead: 'Library',
         totalFees: 18000,
         amount: 1500,
@@ -341,7 +341,7 @@ const students = [
         ],
       },
       {
-        feeHeadId: 230,
+        feeHeadId: 'Admission',
         feeHead: 'Admission',
         grossFee: 1000,
         payableFee: 1000,
