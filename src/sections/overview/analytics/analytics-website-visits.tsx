@@ -16,10 +16,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: number[] | string[];
-    }[];
+    series: ApexAxisChartSeries | ApexNonAxisChartSeries | undefined;
     options?: ChartOptions;
   };
   firstDropdownOptions?: { value: string; label: string }[];

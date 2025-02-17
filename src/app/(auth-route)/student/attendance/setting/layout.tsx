@@ -1,16 +1,9 @@
-'use client';
-
 import React from 'react';
-import { useSelector } from 'react-redux';
 
-import { View403 } from 'src/sections/error';
+import TeacherPermission from 'src/components/teacher-permission';
 
-const AttendanceSettingLayout = ({ children }: any) => {
-  const { employee } = useSelector((state: any) => state.auth);
-  const role = employee?.role?.name;
-
-  if (role === 'Teacher') return <View403 />;
-  return children;
-};
+const AttendanceSettingLayout = ({ children }: any) => (
+  <TeacherPermission>{children}</TeacherPermission>
+);
 
 export default AttendanceSettingLayout;
