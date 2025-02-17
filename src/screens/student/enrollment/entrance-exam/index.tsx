@@ -1,21 +1,25 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Upload } from '@mui/icons-material';
+import { Add, Upload } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Paper,
   Button,
+  Divider,
   MenuItem,
   Checkbox,
   MenuList,
+  useTheme,
   TextField,
   Typography,
   ButtonGroup,
@@ -34,28 +38,32 @@ import { useGetEntranceExamSlotQuery } from 'src/redux/student/entrance-exam-slo
 import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
+  useUpdateEntranceExamMutation,
 } from 'src/redux/student/entrance-exam/entrance-exam-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { CalendarView } from 'src/sections/calendar/view';
+import { SlotsForm } from '../setting/entrance-exam-slots';
 
 const EntranceExamScreen = () => {
   // const [view, setView] = React.useState('calender');
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
-  const dialog = useBoolean();
+  const [editData, setEditData] = useState(null);
+
   const resultDialog = useBoolean();
-  const { data: entranceExamData } = useQueryAndMutation({
+  const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
   });
+  const theme = useTheme();
 
   const tableData = useMemo(
     () =>
@@ -68,16 +76,42 @@ const EntranceExamScreen = () => {
         name: `${item.studentEnrollment.firstName} ${item.studentEnrollment.lastName}`,
         medium: item.studentEnrollment.educationMedium.name,
         class: item.studentEnrollment.standard.name,
-        status: item?.obtainedMarks ? 'Pass' : 'Pending',
+        status:
+          item.marksObtained === null
+            ? 'Pending'
+            : item.marksObtained >= item.passingMark
+              ? 'Pass'
+              : 'Fail',
+        percentage:
+          item.marksObtained === null
+            ? 0
+            : +((item.marksObtained / item.totalMarks) * 100 || 0).toFixed(2),
+        obtainMarks: item.marksObtained ?? '-',
       })),
     [entranceExamData]
   );
 
+  const calendarData = useMemo(
+    () =>
+      entranceExamData?.items.map((i: any) => ({
+        ...i,
+        start: i.examDate,
+        color: theme.palette.success.main,
+        end: i.examDate,
+        allDay: false,
+        textColor: theme.palette.success.main,
+        title: `${i.studentEnrollment.firstName} ${i.studentEnrollment.lastName}`,
+        description: i.reason,
+      })) || [],
+    [entranceExamData?.items, theme.palette.success.main]
+  );
+
   const actions = useCallback(
-    ({ popover }: any) => (
+    ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
+            setEditData(row);
             resultDialog.onTrue();
             popover.onClose();
           }}
@@ -88,16 +122,16 @@ const EntranceExamScreen = () => {
 
         <MenuItem
           onClick={() => {
-            dialog.onTrue();
+            // dialog.onTrue();
             popover.onClose();
           }}
         >
           <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
+          Move To Admission
         </MenuItem>
       </MenuList>
     ),
-    [dialog, resultDialog]
+    [resultDialog]
   );
   return (
     <Box>
@@ -132,81 +166,109 @@ const EntranceExamScreen = () => {
           <Iconify icon="lucide:layout-list" />
         </Button>
       </ButtonGroup>
-      {searchParams.view === 'calender' && (
-        <Box display="flex" height="700px">
-          <CalendarView />
-        </Box>
-      )}
+      <Box mt={2}>
+        {searchParams.view === 'calender' && (
+          <Box display="flex" height="700px">
+            <CommonCalender
+              data={calendarData}
+              // showCalendarToolbar={false}
+              // onDateClick={(e) => {
+              //   console.log(e);
+              //   setCurrentDateClick(e);
+              // }}
+            />
+          </Box>
+        )}
 
-      {searchParams.view === 'table' && (
-        <CustomizableTable
-          tableId="entrance-exam-table"
-          columns={[
-            { id: 'date', label: 'Date' },
-            { id: 'examTime', label: 'Exam Time' },
-            {
-              id: 'name',
-              label: 'Student',
-            },
-            {
-              id: 'medium',
-              label: 'Medium',
-            },
-            {
-              id: 'class',
-              label: 'Class',
-            },
-            {
-              id: 'totalMarks',
-              label: 'Total Marks',
-            },
-            {
-              id: 'obtainedMarks',
-              label: 'Obtained Marks',
-            },
-            {
-              id: 'percentage',
-              label: 'Percentage',
-              render(value, row) {
-                return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100 || 0).toFixed(2)}%`;
+        {searchParams.view === 'table' && (
+          <CustomizableTable
+            tableId="entrance-exam-table"
+            isLoading={isLoading}
+            columns={[
+              { id: 'date', label: 'Date', filterType: 'date' },
+              { id: 'examTime', label: 'Exam Time' },
+              {
+                id: 'name',
+                label: 'Student',
               },
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              render(value, row) {
-                return (
-                  <Label
-                    color={value === 'Pass' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
-                  >
-                    {value}
-                  </Label>
-                );
+              {
+                id: 'medium',
+                label: 'Medium',
               },
-            },
-            {
-              id: 'admission',
-              label: '',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <Button variant="soft" size="small" color="primary">
-                    Admission
-                  </Button>
-                );
+              {
+                id: 'class',
+                label: 'Class',
               },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              render: (value, row) => <ThreeDotsActions placement="right-top" actions={actions} />,
-            },
-          ]}
-          data={tableData || []}
+              {
+                id: 'passingMark',
+                label: 'Passing Marks',
+                filterType: 'number',
+              },
+              {
+                id: 'totalMarks',
+                label: 'Total Marks',
+                filterType: 'number',
+              },
+              {
+                id: 'obtainMarks',
+                label: 'Obtained Marks',
+                filterType: 'number',
+              },
+              {
+                id: 'percentage',
+                label: 'Percentage',
+                filterType: 'number',
+                render(value, row) {
+                  return `${value}%`;
+                },
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                render(value, row) {
+                  let color: LabelColor = 'error';
+                  if (value === 'Pending') {
+                    color = 'warning';
+                  } else if (value === 'Pass') {
+                    color = 'success';
+                  } else {
+                    color = 'error';
+                  }
+                  return <Label color={color}>{value}</Label>;
+                },
+              },
+
+              {
+                id: 'action',
+                label: 'Action',
+                isFilter: false,
+                render: (value, row) => (
+                  <ThreeDotsActions
+                    placement="right-top"
+                    actions={(props) => actions(props, row)}
+                  />
+                ),
+              },
+            ]}
+            data={tableData || []}
+          />
+        )}
+      </Box>
+      <CustomDialog
+        title="Result"
+        handleClose={() => {
+          setEditData(null);
+          resultDialog.onFalse();
+        }}
+        open={resultDialog.value}
+      >
+        <ResultForm
+          handleClose={() => {
+            setEditData(null);
+            resultDialog.onFalse();
+          }}
+          editData={editData}
         />
-      )}
-      <CustomDialog title="Result" handleClose={resultDialog.onFalse} open={resultDialog.value}>
-        <ResultForm />
       </CustomDialog>
     </Box>
   );
@@ -221,6 +283,7 @@ export const ExamForm = ({
   studentEnrollmentId: string;
   handleClose: () => void;
 }) => {
+  const dialog = useBoolean();
   const validationSchema = Yup.object({
     // examDate: Yup.date().required('Exam date is required'),
     // selectedStudents: Yup.string().required('Students are required'),
@@ -256,6 +319,7 @@ export const ExamForm = ({
       isConfirmed: false,
       slots: allSlots || [],
       slot: '',
+      passingMarks: null,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -267,6 +331,7 @@ export const ExamForm = ({
           examType: values.examType,
           totalMarks: values.totalMarks,
           examScheduleType: values.scheduleType,
+          passingMark: values.passingMarks,
         }).unwrap();
         handleClose();
       } catch (error) {
@@ -344,9 +409,33 @@ export const ExamForm = ({
                     }}
                   />
                 </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    name="passingMarks"
+                    type="number"
+                    value={formik.values.passingMarks}
+                    onChange={formik.handleChange}
+                    label="Passing Marks"
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid xs={12}>
+                  <Divider sx={{ my: 0.5 }} />
+                </Grid>
                 <Grid xs={12}>
                   <Box>
-                    <Typography variant="subtitle1">Slots</Typography>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="subtitle1">Slots</Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<Add />}
+                        onClick={dialog.onTrue}
+                      >
+                        Slot
+                      </Button>
+                    </Box>
 
                     <Grid container spacing={2}>
                       {formik.values.slots.map((slot: any, index: number) => (
@@ -388,28 +477,90 @@ export const ExamForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
+      <CustomDialog title="Slots" open={dialog.value} handleClose={dialog.onFalse}>
+        <SlotsForm handleClose={dialog.onFalse} editData={null} />
+      </CustomDialog>
     </form>
   );
 };
 
-const ResultForm = () => (
-  <Box>
-    <Scrollbar
-      sx={{
-        p: 3,
-        bgcolor: 'background.neutral',
-        //   height: 'calc(100vh - 150px)',
-      }}
-    >
-      <Box display="flex" flexDirection="column" gap={2}>
-        <TextField label="Obtained Marks" size="small" fullWidth />
-        <TextField label="Total Marks" size="small" fullWidth />
-      </Box>
-    </Scrollbar>
-    <DialogActions sx={{ flexShrink: 0 }}>
-      <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>
-        Submit
-      </Button>
-    </DialogActions>
-  </Box>
-);
+const ResultForm = ({ editData, handleClose }: { editData: any; handleClose: () => void }) => {
+  const formik = useFormik({
+    initialValues: {
+      obtainedMarks: editData?.marksObtained ?? null,
+      totalMarks: editData?.totalMarks,
+    },
+    onSubmit: async (values) => {
+      console.log(values);
+      try {
+        await updateMarks({
+          id: editData.id,
+          body: {
+            entranceExamSlotId: editData.entranceExamSlotId,
+            studentEnrollmentId: editData.studentEnrollmentId,
+            examDate: editData.examDate,
+            examType: editData.examType,
+            marksObtained: values.obtainedMarks,
+            totalMarks: values.totalMarks,
+            examScheduleType: editData.examScheduleType,
+            passingMark: editData.passingMarks,
+          },
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+
+  const [updateMarks, { isLoading }] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useUpdateEntranceExamMutation,
+  });
+
+  return (
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <Scrollbar
+        sx={{
+          p: 3,
+          bgcolor: 'background.neutral',
+          //   height: 'calc(100vh - 150px)',
+        }}
+      >
+        <Box display="flex" flexDirection="column" gap={2}>
+          <TextField
+            label="Obtained Marks"
+            size="small"
+            fullWidth
+            name="obtainedMarks"
+            value={formik.values.obtainedMarks}
+            onChange={formik.handleChange}
+          />
+          <TextField
+            label="Total Marks"
+            disabled
+            size="small"
+            fullWidth
+            name="totalMarks"
+            value={formik.values.totalMarks}
+            onChange={formik.handleChange}
+          />
+        </Box>
+      </Scrollbar>
+      <DialogActions sx={{ flexShrink: 0 }}>
+        <Button onClick={handleClose} style={{ marginTop: '1rem' }}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading}
+          type="submit"
+          variant="contained"
+          color="primary"
+          style={{ marginTop: '1rem' }}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </Box>
+  );
+};

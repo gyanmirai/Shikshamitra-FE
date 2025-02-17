@@ -104,7 +104,7 @@ const UserManagementScreen = () => {
         open={academicDialog.value}
         handleClose={academicDialog.onFalse}
       >
-        <AccessControlForm user={user} />
+        <AccessControlForm user={user} handleClose={academicDialog.onFalse} />
       </CustomDialog>
     </Box>
   );

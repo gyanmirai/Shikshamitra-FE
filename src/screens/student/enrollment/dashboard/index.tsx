@@ -9,6 +9,7 @@ import React, { useState, useCallback } from 'react';
 import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
+import 'src/utils/convertABPPermissionToNavigation';
 
 import CustomizableView from 'src/components/customizable-view';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';

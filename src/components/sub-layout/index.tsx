@@ -17,10 +17,13 @@ import { useSettingsContext } from '../settings';
 import { NavSectionVertical } from '../nav-section';
 
 const SubLayout = ({ children }: any) => {
+  const { user } = useSelector((state: any) => state.auth);
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
-  const currentData = navSubData[`/${currentModule}` as keyof typeof navSubData];
+  const currentData: Array<any> = navSubData(user?.profile?.email === 'ddvs@gmail.com')?.[
+    `/${currentModule}` as keyof typeof navSubData
+  ];
 
   const settings = useSettingsContext();
   const isNavMini = settings.navLayout === 'mini';

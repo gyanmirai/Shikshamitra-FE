@@ -10,7 +10,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
 
-import { Card } from '@mui/material';
+import { Card, useTheme } from '@mui/material';
 
 import { fDate } from 'src/utils/format-time';
 
@@ -42,6 +42,7 @@ const CommonCalender = ({
   initialDate,
   ...props
 }: CommonCalenderProps) => {
+  const theme = useTheme();
   const {
     calendarRef,
     //
@@ -72,7 +73,15 @@ const CommonCalender = ({
   }, [onInitialView]);
 
   return (
-    <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
+    <DashboardContent
+      maxWidth="xl"
+      sx={{
+        ...flexProps,
+        [theme.breakpoints.up('lg')]: {
+          px: 0,
+        },
+      }}
+    >
       <Card sx={{ ...flexProps, minHeight: '70vh' }}>
         <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
           {showCalendarToolbar && (

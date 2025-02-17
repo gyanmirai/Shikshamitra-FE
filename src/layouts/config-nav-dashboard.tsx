@@ -79,46 +79,55 @@ const studentModule = {
           title: 'Student Enrollment',
           path: '',
           _action: 'student-enrollment',
+          permission: 'Permission:StudentEnrollment',
           children: [
             {
               title: 'Dashboard',
               path: '/student/enrollment/dashboard',
               _action: 'student-enrollment-dashboard',
+              permission: 'Permission:StudentEnrollment.Dashboard',
             },
             {
               title: 'Inquiry',
               path: '/student/enrollment/inquiry',
               _action: 'student-enrollment-inquiry',
+              permission: 'Permission:StudentEnrollment.Inquiry',
             },
             {
               title: 'Registration Form Details',
               path: '/student/enrollment/registration-form',
               _action: 'student-enrollment-registration-form',
+              permission: 'Permission:StudentEnrollment.RegistrationForm',
             },
             {
               title: 'Registration',
               path: '/student/enrollment/registration',
               _action: 'student-enrollment-registration',
+              permission: 'Permission:StudentEnrollment.Registration',
             },
             {
               title: 'Entrance Exam',
               path: '/student/enrollment/entrance-exam',
               _action: 'student-enrollment-entrance-exam',
+              permission: 'Permission:StudentEnrollment.EntranceExam',
             },
             {
               title: 'Follow-up',
               path: '/student/enrollment/follow-up',
               _action: 'student-enrollment-follow-up',
+              permission: 'Permission:StudentEnrollment.FollowUp',
             },
             {
               title: 'Admission',
               path: '/student/enrollment/admission',
               _action: 'student-enrollment-admission',
+              permission: 'Permission:StudentEnrollment.Admission',
             },
             {
               title: 'Admission Fees',
               path: '/student/enrollment/admission-fees',
               _action: 'student-enrollment-admission-fees',
+              permission: 'Permission:StudentEnrollment.AdmissionFees',
             },
 
             // {
@@ -130,11 +139,13 @@ const studentModule = {
               title: 'Reports',
               path: '/student/enrollment/reports',
               _action: 'student-enrollment-reports',
+              permission: 'Permission:StudentEnrollment.Reports',
             },
             {
               title: 'Setting',
               path: '/student/enrollment/setting',
               _action: 'student-enrollment-setting',
+              permission: 'Permission:StudentEnrollment.Setting',
             },
           ],
         },
@@ -339,11 +350,11 @@ const securityModule = {
               path: '/security/department',
               _action: 'department',
             },
-            {
-              title: 'Academic Access Control',
-              path: '/security/access-control',
-              _action: 'access-control',
-            },
+            // {
+            //   title: 'Academic Access Control',
+            //   path: '/security/access-control',
+            //   _action: 'access-control',
+            // },
           ],
         },
       ],
@@ -1301,7 +1312,7 @@ const transportModule = {
   ],
 };
 
-export const navData = [
+export const navData = (isDdvs: boolean) => [
   {
     subheader: 'Management',
     items: [
@@ -1347,7 +1358,7 @@ export const navData = [
         icon: ICONS.communication,
         _action: 'communication',
         submodule: communicationModule[communicationPath].flatMap((list) => list.items),
-        disabled: true,
+        disabled: !isDdvs,
         // caption: 'Coming Soon',
       },
       {
@@ -1356,7 +1367,7 @@ export const navData = [
         icon: ICONS.library,
         _action: 'library',
         submodule: libraryModule[libraryPath].flatMap((list) => list.items),
-        disabled: true,
+        disabled: !isDdvs,
         // caption: 'Coming Soon',
       },
       {
@@ -1365,7 +1376,7 @@ export const navData = [
         icon: ICONS.transport,
         _action: 'transport',
         submodule: transportModule[transportPath].flatMap((list) => list.items),
-        disabled: true,
+        disabled: !isDdvs,
         // caption: 'Coming Soon',
       },
       {
@@ -1374,20 +1385,20 @@ export const navData = [
         icon: ICONS.hostel,
         _action: 'hostel',
         submodule: [],
-        disabled: true,
-        caption: 'Coming Soon',
+        disabled: !isDdvs,
+        // caption: 'Coming Soon',
       },
       {
         title: 'Security',
         path: '/security/role',
         icon: ICONS.security,
         _action: 'security',
-        submodule: [],
+        submodule: securityModule[securityPath].flatMap((list) => list.items),
       },
     ],
   },
 ];
-export const navSubData = {
+export const navSubData = (isDdvs: boolean) => ({
   ...studentModule,
   ...securityModule,
   ...settingModule,
@@ -1398,4 +1409,4 @@ export const navSubData = {
   ...transportModule,
   ...communicationModule,
   ...libraryModule,
-};
+});

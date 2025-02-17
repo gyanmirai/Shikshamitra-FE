@@ -1,8 +1,7 @@
-const Layout = ({ children }: { children: React.ReactNode }) =>
-  // const { user } = useSelector((store: any) => store.auth);
+import React from 'react';
 
-  // if (userInfo?.employee?.role?.name === 'Teacher') {
-  //   return <Typography>You are not authorized to access this page</Typography>;
-  // }
-  children;
-export default Layout;
+import TeacherPermission from 'src/components/teacher-permission';
+
+const HrSettingLayout = ({ children }: any) => <TeacherPermission>{children}</TeacherPermission>;
+
+export default HrSettingLayout;
