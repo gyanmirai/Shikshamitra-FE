@@ -4,27 +4,29 @@ import React, { useState, useCallback } from 'react';
 
 import { Box, Grid, Card, Button, Typography, ButtonGroup } from '@mui/material';
 
+import { formatCurrency } from 'src/utils/cureencyFormater';
+
 import { CONFIG } from 'src/config-global';
 import SeoIllustration from 'src/assets/illustrations/seo-illustration';
+import { TopPerformer } from 'src/screens/student/enrollment/entrance-exam/dashboard';
 
 import { SvgColor } from 'src/components/svg-color';
+import CustomizableTable from 'src/components/customizabaleTable';
 import ScrollableListCard from 'src/components/scrollable-list-card';
 
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
 
 import TimeTableView from '../component/time-table-view';
-import { SubjectOverviewCard } from './component/subject-overview-card';
 import { StudentPerformanceChart } from './component/student-performance';
 import PayrollOverviewTeacherDashboard from './component/payroll-overview';
-import StudentWiseAssignmentTable from './component/student-wise-assignment-table';
 import { PrincipalDashboardCard } from '../principal/component/principal-dashboard-card';
 import WhatsNewInMonthComponent from '../principal/component/whats-new-in-month-component';
 
 const upcomingExams = [
-  { subject: 'Science', date: '16-02-2025', status: 'Completed' },
-  { subject: 'English', date: '20-02-2025', status: 'Pending' },
-  { subject: 'Maths', date: '20-02-2025', status: 'Pending' },
-  { subject: 'Maths', date: '20-05-2025', status: 'Scheduled' },
+  { subject: 'Science', date: '16-02-2025', status: 'Completed', class: '10th-A', room: '101' },
+  { subject: 'English', date: '20-02-2025', status: 'Pending', class: '10th-A', room: '102' },
+  { subject: 'Maths', date: '20-02-2025', status: 'Pending', class: '10th-A', room: '103' },
+  { subject: 'Maths', date: '20-05-2025', status: 'Scheduled', class: '10th-A', room: '104' },
 ];
 
 const studentAssignments = [
@@ -61,11 +63,11 @@ const MainDashboardTeacher = () => {
 
       {/* Dashboard Cards: Total Students & Class Attendance */}
       <Grid container item xs={12} spacing={3}>
-        <Grid item xs={12} md={6} lg={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <PrincipalDashboardCard
             dropdownLabel="Select Class"
             icon="mdi:school"
-            title="Total Students"
+            title="My Class Students"
             count={250}
             color="primary.main"
             bgColor="primary"
@@ -80,7 +82,7 @@ const MainDashboardTeacher = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6} lg={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <PrincipalDashboardCard
             dropdownLabel="Select Class"
             icon="mdi:school"
@@ -90,12 +92,65 @@ const MainDashboardTeacher = () => {
             bgColor="primary"
             href="/dashboard"
             labels={[
-              { name: 'Teaching', color: 'error', value: 50 },
-              { name: 'Non-teaching', color: 'success', value: 50 },
+              { name: 'Present', color: 'error', value: 50 },
+              { name: 'Absent', color: 'success', value: 50 },
             ]}
             selectOptions={[]}
             selectedValue="Jan"
             onSelectChange={(val) => console.log('Selected Month:', val)}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <TopPerformer
+            title="Top Performer"
+            sx={{ height: '100%' }}
+            list={[
+              {
+                id: '1',
+                name: 'Jayvion Simon',
+                avatarUrl: '/static/images/avatars/avatar_1.png',
+                totalMarks: 0,
+              },
+              {
+                id: '2',
+                name: 'Lucian Obrien',
+                avatarUrl: '/static/images/avatars/avatar_2.png',
+                totalMarks: 0,
+              },
+              {
+                id: '3',
+                name: 'Deja Bredy',
+                avatarUrl: '/static/images/avatars/avatar_3.png',
+                totalMarks: 0,
+              },
+            ]}
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <TopPerformer
+            title="Bottom Performer"
+            sx={{ height: '100%' }}
+            list={[
+              {
+                id: '1',
+                name: 'Jayvion Simon',
+                avatarUrl: '/static/images/avatars/avatar_1.png',
+                totalMarks: 0,
+              },
+              {
+                id: '2',
+                name: 'Lucian Obrien',
+                avatarUrl: '/static/images/avatars/avatar_2.png',
+                totalMarks: 0,
+              },
+              {
+                id: '3',
+                name: 'Deja Bredy',
+                avatarUrl: '/static/images/avatars/avatar_3.png',
+                totalMarks: 0,
+              },
+            ]}
           />
         </Grid>
       </Grid>
@@ -106,29 +161,7 @@ const MainDashboardTeacher = () => {
           <ScrollableListCard items={upcomingExams} title="Upcoming Exams" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <SubjectOverviewCard
-            icon="mdi:school"
-            title=""
-            color="primary"
-            bgColor="secondary"
-            studentList={[
-              { name: 'John', subject: 'Math', score: 85 },
-              { name: 'Emma', subject: 'Math', score: 92 },
-              { name: 'Liam', subject: 'Math', score: 70 },
-              { name: 'Sophia', subject: 'Science', score: 60 },
-              { name: 'Mia', subject: 'Science', score: 40 },
-              { name: 'Noah', subject: 'Science', score: 75 },
-              { name: 'Ava', subject: 'English', score: 50 },
-              { name: 'William', subject: 'English', score: 30 },
-              { name: 'James', subject: 'English', score: 45 },
-            ]}
-            selectOptions={[
-              { value: 'Math', label: 'Math' },
-              { value: 'Science', label: 'Science' },
-              { value: 'English', label: 'English' },
-            ]}
-            dropdownLabel="Select Subject"
-          />
+          <ScrollableListCard items={upcomingExams} title="Upcoming Exams" />
         </Grid>
       </Grid>
 
@@ -169,10 +202,70 @@ const MainDashboardTeacher = () => {
       {/* Student Assignments Table */}
       <Grid container spacing={3} sx={{ mt: 3, px: 3 }}>
         <Grid item xs={12} lg={8}>
-          <Typography variant="h6" fontWeight="bold">
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h5">Earning Section</Typography>
+              <CustomizableTable
+                tableId="earning-table"
+                columns={[
+                  { id: 'employeeType', label: 'Employee Type' },
+                  {
+                    id: 'amount',
+                    label: 'Amount',
+                    render(value, row) {
+                      return formatCurrency(value);
+                    },
+                  },
+                  {
+                    id: 'total',
+                    label: 'Total',
+                    render(value, row) {
+                      return formatCurrency(value);
+                    },
+                  },
+                ]}
+                data={[
+                  { employeeType: 'Teaching Allowance', amount: 5000, total: 5000 },
+                  { employeeType: 'Transport Allowance', amount: 2000, total: 2000 },
+                  { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
+                  { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
+                ]}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h5">Deductions Section</Typography>
+              <CustomizableTable
+                tableId="deduction-table"
+                columns={[
+                  { id: 'deductionType', label: 'Deduction Type' },
+                  {
+                    id: 'amount',
+                    label: 'Amount',
+                    render(value, row) {
+                      return formatCurrency(value);
+                    },
+                  },
+                  {
+                    id: 'totalDeduction',
+                    label: 'Total Deduction',
+                    render(value, row) {
+                      return formatCurrency(value);
+                    },
+                  },
+                ]}
+                data={[
+                  { deductionType: 'Income Tax', amount: 5000, totalDeduction: 5000 },
+                  { deductionType: 'Provident Fund', amount: 3000, totalDeduction: 3000 },
+                  { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
+                  { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
+                ]}
+              />
+            </Grid>
+          </Grid>
+          {/* <Typography variant="h6" fontWeight="bold">
             Assignment Overview
-          </Typography>
-          <StudentWiseAssignmentTable />
+          </Typography> */}
+          {/* <StudentWiseAssignmentTable /> */}
         </Grid>
 
         <Grid item xs={12} lg={4}>

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Card, Chip, ListItem, Typography, CardContent, ListItemText } from '@mui/material';
+import { Card, ListItem, Typography, CardContent, ListItemText } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar/scrollbar';
 
@@ -21,15 +21,13 @@ const ScrollableListCard: React.FC<ScrollableListCardProps> = ({ title, items })
         {items.map((item, index) => (
           <ListItem key={index}>
             <ListItemText
-              primary={[item.subject, item.date && `- ${item.date}`, item.name && `- ${item.name}`]
+              primary={[
+                item.subject,
+                item.date && `- ${item.date}`,
+                item.name && `- ${item.name} - ${item.class} - ${item.room}`,
+              ]
                 .filter(Boolean)
                 .join(' ')}
-            />
-
-            <Chip
-              size="small"
-              label={item.status}
-              color={item.status === 'Completed' ? 'success' : 'warning'}
             />
           </ListItem>
         ))}

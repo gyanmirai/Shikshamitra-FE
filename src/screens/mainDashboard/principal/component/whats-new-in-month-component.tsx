@@ -152,7 +152,7 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
             label={
               <Typography style={{ display: 'flex', alignItems: 'center' }}>
                 {tab.label}
-                <Chip label="100" size="small" style={{ marginLeft: 8 }} />
+                <Chip label="100" size="small" style={{ marginLeft: 8, fontSize: '11px' }} />
               </Typography>
             }
           />
