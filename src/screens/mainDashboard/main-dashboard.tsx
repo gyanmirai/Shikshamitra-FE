@@ -4,6 +4,7 @@ import React from 'react';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
+import MainDashboardTeacher from './teacher/main-dashboard-teacher';
 import MainDashboardPrincipal from './principal/main-dashboard-principal';
 
 const MainDashboard = () => (
@@ -13,7 +14,8 @@ const MainDashboard = () => (
       links={[{ name: 'Shikshamitra' }, { name: 'Dashboard' }]}
       sx={{ px: 1, mb: 2 }}
     />
-    <MainDashboardPrincipal />{' '}
+    <MainDashboardPrincipal />
+    <MainDashboardTeacher />
   </>
 );
 

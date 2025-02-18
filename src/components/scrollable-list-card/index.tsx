@@ -1,12 +1,12 @@
 import React from 'react';
 
-import { Card, ListItem, Typography, CardContent, ListItemText } from '@mui/material';
+import { Card, Chip, ListItem, Typography, CardContent, ListItemText } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar/scrollbar';
 
 interface ScrollableListCardProps {
   title: string;
-  items: string[];
+  items: any[];
 }
 
 const ScrollableListCard: React.FC<ScrollableListCardProps> = ({ title, items }) => (
@@ -15,10 +15,22 @@ const ScrollableListCard: React.FC<ScrollableListCardProps> = ({ title, items })
       <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
         {title}
       </Typography>
-      <Scrollbar sx={{ maxHeight: 200, overflowY: 'auto', bgcolor: 'white' }}>
+      <Scrollbar
+        sx={{ minHeight: '215px', maxHeight: '215px', overflowY: 'auto', bgcolor: 'white' }}
+      >
         {items.map((item, index) => (
           <ListItem key={index}>
-            <ListItemText primary={item} sx={{ color: 'black' }} />
+            <ListItemText
+              primary={[item.subject, item.date && `- ${item.date}`, item.name && `- ${item.name}`]
+                .filter(Boolean)
+                .join(' ')}
+            />
+
+            <Chip
+              size="small"
+              label={item.status}
+              color={item.status === 'Completed' ? 'success' : 'warning'}
+            />
           </ListItem>
         ))}
       </Scrollbar>

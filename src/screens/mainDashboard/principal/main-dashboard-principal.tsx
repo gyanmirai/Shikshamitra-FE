@@ -194,7 +194,7 @@ const MainDashboardPrincipal = () => {
             height: '100%',
           }}
         >
-          <WhatsNewInMonthComponent />
+          <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
         </Card>
       </Grid>
 

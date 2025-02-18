@@ -4,6 +4,7 @@ import {
   Tab,
   Box,
   List,
+  Chip,
   Avatar,
   ListItem,
   Typography,
@@ -17,6 +18,33 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 
+interface Birthday {
+  id: number;
+  name: string;
+  age: number;
+  date: string;
+  image: string;
+}
+
+interface TimeOffRequest {
+  id: number;
+  name: string;
+  date: string;
+  reason: string;
+}
+
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+}
+
+interface WhatsNewInMonthProps {
+  birthdays: Birthday[];
+  timeOffRequests: TimeOffRequest[];
+  events: Event[];
+}
+
 const TABS = [
   {
     value: 'timesoff',
@@ -27,25 +55,11 @@ const TABS = [
   { value: 'event', label: 'Event', icon: <Iconify icon="material-symbols-light:event" /> },
 ];
 
-const BirthdayComponent = () => {
-  const today = new Date().toISOString().slice(5, 10); // Format: MM-DD
-  const birthdays: any = [
-    { id: 1, name: 'Alice Johnson', age: 21, date: '2025-02-14', image: '/images/alice.jpg' },
-    { id: 2, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 32, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 22, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-    { id: 12, name: 'Bob Smith', age: 25, date: '2025-02-20', image: '/images/bob.jpg' },
-  ];
+const BirthdayComponent: React.FC<{ birthdays: Birthday[] }> = ({ birthdays }) => {
+  const today = new Date().toISOString().slice(5, 10);
   return (
     <Box>
-      {birthdays.map((person: any) => {
+      {birthdays.map((person) => {
         const isToday = person.date.slice(5, 10) === today;
         return (
           <Box key={person.id} display="flex" alignItems="center" gap={2} p={2}>
@@ -65,20 +79,11 @@ const BirthdayComponent = () => {
     </Box>
   );
 };
-const timeOffRequests = [
-  { id: 1, name: 'John Doe', date: '14-02-2025', reason: 'Sick Leave' },
-  { id: 2, name: 'Jane Smith', date: '15-02-2025', reason: 'Family Emergency' },
-];
-const getTodayDate = () => {
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, '0');
-  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-  const year = today.getFullYear();
-  return `${day}-${month}-${year}`;
-};
 
-const TimesOffComponent = () => {
-  const todayDate = getTodayDate();
+const TimesOffComponent: React.FC<{ timeOffRequests: TimeOffRequest[] }> = ({
+  timeOffRequests,
+}) => {
+  const todayDate = new Date().toLocaleDateString('en-GB').split('/').reverse().join('-');
 
   return (
     <Box>
@@ -86,7 +91,6 @@ const TimesOffComponent = () => {
         <List>
           {timeOffRequests.map((request) => {
             const isToday = request.date === todayDate;
-
             return (
               <ListItem key={request.id} sx={{ bgcolor: 'transparent' }}>
                 <ListItemAvatar>
@@ -107,12 +111,8 @@ const TimesOffComponent = () => {
     </Box>
   );
 };
-const events = [
-  { id: 1, title: 'Parent Meeting', date: '14-02-2025' },
-  { id: 2, title: 'Project Deadline', date: '15-02-2025' },
-];
 
-const EventComponent = () => (
+const EventComponent: React.FC<{ events: Event[] }> = ({ events }) => (
   <Box>
     {events.length > 0 ? (
       <List>
@@ -127,12 +127,17 @@ const EventComponent = () => (
     )}
   </Box>
 );
-const WhatsNewInMonthComponent = () => {
+
+const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
+  birthdays,
+  timeOffRequests,
+  events,
+}) => {
   const tabs = useTabs('timesoff');
 
   return (
     <>
-      <Typography variant="h6" fontWeight={600} mb={2}>{`What's On In February ? `}</Typography>
+      <Typography variant="h6" fontWeight={600} mb={2}>{`What's On This Month?`}</Typography>
       <CustomTabs
         value={tabs.value}
         onChange={tabs.onChange}
@@ -140,14 +145,24 @@ const WhatsNewInMonthComponent = () => {
         slotProps={{ tab: { px: 0 } }}
       >
         {TABS.map((tab) => (
-          <Tab key={tab.value} icon={tab.icon} value={tab.value} label={tab.label} />
+          <Tab
+            key={tab.value}
+            icon={tab.icon}
+            value={tab.value}
+            label={
+              <Typography style={{ display: 'flex', alignItems: 'center' }}>
+                {tab.label}
+                <Chip label="100" size="small" style={{ marginLeft: 8 }} />
+              </Typography>
+            }
+          />
         ))}
       </CustomTabs>
       <Scrollbar sx={{ height: '500px', width: '500px', overflowY: 'auto' }}>
         <Box mt={2}>
-          {tabs.value === 'timesoff' && <TimesOffComponent />}
-          {tabs.value === 'birthday' && <BirthdayComponent />}
-          {tabs.value === 'event' && <EventComponent />}
+          {tabs.value === 'timesoff' && <TimesOffComponent timeOffRequests={timeOffRequests} />}
+          {tabs.value === 'birthday' && <BirthdayComponent birthdays={birthdays} />}
+          {tabs.value === 'event' && <EventComponent events={events} />}
         </Box>
       </Scrollbar>
     </>
