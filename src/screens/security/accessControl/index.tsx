@@ -3,8 +3,8 @@
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
 
-import React from 'react';
 import * as yup from 'yup';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { Box, Button, TextField, Autocomplete } from '@mui/material';
@@ -104,7 +104,7 @@ const AccessControlScreen = () => {
   );
 };
 
-export const AccessControlForm = ({ user }: any) => {
+export const AccessControlForm = ({ user, handleClose }: any) => {
   const [activeStep, setActiveStep] = React.useState(0);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -125,57 +125,65 @@ export const AccessControlForm = ({ user }: any) => {
     },
   });
 
-  // const initial = useMemo(() => {
-  //   if (!isLoading && accessControl) {
-  //     const board = accessControl.educationBoards;
-  //     const medium = accessControl.educationMediums.reduce((acc: any, curr: any) => {
-  //       const findBoard = board.find((boar: any) => boar.id === curr.educationBoardId);
-  //       acc[findBoard.id] = [...(acc[findBoard.id] || []), curr];
-  //       return acc;
-  //     }, {});
-  //     console.log(accessControl, '🚀 ~ medium ~ medium:', medium);
+  const initial = useMemo(() => {
+    if (!isLoading && accessControl) {
+      const board = accessControl.educationBoards || [];
+      const medium = accessControl.educationMediums.reduce((acc: any, curr: any) => {
+        const findBoard = board.find((boar: any) => boar.id === curr.educationBoardId);
+        acc[findBoard.id] = [...(acc[findBoard.id] || []), curr];
+        return acc;
+      }, {});
+      console.log('🚀 ~ medium ~ medium:', medium);
 
-  //     const organization = accessControl.educationMediumStages.reduce((acc: any, curr: any) => {
-  //       const findMedium = medium[curr.educationMediumId];
-  //       acc[findMedium.id] = [...(acc[findMedium.id] || []), curr];
-  //       return acc;
-  //     }, {});
-  //     console.log('🚀 ~ organization ~ organization:', organization);
+      const organization = accessControl.educationMediumStages.reduce((acc: any, curr: any) => {
+        const mediums = Object.values(medium).flat(Infinity);
+        mediums.forEach((med: any) => {
+          if (curr.educationMediumId === med.id) {
+            acc[med.id] = [...(acc[med.id] || []), curr];
+          }
+        });
+        return acc;
+      }, {});
+      console.log('🚀 ~ organization ~ organization:', organization);
 
-  //     const standard = accessControl.standards.reduce((acc: any, curr: any) => {
-  //       const findOrganization = organization[curr.educationMediumStageId];
-  //       acc[findOrganization.id] = [...(acc[findOrganization.id] || []), curr];
-  //       return acc;
-  //     }, {});
-  //     console.log('🚀 ~ standard ~ standard:', standard);
+      const standard = accessControl.standards.reduce((acc: any, curr: any) => {
+        const organizations = Object.values(organization).flat(Infinity);
+        organizations.forEach((org: any) => {
+          if (curr.educationMediumStageId === org.id) {
+            acc[org.id] = [...(acc[org.id] || []), curr];
+          }
+        });
+        return acc;
+      }, {});
+      console.log('🚀 ~ standard ~ standard:', standard);
 
-  //     const division = accessControl.divisions.reduce((acc: any, curr: any) => {
-  //       const findStandard = standard[curr.standardId];
-  //       acc[findStandard.id] = [...(acc[findStandard.id] || []), curr];
-  //       return acc;
-  //     }, {});
-  //     console.log('🚀 ~ division ~ division:', division);
+      const division = accessControl.divisions.reduce((acc: any, curr: any) => {
+        const standards = Object.values(standard).flat(Infinity);
+        standards.forEach((std: any) => {
+          if (curr.standardId === std.id) {
+            acc[std.id] = [...(acc[std.id] || []), curr];
+          }
+        });
+        return acc;
+      }, {});
+      console.log('🚀 ~ division ~ division:', division);
 
-  //     return {
-  //       board,
-  //       medium,
-  //       organization,
-  //       class: standard,
-  //       division,
-  //     };
-  //   }
-  //   return { board: [], medium: {}, organization: {}, class: {}, division: {} };
-  // }, [accessControl, isLoading]);
+      return {
+        board,
+        medium,
+        organization,
+        class: standard,
+        division,
+      };
+    }
+    return { board: [], medium: {}, organization: {}, class: {}, division: {} };
+  }, [accessControl, isLoading]);
 
-  // console.log(initial, 'initial');
+  console.log(initial, 'initial');
 
   const initialValues = {
     user,
-    board: [],
-    medium: {},
-    organization: {},
-    class: {},
-    division: {},
+    ...initial,
   };
   return (
     <CustomStepperWithFormik
@@ -212,6 +220,7 @@ export const AccessControlForm = ({ user }: any) => {
             userId: user.id,
           };
           addAccessControl(payload);
+          handleClose?.();
           return;
         }
 
@@ -303,11 +312,11 @@ const MediumScreenStep = ({ formik }: any) => (
         options={board.educationMediums || []}
         getOptionLabel={(option: any) => option.name}
         id="controlled-demo"
-        value={formik?.values?.medium?.[board.name]}
+        value={formik?.values?.medium?.[board.id]}
         loading={false}
         sx={{ maxWidth: 300, width: '100%' }}
         onChange={(_event: any, newValue: any | null) => {
-          formik.setFieldValue(`medium.${board.name}`, newValue);
+          formik.setFieldValue(`medium.${board.id}`, newValue);
         }}
         multiple
         ChipProps={{
@@ -340,11 +349,11 @@ const OrganizationScreenStep = ({ formik }: any) => (
           options={medium.educationMediumStages || []}
           getOptionLabel={(option: any) => option.name}
           id={`controlled-demo-${index}`}
-          value={formik?.values?.organization?.[medium.name]}
+          value={formik?.values?.organization?.[medium.id]}
           loading={false}
           sx={{ maxWidth: 300, width: '100%' }}
           onChange={(_event: any, newValue: any | null) => {
-            formik.setFieldValue(`organization.${medium.name}`, newValue);
+            formik.setFieldValue(`organization.${medium.id}`, newValue);
           }}
           size="small"
           multiple
@@ -382,11 +391,11 @@ const ClassScreenStep = ({ formik }: any) => (
           options={org.standards || []}
           getOptionLabel={(option: any) => option.name}
           id={`controlled-demo-${index}`}
-          value={formik?.values?.class?.[org.name]}
+          value={formik?.values?.class?.[org.id]}
           loading={false}
           sx={{ maxWidth: 300, width: '100%' }}
           onChange={(_event: any, newValue: any | null) => {
-            formik.setFieldValue(`class.${org.name}`, newValue);
+            formik.setFieldValue(`class.${org.id}`, newValue);
           }}
           size="small"
           multiple
@@ -418,11 +427,11 @@ const DivisionScreenStep = ({ formik }: any) => (
           options={standard.divisions || []}
           getOptionLabel={(option: any) => option.name}
           id={`controlled-demo-${index}`}
-          value={formik?.values?.division?.[standard.name]}
+          value={formik?.values?.division?.[standard.id]}
           loading={false}
           sx={{ maxWidth: 300, width: '100%' }}
           onChange={(_event: any, newValue: any | null) => {
-            formik.setFieldValue(`division.${standard.name}`, newValue);
+            formik.setFieldValue(`division.${standard.id}`, newValue);
           }}
           size="small"
           multiple

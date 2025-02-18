@@ -3,67 +3,51 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
-import {
-  Box,
-  Grid,
-  Button,
-  TextField,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface Grade {
-  id: number;
+interface TGradingScale {
+  minMarks: number;
+  maxMarks: number;
   grade: string;
-  range: string;
-  startRange: number;
-  endRange: number;
-  descriptiveScale: string;
 }
 
-const tableGrades: Grade[] = [
+interface TGrade {
+  id: number;
+  totalMarks: number;
+  gradingScale: TGradingScale[] | null;
+}
+
+const tableGrades: TGrade[] = [
   {
     id: 1,
-    grade: 'A+',
-    range: '95-100',
-    startRange: 95,
-    endRange: 100,
-    descriptiveScale: 'Outstanding',
-  },
-  {
-    id: 2,
-    grade: 'A',
-    range: '90-94',
-    startRange: 90,
-    endRange: 94,
-    descriptiveScale: 'Satisfactory',
-  },
-  {
-    id: 3,
-    grade: 'B+',
-    range: '85-89',
-    startRange: 85,
-    endRange: 89,
-    descriptiveScale: 'Need Improvement',
+    totalMarks: 80,
+    gradingScale: [
+      { minMarks: 72, maxMarks: 80, grade: 'A+' },
+      { minMarks: 64, maxMarks: 71, grade: 'A' },
+      { minMarks: 56, maxMarks: 63, grade: 'B+' },
+      { minMarks: 48, maxMarks: 55, grade: 'B' },
+      { minMarks: 40, maxMarks: 47, grade: 'C+' },
+      { minMarks: 32, maxMarks: 39, grade: 'C' },
+      { minMarks: 0, maxMarks: 31, grade: 'F' },
+    ],
   },
 ];
 
 const GradingScale = () => {
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
+  const [selectedGrade, setSelectedGrade] = useState<TGrade | null>(null);
   const dialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
-
-  const [grades, setGrades] = useState<Grade[]>(tableGrades);
+  const [grades, setGrades] = useState<TGrade[]>(tableGrades);
 
   const handleCloseDialog = () => {
     setSelectedGrade(null);
@@ -83,58 +67,58 @@ const GradingScale = () => {
   const handleSubmit = (values: any) => {
     console.log('values----', values);
 
-    const startRange = Number(values.startRange);
-    const endRange = Number(values.endRange);
-    const { descriptiveScale } = values;
+    // const startRange = Number(values.startRange);
+    // const endRange = Number(values.endRange);
+    // const { descriptiveScale } = values;
 
-    if (startRange >= endRange) {
-      alert('Start range must be less than end range');
-      return;
-    }
+    // if (startRange >= endRange) {
+    //   alert('Start range must be less than end range');
+    //   return;
+    // }
 
-    const hasOverlap = grades.some((g) => {
-      if (isEdit && selectedGrade?.id === g.id) return false;
-      return (
-        (startRange >= g.startRange && startRange <= g.endRange) ||
-        (endRange >= g.startRange && endRange <= g.endRange) ||
-        (startRange <= g.startRange && endRange >= g.endRange)
-      );
-    });
+    // const hasOverlap = grades.some((g) => {
+    //   if (isEdit && selectedGrade?.id === g.id) return false;
+    //   return (
+    //     (startRange >= g.startRange && startRange <= g.endRange) ||
+    //     (endRange >= g.startRange && endRange <= g.endRange) ||
+    //     (startRange <= g.startRange && endRange >= g.endRange)
+    //   );
+    // });
 
-    if (hasOverlap) {
-      alert('Grade ranges cannot overlap');
-      return;
-    }
+    // if (hasOverlap) {
+    //   alert('Grade ranges cannot overlap');
+    //   return;
+    // }
 
-    if (isEdit && selectedGrade) {
-      // Update existing grade
-      setGrades((prevGrades) =>
-        prevGrades.map((g) =>
-          g.id === selectedGrade.id
-            ? {
-                ...g,
-                grade: values.grade,
-                range: `${startRange}-${endRange}`,
-                startRange,
-                endRange,
-                descriptiveScale,
-              }
-            : g
-        )
-      );
-    } else {
-      // Create new grade
-      const newGrade: Grade = {
-        id: Math.max(...grades.map((g) => g.id)) + 1,
-        grade: values.grade,
-        range: `${startRange}-${endRange}`,
-        startRange,
-        endRange,
-        descriptiveScale,
-      };
-      setGrades((prevGrades) => [...prevGrades, newGrade]);
-    }
-    handleCloseDialog();
+    // if (isEdit && selectedGrade) {
+    //   // Update existing grade
+    //   setGrades((prevGrades) =>
+    //     prevGrades.map((g) =>
+    //       g.id === selectedGrade.id
+    //         ? {
+    //             ...g,
+    //             grade: values.grade,
+    //             range: `${startRange}-${endRange}`,
+    //             startRange,
+    //             endRange,
+    //             descriptiveScale,
+    //           }
+    //         : g
+    //     )
+    //   );
+    // } else {
+    //   // Create new grade
+    //   const newGrade: Grade = {
+    //     id: Math.max(...grades.map((g) => g.id)) + 1,
+    //     grade: values.grade,
+    //     range: `${startRange}-${endRange}`,
+    //     startRange,
+    //     endRange,
+    //     descriptiveScale,
+    //   };
+    //   setGrades((prevGrades) => [...prevGrades, newGrade]);
+    // }
+    // handleCloseDialog();
   };
 
   return (
@@ -154,15 +138,7 @@ const GradingScale = () => {
       <CustomizableTable
         tableId="gradesTable"
         columns={[
-          { id: 'grade', label: 'Grade' },
-          {
-            id: 'range',
-            label: 'Range',
-          },
-          {
-            id: 'descriptiveScale',
-            label: 'Descriptive Scale',
-          },
+          { id: 'totalMarks', label: 'Total Marks' },
           {
             id: 'actions',
             label: 'Actions',
@@ -173,6 +149,8 @@ const GradingScale = () => {
                   // actions={(prop) => actions({ ...prop, row })}
                   showThreeDots={false}
                   placement="right-top"
+                  showViewIcon
+                  handleViewClick={() => {}}
                   showEditIcon
                   showDeleteIcon
                   handleDeleteClick={() => {
@@ -191,9 +169,6 @@ const GradingScale = () => {
         ]}
         data={grades}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
-        <Button variant="contained">Save</Button>
-      </Box>
 
       <CustomDialog
         open={dialog.value}
@@ -208,7 +183,7 @@ const GradingScale = () => {
         />{' '}
       </CustomDialog>
 
-      <CustomDialog
+      {/* <CustomDialog
         maxWidth="sm"
         open={deleteConfirmDialog.value}
         handleClose={handleCloseDialog}
@@ -225,7 +200,7 @@ const GradingScale = () => {
             Delete
           </Button>
         </DialogActions>
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };
@@ -235,115 +210,157 @@ export default GradingScale;
 interface GradeFormProps {
   onSubmit: (values: any) => void;
   onClose: () => void;
-  data: Grade | null;
+  data: TGrade | null;
   isEdit: boolean;
 }
 
 const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
   const validationSchema = Yup.object().shape({
-    grade: Yup.string().required('Grade is Required'),
-    startRange: Yup.string().required('Start Range is Required'),
-    endRange: Yup.string().required('End Range is Required'),
-    descriptiveScale: Yup.string().required('Descriptive Scale is Required'),
+    totalMarks: Yup.string().required('TotalMarks is Required'),
+    gradingScale: Yup.array().of(
+      Yup.object().shape({
+        minMarks: Yup.number().required('Min Marks is Required'),
+        maxMarks: Yup.number().required('Max Marks is Required'),
+        grade: Yup.string().required('Grade is Required'),
+      })
+    ),
   });
 
   const formik = useFormik({
     initialValues: {
-      grade: data?.grade || '',
-      startRange: data?.startRange || '',
-      endRange: data?.endRange || '',
-      descriptiveScale: data?.descriptiveScale || '',
+      totalMarks: data?.totalMarks || 0,
+      gradingScale: data?.gradingScale || [],
     },
-    validationSchema,
+    // validationSchema,
     onSubmit: (values) => {
       onSubmit(values);
     },
   });
 
+  const handleAddGradingScale = () => {
+    const updatedGradingScale = [
+      ...formik.values.gradingScale,
+      { minMarks: 0, maxMarks: 0, grade: '' },
+    ];
+    formik.setFieldValue('gradingScale', updatedGradingScale);
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Grade"
-                name="grade"
+                label="Total Marks"
+                name="totalMarks"
                 size="small"
-                value={formik.values.grade}
+                value={formik.values.totalMarks}
                 onChange={formik.handleChange}
-                error={formik.touched.grade && Boolean(formik.errors.grade)}
+                error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Start Range"
-                name="startRange"
-                size="small"
-                value={formik.values.startRange}
-                onChange={formik.handleChange}
-                error={formik.touched.startRange && Boolean(formik.errors.startRange)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="End Range"
-                name="endRange"
-                size="small"
-                value={formik.values.endRange}
-                onChange={formik.handleChange}
-                error={formik.touched.endRange && Boolean(formik.errors.endRange)}
-              />
-            </Grid>
+
             <Grid item xs={12}>
-              <CustomSelect
-                fullWidth
-                label="Descriptive Scale"
-                name="descriptiveScale"
-                size="small"
-                options={[
-                  { value: 'Outstanding', label: 'Outstanding' },
-                  { value: 'Excellent', label: 'Excellent' },
-                  { value: 'Good', label: 'Good' },
-                  { value: 'Satisfactory', label: 'Satisfactory' },
-                  { value: 'Needs Improvement', label: 'Needs Improvement' },
-                  { value: 'Fail', label: 'Fail' },
-                ]}
-                value={formik.values.descriptiveScale}
-                onChange={(val) => {
-                  formik.setFieldValue('descriptiveScale', val);
-                }}
-                formControlProps={{
-                  sx: { width: '100%', mixWidth: '200px' },
-                }}
-                error={formik.touched.descriptiveScale && Boolean(formik.errors.descriptiveScale)}
-              />
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <h4>Grading Scale</h4>
+                <Button
+                  startIcon={<Add />}
+                  variant="contained"
+                  size="small"
+                  onClick={handleAddGradingScale}
+                >
+                  Grading Scale
+                </Button>
+              </Box>
+
+              {formik.values.gradingScale?.map((scale: TGradingScale, index: number) => (
+                <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label="Min Marks"
+                      name={`gradingScale.${index}.minMarks`}
+                      size="small"
+                      value={scale.minMarks}
+                      onChange={formik.handleChange}
+                      // error={
+                      //   formik.touched.gradingScale?.[index]?.minMarks &&
+                      //   Boolean(formik.errors.gradingScale?.[index]?.minMarks)
+                      // }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label="Max Marks"
+                      name={`gradingScale.${index}.maxMarks`}
+                      size="small"
+                      value={scale.maxMarks}
+                      onChange={formik.handleChange}
+                      // error={
+                      //   formik.touched.gradingScale?.[index]?.maxMarks &&
+                      //   Boolean(formik.errors.gradingScale?.[index]?.maxMarks)
+                      // }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={5}>
+                    <CustomSelect
+                      fullWidth
+                      label="Grade"
+                      options={[
+                        { value: 'A+', label: 'A+' },
+                        { value: 'A', label: 'A' },
+                        { value: 'A-', label: 'A-' },
+                        { value: 'B+', label: 'B+' },
+                        { value: 'B', label: 'B' },
+                        { value: 'B-', label: 'B-' },
+                        { value: 'C+', label: 'C+' },
+                        { value: 'C', label: 'C' },
+                        { value: 'C-', label: 'C-' },
+                        { value: 'D+', label: 'D+' },
+                        { value: 'D', label: 'D' },
+                        { value: 'D-', label: 'D-' },
+                        { value: 'F', label: 'F' },
+                      ]}
+                      name={`gradingScale.${index}.grade`}
+                      size="small"
+                      value={scale.grade}
+                      onChange={(val) => {
+                        formik.setFieldValue(`gradingScale.${index}.grade`, val);
+                      }}
+                      // error={
+                      //   formik.touched.gradingScale?.[index]?.grade &&
+                      //   Boolean(formik.errors.gradingScale?.[index]?.grade)
+                      // }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={1}>
+                    <Iconify
+                      icon="mdi:trash"
+                      onClick={() => {
+                        const updatedGradingScale = [...formik.values.gradingScale]; // Copy array
+                        updatedGradingScale.splice(index, 1); // Remove row
+                        formik.setFieldValue('gradingScale', updatedGradingScale); // Update state
+                      }}
+                      sx={{ cursor: 'pointer', mt: 1, color: 'error' }}
+                    />
+                  </Grid>
+                </Grid>
+              ))}
             </Grid>
           </Grid>
         </Scrollbar>
         <DialogActions>
-          {isEdit ? (
-            <Button
-              variant="contained"
-              onClick={() => {
-                formik.handleSubmit();
-              }}
-            >
-              Update
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={() => {
-                formik.handleSubmit();
-              }}
-            >
-              Create
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            onClick={() => {
+              formik.handleSubmit();
+            }}
+          >
+            {isEdit ? 'Update' : 'Create'}
+          </Button>
         </DialogActions>
       </form>
     </Box>

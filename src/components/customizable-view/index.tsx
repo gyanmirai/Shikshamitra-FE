@@ -1,8 +1,9 @@
 // @ts-nocheck
 import React from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Box } from '@mui/material';
+import Grid2 from '@mui/material/Unstable_Grid2';
 
 // const initialSections = [
 //   { id: '1', title: 'Section 1', content: 'Content for Section 1' },
@@ -11,7 +12,7 @@ import { Box } from '@mui/material';
 //   { id: '4', title: 'Section 4', content: 'Content for Section 4' },
 // ];
 
-const CustomizableView = ({ sections, setSections }: any) => {
+const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => {
   // const [sections, setSections] = useState(initialSections);
 
   const handleOnDragEnd = (result: any) => {
@@ -29,52 +30,38 @@ const CustomizableView = ({ sections, setSections }: any) => {
   };
 
   return (
-    <Box
-      sx={{
-        mb: 2,
-        // border: (theme) => `dashed 1px ${theme.vars.palette.divider}`,
-        borderRadius: 1,
-      }}
-    >
-      <DragDropContext onDragEnd={handleOnDragEnd}>
-        {/* <Droppable droppableId="titles" direction="horizontal">
-          {(provided) => (
-            <Box
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center',
-                overflowX: 'auto',
-                padding: 1,
-              }}
-            >
-              <Typography>Customizable View :</Typography>
-              {sections.map((section: any, index: number) => (
-                <Draggable key={section.id} draggableId={section.id.toString()} index={index}>
-                  {(p, snapshot) => (
-                    <Chip
-                      ref={p.innerRef}
-                      {...p.draggableProps}
-                      {...p.dragHandleProps}
-                      elevation={snapshot.isDragging ? 6 : 1}
-                      sx={{
-                        cursor: 'grab',
-                        userSelect: 'none',
-                      }}
-                      variant="outlined"
-                      label={section.title}
-                    />
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </Box>
-          )}
-        </Droppable> */}
-      </DragDropContext>
-    </Box>
+    <DragDropContext onDragEnd={handleOnDragEnd}>
+      <Droppable droppableId="components">
+        {(provided) => (
+          <Box ref={provided.innerRef} {...provided.droppableProps}>
+            {sections.map((section: any, index: number) => (
+              <Draggable key={section.id} draggableId={section.id.toString()} index={index}>
+                {(p, snapshot) => (
+                  <Grid2
+                    container
+                    spacing={2}
+                    ref={p.innerRef}
+                    {...p.draggableProps}
+                    {...p.dragHandleProps}
+                    elevation={snapshot.isDragging ? 6 : 1}
+                    sx={{
+                      cursor: 'grab',
+                      userSelect: 'none',
+                    }}
+                    // variant="outlined"
+                    // label={section.title}
+                  >
+                    {' '}
+                    {dashBoardSections[section.id]}
+                  </Grid2>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </Box>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 };
 

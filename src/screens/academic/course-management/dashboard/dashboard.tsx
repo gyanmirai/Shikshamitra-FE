@@ -13,6 +13,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
+import CousreDetails from './component/cousreDetails';
 import StudentPerformance from './component/studentPerformance';
 import StudentCoursePerfoemance from './component/studentCoursePerfoemance';
 
@@ -75,6 +76,7 @@ const Dashboard = (props: TabComponentType) => {
       />
       <StudentPerformance />
       <StudentCoursePerfoemance />
+      <CousreDetails />
     </Box>
   );
 };

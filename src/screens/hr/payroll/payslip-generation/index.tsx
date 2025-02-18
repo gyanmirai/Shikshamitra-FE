@@ -14,6 +14,7 @@ import {
   Box,
   Card,
   Grid,
+  Alert,
   Button,
   TextField,
   CardHeader,
@@ -223,52 +224,90 @@ const PaySlipGenerationScreen = () => {
       </Box>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-          <Typography variant="h5">Earning Section</Typography>
+          <Typography variant="h6">Earning Section</Typography>
           <CustomizableTable
+            isSearch={false}
+            isFilter={false}
+            isPagination={false}
+            isShowedDense={false}
             tableId="earning-table"
             columns={[
-              { id: 'employeeType', label: 'Employee Type' },
+              {
+                id: 'employeeType',
+                label: 'Employee Type',
+                render(value, row) {
+                  return (
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
+                    >
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
               {
                 id: 'amount',
                 label: 'Amount',
                 render(value, row) {
-                  return formatCurrency(value);
-                },
-              },
-              {
-                id: 'total',
-                label: 'Total',
-                render(value, row) {
-                  return formatCurrency(value);
+                  return (
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal' }}
+                    >
+                      {formatCurrency(value)}
+                    </Typography>
+                  );
                 },
               },
             ]}
             data={[
-              { employeeType: 'Teaching Allowance', amount: 5000, total: 5000 },
-              { employeeType: 'Transport Allowance', amount: 2000, total: 2000 },
-              { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
-              { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
+              { employeeType: 'Teaching Allowance', amount: 5000 },
+              { employeeType: 'Transport Allowance', amount: 2000 },
+              { employeeType: 'Academic Performance Bonus', amount: 3000 },
+              { employeeType: 'Extra-curricular Activities', amount: 2000 },
+              { employeeType: 'Total Amount', amount: 12000 },
             ]}
           />
         </Grid>
         <Grid item xs={12} md={6}>
-          <Typography variant="h5">Deductions Section</Typography>
+          <Typography variant="h6">Deduction Section</Typography>
           <CustomizableTable
+            isSearch={false}
+            isFilter={false}
+            isPagination={false}
+            isShowedDense={false}
             tableId="deduction-table"
             columns={[
-              { id: 'deductionType', label: 'Deduction Type' },
+              {
+                id: 'deductionType',
+                label: 'Deduction Type',
+                render(value, row) {
+                  return (
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
+                    >
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
               {
                 id: 'amount',
                 label: 'Amount',
                 render(value, row) {
-                  return formatCurrency(value);
-                },
-              },
-              {
-                id: 'totalDeduction',
-                label: 'Total Deduction',
-                render(value, row) {
-                  return formatCurrency(value);
+                  return (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{
+                        fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal',
+                      }}
+                    >
+                      {formatCurrency(value)}
+                    </Typography>
+                  );
                 },
               },
             ]}
@@ -277,8 +316,18 @@ const PaySlipGenerationScreen = () => {
               { deductionType: 'Provident Fund', amount: 3000, totalDeduction: 3000 },
               { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
               { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
+              { deductionType: 'Total Amount', amount: 12000 },
             ]}
           />
+        </Grid>
+        <Grid item xs={12}>
+          <Alert
+            variant="outlined"
+            icon={false}
+            sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'inherit' }}
+          >
+            Net Salary : {formatCurrency(24000)}
+          </Alert>
         </Grid>
       </Grid>
     </Box>

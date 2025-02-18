@@ -170,7 +170,7 @@ const ArchievedQuiz = () => {
           { id: 'passingMarks', label: 'Passing Marks', minWidth: '150px', align: 'left' },
           {
             id: 'status',
-            label: 'Status',
+            label: 'Grade Status',
             render: (value: string, row: any) => (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Label

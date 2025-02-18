@@ -2,11 +2,10 @@
 
 import React, { useState } from 'react';
 
-import { Box, Grid, Card, Button, Tooltip, Typography } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 
-import { varAlpha } from 'src/theme/styles';
-
-import { Scrollbar } from 'src/components/scrollbar';
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 export const assignmentData = [
   {
@@ -46,260 +45,93 @@ const HomeworkPendingCards = () => {
 
   return (
     <Grid container spacing={2} mt={1}>
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Pending Assignments</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Button
-                    key={index}
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      mb: 1,
-                    }}
-                    onMouseEnter={() => setHoveredResource(assignment.title)}
-                    onMouseLeave={() => setHoveredResource(null)}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography>{assignment.title}</Typography>
-                      {hoveredResource === assignment.title && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            ml: 2,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Deadline : {assignment.lastDate}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Button>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>{' '}
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Completed Assignments</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Tooltip
-                    key={index}
-                    title={
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color:
-                              assignment.status === 'Completed'
-                                ? 'green'
-                                : assignment.status === 'Review'
-                                  ? 'yellow'
-                                  : 'red',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          Status: {assignment.status.toUpperCase()}
-                        </Typography>
-                        {assignment.status === 'Completed' && (
-                          <Typography variant="body2">Grade : A</Typography>
-                        )}
-                      </Box>
+      <Grid item xs={12}>
+        <Typography variant="h6">My Assignments</Typography>
+        <CustomizableTable
+          tableId="assignment-table"
+          columns={[
+            { id: 'assignmentTitle', label: 'Assignment Title', minWidth: '180px', align: 'left' },
+            { id: 'publishedDate', label: 'Published Date', minWidth: '170px', align: 'left' },
+            { id: 'dueDate', label: 'Due Date', minWidth: '150px', align: 'left' },
+            {
+              id: 'status',
+              label: 'Status',
+              render(value, row) {
+                return (
+                  <Label
+                    variant="soft"
+                    color={
+                      value === 'Pending' ? 'error' : value === 'Completed' ? 'success' : 'default'
                     }
-                    placement="right"
-                    arrow
                   >
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      sx={{
-                        justifyContent: 'space-between',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        mb: 1,
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography>{assignment.title}</Typography>
-                      </Box>
-                    </Button>
-                  </Tooltip>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Pending Homeowrk</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Button
-                    key={index}
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      mb: 1,
-                    }}
-                    onMouseEnter={() => setHoveredResource(assignment.title)}
-                    onMouseLeave={() => setHoveredResource(null)}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography>{assignment.title}</Typography>
-                      {hoveredResource === assignment.title && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            ml: 2,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          Deadline : {assignment.lastDate}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Button>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>{' '}
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-            width: '100%',
-            height: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle1' }}>Completed Homeworks</Box>
-            <Scrollbar sx={{ mt: 1.5, height: '200px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                  height: '300px',
-                  m: 0.5,
-                }}
-              >
-                {assignmentData.map((assignment, index) => (
-                  <Tooltip
-                    key={index}
-                    title={
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color:
-                              assignment.status === 'Completed'
-                                ? 'green'
-                                : assignment.status === 'Review'
-                                  ? 'yellow'
-                                  : 'red',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          Status: {assignment.status.toUpperCase()}
-                        </Typography>
-                        {assignment.status === 'Completed' && (
-                          <Typography variant="body2">Grade : A</Typography>
-                        )}
-                      </Box>
+                    {value}
+                  </Label>
+                );
+              },
+            },
+            {
+              id: 'assignmentCheckStatus',
+              label: 'Assignment Check Status',
+              minWidth: '240px',
+              align: 'left',
+              render(value, row) {
+                return (
+                  <Label
+                    variant="soft"
+                    color={
+                      value === 'Pending' ? 'error' : value === 'Completed' ? 'success' : 'default'
                     }
-                    placement="right"
-                    arrow
                   >
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      sx={{
-                        justifyContent: 'space-between',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        mb: 1,
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography>{assignment.title}</Typography>
-                      </Box>
-                    </Button>
-                  </Tooltip>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>
-        </Card>
+                    {value}
+                  </Label>
+                );
+              },
+            },
+            { id: 'grade', label: 'Grade' },
+          ]}
+          data={[
+            {
+              assignmentTitle: 'Math Homework 1',
+              publishedDate: '2024-02-01',
+              dueDate: '2024-02-10',
+              status: 'Completed',
+              assignmentCheckStatus: 'Completed',
+              grade: 'A',
+            },
+            {
+              assignmentTitle: 'Science Project',
+              publishedDate: '2024-02-03',
+              dueDate: '2024-02-12',
+              status: 'Pending',
+              assignmentCheckStatus: 'Pending',
+              grade: '', // No grade as it's not checked yet
+            },
+            {
+              assignmentTitle: 'History Essay',
+              publishedDate: '2024-02-05',
+              dueDate: '2024-02-15',
+              status: 'Completed',
+              assignmentCheckStatus: 'Completed',
+              grade: 'B+',
+            },
+            {
+              assignmentTitle: 'English Literature Review',
+              publishedDate: '2024-02-07',
+              dueDate: '2024-02-18',
+              status: 'Completed',
+              assignmentCheckStatus: 'Completed',
+              grade: 'A-',
+            },
+            {
+              assignmentTitle: 'Physics Lab Report',
+              publishedDate: '2024-02-08',
+              dueDate: '2024-02-20',
+              status: 'Pending',
+              assignmentCheckStatus: 'Pending',
+              grade: '', // No grade as it's not checked yet
+            },
+          ]}
+        />
       </Grid>
     </Grid>
   );

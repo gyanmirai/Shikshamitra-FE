@@ -66,7 +66,7 @@ const InquiryTable = ({
           label: 'Inquiry Number',
           sticky: true,
           minWidth: '162px',
-          isFilter: true,
+
           filterType: 'string',
         },
         { id: 'standard.name', label: 'Class' },
@@ -76,11 +76,17 @@ const InquiryTable = ({
           label: 'DOB',
           minWidth: '120px',
           align: 'left',
-          isFilter: true,
           filterType: 'date',
         },
         { id: 'ageValue', label: 'Age' },
-        { id: 'doiValue', label: 'DOI', minWidth: '120px', align: 'left', isDateRangeFilter: true },
+        {
+          id: 'doiValue',
+          label: 'DOI',
+          filterType: 'date',
+          minWidth: '120px',
+          align: 'left',
+          isDateRangeFilter: true,
+        },
         { id: 'genderValue', label: 'Gender' },
         { id: 'address', label: 'Address', minWidth: '120px' },
         { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '145px' },
@@ -101,6 +107,7 @@ const InquiryTable = ({
         {
           id: 'actions',
           label: 'Actions',
+          isFilter: false,
           render(value, row) {
             return (
               <ThreeDotsActions

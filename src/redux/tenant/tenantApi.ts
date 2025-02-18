@@ -17,7 +17,13 @@ export const tenantApi = createApi({
       }),
       invalidatesTags: ['Tenant'],
     }),
+    getTenantById: builder.query({
+      query: (id) => ({
+        url: `/multi-tenancy/tenants/${id}`,
+      }),
+      providesTags: ['Tenant'],
+    }),
   }),
 });
 
-export const { useAddTenantMutation } = tenantApi;
+export const { useAddTenantMutation, useGetTenantByIdQuery } = tenantApi;

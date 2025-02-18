@@ -3,6 +3,7 @@
 import type { YesNo } from 'src/enums/yes-no';
 import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
+import type { EmployeeCastType } from 'src/enums/employee-cast';
 import type { Board, Medium, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
@@ -107,7 +108,7 @@ export interface StudentBasicDetails {
   aadhaarNo: string;
   religion: string;
   familyCast: string;
-  castType: number;
+  castType: EmployeeCastType;
   motherTongue: string;
   nationality: string;
   birthPlace: string;

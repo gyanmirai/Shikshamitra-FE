@@ -6,10 +6,10 @@ import type { ChartOptions } from 'src/components/chart';
 import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
+import 'src/utils/convertABPPermissionToNavigation';
 
 import CustomizableView from 'src/components/customizable-view';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -90,11 +90,15 @@ const EnrollmentDashboardScreen = () => {
           />
         }
       />
-      <CustomizableView sections={sections} setSections={setSections} />
+      <CustomizableView
+        sections={sections}
+        setSections={setSections}
+        dashBoardSections={dashBoardSections}
+      />
 
-      <Grid2 container spacing={2}>
+      {/* <Grid2 container spacing={2}>
         {sections.map((section: any) => dashBoardSections[section.id])}
-      </Grid2>
+      </Grid2> */}
     </Box>
   );
 };

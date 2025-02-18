@@ -1,5 +1,6 @@
 //
 
+import { useSelector } from 'react-redux';
 import React, { useRef, useState } from 'react';
 
 import {
@@ -23,7 +24,8 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 const AssignModule = () => {
-  const data = navData.flatMap((item) => item.items);
+  const { user } = useSelector((state: any) => state.auth);
+  const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
   console.log('🚀 ~ file: modules.tsx:27 ~ AssignModule ~ data:', data);
 
   const stackRef = useRef<any>();
