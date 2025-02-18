@@ -16,45 +16,6 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 
-// Utility function to convert numbers to words (simple version)
-const numberToWords = (num) => {
-  const words = [
-    '',
-    'One',
-    'Two',
-    'Three',
-    'Four',
-    'Five',
-    'Six',
-    'Seven',
-    'Eight',
-    'Nine',
-    'Ten',
-    'Eleven',
-    'Twelve',
-    'Thirteen',
-    'Fourteen',
-    'Fifteen',
-    'Sixteen',
-    'Seventeen',
-    'Eighteen',
-    'Nineteen',
-    'Twenty',
-    'Twenty One',
-    'Twenty Two',
-    'Twenty Three',
-    'Twenty Four',
-    'Twenty Five',
-    'Twenty Six',
-    'Twenty Seven',
-    'Twenty Eight',
-    'Twenty Nine',
-    'Thirty',
-  ];
-  if (num <= 30) return words[num];
-  return `${num}`;
-};
-
 const PayrollOverviewTeacherDashboard = () => {
   const earnings = [
     { name: 'Basic Salary', amount: '₹50,000' },
