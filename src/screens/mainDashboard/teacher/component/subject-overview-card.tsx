@@ -89,14 +89,27 @@ export function SubjectOverviewCard({
         <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
           {/* Top Performers */}
           <Box flex={1} mr={2}>
-            <Typography variant="subtitle1" color="black">
-              Top Performers
-            </Typography>
+            <Box display="flex" flexDirection="row" alignItems="center">
+              <Typography variant="subtitle1" color="black">
+                Top Performers
+              </Typography>
+              <CustomSelect
+                label="Subject"
+                options={[
+                  { value: 'all', label: 'All Subjects' },
+                  { value: 'math', label: 'Math' },
+                  { value: 'science', label: 'Science' },
+                  { value: 'english', label: 'English' },
+                ]}
+                value="all"
+                onChange={(e) => console.log(e)}
+              />
+            </Box>
             <Scrollbar sx={{ minHeight: 200, maxHeight: 200, overflowY: 'auto', bgcolor: 'white' }}>
               {top5Students.map((student, index) => (
                 <ListItem key={index}>
                   <ListItemText primary={student.name} secondary={`Score: ${student.score}`} />
-                  <Chip size="small" label="Top" color="success" />
+                  {/* <Chip size="small" label="Top" color="success" /> */}
                 </ListItem>
               ))}
             </Scrollbar>
@@ -104,9 +117,22 @@ export function SubjectOverviewCard({
 
           {/* Bottom Performers */}
           <Box flex={1}>
-            <Typography variant="subtitle1" color="black">
-              Bottom Performers
-            </Typography>
+            <Box display="flex" flexDirection="row" alignItems="center">
+              <Typography variant="subtitle1" color="black">
+                Bottom Performers
+              </Typography>
+              <CustomSelect
+                label="Subject"
+                options={[
+                  { value: 'all', label: 'All Subjects' },
+                  { value: 'math', label: 'Math' },
+                  { value: 'science', label: 'Science' },
+                  { value: 'english', label: 'English' },
+                ]}
+                value="all"
+                onChange={(e) => console.log(e)}
+              />
+            </Box>
             <Scrollbar sx={{ minHeight: 200, maxHeight: 200, overflowY: 'auto', bgcolor: 'white' }}>
               {bottom5Students.length > 0 ? (
                 bottom5Students.map((student, index) => (

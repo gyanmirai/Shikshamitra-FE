@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { School } from '@mui/icons-material';
 import { Box, Card, Typography, CardContent } from '@mui/material'; // Example icon, replace if needed
+import { Iconify } from 'src/components/iconify';
 
 // Define the Exam Interface
 interface Exam {
@@ -17,7 +17,7 @@ interface UpcomingExamCardProps {
 }
 
 const UpcomingExamCard: React.FC<UpcomingExamCardProps> = ({ exams }) => (
-  <Card sx={{ minWidth: 300, p: 2 }}>
+  <Card sx={{ height: '100%', p: 2 }}>
     <Typography variant="h6" mb={2}>
       Upcoming Exams
     </Typography>
@@ -25,7 +25,14 @@ const UpcomingExamCard: React.FC<UpcomingExamCardProps> = ({ exams }) => (
       {exams.slice(0, 4).map((exam, index) => (
         <Box key={index} display="flex" alignItems="center" justifyContent="space-between" p={1}>
           <Box display="flex" alignItems="center">
-            <School sx={{ fontSize: 30, color: 'primary.main', mr: 1 }} />
+            <Iconify
+              icon="healthicons:i-exam-multiple-choice2x-outline"
+              height={44}
+              width={44}
+              color="#c6892c"
+              mr="8px"
+            />
+
             <Box>
               <Typography fontSize={16} fontWeight="bold">
                 {exam.subject}

@@ -15,7 +15,7 @@ interface UpcomingAssignmentCardProps {
 }
 
 const UpcomingAssignmentCard: React.FC<UpcomingAssignmentCardProps> = ({ assignments }) => (
-  <Card sx={{ minWidth: 300, p: 2 }}>
+  <Card sx={{ height: '100%', p: 2 }}>
     <Typography variant="h6" mb={2}>
       Upcoming Assignments
     </Typography>

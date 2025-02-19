@@ -26,7 +26,7 @@ const MainDashboardStudent = () => (
       />
     </Grid>
 
-    <Grid item lg={4}>
+    <Grid item lg={3}>
       <PrincipalDashboardCard
         dropdownLabel=""
         icon="noto:receipt"
@@ -43,11 +43,8 @@ const MainDashboardStudent = () => (
         selectOptions={[]}
       />
     </Grid>
-    <Grid item lg={2}>
-      <OneLineInfoCard Icon="mingcute:performance-line" title="Overall Perfomance" text="A+" />
-    </Grid>
 
-    <Grid item lg={4}>
+    <Grid item lg={3}>
       <PrincipalDashboardCard
         dropdownLabel=""
         icon="noto:receipt"
@@ -61,8 +58,26 @@ const MainDashboardStudent = () => (
       />
     </Grid>
 
-    <Grid item lg={2}>
-      <OneLineInfoCard Icon="noto:receipt" title="Overall Attendance" text="90%" />
+    <Grid item lg={3}>
+      <OneLineInfoCard
+        items={[
+          { title: 'Overall Performance', text: 'A+', icon: 'mdi:star', color: 'yellow' },
+          // { title: 'Overall Attendance', text: '90%', icon: 'mdi:calendar-check', color: "info:main" }
+        ]}
+      />
+    </Grid>
+    <Grid item lg={3}>
+      <OneLineInfoCard
+        items={[
+          // { title: 'Overall Performance', text: 'A+', icon: 'mdi:star', color: "yellow" },
+          {
+            title: 'Overall Attendance',
+            text: '90%',
+            icon: 'mdi:calendar-check',
+            color: 'info:main',
+          },
+        ]}
+      />
     </Grid>
 
     <Grid item lg={6}>
@@ -90,16 +105,12 @@ const MainDashboardStudent = () => (
       <TimeTableView />
     </Grid>
 
-    <Grid item lg={6}>
-      <Typography variant="h6">Attendance</Typography>
-      <TimeTableView />
-    </Grid>
-    <Grid item lg={6}>
+    <Grid item lg={6} pb="30px">
       <Typography variant="h6" mb="20px">
-        Fee Structure
+        My Fee Structure
       </Typography>
       <Box display="flex" justifyContent="space-between">
-        <Box width="50%">
+        <Box width="100%">
           <Typography
             width="100%"
             bgcolor="#F4F6F8"
@@ -130,7 +141,7 @@ const MainDashboardStudent = () => (
             ))}
           </Box>
         </Box>
-        <Box width="50%">
+        <Box width="100%">
           <Typography
             width="100%"
             bgcolor="#F4F6F8"

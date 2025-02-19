@@ -4,24 +4,31 @@ import { Box, Card, Typography, CardContent } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify/iconify';
 
-interface OneLineInfoCardProps {
+interface InfoItem {
   title: string;
   text: string;
-  Icon?: string;
+  icon?: string;
+  color: string;
 }
 
-const OneLineInfoCard: React.FC<OneLineInfoCardProps> = ({ title, text, Icon }) => (
+interface OneLineInfoCardProps {
+  items: InfoItem[];
+}
+
+const OneLineInfoCard: React.FC<OneLineInfoCardProps> = ({ items }) => (
   <Card sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
-    <Typography variant="h6" mb={1}>
-      {title}
-    </Typography>
-    <CardContent
-      sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center', pt: 3 }}
-    >
-      <Box>{Icon && <Iconify icon={Icon} width={44} height={44} color="info" />}</Box>
-      <Typography variant="h5" fontWeight="bold">
-        {text}
-      </Typography>
+    <CardContent sx={{ display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+      {items.map(({ title, text, icon, color }, index) => (
+        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {icon && <Iconify icon={icon} width={44} height={44} color={color} />}
+          <Box>
+            <Typography variant="h6">{title}</Typography>
+            <Typography variant="h5" fontWeight="bold">
+              {text}
+            </Typography>
+          </Box>
+        </Box>
+      ))}
     </CardContent>
   </Card>
 );

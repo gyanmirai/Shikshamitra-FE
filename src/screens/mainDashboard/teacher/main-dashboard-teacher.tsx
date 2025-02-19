@@ -2,23 +2,23 @@
 
 import React, { useState, useCallback } from 'react';
 
-import { Box, Grid, Card, Button, Typography, ButtonGroup } from '@mui/material';
+import { Box, Grid, Card, Alert, Button, Typography, ButtonGroup } from '@mui/material';
 
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
 import { CONFIG } from 'src/config-global';
 import SeoIllustration from 'src/assets/illustrations/seo-illustration';
-import { TopPerformer } from 'src/screens/student/enrollment/entrance-exam/dashboard';
 
 import { SvgColor } from 'src/components/svg-color';
 import CustomizableTable from 'src/components/customizabaleTable';
-import ScrollableListCard from 'src/components/scrollable-list-card';
 
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
 
+import PerformerCard from './component/performer-card';
 import TimeTableView from '../component/time-table-view';
 import { StudentPerformanceChart } from './component/student-performance';
-import PayrollOverviewTeacherDashboard from './component/payroll-overview';
+import UpcomingExamCard from '../student/component/exam-card-for-student';
+import UpcomingAssignmentCard from '../student/component/upcoming-assignment-card';
 import { PrincipalDashboardCard } from '../principal/component/principal-dashboard-card';
 import WhatsNewInMonthComponent from '../principal/component/whats-new-in-month-component';
 
@@ -50,6 +50,45 @@ const MainDashboardTeacher = () => {
     <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
   );
 
+  const studentList = [
+    { id: 1, name: 'John Doe', subject: 'math', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      subject: 'science',
+      totalMarks: 89,
+      avatarUrl: '/path/to/avatar2.jpg',
+    },
+    {
+      id: 3,
+      name: 'Alice Brown',
+      subject: 'english',
+      totalMarks: 78,
+      avatarUrl: '/path/to/avatar3.jpg',
+    },
+    {
+      id: 4,
+      name: 'Bob Johnson',
+      subject: 'math',
+      totalMarks: 65,
+      avatarUrl: '/path/to/avatar4.jpg',
+    },
+    {
+      id: 5,
+      name: 'Charlie Wilson',
+      subject: 'science',
+      totalMarks: 55,
+      avatarUrl: '/path/to/avatar5.jpg',
+    },
+  ];
+
+  const subjectOptions = [
+    { value: 'all', label: 'All Subjects' },
+    { value: 'math', label: 'Math' },
+    { value: 'science', label: 'Science' },
+    { value: 'english', label: 'English' },
+  ];
+
   return (
     <Grid container spacing={3} sx={{ px: 2 }}>
       {/* Welcome Section */}
@@ -63,106 +102,120 @@ const MainDashboardTeacher = () => {
 
       {/* Dashboard Cards: Total Students & Class Attendance */}
       <Grid container item xs={12} spacing={3}>
-        <Grid item xs={12} md={6} lg={3}>
-          <PrincipalDashboardCard
-            dropdownLabel="Select Class"
-            icon="mdi:school"
-            title="My Class Students"
-            count={250}
-            color="primary.main"
-            bgColor="primary"
-            href="/dashboard"
-            labels={[
-              { name: 'Female', color: 'error', value: 500 },
-              { name: 'Male', color: 'success', value: 500 },
+        <Grid item lg={3}>
+          <UpcomingExamCard
+            exams={[
+              { subject: 'Math Exam', date: 'Sep 20, 2024', class: '10th-A', room: '101' },
+              { subject: 'Physics Exam', date: 'Sep 22, 2024', class: '12th-B', room: '102' },
+              { subject: 'Chemistry Exam', date: 'Sep 24, 2024', class: '11th-C', room: '103' },
+              { subject: 'Biology Exam', date: 'Sep 26, 2024', class: '9th-D', room: '104' },
+              { subject: 'Math Exam', date: 'Sep 20, 2024', class: '10th-A', room: '101' },
+              { subject: 'Physics Exam', date: 'Sep 22, 2024', class: '12th-B', room: '102' },
             ]}
-            selectOptions={[]}
-            selectedValue="1"
-            onSelectChange={(val) => console.log('sele:', val)}
           />
         </Grid>
-
-        <Grid item xs={12} md={6} lg={3}>
-          <PrincipalDashboardCard
-            dropdownLabel="Select Class"
-            icon="mdi:school"
-            title="Today Class Attendance"
-            count="50%"
-            color="primary.main"
-            bgColor="primary"
-            href="/dashboard"
-            labels={[
-              { name: 'Present', color: 'error', value: 50 },
-              { name: 'Absent', color: 'success', value: 50 },
+        <Grid item lg={3}>
+          <UpcomingAssignmentCard
+            assignments={[
+              { name: 'Math Homework', dueDate: 'Sep 20, 2024' },
+              { name: 'Science Report', dueDate: 'Sep 22, 2024' },
+              { name: 'English Essay', dueDate: 'Sep 25, 2024' },
+              { name: 'History Presentation', dueDate: 'Sep 27, 2024' },
+              { name: 'Math Homework', dueDate: 'Sep 20, 2024' },
+              { name: 'Science Report', dueDate: 'Sep 22, 2024' },
             ]}
-            selectOptions={[]}
-            selectedValue="Jan"
-            onSelectChange={(val) => console.log('Selected Month:', val)}
           />
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <TopPerformer
-            title="Top Performer"
-            sx={{ height: '100%' }}
-            list={[
-              {
-                id: '1',
-                name: 'Jayvion Simon',
-                avatarUrl: '/static/images/avatars/avatar_1.png',
-                totalMarks: 0,
-              },
-              {
-                id: '2',
-                name: 'Lucian Obrien',
-                avatarUrl: '/static/images/avatars/avatar_2.png',
-                totalMarks: 0,
-              },
-              {
-                id: '3',
-                name: 'Deja Bredy',
-                avatarUrl: '/static/images/avatars/avatar_3.png',
-                totalMarks: 0,
-              },
-            ]}
+          <PerformerCard
+            title="Needs improvement"
+            subheader="Needs improvement"
+            list={studentList}
+            options={subjectOptions}
           />
         </Grid>
         <Grid item xs={12} md={3}>
-          <TopPerformer
-            title="Bottom Performer"
-            sx={{ height: '100%' }}
-            list={[
-              {
-                id: '1',
-                name: 'Jayvion Simon',
-                avatarUrl: '/static/images/avatars/avatar_1.png',
-                totalMarks: 0,
-              },
-              {
-                id: '2',
-                name: 'Lucian Obrien',
-                avatarUrl: '/static/images/avatars/avatar_2.png',
-                totalMarks: 0,
-              },
-              {
-                id: '3',
-                name: 'Deja Bredy',
-                avatarUrl: '/static/images/avatars/avatar_3.png',
-                totalMarks: 0,
-              },
-            ]}
+          <PerformerCard
+            title="Top Performers"
+            subheader="Best students by subject"
+            list={studentList}
+            options={subjectOptions}
           />
         </Grid>
       </Grid>
+      <Grid item xs={12} md={6} lg={3}>
+        <PrincipalDashboardCard
+          dropdownLabel="Select Class"
+          icon="hugeicons:students"
+          title="My Class Students"
+          count={250}
+          color="primary.main"
+          bgColor="primary"
+          href="/dashboard"
+          labels={[
+            { name: 'Male', color: 'success', value: 500 },
+            { name: 'Female', color: 'error', value: 500 },
+          ]}
+          selectOptions={[]}
+          selectedValue="1"
+          onSelectChange={(val) => console.log('sele:', val)}
+        />
+      </Grid>
 
-      {/* Upcoming Exams and Assignments */}
-      <Grid container item xs={12} spacing={3}>
-        <Grid item xs={12} md={6} lg={6}>
-          <ScrollableListCard items={upcomingExams} title="Upcoming Exams" />
-        </Grid>
-        <Grid item xs={12} md={6} lg={6}>
-          <ScrollableListCard items={upcomingExams} title="Upcoming Exams" />
-        </Grid>
+      <Grid item xs={12} md={6} lg={3}>
+        <PrincipalDashboardCard
+          dropdownLabel="Select Class"
+          icon="hugeicons:task-daily-02"
+          title="Today Class Attendance"
+          count="50%"
+          color="primary.main"
+          bgColor="primary"
+          href="/dashboard"
+          labels={[
+            { name: 'Present', color: 'success', value: 50 },
+            { name: 'Absent', color: 'error', value: 50 },
+          ]}
+          selectOptions={[]}
+          selectedValue="Jan"
+          onSelectChange={(val) => console.log('Selected Month:', val)}
+        />
+      </Grid>
+      {/* 
+      <Grid item xs={12} md={6} lg={3}>
+        <PrincipalDashboardCard
+          dropdownLabel="Select Class"
+          icon="hugeicons:task-daily-02"
+          title="My Attendance Overall"
+          count="50%"
+          color="primary.main"
+          bgColor="primary"
+          href="/dashboard"
+          labels={[
+
+          ]}
+          selectOptions={[]}
+          selectedValue="Jan"
+          onSelectChange={(val) => console.log('Selected Month:', val)}
+        />
+      </Grid> */}
+      <Grid item xs={12} md={6} lg={3}>
+        <PrincipalDashboardCard
+          dropdownLabel="Select Class"
+          icon="material-symbols-light:pending-actions"
+          title="My Pending Task"
+          count="100"
+          color="primary.main"
+          bgColor="primary"
+          href="/dashboard"
+          labels={[
+            { name: 'Assignment', color: 'warning', value: 50 },
+            { name: 'Grading', color: 'warning', value: 50 },
+          ]}
+          selectOptions={[]}
+          selectedValue="Jan"
+          onSelectChange={(val) => console.log('Selected Month:', val)}
+        />
       </Grid>
 
       {/* Time Table & Class View Buttons */}
@@ -201,55 +254,112 @@ const MainDashboardTeacher = () => {
 
       {/* Student Assignments Table */}
       <Grid container spacing={3} sx={{ mt: 3, px: 3 }}>
+        <Grid item xs={12} lg={4}>
+          <Card sx={{ p: 2, height: '90%' }}>
+            <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
+          </Card>
+        </Grid>
         <Grid item xs={12} lg={8}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <Typography variant="h5">Earning Section</Typography>
+              <Typography variant="h6">Earning Section</Typography>
               <CustomizableTable
+                isSearch={false}
+                isFilter={false}
+                isPagination={false}
+                isShowedDense={false}
                 tableId="earning-table"
                 columns={[
-                  { id: 'employeeType', label: 'Employee Type' },
                   {
-                    id: 'amount',
-                    label: 'Amount',
+                    id: 'employeeType',
+                    label: 'Employee Type',
+                    isFilter: false,
                     render(value, row) {
-                      return formatCurrency(value);
+                      return (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '16px',
+                            fontWeight: value === 'Total Amount' ? 'bold' : 'normal',
+                          }}
+                        >
+                          {value}
+                        </Typography>
+                      );
                     },
                   },
                   {
-                    id: 'total',
-                    label: 'Total',
+                    id: 'amount',
+                    label: 'Amount',
+                    isFilter: false,
                     render(value, row) {
-                      return formatCurrency(value);
+                      return (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '16px',
+                            fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
+                          }}
+                        >
+                          {formatCurrency(value)}
+                        </Typography>
+                      );
                     },
                   },
                 ]}
                 data={[
-                  { employeeType: 'Teaching Allowance', amount: 5000, total: 5000 },
-                  { employeeType: 'Transport Allowance', amount: 2000, total: 2000 },
-                  { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
-                  { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
+                  { employeeType: 'Teaching Allowance', amount: 5000 },
+                  { employeeType: 'Transport Allowance', amount: 2000 },
+                  { employeeType: 'Academic Performance Bonus', amount: 3000 },
+                  { employeeType: 'Extra-curricular Activities', amount: 2000 },
+                  { employeeType: 'Total Amount', amount: 12000 },
                 ]}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="h5">Deductions Section</Typography>
+              <Typography variant="h6">Deduction Section</Typography>
               <CustomizableTable
+                isSearch={false}
+                isFilter={false}
+                isPagination={false}
+                isShowedDense={false}
                 tableId="deduction-table"
                 columns={[
-                  { id: 'deductionType', label: 'Deduction Type' },
                   {
-                    id: 'amount',
-                    label: 'Amount',
+                    id: 'deductionType',
+                    label: 'Deduction Type',
+                    isFilter: false,
                     render(value, row) {
-                      return formatCurrency(value);
+                      return (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '16px',
+                            fontWeight: value === 'Total Amount' ? 'bold' : 'normal',
+                          }}
+                        >
+                          {value}
+                        </Typography>
+                      );
                     },
                   },
                   {
-                    id: 'totalDeduction',
-                    label: 'Total Deduction',
+                    id: 'amount',
+                    label: 'Amount',
+                    isFilter: false,
                     render(value, row) {
-                      return formatCurrency(value);
+                      return (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{
+                            fontSize: '16px',
+                            fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal',
+                          }}
+                        >
+                          {formatCurrency(value)}
+                        </Typography>
+                      );
                     },
                   },
                 ]}
@@ -258,8 +368,18 @@ const MainDashboardTeacher = () => {
                   { deductionType: 'Provident Fund', amount: 3000, totalDeduction: 3000 },
                   { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
                   { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
+                  { deductionType: 'Total Amount', amount: 12000 },
                 ]}
               />
+            </Grid>
+            <Grid item xs={12} display="flex" justifyContent="flex-end" alignItems="flex-end">
+              <Alert
+                variant="outlined"
+                icon={false}
+                sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'inherit' }}
+              >
+                Net Salary : {formatCurrency(24000)}
+              </Alert>
             </Grid>
           </Grid>
           {/* <Typography variant="h6" fontWeight="bold">
@@ -267,22 +387,9 @@ const MainDashboardTeacher = () => {
           </Typography> */}
           {/* <StudentWiseAssignmentTable /> */}
         </Grid>
-
-        <Grid item xs={12} lg={4}>
-          <Card sx={{ p: 2, height: '90%' }}>
-            <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
-          </Card>
-        </Grid>
       </Grid>
 
       {/* Payroll Overview */}
-
-      <Grid item xs={12} lg={12} sx={{ pt: 0 }}>
-        <Typography variant="h6" fontWeight="bold">
-          Payroll Overview
-        </Typography>
-        <PayrollOverviewTeacherDashboard />
-      </Grid>
     </Grid>
   );
 };
