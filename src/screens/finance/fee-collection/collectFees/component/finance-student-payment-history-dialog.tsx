@@ -35,6 +35,7 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
           isPagination={false}
           isShowedDense={false}
           columns={[
+            { id: 'feeHead', label: 'Fee Head' },
             { id: 'paymentId', label: 'Payment Id / Cheque No' },
             {
               id: 'amount',

@@ -135,6 +135,19 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
 }) => {
   const tabs = useTabs('timesoff');
 
+  const getColor = (tab: string) => {
+    if (tab === 'timesoff') {
+      return `red`;
+    }
+    if (tab === 'birthday') {
+      return `blue`;
+    }
+    if (tab === 'event') {
+      return 'green';
+    }
+    return 'default';
+  };
+
   return (
     <>
       <Typography variant="h6" fontWeight={600} mb={2}>{`What's On This Month?`}</Typography>
@@ -152,7 +165,16 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
             label={
               <Typography style={{ display: 'flex', alignItems: 'center' }}>
                 {tab.label}
-                <Chip label="100" size="small" style={{ marginLeft: 8, fontSize: '11px' }} />
+                <Chip
+                  label="100"
+                  size="small"
+                  style={{
+                    backgroundColor: 'white',
+                    marginLeft: 8,
+                    fontSize: '11px',
+                    color: getColor(tab.value),
+                  }}
+                />
               </Typography>
             }
           />

@@ -51,42 +51,42 @@ const MainDashboardTeacher = () => {
   );
 
   const studentList = [
-    { id: 1, name: 'John Doe', subject: 'math', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
+    { id: 1, name: '1', value: 'math', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
     {
       id: 2,
       name: 'Jane Smith',
-      subject: 'science',
+      value: '2',
       totalMarks: 89,
       avatarUrl: '/path/to/avatar2.jpg',
     },
     {
       id: 3,
       name: 'Alice Brown',
-      subject: 'english',
+      value: '3',
       totalMarks: 78,
       avatarUrl: '/path/to/avatar3.jpg',
     },
     {
       id: 4,
       name: 'Bob Johnson',
-      subject: 'math',
+      value: '4',
       totalMarks: 65,
       avatarUrl: '/path/to/avatar4.jpg',
     },
     {
       id: 5,
       name: 'Charlie Wilson',
-      subject: 'science',
+      value: '3',
       totalMarks: 55,
       avatarUrl: '/path/to/avatar5.jpg',
     },
   ];
 
   const subjectOptions = [
-    { value: 'all', label: 'All Subjects' },
-    { value: 'math', label: 'Math' },
-    { value: 'science', label: 'Science' },
-    { value: 'english', label: 'English' },
+    { value: 'all', label: 'All' },
+    { value: '1', label: '1' },
+    { value: '2', label: '2' },
+    { value: '3', label: '3' },
   ];
 
   return (
@@ -130,7 +130,7 @@ const MainDashboardTeacher = () => {
         <Grid item xs={12} md={3}>
           <PerformerCard
             title="Needs improvement"
-            subheader="Needs improvement"
+            subheader="Based on The latest Exam"
             list={studentList}
             options={subjectOptions}
           />
@@ -138,7 +138,7 @@ const MainDashboardTeacher = () => {
         <Grid item xs={12} md={3}>
           <PerformerCard
             title="Top Performers"
-            subheader="Best students by subject"
+            subheader="Based on The latest Exam"
             list={studentList}
             options={subjectOptions}
           />

@@ -8,7 +8,7 @@ import CustomSelect from 'src/components/custom-select';
 interface Student {
   id: number;
   name: string;
-  subject: string;
+  value: string;
   totalMarks: number;
   avatarUrl: string;
 }
@@ -28,12 +28,10 @@ const PerformerCard: React.FC<PerformerCardProps> = ({ title, subheader, list, o
   };
 
   const filteredList =
-    selectedSubject === 'all'
-      ? list
-      : list.filter((student) => student.subject === selectedSubject);
+    selectedSubject === 'all' ? list : list.filter((student) => student.value === selectedSubject);
 
   return (
-    <Card sx={{ p: 2, height: '100%' }}>
+    <Card sx={{ p: 2, height: '380px' }}>
       {/* Title & Dropdown */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box flex={10}>

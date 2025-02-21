@@ -27,6 +27,7 @@ import { AppWelcome } from 'src/sections/overview/app/app-welcome';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import TimeTableView from '../component/time-table-view';
+import PerformerCard from '../teacher/component/performer-card';
 import { AnalyticsClassResults } from './component/result-graph';
 import ExamOverviewForPrincipal from './component/exam-overview';
 import { PrincipalDashboardCard } from './component/principal-dashboard-card';
@@ -42,6 +43,45 @@ const _ExamSalesOverview = [
   totalAmount: (19 + index) * 100,
   value: 10 + index,
 }));
+
+const studentList = [
+  { id: 1, name: 'John Doe', value: '1', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
+  {
+    id: 2,
+    name: 'Jane Smith',
+    value: '1',
+    totalMarks: 89,
+    avatarUrl: '/path/to/avatar2.jpg',
+  },
+  {
+    id: 3,
+    name: 'Alice Brown',
+    value: '2',
+    totalMarks: 78,
+    avatarUrl: '/path/to/avatar3.jpg',
+  },
+  {
+    id: 4,
+    name: 'Bob Johnson',
+    value: '3',
+    totalMarks: 65,
+    avatarUrl: '/path/to/avatar4.jpg',
+  },
+  {
+    id: 5,
+    name: 'Charlie Wilson',
+    value: '4',
+    totalMarks: 55,
+    avatarUrl: '/path/to/avatar5.jpg',
+  },
+];
+
+const subjectOptions = [
+  { value: 'all', label: 'All' },
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+  { value: '3', label: '3' },
+];
 
 const MainDashboardPrincipal = () => {
   const [timeTable, setTimeTable] = useState('student');
@@ -147,7 +187,22 @@ const MainDashboardPrincipal = () => {
           />
         </Grid>
       </Grid>
-
+      <Grid item xs={12} lg={4}>
+        <PerformerCard
+          title="Needs improvement"
+          subheader="Based on The latest Exam"
+          list={studentList}
+          options={subjectOptions}
+        />
+      </Grid>
+      <Grid item xs={12} lg={4}>
+        <PerformerCard
+          title="Top Performers"
+          subheader="Based on The latest Exam"
+          list={studentList}
+          options={subjectOptions}
+        />
+      </Grid>
       <Grid item xs={12}>
         <Card sx={{ boxShadow: 'var(--shadows-2)' }}>
           <AnalyticsWebsiteVisits
