@@ -76,6 +76,7 @@
     "@types/lodash": "^4.17.7",
     "autosuggest-highlight": "^3.3.4",
     "axios": "^1.7.2",
+    "country-state-city": "^3.2.1",
     "dayjs": "^1.11.11",
     "embla-carousel": "^8.3.0",
     "embla-carousel-auto-height": "^8.3.0",

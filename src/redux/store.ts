@@ -25,6 +25,8 @@ import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
+import { StudentAdmissionApi } from './student/admission/admission-api';
+import { StudentCertificateApi } from './student/certificate/certificate';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
@@ -36,6 +38,7 @@ import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-t
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
+import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
 
 const persistConfig = {
   key: 'root',
@@ -78,6 +81,9 @@ const reducers = combineReducers({
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
   [FollowUpApi.reducerPath]: FollowUpApi.reducer,
+  [StudentAdmissionApi.reducerPath]: StudentAdmissionApi.reducer,
+  [EnrollmentReportApi.reducerPath]: EnrollmentReportApi.reducer,
+  [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
 });
 
 const store = configureStore({
@@ -114,7 +120,10 @@ const store = configureStore({
       .concat(organizationUnitApi.middleware)
       .concat(EntranceExamSlotApi.middleware)
       .concat(EntranceExamApi.middleware)
-      .concat(FollowUpApi.middleware),
+      .concat(FollowUpApi.middleware)
+      .concat(StudentAdmissionApi.middleware)
+      .concat(EnrollmentReportApi.middleware)
+      .concat(StudentCertificateApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

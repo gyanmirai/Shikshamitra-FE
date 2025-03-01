@@ -2,26 +2,21 @@
 
 import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Avatar from '@mui/material/Avatar';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import ButtonBase from '@mui/material/ButtonBase';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
 export type WorkspacesPopoverProps = ButtonBaseProps & {
-  workspace: {
-    id?: string;
-    name?: string;
-    logo?: string;
-    plan?: string;
-  };
-  setWorkspace: (workspace: { id: string; name: string; logo: string; plan: string }) => void;
   data?: {
     id: string;
     name: string;
@@ -30,23 +25,19 @@ export type WorkspacesPopoverProps = ButtonBaseProps & {
   }[];
 };
 
-export function WorkspacesPopover({
-  data = [],
-  sx,
-  workspace,
-  setWorkspace,
-  ...other
-}: WorkspacesPopoverProps) {
+export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopoverProps) {
   const popover = usePopover();
 
   const mediaQuery = 'sm';
+
+  const [workspace, setWorkspace] = useState(data[0]);
 
   const handleChangeWorkspace = useCallback(
     (newValue: (typeof data)[0]) => {
       setWorkspace(newValue);
       popover.onClose();
     },
-    [popover, setWorkspace]
+    [popover]
   );
 
   return (
@@ -55,22 +46,19 @@ export function WorkspacesPopover({
         disableRipple
         onClick={popover.onOpen}
         sx={{
-          p: 0.5,
+          py: 0.5,
           gap: { xs: 0.5, [mediaQuery]: 1 },
-          border: (theme) => `dashed 1px ${theme.vars.palette.success.main}`,
-          borderRadius: 1,
-          zIndex: 0,
           ...sx,
         }}
         {...other}
       >
-        {/* <Box
+        <Box
           component="img"
           alt={workspace?.name}
-          src={`${CONFIG.site.basePath}/assets/icons/workspaces/year.svg`}
+          src={workspace?.logo}
           sx={{ width: 24, height: 24, borderRadius: '50%' }}
-        /> */}
-        <Iconify width={20} icon="uil:calender" sx={{ color: 'primary.main' }} />
+        />
+
         <Box
           component="span"
           sx={{
@@ -81,7 +69,7 @@ export function WorkspacesPopover({
           {workspace?.name}
         </Box>
 
-        {/* <Label
+        <Label
           color={workspace?.plan === 'Free' ? 'default' : 'info'}
           sx={{
             height: 22,
@@ -89,9 +77,9 @@ export function WorkspacesPopover({
           }}
         >
           {workspace?.plan}
-        </Label> */}
+        </Label>
 
-        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'primary.main' }} />
+        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
       </ButtonBase>
 
       <CustomPopover
@@ -101,26 +89,22 @@ export function WorkspacesPopover({
         slotProps={{ arrow: { placement: 'top-left' } }}
       >
         <MenuList sx={{ width: 240 }}>
-          {data.length ? (
-            data.map((option) => (
-              <MenuItem
-                key={option.id}
-                selected={option.id === workspace?.id}
-                onClick={() => handleChangeWorkspace(option)}
-                sx={{ height: 32 }}
-              >
-                {/* <Avatar alt={option.name} src={option.logo} sx={{ width: 24, height: 24 }} /> */}
+          {data.map((option) => (
+            <MenuItem
+              key={option.id}
+              selected={option.id === workspace?.id}
+              onClick={() => handleChangeWorkspace(option)}
+              sx={{ height: 48 }}
+            >
+              <Avatar alt={option.name} src={option.logo} sx={{ width: 24, height: 24 }} />
 
-                <Box component="span" sx={{ flexGrow: 1 }}>
-                  {option.name}
-                </Box>
+              <Box component="span" sx={{ flexGrow: 1 }}>
+                {option.name}
+              </Box>
 
-                {/* <Label color={option.plan === 'Free' ? 'default' : 'info'}>{option.plan}</Label> */}
-              </MenuItem>
-            ))
-          ) : (
-            <MenuItem>No Academic Year Available</MenuItem>
-          )}
+              <Label color={option.plan === 'Free' ? 'default' : 'info'}>{option.plan}</Label>
+            </MenuItem>
+          ))}
         </MenuList>
       </CustomPopover>
     </>

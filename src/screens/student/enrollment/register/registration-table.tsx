@@ -1,7 +1,6 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
-import { toast } from 'sonner';
 import React, { useMemo, useCallback } from 'react';
 
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
@@ -10,7 +9,10 @@ import calculateAge from 'src/utils/calculate-age';
 
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetStudentRegistrationQuery } from 'src/redux/student/registration/registration-api';
+import {
+  useMoveToAdmissionMutation,
+  useGetStudentRegistrationQuery,
+} from 'src/redux/student/registration/registration-api';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -29,16 +31,25 @@ const RegistrationTable = ({
   followUpDialog: UseBooleanReturn;
   setEditData: (data: null | IInquiryData) => void;
 }) => {
+  const [moveToAdmission] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useMoveToAdmissionMutation,
+    popupConfig: {
+      successMessage: 'Student moved to Admission successfully',
+      success: true,
+    },
+  });
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
         {' '}
         <MenuList>
           <MenuItem
-            onClick={() => {
-              if (row.progress < 50) {
-                toast.error('Please Complete Registration Form First');
-              }
+            onClick={async () => {
+              // if (row.progress < 50) {
+              //   toast.error('Please Complete Registration Form First');
+              // }
+              await moveToAdmission(row.id);
             }}
           >
             <Iconify icon="mdi:arrow-right" sx={{ mr: 2 }} />
@@ -67,7 +78,7 @@ const RegistrationTable = ({
         </MenuList>
       </>
     ),
-    [dialog, followUpDialog, setEditData]
+    [dialog, followUpDialog, moveToAdmission, setEditData]
   );
 
   const { data: registrationData, isLoading } = useQueryAndMutation({

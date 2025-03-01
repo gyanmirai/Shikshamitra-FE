@@ -5,8 +5,7 @@ import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Stack, Button, Popover, useTheme } from '@mui/material';
-import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
+import { Stack, useTheme, ButtonBase } from '@mui/material';
 
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
@@ -17,8 +16,10 @@ import {
   setCurrentMedium,
 } from 'src/redux/globalState/globalSlice';
 
-import { usePopover } from 'src/components/custom-popover';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { NavItem } from 'src/components/nav-section/vertical/nav-item';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   NavLi,
   NavUl,
@@ -91,18 +92,65 @@ const GlobalAcademicSearch = () => {
 
   return (
     <>
-      <Button
+      <ButtonBase
+        disableRipple
         onClick={popover.onOpen}
-        variant="soft"
-        color="primary"
-        // sx={{ border: `dashed 1px ${theme.vars.palette.primary.main}` }}
-        endIcon={popover.open ? <ArrowDropDown /> : <ArrowDropUp />}
+        sx={{
+          p: 0.5,
+          gap: { xs: 0.5, sm: 1 },
+          boxShadow: 'var(--shadows-1)',
+          borderRadius: 1,
+          // ...sx,
+        }}
       >
-        {currentYear?.name && currentBoard.name && currentMedium?.name
-          ? `${currentYear.name} > ${currentBoard.name} > ${currentMedium.name}`
-          : 'Select Academic Year, Board and Medium'}
-      </Button>
-      <Popover
+        {currentYear?.name ? (
+          <>
+            <Label color="primary">{currentYear?.name}</Label>
+
+            <Label color="secondary">{currentBoard?.name}</Label>
+
+            <Label
+              color="info"
+              sx={{
+                height: 22,
+                display: { xs: 'none', sm: 'inline-flex' },
+              }}
+            >
+              {currentMedium?.name}
+            </Label>
+          </>
+        ) : (
+          'Please select a year, board and medium'
+        )}
+
+        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
+      </ButtonBase>
+      <CustomPopover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
+        onClose={popover.onClose}
+        slotProps={{
+          paper: {
+            elevation: 6,
+            sx: {
+              mt: 0.5,
+              width: { xs: 1, sm: 250 },
+              border: `1px solid ${theme.vars.palette.grey[300]}`,
+            },
+          },
+        }}
+      >
+        <Stack
+          component="nav"
+          className={navSectionClasses.vertical.root}
+          sx={{ p: 0.5, ...cssVars }}
+        >
+          <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
+            <Group1 items={allData} popover={popover} />
+          </NavUl>
+        </Stack>
+      </CustomPopover>
+      {/* <Popover
         open={popover.open}
         anchorEl={popover.anchorEl}
         onClose={popover.onClose}
@@ -134,7 +182,7 @@ const GlobalAcademicSearch = () => {
             <Group1 items={allData} popover={popover} />
           </NavUl>
         </Stack>
-      </Popover>
+      </Popover> */}
     </>
   );
 };

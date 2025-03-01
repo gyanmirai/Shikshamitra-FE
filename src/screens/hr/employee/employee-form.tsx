@@ -8,7 +8,6 @@ import { Box, Grid, Slide, TextField } from '@mui/material';
 
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import { convertBase64Format } from 'src/utils/base64Formate';
-import { ConvertRtkResponse } from 'src/utils/convrtRtkResponse';
 
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -181,22 +180,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
-        const res = ConvertRtkResponse(
-          await addUser({
-            userName: `${values.firstName}${values.lastName}`,
-            name: values.firstName,
-            surname: values.lastName,
-            email: values.email,
-            phoneNumber: values.mobileNo,
-            isActive: true,
-            lockoutEnabled: true,
-            roleNames: [],
-            password: 'Test@123',
-          })
-        );
-
         const resp = await addEmployee({
-          userId: res.data.id,
+          // userId: res.data.id,
           profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
           // employeeCode: values.code,
           lastName: values.lastName,
@@ -234,7 +219,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         formik.setFieldValue('employeeId', resp.data.id);
       }
     },
-    [addEmployee, addUser]
+    [addEmployee]
   );
   const handleFamilyInformation = useCallback(
     async (values: any, formik: any) => {

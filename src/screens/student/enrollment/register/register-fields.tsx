@@ -22,6 +22,7 @@ import {
   IconButton,
   FormControl,
   Autocomplete,
+  FormHelperText,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -446,6 +447,8 @@ export const generalFormFields: FieldsType[] = [
             placeholder: 'Date of Birth',
             fullWidth: true,
             size: 'small',
+            error: props.formik.touched.dob && Boolean(props.formik.errors.dob),
+            helperText: props.formik.touched.dob && props.formik.errors.dob,
           },
         }}
         onChange={(newValue) => {
@@ -473,8 +476,15 @@ export const generalFormFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp: (props) => (
-      <FormControl fullWidth>
-        <InputLabel id="dropdown-label" size="small">
+      <FormControl
+        fullWidth
+        error={props.formik.touched.gender && Boolean(props.formik.errors.gender)}
+      >
+        <InputLabel
+          id="dropdown-label"
+          size="small"
+          error={props.formik.touched.gender && Boolean(props.formik.errors.gender)}
+        >
           Gender
         </InputLabel>
         <Select
@@ -485,6 +495,7 @@ export const generalFormFields: FieldsType[] = [
           size="small"
           label="Gender"
           name="gender"
+          error={props.formik.touched.gender && Boolean(props.formik.errors.gender)}
         >
           {GenderTypeArray.map((i, index) => (
             <MenuItem key={i} value={index}>
@@ -492,6 +503,7 @@ export const generalFormFields: FieldsType[] = [
             </MenuItem>
           ))}
         </Select>
+        <FormHelperText>{props.formik.touched.gender && props.formik.errors.gender}</FormHelperText>
       </FormControl>
     ),
   },
@@ -504,8 +516,15 @@ export const generalFormFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp: (props) => (
-      <FormControl fullWidth>
-        <InputLabel id="dropdown-label" size="small">
+      <FormControl
+        fullWidth
+        error={props.formik.touched.castCategory && Boolean(props.formik.errors.castCategory)}
+      >
+        <InputLabel
+          id="dropdown-label"
+          size="small"
+          error={props.formik.touched.castCategory && Boolean(props.formik.errors.castCategory)}
+        >
           Cast Category
         </InputLabel>
         <Select
@@ -516,6 +535,7 @@ export const generalFormFields: FieldsType[] = [
           size="small"
           label="Cast Category"
           name="castCategory"
+          error={props.formik.touched.castCategory && Boolean(props.formik.errors.castCategory)}
         >
           {EmployeeCastTypeArray.map((i, index) => (
             <MenuItem key={i} value={index}>
@@ -523,6 +543,9 @@ export const generalFormFields: FieldsType[] = [
             </MenuItem>
           ))}
         </Select>
+        <FormHelperText>
+          {props.formik.touched.castCategory && props.formik.errors.castCategory}
+        </FormHelperText>
       </FormControl>
     ),
   },
@@ -1148,6 +1171,8 @@ export const additionalDetailsFields: FieldsType[] = [
             props.formik.setFieldValue('category', value);
           }}
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={props.formik.touched.category && Boolean(props.formik.errors.category)}
+          helperText={props.formik.touched.category && props.formik.errors.category}
         />
       );
     },
@@ -1160,13 +1185,15 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={YesNoArray}
+          options={YesNoArray as any}
           label="Right to Education"
           value={props.formik.values.RTE}
           onChange={(value) => {
             props.formik.setFieldValue('RTE', value);
           }}
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={props.formik.touched.RTE && Boolean(props.formik.errors.RTE)}
+          helperText={props.formik.touched.RTE && props.formik.errors.RTE}
         />
       );
     },
@@ -1179,13 +1206,15 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={YesNoArray}
+          options={YesNoArray as any}
           label="BPL Student"
           value={props.formik.values.bplStudent}
           onChange={(value) => {
             props.formik.setFieldValue('bplStudent', value);
           }}
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={props.formik.touched.bplStudent && Boolean(props.formik.errors.bplStudent)}
+          helperText={props.formik.touched.bplStudent && props.formik.errors.bplStudent}
         />
       );
     },
@@ -1204,13 +1233,20 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={YesNoArray}
+          options={YesNoArray as any}
           label="Person With Disability"
           value={props.formik.values.personWithDisability}
           onChange={(value) => {
             props.formik.setFieldValue('personWithDisability', value);
           }}
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={
+            props.formik.touched.personWithDisability &&
+            Boolean(props.formik.errors.personWithDisability)
+          }
+          helperText={
+            props.formik.touched.personWithDisability && props.formik.errors.personWithDisability
+          }
         />
       );
     },
@@ -1226,6 +1262,21 @@ export const additionalDetailsFields: FieldsType[] = [
     label: 'Emergency Contact No',
     type: 'text',
     otherProps: {},
+    renderComp(props) {
+      const { formik } = props;
+      return (
+        <PhoneInput
+          name="emergencyContactNo"
+          value={formik.values.emergencyContactNo}
+          onChange={(value) => {
+            formik.setFieldValue('emergencyContactNo', value);
+          }}
+          placeholder="Emergency Contact No."
+          label="Emergency Contact No"
+          error={formik.touched.emergencyContactNo && Boolean(formik.errors.emergencyContactNo)}
+        />
+      );
+    },
   },
   {
     name: 'singleParentChild',
@@ -1235,13 +1286,19 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={YesNoArray}
+          options={YesNoArray as any}
           label="Single Parent Child"
           value={props.formik.values.singleParentChild}
           onChange={(value) => {
             props.formik.setFieldValue('singleParentChild', value);
           }}
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={
+            props.formik.touched.singleParentChild && Boolean(props.formik.errors.singleParentChild)
+          }
+          helperText={
+            props.formik.touched.singleParentChild && props.formik.errors.singleParentChild
+          }
         />
       );
     },
@@ -1254,13 +1311,15 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
-          options={YesNoArray}
+          options={YesNoArray as any}
           label="Single Child"
           value={props.formik.values.singleChild}
           onChange={(value) => {
             props.formik.setFieldValue('singleChild', value);
           }}
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={props.formik.touched.singleChild && Boolean(props.formik.errors.singleChild)}
+          helperText={props.formik.touched.singleChild && props.formik.errors.singleChild}
         />
       );
     },
