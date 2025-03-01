@@ -5,24 +5,94 @@ import React, { useState } from 'react';
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 
+import { useUpdateStudentRollNumberMutation } from 'src/redux/student/roll-number/roll-number-api';
+
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+const initialData = [
+  { id: 1, surname: 'Akbari', srNo: 1, grNo: 'GR001', name: 'Parth', rollNo: '', gender: 'Male' },
+  { id: 2, surname: 'Guhsar', srNo: 2, grNo: 'GR002', name: 'Hiren', rollNo: '', gender: 'Female' },
+  { id: 3, surname: 'Ram', srNo: 2, grNo: 'GR002', name: 'Jeet', rollNo: '', gender: 'Female' },
+  { id: 4, surname: 'Jignesh', srNo: 2, grNo: 'GR002', name: 'Hiren', rollNo: '', gender: 'Male' },
+];
+
 const RollNoGenerationScreen = () => {
   const [arrangementType, setArrangementType] = useState('');
-  const [isManual, setIsManual] = useState<boolean>(false);
+  const [isManual, setIsManual] = useState(false);
   const [arrangeBy, setArrangeBy] = useState('');
+  const [tableData, setTableData] = useState(initialData);
+  const [error, setError] = useState<Record<number, string>>({});
 
-  const data = [
-    { id: 1, surname: 'Doe', srNo: 1, grNo: 'GR001', name: 'John', rollNo: '' },
-    { id: 2, surname: 'Smith', srNo: 2, grNo: 'GR002', name: 'Jane', rollNo: '' },
-    { id: 3, surname: 'Johnson', srNo: 3, grNo: 'GR003', name: 'Alice', rollNo: '' },
-  ];
+  const [updateStudentRollNumbers, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
+  const handleAutoGenerate = () => {
+    let filteredData = [...initialData];
+
+    // Step 1: Filter based on Arrangement Type
+    if (arrangementType === 'boysFirst') {
+      filteredData = filteredData.filter((item) => item.gender === 'Male');
+    } else if (arrangementType === 'girlsFirst') {
+      filteredData = filteredData.filter((item) => item.gender === 'Female');
+    }
+
+    // Step 2: Sort based on Arrangement By
+    if (arrangeBy === 'name') {
+      filteredData.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (arrangeBy === 'surname') {
+      filteredData.sort((a, b) => a.surname.localeCompare(b.surname));
+    } else if (arrangeBy === 'grNo') {
+      filteredData.sort((a, b) => a.grNo.localeCompare(b.grNo));
+    }
+
+    // Step 3: Assign Roll Numbers from 1
+    filteredData = filteredData.map((item, index) => ({
+      ...item,
+      rollNo: (index + 1).toString(), // Assign roll numbers sequentially
+    }));
+
+    setTableData(filteredData);
+  };
+
+  const handleRollNoChange = (id: number, newValue: string) => {
+    const updatedData = tableData.map((item) =>
+      item.id === id ? { ...item, rollNo: newValue } : item
+    );
+
+    const rollNumbers = updatedData.map((item) => item.rollNo);
+    const duplicateRolls = rollNumbers.filter(
+      (num, idx) => num && rollNumbers.indexOf(num) !== idx
+    );
+
+    setError((prevError) => ({
+      ...prevError,
+      [id]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
+    }));
+
+    setTableData(updatedData);
+  };
+
+  const handleSave = async () => {
+    const requestBody = {
+      studentNumbers: tableData.map((item) => ({
+        studentId: item.id,
+        rollNo: item.rollNo,
+      })),
+    };
+
+    console.log('Request body:', requestBody);
+    try {
+      const response = await updateStudentRollNumbers(requestBody).unwrap();
+      console.log('GR Numbers updated successfully:', response);
+      alert('GR Numbers updated successfully!');
+    } catch (err) {
+      console.error('Failed to update GR Numbers:', err);
+      alert('Failed to update GR Numbers. Please try again.');
+    }
+  };
 
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
-        {/* Left side - Dropdowns */}
         <Box display="flex" gap={2}>
           <CustomSelect
             options={[
@@ -53,18 +123,17 @@ const RollNoGenerationScreen = () => {
           />
         </Box>
 
-        {/* Right side - Buttons */}
         {arrangeBy && (
           <Box display="flex" gap={2}>
             <Button
               startIcon={<Save />}
               variant="outlined"
-              onClick={() => {
-                setIsManual(false);
-              }}
+              onClick={handleSave}
+              disabled={isSaving}
             >
-              Save
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
+
             <Button
               startIcon={<Grading />}
               variant="outlined"
@@ -72,7 +141,7 @@ const RollNoGenerationScreen = () => {
             >
               Manual Generation
             </Button>
-            <Button startIcon={<Refresh />} variant="contained">
+            <Button startIcon={<Refresh />} variant="contained" onClick={handleAutoGenerate}>
               Auto Generate
             </Button>
           </Box>
@@ -80,26 +149,34 @@ const RollNoGenerationScreen = () => {
       </Box>
 
       {arrangeBy && (
-        <>
-          <CustomizableTable
-            tableId="roll-no-generation-table"
-            columns={[
-              { id: 'srNo', label: 'Sr. No.' },
-              { id: 'grNo', label: 'GR No.' },
-              { id: 'name', label: 'Name' },
-              { id: 'surname', label: 'Surname' },
-              {
-                id: 'rollNo',
-                label: 'Roll No.',
-                minWidth: 250,
-                render(value, row) {
-                  return isManual && <TextField size="small" variant="standard" />;
-                },
+        <CustomizableTable
+          tableId="roll-no-generation-table"
+          columns={[
+            { id: 'srNo', label: 'Sr. No.' },
+            { id: 'grNo', label: 'GR No.' },
+            { id: 'name', label: 'Name' },
+            { id: 'surname', label: 'Surname' },
+            {
+              id: 'rollNo',
+              label: 'Roll No.',
+              minWidth: 250,
+              render(value, row) {
+                return (
+                  <TextField
+                    size="small"
+                    variant="standard"
+                    value={row.rollNo}
+                    onChange={(e) => handleRollNoChange(row.id, e.target.value)}
+                    error={Boolean(error[row.id])}
+                    helperText={error[row.id]}
+                    disabled={!isManual}
+                  />
+                );
               },
-            ]}
-            data={data}
-          />{' '}
-        </>
+            },
+          ]}
+          data={tableData}
+        />
       )}
     </Box>
   );

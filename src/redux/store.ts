@@ -30,6 +30,7 @@ import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
+import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
@@ -78,6 +79,7 @@ const reducers = combineReducers({
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
   [FollowUpApi.reducerPath]: FollowUpApi.reducer,
+  [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
 });
 
 const store = configureStore({
@@ -114,7 +116,8 @@ const store = configureStore({
       .concat(organizationUnitApi.middleware)
       .concat(EntranceExamSlotApi.middleware)
       .concat(EntranceExamApi.middleware)
-      .concat(FollowUpApi.middleware),
+      .concat(FollowUpApi.middleware)
+      .concat(studentGrNumberApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
