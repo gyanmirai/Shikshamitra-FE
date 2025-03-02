@@ -38,7 +38,7 @@ interface CardItem {
   labels: ILabel[];
 }
 
-const StudentEnrollmentCard = ({
+export const StudentEnrollmentCard = ({
   icon,
   title,
   count,

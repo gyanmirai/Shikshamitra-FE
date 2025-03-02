@@ -67,6 +67,7 @@ const RenderBehavioralRecord = () => (
           { name: 'Honor Roll (2022-2023)', color: 'success' },
           { name: 'Volunteer of the Month (May 2023)', color: 'warning' },
         ]}
+        index={0}
       />
       <StudentEnrollmentCard
         icon="fluent-mdl2:account-activity"
@@ -78,6 +79,7 @@ const RenderBehavioralRecord = () => (
           { name: 'Honor Roll (2022-2023)', color: 'success' },
           { name: 'Volunteer of the Month (May 2023)', color: 'warning' },
         ]}
+        index={0}
       />
     </Box>
     <Grid container spacing={2} mt={2}>
