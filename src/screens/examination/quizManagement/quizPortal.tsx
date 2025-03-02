@@ -19,7 +19,12 @@ import {
 import { Iconify } from 'src/components/iconify';
 
 // Styled components
-const QuestionNumber = styled(Paper)(({ theme, status }: any) => ({
+interface QuestionNumberProps {
+  theme?: any;
+  children?: React.ReactNode;
+  status: any;
+}
+const QuestionNumber: React.FC<QuestionNumberProps> = styled(Paper)(({ theme, status }: any) => ({
   padding: theme.spacing(1),
   textAlign: 'center',
   cursor: 'pointer',
