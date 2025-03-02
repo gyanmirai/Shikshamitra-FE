@@ -25,18 +25,21 @@ import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
+import { StudentAdmissionApi } from './student/admission/admission-api';
+import { StudentCertificateApi } from './student/certificate/certificate';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
-import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
+import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
+
 
 const persistConfig = {
   key: 'root',
@@ -79,6 +82,9 @@ const reducers = combineReducers({
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
   [FollowUpApi.reducerPath]: FollowUpApi.reducer,
+  [StudentAdmissionApi.reducerPath]: StudentAdmissionApi.reducer,
+  [EnrollmentReportApi.reducerPath]: EnrollmentReportApi.reducer,
+  [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
   [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
 });
 
@@ -117,7 +123,10 @@ const store = configureStore({
       .concat(EntranceExamSlotApi.middleware)
       .concat(EntranceExamApi.middleware)
       .concat(FollowUpApi.middleware)
-      .concat(studentGrNumberApi.middleware),
+      .concat(StudentAdmissionApi.middleware)
+      .concat(EnrollmentReportApi.middleware)
+      .concat(StudentCertificateApi.middleware)
+      .concat(studentGrNumberApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;
@@ -126,3 +135,6 @@ export type AppDispatch = typeof store.dispatch;
 export default store;
 
 export const persistor = persistStore(store);
+
+
+

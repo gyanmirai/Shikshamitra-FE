@@ -48,6 +48,7 @@ export type NavItemBaseProps = {
   icon?: string | React.ReactNode;
   info?: string[] | React.ReactNode;
   style?: any;
+  submodule?: any;
 };
 
 export type NavItemProps = ButtonBaseProps & NavItemStateProps & NavItemBaseProps;
@@ -80,5 +81,6 @@ export type NavSectionProps = Omit<NavListProps, 'data' | 'depth'> & {
     items: NavItemBaseProps[];
     _action?: string;
     isSubLayout?: boolean;
+    submodule?: NavItemBaseProps[];
   }[];
 };

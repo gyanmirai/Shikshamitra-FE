@@ -43,7 +43,7 @@ import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import StandardAddress from 'src/components/stardard-address';
+import StandardAddress, { useStandardAddress } from 'src/components/stardard-address';
 
 import { InquiryPreferenceForm } from '../setting/inquiryPreference';
 
@@ -150,6 +150,7 @@ const InquiryForm = ({
     addressLine3: editData?.addressLine3 || '',
     // organization: editData?. || '',
   };
+  const { renderCountry, renderState, renderCity } = useStandardAddress();
   const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
@@ -581,7 +582,9 @@ const InquiryForm = ({
                   />
                 </Grid>
                 <Grid item xs={4}>
-                  <StandardAddress.RenderCountry
+                  {renderCountry()}
+
+                  {/* <StandardAddress.RenderCountry
                     name="country"
                     value={values.country}
                     onChange={(value) => setFieldValue('country', value)}
@@ -592,10 +595,11 @@ const InquiryForm = ({
                     size="small"
                     label="Country"
                     options={[]}
-                  />
+                  /> */}
                 </Grid>
                 <Grid item xs={4}>
-                  <StandardAddress.RenderState
+                  {renderState()}
+                  {/* <StandardAddress.RenderState
                     name="state"
                     value={values.state}
                     onChange={handleChange}
@@ -606,10 +610,11 @@ const InquiryForm = ({
                     size="small"
                     label="State"
                     options={[]}
-                  />
+                  /> */}
                 </Grid>
                 <Grid item xs={4}>
-                  <StandardAddress.RenderCity
+                  {renderCity()}
+                  {/* <StandardAddress.RenderCity
                     name="city"
                     value={values.city}
                     onChange={handleChange}
@@ -620,7 +625,7 @@ const InquiryForm = ({
                     size="small"
                     label="City"
                     options={[]}
-                  />
+                  /> */}
                 </Grid>
                 <Grid item xs={4}>
                   <StandardAddress.RenderPincode

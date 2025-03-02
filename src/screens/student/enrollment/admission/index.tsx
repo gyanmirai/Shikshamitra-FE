@@ -3,6 +3,7 @@
 import type { IKanbanColumn } from 'src/types/kanban';
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 
@@ -28,7 +29,12 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import calculateAge from 'src/utils/calculate-age';
+
+import { GenderType } from 'src/enums/gender';
 import { paper, varAlpha } from 'src/theme/styles';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetStudentRegistrationQuery } from 'src/redux/student/admission/admission-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -444,74 +450,6 @@ const data = [
 //   );
 // };
 
-const tableData = [
-  {
-    Organization: 'primary',
-    Code: 'REG001',
-    Name: 'Sarah Anderson',
-    FirstName: 'Sarah',
-    MiddleName: 'Marie',
-    EmployeeDesignation: 'Student',
-    StatusName: 'Active',
-    parentContactNo: '+91-555-0101',
-    class: '5',
-    inquiryNo: 'INQ001',
-    progress: '100',
-  },
-  {
-    Organization: 'pre-primary',
-    Code: 'REG002',
-    Name: 'Michael Chen',
-    FirstName: 'Michael',
-    MiddleName: 'James',
-    EmployeeDesignation: 'Student',
-    StatusName: 'Inactive',
-    parentContactNo: '+91-555-0102',
-    class: 'KG-2',
-    inquiryNo: 'INQ002',
-    progress: '75',
-  },
-  {
-    Organization: 'primary',
-    Code: 'REG003',
-    Name: 'Emily Rodriguez',
-    FirstName: 'Emily',
-    MiddleName: 'Sofia',
-    EmployeeDesignation: 'Student',
-    StatusName: 'Active',
-    parentContactNo: '+91-555-0103',
-    class: '3',
-    inquiryNo: 'INQ003',
-    progress: '50',
-  },
-  {
-    Organization: 'secondary',
-    Code: 'REG004',
-    Name: 'David Thompson',
-    FirstName: 'David',
-    MiddleName: 'Alexander',
-    EmployeeDesignation: 'Student',
-    StatusName: 'Active',
-    parentContactNo: '+91-555-0104',
-    class: '9',
-    inquiryNo: 'INQ004',
-    progress: '25',
-  },
-  {
-    Organization: 'higher secondary',
-    Code: 'REG005',
-    Name: 'Lisa Wong',
-    FirstName: 'Lisa',
-    MiddleName: 'Grace',
-    EmployeeDesignation: 'Student',
-    StatusName: 'Inactive',
-    parentContactNo: '+91-555-0105',
-    class: '11',
-    inquiryNo: 'INQ005',
-    progress: '0',
-  },
-];
-
 const AdmissionScreen = () => {
   const tabs = useTabs('pending');
   const divisionDialog = useBoolean();
@@ -521,13 +459,20 @@ const AdmissionScreen = () => {
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const [editData, setEditData] = useState<IInquiryData | null>(null);
 
+  const { data: admissionData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentRegistrationQuery,
+  });
+
+  console.log(admissionData);
+
   const counts = useMemo(
     () => ({
-      pending: data.filter((i) => i.status === 'pending').length,
-      approved: data.filter((i) => i.status === 'approved').length,
-      rejected: data.filter((i) => i.status === 'rejected').length,
+      pending: admissionData?.items.length,
+      approved: admissionData?.items.length,
+      rejected: admissionData?.items.length,
     }),
-    []
+    [admissionData?.items.length]
   );
   const TABS = useMemo(
     () => [
@@ -551,6 +496,19 @@ const AdmissionScreen = () => {
       },
     ],
     [counts]
+  );
+
+  const tableData = useMemo(
+    () =>
+      admissionData?.items.map((item: IInquiryData) => ({
+        ...item,
+        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+        doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        genderValue: GenderType[item?.genderType],
+      })),
+    [admissionData?.items]
   );
   return (
     <Box>
@@ -601,17 +559,19 @@ const AdmissionScreen = () => {
       </Box>
       <CustomizableTable
         tableId="student-enrollment-admission-table"
+        isLoading={isLoading}
         columns={[
           {
             id: 'checkBox',
             align: 'left',
             minWidth: '60px',
             isSort: false,
+            isFilter: false,
             label: '',
             renderColumn() {
               return (
                 <Checkbox
-                  checked={selectedStudents.length === tableData.length}
+                  checked={selectedStudents?.length === tableData?.length}
                   onChange={(e) => {
                     if (e.target.checked) {
                       setSelectedStudents(tableData);
@@ -639,19 +599,52 @@ const AdmissionScreen = () => {
               );
             },
           },
-          { id: 'inquiryNo', align: 'left', label: 'Inquiry No', minWidth: '104px' },
-          // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
-          // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
-          { id: 'Name', label: 'Name' },
-          { id: 'Code', label: 'Code' },
-          { id: 'class', label: 'Class' },
-          { id: 'Organization', label: 'Organization' },
-          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
+          { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+          {
+            id: 'inquiryNumber',
+            label: 'Inquiry Number',
+
+            minWidth: '162px',
+            isFilter: true,
+            filterType: 'string',
+          },
+          { id: 'standard.name', label: 'Class' },
+          { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+          {
+            id: 'dobValue',
+            label: 'DOB',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'date',
+          },
+          { id: 'ageValue', label: 'Age' },
+          {
+            id: 'doiValue',
+            label: 'DOI',
+            minWidth: '120px',
+            align: 'left',
+            isDateRangeFilter: true,
+            filterType: 'date',
+          },
+          { id: 'genderValue', label: 'Gender' },
+          { id: 'address', label: 'Address', minWidth: '120px' },
+          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
+          { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+          {
+            id: 'inquiryPreference.preferenceName',
+            label: 'Enquiry Preferences',
+            minWidth: '200px',
+          },
+
+          { id: 'educationMedium.name', label: 'Organization' },
 
           {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -684,7 +677,7 @@ const AdmissionScreen = () => {
             },
           },
         ]}
-        data={tableData}
+        data={tableData || []}
       />
 
       <CustomDialog

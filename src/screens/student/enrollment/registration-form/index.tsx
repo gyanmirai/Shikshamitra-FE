@@ -26,6 +26,7 @@ import type { IInquiryData } from '../Inquiry';
 
 const RegistrationFormScreen = () => {
   const [editData, setEditData] = useState<IInquiryData | null>(null);
+  const [dates, setDates] = useState([]);
   const followUpDialog = useBoolean();
   const {
     data: inquiryFormData,
@@ -69,6 +70,7 @@ const RegistrationFormScreen = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
+
       <CustomizableTable
         isLoading={isLoading}
         tableId="student-registration-form-table"

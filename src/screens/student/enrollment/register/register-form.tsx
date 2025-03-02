@@ -1,4 +1,3 @@
-import * as Yup from 'yup';
 import React, { useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -23,6 +22,7 @@ import {
 import { UploadAvatar } from 'src/components/upload';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
+import { validationSchemas } from './register-form-validation';
 import {
   allFields,
   bankDetailsInitialValues,
@@ -118,7 +118,7 @@ const RegisterForm = ({
 
         //   formik.setFieldValue('userId', res?.id);
         // }
-        if (editData || values?.id) {
+        if (editData) {
           await updateBasicDetails({
             id: editData?.id || values?.id,
             body: {
@@ -178,7 +178,7 @@ const RegisterForm = ({
     async (values: any, formik: any) => {
       try {
         await updateFamilyDetails({
-          id: editData?.id,
+          id: editData?.id || values?.id,
           body: {
             fatherDetails: {
               name: values.fatherName,
@@ -240,7 +240,7 @@ const RegisterForm = ({
     async (values: any, formik: any) => {
       try {
         await updateCommunicationDetails({
-          id: editData?.id,
+          id: editData?.id || values?.id,
           body: {
             primaryContactNo: values.primaryContactNumber,
             parentContactNo: values.parentContactNumber,
@@ -273,7 +273,7 @@ const RegisterForm = ({
     async (values: any, formik: any) => {
       try {
         await updateMedicalDetails({
-          id: editData?.id,
+          id: editData?.id || values?.id,
           body: {
             weight: values.weight,
             height: values.height,
@@ -295,7 +295,7 @@ const RegisterForm = ({
     async (values: any, formik: any) => {
       try {
         await updatePreviousSchoolDetails({
-          id: editData?.id,
+          id: editData?.id || values?.id,
           body: {
             previousSchoolName: values.schoolName,
             previousSchoolAddress: values.schoolAddress,
@@ -317,7 +317,7 @@ const RegisterForm = ({
     async (values: any, formik: any) => {
       try {
         await updateBankDetails({
-          id: editData?.id,
+          id: editData?.id || values?.id,
           body: {
             bankName: values.bankName,
             branchName: values.branchName,
@@ -336,7 +336,7 @@ const RegisterForm = ({
     async (values: any, formik: any) => {
       try {
         await updateAdditionDetails({
-          id: editData?.id,
+          id: editData?.id || values?.id,
           body: {
             category: values.category,
             rightToEducation: values.RTE,
@@ -357,6 +357,8 @@ const RegisterForm = ({
     [editData?.id, updateAdditionDetails]
   );
 
+  console.log(validationSchemas[activeStep], 'sdfdsfdsfsdfds========');
+
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => setActiveStep(index)}
@@ -376,9 +378,7 @@ const RegisterForm = ({
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
-      validationSchema={Yup.object({
-        name: Yup.string(),
-      })}
+      validationSchema={validationSchemas[activeStep]}
       handleNext={async (isLastStep, values, formik, setIsLoading) => {
         setIsLoading(true);
         try {
@@ -425,7 +425,7 @@ const RegisterForm = ({
                 />
               </Box>
             )}
-            <Grid container spacing={2}>
+            <Grid container spacing={2.5}>
               {allFields[step].map((field: FieldsType) => (
                 <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
                   {field.renderComp ? (

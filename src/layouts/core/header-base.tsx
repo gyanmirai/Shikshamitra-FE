@@ -1,8 +1,4 @@
-import type { RootState } from 'src/redux/store';
 import type { NavSectionProps } from 'src/components/nav-section';
-
-import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -115,58 +111,6 @@ export function HeaderBase({
   ...other
 }: HeaderBaseProps) {
   const theme = useTheme();
-  const dispatch = useDispatch();
-  const { currentYear, currentBoard, currentMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
-  const { user } = useSelector((state: RootState) => state.auth);
-
-  // const { data: yearData, isLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetYearQuery,
-  //   options: {
-  //     skip: !workspaces || !userInfo?.access_token,
-  //   },
-  // });
-
-  // const { data: boardsData, isLoading: isBoardsLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetBoardsQuery,
-  //   options: {
-  //     skip: !workspaces || !userInfo?.access_token,
-  //   },
-  // });
-  const [boards, setBoards] = useState([]);
-
-  // useEffect(() => {
-  //   if (!currentYear?.id) {
-  //     if (yearData) {
-  //       dispatch(setCurrentYear(yearData?.items?.[0]));
-  //     }
-  //   } else if (currentYear?.id && !yearData?.items?.length && !isLoading) {
-  //     dispatch(setCurrentYear({}));
-  //   }
-  // }, [currentYear?.id, dispatch, isLoading, yearData]);
-
-  // useEffect(() => {
-  //   if (!isEmpty(currentYear) && boardsData) {
-  //     const filterData = boardsData?.items?.filter(
-  //       (bo: any) => bo.academicYearId === currentYear?.id
-  //     );
-  //     setBoards(filterData || []);
-  //     dispatch(setCurrentBoard(filterData?.[0]));
-  //   }
-  // }, [boardsData, currentYear, dispatch]);
-
-  // useEffect(() => {
-  //   if (currentBoard?.id) {
-  //     if (currentBoard?.educationMediums?.length && !currentMedium?.id) {
-  //       dispatch(setCurrentMedium(currentBoard?.educationMediums?.[0]));
-  //     }
-  //   } else {
-  //     dispatch(setCurrentMedium({}));
-  //   }
-  // }, [currentBoard, currentMedium?.id, dispatch]);
 
   return (
     <HeaderSection
@@ -195,9 +139,7 @@ export function HeaderBase({
             <StyledDivider data-slot="divider" />
 
             {/* -- Workspace popover -- */}
-            {/* {workspaces && !isLoading && (
-              <WorkspacesPopover data-slot="workspaces" data={yearData?.items || []} />
-            )} */}
+            {/* {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />} */}
 
             {slots?.leftAreaEnd}
           </>

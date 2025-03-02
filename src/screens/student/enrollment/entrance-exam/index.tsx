@@ -93,17 +93,45 @@ const EntranceExamScreen = () => {
 
   const calendarData = useMemo(
     () =>
-      entranceExamData?.items.map((i: any) => ({
-        ...i,
-        start: i.examDate,
-        color: theme.palette.success.main,
-        end: i.examDate,
-        allDay: false,
-        textColor: theme.palette.success.main,
-        title: `${i.studentEnrollment.firstName} ${i.studentEnrollment.lastName}`,
-        description: i.reason,
-      })) || [],
-    [entranceExamData?.items, theme.palette.success.main]
+      entranceExamData?.items.map((i: any) => {
+        const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
+        const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
+        console.log(`${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`);
+        const startExamDate = dayjs(
+          dayjs(
+            `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
+            'DD-MM-YYYY hh:mm A'
+          ).format('YYYY-MM-DD hh:mm A')
+        ).format();
+        const endExamDate = dayjs(
+          dayjs(
+            `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
+            'DD-MM-YYYY hh:mm A'
+          ).format('YYYY-MM-DD hh:mm A')
+        ).format();
+
+        const status =
+          i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
+        let color: LabelColor = 'error';
+        if (status === 'Pending') {
+          color = 'warning';
+        } else if (status === 'Pass') {
+          color = 'success';
+        } else {
+          color = 'error';
+        }
+        return {
+          ...i,
+          start: startExamDate,
+          end: endExamDate,
+          color: theme.palette[color].main,
+          allDay: false,
+          textColor: theme.palette[color].main,
+          title: `${i.studentEnrollment.firstName} ${i.studentEnrollment.lastName}`,
+          description: i.reason,
+        };
+      }) || [],
+    [entranceExamData?.items, theme.palette]
   );
 
   const actions = useCallback(
@@ -171,6 +199,11 @@ const EntranceExamScreen = () => {
           <Box display="flex" height="700px">
             <CommonCalender
               data={calendarData}
+              eventTimeFormat={{
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short', // Use 'short' for AM/PM or 'false' for 24-hour format
+              }}
               // showCalendarToolbar={false}
               // onDateClick={(e) => {
               //   console.log(e);

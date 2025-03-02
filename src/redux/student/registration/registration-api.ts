@@ -48,6 +48,13 @@ export const StudentRegistrationApi = createApi({
       }),
       invalidatesTags: ['Student-Registration'],
     }),
+    moveToAdmission: builder.mutation({
+      query: (enrollmentId) => ({
+        url: `/app/student-enrollment/move-to-admission/${enrollmentId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Student-Registration'],
+    }),
     updateBasicDetails: builder.mutation({
       query: ({ id, body }) => ({
         url: `/app/student-enrollment/student-basic-details/${id}`,
@@ -149,6 +156,7 @@ export const {
   useGetStudentRegistrationQuery,
   useUpdateStudentRegistrationMutation,
   useMoveToRegistrationMutation,
+  useMoveToAdmissionMutation,
   useUpdateBasicDetailsMutation,
   useUpdateFamilyDetailsMutation,
   useUpdateParentBankDetailsMutation,
