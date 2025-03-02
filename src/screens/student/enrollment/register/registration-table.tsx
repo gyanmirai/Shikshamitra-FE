@@ -108,7 +108,6 @@ const RegistrationTable = ({
         {
           id: 'inquiryNumber',
           label: 'Inquiry Number',
-
           minWidth: '162px',
           isFilter: true,
           filterType: 'string',
@@ -129,6 +128,7 @@ const RegistrationTable = ({
           label: 'DOI',
           minWidth: '120px',
           align: 'left',
+          filterType: 'date',
           isDateRangeFilter: true,
         },
         { id: 'genderValue', label: 'Gender' },

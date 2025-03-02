@@ -29,6 +29,9 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useFillStudentAttendanceMutation } from 'src/redux/student/take-attendance/take-attendace-api';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -36,6 +39,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const TakeAttendanceScreen = () => {
+  const [fillStudentAttendance, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useFillStudentAttendanceMutation,
+  });
+
   const [view, setView] = React.useState('list');
   // State to control the dialog visibility
   const dialog = useBoolean();
@@ -89,6 +97,14 @@ const TakeAttendanceScreen = () => {
     { id: 4, name: 'Bob Williams', rollNo: '004', grNo: 'GR004', class: '10', division: 'B' },
     { id: 5, name: 'Charlie Brown', rollNo: '005', grNo: 'GR005', class: '10', division: 'C' },
   ];
+
+  const handleSave = async () => {
+    const response = await fillStudentAttendance({
+      attendanceDate: date, // Passing date as a query parameter
+      data: [{ studentId: '3fa85f64-5717-4562-b3fc-2c963f66afa6', isPresent: true }],
+    });
+    console.log('response of take attendance ---------', response);
+  };
 
   return (
     <Box>
@@ -162,7 +178,14 @@ const TakeAttendanceScreen = () => {
             Reset
           </Button>
 
-          <Button size="small" variant="contained" startIcon={<Stack />} onClick={() => {}}>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Stack />}
+            onClick={() => {
+              handleSave();
+            }}
+          >
             Save
           </Button>
         </Box>

@@ -3,59 +3,24 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
+import { Card, alpha, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
 import { Chart, useChart } from 'src/components/chart';
 
 const BoardEnrollmentStatus = () => (
-  <Grid2 xs={6}>
-    <Box
-      display="flex"
-      flexDirection="column"
-      gap={2}
-      sx={{
-        boxShadow: 'var(--shadows-2)',
-        height: '100%',
-        justifyContent: 'center',
-        padding: '8px',
-        borderRadius: 2,
+  <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)', height: '100%' }}>
+    <AnalyticsConversionRates
+      title="Board Enrollment Status"
+      //   subheader="(+43%) than last year"
+      chart={{
+        categories: ['enrolled', 'pending', 'declined'],
+        series: [{ name: '', data: [44, 55, 41] }],
       }}
-    >
-      <AnalyticsConversionRates
-        title="Board Enrollment Status"
-        //   subheader="(+43%) than last year"
-        chart={{
-          categories: ['enrolled', 'pending', 'declined'],
-          series: [{ name: '', data: [44, 55, 41] }],
-        }}
-        sx={{ boxShadow: 'none', height: '100%' }}
-      />
-
-      {/* <List>
-        <ListItem>
-          <ListItemIcon>
-            <FiberManualRecord sx={{ fontSize: 8 }} />
-          </ListItemIcon>
-          <ListItemText primary="Total Enrolled Students - 500 Students Enrolled" />
-        </ListItem>
-        <ListItem>
-          <ListItemIcon>
-            <FiberManualRecord sx={{ fontSize: 8 }} />
-          </ListItemIcon>
-          <ListItemText primary="Pending Enrollments - 50 Pending" />
-        </ListItem>
-        <ListItem>
-          <ListItemIcon>
-            <FiberManualRecord sx={{ fontSize: 8 }} />
-          </ListItemIcon>
-          <ListItemText primary="Declined Applications - 20 Declined" />
-        </ListItem>
-      </List> */}
-    </Box>
-  </Grid2>
+      sx={{ boxShadow: 'none', height: '100%' }}
+    />
+  </Card>
 );
 
 export default BoardEnrollmentStatus;

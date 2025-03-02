@@ -33,6 +33,7 @@ import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
+import { StudentTakeAttendanceApi } from './student/take-attendance/take-attendace-api';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
@@ -84,6 +85,7 @@ const reducers = combineReducers({
   [StudentAdmissionApi.reducerPath]: StudentAdmissionApi.reducer,
   [EnrollmentReportApi.reducerPath]: EnrollmentReportApi.reducer,
   [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
+  [StudentTakeAttendanceApi.reducerPath]: StudentTakeAttendanceApi.reducer,
 });
 
 const store = configureStore({
@@ -123,7 +125,8 @@ const store = configureStore({
       .concat(FollowUpApi.middleware)
       .concat(StudentAdmissionApi.middleware)
       .concat(EnrollmentReportApi.middleware)
-      .concat(StudentCertificateApi.middleware),
+      .concat(StudentCertificateApi.middleware)
+      .concat(StudentTakeAttendanceApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

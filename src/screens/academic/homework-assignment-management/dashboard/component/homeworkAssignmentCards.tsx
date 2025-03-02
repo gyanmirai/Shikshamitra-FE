@@ -64,9 +64,11 @@ const HomeworkAssignmentCards = () => {
           }}
         >
           <ToggleButton value="assignment">
+            <Iconify icon="mdi:assignment" mr={1} />
             <Typography variant="subtitle2">Assignment</Typography>
           </ToggleButton>
           <ToggleButton value="homework">
+            <Iconify icon="mdi:book-open-page-variant" mr={1} />
             <Typography variant="subtitle2">Homework</Typography>
           </ToggleButton>
         </ToggleButtonGroup>

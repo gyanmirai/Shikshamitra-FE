@@ -382,8 +382,8 @@ const UpdateProgress = () => {
       <TextField
         fullWidth
         id="completePercentage"
-        name="Complete Percentage"
-        label="Add Complete Percentage"
+        name="completePercentage"
+        label="Add Approax Percentage"
         value={formik.values.completePercentage}
         onChange={formik.handleChange}
         error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}

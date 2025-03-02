@@ -5,7 +5,7 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add, Upload } from '@mui/icons-material';
@@ -154,7 +154,7 @@ const EntranceExamScreen = () => {
             popover.onClose();
           }}
         >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon="mdi:arrow-right-circle" sx={{ height: '16px', width: '16px' }} />
           Move To Admission
         </MenuItem>
       </MenuList>
@@ -318,8 +318,19 @@ export const ExamForm = ({
 }) => {
   const dialog = useBoolean();
   const validationSchema = Yup.object({
-    // examDate: Yup.date().required('Exam date is required'),
+    examDate: Yup.date().required('Exam date is required'),
     // selectedStudents: Yup.string().required('Students are required'),
+    passingMarks: Yup.number()
+      .nullable()
+      .test(
+        'less-than-total',
+        'Passing marks should be less than total marks',
+        (value, context) => {
+          const { totalMarks } = context.parent;
+          return value == null || (totalMarks != null && value < totalMarks);
+        }
+      ),
+    slot: Yup.string().required('At least one slot should be selected'),
   });
 
   const { data: slots } = useQueryAndMutation({
@@ -343,7 +354,7 @@ export const ExamForm = ({
   );
 
   const formik = useFormik({
-    enableReinitialize: true,
+    // enableReinitialize: true,
     initialValues: {
       examDate: null,
       examType: '',
@@ -373,6 +384,11 @@ export const ExamForm = ({
       console.log(values);
     },
   });
+
+  useEffect(() => {
+    formik.setFieldValue('slots', allSlots || []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSlots]);
 
   return (
     <form onSubmit={formik.handleSubmit}>
@@ -404,6 +420,11 @@ export const ExamForm = ({
                 }}
               />
             </Paper>
+            {formik.touched.examDate && formik.errors.examDate && (
+              <Typography variant="caption" color="error">
+                {formik.errors.examDate}
+              </Typography>
+            )}
           </Grid>
           <Grid xs={7}>
             <Paper sx={{ p: 1, height: '100%' }}>
@@ -452,6 +473,9 @@ export const ExamForm = ({
                     size="small"
                     fullWidth
                   />
+                  <Typography variant="caption" color="error">
+                    {formik.errors.passingMarks}
+                  </Typography>
                 </Grid>
                 <Grid xs={12}>
                   <Divider sx={{ my: 0.5 }} />
@@ -492,6 +516,11 @@ export const ExamForm = ({
                         </Grid>
                       ))}
                     </Grid>
+                    {formik.touched.slot && formik.errors.slot && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.slot}
+                      </Typography>
+                    )}
                   </Box>
                 </Grid>
               </Grid>
