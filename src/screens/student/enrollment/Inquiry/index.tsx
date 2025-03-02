@@ -36,6 +36,7 @@ export interface IInquiryData {
   genderType: GenderType;
   parentContactNumber: string;
   alternativeContactNumber: string;
+  dueDate?: string;
   country: string;
   city: string;
   state: string;

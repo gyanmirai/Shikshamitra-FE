@@ -22,27 +22,35 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
     },
     withCredentials: true, // Ensure credentials (cookies) are sent with the request
   });
+  instance.defaults.withCredentials = true;
 
   // Request interceptor
   instance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
+      console.log('Cookies in Document:', document.cookie);
       if (typeof window !== 'undefined') {
         const reduxStore = store.getState();
         const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
+        console.log('🚀 ~ currentYear:', currentYear);
 
         // Set cookies using js-cookie library
-        Cookies.set('academicYearId', currentYear?.id, {
+        Cookies.set('AcademicYearId', currentYear?.id, {
+          expires: 7, // 7 days
           path: '/',
-          sameSite: 'Lax', // Adjust as needed ('Lax', 'Strict', or 'None' with 'Secure' for cross-origin)
-          // Set to true if using HTTPS
+          sameSite: 'None',
+          secure: true, // Must be true since frontend is HTTP
         });
-        Cookies.set('educationBoardId', currentBoard?.id, {
+        Cookies.set('EducationBoardId', currentBoard?.id, {
+          expires: 7, // 7 days
           path: '/',
-          sameSite: 'Lax',
+          sameSite: 'None',
+          secure: true, // Must be true since frontend is HTTP
         });
-        Cookies.set('educationMediumId', currentMedium?.id, {
+        Cookies.set('EducationMediumId', currentMedium?.id, {
+          expires: 7, // 7 days
           path: '/',
-          sameSite: 'Lax',
+          sameSite: 'None',
+          secure: true, // Must be true since frontend is HTTP
         });
 
         console.log('Cookies set:', document.cookie);

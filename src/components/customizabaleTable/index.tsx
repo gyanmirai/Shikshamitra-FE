@@ -71,7 +71,7 @@ interface ColumnFilterAnchor {
 export interface Column {
   id: string;
   label: string;
-  filterType?: 'string' | 'number' | 'date';
+  filterType?: 'string' | 'number' | 'date' | 'enum';
   isFilter?: boolean;
   minWidth?: number | string;
   align?: 'right' | 'left' | 'center';
@@ -83,6 +83,7 @@ export interface Column {
   sticky?: boolean;
   isDateFilter?: boolean;
   isDateRangeFilter?: boolean;
+  enumOptions?: { label: string; value: any }[];
 }
 
 interface Data {
@@ -143,45 +144,19 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   isPagination = true,
   isFilter = true,
   isSearch = true,
-  isScrollbar = true,
+
   isShowedDense = true,
   rowProps = () => {},
-  startDateProps,
-  endDateProps,
-  dateProps,
   tableId,
 }) => {
-  // const currentParams = convertNextJsParamsToObject(useSearchParams());
   columns = useMemo(
     () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
     [columns]
   );
 
-  // const [params, setParams, _removeAllParams, removeParamsByKey] = useSearchParam<
-  //   Record<string, IParams>
-  // >({
-  //   // ...currentParams,
-  //   [tableId]: {
-  //     page: 0,
-  //     rowsPerPage: 10,
-  //     searchTerm: '',
-  //     filterColumn: '',
-  //     filterType: 'contains',
-  //     dense: true,
-  //     columnSearchTerm: '',
-  //     filters: [],
-  //     sorts: [],
-  //     dateFilter: null,
-  //     dateRangeFilter: { start: null, end: null },
-  //     filterValue: '',
-  //     columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
-  //     // ...(currentParams?.[tableId] || {}),
-  //   },
-  // });
-
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
-    rowsPerPage: 10,
+    rowsPerPage: 10, // Changed from 10 to -1
     searchTerm: '',
     filterColumn: '',
     filterType: 'contains',
@@ -194,27 +169,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     filterValue: '',
     columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
   });
-
-  // const [params, setParams, removeParamsByKey] = useSearchParam<Record<string, IParams>>({
-  //   ...currentParams,
-  //   [tableId]: {
-  //     page: 0,
-  //     rowsPerPage: 10,
-  //     searchTerm: '',
-  //     filterColumn: '',
-  //     filterType: 'contains',
-  //     dense: true,
-  //     columnSearchTerm: '',
-  //     filters: [],
-  //     sorts: [],
-  //     dateFilter: null,
-  //     dateRangeFilter: { start: null, end: null },
-  //     filterValue: '',
-  //     columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
-  //     // ...(currentParams?.[tableId] || {}),
-  //   },
-  // });
-  // console.log('🚀 ~ file: index.tsx:184 ~ allPaarm[][][][]:', params);
 
   const handelChangeParams = useCallback(
     (param: Partial<IParams>) => {
@@ -363,6 +317,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           : filter.value;
         const isDateType = filter.valueType === 'date';
 
+        console.log(value, 'value', filter);
+
         if (isDateType) {
           switch (filter.type) {
             case 'equals':
@@ -380,7 +336,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
             case 'contains':
               return value.toString().toLowerCase().includes(filter.value.toLowerCase());
             case 'equals':
-              return value.toString().toLowerCase() === filter.value.toLowerCase();
+              return value.toString().toLowerCase() === filter.value.toString().toLowerCase();
             case 'startsWith':
               return value.toString().toLowerCase().startsWith(filter.value.toLowerCase());
             case 'endsWith':
@@ -531,6 +487,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     });
     setFilterAnchorEl(null);
   };
+
+  console.log(paginatedData, 'paginatedData');
   return (
     <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
@@ -683,6 +641,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
         <FilterChips
           filters={filters}
           removeFilter={removeFilter}
+          columns={columns}
           clearAllFilters={clearAllFilters}
         />
       )}
@@ -922,7 +881,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
             )}
             {isPagination && (
               <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
+                rowsPerPageOptions={[10, 25, 100, { value: -1, label: 'All' }]}
                 component={Scrollbar}
                 count={serverSide ? totalCount || 0 : filteredData.length}
                 rowsPerPage={rowsPerPage}
@@ -949,7 +908,17 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
 
 export default CustomizableTable;
 
-const FilterChips = ({ filters, removeFilter, clearAllFilters }: any) => (
+const FilterChips = ({
+  filters,
+  removeFilter,
+  clearAllFilters,
+  columns,
+}: {
+  filters: IParams['filters'];
+  removeFilter: (index: number) => void;
+  clearAllFilters: () => void;
+  columns: Column[];
+}) => (
   <Box
     sx={{
       display: 'flex',
@@ -962,15 +931,23 @@ const FilterChips = ({ filters, removeFilter, clearAllFilters }: any) => (
       borderRadius: 1,
     }}
   >
-    {filters.map((filter: any, index: number) => (
-      <Chip
-        key={index}
-        size="small"
-        variant="soft"
-        label={`${filter.column} : ${filter.value}`}
-        onDelete={() => removeFilter(index)}
-      />
-    ))}
+    {filters.map((filter: any, index: number) => {
+      const findColumn = columns.find((column: any) => column.id === filter.column);
+      const filterValue: string | number =
+        findColumn?.filterType === 'enum'
+          ? findColumn.enumOptions?.find((i) => i.value === filter.value)?.label
+          : filter.value;
+
+      return (
+        <Chip
+          key={index}
+          size="small"
+          variant="soft"
+          label={`${findColumn?.label} : ${filterValue}`}
+          onDelete={() => removeFilter(index)}
+        />
+      );
+    })}
     {filters.length > 0 && (
       <Button
         size="small"
@@ -1020,6 +997,8 @@ const ColumnFilterMenu: React.FC<{
           { value: 'after', label: 'After' },
           { value: 'before', label: 'Before' },
         ];
+      case 'enum':
+        return [{ value: 'equals', label: 'Equals' }];
       default:
         return [
           { value: 'contains', label: 'Contains' },
@@ -1034,35 +1013,89 @@ const ColumnFilterMenu: React.FC<{
     if (!anchorEl) return;
 
     let value = filterValue;
+    let filterTypeValue = filterType;
     if (anchorEl.column.filterType === 'date') {
       value = (value as Dayjs).format('DD-MM-YYYY');
     }
+    if (anchorEl.column.filterType === 'enum') {
+      filterTypeValue = 'equals';
+    }
 
-    onApplyFilter(anchorEl.column.id, filterType, value, anchorEl.column.filterType as string);
+    onApplyFilter(anchorEl.column.id, filterTypeValue, value, anchorEl.column.filterType as string);
     setFilterType('');
     setFilterValue(null);
     setDateRange([null, null]);
   };
 
   return (
-    <Menu anchorEl={anchorEl?.element} open={Boolean(anchorEl)} onClose={onClose}>
-      <Box sx={{ p: 2, maxWidth: 250 }}>
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-          <InputLabel>Filter Type</InputLabel>
-          <Select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            label="Filter Type"
-          >
-            {getFilterOptions().map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+    <Menu
+      anchorEl={anchorEl?.element}
+      open={Boolean(anchorEl)}
+      onClose={onClose}
+      slotProps={{
+        paper: {
+          sx: {
+            width: '260px',
+          },
+        },
+      }}
+    >
+      <Box sx={{ p: 2, maxWidth: 350 }}>
+        {anchorEl?.column.filterType !== 'enum' && (
+          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+            <InputLabel>Filter Type</InputLabel>
+            <Select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              label="Filter Type"
+            >
+              {getFilterOptions().map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
 
-        {filterType === 'range' ? null : anchorEl?.column.filterType === 'date' ? (
+        {anchorEl?.column.filterType === 'enum' && (
+          <FormControl fullWidth size="small">
+            <InputLabel>{anchorEl.column.label}</InputLabel>
+            <Select
+              value={filterValue as string}
+              onChange={(e) => setFilterValue(e.target.value)}
+              label={anchorEl.column.label}
+            >
+              {anchorEl.column.enumOptions?.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
+        {filterType &&
+          (anchorEl?.column.filterType === 'date' ? (
+            <DatePicker
+              value={filterValue as null | Dayjs}
+              onChange={(newValue) => setFilterValue(newValue)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              format="DD-MM-YYYY"
+            />
+          ) : (
+            <TextField
+              fullWidth
+              size="small"
+              value={filterValue as string}
+              onChange={(e) => setFilterValue(e.target.value as string)}
+              type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
+              label={anchorEl?.column.label}
+              placeholder={anchorEl?.column.label}
+            />
+          ))}
+
+        {/* {filterType === 'range' ? null : anchorEl?.column.filterType === 'date' ? (
           <DatePicker
             value={filterValue as null | Dayjs}
             onChange={(newValue) => setFilterValue(newValue)}
@@ -1079,7 +1112,7 @@ const ColumnFilterMenu: React.FC<{
             label={anchorEl?.column.label}
             placeholder={anchorEl?.column.label}
           />
-        )}
+        )} */}
 
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button

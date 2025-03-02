@@ -3,6 +3,6 @@ export enum YesNo {
   No,
 }
 export const YesNoArray = [
-  { label: 'Yes', value: YesNo.Yes },
-  { label: 'No', value: YesNo.No },
+  { label: 'Yes', value: true },
+  { label: 'No', value: false },
 ];

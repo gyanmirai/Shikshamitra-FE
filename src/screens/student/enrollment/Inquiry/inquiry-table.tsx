@@ -13,7 +13,11 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
-import { InquiryStatusType, InquiryStatusTypeColors } from 'src/enums/inquiry-status-type';
+import {
+  InquiryStatusType,
+  InquiryStatusTypeColors,
+  InquiryStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -92,10 +96,16 @@ const InquiryTable = ({
         { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '145px' },
         { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '222px' },
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px' },
-        { id: 'inquiryPreference.preferenceName', label: 'Enquiry Preferences', minWidth: '180px' },
+        {
+          id: 'inquiryPreference.preferenceName',
+          label: 'Enquiry Preferences',
+          minWidth: '180px',
+        },
         {
           id: 'inquiryStatusType',
           label: 'Status',
+          filterType: 'enum',
+          enumOptions: InquiryStatusTypeOptions,
           minWidth: '180px',
           align: 'left',
           render(value, row) {

@@ -41,8 +41,6 @@ export type DashboardLayoutProps = {
 
 export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
   const { user } = useSelector((state: any) => state.auth);
-  console.log('🚀 ~ DashboardLayout ~ user:', user);
-
   const theme = useTheme();
 
   const mobileNavOpen = useBoolean();
@@ -80,7 +78,10 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
             disableElevation={isNavVertical}
             onOpenNav={mobileNavOpen.onTrue}
             data={{
-              nav: navData,
+              nav: navData.map((i) => ({
+                ...i,
+                items: i.items.map((item) => ({ ...item, children: item.submodule })),
+              })),
               langs: [
                 { value: 'en', label: 'English', countryCode: 'GB' },
                 { value: 'fr', label: 'French', countryCode: 'FR' },
