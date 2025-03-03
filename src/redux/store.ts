@@ -32,6 +32,7 @@ import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
+import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
 import { StudentTakeAttendanceApi } from './student/take-attendance/take-attendace-api';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
