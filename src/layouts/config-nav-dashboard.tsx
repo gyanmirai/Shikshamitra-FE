@@ -123,13 +123,6 @@ const studentModule = {
               _action: 'student-enrollment-admission',
               permission: 'Permission:StudentEnrollment.Admission',
             },
-            {
-              title: 'Admission Fees',
-              path: '/student/enrollment/admission-fees',
-              _action: 'student-enrollment-admission-fees',
-              permission: 'Permission:StudentEnrollment.AdmissionFees',
-            },
-
             // {
             //   title: 'Enrollment',
             //   path: '/student/enrollment/enroll',

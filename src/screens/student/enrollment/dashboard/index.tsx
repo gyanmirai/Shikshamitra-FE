@@ -6,12 +6,12 @@ import type { ChartOptions } from 'src/components/chart';
 import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
+import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 import 'src/utils/convertABPPermissionToNavigation';
 
-import CustomizableView from 'src/components/customizable-view';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
@@ -21,38 +21,8 @@ import AdmissionOverTime from './admission-over-time';
 import OrganizationStatus from './organization-status';
 import BoardEnrollmentStatus from './board-enrollment-status';
 
-const dashBoardSections = [
-  <Overview />,
-  <BoardEnrollmentStatus />,
-  <OrganizationStatus />,
-  // <TotalInquiries />,
-  <AdmissionOverTime />,
-];
 const EnrollmentDashboardScreen = () => {
   const router = useRouter();
-
-  const [sections, setSections] = useState([
-    {
-      id: '0',
-      title: 'Over View',
-    },
-    {
-      id: '1',
-      title: 'Board Enrollment Status',
-    },
-    {
-      id: '2',
-      title: 'Organization Status',
-    },
-    // {
-    //   id: '3',
-    //   title: 'Total Inquiries',
-    // },
-    {
-      id: '3',
-      title: 'Admission over time',
-    },
-  ]);
 
   return (
     <Box>
@@ -90,11 +60,20 @@ const EnrollmentDashboardScreen = () => {
           />
         }
       />
-      <CustomizableView
-        sections={sections}
-        setSections={setSections}
-        dashBoardSections={dashBoardSections}
-      />
+      <Grid2 container spacing={2} sx={{ mb: 2 }}>
+        <Grid2 xs={12}>
+          <Overview />
+        </Grid2>
+        <Grid2 xs={15} md={6}>
+          <BoardEnrollmentStatus />
+        </Grid2>
+        <Grid2 xs={15} md={6}>
+          <OrganizationStatus />
+        </Grid2>
+        <Grid2 xs={12}>
+          <AdmissionOverTime />
+        </Grid2>
+      </Grid2>
 
       {/* <Grid2 container spacing={2}>
         {sections.map((section: any) => dashBoardSections[section.id])}

@@ -40,7 +40,7 @@ const ExaminationDashboardExamlistComponent = (props: TabComponentType) => {
           { id: 'class', label: 'Class' },
           { id: 'subjectName', label: 'Subject Name' },
           { id: 'examName', label: 'Exam Name' },
-          { id: 'marksEntry', label: 'Marks Entry' },
+          { id: 'examDate', label: 'Exam Date' },
           { id: 'grade', label: 'Grade' },
           {
             id: 'status',

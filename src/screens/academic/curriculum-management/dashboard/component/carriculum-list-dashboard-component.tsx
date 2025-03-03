@@ -165,7 +165,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
         <Grid item xs={12}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1">Material for subject</Typography>
+              <Typography variant="subtitle1">Material For Subjects</Typography>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
@@ -179,9 +179,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
                   setClasses(selectedClass?.name);
                 }}
                 value={classes}
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
+                formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
             <AnalyticsWebsiteVisits

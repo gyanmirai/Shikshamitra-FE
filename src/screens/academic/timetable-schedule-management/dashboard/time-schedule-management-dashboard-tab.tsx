@@ -65,7 +65,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         }
       />
-      <Box display="flex" flexDirection="row" gap={2}>
+      <Box display="flex" flexDirection="row" gap={2} mb={2}>
         <CustomSelect
           label="Organization"
           options={[]}

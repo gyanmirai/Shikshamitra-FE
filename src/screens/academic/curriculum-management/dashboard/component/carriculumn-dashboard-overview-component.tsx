@@ -64,7 +64,7 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
           />
         }
       />
-      <Grid2 container spacing={3} alignItems="stretch">
+      <Grid2 container spacing={2} alignItems="stretch">
         <Grid2 xs={12} md={6} lg={6} xl={4}>
           <Card
             sx={{
@@ -124,7 +124,7 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
                 sx={{ fontSize: '18px', fontWeight: '600' }}
                 gutterBottom
               >
-                Subjects Managed
+                Subjects
               </Typography>
               <CustomSelect
                 label="Class"
@@ -160,7 +160,7 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography component="span" variant="h6" gutterBottom>
-                Teacher Managed
+                Teacher
               </Typography>
               <CustomSelect
                 label="class"

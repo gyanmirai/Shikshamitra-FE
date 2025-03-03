@@ -3,7 +3,6 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React, { useState } from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, Divider, useTheme, CardHeader, Typography } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
@@ -22,42 +21,40 @@ const OrganizationStatus = () => {
 
   const [selectedOrganization, setSelectedOrganization] = useState<string>('');
   return (
-    <Grid2 xs={6}>
-      <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)' }}>
-        <Box display="flex" justifyContent="space-between" alignContent="center">
-          <Typography variant="h6">Organization Status</Typography>
-          <CustomSelect
-            options={organization?.items || []}
-            value={selectedOrganization}
-            onChange={(val) => {
-              setSelectedOrganization(val as string);
-            }}
-            isLoading={isLoading}
-            label="Select organization"
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{
-              sx: {
-                maxWidth: '200px',
-                width: '100%',
-              },
-            }}
-          />
-        </Box>
-
-        <AnalyticsCurrentVisits
-          title=""
-          chart={{
-            series: [
-              { label: 'active', value: 100 },
-              { label: 'inactive', value: 200 },
-              { label: 'pending', value: 300 },
-            ],
+    <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)', height: '100%' }}>
+      <Box display="flex" justifyContent="space-between" alignContent="center">
+        <Typography variant="h6">Organization Status</Typography>
+        <CustomSelect
+          options={organization?.items || []}
+          value={selectedOrganization}
+          onChange={(val) => {
+            setSelectedOrganization(val as string);
           }}
-          sx={{ boxShadow: 'none', height: '100%' }}
+          isLoading={isLoading}
+          label="Select organization"
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{
+            sx: {
+              maxWidth: '200px',
+              width: '100%',
+            },
+          }}
         />
-      </Card>
-    </Grid2>
+      </Box>
+
+      <AnalyticsCurrentVisits
+        title=""
+        chart={{
+          series: [
+            { label: 'active', value: 100 },
+            { label: 'inactive', value: 200 },
+            { label: 'pending', value: 300 },
+          ],
+        }}
+        sx={{ boxShadow: 'none', height: '100%' }}
+      />
+    </Card>
   );
 };
 

@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
@@ -14,6 +14,8 @@ import {
   Switch,
   Button,
   TableRow,
+  MenuList,
+  MenuItem,
   TextField,
   TableHead,
   TableCell,
@@ -39,6 +41,9 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+
+import QuizPortal from './quizPortal';
+import { quizData } from './quizOptions';
 
 const dummyData = [
   {
@@ -110,91 +115,129 @@ const dummyData = [
 const ActiveQuiz = () => {
   const [tableData, setTableData] = useState(dummyData);
   const addQuizDialog = useBoolean();
+  const attemptQuizDialog = useBoolean();
+  const [open, setOpen] = useState(false);
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
+            Attempt Quiz
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          size="small"
-          onClick={() => {
-            addQuizDialog.onTrue();
-          }}
-        >
-          Quiz
-        </Button>
+        {open ? (
+          <Button
+            startIcon={<Iconify icon="mdi:arrow-back" />}
+            variant="contained"
+            size="small"
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            Back
+          </Button>
+        ) : (
+          <Button
+            startIcon={<Iconify icon="mdi:plus" />}
+            variant="contained"
+            size="small"
+            onClick={() => {
+              addQuizDialog.onTrue();
+            }}
+          >
+            Quiz
+          </Button>
+        )}
       </Box>
 
-      <CustomizableTable
-        tableId="quiz-table"
-        columns={[
-          { id: 'class', label: 'Class' },
-          {
-            id: 'division',
-            label: 'Division',
-            render(value, row) {
-              return (
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  {value.length
-                    ? value.map((audience: string) => (
-                        <Chip key={audience} label={audience} size="small" variant="outlined" />
-                      ))
-                    : '-'}
+      {open ? (
+        <QuizPortal quizData={quizData} />
+      ) : (
+        <CustomizableTable
+          tableId="quiz-table"
+          columns={[
+            { id: 'class', label: 'Class' },
+            {
+              id: 'division',
+              label: 'Division',
+              render(value, row) {
+                return (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.length
+                      ? value.map((audience: string) => (
+                          <Chip key={audience} label={audience} size="small" variant="outlined" />
+                        ))
+                      : '-'}
+                  </Box>
+                );
+              },
+            },
+            { id: 'subject', label: 'Subject' },
+            { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
+            { id: 'createdAt', label: 'Created At', minWidth: '150px', align: 'left' },
+            { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
+            { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
+            { id: 'quizEndDate', label: 'Quiz End Date', minWidth: '200px', align: 'left' },
+            { id: 'quizEndTime', label: 'Quiz End Time', minWidth: '200px', align: 'left' },
+            { id: 'quizDuration', label: 'Quiz Duration', minWidth: '200px', align: 'left' },
+            { id: 'attemptsAllow', label: 'Attempts Allow', minWidth: '200px', align: 'left' },
+            { id: 'totalMakrs', label: 'Total Marks', minWidth: '200px', align: 'left' },
+            { id: 'passingMarks', label: 'Passing Marks', minWidth: '200px', align: 'left' },
+            {
+              id: 'status',
+              label: 'Publish',
+              render: (value: boolean, row: any) => (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Switch
+                    size="small"
+                    checked={value}
+                    onChange={() => {
+                      // setPendingStatusChange({
+                      //   id: row.id, // Use row.id instead of undefined 'id'
+                      //   value: !value,
+                      // });
+                      // confirmPublishDialog.onTrue();
+                    }}
+                  />
                 </Box>
-              );
+              ),
             },
-          },
-          { id: 'subject', label: 'Subject' },
-          { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
-          { id: 'createdAt', label: 'Created At', minWidth: '150px', align: 'left' },
-          { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
-          { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
-          { id: 'quizEndDate', label: 'Quiz End Date', minWidth: '200px', align: 'left' },
-          { id: 'quizEndTime', label: 'Quiz End Time', minWidth: '200px', align: 'left' },
-          { id: 'quizDuration', label: 'Quiz Duration', minWidth: '200px', align: 'left' },
-          { id: 'attemptsAllow', label: 'Attempts Allow', minWidth: '200px', align: 'left' },
-          { id: 'totalMakrs', label: 'Total Marks', minWidth: '200px', align: 'left' },
-          { id: 'passingMarks', label: 'Passing Marks', minWidth: '200px', align: 'left' },
-          {
-            id: 'status',
-            label: 'Active',
-            render: (value: boolean, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch
-                  size="small"
-                  checked={value}
-                  onChange={() => {
-                    // setPendingStatusChange({
-                    //   id: row.id, // Use row.id instead of undefined 'id'
-                    //   value: !value,
-                    // });
-                    // confirmPublishDialog.onTrue();
-                  }}
-                />
-              </Box>
-            ),
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                  showThreeDots={false}
-                  showEditIcon
-                  showDeleteIcon
-                  handleEditClick={() => {}}
-                  handleDeleteClick={() => {}}
-                />
-              );
+            {
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showDeleteIcon
+                    handleEditClick={() => {}}
+                    handleDeleteClick={() => {}}
+                  />
+                );
+              },
             },
-          },
-        ]}
-        data={tableData}
-      />
+          ]}
+          data={tableData}
+        />
+      )}
 
       <CustomDialog
         maxWidth="lg"

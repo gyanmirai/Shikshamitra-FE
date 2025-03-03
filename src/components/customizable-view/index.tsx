@@ -2,7 +2,6 @@
 import React from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
-import { Box } from '@mui/material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
 // const initialSections = [
@@ -33,12 +32,13 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <Droppable droppableId="components">
         {(provided) => (
-          <Box ref={provided.innerRef} {...provided.droppableProps}>
+          <Grid2 container spacing={2} ref={provided.innerRef} {...provided.droppableProps}>
             {sections.map((section: any, index: number) => (
               <Draggable key={section.id} draggableId={section.id.toString()} index={index}>
                 {(p, snapshot) => (
                   <Grid2
-                    container
+                    xs={12}
+                    md={section.width}
                     spacing={2}
                     ref={p.innerRef}
                     {...p.draggableProps}
@@ -58,7 +58,7 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
               </Draggable>
             ))}
             {provided.placeholder}
-          </Box>
+          </Grid2>
         )}
       </Droppable>
     </DragDropContext>
