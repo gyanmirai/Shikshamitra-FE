@@ -12,7 +12,6 @@ import { CONFIG } from 'src/config-global';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
@@ -208,54 +207,37 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
       <Grid container spacing={2} mt={1}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <PerformanceOverTime
-              id="demo__4"
-              title="Exams Over Time"
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: [
-                  'Jan',
-                  'Feb',
-                  'Mar',
-                  'Apr',
-                  'May',
-                  'Jun',
-                  'Jul',
-                  'Aug',
-                  'Sep',
-                  'Oct',
-                  'Nov',
-                  'Dec',
-                ],
-                series: [
-                  {
-                    name: 'Scores',
-                    data: [5, 10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                  },
-                  {
-                    name: 'Participation',
-                    data: [40, 60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                  },
-                ],
-                options: {
-                  legend: {
-                    show: true,
-                    position: 'top',
-                  },
-                },
-              }}
-              sx={{ height: '100%', boxShadow: 'none' }}
-            />
-          </Card>
-        </Grid>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography variant="subtitle1">Attendees/Non-Attendees in Exams</Typography>
+              <CustomSelect
+                label="Subject"
+                options={[
+                  { value: 'math', label: 'Math' },
+                  { value: 'science', label: 'Science' },
+                  { value: 'english', label: 'English' },
+                ]}
+                value=""
+                onChange={(val) => {
+                  // Handle subject selection
+                }}
+                formControlProps={{
+                  sx: { width: '200px' },
+                }}
+              />
+            </Box>
 
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <AnalyticsWebsiteVisits
-              title="Student engagement across different Exams"
+              title=""
               chart={{
-                categories: ['Math', 'English', 'Science', 'Gujarati'],
-                series: [{ name: '', data: [65, 70, 40, 55] }],
+                categories: ['Exam1', 'Exam2', 'Exam3', 'Exam4', 'Exam5', 'Exam6', 'Exam7'],
+                series: [
+                  { name: 'Attendees', data: [43, 33, 22, 37, 18, 35, 27] },
+                  { name: 'Non-Attendees', data: [20, 45, 15, 65, 80, 5] },
+                ],
+                colors: [
+                  alpha(theme.palette.primary.dark, 0.8),
+                  alpha(theme.palette.error.main, 0.8),
+                ],
               }}
               sx={{ height: '100%' }}
             />
@@ -269,39 +251,18 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
             <Typography variant="subtitle1">Average Score of Quiz</Typography>
             <Box display="flex" justifyContent="flex-end" alignItems="flex-end" gap={1}>
               <CustomSelect
-                label="Class"
-                options={classData?.items || []}
-                labelKey="name"
-                valueKey="id"
+                label="Subject"
+                options={[
+                  { value: 'math', label: 'Math' },
+                  { value: 'science', label: 'Science' },
+                  { value: 'english', label: 'English' },
+                ]}
+                value=""
                 onChange={(val) => {
-                  const selectedClass: Standards = classData.items.find(
-                    (i: Standards) => i.id === val
-                  );
-                  // formik.setFieldValue('class', selectedClass?.name || '');
-                  setSearchParams?.({
-                    classId: val as string,
-                  });
-                  setDivisionOptions(selectedClass?.divisions || []);
-                }}
-                value={classes}
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
-              />
-              <CustomSelect
-                label="Division"
-                disabled={!classes}
-                labelKey="name"
-                valueKey="id"
-                options={divisionOptions}
-                value={division}
-                onChange={(val) => {
-                  // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-                  // formik.setFieldValue('division', selectedDivision?.name || '');
-                  setDivision(val as string);
+                  // Handle subject selection
                 }}
                 formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
+                  sx: { width: '200px' },
                 }}
               />
             </Box>

@@ -455,9 +455,11 @@ const HomeworkCreation = (props: TabComponentType) => {
             }}
           >
             <ToggleButton value="homework">
+              <Iconify icon="mdi:book-open-page-variant" mr={1} />
               <Typography variant="subtitle2">Homework</Typography>
             </ToggleButton>
             <ToggleButton value="assignment">
+              <Iconify icon="mdi:assignment" mr={1} />
               <Typography variant="subtitle2">Assignment</Typography>
             </ToggleButton>
           </ToggleButtonGroup>

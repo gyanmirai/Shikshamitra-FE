@@ -5,14 +5,23 @@ import React, { useCallback } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Button,
+  MenuList,
+  MenuItem,
+  Checkbox,
+  TextField,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -106,7 +115,7 @@ const LateArrivalPolicy = () => {
       <CustomDialog
         open={leaveRuleDialog.value}
         handleClose={leaveRuleDialog.onFalse}
-        title="Update Progress"
+        title="Add Leave Arrival Policy"
       >
         <LateArrivalPolicyForm />
       </CustomDialog>
@@ -127,7 +136,7 @@ export default LateArrivalPolicy;
 const LateArrivalPolicyForm = () => (
   <Box display="flex" flexDirection="column" gap={2}>
     <form onSubmit={() => {}}>
-      <Scrollbar sx={{ p: 2, height: '200px' }}>
+      <Scrollbar sx={{ p: 2, height: '200px', bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <TextField size="small" name="policyName" onChange={() => {}} label="Policy Name" />
@@ -178,32 +187,78 @@ const LateArrivalPolicyForm = () => (
 const AssignEmployeeForm = () => (
   <Box display="flex" flexDirection="column" gap={2}>
     <form onSubmit={() => {}}>
-      <Scrollbar sx={{ p: 2, height: '150px' }}>
+      <Scrollbar sx={{ p: 2, height: '150px', bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <CustomSelect
-              label="Organizations"
-              name="organizations"
-              value=""
+            <Autocomplete
               options={[
-                { value: 'pre-primary', label: 'Pre-Primary' },
-                { value: 'primary', label: 'Primary' },
-                { value: 'secondary', label: 'Secondary' },
+                { id: 1, organization: 'All' },
+                { id: 2, organization: 'Pre-Primary' },
+                { id: 3, organization: 'Primary' },
+                { id: 4, organization: 'Secondary' },
               ]}
-              onChange={() => {}}
+              multiple
+              getOptionLabel={(option) => option.organization}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<Iconify icon="mdi:checkbox-blank-outline" />}
+                    checkedIcon={<Iconify icon="mdi:checkbox-marked" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.organization}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Organizations"
+                  placeholder="Search Organizations"
+                  size="small"
+                  fullWidth
+                  sx={{ width: '100%', minWidth: '200px' }}
+                />
+              )}
+              onChange={(e, value) =>
+                console.log('organization', value ? value.map((org) => org.organization) : '')
+              }
             />
           </Grid>
           <Grid item xs={12}>
-            <CustomSelect
-              label="Employees"
-              name="employees"
-              value=""
+            <Autocomplete
               options={[
-                { value: 'abc', label: 'ABC' },
-                { value: 'xyz', label: 'XYZ' },
-                { value: 'pqr', label: 'PQR' },
+                { id: 1, employee: 'All' },
+                { id: 2, employee: 'ABC' },
+                { id: 3, employee: 'XYZ' },
+                { id: 4, employee: 'PQR' },
               ]}
-              onChange={() => {}}
+              multiple
+              getOptionLabel={(option) => option.employee}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<Iconify icon="mdi:checkbox-blank-outline" />}
+                    checkedIcon={<Iconify icon="mdi:checkbox-marked" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.employee}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Employees"
+                  placeholder="Search Employees"
+                  size="small"
+                  fullWidth
+                  sx={{ width: '100%', minWidth: '200px' }}
+                />
+              )}
+              onChange={(e, value) =>
+                console.log('GR No', value ? value.map((emp) => emp.employee) : '')
+              }
             />
           </Grid>
         </Grid>

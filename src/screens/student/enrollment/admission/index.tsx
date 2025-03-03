@@ -35,6 +35,7 @@ import { GenderType } from 'src/enums/gender';
 import { paper, varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentRegistrationQuery } from 'src/redux/student/admission/admission-api';
+import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -452,6 +453,7 @@ const data = [
 
 const AdmissionScreen = () => {
   const tabs = useTabs('pending');
+  const dialogForCollectFees = useBoolean();
   const divisionDialog = useBoolean();
   const statusDialog = useBoolean();
   const openDetails = useBoolean();
@@ -640,6 +642,27 @@ const AdmissionScreen = () => {
 
           { id: 'educationMedium.name', label: 'Organization' },
 
+          { id: 'inquiryNo', align: 'left', label: 'Inquiry No', minWidth: '104px' },
+          // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
+          // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
+          { id: 'Name', label: 'Name' },
+          { id: 'Code', label: 'Code' },
+          { id: 'class', label: 'Class' },
+          { id: 'Organization', label: 'Organization' },
+          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
+          { id: 'totalAmount', label: 'Total Amount', minWidth: '135px' },
+          { id: 'paidAmount', label: 'Paid Amount', minWidth: '125px' },
+          {
+            id: 'StatusName',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
+                  {value}
+                </Label>
+              );
+            },
+          },
           {
             id: 'actions',
             label: 'Actions',
@@ -668,6 +691,14 @@ const AdmissionScreen = () => {
                       >
                         <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
                         Assign Division
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          dialogForCollectFees.onTrue();
+                        }}
+                      >
+                        <Iconify icon="tdesign:money" />
+                        Pay Fees
                       </MenuItem>
                     </MenuList>
                   )}
@@ -709,8 +740,30 @@ const AdmissionScreen = () => {
         handleClose={statusDialog.onFalse}
         title="Change Status"
       >
-        <ChangeStatusForm handleClose={statusDialog.onFalse} />
+        <ChangeStatusForm handleClose={statusDialog.onFalse} tabValue={tabs.value} />
       </CustomDialog>
+
+      {dialogForCollectFees.value && (
+        // <FeeCollectionForm
+        //   dialogValue={dialog.value}
+        //   onClose={closeDialog}
+        // />
+        <FeeNewCollectionForm
+          isFromStudentAdmissionFlow
+          dialogValue={dialogForCollectFees.value}
+          onClose={() => {
+            dialogForCollectFees.onFalse();
+          }}
+          data={[]}
+        />
+        // <FinanceNewCollectFeeDialog
+        //   isFromStudentAdmission={false}
+        //   onSave={() => {}}
+        //   dialogValue={dialog.value}
+        //   onClose={closeDialog}
+        //   data={selectedStudent}
+        // />
+      )}
 
       <Drawer
         anchor="right"
@@ -750,7 +803,7 @@ const AdmissionScreen = () => {
               onClick={openDetails.onFalse}
               sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
             />
-            <StudentDetails />
+            <StudentDetails tabValue={tabs.value} />
           </Scrollbar>
         </Paper>
       </Drawer>
@@ -760,7 +813,7 @@ const AdmissionScreen = () => {
 
 export default AdmissionScreen;
 
-const StudentDetails = () => (
+const StudentDetails = ({ tabValue }: any) => (
   <Box>
     <Typography variant="h6" mb={2}>
       Student Details
@@ -783,18 +836,41 @@ const StudentDetails = () => (
     <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
     <DocumentsSections />
     <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-    <Button fullWidth variant="soft" color="success" sx={{ mt: 2 }}>
-      Approve Application
-    </Button>
-    <Button fullWidth variant="soft" color="error" sx={{ mt: 2 }}>
-      Reject Application
-    </Button>
-    <Button fullWidth variant="soft" color="info" sx={{ mt: 2 }}>
-      Request Information
-    </Button>
-    <Button fullWidth variant="soft" sx={{ mt: 2 }}>
+    {tabValue === 'pending' && (
+      <>
+        <Button fullWidth variant="soft" color="success" sx={{ mt: 2 }}>
+          Approve Application
+        </Button>
+        <Button fullWidth variant="soft" color="error" sx={{ mt: 2 }}>
+          Reject Application
+        </Button>
+      </>
+    )}
+
+    {tabValue === 'approved' && (
+      <>
+        <Button fullWidth variant="soft" color="error" sx={{ mt: 2 }}>
+          Reject Application
+        </Button>
+        <Button fullWidth variant="soft" color="info" sx={{ mt: 2 }}>
+          Request Information
+        </Button>
+      </>
+    )}
+
+    {tabValue === 'rejected' && (
+      <>
+        <Button fullWidth variant="soft" color="success" sx={{ mt: 2 }}>
+          Approve Application
+        </Button>
+        <Button fullWidth variant="soft" color="info" sx={{ mt: 2 }}>
+          Request Information
+        </Button>
+      </>
+    )}
+    {/* <Button fullWidth variant="soft" sx={{ mt: 2 }}>
       Schedule Interview
-    </Button>
+    </Button> */}
     <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
   </Box>
 );
@@ -936,21 +1012,47 @@ const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
     </Box>
   );
 };
-const ChangeStatusForm = ({ handleClose }: { handleClose: () => void }) => {
+
+interface ChangeStatusFormProps {
+  handleClose: () => void;
+  tabValue?: any; // Add correct type if `tabValue` is needed, or remove if unused
+}
+
+const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({ handleClose, tabValue }: any) => {
   const formik = useFormik({
     initialValues: {
       status: '',
     },
     onSubmit: () => {},
   });
+
+  const getStatusOptions = () => {
+    switch (tabValue) {
+      case 'pending':
+        return [
+          { label: 'Approved', value: 'approved' },
+          { label: 'Rejected', value: 'rejected' },
+        ];
+      case 'approved':
+        return [
+          { label: 'Rejected', value: 'rejected' },
+          { label: 'Requested', value: 'requested' },
+        ];
+      case 'rejected':
+        return [
+          { label: 'Approved', value: 'approved' },
+          { label: 'Requested', value: 'requested' },
+        ];
+      default:
+        return [];
+    }
+  };
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
         <CustomSelect
-          options={[
-            { label: 'Approved', value: 'approved' },
-            { label: 'Rejected', value: 'rejected' },
-          ]}
+          options={getStatusOptions()}
           value={formik.values.status}
           onChange={(val) => {
             formik.setFieldValue('status', val);

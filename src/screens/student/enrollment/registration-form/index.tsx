@@ -115,6 +115,7 @@ const RegistrationFormScreen = () => {
           {
             id: 'actions',
             label: 'Actions',
+            isFilter: true,
             isSort: false,
             render(value, row) {
               return (
