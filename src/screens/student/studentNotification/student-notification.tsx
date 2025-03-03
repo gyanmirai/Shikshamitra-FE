@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
@@ -270,29 +271,30 @@ const StudentNotificationScreen = () => {
               //         );
               //     },
               // },
-              // {
-              //     id: "action",
-              //     label: "Action",
-              //     render(value, row) {
-              //         return <ThreeDotsActions
-              //             actions={({ popover }) => (
-              //                 <MenuList>
-              //                     <MenuItem
-              //                         onClick={() => {
-              //                             setSendManual(true)
-              //                             setOpen(true);
-              //                             setSelectedData(row)
-              //                         }}
-              //                     >
-              //                         <Iconify icon="mynaui:send" sx={{ mr: 2 }} />
-              //                         Send Manual
-              //                     </MenuItem>
-              //                 </MenuList>
-              //             )}
-
-              //         />
-              //     },
-              // }
+              {
+                id: 'action',
+                label: 'Action',
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={({ popover }) => (
+                        <MenuList>
+                          <MenuItem
+                            onClick={() => {
+                              setSendManual(true);
+                              setOpen(true);
+                              setSelectedData(row);
+                            }}
+                          >
+                            <Iconify icon="mynaui:send" sx={{ mr: 2 }} />
+                            Send Manual
+                          </MenuItem>
+                        </MenuList>
+                      )}
+                    />
+                  );
+                },
+              },
             ]}
           />
         </>

@@ -13,7 +13,7 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
   const formik = useFormik({
     initialValues: {
       categoryName: '',
-      categoryDescription: '',
+      placeHolderList: '',
       subCategoyName: '',
       moduleName: '',
     },
@@ -59,17 +59,17 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
         />
 
         {/* Description Field */}
-        {/* <TextField
-          name="categoryDescription"
-          label="Description"
-          value={formik.values.categoryDescription}
+        <TextField
+          name="enterplaceholder"
+          label="Enter Placeholder(s) (separate with commas)"
+          value={formik.values.placeHolderList}
           onChange={formik.handleChange}
           size="small"
           fullWidth
           multiline
-          rows={3}
+          rows={4}
           margin="dense"
-        /> */}
+        />
       </DialogContent>
 
       {/* Dialog Actions */}

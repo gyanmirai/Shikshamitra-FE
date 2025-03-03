@@ -75,6 +75,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
       isRecurringForTeacher: false,
       recurringValueForStudent: 0,
       recurringValueForTeacher: 0,
+      eventType: '',
     },
     onSubmit: (values) => {
       console.log('Form Submitted type:', values);
@@ -189,7 +190,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
     <form onSubmit={formik.handleSubmit}>
       <Grid container spacing={2} px="18px" pt="40px">
         <Grid container spacing={2}>
-          <Grid item lg={6} px={0}>
+          <Grid item lg={4} px={0}>
             <TextField
               label="Notification Name"
               value={formik.values.notificationName}
@@ -199,7 +200,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
               disabled={fromSendManual}
             />
           </Grid>
-          <Grid item lg={6} px={0}>
+          <Grid item lg={4} px={0}>
             <CustomSelect
               disabled={fromSendManual}
               label="Notification Type"
@@ -211,6 +212,20 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
               value={formik.values.notificationType}
               onChange={(e) =>
                 formik.setFieldValue('notificationType', e as string | number | string[] | number[])
+              }
+            />
+          </Grid>
+          <Grid item lg={4} px={0}>
+            <CustomSelect
+              disabled={fromSendManual}
+              label="Event Type"
+              options={[
+                { label: 'While Home-work Create', value: 'While Home-work Create' },
+                { label: 'Rule Based', value: 'rule' },
+              ]}
+              value={formik.values.eventType}
+              onChange={(e) =>
+                formik.setFieldValue('eventType', e as string | number | string[] | number[])
               }
             />
           </Grid>
@@ -307,7 +322,6 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
           </Grid>
           <Grid item lg={4}>
             <CustomSelect
-              disabled={fromSendManual}
               multiple
               name="role"
               label="Select Role"
@@ -325,7 +339,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
           {formik.values.selectedRoles.includes('Teacher') && (
             <Grid item lg={4}>
               <CustomSelect
-                disabled={fromSendManual}
+                // disabled={fromSendManual}
                 multiple
                 label="Select Class Teacher"
                 options={[
@@ -342,7 +356,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
           {formik.values.selectedRoles.includes('Student') && (
             <Grid item lg={4}>
               <CustomSelect
-                disabled={fromSendManual}
+                // disabled={fromSendManual}
                 multiple
                 label="Select Student"
                 options={[

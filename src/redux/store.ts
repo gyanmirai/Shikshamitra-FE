@@ -40,7 +40,6 @@ import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-prefe
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
 
-
 const persistConfig = {
   key: 'root',
   storage,
@@ -85,7 +84,7 @@ const reducers = combineReducers({
   [StudentAdmissionApi.reducerPath]: StudentAdmissionApi.reducer,
   [EnrollmentReportApi.reducerPath]: EnrollmentReportApi.reducer,
   [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
-  [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
+  // [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
 });
 
 const store = configureStore({
@@ -125,8 +124,8 @@ const store = configureStore({
       .concat(FollowUpApi.middleware)
       .concat(StudentAdmissionApi.middleware)
       .concat(EnrollmentReportApi.middleware)
-      .concat(StudentCertificateApi.middleware)
-      .concat(studentGrNumberApi.middleware)
+      .concat(StudentCertificateApi.middleware),
+  // .concat(studentGrNumberApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;
@@ -135,6 +134,3 @@ export type AppDispatch = typeof store.dispatch;
 export default store;
 
 export const persistor = persistStore(store);
-
-
-
