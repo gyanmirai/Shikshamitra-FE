@@ -17,6 +17,7 @@ import CreateNotificationTemplates from './component/create-templates';
 import SendNotificationScreen from './component/send-notification-screen';
 import AddNotificationCategoryDialog from './component/add-notification-category-dialog';
 import AddNotificationTemplateDialog from './component/add-notification-template-dialog';
+// import AutoNotificationConfigurationDialog from './component/auto-notification-configuration-dialog';
 
 // Store components in an object instead of recreating them every render
 const COMPONENTS: any = {
@@ -25,6 +26,7 @@ const COMPONENTS: any = {
   'notification-category': NotificationCategory,
   'send-alert-others': SendAlertToOthers,
   'send-custom-alert': SendCustomAlert,
+  // 'auto-notification-configuration': AutoNotificationConfigurationScreen,
 };
 
 const TABS = [
@@ -33,12 +35,16 @@ const TABS = [
   { value: 'notification-category', label: 'Category' },
   { value: 'send-alert-others', label: 'Send Alert to Others' },
   { value: 'send-custom-alert', label: 'Send Custom Alert' },
+  // { value: 'auto-notification-configuration', label: 'Auto Notification Configuration' },
+  { value: 'auto-notification-configuration', label: 'Auto Notification Configuration' },
 ];
 
 const NotificationScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'send-notification' });
   const [openForNotificationCategory, setOpenForNotificationCategory] = useState(false);
   const [openForTemplates, setOpenForTemplates] = useState(false);
+  const [openForAutoNotificationConfiguration, setOpenForAutoNotificationConfiguration] =
+    useState(false);
 
   // Find the selected tab once and reuse the result
   const selectedTab = TABS.find((tab) => tab.value === searchParams.tab) || TABS[0];
@@ -55,6 +61,7 @@ const NotificationScreen = () => {
       // Close any open dialogs when switching tabs
       setOpenForNotificationCategory(false);
       setOpenForTemplates(false);
+      setOpenForAutoNotificationConfiguration(false);
     },
     [setSearchParams]
   );
@@ -63,15 +70,24 @@ const NotificationScreen = () => {
     if (breadcrumbTabName === 'Category') {
       setOpenForTemplates(false);
       setOpenForNotificationCategory(true);
-    } else {
+      setOpenForAutoNotificationConfiguration(false);
+    }
+    if (breadcrumbTabName === 'Auto Notification Configuration') {
+      setOpenForTemplates(false);
+      setOpenForNotificationCategory(false);
+      setOpenForAutoNotificationConfiguration(true);
+    }
+    if (breadcrumbTabName === 'Notification Templates') {
       setOpenForTemplates(true);
       setOpenForNotificationCategory(false);
+      setOpenForAutoNotificationConfiguration(false);
     }
   };
 
   const closeHandler = () => {
     setOpenForTemplates(false);
     setOpenForNotificationCategory(false);
+    setOpenForAutoNotificationConfiguration(false);
   };
   return (
     <Box>
@@ -84,7 +100,9 @@ const NotificationScreen = () => {
         {breadcrumbTabName !== 'Send Notification' &&
           breadcrumbTabName !== 'Send Alert to Others' &&
           breadcrumbTabName !== 'Send Custom Alert' &&
-          (openForNotificationCategory || openForTemplates ? (
+          (openForNotificationCategory ||
+          openForTemplates ||
+          openForAutoNotificationConfiguration ? (
             <Button
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
               onClick={closeHandler}
@@ -117,15 +135,20 @@ const NotificationScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {!openForTemplates && !openForNotificationCategory && ActiveComponent && (
-          <ActiveComponent />
-        )}
+        {!openForTemplates &&
+          !openForNotificationCategory &&
+          !openForAutoNotificationConfiguration &&
+          ActiveComponent && <ActiveComponent />}
       </Box>
 
       {openForNotificationCategory && (
         <AddNotificationCategoryDialog onClose={() => setOpenForNotificationCategory(false)} />
       )}
       {openForTemplates && <AddNotificationTemplateDialog />}
+
+      {/* {openForAutoNotificationConfiguration && (
+        <AutoNotificationConfigurationDialog onClose={() => setOpenForAutoNotificationConfiguration(false)} />
+      )} */}
     </Box>
   );
 };

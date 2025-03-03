@@ -313,6 +313,11 @@ const studentModule = {
             },
           ],
         },
+        {
+          title: 'Notification',
+          path: '/student/studentNotification',
+          _action: 'notification',
+        },
       ],
     },
   ],

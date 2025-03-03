@@ -15,6 +15,7 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
       categoryName: '',
       categoryDescription: '',
       subCategoyName: '',
+      moduleName: '',
     },
     onSubmit: (values) => {
       console.log('Submitted values:', values);
@@ -26,6 +27,16 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
   return (
     <form onSubmit={formik.handleSubmit}>
       <DialogContent>
+        <TextField
+          name="moduleName"
+          label="Module Name"
+          value={formik.values.moduleName}
+          onChange={formik.handleChange}
+          size="small"
+          fullWidth
+          margin="dense"
+        />
+
         {/* Category Name Field */}
         <TextField
           name="categoryName"
@@ -48,7 +59,7 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
         />
 
         {/* Description Field */}
-        <TextField
+        {/* <TextField
           name="categoryDescription"
           label="Description"
           value={formik.values.categoryDescription}
@@ -58,7 +69,7 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
           multiline
           rows={3}
           margin="dense"
-        />
+        /> */}
       </DialogContent>
 
       {/* Dialog Actions */}
