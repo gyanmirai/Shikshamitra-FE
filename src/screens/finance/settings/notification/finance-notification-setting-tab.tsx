@@ -11,8 +11,6 @@ import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import FinanceCategoryNotificationDialog from './component/finance-category-notification-dialog';
-
 const FinanceNotificationTable = () => {
   const [open, setOpen] = useState(false); // State to manage dialog visibility
   const [currentRow, setCurrentRow] = useState<any>(null); // State to store the current row being edited
@@ -126,7 +124,7 @@ const FinanceNotificationTable = () => {
         ]}
         data={cardData}
       />
-      {financeCategoryNotificationDialogBoolean && (
+      {/* {financeCategoryNotificationDialogBoolean && (
         <FinanceCategoryNotificationDialog
           open={financeCategoryNotificationDialogBoolean.value}
           onClose={() => {
@@ -134,7 +132,7 @@ const FinanceNotificationTable = () => {
           }}
           selectedCategory={[]}
         />
-      )}
+      )} */}
       {/* Dialog for editing details */}
       <CustomDialog
         title={`Edit Details For ${currentRow !== null ? currentRow!.cardTitle : ''}`}

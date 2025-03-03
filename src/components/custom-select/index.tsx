@@ -107,7 +107,7 @@ const CustomSelect = <T extends string, J extends boolean>({
           options.map((option) => (
             <MenuItem key={option[valueKey]} value={option[valueKey]}>
               {multiple && (
-                <Checkbox checked={(value as string[]).indexOf(option[valueKey] as string) > -1} />
+                <Checkbox checked={(value as string[])?.indexOf(option[valueKey] as string) > -1} />
               )}
               <ListItemText primary={option[labelKey]} />
             </MenuItem>
