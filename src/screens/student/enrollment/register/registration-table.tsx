@@ -138,7 +138,7 @@ const RegistrationTable = ({
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
         {
           id: 'inquiryPreference.preferenceName',
-          label: 'Enquiry Preferences',
+          label: 'Inquiry Preferences',
           minWidth: '200px',
         },
 
@@ -148,6 +148,7 @@ const RegistrationTable = ({
         {
           id: 'progress',
           label: 'Progress',
+          filterType: 'number',
           render(value, row) {
             return (
               <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -187,6 +188,7 @@ const RegistrationTable = ({
           id: 'actions',
           label: 'Actions',
           isSort: false,
+          isFilter: false,
           render(value, row) {
             return (
               <ThreeDotsActions

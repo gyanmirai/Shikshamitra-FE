@@ -636,7 +636,7 @@ const AdmissionScreen = () => {
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Enquiry Preferences',
+            label: 'Inquiry Preferences',
             minWidth: '200px',
           },
 

@@ -98,7 +98,7 @@ const InquiryTable = ({
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px' },
         {
           id: 'inquiryPreference.preferenceName',
-          label: 'Enquiry Preferences',
+          label: 'Inquiry Preferences',
           minWidth: '180px',
         },
         {
