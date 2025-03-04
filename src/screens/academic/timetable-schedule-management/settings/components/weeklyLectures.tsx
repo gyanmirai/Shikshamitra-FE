@@ -34,12 +34,13 @@ const WeeklyLectures = () => {
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         columns={[
-          { id: 'class', label: 'Class' },
-          { id: 'totalLectures', label: 'Total Lectures' },
+          { id: 'class', label: 'Class', filterType: 'number' },
+          { id: 'totalLectures', label: 'Total Lectures', filterType: 'number' },
           {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -57,23 +58,23 @@ const WeeklyLectures = () => {
         ]}
         data={[
           {
-            class: 'Class 1',
+            class: 1,
             totalLectures: 8,
           },
           {
-            class: 'Class 2',
+            class: 2,
             totalLectures: 9,
           },
           {
-            class: 'Class 3',
+            class: 3,
             totalLectures: 6,
           },
           {
-            class: 'Class 4',
+            class: 4,
             totalLectures: 7,
           },
           {
-            class: 'Class 5',
+            class: 5,
             totalLectures: 5,
           },
         ]}

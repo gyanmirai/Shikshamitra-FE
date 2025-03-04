@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { Division, Standards } from 'src/types/school';
 import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -13,7 +14,6 @@ import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
-  Chip,
   Card,
   Button,
   Switch,
@@ -31,6 +31,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Label } from 'src/components/label';
@@ -60,7 +62,7 @@ export interface Assignment {
   createdBy: string;
   status: string;
   // Homework-Specific Fields
-  topic?: string;
+  chapters?: string[];
   homeworkType?: string;
   isDailyTask?: boolean;
   parentAcknowledgement?: boolean;
@@ -73,7 +75,7 @@ export interface Assignment {
   assignmentType?: string;
   evaluationCriteria?: string;
   assignedResources?: string;
-  customRubric?: string;
+  rubric?: string;
   isScheduled: boolean;
 }
 
@@ -88,7 +90,7 @@ const initialData: Assignment[] = [
     dueTime: null,
     submissionType: 'Online',
     status: 'draft',
-    topic: 'Linear Equations',
+    chapters: ['Linear Equations'],
     homeworkType: 'Practice Questions', // Homework-specific field
     isDailyTask: true,
     parentAcknowledgement: true,
@@ -96,7 +98,7 @@ const initialData: Assignment[] = [
     recurringFrequency: '',
     assignedResources: 'Workbook Page 32-34',
     evaluationCriteria: '', // Not applicable for homework
-    customRubric: '', // Not applicable for homework
+    rubric: '', // Not applicable for homework
     assignmentType: '',
     attachments: [],
     createdBy: '',
@@ -113,7 +115,7 @@ const initialData: Assignment[] = [
     dueTime: dayjs('23:59'),
     submissionType: 'In-Person',
     status: 'publish',
-    topic: 'Solar System',
+    chapters: ['Solar System'],
     assignmentType: 'Project Work', // Assignment-specific field
     isDailyTask: false,
     parentAcknowledgement: false,
@@ -121,7 +123,7 @@ const initialData: Assignment[] = [
     recurringFrequency: '',
     assignedResources: 'Chapter 7: The Solar System',
     evaluationCriteria: 'Model Design, Explanation, Creativity', // Assignment-specific field
-    customRubric: 'Include all 8 planets with labels.', // Assignment-specific field
+    rubric: 'Include all 8 planets with labels.', // Assignment-specific field
     homeworkType: '',
     attachments: [],
     createdBy: '',
@@ -137,7 +139,7 @@ const initialData: Assignment[] = [
     dueTime: dayjs('23:59'),
     submissionType: 'Online',
     status: 'draft',
-    topic: 'World War II',
+    chapters: ['World War II'],
     assignmentType: 'Essay Writing', // Assignment-specific field
     isDailyTask: false,
     parentAcknowledgement: true,
@@ -145,7 +147,7 @@ const initialData: Assignment[] = [
     recurringFrequency: '',
     assignedResources: 'History Textbook Chapter 10',
     evaluationCriteria: 'Content, Structure, Grammar, and Relevance', // Assignment-specific field
-    customRubric: 'Include at least 3 major causes and their effects.', // Assignment-specific field
+    rubric: 'Include at least 3 major causes and their effects.', // Assignment-specific field
     homeworkType: '',
     attachments: [],
     createdBy: '',
@@ -161,7 +163,7 @@ const initialData: Assignment[] = [
     dueTime: dayjs('18:00'),
     submissionType: 'In-Person',
     status: 'draft',
-    topic: 'Indian Rivers',
+    chapters: ['Indian Rivers'],
     homeworkType: 'Map Work', // Homework-specific field
     isDailyTask: false,
     parentAcknowledgement: false,
@@ -169,7 +171,7 @@ const initialData: Assignment[] = [
     recurringFrequency: '',
     assignedResources: 'Map and Atlas',
     evaluationCriteria: '', // Not applicable for homework
-    customRubric: '', // Not applicable for homework
+    rubric: '', // Not applicable for homework
     assignmentType: '',
     attachments: [],
     createdBy: '',
@@ -185,7 +187,7 @@ const initialData: Assignment[] = [
     dueTime: null,
     submissionType: 'Online',
     status: 'publish',
-    topic: 'Reading Comprehension',
+    chapters: ['Reading Comprehension'],
     homeworkType: 'Summary Writing', // Homework-specific field
     isDailyTask: true,
     parentAcknowledgement: true,
@@ -193,7 +195,7 @@ const initialData: Assignment[] = [
     recurringFrequency: 'Weekly',
     assignedResources: 'Textbook Chapter 3',
     evaluationCriteria: '', // Not applicable for homework
-    customRubric: '', // Not applicable for homework
+    rubric: '', // Not applicable for homework
     assignmentType: '',
     attachments: [],
     createdBy: '',
@@ -205,6 +207,14 @@ const initialData: Assignment[] = [
 const HomeworkCreation = (props: TabComponentType) => {
   const [view, setView] = useState('homework');
   const [open, setOpen] = useState(false);
+  const [classes, setClasses] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
   // const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
   const dialog = useBoolean();
   const confirmDialog = useBoolean();
@@ -258,33 +268,21 @@ const HomeworkCreation = (props: TabComponentType) => {
 
   const homeworkColumns: Column[] = [
     {
-      id: 'class',
-      label: 'Class',
-    },
-    {
-      id: 'division',
-      label: 'Division',
-      render: (value: any, row: any) => (
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {value?.map((audience: string) => (
-            <Chip key={audience} label={audience} size="small" variant="outlined" />
-          ))}
-        </Box>
-      ),
-    },
-    {
-      id: 'subject',
-      label: 'Subject',
-    },
-    {
       id: 'title',
       label: 'Homework Title',
-      minWidth: 170,
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
+      id: 'homeworkType',
+      label: 'Homework Type',
+      minWidth: '200px',
       align: 'left',
     },
     {
       id: 'dueDate',
       label: 'Due Date',
+      minWidth: '200px',
       align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
@@ -293,8 +291,27 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
+      id: 'dueTime',
+      label: 'Due Time',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('HH:MM') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'submissionType',
+      label: 'Submission Type',
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
       id: 'status',
       label: 'Publish',
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
@@ -310,6 +327,9 @@ const HomeworkCreation = (props: TabComponentType) => {
       id: 'action',
       label: 'Actions',
       isSort: false,
+      isFilter: false,
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <ThreeDotsActions
           placement="right-top"
@@ -328,33 +348,22 @@ const HomeworkCreation = (props: TabComponentType) => {
   // Columns for Assignment view
   const assignmentColumns: Column[] = [
     {
-      id: 'class',
-      label: 'Class',
-    },
-    {
-      id: 'division',
-      label: 'Division',
-      render: (value: any, row: any) => (
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {value?.map((audience: string) => (
-            <Chip key={audience} label={audience} size="small" variant="outlined" />
-          ))}
-        </Box>
-      ),
-    },
-    {
-      id: 'subject',
-      label: 'Subject',
-    },
-    {
       id: 'title',
       label: 'Assignment Title',
-      minWidth: 200,
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
+      id: 'assignmentType',
+      label: 'Assignment Type',
+      minWidth: '200px',
       align: 'left',
     },
     {
       id: 'dueDate',
       label: 'Due Date',
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -362,8 +371,27 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
+      id: 'dueTime',
+      label: 'Due Time',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('HH:MM') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'submissionType',
+      label: 'Submission Type',
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
       id: 'status',
       label: 'Publish',
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
@@ -376,8 +404,19 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
+      id: 'rubric',
+      label: 'View Rubric',
+      minWidth: '200px',
+      align: 'left',
+      render: (value, row) => <Iconify icon="mdi:eye" width="16px" height="16px" />,
+    },
+    {
       id: 'action',
       label: 'Action',
+      minWidth: '200px',
+      align: 'left',
+      isSort: false,
+      isFilter: false,
       render: (value: any, row: any) => (
         <ThreeDotsActions
           placement="right-top"
@@ -467,11 +506,58 @@ const HomeworkCreation = (props: TabComponentType) => {
       )}
 
       {!open && (
-        <CustomizableTable
-          tableId="homework-assignment-management"
-          columns={view === 'homework' ? homeworkColumns : assignmentColumns}
-          data={filteredData}
-        />
+        <>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 2 }}>
+            <CustomSelect
+              label="Class"
+              name="class"
+              isLoading={isLoading}
+              options={classData?.items || []}
+              valueKey="id"
+              labelKey="name"
+              formControlProps={{ sx: { width: '150px' } }}
+              value={classes}
+              onChange={(value) => {
+                const selectedClass: Standards = classData.items.find(
+                  (i: Standards) => i.id === value
+                );
+                setClasses(value as string);
+                setDivisionOptions(selectedClass?.divisions || []);
+              }}
+            />
+            <CustomSelect
+              label="Division"
+              disabled={!classes}
+              labelKey="name"
+              valueKey="id"
+              options={divisionOptions}
+              value={division}
+              onChange={(val) => {
+                setDivision(val as string);
+              }}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '150px' },
+              }}
+            />
+            <CustomSelect
+              label="Subject"
+              disabled={!division}
+              options={[]}
+              value={subject}
+              onChange={(val) => {
+                setSubject(val as string);
+              }}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '150px' },
+              }}
+            />
+          </Box>
+          <CustomizableTable
+            tableId="homework-assignment-management"
+            columns={view === 'homework' ? homeworkColumns : assignmentColumns}
+            data={filteredData}
+          />
+        </>
       )}
 
       {open && (

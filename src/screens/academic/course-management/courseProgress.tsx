@@ -244,7 +244,7 @@ const CourseProgress = (props: TabComponentType) => {
           }}
         />
       </Box>
-      <Grid container spacing={2} marginTop={2} marginBottom={2}>
+      <Grid container spacing={2} marginTop={2} marginBottom={4}>
         {courses.map((course) => (
           <Grid item xs={12} md={2}>
             <Card
@@ -286,11 +286,14 @@ const CourseProgress = (props: TabComponentType) => {
           <CustomizableTable
             tableId="course-progress-table"
             columns={[
-              { id: 'chapterName', label: 'Chapter Name' },
-              { id: 'teacherName', label: 'Teacher Name' },
+              { id: 'chapterName', label: 'Chapter Name', minWidth: '200px', align: 'left' },
+              { id: 'teacherName', label: 'Teacher Name', minWidth: '200px', align: 'left' },
               {
                 id: 'progress',
                 label: 'Progress',
+                align: 'center',
+                minWidth: '200px',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -322,6 +325,9 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'timeLine',
                 label: 'Timeline',
+                align: 'left',
+                minWidth: '200px',
+                filterType: 'date',
                 render: (value, row) => (
                   <Typography fontSize="12px" gutterBottom>
                     {dayjs(value).format('DD MMM YYYY')}
@@ -331,6 +337,9 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'actions',
                 label: 'Actions',
+                minWidth: '200px',
+                align: 'left',
+                isFilter: false,
                 render(value: any, row: any) {
                   return (
                     <ThreeDotsActions

@@ -66,13 +66,14 @@ const LectureSlots = () => {
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         columns={[
-          { id: 'className', label: 'Class' },
-          { id: 'periodSlots', label: 'Period Slots' },
-          { id: 'breakSlots', label: 'Break Slots' },
+          { id: 'className', label: 'Class', filterType: 'number' },
+          { id: 'periodSlots', label: 'Period Slots', filterType: 'number' },
+          { id: 'breakSlots', label: 'Break Slots', filterType: 'number' },
           {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -90,19 +91,19 @@ const LectureSlots = () => {
         data={[
           {
             id: 1,
-            className: 'Class 1',
+            className: 1,
             periodSlots: 6, // Number of periods
             breakSlots: 2, // Number of breaks
           },
           {
             id: 2,
-            className: 'Class 2',
+            className: 2,
             periodSlots: 5,
             breakSlots: 1,
           },
           {
             id: 3,
-            className: 'Class 3',
+            className: 3,
             periodSlots: 7,
             breakSlots: 2,
           },
@@ -420,6 +421,9 @@ const CreateSlotsForm = () => {
           )}
         </Scrollbar>
         <DialogActions>
+          <Button type="submit" startIcon={<Iconify icon="" />} variant="outlined">
+            Preview
+          </Button>
           <Button type="submit" variant="contained">
             Save
           </Button>

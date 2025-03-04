@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
@@ -15,6 +16,7 @@ import {
   Grid,
   List,
   Chip,
+  Card,
   Button,
   MenuItem,
   MenuList,
@@ -41,7 +43,6 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -68,6 +69,8 @@ interface AssignmentRow {
 
 const Subjects = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+  const [open, setOpen] = useState(false);
   const chapterDialog = useBoolean();
   const addChapterDialog = useBoolean();
   const [subjectData, setSubjectData] = useState<any>(subjectTempData);
@@ -93,12 +96,12 @@ const Subjects = (props: TabComponentType) => {
         const divisionData = selectedClassData.divisions;
         const firstDivisionSubjects = divisionData[0]?.subjects || [];
 
-        const subjects = firstDivisionSubjects.map((subject: any) => ({
-          subjectName: subject.name,
-          primaryTeacher: subject.primaryTeacher,
-          secondaryTeacher: subject.secondaryTeacher,
-          progress: subject.progress,
-          material: subject.material,
+        const subjects = firstDivisionSubjects.map((sub: any) => ({
+          subjectName: sub.name,
+          primaryTeacher: sub.primaryTeacher,
+          secondaryTeacher: sub.secondaryTeacher,
+          progress: sub.progress,
+          material: sub.material,
         }));
 
         setSubjectTableData(subjects);
@@ -143,24 +146,19 @@ const Subjects = (props: TabComponentType) => {
       if (isEditMode && selectedChapter) {
         // Update existing chapter
         selectedClass.divisions.forEach((division: any) => {
-          const subject = division.subjects.find((sub: any) => sub.name === selectedSubject);
+          const subj = division.subjects.find((sub: any) => sub.name === selectedSubject);
           if (subject) {
-            const chapterIndex = subject.chapters.findIndex(
-              (ch: any) => ch.id === selectedChapter.id
-            );
-            if (chapterIndex !== -1) {
-              subject.chapters[chapterIndex] = {
-                ...subject.chapters[chapterIndex],
-                chapterName: values.chapterName,
-                assignedTeacher: values.assignedTeacher,
-                content: values.content,
-                startTime: values.startTime,
-                endTime: values.endTime,
-                documents: newDocuments,
-                progress: subject.chapters[chapterIndex].progress,
-                assignments: subject.chapters[chapterIndex].assignments,
-              };
-            }
+            const newChapter = {
+              chapterNo: values.chapterNo,
+              chapterName: values.chapterName,
+              assignedTeacher: values.assignedTeacher,
+              content: values.content,
+              startTime: values.startTime,
+              endTime: values.endTime,
+              documents: newDocuments,
+              progress: subj.progress,
+              assignments: subj.assignments,
+            };
           }
         });
       } else {
@@ -173,6 +171,8 @@ const Subjects = (props: TabComponentType) => {
               ),
               0
             ) + 1,
+          chapterNo: values.chapterNo,
+
           chapterName: values.chapterName,
           assignedTeacher: values.assignedTeacher,
           content: values.content,
@@ -184,9 +184,9 @@ const Subjects = (props: TabComponentType) => {
         };
 
         selectedClass.divisions.forEach((division: any) => {
-          const subject = division.subjects.find((sub: any) => sub.name === selectedSubject);
+          const subj = division.subjects.find((sub: any) => sub.name === selectedSubject);
           if (subject) {
-            subject.chapters.push({ ...newChapter });
+            subj.chapters.push({ ...newChapter });
           }
         });
       }
@@ -195,8 +195,8 @@ const Subjects = (props: TabComponentType) => {
       const updatedDialogData = selectedClass.divisions.map((division: any) => ({
         divisionName: division.name,
         chapters: division.subjects
-          .filter((subject: any) => subject.name === selectedSubject)
-          .flatMap((subject: any) => subject.chapters),
+          .filter((sub: any) => sub.name === selectedSubject)
+          .flatMap((sub: any) => sub.chapters),
       }));
 
       setDialogData(updatedDialogData);
@@ -216,9 +216,7 @@ const Subjects = (props: TabComponentType) => {
     setSelectedSubject(subjectName);
     const allDivisionChapters =
       selectedClassData?.divisions.map((division: any) => {
-        const subjectDataOfClass = division.subjects.find(
-          (subject: any) => subject.name === subjectName
-        );
+        const subjectDataOfClass = division.subjects.find((sub: any) => sub.name === subjectName);
 
         return {
           divisionName: division.name,
@@ -269,148 +267,202 @@ const Subjects = (props: TabComponentType) => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Content Management"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Course' },
-          { name: 'Content Management' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <CustomSelect
-        options={classData?.items || []}
-        value={classes}
-        onChange={(val) => {
-          setClasses(val as string);
-        }}
-        label="Class"
-        isLoading={isLoading}
-        labelKey="name"
-        valueKey="name"
-        formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
-      />
-      {subjectTableData.length > 0 && (
-        <CustomizableTable
-          tableId="subjectTable"
-          columns={[
-            {
-              id: 'subjectName',
-              label: 'Subject Name',
-              minWidth: '180px',
-              align: 'left',
-            },
-            { id: 'primaryTeacher', label: 'Primary Teacher', minWidth: '200px', align: 'left' },
-            {
-              id: 'secondaryTeacher',
-              label: 'Secondary Teacher',
-              minWidth: '200px',
-              align: 'left',
-              render: (value) => (
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  {value.map((audience: string) => (
-                    <Chip key={audience} label={audience} size="small" variant="outlined" />
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'material',
-              label: 'Material',
-              render(value, row) {
-                const { videos, pdfs } = value;
-                return (
-                  <Typography sx={{ mr: 2 }} fontSize={12}>
-                    {videos} Videos and {pdfs} PDF/Notes
-                  </Typography>
-                );
+      {open ? (
+        <>
+          <CustomBreadcrumbs
+            heading="Syllabus Management"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Course' },
+              { name: 'Syllabus Management' },
+              { name: 'Add Chapter' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                Back
+              </Button>
+            }
+          />
+          <Card>
+            <AddNewChapter
+              onSubmit={handleChapterSubmit}
+              selectedSubject={selectedSubject}
+              initialValues={selectedChapter}
+              isEdit={isEditMode}
+            />
+          </Card>
+        </>
+      ) : (
+        <>
+          <CustomBreadcrumbs
+            heading="Syllabus Management"
+            links={[
+              { name: 'Academic and Assignment' },
+              { name: 'Course' },
+              { name: 'Syllabus Management' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="contained"
+                onClick={() => {
+                  setOpen(true);
+                  // setIsEdit(false);
+                  // setSelectedSubject(null);
+                }}
+              >
+                Chapter
+              </Button>
+            }
+          />
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <CustomSelect
+              options={classData?.items || []}
+              value={classes}
+              onChange={(val) => {
+                setClasses(val as string);
+              }}
+              label="Class"
+              isLoading={isLoading}
+              labelKey="name"
+              valueKey="name"
+              formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
+            />
+            <CustomSelect
+              options={[]}
+              value={subject}
+              onChange={(val) => {
+                // setClasses(val as string);
+              }}
+              label="Subject"
+              isLoading={isLoading}
+              formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
+            />
+          </Box>
+          <CustomizableTable
+            tableId="subjectTable"
+            columns={[
+              {
+                id: 'chapterNo',
+                label: 'Chapter No',
+                minWidth: '180px',
+                align: 'left',
+                filterType: 'number',
               },
-            },
-            {
-              id: 'progress',
-              label: 'Progress',
-              render(value, row) {
-                return (
-                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                    <CircularProgress variant="determinate" value={value} />
-                    <Box
-                      sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        component="div"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        {value}%
-                      </Typography>
-                    </Box>
+              {
+                id: 'chapterName',
+                label: 'Chapter Name',
+                minWidth: '200px',
+                align: 'left',
+                filterType: 'string',
+              },
+              {
+                id: 'startDate',
+                label: 'Start Date',
+                minWidth: '200px',
+                align: 'left',
+                filterType: 'date',
+              },
+              {
+                id: 'endDate',
+                label: 'End Date',
+                minWidth: '200px',
+                align: 'left',
+                filterType: 'date',
+              },
+              {
+                id: 'assignedTeacher',
+                label: 'Secondary Teacher',
+                minWidth: '200px',
+                align: 'left',
+                render: (value) => (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {value.map((audience: string) => (
+                      <Chip key={audience} label={audience} size="small" variant="outlined" />
+                    ))}
                   </Box>
-                );
+                ),
               },
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    placement="right-top"
-                    showViewIcon
-                    handleViewClick={() => {
-                      handleEyeClick(row.subjectName);
-                    }}
-                  />
-                );
+              {
+                id: 'viewMaterial',
+                label: 'View Material',
+                minWidth: '200px',
+                isFilter: false,
+                render(value, row) {
+                  // const { videos, pdfs } = value;
+                  return <Iconify icon="mdi:eye" />;
+                },
               },
-            },
-          ]}
-          data={subjectTableData}
-        />
+              {
+                id: 'progress',
+                label: 'Progress',
+                minWidth: '200px',
+                render(value, row) {
+                  return (
+                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                      <CircularProgress variant="determinate" value={value} />
+                      <Box
+                        sx={{
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          right: 0,
+                          position: 'absolute',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          component="div"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          {value}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                },
+              },
+              {
+                id: 'actions',
+                label: 'Actions',
+                minWidth: '200px',
+                isSort: false,
+                isFilter: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                      showEditIcon
+                      showViewIcon
+                      showDeleteIcon
+                      handleViewClick={() => {
+                        handleEyeClick(row.subjectName);
+                      }}
+                      handleEditClick={() => {}}
+                      handleDeleteClick={() => {}}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={[]}
+          />
+        </>
       )}
-
-      <CustomDialog
-        title={`class ${classes} - ${selectedSubject} Details`}
-        open={chapterDialog.value}
-        handleClose={chapterDialog.onFalse}
-        maxWidth="md"
-      >
-        <ViewSubjectChapter
-          onClose={chapterDialog.onFalse}
-          chapterData={dialogData}
-          onAddNewChapter={() => {
-            setSelectedSubject(selectedSubject);
-            setIsEditMode(false);
-            setSelectedChapter(null);
-            addChapterDialog.onTrue();
-          }}
-          onEditChapter={handleEditChapter}
-        />
-      </CustomDialog>
-
-      <CustomDialog
-        title={isEditMode ? `Edit ${selectedChapter.chapterName} Chapter` : 'Add New Chapter'}
-        open={addChapterDialog.value}
-        handleClose={addChapterDialog.onFalse}
-        maxWidth="sm"
-      >
-        <AddNewChapter
-          onSubmit={handleChapterSubmit}
-          selectedSubject={selectedSubject}
-          initialValues={selectedChapter}
-          isEdit={isEditMode}
-        />
-      </CustomDialog>
     </Box>
   );
 };
@@ -425,6 +477,7 @@ export interface Document {
 }
 
 export interface ChapterFormValues {
+  chapterNo: number;
   chapterName: string;
   assignedTeacher: string;
   content: string;
@@ -439,6 +492,7 @@ interface AddNewChapterProps {
   selectedSubject: string;
   isEdit?: boolean;
   initialValues?: {
+    chapterNo: number;
     chapterName: string;
     assignedTeacher: string;
     content: string;
@@ -464,6 +518,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   const [editorContent, setEditorContent] = useState('');
 
   const validationSchema = Yup.object({
+    chapterNo: Yup.number().required('Chapter No is required'),
     chapterName: Yup.string().required('Chapter name is required'),
     assignedTeacher: Yup.string().required('Assigned Teacher is Required'),
     content: Yup.string().required('Chapter description is required'),
@@ -473,6 +528,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
 
   const formik = useFormik({
     initialValues: {
+      chapterNo: initialValues?.chapterNo || 0,
       chapterName: initialValues?.chapterName || '',
       assignedTeacher: initialValues?.assignedTeacher || '',
       content: initialValues?.content || '',
@@ -523,8 +579,19 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
+        <Scrollbar sx={{ p: 2, height: { xs: 'auto', md: '500px' } }}>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Chapter Number"
+                name="chapterNo"
+                type="number"
+                value={formik.values.chapterNo}
+                onChange={formik.handleChange}
+                size="small"
+              />
+            </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth

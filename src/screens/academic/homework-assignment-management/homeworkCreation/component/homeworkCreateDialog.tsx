@@ -48,7 +48,7 @@ const assignmentInitialValues: Assignment = {
   createdBy: '', // Would typically be auto-populated from logged-in user
   status: 'draft',
   // Optional fields
-  topic: '',
+  chapters: [],
   homeworkType: '',
   isDailyTask: false,
   parentAcknowledgement: false,
@@ -58,7 +58,7 @@ const assignmentInitialValues: Assignment = {
   assignmentType: '',
   evaluationCriteria: '',
   assignedResources: '',
-  customRubric: '',
+  rubric: '',
   isScheduled: false,
 };
 
@@ -94,6 +94,76 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
       <Scrollbar sx={{ p: 2, height: '450px' }}>
         <Box display="flex" flexDirection="column" gap={2}>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Class"
+                options={classData?.items || []}
+                value={classes}
+                isLoading={isLoading}
+                disabled
+                labelKey="name"
+                valueKey="id"
+                onChange={(val) => {
+                  const selectedClass = classData?.items?.find((i: any) => i.id === val);
+                  formik.setFieldValue('class', selectedClass?.name || '');
+                  setClasses(val as string);
+                  setDivisionOptions(selectedClass?.divisions || []);
+                }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Division"
+                disabled={!formik.values.class}
+                labelKey="name"
+                valueKey="id"
+                multiple
+                options={divisionOptions}
+                value={division}
+                onChange={(val: any[]) => {
+                  const selectedDivisions = divisionOptions
+                    .filter((i) => val.includes(i.id))
+                    .map((div) => div.name);
+                  formik.setFieldValue('division', selectedDivisions);
+                  setDivision(val);
+                }}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="Subject"
+                disabled
+                options={[
+                  { value: 'math', label: 'Mathematics' },
+                  { value: 'science', label: 'Science' },
+                  { value: 'history', label: 'History' },
+                  { value: 'english', label: 'English' },
+                ]}
+                value={formik.values.subject}
+                onChange={(val) => formik.setFieldValue('subject', val)}
+                formControlProps={{ fullWidth: true }}
+              />
+            </Grid>
+            {view === 'homework' && (
+              <Grid item xs={12} md={6}>
+                <CustomSelect
+                  size="small"
+                  fullWidth
+                  label="Chapter"
+                  name="chapters"
+                  multiple
+                  options={[
+                    { value: 'chapter1', label: 'chapter1' },
+                    { value: 'chapter2', label: 'chapter2' },
+                  ]}
+                  value={formik.values.chapters || []}
+                  onChange={(val) => formik.setFieldValue('chapter', val)}
+                />
+              </Grid>
+            )}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -133,69 +203,6 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                   value={formik.values.assignmentType || ''}
                   onChange={(val) => formik.setFieldValue('assignmentType', val)}
                   formControlProps={{ fullWidth: true }}
-                />
-              </Grid>
-            )}
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Class"
-                options={classData?.items || []}
-                value={classes}
-                isLoading={isLoading}
-                labelKey="name"
-                valueKey="id"
-                onChange={(val) => {
-                  const selectedClass = classData?.items?.find((i: any) => i.id === val);
-                  formik.setFieldValue('class', selectedClass?.name || '');
-                  setClasses(val as string);
-                  setDivisionOptions(selectedClass?.divisions || []);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Division"
-                disabled={!formik.values.class}
-                labelKey="name"
-                valueKey="id"
-                multiple
-                options={divisionOptions}
-                value={division}
-                onChange={(val: any[]) => {
-                  const selectedDivisions = divisionOptions
-                    .filter((i) => val.includes(i.id))
-                    .map((div) => div.name);
-                  formik.setFieldValue('division', selectedDivisions);
-                  setDivision(val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Subject"
-                options={[
-                  { value: 'math', label: 'Mathematics' },
-                  { value: 'science', label: 'Science' },
-                  { value: 'history', label: 'History' },
-                  { value: 'english', label: 'English' },
-                ]}
-                value={formik.values.subject}
-                onChange={(val) => formik.setFieldValue('subject', val)}
-                formControlProps={{ fullWidth: true }}
-              />
-            </Grid>
-            {view === 'homework' && (
-              <Grid item xs={12} md={6}>
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Topic/Chapter"
-                  name="topic"
-                  value={formik.values.topic}
-                  onChange={formik.handleChange}
                 />
               </Grid>
             )}
@@ -254,8 +261,8 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                       multiline
                       rows={4}
                       label="Custom Rubric"
-                      name="customRubric"
-                      value={formik.values.customRubric}
+                      name="rubric"
+                      value={formik.values.rubric}
                       onChange={formik.handleChange}
                       placeholder="Enter your custom rubric details here..."
                       variant="outlined"

@@ -66,10 +66,11 @@ const TimeTableGrid = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  const [classroom, setClassroom] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { searchParams, setSearchParams } = props;
-  const classes = searchParams?.classId ? searchParams?.classId : '';
-  const [division, setDivision] = useState('');
+  const [classes, setClasses] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   const theme = useTheme();
@@ -248,7 +249,7 @@ const TimeTableGrid = (props: TabComponentType) => {
       <>
         {' '}
         <MenuList>
-          {row.status === 'Not Create' && (
+          {row.status === 'Pending' && (
             <MenuItem
               onClick={() => {
                 // uploadPictureDialog.onTrue();
@@ -259,7 +260,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               Timetable
             </MenuItem>
           )}
-          {(row.status === 'Pending' || row.status === 'Complete') && (
+          {(row.status === 'Draft' || row.status === 'Publish') && (
             <MenuItem
               onClick={() => {
                 // assignStudentDialog.onTrue();
@@ -305,6 +306,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               label="Class"
               options={classData?.items || []}
               labelKey="name"
+              disabled
               valueKey="id"
               onChange={(val) => {
                 const selectedClass: Standards = classData.items.find(
@@ -333,6 +335,22 @@ const TimeTableGrid = (props: TabComponentType) => {
               }}
               formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
             />
+            <CustomSelect
+              label="Classroom"
+              disabled={!division}
+              options={[
+                { id: 'A101', name: 'A101' },
+                { id: 'A102', name: 'A102' },
+                { id: 'B101', name: 'B101' },
+              ]}
+              labelKey="name"
+              valueKey="id"
+              value={classroom}
+              onChange={(val) => {
+                setClassroom(val as string);
+              }}
+              formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
+            />
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button variant="contained" color="warning" size="small">
@@ -345,69 +363,96 @@ const TimeTableGrid = (props: TabComponentType) => {
         </Box>
       )}
       {!open && (
-        <CustomizableTable
-          tableId="timetable-table"
-          columns={[
-            { id: 'className', label: 'Class' },
-            { id: 'division', label: 'Division' },
-            {
-              id: 'status',
-              label: 'Status',
-              render: (value, row) => (
-                <Label
-                  color={
-                    value === 'Not Create'
-                      ? 'error'
-                      : value === 'Pending'
-                        ? 'warning'
-                        : value === 'Complete'
-                          ? 'primary'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                />
-              ),
-            },
-          ]}
-          data={[
-            {
-              id: 1,
-              className: 'Class 10',
-              division: 'A',
-              status: 'Complete',
-            },
-            {
-              id: 2,
-              className: 'Class 9',
-              division: 'B',
-              status: 'Pending',
-            },
-            {
-              id: 3,
-              className: 'Class 8',
-              division: 'C',
-              status: 'Not Create',
-            },
-            {
-              id: 4,
-              className: 'Class 7',
-              division: 'D',
-              status: 'Complete',
-            },
-          ]}
-        />
+        <>
+          <CustomSelect
+            label="Class"
+            name="class"
+            isLoading={isLoading}
+            options={classData?.items || []}
+            valueKey="id"
+            labelKey="name"
+            formControlProps={{ sx: { width: '150px', mb: 2 } }}
+            value={classes}
+            onChange={(value) => {
+              // setClasses(value);
+            }}
+          />
+          <CustomizableTable
+            tableId="timetable-table"
+            columns={[
+              { id: 'division', label: 'Division' },
+              {
+                id: 'status',
+                label: 'Status',
+                render: (value, row) => (
+                  <Label
+                    color={
+                      value === 'Pending'
+                        ? 'error'
+                        : value === 'Draft'
+                          ? 'warning'
+                          : value === 'Publish'
+                            ? 'primary'
+                            : 'default'
+                    }
+                  >
+                    {value}
+                  </Label>
+                ),
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                isFilter: false,
+                render: (value, row) => (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                  />
+                ),
+              },
+            ]}
+            data={[
+              {
+                id: 1,
+                className: 'Class 10',
+                division: 'A',
+                status: 'Publish',
+              },
+              {
+                id: 2,
+                className: 'Class 9',
+                division: 'B',
+                status: 'Pending',
+              },
+              {
+                id: 3,
+                className: 'Class 8',
+                division: 'C',
+                status: 'Draft',
+              },
+              {
+                id: 5,
+                className: 'Class 6',
+                division: 'E',
+                status: 'Pending',
+              },
+              {
+                id: 6,
+                className: 'Class 5',
+                division: 'F',
+                status: 'Draft',
+              },
+              {
+                id: 7,
+                className: 'Class 4',
+                division: 'G',
+                status: 'Publish',
+              },
+            ]}
+          />
+        </>
       )}
       {open && (
         <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
@@ -451,6 +496,7 @@ const TimeTableGrid = (props: TabComponentType) => {
                           slotData={timetable[timeSlotIndex][dayIndex]}
                           isBreak={isBreak(timeSlot)}
                           onDrop={handleDrop}
+                          selectedRoom={classroom}
                           onTeacherSelect={handleTeacherSelect}
                           onRoomSelect={handleRoomSelect}
                           onDeleteSlot={handleDeleteSlot}

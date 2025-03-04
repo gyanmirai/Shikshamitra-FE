@@ -1,5 +1,7 @@
 'use client';
 
+import type { Division, Standards } from 'src/types/school';
+
 import React, { useMemo, useState } from 'react';
 
 import { Box, Chip } from '@mui/material';
@@ -68,8 +70,10 @@ const Teacher = ({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  const [division, setDivision] = useState<string>('');
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
-  const selectedClass = searchParams?.classId ? searchParams?.classId : 'All';
+  const [classes, setClasses] = useState<string>('');
   const selectedSubject = searchParams?.subject ? searchParams?.subject : 'All';
 
   // const [selectedClass, setSelectedClass] = useState('All');
@@ -92,28 +96,28 @@ const Teacher = ({
     }
   };
 
-  const classOptions = useMemo(() => {
-    if (!classData) return [{ label: 'All', value: 'All' }];
+  // const classOptions = useMemo(() => {
+  //   if (!classData) return [{ label: 'All', value: 'All' }];
 
-    return [
-      { label: 'All', value: 'All' },
-      // eslint-disable-next-line no-unsafe-optional-chaining
-      ...classData?.items.map((cls: any) => ({
-        label: cls.name, // Adjust this based on your actual API response structure
-        value: cls.id, // Adjust this based on your actual API response structure
-      })),
-    ];
-  }, [classData]);
+  //   return [
+  //     { label: 'All', value: 'All' },
+  //     // eslint-disable-next-line no-unsafe-optional-chaining
+  //     ...classData?.items.map((cls: any) => ({
+  //       label: cls.name, // Adjust this based on your actual API response structure
+  //       value: cls.id, // Adjust this based on your actual API response structure
+  //     })),
+  //   ];
+  // }, [classData]);
 
   const filteredData = useMemo(
     () =>
       teacherData.filter((item: any) => {
-        const findClass = classData?.items?.find((c: any) => c.id === selectedClass);
-        const matchesClass = selectedClass === 'All' || item.className === findClass?.name;
+        const findClass = classData?.items?.find((c: any) => c.id === classes);
+        const matchesClass = item.className === findClass?.name;
         const matchesSubject = selectedSubject === 'All' || item.subject === selectedSubject;
         return matchesClass && matchesSubject;
       }),
-    [teacherData, classData?.items, selectedClass, selectedSubject]
+    [teacherData, classData?.items, selectedSubject, classes]
   );
 
   return (
@@ -128,21 +132,34 @@ const Teacher = ({
         <CustomSelect
           label="Class"
           name="class"
-          options={classOptions}
+          options={classData?.items || []}
           formControlProps={{ sx: { width: '150px' } }}
-          value={selectedClass}
+          value={classes}
+          labelKey="name"
+          valueKey="id"
           onChange={(value) => {
-            setSearchParams?.({ classId: value as string });
+            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === value);
+            setClasses(selectedClass?.id);
+            setDivisionOptions(selectedClass?.divisions || []);
           }}
+        />
+        <CustomSelect
+          label="Division"
+          disabled={!classes}
+          labelKey="name"
+          valueKey="id"
+          options={divisionOptions}
+          value={division}
+          onChange={(val) => {
+            const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
+            setDivision(val as string);
+          }}
+          formControlProps={{ sx: { width: '150px' } }}
         />
       </Box>
       <CustomizableTable
         tableId="teacher-table"
         columns={[
-          {
-            id: 'className',
-            label: 'Class',
-          },
           {
             id: 'subject',
             label: 'Subject',
@@ -161,6 +178,7 @@ const Teacher = ({
           {
             id: 'action',
             label: 'Actions',
+            isFilter: false,
             isSort: false,
             render(value, row) {
               return (
