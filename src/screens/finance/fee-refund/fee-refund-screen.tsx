@@ -11,6 +11,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 
 import {
+  RequestStatusType,
+  RequestStatusTypeColors,
+  RequestStatusTypeOptions,
+} from 'src/enums/refund-request-status';
+import {
   FinancePaymentHistoryStatusType,
   FinancePaymentHistoryStatusOptions,
   FinancePaymentHistoryStatusTypeColors,
@@ -678,22 +683,15 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                 {
                   id: 'status',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: RequestStatusTypeOptions,
+                  minWidth: '180px',
+                  align: 'left',
                   render(value, row) {
+                    const color = RequestStatusTypeColors[value as RequestStatusType] as LabelColor;
+
                     return (
-                      <Label
-                        variant="soft"
-                        color={
-                          value === 'Rejected'
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : value === 'Approved'
-                                ? 'success'
-                                : 'default'
-                        }
-                      >
-                        {value}
-                      </Label>
+                      <Label color={color}>{RequestStatusType[value as RequestStatusType]}</Label>
                     );
                   },
                 },
@@ -754,7 +752,9 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
       {dialog.value && (
         <FinanceFeeRefundAllocationDialog
           dialogValue={dialog.value}
-          onClose={closeDialog}
+          onClose={() => {
+            dialog.onFalse();
+          }}
           selectedData={selectedStudent}
         />
       )}
