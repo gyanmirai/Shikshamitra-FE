@@ -105,36 +105,6 @@ const StudentNotificationScreen = () => {
         'Dear {student_name}, your current attendance is {attendance_percentage}%. Please ensure you maintain the required attendance to avoid any issues. Thank you!',
       conditionRule: 'Attendance < 80 %',
     },
-    // {
-    //     id: "2",
-    //     category: "",
-    //     subCategory: "",
-    //     typeOfNotification: "Time Based",
-    //     generateTime: "11:00 AM",
-    //     nameOfTheNotification: "Class Schedule Update",
-    //     occurance: "7",
-    //     role: ["Student"],
-    //     teacherRecipient: [],
-    //     studentRecipient: [10],
-    //     isActive: false,
-    //     communicationTypeForTeacher: ["Whatsapp", "SMS"],
-    //     communicationTypeForStudent: ["Whatsapp", "SMS"],
-    // },
-    // {
-    //     id: "3",
-    //     category: "",
-    //     subCategory: "",
-    //     typeOfNotification: "Event Based",
-    //     generateTime: "Instant",
-    //     nameOfTheNotification: "Inquiry Submitted",
-    //     occurance: "",
-    //     role: ["Student"],
-    //     teacherRecipient: ["All"],
-    //     studentRecipient: ["All"],
-    //     isActive: true,
-    //     communicationTypeForTeacher: ["Whatsapp", "SMS"],
-    //     communicationTypeForStudent: ["Whatsapp", "SMS"],
-    // },
   ];
 
   return (
@@ -188,38 +158,6 @@ const StudentNotificationScreen = () => {
                 },
               },
 
-              // {
-              //     id: "communicationTypeForStudent",
-              //     label: "Communication Type For Student",
-              //     render(value, row) {
-              //         return (
-              //             row.communicationTypeForStudent.length > 0 ? (<Box display="flex" flexWrap="wrap" gap={1}>
-              //                 {row.communicationTypeForStudent.length === 1
-              //                     ? row.communicationTypeForStudent[0]
-              //                     : row.communicationTypeForStudent.join(", ")
-              //                 }
-              //             </Box>) : (<Box p="2px"  >
-              //                 ----
-              //             </Box>)
-              //         );
-              //     },
-              // },
-              // {
-              //     id: "communicationTypeForTeacher",
-              //     label: "Communication Type For Teacher",
-              //     render(value, row) {
-              //         return (
-              //             row.communicationTypeForTeacher.length > 0 ? (<Box display="flex" flexWrap="wrap" gap={1}>
-              //                 {row.communicationTypeForTeacher.length === 1
-              //                     ? row.communicationTypeForTeacher[0]
-              //                     : row.communicationTypeForTeacher.join(", ")
-              //                 }
-              //             </Box>) : (<Box p="2px"  >
-              //                 ----
-              //             </Box>)
-              //         );
-              //     },
-              // },
               {
                 id: 'teacherRecipient',
                 label: 'Teacher Recipient',

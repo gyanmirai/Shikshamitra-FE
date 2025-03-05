@@ -1128,6 +1128,11 @@ const financeModule = {
           _action: 'finance-reports',
         },
         {
+          title: 'Notification',
+          path: '/finance/finance-notification',
+          _action: 'notification',
+        },
+        {
           title: 'Setting',
           path: '',
           _action: 'finance-settings',

@@ -24,6 +24,7 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({
   division,
 }) => {
   // Get and set search params (studentId, class, division)
+
   const [searchParams, setSearchParams] = useSearchParam({ studentId: '1' });
 
   // Update studentId in the URL

@@ -1,5 +1,7 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
+
 import React, { useState } from 'react';
 
 import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
@@ -7,6 +9,12 @@ import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/mater
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
+
+import {
+  FinancePaymentHistoryStatusType,
+  FinancePaymentHistoryStatusOptions,
+  FinancePaymentHistoryStatusTypeColors,
+} from 'src/enums/finance-payment-history';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -507,21 +515,18 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                 {
                   id: 'status',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: FinancePaymentHistoryStatusOptions,
+                  minWidth: '180px',
+                  align: 'left',
                   render(value, row) {
+                    const color = FinancePaymentHistoryStatusTypeColors[
+                      value as FinancePaymentHistoryStatusType
+                    ] as LabelColor;
+
                     return (
-                      <Label
-                        variant="soft"
-                        color={
-                          value === 'Rejected'
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : value === 'Approved'
-                                ? 'success'
-                                : 'default'
-                        }
-                      >
-                        {value}
+                      <Label color={color}>
+                        {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
                       </Label>
                     );
                   },

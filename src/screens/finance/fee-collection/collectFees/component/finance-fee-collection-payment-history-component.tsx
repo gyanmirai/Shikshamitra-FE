@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label';
+
 import React, { useState } from 'react';
 
 import { MenuItem, MenuList, Typography } from '@mui/material';
@@ -5,6 +7,12 @@ import { MenuItem, MenuList, Typography } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
+
+import {
+  FinancePaymentHistoryStatusType,
+  FinancePaymentHistoryStatusOptions,
+  FinancePaymentHistoryStatusTypeColors,
+} from 'src/enums/finance-payment-history';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -81,26 +89,22 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
               );
             },
           },
-          // { id: 'dueDate', label: 'Due Date' },
 
           {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: FinancePaymentHistoryStatusOptions,
+            minWidth: '180px',
+            align: 'left',
             render(value, row) {
+              const color = FinancePaymentHistoryStatusTypeColors[
+                value as FinancePaymentHistoryStatusType
+              ] as LabelColor;
+
               return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
+                <Label color={color}>
+                  {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
                 </Label>
               );
             },
