@@ -1,5 +1,7 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
+
 import React, { useState } from 'react';
 
 import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
@@ -7,6 +9,17 @@ import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/mater
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
+
+import {
+  RequestStatusType,
+  RequestStatusTypeColors,
+  RequestStatusTypeOptions,
+} from 'src/enums/refund-request-status';
+import {
+  FinancePaymentHistoryStatusType,
+  FinancePaymentHistoryStatusOptions,
+  FinancePaymentHistoryStatusTypeColors,
+} from 'src/enums/finance-payment-history';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -507,21 +520,18 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                 {
                   id: 'status',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: FinancePaymentHistoryStatusOptions,
+                  minWidth: '180px',
+                  align: 'left',
                   render(value, row) {
+                    const color = FinancePaymentHistoryStatusTypeColors[
+                      value as FinancePaymentHistoryStatusType
+                    ] as LabelColor;
+
                     return (
-                      <Label
-                        variant="soft"
-                        color={
-                          value === 'Rejected'
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : value === 'Approved'
-                                ? 'success'
-                                : 'default'
-                        }
-                      >
-                        {value}
+                      <Label color={color}>
+                        {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
                       </Label>
                     );
                   },
@@ -673,22 +683,15 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
                 {
                   id: 'status',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: RequestStatusTypeOptions,
+                  minWidth: '180px',
+                  align: 'left',
                   render(value, row) {
+                    const color = RequestStatusTypeColors[value as RequestStatusType] as LabelColor;
+
                     return (
-                      <Label
-                        variant="soft"
-                        color={
-                          value === 'Rejected'
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : value === 'Approved'
-                                ? 'success'
-                                : 'default'
-                        }
-                      >
-                        {value}
-                      </Label>
+                      <Label color={color}>{RequestStatusType[value as RequestStatusType]}</Label>
                     );
                   },
                 },
@@ -749,7 +752,9 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
       {dialog.value && (
         <FinanceFeeRefundAllocationDialog
           dialogValue={dialog.value}
-          onClose={closeDialog}
+          onClose={() => {
+            dialog.onFalse();
+          }}
           selectedData={selectedStudent}
         />
       )}

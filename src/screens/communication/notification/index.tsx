@@ -10,8 +10,10 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import eventList from './component/eventList';
 import SendCustomAlert from './component/send-custom-alert';
 import SendAlertToOthers from './component/send-alert-to-others';
+import AddEventListDialog from './component/add-eventList-dialog';
 import NotificationCategory from './component/notification-category';
 import CreateNotificationTemplates from './component/create-templates';
 import SendNotificationScreen from './component/send-notification-screen';
@@ -26,7 +28,7 @@ const COMPONENTS: any = {
   'notification-category': NotificationCategory,
   'send-alert-others': SendAlertToOthers,
   'send-custom-alert': SendCustomAlert,
-  // 'auto-notification-configuration': AutoNotificationConfigurationScreen,
+  event: eventList,
 };
 
 const TABS = [
@@ -37,12 +39,14 @@ const TABS = [
   { value: 'send-custom-alert', label: 'Send Custom Alert' },
   // { value: 'auto-notification-configuration', label: 'Auto Notification Configuration' },
   { value: 'auto-notification-configuration', label: 'Auto Notification Configuration' },
+  { value: 'event', label: 'Add Event' },
 ];
 
 const NotificationScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'send-notification' });
   const [openForNotificationCategory, setOpenForNotificationCategory] = useState(false);
   const [openForTemplates, setOpenForTemplates] = useState(false);
+  const [openAddEventCategory, setOpenEventCategory] = useState(false);
   const [openForAutoNotificationConfiguration, setOpenForAutoNotificationConfiguration] =
     useState(false);
 
@@ -62,6 +66,7 @@ const NotificationScreen = () => {
       setOpenForNotificationCategory(false);
       setOpenForTemplates(false);
       setOpenForAutoNotificationConfiguration(false);
+      setOpenEventCategory(false);
     },
     [setSearchParams]
   );
@@ -71,16 +76,25 @@ const NotificationScreen = () => {
       setOpenForTemplates(false);
       setOpenForNotificationCategory(true);
       setOpenForAutoNotificationConfiguration(false);
+      setOpenEventCategory(false);
     }
     if (breadcrumbTabName === 'Auto Notification Configuration') {
       setOpenForTemplates(false);
       setOpenForNotificationCategory(false);
       setOpenForAutoNotificationConfiguration(true);
+      setOpenEventCategory(false);
     }
     if (breadcrumbTabName === 'Notification Templates') {
       setOpenForTemplates(true);
       setOpenForNotificationCategory(false);
       setOpenForAutoNotificationConfiguration(false);
+      setOpenEventCategory(false);
+    }
+    if (breadcrumbTabName === 'Add Event') {
+      setOpenForTemplates(false);
+      setOpenForNotificationCategory(false);
+      setOpenForAutoNotificationConfiguration(false);
+      setOpenEventCategory(true);
     }
   };
 
@@ -88,6 +102,7 @@ const NotificationScreen = () => {
     setOpenForTemplates(false);
     setOpenForNotificationCategory(false);
     setOpenForAutoNotificationConfiguration(false);
+    setOpenEventCategory(false);
   };
   return (
     <Box>
@@ -102,6 +117,7 @@ const NotificationScreen = () => {
           breadcrumbTabName !== 'Send Custom Alert' &&
           (openForNotificationCategory ||
           openForTemplates ||
+          openAddEventCategory ||
           openForAutoNotificationConfiguration ? (
             <Button
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
@@ -138,6 +154,7 @@ const NotificationScreen = () => {
         {!openForTemplates &&
           !openForNotificationCategory &&
           !openForAutoNotificationConfiguration &&
+          !openAddEventCategory &&
           ActiveComponent && <ActiveComponent />}
       </Box>
 
@@ -145,6 +162,8 @@ const NotificationScreen = () => {
         <AddNotificationCategoryDialog onClose={() => setOpenForNotificationCategory(false)} />
       )}
       {openForTemplates && <AddNotificationTemplateDialog />}
+
+      {openAddEventCategory && <AddEventListDialog onClose={() => setOpenEventCategory(false)} />}
 
       {/* {openForAutoNotificationConfiguration && (
         <AutoNotificationConfigurationDialog onClose={() => setOpenForAutoNotificationConfiguration(false)} />

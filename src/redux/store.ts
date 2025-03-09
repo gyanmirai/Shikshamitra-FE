@@ -86,8 +86,8 @@ const reducers = combineReducers({
   [StudentAdmissionApi.reducerPath]: StudentAdmissionApi.reducer,
   [EnrollmentReportApi.reducerPath]: EnrollmentReportApi.reducer,
   [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
-  [StudentTakeAttendanceApi.reducerPath]: StudentTakeAttendanceApi.reducer,
   [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
+  [StudentTakeAttendanceApi.reducerPath]: StudentTakeAttendanceApi.reducer,
 });
 
 const store = configureStore({
@@ -128,8 +128,9 @@ const store = configureStore({
       .concat(StudentAdmissionApi.middleware)
       .concat(EnrollmentReportApi.middleware)
       .concat(StudentCertificateApi.middleware)
-      .concat(StudentTakeAttendanceApi.middleware)
-      .concat(studentGrNumberApi.middleware),
+      .concat(studentGrNumberApi.middleware)
+      .concat(StudentCertificateApi.middleware)
+      .concat(StudentTakeAttendanceApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

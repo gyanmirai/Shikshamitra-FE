@@ -63,7 +63,7 @@ const RoleConfigForNotification: React.FC<RoleConfigForNotificationProps> = ({
         disabled
       />
       <CustomSelect
-        disabled={fromSendManual}
+        // disabled={fromSendManual}
         multiple
         label="Select Communication Channel"
         options={[

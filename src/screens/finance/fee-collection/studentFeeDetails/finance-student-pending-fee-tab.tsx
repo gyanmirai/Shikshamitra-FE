@@ -1,8 +1,16 @@
+import type { LabelColor } from 'src/components/label';
+
 import React from 'react';
 
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
+
+import {
+  FinancePendingFeeStatusType,
+  FinancePendingFeeStatusTypeColors,
+  FinancePendingFeeStatusTypeOptions,
+} from 'src/enums/finance-pending-fee-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -64,24 +72,19 @@ const FinanceStudentPendingFeeTab = () => {
           {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: FinancePendingFeeStatusTypeOptions,
+            minWidth: '180px',
+            align: 'left',
             render(value, row) {
-              return value !== '' ? (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Upcoming'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
+              const color = FinancePendingFeeStatusTypeColors[
+                value as FinancePendingFeeStatusType
+              ] as LabelColor;
+
+              return (
+                <Label color={color}>
+                  {FinancePendingFeeStatusType[value as FinancePendingFeeStatusType]}
                 </Label>
-              ) : (
-                <Box />
               );
             },
           },

@@ -5,7 +5,15 @@ import { Typography } from '@mui/material';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable'; // Make sure Iconify is correctly imported
+import type { LabelColor } from 'src/components/label';
+
 import { formatNumber } from 'src/utils/formate_number';
+
+import {
+  PaymentStatusType,
+  PaymentStatusOptions,
+  PaymentStatusTypeColors,
+} from 'src/enums/payment-status';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -48,23 +56,14 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
             {
               id: 'paymentStatus',
               label: 'Status',
+              filterType: 'enum',
+              enumOptions: PaymentStatusOptions,
+              minWidth: '180px',
+              align: 'left',
               render(value, row) {
-                return (
-                  <Label
-                    variant="soft"
-                    color={
-                      value === 'Failed'
-                        ? 'error'
-                        : value === 'Pending'
-                          ? 'warning'
-                          : value === 'Success'
-                            ? 'success'
-                            : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                );
+                const color = PaymentStatusTypeColors[value as PaymentStatusType] as LabelColor;
+
+                return <Label color={color}>{PaymentStatusType[value as PaymentStatusType]}</Label>;
               },
             },
           ]}
