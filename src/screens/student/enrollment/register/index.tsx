@@ -1,11 +1,16 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -21,6 +26,8 @@ import type { IInquiryData } from '../Inquiry';
 const RegisterScreen = () => {
   const [editData, setEditData] = useState<null | IInquiryData>(null);
   const formDialog = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
   const links = formDialog.value
@@ -31,6 +38,18 @@ const RegisterScreen = () => {
         { name: 'Registration Form' },
       ]
     : [{ name: 'Student' }, { name: 'Student Enroll' }, { name: 'Registration' }];
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      formDialog.onFalse();
+      dispatch(setIsChanges(false));
+      setEditData(null);
+    } else {
+      formDialog.onFalse();
+      setEditData(null);
+    }
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -42,7 +61,7 @@ const RegisterScreen = () => {
             variant="contained"
             size="small"
             startIcon={formDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            onClick={formDialog.onToggle}
+            onClick={formDialog.value ? handleClose : formDialog.onTrue}
           >
             {formDialog.value ? 'Back' : 'Registration'}
           </Button>
@@ -50,13 +69,7 @@ const RegisterScreen = () => {
       />
       {formDialog.value ? (
         <Card sx={{ height: '100%', mt: 1 }}>
-          <RegisterForm
-            editData={editData}
-            handleClose={() => {
-              setEditData(null);
-              formDialog.onFalse();
-            }}
-          />
+          <RegisterForm editData={editData} handleClose={handleClose} />
         </Card>
       ) : (
         <RegistrationTable

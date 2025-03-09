@@ -2,20 +2,7 @@
 
 import React from 'react';
 
-import {
-  Box,
-  Grid,
-  Card,
-  List,
-  ListItem,
-  Typography,
-  CardHeader,
-  CardContent,
-} from '@mui/material';
-
-import DataTable from 'src/components/commonTable';
-
-import { StudentEnrollmentCard } from '../enrollment/dashboard/overview';
+import { Box, Card, List, ListItem, Typography, CardHeader, CardContent } from '@mui/material';
 
 import type { StudentTabsComponentType } from '.';
 
@@ -51,63 +38,67 @@ const TABS = [
 //     </Box>
 //   );
 // };
-const Records = (props: StudentTabsComponentType) => <RenderBehavioralRecord />;
+const Records = (props: StudentTabsComponentType) => {
+  console.log('records component render------------');
+
+  return (
+    <>
+      <Typography variant="h6">Records</Typography>
+
+      {/* <Box display="flex" gap={2}>
+        <StudentEnrollmentCard
+          icon="wpf:inspection"
+          title="Merits and Achievements"
+          count={2}
+          color="success.main"
+          bgColor="success"
+          labels={[
+            { name: 'Honor Roll (2022-2023)', color: 'success' },
+            { name: 'Volunteer of the Month (May 2023)', color: 'warning' },
+          ]}
+          index={0}
+        />
+        <StudentEnrollmentCard
+          icon="fluent-mdl2:account-activity"
+          title="Extracurricular Activities"
+          count={3}
+          color="warning.main"
+          bgColor="warning"
+          labels={[
+            { name: 'Honor Roll (2022-2023)', color: 'success' },
+            { name: 'Volunteer of the Month (May 2023)', color: 'warning' },
+          ]}
+          index={0}
+        />
+      </Box>
+      <Grid container spacing={2} mt={2}>
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle1">Disciplinary Incidents</Typography>
+
+          <DataTable
+            data={[{ date: '2023-03-15', incident: 'Disrupting Class', actionTaken: 'Warning' }]}
+            columns={[
+              { key: 'date', label: 'Date' },
+              { key: 'incident', label: 'Incident' },
+              { key: 'actionTaken', label: 'Action Taken' },
+            ]}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle1">Counseling Sessions</Typography>
+          <DataTable
+            data={[{ date: '2023-03-15', reason: 'Academic Support' }]}
+            columns={[
+              { key: 'date', label: 'Date' },
+              { key: 'reason', label: 'Reason' },
+            ]}
+          />
+        </Grid>
+      </Grid> */}
+    </>
+  );
+};
 export default Records;
-
-const RenderBehavioralRecord = () => (
-  <>
-    <Box display="flex" gap={2}>
-      <StudentEnrollmentCard
-        icon="wpf:inspection"
-        title="Merits and Achievements"
-        count={2}
-        color="success.main"
-        bgColor="success"
-        labels={[
-          { name: 'Honor Roll (2022-2023)', color: 'success' },
-          { name: 'Volunteer of the Month (May 2023)', color: 'warning' },
-        ]}
-        index={0}
-      />
-      <StudentEnrollmentCard
-        icon="fluent-mdl2:account-activity"
-        title="Extracurricular Activities"
-        count={3}
-        color="warning.main"
-        bgColor="warning"
-        labels={[
-          { name: 'Honor Roll (2022-2023)', color: 'success' },
-          { name: 'Volunteer of the Month (May 2023)', color: 'warning' },
-        ]}
-        index={0}
-      />
-    </Box>
-    <Grid container spacing={2} mt={2}>
-      <Grid item xs={12} md={6}>
-        <Typography variant="subtitle1">Disciplinary Incidents</Typography>
-
-        <DataTable
-          data={[{ date: '2023-03-15', incident: 'Disrupting Class', actionTaken: 'Warning' }]}
-          columns={[
-            { key: 'date', label: 'Date' },
-            { key: 'incident', label: 'Incident' },
-            { key: 'actionTaken', label: 'Action Taken' },
-          ]}
-        />
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Typography variant="subtitle1">Counseling Sessions</Typography>
-        <DataTable
-          data={[{ date: '2023-03-15', reason: 'Academic Support' }]}
-          columns={[
-            { key: 'date', label: 'Date' },
-            { key: 'reason', label: 'Reason' },
-          ]}
-        />
-      </Grid>
-    </Grid>
-  </>
-);
 
 const RenderHealthRecord = () => (
   <Box display="flex" gap={1}>

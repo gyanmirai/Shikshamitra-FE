@@ -21,6 +21,7 @@ import {
 
 import { UploadAvatar } from 'src/components/upload';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchemas } from './register-form-validation';
 import {
@@ -55,7 +56,7 @@ const RegisterForm = ({
   handleClose,
 }: {
   editData: null | IInquiryData;
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit?: boolean) => void;
 }) => {
   const [activeStep, setActiveStep] = useState(0);
 
@@ -404,7 +405,7 @@ const RegisterForm = ({
           if (!isLastStep) {
             setActiveStep(activeStep + 1);
           } else {
-            handleClose();
+            handleClose(null, true);
           }
         } catch (error) {
           console.log(error);
@@ -413,67 +414,69 @@ const RegisterForm = ({
         }
       }}
       renderItem={({ activeStep: step, formik, isBackClick }: any) => (
-        <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-          <Box display="flex" gap={2}>
-            {step === 0 && (
-              <Box flexGrow={1} display="flex" alignItems="center">
-                <UploadAvatar
-                  maxSize={3145728}
-                  onDrop={async (acceptedFiles: File[]) => {
-                    const value = acceptedFiles[0];
-                    const base64 = await fileToBase64(value);
-                    formik.setFieldValue('photo', base64);
-                  }}
-                  value={formik.values.photo}
-                  error={formik.touched.photo && Boolean(formik.errors.photo)}
-                />
-              </Box>
-            )}
-            <Grid container spacing={2.5}>
-              {allFields[step].map((field: FieldsType) => (
-                <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
-                  {field.renderComp ? (
-                    field.renderComp({ formik, field })
-                  ) : field.type === 'date' ? (
-                    <DatePicker
-                      label={field.label}
-                      name={field.name}
-                      value={formik.values[field.name]}
-                      format="DD/MM/YYYY"
-                      onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                      slotProps={{
-                        textField: {
-                          placeholder: field.placeholder,
-                          fullWidth: true,
-                          size: 'small',
-                          helperText: formik.touched[field.name] && formik.errors[field.name],
-                          error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                        },
-                      }}
-                    />
-                  ) : (
-                    <TextField
-                      key={field.name}
-                      type={field.type}
-                      size="small"
-                      label={field.label}
-                      name={field.name}
-                      placeholder={field.placeholder}
-                      value={formik.values[field.name]}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                      helperText={formik.touched[field.name] && formik.errors[field.name]}
-                      fullWidth
-                      // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                      {...(field?.otherProps || {})}
-                    />
-                  )}
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </FormSlider>
+        <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+          <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
+            <Box display="flex" gap={2}>
+              {step === 0 && (
+                <Box flexGrow={1} display="flex" alignItems="center">
+                  <UploadAvatar
+                    maxSize={3145728}
+                    onDrop={async (acceptedFiles: File[]) => {
+                      const value = acceptedFiles[0];
+                      const base64 = await fileToBase64(value);
+                      formik.setFieldValue('photo', base64);
+                    }}
+                    value={formik.values.photo}
+                    error={formik.touched.photo && Boolean(formik.errors.photo)}
+                  />
+                </Box>
+              )}
+              <Grid container spacing={2.5}>
+                {allFields[step].map((field: FieldsType) => (
+                  <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
+                    {field.renderComp ? (
+                      field.renderComp({ formik, field })
+                    ) : field.type === 'date' ? (
+                      <DatePicker
+                        label={field.label}
+                        name={field.name}
+                        value={formik.values[field.name]}
+                        format="DD/MM/YYYY"
+                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                        slotProps={{
+                          textField: {
+                            placeholder: field.placeholder,
+                            fullWidth: true,
+                            size: 'small',
+                            helperText: formik.touched[field.name] && formik.errors[field.name],
+                            error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                          },
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        key={field.name}
+                        type={field.type}
+                        size="small"
+                        label={field.label}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        value={formik.values[field.name]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                        helperText={formik.touched[field.name] && formik.errors[field.name]}
+                        fullWidth
+                        // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                        {...(field?.otherProps || {})}
+                      />
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </FormSlider>
+        </BackPopUpChecked>
       )}
     />
   );

@@ -224,7 +224,7 @@ const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
 };
 
 const RenderAcademicYear = (props: any) => {
-  const { formik } = props;
+  const { formik, isEdit } = props;
   const { values, setFieldValue, touched, errors } = formik;
   const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
@@ -239,6 +239,7 @@ const RenderAcademicYear = (props: any) => {
       value={values.academicYear}
       labelKey="name"
       valueKey="id"
+      disabled={!isEdit}
       onChange={(value) => setFieldValue('academicYear', value)}
       error={!!(touched.academicYear && errors.academicYear) || false}
       helperText={(touched.academicYear && errors.academicYear) || ''}
@@ -370,10 +371,11 @@ export const generalFormFields: FieldsType[] = [
     label: 'Contact Number',
     type: 'text',
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
       return (
         <PhoneInput
           name="mobileNo"
+          disabled={!isEdit}
           value={formik.values.mobileNo}
           onChange={(value) => {
             formik.setFieldValue('mobileNo', value);
@@ -393,11 +395,12 @@ export const generalFormFields: FieldsType[] = [
     label: 'Contact Number',
     type: 'text',
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
       return (
         <PhoneInput
           name="alternativeContactNumber"
           value={formik.values.alternativeContactNumber}
+          disabled={!isEdit}
           onChange={(value) => {
             formik.setFieldValue('alternativeContactNumber', value);
           }}
@@ -441,6 +444,7 @@ export const generalFormFields: FieldsType[] = [
         label="Date of Birth"
         name="dob"
         value={props.formik.values.dob}
+        disabled={!props.isEdit}
         format="DD/MM/YYYY"
         slotProps={{
           textField: {
@@ -479,6 +483,7 @@ export const generalFormFields: FieldsType[] = [
       <FormControl
         fullWidth
         error={props.formik.touched.gender && Boolean(props.formik.errors.gender)}
+        disabled={!props.isEdit}
       >
         <InputLabel
           id="dropdown-label"
@@ -519,6 +524,7 @@ export const generalFormFields: FieldsType[] = [
       <FormControl
         fullWidth
         error={props.formik.touched.castCategory && Boolean(props.formik.errors.castCategory)}
+        disabled={!props.isEdit}
       >
         <InputLabel
           id="dropdown-label"
@@ -587,10 +593,11 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
 
       return (
         <PhoneInput
+          disabled={!isEdit}
           name="primaryContactNumber"
           value={formik.values.primaryContactNumber}
           onChange={(value) => {
@@ -609,11 +616,12 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
 
       return (
         <PhoneInput
           name="parentContactNumber"
+          disabled={!isEdit}
           value={formik.values.parentContactNumber}
           onChange={(value) => {
             formik.setFieldValue('parentContactNumber', value);
@@ -646,10 +654,11 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
 
       return (
         <PhoneInput
+          disabled={!isEdit}
           name="studentContactNo"
           value={formik.values.studentContactNo}
           onChange={(value) => {
@@ -684,10 +693,11 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
 
       return (
         <PhoneInput
+          disabled={!isEdit}
           name="whatsAppContactNo"
           value={formik.values.whatsAppContactNo}
           onChange={(value) => {
@@ -707,7 +717,7 @@ export const communicationFields: FieldsType[] = [
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
       return (
         <>
           <Subheader
@@ -727,6 +737,7 @@ export const communicationFields: FieldsType[] = [
                 <StandardAddress.RenderAddressField
                   name="localAddressLine1"
                   label="Address Line 1"
+                  disabled={!isEdit}
                   value={formik.values.localAddressLine1}
                   onChange={formik.handleChange}
                   error={
@@ -740,6 +751,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="localAddressLine2"
                   label="Address Line 2"
                   value={formik.values.localAddressLine2}
@@ -755,6 +767,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="localAddressLine3"
                   label="Address Line 3"
                   value={formik.values.localAddressLine3}
@@ -771,6 +784,7 @@ export const communicationFields: FieldsType[] = [
 
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderCountry
+                  disabled={!isEdit}
                   name="localCountry"
                   value={formik.values.localCountry}
                   onChange={(value) => formik.setFieldValue('localCountry', value)}
@@ -785,6 +799,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderState
+                  disabled={!isEdit}
                   name="localState"
                   value={formik.values.localState}
                   onChange={formik.handleChange}
@@ -799,6 +814,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderCity
+                  disabled={!isEdit}
                   name="localCity"
                   value={formik.values.localCity}
                   onChange={formik.handleChange}
@@ -813,6 +829,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderPincode
+                  disabled={!isEdit}
                   name="localPincode"
                   value={formik.values.localPincode}
                   onChange={formik.handleChange}
@@ -837,7 +854,7 @@ export const communicationFields: FieldsType[] = [
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
       return (
         <>
           <Subheader
@@ -849,6 +866,7 @@ export const communicationFields: FieldsType[] = [
             <Checkbox
               checked={formik.values.sameAsLocalForPermanent}
               size="small"
+              disabled={!isEdit}
               sx={{ p: 0 }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -874,6 +892,7 @@ export const communicationFields: FieldsType[] = [
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="permanentAddressLine1"
                   label="Address Line 1"
                   value={formik.values.permanentAddressLine1}
@@ -892,6 +911,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="permanentAddressLine2"
                   label="Address Line 2"
                   value={formik.values.permanentAddressLine2}
@@ -910,6 +930,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="permanentAddressLine3"
                   label="Address Line 3"
                   value={formik.values.permanentAddressLine3}
@@ -930,6 +951,7 @@ export const communicationFields: FieldsType[] = [
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderCountry
                   name="permanentCountry"
+                  disabled={!isEdit}
                   value={formik.values.permanentCountry}
                   onChange={(value) => formik.setFieldValue('permanentCountry', value)}
                   error={formik.touched.permanentCountry && Boolean(formik.errors.permanentCountry)}
@@ -944,6 +966,7 @@ export const communicationFields: FieldsType[] = [
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderState
                   name="permanentState"
+                  disabled={!isEdit}
                   value={formik.values.permanentState}
                   onChange={formik.handleChange}
                   error={formik.touched.state && Boolean(formik.errors.permanentState)}
@@ -958,6 +981,7 @@ export const communicationFields: FieldsType[] = [
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderCity
                   name="permanentCity"
+                  disabled={!isEdit}
                   value={formik.values.permanentCity}
                   onChange={formik.handleChange}
                   error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
@@ -972,6 +996,7 @@ export const communicationFields: FieldsType[] = [
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderPincode
                   name="permanentPincode"
+                  disabled={!isEdit}
                   value={formik.values.permanentPincode}
                   onChange={formik.handleChange}
                   error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
@@ -995,7 +1020,7 @@ export const communicationFields: FieldsType[] = [
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
       return (
         <>
           <Subheader
@@ -1008,6 +1033,7 @@ export const communicationFields: FieldsType[] = [
           >
             <Checkbox
               checked={formik.values.emergencySameAsLocal}
+              disabled={!isEdit}
               onClick={(e) => {
                 e.stopPropagation();
               }}
@@ -1032,6 +1058,7 @@ export const communicationFields: FieldsType[] = [
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="emergencyAddressLine1"
                   label="Address Line 1"
                   value={formik.values.emergencyAddressLine1}
@@ -1050,6 +1077,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="emergencyAddressLine2"
                   label="Address Line 2"
                   value={formik.values.emergencyAddressLine2}
@@ -1068,6 +1096,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderAddressField
+                  disabled={!isEdit}
                   name="emergencyAddressLine3"
                   label="Address Line 3"
                   value={formik.values.emergencyAddressLine3}
@@ -1087,6 +1116,7 @@ export const communicationFields: FieldsType[] = [
 
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderCountry
+                  disabled={!isEdit}
                   name="emergencyCountry"
                   value={formik.values.emergencyCountry}
                   onChange={(value) => formik.setFieldValue('emergencyCountry', value)}
@@ -1101,6 +1131,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderState
+                  disabled={!isEdit}
                   name="emergencyState"
                   value={formik.values.emergencyState}
                   onChange={formik.handleChange}
@@ -1115,6 +1146,7 @@ export const communicationFields: FieldsType[] = [
               </Grid>
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderCity
+                  disabled={!isEdit}
                   name="emergencyCity"
                   value={formik.values.emergencyCity}
                   onChange={formik.handleChange}
@@ -1130,6 +1162,7 @@ export const communicationFields: FieldsType[] = [
               <Grid item xs={12} md={4}>
                 <StandardAddress.RenderPincode
                   name="emergencyPincode"
+                  disabled={!isEdit}
                   value={formik.values.emergencyPincode}
                   onChange={formik.handleChange}
                   error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
@@ -1165,6 +1198,7 @@ export const additionalDetailsFields: FieldsType[] = [
       return (
         <CustomSelect
           options={CategoryArray}
+          disabled={!props.isEdit}
           label="Category"
           value={props.formik.values.category}
           onChange={(value) => {
@@ -1185,6 +1219,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
+          disabled={!props.isEdit}
           options={YesNoArray as any}
           label="Right to Education"
           value={props.formik.values.RTE}
@@ -1206,6 +1241,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
+          disabled={!props.isEdit}
           options={YesNoArray as any}
           label="BPL Student"
           value={props.formik.values.bplStudent}
@@ -1233,6 +1269,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
+          disabled={!props.isEdit}
           options={YesNoArray as any}
           label="Person With Disability"
           value={props.formik.values.personWithDisability}
@@ -1263,9 +1300,10 @@ export const additionalDetailsFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props) {
-      const { formik } = props;
+      const { formik, isEdit } = props;
       return (
         <PhoneInput
+          disabled={!isEdit}
           name="emergencyContactNo"
           value={formik.values.emergencyContactNo}
           onChange={(value) => {
@@ -1286,6 +1324,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
+          disabled={!props.isEdit}
           options={YesNoArray as any}
           label="Single Parent Child"
           value={props.formik.values.singleParentChild}
@@ -1311,6 +1350,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <CustomSelect
+          disabled={!props.isEdit}
           options={YesNoArray as any}
           label="Single Child"
           value={props.formik.values.singleChild}
@@ -1332,6 +1372,7 @@ export const additionalDetailsFields: FieldsType[] = [
     renderComp(props: any) {
       return (
         <Autocomplete
+          disabled={!props.isEdit}
           loading={false}
           noOptionsText="No Student Found"
           fullWidth
@@ -1672,7 +1713,7 @@ export const bankDetailsInitialValues = (editData?: IInquiryData | null) => ({
 });
 
 function RenderFamilyInformation(props: any) {
-  const { formik } = props;
+  const { formik, isEdit } = props;
   const [student, setStudent] = useState([]);
 
   return (
@@ -1693,6 +1734,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherName && formik.errors.fatherName}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
               />
               <DatePicker
                 name="fatherDob"
@@ -1701,6 +1743,7 @@ function RenderFamilyInformation(props: any) {
                 onChange={(value) => {
                   formik.setFieldValue('fatherDob', value);
                 }}
+                disabled={!isEdit}
                 slotProps={{
                   textField: {
                     error: formik.touched.fatherDob && Boolean(formik.errors.fatherDob),
@@ -1719,6 +1762,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherOccupation && formik.errors.fatherOccupation}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
               />
               <TextField
                 name="fatherQualification"
@@ -1731,6 +1775,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherQualification && formik.errors.fatherQualification}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
               />
               <PhoneInput
                 name="fatherContactNo"
@@ -1740,6 +1785,7 @@ function RenderFamilyInformation(props: any) {
                 }}
                 placeholder="Enter Father Contact No."
                 label="Father Contact No."
+                disabled={!isEdit}
                 error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
               />
 
@@ -1752,6 +1798,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherEmail && formik.errors.fatherEmail}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
                 inputProps={{
                   startAdornment: (
                     <>
@@ -1772,6 +1819,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
               />
 
               <PhoneInput
@@ -1783,6 +1831,7 @@ function RenderFamilyInformation(props: any) {
                 label="Father Office No."
                 placeholder="Enter Father Office No."
                 error={formik.touched.fatherOfficeNo && Boolean(formik.errors.fatherOfficeNo)}
+                disabled={!isEdit}
               />
 
               <TextField
@@ -1798,6 +1847,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherOfficeAddress && formik.errors.fatherOfficeAddress}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
               />
               <TextField
                 name="fatherDesignation"
@@ -1808,11 +1858,13 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.fatherDesignation && formik.errors.fatherDesignation}
                 fullWidth
                 size="small"
+                disabled={!isEdit}
               />
 
               <TextField
                 name="fatherOrganization"
                 label="Father Organization"
+                disabled={!isEdit}
                 value={formik.values.fatherOrganization}
                 onChange={formik.handleChange}
                 error={
@@ -1826,6 +1878,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="fatherAadharNo"
                 label="Father Aadhar No."
+                disabled={!isEdit}
                 value={formik.values.fatherAadharNo}
                 onChange={formik.handleChange}
                 error={formik.touched.fatherAadharNo && Boolean(formik.errors.fatherAadharNo)}
@@ -1837,6 +1890,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="fatherRemarks"
                 label="Remarks"
+                disabled={!isEdit}
                 multiline
                 rows={3}
                 value={formik.values.fatherRemarks}
@@ -1852,6 +1906,7 @@ function RenderFamilyInformation(props: any) {
                 multiline
                 rows={3}
                 label="Father Address"
+                disabled={!isEdit}
                 value={formik.values.fatherAddress}
                 onChange={formik.handleChange}
                 error={formik.touched.fatherAddress && Boolean(formik.errors.fatherAddress)}
@@ -1871,6 +1926,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherName"
                 label="Mother Name"
+                disabled={!isEdit}
                 value={formik.values.motherName}
                 onChange={formik.handleChange}
                 error={formik.touched.motherName && Boolean(formik.errors.motherName)}
@@ -1881,6 +1937,7 @@ function RenderFamilyInformation(props: any) {
               <DatePicker
                 name="motherDob"
                 label="Mother DOB"
+                disabled={!isEdit}
                 value={formik.values.motherDob}
                 onChange={(value) => {
                   formik.setFieldValue('motherDob', value);
@@ -1897,6 +1954,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherOccupation"
                 label="Mother Occupation"
+                disabled={!isEdit}
                 value={formik.values.motherOccupation}
                 onChange={formik.handleChange}
                 error={formik.touched.motherOccupation && Boolean(formik.errors.motherOccupation)}
@@ -1907,6 +1965,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherQualification"
                 label="Mother Qualification"
+                disabled={!isEdit}
                 value={formik.values.motherQualification}
                 onChange={formik.handleChange}
                 error={
@@ -1918,6 +1977,7 @@ function RenderFamilyInformation(props: any) {
               />
               <PhoneInput
                 name="motherContactNo"
+                disabled={!isEdit}
                 value={formik.values.motherContactNo}
                 onChange={(value) => {
                   formik.setFieldValue('motherContactNo', value);
@@ -1930,6 +1990,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherEmail"
                 label="Mother Email"
+                disabled={!isEdit}
                 value={formik.values.motherEmail}
                 onChange={formik.handleChange}
                 error={formik.touched.motherEmail && Boolean(formik.errors.motherEmail)}
@@ -1950,6 +2011,7 @@ function RenderFamilyInformation(props: any) {
                 name="motherPassOutYear"
                 label="Mother Pass out Year"
                 type="number"
+                disabled={!isEdit}
                 value={formik.values.motherPassOutYear}
                 onChange={formik.handleChange}
                 error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
@@ -1960,6 +2022,7 @@ function RenderFamilyInformation(props: any) {
 
               <PhoneInput
                 name="motherOfficeNo"
+                disabled={!isEdit}
                 value={formik.values.motherOfficeNo}
                 onChange={(value) => {
                   formik.setFieldValue('motherOfficeNo', value);
@@ -1974,6 +2037,7 @@ function RenderFamilyInformation(props: any) {
                 multiline
                 rows={3}
                 label="Mother Office Address"
+                disabled={!isEdit}
                 value={formik.values.motherOfficeAddress}
                 onChange={formik.handleChange}
                 error={
@@ -1986,6 +2050,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherDesignation"
                 label="Mother Designation"
+                disabled={!isEdit}
                 value={formik.values.motherDesignation}
                 onChange={formik.handleChange}
                 error={formik.touched.motherDesignation && Boolean(formik.errors.motherDesignation)}
@@ -1997,6 +2062,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherOrganization"
                 label="Mother Organization"
+                disabled={!isEdit}
                 value={formik.values.motherOrganization}
                 onChange={formik.handleChange}
                 error={
@@ -2010,6 +2076,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherAadharNo"
                 label="Mother Aadhar No."
+                disabled={!isEdit}
                 value={formik.values.motherAadharNo}
                 onChange={formik.handleChange}
                 error={formik.touched.motherAadharNo && Boolean(formik.errors.motherAadharNo)}
@@ -2021,6 +2088,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherRemarks"
                 label="Remarks"
+                disabled={!isEdit}
                 multiline
                 rows={3}
                 value={formik.values.motherRemarks}
@@ -2034,6 +2102,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherAddress"
                 multiline
+                disabled={!isEdit}
                 rows={3}
                 label="Mother Address"
                 value={formik.values.motherAddress}
@@ -2055,6 +2124,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianName"
                 label="Guardian Name"
+                disabled={!isEdit}
                 value={formik.values.guardianName}
                 onChange={formik.handleChange}
                 error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
@@ -2065,6 +2135,7 @@ function RenderFamilyInformation(props: any) {
               <DatePicker
                 name="guardianDob"
                 label="Guardian DOB"
+                disabled={!isEdit}
                 value={formik.values.guardianDob}
                 onChange={(value) => {
                   formik.setFieldValue('guardianDob', value);
@@ -2081,6 +2152,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianOccupation"
                 label="Guardian Occupation"
+                disabled={!isEdit}
                 value={formik.values.guardianOccupation}
                 onChange={formik.handleChange}
                 error={
@@ -2093,6 +2165,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianQualification"
                 label="Guardian Qualification"
+                disabled={!isEdit}
                 value={formik.values.guardianQualification}
                 onChange={formik.handleChange}
                 error={
@@ -2107,6 +2180,7 @@ function RenderFamilyInformation(props: any) {
               />
               <PhoneInput
                 name="guardianContactNo"
+                disabled={!isEdit}
                 value={formik.values.guardianContactNo}
                 onChange={(value) => {
                   formik.setFieldValue('guardianContactNo', value);
@@ -2118,6 +2192,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianEmail"
                 label="Guardian Email"
+                disabled={!isEdit}
                 value={formik.values.guardianEmail}
                 onChange={formik.handleChange}
                 error={formik.touched.guardianEmail && Boolean(formik.errors.guardianEmail)}
@@ -2138,6 +2213,7 @@ function RenderFamilyInformation(props: any) {
                 name="guardianPassOutYear"
                 label="Guardian Pass out Year"
                 type="number"
+                disabled={!isEdit}
                 value={formik.values.guardianPassOutYear}
                 onChange={formik.handleChange}
                 error={
@@ -2150,6 +2226,7 @@ function RenderFamilyInformation(props: any) {
 
               <PhoneInput
                 name="guardianOfficeNo"
+                disabled={!isEdit}
                 value={formik.values.guardianOfficeNo}
                 onChange={(value) => {
                   formik.setFieldValue('guardianOfficeNo', value);
@@ -2164,6 +2241,7 @@ function RenderFamilyInformation(props: any) {
                 multiline
                 rows={3}
                 label="Guardian Office Address"
+                disabled={!isEdit}
                 value={formik.values.guardianOfficeAddress}
                 onChange={formik.handleChange}
                 error={
@@ -2179,6 +2257,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianDesignation"
                 label="Guardian Designation"
+                disabled={!isEdit}
                 value={formik.values.guardianDesignation}
                 onChange={formik.handleChange}
                 error={
@@ -2192,6 +2271,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianOrganization"
                 label="Guardian Organization"
+                disabled={!isEdit}
                 value={formik.values.guardianOrganization}
                 onChange={formik.handleChange}
                 error={
@@ -2207,6 +2287,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianAadharNo"
                 label="Guardian Aadhar No."
+                disabled={!isEdit}
                 value={formik.values.guardianAadharNo}
                 onChange={formik.handleChange}
                 error={formik.touched.guardianAadharNo && Boolean(formik.errors.guardianAadharNo)}
@@ -2218,6 +2299,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianRemarks"
                 label="Remarks"
+                disabled={!isEdit}
                 multiline
                 rows={3}
                 value={formik.values.guardianRemarks}
@@ -2233,13 +2315,13 @@ function RenderFamilyInformation(props: any) {
                 multiline
                 rows={3}
                 label="Guardian Address"
+                disabled={!isEdit || formik.values.sameAsFatherAddressForSpouse}
                 value={formik.values.guardianAddress}
                 onChange={formik.handleChange}
                 error={formik.touched.guardianAddress && Boolean(formik.errors.guardianAddress)}
                 helperText={formik.touched.guardianAddress && formik.errors.guardianAddress}
                 fullWidth
                 size="small"
-                disabled={formik.values.sameAsFatherAddressForSpouse}
               />
               {/* <FormControlLabel
                 control={
@@ -2265,6 +2347,7 @@ function RenderFamilyInformation(props: any) {
               Sibling Details
             </Typography>
             <Autocomplete
+              disabled={!isEdit}
               loading={false}
               noOptionsText="No Student Found"
               fullWidth

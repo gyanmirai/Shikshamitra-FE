@@ -160,6 +160,7 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn }) => <Library {...props} />,
   },
 ];
+
 export function StudentProfile() {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
@@ -196,11 +197,14 @@ export function StudentProfile() {
     searchValue: '',
   });
   const tabs = useTabs('dashboard');
+  // console.log('tabs---------', tabs);
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
+
+  // console.log('currentActiveComponent----', currentActiveComponent);
 
   const currentStudent = students.find((item) => item.id === Number(searchParams?.student));
 
@@ -287,6 +291,8 @@ export function StudentProfile() {
               {
                 id: 'action',
                 label: 'Action',
+                isSort: false,
+                isFilter: false,
                 render: (value, row) => (
                   <Button
                     onClick={() => {

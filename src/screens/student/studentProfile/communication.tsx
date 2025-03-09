@@ -1,3 +1,4 @@
+import type { LabelColor } from 'src/components/label';
 import type { Meeting } from 'src/screens/communication/meetings/AllMeetings';
 
 import dayjs from 'dayjs';
@@ -10,6 +11,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { varAlpha } from 'src/theme/styles';
 import { surveyData } from 'src/screens/communication/feedback/pastFeedback';
 import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
+import {
+  AttendanceStatusType,
+  AttendanceStatusOptions,
+  AttendanceStatusTypeColors,
+} from 'src/enums/attendance-type';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -292,6 +298,7 @@ const Communication = (props: StudentTabsComponentType) => {
             id: 'endDate',
             label: 'Submit Date',
             align: 'left',
+            filterType: 'date',
             minWidth: '180px',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
@@ -303,6 +310,7 @@ const Communication = (props: StudentTabsComponentType) => {
             id: 'responseRate',
             label: 'Response Rate',
             align: 'left',
+            filterType: 'number',
             minWidth: '180px',
             render(value, row) {
               return (
@@ -331,6 +339,7 @@ const Communication = (props: StudentTabsComponentType) => {
           {
             id: 'actions',
             label: 'Actions',
+            isFilter: false,
             isSort: false,
             render(value, row) {
               return (
@@ -363,6 +372,7 @@ const Communication = (props: StudentTabsComponentType) => {
             id: 'meetingDate',
             label: 'Meeting Date',
             align: 'left',
+            filterType: 'date',
             minWidth: '180px',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
@@ -423,14 +433,14 @@ const Communication = (props: StudentTabsComponentType) => {
           {
             id: 'status',
             label: 'Status',
-            render: (value: any, row: any) => (
-              <Label
-                variant="soft"
-                color={value === 'Present' ? 'primary' : value === 'Absent' ? 'error' : 'default'}
-              >
-                {value}
-              </Label>
-            ),
+            filterType: 'enum',
+            enumOptions: AttendanceStatusOptions,
+            render(value, row) {
+              const color = AttendanceStatusTypeColors[value as AttendanceStatusType] as LabelColor;
+              return (
+                <Label color={color}>{AttendanceStatusType[value as AttendanceStatusType]}</Label>
+              );
+            },
           },
         ]}
         data={meetingTableData}

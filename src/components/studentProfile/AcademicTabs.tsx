@@ -6,18 +6,17 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { Scrollbar } from '../scrollbar';
 import { CustomTabs } from '../custom-tabs';
-import AcademicActivity from './academicActivity';
-import AcademicDashboard from './academicDashboard';
-import AcademicPerformance from './AcademicPerformance';
+import AcademicTimetable from './academicTimetable';
+import SubjectPerformance from './subjectPerformance';
+import HomeworkAssignment from './homeworkAssignment';
 
 const TABS = [
-  { value: 'dashboard', label: 'Dashboard' },
-  { value: 'activity', label: 'Activity' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'studentPlanner', label: 'Student Planner' },
+  { value: 'timetable', label: 'Timetable' },
+  { value: 'subjectPerformace', label: 'Subject Performace' },
+  { value: 'homework/assignments', label: 'Homework/Assignments' },
 ];
 const AcademicTabs = () => {
-  const tabs = useTabs('dashboard');
+  const tabs = useTabs('timetable');
   return (
     <Card sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}>
       <CustomTabs
@@ -33,9 +32,9 @@ const AcademicTabs = () => {
 
       <Scrollbar sx={{ minHeight: 384 }}>
         <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-          {tabs.value === 'dashboard' && <AcademicDashboard />}
-          {tabs.value === 'activity' && <AcademicActivity />}
-          {tabs.value === 'performance' && <AcademicPerformance />}
+          {tabs.value === 'timetable' && <AcademicTimetable />}
+          {tabs.value === 'subjectPerformace' && <SubjectPerformance />}
+          {tabs.value === 'homework/assignments' && <HomeworkAssignment />}
         </Box>
       </Scrollbar>
     </Card>

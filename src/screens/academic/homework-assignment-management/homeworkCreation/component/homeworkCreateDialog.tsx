@@ -40,7 +40,7 @@ const assignmentInitialValues: Assignment = {
   description: '',
   class: '',
   division: [],
-  subject: '',
+  subjects: [],
   submissionType: '',
   dueDate: null,
   dueTime: null,
@@ -91,7 +91,7 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
 
   return (
     <Box>
-      <Scrollbar sx={{ p: 2, height: '450px' }}>
+      <Scrollbar sx={{ p: 2, height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -100,7 +100,6 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                 options={classData?.items || []}
                 value={classes}
                 isLoading={isLoading}
-                disabled
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
@@ -135,15 +134,16 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Subject"
-                disabled
+                disabled={!formik.values.division}
                 options={[
                   { value: 'math', label: 'Mathematics' },
                   { value: 'science', label: 'Science' },
                   { value: 'history', label: 'History' },
                   { value: 'english', label: 'English' },
                 ]}
-                value={formik.values.subject}
-                onChange={(val) => formik.setFieldValue('subject', val)}
+                multiple
+                value={formik.values.subjects}
+                onChange={(val) => formik.setFieldValue('subjects', val)}
                 formControlProps={{ fullWidth: true }}
               />
             </Grid>
@@ -207,26 +207,51 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
               </Grid>
             )}
 
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Description"
+                name="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                error={formik.touched.description && Boolean(formik.errors.description)}
+                helperText={formik.touched.description && formik.errors.description}
+              />
+            </Grid>
+
             {view === 'assignment' && (
               <>
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom>
                     Rubric Selection
                   </Typography>
-                  <RadioGroup
-                    row
-                    value={rubricType}
-                    onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-                  >
-                    <FormControlLabel
-                      value="predefined"
-                      control={<Radio />}
-                      label="Predefined Rubric"
-                    />
-                    <FormControlLabel value="custom" control={<Radio />} label="Custom Rubric" />
-                  </RadioGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formik.values.rubricRequired}
+                        onChange={(e) => formik.setFieldValue('rubricRequired', e.target.checked)}
+                      />
+                    }
+                    label="Rubric Required"
+                  />
+                  {formik.values.rubricRequired && (
+                    <RadioGroup
+                      row
+                      value={rubricType}
+                      onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+                    >
+                      <FormControlLabel
+                        value="predefined"
+                        control={<Radio />}
+                        label="Predefined Rubric"
+                      />
+                      <FormControlLabel value="custom" control={<Radio />} label="Custom Rubric" />
+                    </RadioGroup>
+                  )}
                 </Grid>
-                {rubricType === 'predefined' ? (
+                {rubricType === 'predefined' && formik.values.rubricRequired ? (
                   <Grid item xs={12}>
                     <UploadBox
                       onDrop={(acceptedFiles) => {
@@ -254,7 +279,7 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                       }}
                     />
                   </Grid>
-                ) : (
+                ) : formik.values.rubricRequired ? (
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -268,21 +293,23 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                       variant="outlined"
                     />
                   </Grid>
-                )}
+                ) : null}
               </>
             )}
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Description"
-                name="description"
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                label="Today's Date"
+                value={formik.values.todaysDate}
+                onChange={(date) => formik.setFieldValue('todaysDate', date)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: formik.touched.todaysDate && Boolean(formik.errors.todaysDate),
+                    helperText: formik.touched.todaysDate && formik.errors.todaysDate,
+                  },
+                }}
               />
             </Grid>
 
@@ -292,7 +319,7 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
 
             {/* Submission Details */}
             {view === 'homework' && (
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <FormControlLabel
                   control={
                     <Checkbox

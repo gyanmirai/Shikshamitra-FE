@@ -36,6 +36,11 @@ import { paper, varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentRegistrationQuery } from 'src/redux/student/admission/admission-api';
 import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
+import {
+  AdmissionPaymentStatusType,
+  AdmissionPaymentStatusOptions,
+  AdmissionPaymentStatusTypeColors,
+} from 'src/enums/admission-payment-statusType';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -466,7 +471,7 @@ const AdmissionScreen = () => {
     currentQueryAndMutation: useGetStudentRegistrationQuery,
   });
 
-  console.log(admissionData);
+  console.log('admissionData----', admissionData);
 
   const counts = useMemo(
     () => ({
@@ -649,16 +654,21 @@ const AdmissionScreen = () => {
           { id: 'Code', label: 'Code' },
           { id: 'class', label: 'Class' },
           { id: 'Organization', label: 'Organization' },
-          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '162px' },
-          { id: 'totalAmount', label: 'Total Amount', minWidth: '135px' },
-          { id: 'paidAmount', label: 'Paid Amount', minWidth: '125px' },
+          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '170px' },
+          { id: 'totalAmount', label: 'Total Amount', minWidth: '135px', filterType: 'number' },
+          { id: 'paidAmount', label: 'Paid Amount', minWidth: '125px', filterType: 'number' },
           {
             id: 'StatusName',
-            label: 'Status',
+            label: 'Payment Status',
+            filterType: 'enum',
+            enumOptions: AdmissionPaymentStatusOptions,
             render(value, row) {
+              const color = AdmissionPaymentStatusTypeColors[
+                value as AdmissionPaymentStatusType
+              ] as LabelColor;
               return (
-                <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
-                  {value}
+                <Label color={color}>
+                  {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
                 </Label>
               );
             },

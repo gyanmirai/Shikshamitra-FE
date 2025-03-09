@@ -195,8 +195,8 @@ const Libraray = (props: StudentTabsComponentType) => {
           columns={[
             { id: 'bookId', label: 'Book Id' },
             { id: 'bookName', label: 'Title' },
-            { id: 'issueDate', label: 'Issue Date' },
-            { id: 'dueDate', label: 'Due Date' },
+            { id: 'issueDate', label: 'Issue Date', filterType: 'date' },
+            { id: 'dueDate', label: 'Due Date', filterType: 'date' },
             { id: 'daysOverdue', label: 'Days Overdue' },
           ]}
         />
@@ -209,8 +209,8 @@ const Libraray = (props: StudentTabsComponentType) => {
           columns={[
             { id: 'bookId', label: 'Book Id' },
             { id: 'bookName', label: 'Title' },
-            { id: 'issueDate', label: 'Issue Date' },
-            { id: 'returnDate', label: 'Return Date' },
+            { id: 'issueDate', label: 'Issue Date', filterType: 'date' },
+            { id: 'returnDate', label: 'Return Date', filterType: 'date' },
           ]}
         />
       )}

@@ -11,6 +11,7 @@ import { PDFViewer } from '@react-pdf/renderer';
 import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
@@ -54,7 +55,7 @@ export interface Assignment {
   description: string;
   class: string;
   division: string[];
-  subject: string;
+  subjects: string[];
   submissionType: string;
   dueDate: Dayjs | null;
   dueTime: Dayjs | null;
@@ -68,6 +69,7 @@ export interface Assignment {
   parentAcknowledgement?: boolean;
   isRecurring?: boolean;
   recurringFrequency?: string;
+  todaysDate?: Dayjs | null;
   dayOfSubmission?: string;
   endDate?: Dayjs | null;
   scheduleDate?: Dayjs | null;
@@ -75,132 +77,143 @@ export interface Assignment {
   assignmentType?: string;
   evaluationCriteria?: string;
   assignedResources?: string;
+  rubricRequired?: boolean;
   rubric?: string;
   isScheduled: boolean;
 }
 
-const initialData: Assignment[] = [
+export const initialData: Assignment[] = [
   {
     class: '10',
     division: ['A'],
     title: 'Math Practice Problems',
-    subject: 'Mathematics',
+    subjects: ['Mathematics'],
     description: 'Solve problems from Chapter 5 on Linear Equations.',
     dueDate: null,
     dueTime: null,
     submissionType: 'Online',
     status: 'draft',
     chapters: ['Linear Equations'],
-    homeworkType: 'Practice Questions', // Homework-specific field
+    homeworkType: 'Practice Questions',
     isDailyTask: true,
     parentAcknowledgement: true,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'Workbook Page 32-34',
-    evaluationCriteria: '', // Not applicable for homework
-    rubric: '', // Not applicable for homework
+    evaluationCriteria: '',
+    rubric: '',
+    rubricRequired: false,
     assignmentType: '',
     attachments: [],
     createdBy: '',
     endDate: dayjs('2024-12-10'),
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '9',
     division: ['B'],
     title: 'Science Project',
-    subject: 'Science',
+    subjects: ['Science'],
     description: 'Prepare a working model of the solar system.',
     dueDate: dayjs('2024-12-15'),
     dueTime: dayjs('23:59'),
     submissionType: 'In-Person',
     status: 'publish',
     chapters: ['Solar System'],
-    assignmentType: 'Project Work', // Assignment-specific field
+    assignmentType: 'Project Work',
     isDailyTask: false,
     parentAcknowledgement: false,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'Chapter 7: The Solar System',
-    evaluationCriteria: 'Model Design, Explanation, Creativity', // Assignment-specific field
-    rubric: 'Include all 8 planets with labels.', // Assignment-specific field
+    evaluationCriteria: 'Model Design, Explanation, Creativity',
+    rubric: 'Include all 8 planets with labels.',
+    rubricRequired: true,
     homeworkType: '',
     attachments: [],
     createdBy: '',
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '8',
     division: ['C'],
     title: 'History Essay',
-    subject: 'History',
+    subjects: ['History'],
     description: 'Write an essay on the causes and effects of World War II.',
     dueDate: dayjs('2024-12-20'),
     dueTime: dayjs('23:59'),
     submissionType: 'Online',
     status: 'draft',
     chapters: ['World War II'],
-    assignmentType: 'Essay Writing', // Assignment-specific field
+    assignmentType: 'Essay Writing',
     isDailyTask: false,
     parentAcknowledgement: true,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'History Textbook Chapter 10',
-    evaluationCriteria: 'Content, Structure, Grammar, and Relevance', // Assignment-specific field
-    rubric: 'Include at least 3 major causes and their effects.', // Assignment-specific field
+    evaluationCriteria: 'Content, Structure, Grammar, and Relevance',
+    rubric: 'Include at least 3 major causes and their effects.',
+    rubricRequired: true,
     homeworkType: '',
     attachments: [],
     createdBy: '',
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '7',
     division: ['D'],
     title: 'Geography Map Work',
-    subject: 'Geography',
+    subjects: ['Geography'],
     description: 'Mark and label the major rivers of India on the map.',
     dueDate: dayjs('2024-12-12'),
     dueTime: dayjs('18:00'),
     submissionType: 'In-Person',
     status: 'draft',
     chapters: ['Indian Rivers'],
-    homeworkType: 'Map Work', // Homework-specific field
+    homeworkType: 'Map Work',
     isDailyTask: false,
     parentAcknowledgement: false,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'Map and Atlas',
-    evaluationCriteria: '', // Not applicable for homework
-    rubric: '', // Not applicable for homework
+    evaluationCriteria: '',
+    rubric: '',
+    rubricRequired: false,
     assignmentType: '',
     attachments: [],
     createdBy: '',
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '6',
     division: ['E'],
     title: 'English Reading Task',
-    subject: 'English',
+    subjects: ['English'],
     description: 'Read and summarize Chapter 3 of your textbook.',
     dueDate: null,
     dueTime: null,
     submissionType: 'Online',
     status: 'publish',
     chapters: ['Reading Comprehension'],
-    homeworkType: 'Summary Writing', // Homework-specific field
+    homeworkType: 'Summary Writing',
     isDailyTask: true,
     parentAcknowledgement: true,
     isRecurring: true,
     recurringFrequency: 'Weekly',
     assignedResources: 'Textbook Chapter 3',
-    evaluationCriteria: '', // Not applicable for homework
-    rubric: '', // Not applicable for homework
+    evaluationCriteria: '',
+    rubric: '',
+    rubricRequired: false,
     assignmentType: '',
     attachments: [],
     createdBy: '',
     endDate: null,
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
 ];
 
@@ -210,6 +223,8 @@ const HomeworkCreation = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
   const [subject, setSubject] = useState<string>('');
   const [division, setDivision] = useState<string>('');
+  const [homeworkDate, setHomeworkDate] = useState<Dayjs | null>(null);
+  const [assignmentDate, setAssignmentDate] = useState<Dayjs | null>(null);
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -278,6 +293,17 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Homework Type',
       minWidth: '200px',
       align: 'left',
+    },
+    {
+      id: 'todaysDate',
+      label: 'Creation Date',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('DD MMM YYYY') : '-'}
+        </Typography>
+      ),
     },
     {
       id: 'dueDate',
@@ -358,6 +384,17 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Assignment Type',
       minWidth: '200px',
       align: 'left',
+    },
+    {
+      id: 'todaysDate',
+      label: 'Creation Date',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('DD MMM YYYY') : '-'}
+        </Typography>
+      ),
     },
     {
       id: 'dueDate',
@@ -551,6 +588,37 @@ const HomeworkCreation = (props: TabComponentType) => {
                 sx: { width: '100%', maxWidth: '150px' },
               }}
             />
+            {view === 'homework' ? (
+              <DatePicker
+                label="Homework Date"
+                name="homeworkDate"
+                value={homeworkDate}
+                format="DD/MM/YYYY"
+                onChange={(val) => {
+                  setHomeworkDate(val);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            ) : (
+              <DatePicker
+                label="Assignment Date"
+                name="assignmentDate"
+                value={assignmentDate}
+                format="DD/MM/YYYY"
+                onChange={(val) => {
+                  setAssignmentDate(val);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            )}
           </Box>
           <CustomizableTable
             tableId="homework-assignment-management"

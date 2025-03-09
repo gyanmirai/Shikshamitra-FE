@@ -72,8 +72,8 @@ const LeaveAndAbsentScreen = () => {
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
           { id: 'leaveType', label: 'Leave Type' },
-          { id: 'startDate', label: 'Start Date' },
-          { id: 'endDate', label: 'End Date' },
+          { id: 'startDate', label: 'Start Date', filterType: 'date' },
+          { id: 'endDate', label: 'End Date', filterType: 'date' },
           { id: 'description', label: 'Description' },
           { id: 'remarks', label: 'Remarks' },
           {
@@ -95,6 +95,7 @@ const LeaveAndAbsentScreen = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <Box display="flex" gap={1}>

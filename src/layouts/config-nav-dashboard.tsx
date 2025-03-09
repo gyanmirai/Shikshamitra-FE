@@ -577,21 +577,21 @@ const academicModule = {
           path: '',
           _action: 'curriculum-management',
           children: [
-            {
-              title: 'Dashboard',
-              path: '/academic/curriculumDashboard',
-              _action: 'curriculum-management-dashboard',
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: '/academic/curriculumDashboard',
+            //   _action: 'curriculum-management-dashboard',
+            // },
             {
               title: 'Subject',
               path: '/academic/curriculumSubjects',
               _action: 'curriculum-management-subjects',
             },
-            {
-              title: 'Curriculum Overview',
-              path: '/academic/curriculumOverview',
-              _action: 'student-enrollment-curriculumOverview',
-            },
+            // {
+            //   title: 'Curriculum Overview',
+            //   path: '/academic/curriculumOverview',
+            //   _action: 'student-enrollment-curriculumOverview',
+            // },
             {
               title: 'Teacher',
               path: '/academic/teacher',
@@ -614,11 +614,11 @@ const academicModule = {
           path: '/academic/course-management',
           _action: 'course-management',
           children: [
-            {
-              title: 'Dashboard',
-              path: '/academic/courseDashboard',
-              _action: 'course-management-dashboard',
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: '/academic/courseDashboard',
+            //   _action: 'course-management-dashboard',
+            // },
             {
               title: 'Syllabus Management',
               path: '/academic/courseSubjects',
