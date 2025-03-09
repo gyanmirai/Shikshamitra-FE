@@ -1,17 +1,22 @@
 'use client';
 
 import type { YesNo } from 'src/enums/yes-no';
+import type { RootState } from 'src/redux/store';
 import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
 import type { EmployeeCastType } from 'src/enums/employee-cast';
+import type { ICity, IState, ICountry } from 'country-state-city';
 import type { Board, Medium, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -37,9 +42,9 @@ export interface IInquiryData {
   parentContactNumber: string;
   alternativeContactNumber: string;
   dueDate?: string;
-  country: string;
-  city: string;
-  state: string;
+  country: ICountry;
+  city: ICity;
+  state: IState;
   pinCode: number;
   address: string;
   addressLine1: string;
@@ -182,6 +187,8 @@ export interface StudentAdditionalDetails {
 }
 const InquiryScreen = () => {
   const [editData, setEditData] = useState<null | IInquiryData>(null);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
   const links = dialog.value
@@ -193,9 +200,15 @@ const InquiryScreen = () => {
       ]
     : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
 
-  const handleClose = () => {
-    dialog.onFalse();
-    setEditData(null);
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dispatch(setIsChanges(false));
+      dialog.onFalse();
+      setEditData(null);
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setEditData(null);
+    }
   };
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

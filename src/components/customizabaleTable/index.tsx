@@ -658,7 +658,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               <TableRow>
                 {columns.some((column) => column.children) && <TableCell />}
                 {columns.map(
-                  (column) =>
+                  (column, index) =>
                     columnVisibility[column.id] && (
                       <TableCell
                         key={column.id}
@@ -668,6 +668,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           width: column.minWidth,
                           position: column.sticky ? 'sticky' : 'relative',
                           left: column.sticky ? 0 : 'auto',
+                          right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
                           zIndex: column.sticky ? 2 : 'auto',
                           backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                           boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
@@ -814,7 +815,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                         </TableCell>
                       )}
                       {columns.map(
-                        (column) =>
+                        (column, ind) =>
                           columnVisibility[column.id] && (
                             <TableCell
                               key={column.id}
@@ -824,6 +825,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 fontSize: '13px',
                                 position: column.sticky ? 'sticky' : 'static',
                                 left: column.sticky ? 0 : 'auto',
+                                right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
                                 zIndex: column.sticky ? 2 : 'auto',
                                 backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                                 boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',

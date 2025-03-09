@@ -117,6 +117,7 @@ const RegistrationFormScreen = () => {
             label: 'Actions',
             isFilter: true,
             isSort: false,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions

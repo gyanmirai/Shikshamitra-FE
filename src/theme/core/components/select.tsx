@@ -36,6 +36,11 @@ const MuiSelect: Components<Theme>['MuiSelect'] = {
       height: 18,
       top: 'calc(50% - 9px)',
     },
+    root: {
+      '&.Mui-disabled': {
+        cursor: 'no-drop',
+      },
+    },
   },
 };
 
@@ -56,6 +61,11 @@ const MuiNativeSelect: Components<Theme>['MuiNativeSelect'] = {
       width: 18,
       height: 18,
       top: 'calc(50% - 9px)',
+    },
+    root: {
+      '&.Mui-disabled': {
+        cursor: 'no-drop',
+      },
     },
   },
 };

@@ -10,6 +10,7 @@ import {
   Tab,
   Box,
   Tabs,
+  Stack,
   Button,
   MenuList,
   MenuItem,
@@ -243,6 +244,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
   const formik = useFormik({
     initialValues: {
       class: editData ? editData.name : '',
+      limit: editData ? editData.limit : 0,
     },
     validationSchema: Yup.object().shape({
       class: Yup.string().required('Class is required'),
@@ -269,18 +271,32 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <TextField
-        fullWidth
-        id="class"
-        name="class"
-        label="class Name"
-        value={formik.values.class}
-        onChange={formik.handleChange}
-        error={formik.touched.class && Boolean(formik.errors.class)}
-        // @ts-ignore
-        helperText={formik.touched.class && formik.errors.class}
-        size="small"
-      />
+      <Stack spacing={2} direction="column">
+        <TextField
+          fullWidth
+          id="class"
+          name="class"
+          label="Class Name"
+          value={formik.values.class}
+          onChange={formik.handleChange}
+          error={formik.touched.class && Boolean(formik.errors.class)}
+          // @ts-ignore
+          helperText={formik.touched.class && formik.errors.class}
+          size="small"
+        />
+        <TextField
+          fullWidth
+          id="limitOfAge"
+          name="limit"
+          label="Limit Of Age"
+          value={formik.values.limit}
+          onChange={formik.handleChange}
+          error={formik.touched.limit && Boolean(formik.errors.limit)}
+          // @ts-ignore
+          helperText={formik.touched.limit && formik.errors.limit}
+          size="small"
+        />
+      </Stack>
       <DialogActions>
         <Button variant="outlined" size="small" onClick={handleClose}>
           Cancel

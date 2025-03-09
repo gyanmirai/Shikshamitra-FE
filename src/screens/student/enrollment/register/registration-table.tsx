@@ -187,6 +187,7 @@ const RegistrationTable = ({
           id: 'actions',
           label: 'Actions',
           isSort: false,
+          sticky: true,
           render(value, row) {
             return (
               <ThreeDotsActions

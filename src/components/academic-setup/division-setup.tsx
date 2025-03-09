@@ -235,6 +235,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
     initialValues: {
       division: editData ? editData.name : '',
       strength: editData ? editData.strength : '',
+      roomNo: editData ? editData.roomNo : '',
     },
     validationSchema: Yup.object().shape({
       division: Yup.string().required('Division is required'),
@@ -287,6 +288,19 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
         error={formik.touched.strength && Boolean(formik.errors.strength)}
         // @ts-ignore
         helperText={formik.touched.strength && formik.errors.strength}
+        size="small"
+      />
+      <TextField
+        fullWidth
+        sx={{ mt: 2 }}
+        id="roomNo"
+        name="roomNo"
+        label="Room No"
+        value={formik.values.roomNo}
+        onChange={formik.handleChange}
+        error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
+        // @ts-ignore
+        helperText={formik.touched.roomNo && formik.errors.roomNo}
         size="small"
       />
       <DialogActions>

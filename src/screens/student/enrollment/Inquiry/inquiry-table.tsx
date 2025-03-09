@@ -118,6 +118,7 @@ const InquiryTable = ({
           id: 'actions',
           label: 'Actions',
           isFilter: false,
+          sticky: true,
           render(value, row) {
             return (
               <ThreeDotsActions
