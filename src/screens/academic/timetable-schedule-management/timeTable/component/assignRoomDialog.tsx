@@ -8,12 +8,13 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 
 interface AssignRoomProps {
+  selectedRoom: string;
   slotData: any;
   onRoomSelect: (value: string) => void;
 }
 
-const AssignRoom: React.FC<AssignRoomProps> = ({ slotData, onRoomSelect }) => {
-  const [selectedRoom, setSelectedRoom] = useState(slotData?.room || '');
+const AssignRoom: React.FC<AssignRoomProps> = ({ selectedRoom, slotData, onRoomSelect }) => {
+  const [room, setRoom] = useState<string>(selectedRoom || '');
   const handleSubmit = () => {
     onRoomSelect(selectedRoom);
   };
@@ -26,7 +27,7 @@ const AssignRoom: React.FC<AssignRoomProps> = ({ slotData, onRoomSelect }) => {
             <Grid item xs={12}>
               <CustomSelect
                 label="Room"
-                name="teacher"
+                name="room"
                 options={[
                   { id: 'A101', name: 'A101' },
                   { id: 'A102', name: 'A102' },
@@ -34,9 +35,9 @@ const AssignRoom: React.FC<AssignRoomProps> = ({ slotData, onRoomSelect }) => {
                 ]}
                 labelKey="name"
                 valueKey="id"
-                value={selectedRoom}
+                value={room}
                 onChange={(value) => {
-                  setSelectedRoom(value);
+                  setRoom(value as string);
                 }}
                 // disabled={!formik.values.subject}
                 // error={formik.touched.teacher && Boolean(formik.errors.teacher)}

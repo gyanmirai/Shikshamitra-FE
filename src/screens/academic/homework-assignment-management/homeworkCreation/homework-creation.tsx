@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { Division, Standards } from 'src/types/school';
 import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -10,10 +11,10 @@ import { PDFViewer } from '@react-pdf/renderer';
 import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
-  Chip,
   Card,
   Button,
   Switch,
@@ -31,6 +32,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Label } from 'src/components/label';
@@ -52,7 +55,7 @@ export interface Assignment {
   description: string;
   class: string;
   division: string[];
-  subject: string;
+  subjects: string[];
   submissionType: string;
   dueDate: Dayjs | null;
   dueTime: Dayjs | null;
@@ -60,12 +63,13 @@ export interface Assignment {
   createdBy: string;
   status: string;
   // Homework-Specific Fields
-  topic?: string;
+  chapters?: string[];
   homeworkType?: string;
   isDailyTask?: boolean;
   parentAcknowledgement?: boolean;
   isRecurring?: boolean;
   recurringFrequency?: string;
+  todaysDate?: Dayjs | null;
   dayOfSubmission?: string;
   endDate?: Dayjs | null;
   scheduleDate?: Dayjs | null;
@@ -73,138 +77,159 @@ export interface Assignment {
   assignmentType?: string;
   evaluationCriteria?: string;
   assignedResources?: string;
-  customRubric?: string;
+  rubricRequired?: boolean;
+  rubric?: string;
   isScheduled: boolean;
 }
 
-const initialData: Assignment[] = [
+export const initialData: Assignment[] = [
   {
     class: '10',
     division: ['A'],
     title: 'Math Practice Problems',
-    subject: 'Mathematics',
+    subjects: ['Mathematics'],
     description: 'Solve problems from Chapter 5 on Linear Equations.',
     dueDate: null,
     dueTime: null,
     submissionType: 'Online',
     status: 'draft',
-    topic: 'Linear Equations',
-    homeworkType: 'Practice Questions', // Homework-specific field
+    chapters: ['Linear Equations'],
+    homeworkType: 'Practice Questions',
     isDailyTask: true,
     parentAcknowledgement: true,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'Workbook Page 32-34',
-    evaluationCriteria: '', // Not applicable for homework
-    customRubric: '', // Not applicable for homework
+    evaluationCriteria: '',
+    rubric: '',
+    rubricRequired: false,
     assignmentType: '',
     attachments: [],
     createdBy: '',
     endDate: dayjs('2024-12-10'),
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '9',
     division: ['B'],
     title: 'Science Project',
-    subject: 'Science',
+    subjects: ['Science'],
     description: 'Prepare a working model of the solar system.',
     dueDate: dayjs('2024-12-15'),
     dueTime: dayjs('23:59'),
     submissionType: 'In-Person',
     status: 'publish',
-    topic: 'Solar System',
-    assignmentType: 'Project Work', // Assignment-specific field
+    chapters: ['Solar System'],
+    assignmentType: 'Project Work',
     isDailyTask: false,
     parentAcknowledgement: false,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'Chapter 7: The Solar System',
-    evaluationCriteria: 'Model Design, Explanation, Creativity', // Assignment-specific field
-    customRubric: 'Include all 8 planets with labels.', // Assignment-specific field
+    evaluationCriteria: 'Model Design, Explanation, Creativity',
+    rubric: 'Include all 8 planets with labels.',
+    rubricRequired: true,
     homeworkType: '',
     attachments: [],
     createdBy: '',
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '8',
     division: ['C'],
     title: 'History Essay',
-    subject: 'History',
+    subjects: ['History'],
     description: 'Write an essay on the causes and effects of World War II.',
     dueDate: dayjs('2024-12-20'),
     dueTime: dayjs('23:59'),
     submissionType: 'Online',
     status: 'draft',
-    topic: 'World War II',
-    assignmentType: 'Essay Writing', // Assignment-specific field
+    chapters: ['World War II'],
+    assignmentType: 'Essay Writing',
     isDailyTask: false,
     parentAcknowledgement: true,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'History Textbook Chapter 10',
-    evaluationCriteria: 'Content, Structure, Grammar, and Relevance', // Assignment-specific field
-    customRubric: 'Include at least 3 major causes and their effects.', // Assignment-specific field
+    evaluationCriteria: 'Content, Structure, Grammar, and Relevance',
+    rubric: 'Include at least 3 major causes and their effects.',
+    rubricRequired: true,
     homeworkType: '',
     attachments: [],
     createdBy: '',
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '7',
     division: ['D'],
     title: 'Geography Map Work',
-    subject: 'Geography',
+    subjects: ['Geography'],
     description: 'Mark and label the major rivers of India on the map.',
     dueDate: dayjs('2024-12-12'),
     dueTime: dayjs('18:00'),
     submissionType: 'In-Person',
     status: 'draft',
-    topic: 'Indian Rivers',
-    homeworkType: 'Map Work', // Homework-specific field
+    chapters: ['Indian Rivers'],
+    homeworkType: 'Map Work',
     isDailyTask: false,
     parentAcknowledgement: false,
     isRecurring: false,
     recurringFrequency: '',
     assignedResources: 'Map and Atlas',
-    evaluationCriteria: '', // Not applicable for homework
-    customRubric: '', // Not applicable for homework
+    evaluationCriteria: '',
+    rubric: '',
+    rubricRequired: false,
     assignmentType: '',
     attachments: [],
     createdBy: '',
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
   {
     class: '6',
     division: ['E'],
     title: 'English Reading Task',
-    subject: 'English',
+    subjects: ['English'],
     description: 'Read and summarize Chapter 3 of your textbook.',
     dueDate: null,
     dueTime: null,
     submissionType: 'Online',
     status: 'publish',
-    topic: 'Reading Comprehension',
-    homeworkType: 'Summary Writing', // Homework-specific field
+    chapters: ['Reading Comprehension'],
+    homeworkType: 'Summary Writing',
     isDailyTask: true,
     parentAcknowledgement: true,
     isRecurring: true,
     recurringFrequency: 'Weekly',
     assignedResources: 'Textbook Chapter 3',
-    evaluationCriteria: '', // Not applicable for homework
-    customRubric: '', // Not applicable for homework
+    evaluationCriteria: '',
+    rubric: '',
+    rubricRequired: false,
     assignmentType: '',
     attachments: [],
     createdBy: '',
     endDate: null,
     isScheduled: false,
+    todaysDate: dayjs('2025-03-07'),
   },
 ];
 
 const HomeworkCreation = (props: TabComponentType) => {
   const [view, setView] = useState('homework');
   const [open, setOpen] = useState(false);
+  const [classes, setClasses] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
+  const [homeworkDate, setHomeworkDate] = useState<Dayjs | null>(null);
+  const [assignmentDate, setAssignmentDate] = useState<Dayjs | null>(null);
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
   // const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
   const dialog = useBoolean();
   const confirmDialog = useBoolean();
@@ -258,33 +283,21 @@ const HomeworkCreation = (props: TabComponentType) => {
 
   const homeworkColumns: Column[] = [
     {
-      id: 'class',
-      label: 'Class',
-    },
-    {
-      id: 'division',
-      label: 'Division',
-      render: (value: any, row: any) => (
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {value?.map((audience: string) => (
-            <Chip key={audience} label={audience} size="small" variant="outlined" />
-          ))}
-        </Box>
-      ),
-    },
-    {
-      id: 'subject',
-      label: 'Subject',
-    },
-    {
       id: 'title',
       label: 'Homework Title',
-      minWidth: 170,
+      minWidth: '200px',
       align: 'left',
     },
     {
-      id: 'dueDate',
-      label: 'Due Date',
+      id: 'homeworkType',
+      label: 'Homework Type',
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
+      id: 'todaysDate',
+      label: 'Creation Date',
+      minWidth: '200px',
       align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
@@ -293,8 +306,38 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
+      id: 'dueDate',
+      label: 'Due Date',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('DD MMM YYYY') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'dueTime',
+      label: 'Due Time',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('HH:MM') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'submissionType',
+      label: 'Submission Type',
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
       id: 'status',
       label: 'Publish',
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
@@ -310,6 +353,9 @@ const HomeworkCreation = (props: TabComponentType) => {
       id: 'action',
       label: 'Actions',
       isSort: false,
+      isFilter: false,
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <ThreeDotsActions
           placement="right-top"
@@ -328,33 +374,22 @@ const HomeworkCreation = (props: TabComponentType) => {
   // Columns for Assignment view
   const assignmentColumns: Column[] = [
     {
-      id: 'class',
-      label: 'Class',
-    },
-    {
-      id: 'division',
-      label: 'Division',
-      render: (value: any, row: any) => (
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {value?.map((audience: string) => (
-            <Chip key={audience} label={audience} size="small" variant="outlined" />
-          ))}
-        </Box>
-      ),
-    },
-    {
-      id: 'subject',
-      label: 'Subject',
-    },
-    {
       id: 'title',
       label: 'Assignment Title',
-      minWidth: 200,
+      minWidth: '200px',
       align: 'left',
     },
     {
-      id: 'dueDate',
-      label: 'Due Date',
+      id: 'assignmentType',
+      label: 'Assignment Type',
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
+      id: 'todaysDate',
+      label: 'Creation Date',
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -362,8 +397,38 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
+      id: 'dueDate',
+      label: 'Due Date',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('DD MMM YYYY') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'dueTime',
+      label: 'Due Time',
+      minWidth: '200px',
+      align: 'left',
+      render: (value: any, row: any) => (
+        <Typography fontSize="12px" gutterBottom>
+          {value ? dayjs(value).format('HH:MM') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'submissionType',
+      label: 'Submission Type',
+      minWidth: '200px',
+      align: 'left',
+    },
+    {
       id: 'status',
       label: 'Publish',
+      minWidth: '200px',
+      align: 'left',
       render: (value: any, row: any) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
@@ -376,8 +441,19 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
     {
+      id: 'rubric',
+      label: 'View Rubric',
+      minWidth: '200px',
+      align: 'left',
+      render: (value, row) => <Iconify icon="mdi:eye" width="16px" height="16px" />,
+    },
+    {
       id: 'action',
       label: 'Action',
+      minWidth: '200px',
+      align: 'left',
+      isSort: false,
+      isFilter: false,
       render: (value: any, row: any) => (
         <ThreeDotsActions
           placement="right-top"
@@ -467,11 +543,89 @@ const HomeworkCreation = (props: TabComponentType) => {
       )}
 
       {!open && (
-        <CustomizableTable
-          tableId="homework-assignment-management"
-          columns={view === 'homework' ? homeworkColumns : assignmentColumns}
-          data={filteredData}
-        />
+        <>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 2 }}>
+            <CustomSelect
+              label="Class"
+              name="class"
+              isLoading={isLoading}
+              options={classData?.items || []}
+              valueKey="id"
+              labelKey="name"
+              formControlProps={{ sx: { width: '150px' } }}
+              value={classes}
+              onChange={(value) => {
+                const selectedClass: Standards = classData.items.find(
+                  (i: Standards) => i.id === value
+                );
+                setClasses(value as string);
+                setDivisionOptions(selectedClass?.divisions || []);
+              }}
+            />
+            <CustomSelect
+              label="Division"
+              disabled={!classes}
+              labelKey="name"
+              valueKey="id"
+              options={divisionOptions}
+              value={division}
+              onChange={(val) => {
+                setDivision(val as string);
+              }}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '150px' },
+              }}
+            />
+            <CustomSelect
+              label="Subject"
+              disabled={!division}
+              options={[]}
+              value={subject}
+              onChange={(val) => {
+                setSubject(val as string);
+              }}
+              formControlProps={{
+                sx: { width: '100%', maxWidth: '150px' },
+              }}
+            />
+            {view === 'homework' ? (
+              <DatePicker
+                label="Homework Date"
+                name="homeworkDate"
+                value={homeworkDate}
+                format="DD/MM/YYYY"
+                onChange={(val) => {
+                  setHomeworkDate(val);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            ) : (
+              <DatePicker
+                label="Assignment Date"
+                name="assignmentDate"
+                value={assignmentDate}
+                format="DD/MM/YYYY"
+                onChange={(val) => {
+                  setAssignmentDate(val);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            )}
+          </Box>
+          <CustomizableTable
+            tableId="homework-assignment-management"
+            columns={view === 'homework' ? homeworkColumns : assignmentColumns}
+            data={filteredData}
+          />
+        </>
       )}
 
       {open && (

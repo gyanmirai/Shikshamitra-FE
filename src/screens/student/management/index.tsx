@@ -116,7 +116,7 @@ const StudentManagementScreen = () => {
       </Box>
       <Card
         sx={{
-          px: 1,
+          px: 0,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
@@ -124,7 +124,7 @@ const StudentManagementScreen = () => {
           value={searchParams.tab}
           onChange={(_, val) => setSearchParams({ tab: val })}
           variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          slotProps={{ tab: { px: 1 } }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />

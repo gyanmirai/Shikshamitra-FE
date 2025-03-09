@@ -294,21 +294,30 @@ const LearningResources = (props: TabComponentType) => {
                   {
                     id: 'resourceTitle',
                     label: 'Resource Title',
-                    minWidth: '180px',
+                    minWidth: '200px',
                     align: 'left',
                   },
                   {
                     id: 'typeOfResource',
                     label: 'Type of Resource',
-                    minWidth: '180px',
+                    minWidth: '200px',
                     align: 'left',
                   },
-                  { id: 'className', label: 'Class' },
-                  { id: 'subject', label: 'Subject' },
-                  { id: 'dateUploaded', label: 'Date Uploaded', minWidth: '180px', align: 'left' },
+                  { id: 'className', label: 'Class', minWidth: '200px' },
+                  { id: 'subject', label: 'Subject', minWidth: '200px' },
+                  {
+                    id: 'dateUploaded',
+                    label: 'Date Uploaded',
+                    minWidth: '200px',
+                    align: 'left',
+                    filterType: 'date',
+                    isDateRangeFilter: true,
+                  },
                   {
                     id: 'status',
                     label: 'Publish',
+                    minWidth: '200px',
+                    align: 'center',
                     render: (value, row) => (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Switch
@@ -321,8 +330,10 @@ const LearningResources = (props: TabComponentType) => {
                   },
                   {
                     id: 'action',
-                    label: 'Action',
+                    label: 'Actions',
+                    minWidth: '180px',
                     isSort: false,
+                    isFilter: false,
                     render: (value, row) => (
                       <ThreeDotsActions
                         actions={(prop) => actions({ ...prop, row })}

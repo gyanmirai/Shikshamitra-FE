@@ -54,7 +54,7 @@ const StudentPerformance = () => (
             <CircularProgress
               variant="determinate"
               value={73.9}
-              size={45}
+              size={50}
               thickness={2}
               color="success"
             />
@@ -81,7 +81,7 @@ const StudentPerformance = () => (
             <CircularProgress
               variant="determinate"
               value={73.9}
-              size={45}
+              size={50}
               thickness={2}
               color="error"
             />

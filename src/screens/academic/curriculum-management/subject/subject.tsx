@@ -353,6 +353,8 @@ const Subject = (props: TabComponentType) => {
                   label: 'Schedule Date',
                   minWidth: '180px',
                   align: 'left',
+                  filterType: 'date',
+                  isDateRangeFilter: true,
                   render: (value, row) => (
                     <Typography fontSize="12px" gutterBottom>
                       {dayjs(value).format('DD MMM YYYY')}
@@ -377,6 +379,7 @@ const Subject = (props: TabComponentType) => {
                 {
                   id: 'action',
                   label: 'Actions',
+                  isFilter: false,
                   isSort: false,
                   render(value, row) {
                     const subject = subjectTableData.find((s) => s.id === row.id);

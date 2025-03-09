@@ -263,6 +263,7 @@ const TimeTableView = (props: TabComponentType) => {
                         onTeacherSelect={handleTeacherSelect}
                         onRoomSelect={handleRoomSelect}
                         onDeleteSlot={handleDeleteSlot}
+                        selectedRoom="101"
                       />
                     ))}
                   </TableRow>

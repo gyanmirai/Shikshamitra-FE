@@ -154,6 +154,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     [columns]
   );
 
+  console.log('columns----', columns);
+
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
     rowsPerPage: 10, // Changed from 10 to -1
@@ -169,6 +171,13 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     filterValue: '',
     columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
   });
+
+  useEffect(() => {
+    setTableConfig((pre) => ({
+      ...pre,
+      columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
+    }));
+  }, [columns]);
 
   const handelChangeParams = useCallback(
     (param: Partial<IParams>) => {

@@ -3,13 +3,14 @@ import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
+import { Draggable } from 'react-beautiful-dnd';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { Box, Card, useTheme, Typography } from '@mui/material';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomizableView from 'src/components/customizable-view';
 // Assuming this is the correct path
 
 interface ILabel {
@@ -29,6 +30,7 @@ interface IStudentEnrollmentCardProps {
 }
 
 interface CardItem {
+  id: number;
   icon: string;
   title: string;
   count: number | string;
@@ -118,6 +120,7 @@ const Overview = () => {
   // Define the initial state for the cards
   const [cards, setCards] = useState<CardItem[]>([
     {
+      id: 0,
       icon: 'wpf:inspection',
       title: 'Enrollment',
       count: 700,
@@ -130,6 +133,7 @@ const Overview = () => {
       ],
     },
     {
+      id: 1,
       icon: 'medical-icon:i-registration',
       title: 'Registration',
       count: 700,
@@ -142,6 +146,7 @@ const Overview = () => {
       ],
     },
     {
+      id: 2,
       icon: 'fluent-mdl2:open-enrollment',
       title: 'Admission',
       count: 700,
@@ -154,6 +159,7 @@ const Overview = () => {
       ],
     },
     {
+      id: 3,
       icon: 'healthicons:i-exam-multiple-choice',
       title: 'Entrance Exam Status',
       count: 10,
@@ -166,6 +172,7 @@ const Overview = () => {
       ],
     },
     {
+      id: 4,
       icon: 'bi:pass-fill',
       title: 'Pass-Fail Ratio',
       count: 17,
@@ -178,6 +185,7 @@ const Overview = () => {
       ],
     },
     {
+      id: 5,
       icon: 'mingcute:performance-fill',
       title: 'Top 3 Performers',
       count: '89 %',
@@ -212,38 +220,32 @@ const Overview = () => {
     setCards(newCards);
   };
 
-  return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Grid2 xs={12}>
-        <Box
-          sx={{
-            height: '100%',
-          }}
-        >
-          <Droppable droppableId="cards" direction="horizontal">
-            {(provided) => (
-              <Grid2 container spacing={2} ref={provided.innerRef} {...provided.droppableProps}>
-                {cards.map((card, index) => (
-                  <Grid2 key={index} xs={12} md={4}>
-                    <StudentEnrollmentCard
-                      icon={card.icon}
-                      title={card.title}
-                      count={card.count}
-                      color={card.color}
-                      bgColor={card.bgColor}
-                      href={card.href}
-                      labels={card.labels}
-                      index={index}
-                    />
-                  </Grid2>
-                ))}
-                {provided.placeholder}
-              </Grid2>
-            )}
-          </Droppable>
-        </Box>
+  const dashBoardSections = cards.reduce((acc: { [key: number]: JSX.Element }, card, index) => {
+    acc[card.id] = (
+      <Grid2 key={index} xs={12} md={4}>
+        <StudentEnrollmentCard
+          icon={card.icon}
+          title={card.title}
+          count={card.count}
+          color={card.color}
+          bgColor={card.bgColor}
+          href={card.href}
+          labels={card.labels}
+          index={card.id}
+        />
       </Grid2>
-    </DragDropContext>
+    );
+    return acc;
+  }, {});
+
+  return (
+    <Box>
+      <CustomizableView
+        sections={cards}
+        setSections={setCards}
+        dashBoardSections={dashBoardSections}
+      />
+    </Box>
   );
 };
 

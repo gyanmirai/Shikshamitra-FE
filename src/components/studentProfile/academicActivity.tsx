@@ -9,14 +9,12 @@ const AcademicActivity = () => {
     { id: '5', activity: 'Volunteered at Local Library', date: '2023-09-01' },
   ];
 
-  const columns: any = [
-    { id: 'activity', label: 'Activity' },
-    { id: 'date', label: 'Date' },
-  ];
-
   return (
     <CustomizableTable
-      columns={columns}
+      columns={[
+        { id: 'activity', label: 'Activity' },
+        { id: 'date', label: 'Date', filterType: 'date' },
+      ]}
       data={studentActivityData}
       tableId="student-activity-table"
     />

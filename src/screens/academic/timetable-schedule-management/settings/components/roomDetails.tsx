@@ -15,21 +15,21 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const tableData = [
   {
-    roomNumber: '104',
+    roomNumber: 104,
     buildingName: 'A',
-    floor: '2',
+    floor: 2,
     capacity: 50,
   },
   {
-    roomNumber: '102',
+    roomNumber: 102,
     buildingName: 'A',
-    floor: '2',
+    floor: 2,
     capacity: 50,
   },
   {
-    roomNumber: '101',
+    roomNumber: 101,
     buildingName: 'A',
-    floor: '2',
+    floor: 2,
     capacity: 50,
   },
 ];
@@ -48,11 +48,8 @@ const RoomDetails = () => {
     const { roomNumber, buildingName, floor, capacity } = dataFromDialog;
 
     if (dataFromDialog) {
-      const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
       const existingEntryIndex = roomData.findIndex(
-        (val) =>
-          normalize(roomNumber) === normalize(val.roomNumber) &&
-          normalize(buildingName) === normalize(val.buildingName)
+        (val) => roomNumber === val.roomNumber && buildingName === val.buildingName
       );
 
       // If the entry already exists and it's not an edit, show duplicate dialog
@@ -97,10 +94,10 @@ const RoomDetails = () => {
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         columns={[
-          { id: 'roomNumber', label: 'Room Number' },
-          { id: 'buildingName', label: 'Building Name' },
-          { id: 'floor', label: 'Floor' },
-          { id: 'capacity', label: 'Capacity' },
+          { id: 'roomNumber', label: 'Room Number', filterType: 'number' },
+          { id: 'buildingName', label: 'Building Name', filterType: 'number' },
+          { id: 'floor', label: 'Floor', filterType: 'number' },
+          { id: 'capacity', label: 'Capacity', filterType: 'number' },
           {
             id: 'actions',
             label: 'Actions',
@@ -174,10 +171,10 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
 
   const formik = useFormik<FormikValue>({
     initialValues: {
-      roomNumber: isEdit ? (data.roomNumber ?? '') : '',
+      roomNumber: isEdit ? (data.roomNumber ?? 0) : 0,
       buildingName: isEdit ? (data.buildingName ?? '') : '',
-      floor: isEdit ? (data.floor ?? '') : '',
-      capacity: isEdit ? (data.capacity ?? '') : '',
+      floor: isEdit ? (data.floor ?? 0) : 0,
+      capacity: isEdit ? (data.capacity ?? 0) : 0,
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
     onSubmit: (values) => {
@@ -211,6 +208,7 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                 label="Room Name"
                 size="small"
                 name="roomNumber"
+                type="number"
                 value={formik.values.roomNumber}
                 onChange={formik.handleChange}
                 fullWidth
@@ -231,6 +229,7 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
               <TextField
                 name="floor"
                 disabled={isEdit}
+                type="number"
                 value={formik.values.floor}
                 onChange={formik.handleChange}
                 label="Floors"
@@ -244,6 +243,7 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                 value={formik.values.capacity}
                 onChange={formik.handleChange}
                 label="Room Capacity"
+                type="number"
                 size="small"
                 fullWidth
               />

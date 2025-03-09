@@ -1,10 +1,12 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -33,8 +35,14 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ScheduleType, scheduleTypeOptions } from 'src/enums/schedule-type';
 import { useGetEntranceExamSlotQuery } from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
+import {
+  EntranceExamStatusType,
+  EntranceExamStatusOptions,
+  EntranceExamStatusTypeColors,
+} from 'src/enums/entranceExam-type';
 import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
@@ -50,6 +58,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { SlotsForm } from '../setting/entrance-exam-slots';
 
@@ -57,7 +66,8 @@ const EntranceExamScreen = () => {
   // const [view, setView] = React.useState('calender');
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
   const [editData, setEditData] = useState(null);
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const resultDialog = useBoolean();
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -161,6 +171,19 @@ const EntranceExamScreen = () => {
     ),
     [resultDialog]
   );
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      console.log('Are u sure to leave this page ');
+      resultDialog.onFalse();
+      setEditData(null);
+      dispatch(setIsChanges(false));
+    } else {
+      resultDialog.onFalse();
+      setEditData(null);
+    }
+  };
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -258,23 +281,24 @@ const EntranceExamScreen = () => {
               {
                 id: 'status',
                 label: 'Status',
+                filterType: 'enum',
+                enumOptions: EntranceExamStatusOptions,
                 render(value, row) {
-                  let color: LabelColor = 'error';
-                  if (value === 'Pending') {
-                    color = 'warning';
-                  } else if (value === 'Pass') {
-                    color = 'success';
-                  } else {
-                    color = 'error';
-                  }
-                  return <Label color={color}>{value}</Label>;
+                  const color = EntranceExamStatusTypeColors[
+                    value as EntranceExamStatusType
+                  ] as LabelColor;
+                  return (
+                    <Label color={color}>
+                      {EntranceExamStatusType[value as EntranceExamStatusType]}
+                    </Label>
+                  );
                 },
               },
-
               {
                 id: 'action',
                 label: 'Action',
                 isFilter: false,
+                isSort: false,
                 render: (value, row) => (
                   <ThreeDotsActions
                     placement="right-top"
@@ -295,13 +319,7 @@ const EntranceExamScreen = () => {
         }}
         open={resultDialog.value}
       >
-        <ResultForm
-          handleClose={() => {
-            setEditData(null);
-            resultDialog.onFalse();
-          }}
-          editData={editData}
-        />
+        <ResultForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>
   );
@@ -314,7 +332,7 @@ export const ExamForm = ({
   handleClose,
 }: {
   studentEnrollmentId: string;
-  handleClose: () => void;
+  handleClose: (_e: any, isSubmit: boolean) => void;
 }) => {
   const dialog = useBoolean();
   const validationSchema = Yup.object({
@@ -377,7 +395,7 @@ export const ExamForm = ({
           examScheduleType: values.scheduleType,
           passingMark: values.passingMarks,
         }).unwrap();
-        handleClose();
+        handleClose(null, true);
       } catch (error) {
         console.log(error);
       }
@@ -546,12 +564,28 @@ export const ExamForm = ({
   );
 };
 
-const ResultForm = ({ editData, handleClose }: { editData: any; handleClose: () => void }) => {
+const ResultForm = ({
+  editData,
+  handleClose,
+}: {
+  editData: any;
+  handleClose: (e: any, isSubmit: boolean) => void;
+}) => {
   const formik = useFormik({
     initialValues: {
       obtainedMarks: editData?.marksObtained ?? null,
       totalMarks: editData?.totalMarks,
     },
+    validationSchema: Yup.object({
+      obtainedMarks: Yup.string().test(
+        'is-less-than-total',
+        'Obtained marks must be less than total marks',
+        (value, context) => {
+          const { totalMarks } = context.parent;
+          return value == null || (totalMarks != null && value <= totalMarks);
+        }
+      ),
+    }),
     onSubmit: async (values) => {
       console.log(values);
       try {
@@ -568,7 +602,7 @@ const ResultForm = ({ editData, handleClose }: { editData: any; handleClose: () 
             passingMark: editData.passingMarks,
           },
         }).unwrap();
-        handleClose();
+        handleClose(null, true);
       } catch (error) {
         console.log(error);
       }
@@ -589,28 +623,35 @@ const ResultForm = ({ editData, handleClose }: { editData: any; handleClose: () 
           //   height: 'calc(100vh - 150px)',
         }}
       >
-        <Box display="flex" flexDirection="column" gap={2}>
-          <TextField
-            label="Obtained Marks"
-            size="small"
-            fullWidth
-            name="obtainedMarks"
-            value={formik.values.obtainedMarks}
-            onChange={formik.handleChange}
-          />
-          <TextField
-            label="Total Marks"
-            disabled
-            size="small"
-            fullWidth
-            name="totalMarks"
-            value={formik.values.totalMarks}
-            onChange={formik.handleChange}
-          />
-        </Box>
+        <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            <TextField
+              label="Obtained Marks"
+              size="small"
+              fullWidth
+              name="obtainedMarks"
+              value={formik.values.obtainedMarks}
+              onChange={formik.handleChange}
+              error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
+              // helperText={formik.touched.obtainedMarks && formik.errors.obtainedMarks}
+            />
+            <Typography variant="caption" color="error">
+              {formik.errors.obtainedMarks as string}
+            </Typography>
+            <TextField
+              label="Total Marks"
+              disabled
+              size="small"
+              fullWidth
+              name="totalMarks"
+              value={formik.values.totalMarks}
+              onChange={formik.handleChange}
+            />
+          </Box>
+        </BackPopUpChecked>
       </Scrollbar>
       <DialogActions sx={{ flexShrink: 0 }}>
-        <Button onClick={handleClose} style={{ marginTop: '1rem' }}>
+        <Button onClick={() => handleClose(null, false)} style={{ marginTop: '1rem' }}>
           Cancel
         </Button>
         <LoadingButton

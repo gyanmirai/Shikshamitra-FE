@@ -18,6 +18,7 @@ interface TimeTableCellProps {
   day: string;
   slotData: any;
   isBreak: boolean;
+  selectedRoom: string;
   onDrop: (e: any, timeSlot: string, day: string) => void;
   onTeacherSelect: (teacher: string, timeSlot: string, day: string) => void;
   onRoomSelect: (room: string, timeSlot: string, day: string) => void;
@@ -29,6 +30,7 @@ const TimeTableCell = ({
   day,
   slotData,
   isBreak,
+  selectedRoom,
   onDrop,
   onTeacherSelect,
   onRoomSelect,
@@ -147,7 +149,7 @@ const TimeTableCell = ({
                           popover.onClose();
                         }}
                       >
-                        <Iconify icon="solar:pen-bold" sx={{ height: '14px', width: '14px' }} />
+                        <Iconify icon="mdi:teacher" sx={{ height: '18px', width: '18px' }} />
                         Teacher
                       </MenuItem>
                       <MenuItem
@@ -157,7 +159,10 @@ const TimeTableCell = ({
                           popover.onClose();
                         }}
                       >
-                        <Iconify icon="solar:pen-bold" sx={{ height: '14px', width: '14px' }} />
+                        <Iconify
+                          icon="mdi:google-classroom"
+                          sx={{ height: '18px', width: '18px' }}
+                        />
                         Room
                       </MenuItem>
                       <MenuItem
@@ -167,7 +172,11 @@ const TimeTableCell = ({
                           popover.onClose();
                         }}
                       >
-                        <Iconify icon="mdi:trash" sx={{ height: '14px', width: '14px' }} />
+                        <Iconify
+                          icon="mdi:trash"
+                          sx={{ height: '18px', width: '18px' }}
+                          color="red"
+                        />
                         Slot
                       </MenuItem>
                     </MenuList>
@@ -197,6 +206,7 @@ const TimeTableCell = ({
           <CustomDialog open={roomDialog.value} handleClose={roomDialog.onFalse} title="Edit Room">
             <AssignRoom
               slotData={slotData}
+              selectedRoom={selectedRoom}
               onRoomSelect={(value) => {
                 onRoomSelect(value, timeSlot, day);
                 roomDialog.onFalse();

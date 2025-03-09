@@ -4,7 +4,6 @@ import { Tab, Tabs } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import Records from 'src/screens/student/studentProfile/records';
 import Academic from 'src/screens/student/studentProfile/academic';
 import Attendance from 'src/screens/student/studentProfile/attendance';
 import { StudentInformation } from 'src/screens/student/studentProfile/information';
@@ -31,12 +30,12 @@ const TABS = [
     icon: <Iconify icon="solar:square-academic-cap-bold" width={22} />,
     component: (props: Record<string, string>) => <Academic {...props} />,
   },
-  {
-    value: 'records',
-    label: 'Records',
-    icon: <Iconify icon="vaadin:records" width={22} />,
-    component: (props: Record<string, string>) => <Records {...props} />,
-  },
+  // {
+  //   value: 'records',
+  //   label: 'Records',
+  //   icon: <Iconify icon="vaadin:records" width={22} />,
+  //   component: (props: Record<string, string>) => <Records {...props} />,
+  // },
   { value: 'finance', label: 'Finance', icon: <Iconify icon="map:finance" width={22} /> },
   { value: 'documents', label: 'Documents', icon: <Iconify icon="ion:documents" width={22} /> },
   {

@@ -577,21 +577,21 @@ const academicModule = {
           path: '',
           _action: 'curriculum-management',
           children: [
-            {
-              title: 'Dashboard',
-              path: '/academic/curriculumDashboard',
-              _action: 'curriculum-management-dashboard',
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: '/academic/curriculumDashboard',
+            //   _action: 'curriculum-management-dashboard',
+            // },
             {
               title: 'Subject',
               path: '/academic/curriculumSubjects',
               _action: 'curriculum-management-subjects',
             },
-            {
-              title: 'Curriculum Overview',
-              path: '/academic/curriculumOverview',
-              _action: 'student-enrollment-curriculumOverview',
-            },
+            // {
+            //   title: 'Curriculum Overview',
+            //   path: '/academic/curriculumOverview',
+            //   _action: 'student-enrollment-curriculumOverview',
+            // },
             {
               title: 'Teacher',
               path: '/academic/teacher',
@@ -610,17 +610,17 @@ const academicModule = {
           ],
         },
         {
-          title: 'Course',
+          title: 'Syllabus',
           path: '/academic/course-management',
           _action: 'course-management',
           children: [
+            // {
+            //   title: 'Dashboard',
+            //   path: '/academic/courseDashboard',
+            //   _action: 'course-management-dashboard',
+            // },
             {
-              title: 'Dashboard',
-              path: '/academic/courseDashboard',
-              _action: 'course-management-dashboard',
-            },
-            {
-              title: 'Content Management',
+              title: 'Syllabus Management',
               path: '/academic/courseSubjects',
               _action: 'course-management-subjects',
             },
@@ -630,7 +630,7 @@ const academicModule = {
               _action: 'course-management-learningResources',
             },
             {
-              title: 'Course Progress',
+              title: 'Syllabus Progress',
               path: '/academic/courseProgress',
               _action: 'course-management-courseProgress',
             },
