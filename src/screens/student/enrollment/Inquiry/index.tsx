@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
 import type { EmployeeCastType } from 'src/enums/employee-cast';
+import type { ICity, IState, ICountry } from 'country-state-city';
 import type { Board, Medium, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
@@ -41,9 +42,9 @@ export interface IInquiryData {
   parentContactNumber: string;
   alternativeContactNumber: string;
   dueDate?: string;
-  country: string;
-  city: string;
-  state: string;
+  country: ICountry;
+  city: ICity;
+  state: IState;
   pinCode: number;
   address: string;
   addressLine1: string;
@@ -200,12 +201,11 @@ const InquiryScreen = () => {
     : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      console.log('Are u sure to leave this page ');
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dispatch(setIsChanges(false));
       dialog.onFalse();
       setEditData(null);
-      dispatch(setIsChanges(false));
-    } else {
+    } else if (!isChanges) {
       dialog.onFalse();
       setEditData(null);
     }

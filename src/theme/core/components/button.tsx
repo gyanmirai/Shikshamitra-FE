@@ -36,7 +36,14 @@ const MuiButtonBase: Components<Theme>['MuiButtonBase'] = {
   /** **************************************
    * STYLE
    *************************************** */
-  styleOverrides: { root: ({ theme }) => ({ fontFamily: theme.typography.fontFamily }) },
+  styleOverrides: {
+    root: ({ theme }) => ({
+      fontFamily: theme.typography.fontFamily,
+      '&.Mui-disabled': {
+        cursor: 'no-drop',
+      },
+    }),
+  },
 };
 
 // ----------------------------------------------------------------------

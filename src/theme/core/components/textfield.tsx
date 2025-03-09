@@ -17,9 +17,15 @@ const MuiInputBase: Components<Theme>['MuiInputBase'] = {
       [`&.${inputBaseClasses.disabled}`]: {
         '& svg': { color: theme.vars.palette.text.disabled },
       },
+      '& .MuiInputBase-root.Mui-disabled': {
+        cursor: 'no-drop',
+      },
+      borderColor: theme.vars.palette.grey['700Channel'],
     }),
     input: ({ theme }) => ({
       fontSize: theme.typography.pxToRem(15),
+      borderColor: theme.vars.palette.grey['700Channel'],
+
       [theme.breakpoints.down('sm')]: {
         // This will prevent zoom in Safari min font size ~ 16px
         fontSize: theme.typography.pxToRem(16),
@@ -69,9 +75,12 @@ const MuiOutlinedInput: Components<Theme>['MuiOutlinedInput'] = {
           borderColor: theme.vars.palette.action.disabledBackground,
         },
       },
+      '& .MuiInputBase-root.Mui-disabled': {
+        cursor: 'no-drop',
+      },
     }),
     notchedOutline: ({ theme }) => ({
-      borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
+      borderColor: varAlpha(theme.vars.palette.common.onBackgroundChannel, 0.3),
       transition: theme.transitions.create(['border-color'], {
         duration: theme.transitions.duration.shortest,
       }),
@@ -106,6 +115,9 @@ const MuiFilledInput: Components<Theme>['MuiFilledInput'] = {
       },
       [`&.${filledInputClasses.disabled}`]: {
         backgroundColor: theme.vars.palette.action.disabledBackground,
+      },
+      '& .MuiInputBase-root.Mui-disabled': {
+        cursor: 'no-drop',
       },
     }),
   },

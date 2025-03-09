@@ -44,6 +44,10 @@ export const classApi = createApi({
       query: (id) => ({ url: `/education-medium/${id}/standards` }),
       providesTags: ['Class'],
     }),
+    getClassByMedium: builder.query({
+      query: (educationMediumId) => ({ url: `/education-medium/${educationMediumId}/standards` }),
+      providesTags: ['Class'],
+    }),
   }),
 });
 
@@ -56,4 +60,6 @@ export const {
   useDeleteClassMutation,
   useGetClassByOrganizationIdQuery,
   useLazyGetClassByOrganizationIdQuery,
+  useGetClassByMediumQuery,
+  useLazyGetClassByMediumQuery,
 } = classApi;

@@ -21,6 +21,9 @@ const MuiFormLabel: Components<Theme>['MuiFormLabel'] = {
         [`&.${inputLabelClasses.disabled}`]: { color: theme.vars.palette.text.disabled },
         [`&.${inputLabelClasses.filled}`]: { transform: 'translate(12px, 6px) scale(0.75)' },
       },
+      '&.Mui-disabled': {
+        cursor: 'no-drop',
+      },
     }),
   },
 };

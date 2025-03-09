@@ -94,8 +94,8 @@ export const CustomAcademicTable = ({
       <Table sx={{ minWidth: 800, '& *': { fontSize: '12px !important' } }} size="small">
         <TableHead>
           <TableRow>
-            <TableCell sx={{ width: '10%' }} />
-            <TableCell>
+            <TableCell align="center" sx={{ width: '10%' }} />
+            <TableCell align="center">
               {name} {/* {isParent && ( */}
               {/* <Iconify
                 icon="zondicons:add-solid"
@@ -357,7 +357,7 @@ function CollapsibleTableRow({
         }
       />
       <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} hover>
-        <TableCell>
+        <TableCell align="center">
           {children && (
             <IconButton
               size="small"
@@ -372,28 +372,35 @@ function CollapsibleTableRow({
             </IconButton>
           )}
         </TableCell>
-        <TableCell>{`${row.name}${row?.strength ? ` (${row.strength})` : ''}`}</TableCell>
+        <TableCell align="center">{`${row.name}${row?.strength ? ` (${row.strength})` : ''}`}</TableCell>
         {children && <TableCell align="center">{row[children.dataKey].length}</TableCell>}
-        {/* <TableCell align="right">{row.calories}</TableCell>
-        <TableCell align="right">{row.fat}</TableCell>
-        <TableCell align="right">{row.carbs}</TableCell>
-        <TableCell align="right">{row.protein}</TableCell> */}
-        <TableCell align="center">
+
+        <TableCell align="center" sx={{ display: 'flex', justifyContent: 'center' }}>
           <ThreeDotsActions
-            onClickThreeDots={() => {
+            showDeleteIcon
+            showEditIcon
+            handleDeleteClick={() => {
+              confirm.onTrue();
               setEditData(row);
               if (children) {
                 setChildEditData(children);
               }
             }}
-            actions={actions}
+            handleEditClick={() => {
+              setEditData(row);
+              if (children) {
+                setChildEditData(children);
+              }
+              modal.onTrue();
+            }}
+            showThreeDots={false}
           />
         </TableCell>
         <TableCell align="right" />
       </TableRow>
 
       <TableRow>
-        <TableCell sx={{ py: 0 }} colSpan={6}>
+        <TableCell align="center" sx={{ py: 0 }} colSpan={6}>
           <Collapse in={collapsible.value} timeout="auto" unmountOnExit>
             <Paper
               variant="outlined"
