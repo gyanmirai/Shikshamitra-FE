@@ -139,3 +139,7 @@ html {
       100% 100%;
   }
 }
+
+.Mui-disabled {
+  cursor: no-drop !important;
+}

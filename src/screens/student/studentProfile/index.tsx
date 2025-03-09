@@ -8,9 +8,21 @@ import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Tab, Card, Tabs, Paper, Button, Avatar, Typography, IconButton } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Card,
+  Tabs,
+  Paper,
+  Button,
+  Avatar,
+  Dialog,
+  Typography,
+  IconButton,
+} from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
@@ -27,6 +39,7 @@ import Academic from './academic';
 import Document from './document';
 import Attendance from './attendance';
 import Communication from './communication';
+import StudentIDCard from './student-id-card';
 import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
@@ -162,6 +175,7 @@ const TABS = [
 ];
 
 export function StudentProfile() {
+  const icardDialog = useBoolean();
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -356,7 +370,7 @@ export function StudentProfile() {
                 </Label>
               </Box>
               <Box display="flex" gap={2} alignItems="center">
-                <Button size="small" variant="outlined">
+                <Button size="small" variant="outlined" onClick={icardDialog.onTrue}>
                   View I-card
                 </Button>
                 <CustomTooltip
@@ -405,6 +419,24 @@ export function StudentProfile() {
               ))}
             </Tabs>
           </Card>
+          <Dialog open={icardDialog.value} onClose={icardDialog.onFalse}>
+            <StudentIDCard
+              student={{
+                name: 'John Doe',
+                grNo: 'GR01',
+                rollNo: '20',
+                class: '10-A',
+                division: 'Higher Secondary',
+                contactNo: '9876543210',
+                email: 'johndoe@example.com',
+                address: '123 Main Street, City, Country',
+                dob: '1990-01-01',
+                bloodGroup: 'A+',
+                academicYear: '2023-2024',
+                gender: 'Male',
+              }}
+            />
+          </Dialog>
           {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
           {currentActiveComponent?.component && <currentActiveComponent.component tabs={tabs} />}
           {/* </Scrollbar> */}

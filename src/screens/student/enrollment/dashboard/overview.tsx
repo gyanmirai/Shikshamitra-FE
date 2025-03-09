@@ -27,6 +27,7 @@ interface IStudentEnrollmentCardProps {
   href?: string;
   labels?: ILabel[];
   index: number;
+  isDraggable?: boolean;
 }
 
 interface CardItem {
@@ -49,10 +50,11 @@ export const StudentEnrollmentCard = ({
   href = '',
   labels = [],
   index,
+  isDraggable = true,
 }: IStudentEnrollmentCardProps) => {
   const theme = useTheme();
 
-  return (
+  return isDraggable ? (
     <Draggable draggableId={`card-${index}`} index={index}>
       {(provided, snapshot) => (
         <div
@@ -113,6 +115,44 @@ export const StudentEnrollmentCard = ({
         </div>
       )}
     </Draggable>
+  ) : (
+    <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
+      <Card
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+          flexGrow: 1,
+          cursor: 'pointer',
+          height: '100%',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        <Iconify
+          icon={icon}
+          sx={{
+            height: '32px',
+            width: '32px',
+            color,
+          }}
+        />
+
+        <Box>
+          <Typography variant="subtitle1">{title}</Typography>
+          <Typography variant="h3" color={color}>
+            {count}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+            {labels.map((label, idx) => (
+              <Label key={idx} color={label.color}>
+                {label.name}
+              </Label>
+            ))}
+          </Box>
+        </Box>
+      </Card>
+    </Box>
   );
 };
 

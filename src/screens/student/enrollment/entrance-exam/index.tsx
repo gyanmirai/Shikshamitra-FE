@@ -37,6 +37,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ScheduleType, scheduleTypeOptions } from 'src/enums/schedule-type';
+import { useMoveToAdmissionMutation } from 'src/redux/student/registration/registration-api';
 import { useGetEntranceExamSlotQuery } from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
 import {
   EntranceExamStatusType,
@@ -72,6 +73,14 @@ const EntranceExamScreen = () => {
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
+  });
+  const [moveToAdmission] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useMoveToAdmissionMutation,
+    popupConfig: {
+      successMessage: 'Student moved to Admission successfully',
+      success: true,
+    },
   });
   const theme = useTheme();
 
@@ -159,8 +168,9 @@ const EntranceExamScreen = () => {
         </MenuItem>
 
         <MenuItem
-          onClick={() => {
-            // dialog.onTrue();
+          onClick={async () => {
+            // dialog.onTrue()
+            await moveToAdmission(row.id);
             popover.onClose();
           }}
         >
@@ -169,7 +179,7 @@ const EntranceExamScreen = () => {
         </MenuItem>
       </MenuList>
     ),
-    [resultDialog]
+    [moveToAdmission, resultDialog]
   );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -599,7 +609,7 @@ const ResultForm = ({
             marksObtained: values.obtainedMarks,
             totalMarks: values.totalMarks,
             examScheduleType: editData.examScheduleType,
-            passingMark: editData.passingMarks,
+            passingMark: editData.passingMark,
           },
         }).unwrap();
         handleClose(null, true);

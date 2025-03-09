@@ -1,5 +1,5 @@
-import type { TextFieldProps } from '@mui/material';
 import type { ICity, IState, ICountry } from 'country-state-city';
+import type { TextFieldProps, AutocompleteProps } from '@mui/material';
 
 import { City, State, Country } from 'country-state-city';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -51,8 +51,8 @@ export const useStandardAddress = ({
   const [countryValue, setCountryValue] = useState<ICountry | null>(null);
   const [stateValue, setStateValue] = useState<IState | null>(null);
   const [cityValue, setCityValue] = useState<ICity | null>(null);
-  const [pinCodeValue, setPinCodeValue] = useState<null | number>(null);
-  const [addressValue, setAddressValue] = useState<null | string>(null);
+  const [pinCodeValue, setPinCodeValue] = useState<null | number | undefined>(null);
+  const [addressValue, setAddressValue] = useState<null | string | undefined>(null);
 
   useEffect(() => {
     if (country) {
@@ -73,7 +73,6 @@ export const useStandardAddress = ({
   }, [address, city, country, pinCode, state]);
 
   const allCountry = useMemo(() => Country.getAllCountries(), []);
-  console.log('🚀 ~ useStandardAddress ~ allCountry:', allCountry);
 
   const allState = useMemo(
     () => State.getStatesOfCountry(countryValue?.isoCode) || [],
@@ -84,15 +83,18 @@ export const useStandardAddress = ({
     [stateValue]
   );
 
-  const renderCountry = useCallback(
-    (filedProp?: any) => (
+  const RenderCountry = useCallback(
+    ({ onChange, ...filedProp }: Partial<AutocompleteProps<ICountry, false, false, false>>) => (
       <Autocomplete
         // loading={isLoading}
         noOptionsText="No Country Found"
         fullWidth
         value={countryValue}
-        onChange={(e, value) => {
+        onChange={(e, value, ...rest) => {
+          setStateValue(null);
+          setCityValue(null);
           setCountryValue(value as ICountry);
+          onChange?.(e, value, ...rest);
         }}
         options={allCountry || []}
         getOptionLabel={(option: any) => `${option?.isoCode} ${option?.name}`}
@@ -116,14 +118,18 @@ export const useStandardAddress = ({
     [allCountry, countryValue]
   );
 
-  const renderState = useCallback(
-    (filedProps?: any) => (
+  const RenderState = useCallback(
+    ({
+      onChange,
+      ...filedProps
+    }: Partial<AutocompleteProps<IState | undefined, false, false, false>>) => (
       <Autocomplete
         // loading={isLoading}
         noOptionsText="No State Found"
         fullWidth
         value={stateValue}
         onChange={(e, value) => {
+          setCityValue(null);
           setStateValue(value as IState);
         }}
         options={allState || []}
@@ -136,39 +142,46 @@ export const useStandardAddress = ({
             {`${option?.isoCode} ${option?.name}`}
           </li>
         )}
+        disabled={!countryValue}
         {...filedProps}
       />
     ),
-    [allState, stateValue]
+    [allState, countryValue, stateValue]
   );
 
-  const renderCity = useCallback(
-    (filedProps?: any) => (
+  const RenderCity = useCallback(
+    ({
+      onChange,
+      renderInput = () => null,
+      ...filedProps
+    }: Partial<AutocompleteProps<ICity | undefined, false, false, false>>) => (
       <Autocomplete
         // loading={isLoading}
         noOptionsText="No City Found"
         fullWidth
         value={cityValue}
-        onChange={(e, value) => {
+        onChange={(e, value, ...rest) => {
           setCityValue(value as ICity);
+          onChange?.(e, value, ...rest);
         }}
-        options={allCities || []}
-        getOptionLabel={(option: any) => `${option?.name}`}
-        renderInput={(params) => (
-          <TextField {...params} fullWidth size="small" label="City" placeholder="Search  City" />
-        )}
         renderOption={(props, option: any) => (
           <li {...props} key={option.id}>
             {`${option?.name}`}
           </li>
         )}
+        disabled={!stateValue}
+        options={allCities || []}
+        getOptionLabel={(option: any) => `${option?.name}`}
+        renderInput={(params) => (
+          <TextField {...params} fullWidth size="small" label="City" placeholder="Search  City" />
+        )}
         {...filedProps}
       />
     ),
-    [allCities, cityValue]
+    [allCities, cityValue, stateValue]
   );
 
-  const renderPincode = (filedProps: TextFieldProps) => (
+  const RenderPincode = (filedProps: TextFieldProps) => (
     <TextField
       label="Pincode"
       value={pinCodeValue}
@@ -179,7 +192,7 @@ export const useStandardAddress = ({
     />
   );
 
-  const renderAddressField = (filedProps: TextFieldProps) => (
+  const RenderAddressField = (filedProps: TextFieldProps) => (
     <TextField
       value={addressValue}
       fullWidth
@@ -194,10 +207,10 @@ export const useStandardAddress = ({
     cityValue,
     pinCodeValue,
     addressValue,
-    renderCountry,
-    renderState,
-    renderCity,
-    renderPincode,
-    renderAddressField,
+    RenderCountry,
+    RenderState,
+    RenderCity,
+    RenderPincode,
+    RenderAddressField,
   };
 };
