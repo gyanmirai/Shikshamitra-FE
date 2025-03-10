@@ -1,12 +1,9 @@
-import type { DropResult } from 'react-beautiful-dnd';
 import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Draggable } from 'react-beautiful-dnd';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, useTheme, Typography } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -26,12 +23,11 @@ interface IStudentEnrollmentCardProps {
   bgColor: string;
   href?: string;
   labels?: ILabel[];
-  index: number;
-  isDraggable?: boolean;
+  index?: number;
 }
 
 interface CardItem {
-  id: number;
+  id: string;
   icon: string;
   title: string;
   count: number | string;
@@ -39,6 +35,7 @@ interface CardItem {
   bgColor: string;
   href: string;
   labels: ILabel[];
+  width: number;
 }
 
 export const StudentEnrollmentCard = ({
@@ -50,117 +47,50 @@ export const StudentEnrollmentCard = ({
   href = '',
   labels = [],
   index,
-  isDraggable = true,
-}: IStudentEnrollmentCardProps) => {
-  const theme = useTheme();
-
-  return isDraggable ? (
-    <Draggable draggableId={`card-${index}`} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          style={{
-            ...provided.draggableProps.style,
-            opacity: snapshot.isDragging ? 0.6 : 1,
-          }}
-        >
-          <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
-            <Card
-              sx={{
-                p: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                flexGrow: 1,
-                cursor: 'pointer',
-                height: '100%',
-                transition: 'all 0.3s ease',
-                ...(!snapshot.isDragging && {
-                  '&:hover': {
-                    boxShadow: 'var(--shadows-8)',
-                    scale: 1.03,
-                  },
-                }),
-                ...(snapshot.isDragging && {
-                  boxShadow: 'var(--shadows-16)',
-                }),
-              }}
-            >
-              <Iconify
-                icon={icon}
-                sx={{
-                  height: '32px',
-                  width: '32px',
-                  color,
-                }}
-              />
-
-              <Box>
-                <Typography variant="subtitle1">{title}</Typography>
-                <Typography variant="h3" color={color}>
-                  {count}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                  {labels.map((label, idx) => (
-                    <Label key={idx} color={label.color}>
-                      {label.name}
-                    </Label>
-                  ))}
-                </Box>
-              </Box>
-            </Card>
-          </Box>
-        </div>
-      )}
-    </Draggable>
-  ) : (
-    <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
-      <Card
+}: IStudentEnrollmentCardProps) => (
+  <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
+    <Card
+      sx={{
+        p: 2,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 5,
+        flexGrow: 1,
+        cursor: 'pointer',
+        height: '100%',
+      }}
+    >
+      <Iconify
+        icon={icon}
         sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-          flexGrow: 1,
-          cursor: 'pointer',
-          height: '100%',
-          transition: 'all 0.3s ease',
+          height: '32px',
+          width: '32px',
+          color,
         }}
-      >
-        <Iconify
-          icon={icon}
-          sx={{
-            height: '32px',
-            width: '32px',
-            color,
-          }}
-        />
+      />
 
-        <Box>
-          <Typography variant="subtitle1">{title}</Typography>
-          <Typography variant="h3" color={color}>
-            {count}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-            {labels.map((label, idx) => (
-              <Label key={idx} color={label.color}>
-                {label.name}
-              </Label>
-            ))}
-          </Box>
+      <Box>
+        <Typography variant="subtitle1">{title}</Typography>
+        <Typography variant="h3" color={color}>
+          {count}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+          {labels.map((label, idx) => (
+            <Label key={idx} color={label.color}>
+              {label.name}
+            </Label>
+          ))}
         </Box>
-      </Card>
-    </Box>
-  );
-};
+      </Box>
+    </Card>
+  </Box>
+);
 
 const Overview = () => {
   // Define the initial state for the cards
   const [cards, setCards] = useState<CardItem[]>([
     {
-      id: 0,
+      id: '0',
       icon: 'wpf:inspection',
       title: 'Enrollment',
       count: 700,
@@ -171,9 +101,10 @@ const Overview = () => {
         { name: 'Male 500', color: 'success' },
         { name: 'Female 200', color: 'warning' },
       ],
+      width: 4,
     },
     {
-      id: 1,
+      id: '1',
       icon: 'medical-icon:i-registration',
       title: 'Registration',
       count: 700,
@@ -184,9 +115,10 @@ const Overview = () => {
         { name: 'Male 500', color: 'success' },
         { name: 'Female 200', color: 'warning' },
       ],
+      width: 4,
     },
     {
-      id: 2,
+      id: '2',
       icon: 'fluent-mdl2:open-enrollment',
       title: 'Admission',
       count: 700,
@@ -197,9 +129,10 @@ const Overview = () => {
         { name: 'Male 500', color: 'success' },
         { name: 'Female 200', color: 'warning' },
       ],
+      width: 4,
     },
     {
-      id: 3,
+      id: '3',
       icon: 'healthicons:i-exam-multiple-choice',
       title: 'Entrance Exam Status',
       count: 10,
@@ -210,9 +143,10 @@ const Overview = () => {
         { name: 'Ongoing 2', color: 'success' },
         { name: 'Upcoming 5', color: 'info' },
       ],
+      width: 4,
     },
     {
-      id: 4,
+      id: '4',
       icon: 'bi:pass-fill',
       title: 'Pass-Fail Ratio',
       count: 17,
@@ -223,9 +157,10 @@ const Overview = () => {
         { name: 'Passed 15', color: 'success' },
         { name: 'Failed 2', color: 'error' },
       ],
+      width: 4,
     },
     {
-      id: 5,
+      id: '5',
       icon: 'mingcute:performance-fill',
       title: 'Top 3 Performers',
       count: '89 %',
@@ -237,43 +172,21 @@ const Overview = () => {
         { name: 'John Doe', color: 'error' },
         { name: 'John Loe', color: 'warning' },
       ],
+      width: 4,
     },
   ]);
 
-  // Function to handle when the drag ends
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source } = result;
-
-    // If there's no destination or the item is dropped in the same place
-    if (
-      !destination ||
-      (destination.droppableId === source.droppableId && destination.index === source.index)
-    ) {
-      return;
-    }
-
-    // Reordering logic
-    const newCards = Array.from(cards);
-    const [removed] = newCards.splice(source.index, 1);
-    newCards.splice(destination.index, 0, removed);
-
-    setCards(newCards);
-  };
-
-  const dashBoardSections = cards.reduce((acc: { [key: number]: JSX.Element }, card, index) => {
+  const dashBoardSections = cards.reduce((acc: { [key: string]: JSX.Element }, card, index) => {
     acc[card.id] = (
-      <Grid2 key={index} xs={12} md={4}>
-        <StudentEnrollmentCard
-          icon={card.icon}
-          title={card.title}
-          count={card.count}
-          color={card.color}
-          bgColor={card.bgColor}
-          href={card.href}
-          labels={card.labels}
-          index={card.id}
-        />
-      </Grid2>
+      <StudentEnrollmentCard
+        icon={card.icon}
+        title={card.title}
+        count={card.count}
+        color={card.color}
+        bgColor={card.bgColor}
+        href={card.href}
+        labels={card.labels}
+      />
     );
     return acc;
   }, {});
