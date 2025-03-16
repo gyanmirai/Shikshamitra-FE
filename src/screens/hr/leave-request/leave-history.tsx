@@ -9,13 +9,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusTypeColor,
-} from 'src/enums/employee-leave-status';
-import {
   useGetEmployeeLeaveQuery,
   useEmployeeLeaveRequestStatusMutation,
 } from 'src/redux/employee/employeeApi';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusOptions,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -99,10 +100,12 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Start Date',
             id: 'start',
+            filterType: 'date',
           },
           {
             label: 'End Date',
             id: 'end',
+            filterType: 'date',
           },
           {
             label: 'Half Day',
@@ -125,6 +128,8 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Status',
             id: 'statusValue',
+            filterType: 'enum',
+            enumOptions: EmployeeLeaveStatusOptions,
             render(value: number, row) {
               const status = EmployeeLeaveStatusType[row.status];
               return (
@@ -144,6 +149,9 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Action',
             id: 'action',
+            isFilter: false,
+            sticky: true,
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />

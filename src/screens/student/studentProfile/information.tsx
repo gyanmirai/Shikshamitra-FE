@@ -91,8 +91,8 @@ export function StudentInformation(props: StudentTabsComponentType) {
   );
 
   // useEffect(() => {
-  //   if (isChanges && window.confirm('Are u sure to leave this page ?')) {
-  //     dispatch(setIsChanges(false));
+  //   if (isChanges) {
+  //     // dispatch(setIsChanges(false));
   //     // setEditData(null);
   //   } else {
   //     // formDialog.onFalse();

@@ -6,6 +6,29 @@ export enum EmployeeAttendanceStatus {
   Late,
 }
 
+export const EmployeeAttendanceStatusOptions = [
+  {
+    label: 'Present',
+    value: EmployeeAttendanceStatus.Present,
+  },
+  {
+    label: 'HalfDayLeave',
+    value: EmployeeAttendanceStatus.HalfDayLeave,
+  },
+  {
+    label: 'FullDayLeave',
+    value: EmployeeAttendanceStatus.FullDayLeave,
+  },
+  {
+    label: 'All',
+    value: EmployeeAttendanceStatus.All,
+  },
+  {
+    label: 'Late',
+    value: EmployeeAttendanceStatus.Late,
+  },
+];
+
 export enum EmployeeAttendanceStatusColor {
   Present = 'success',
   HalfDayLeave = 'warning',

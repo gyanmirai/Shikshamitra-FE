@@ -1,4 +1,5 @@
 import React from 'react';
+import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
@@ -48,7 +49,8 @@ const WorkExperiences = (props: any) => {
               margin="normal"
               value={experience.organizationName}
               onChange={(event) => {
-                setFieldValue(`experiences.${index}.organizationName`, event.target.value);
+                const val = capitalize(event.target.value);
+                setFieldValue(`experiences.${index}.organizationName`, val);
               }}
               disabled={!!disabled}
             />
@@ -62,7 +64,8 @@ const WorkExperiences = (props: any) => {
               margin="normal"
               value={experience.organizationAddress}
               onChange={(event) => {
-                setFieldValue(`experiences.${index}.organizationAddress`, event.target.value);
+                const val = capitalize(event.target.value);
+                setFieldValue(`experiences.${index}.organizationAddress`, val);
               }}
               disabled={!!disabled}
             />
@@ -113,7 +116,8 @@ const WorkExperiences = (props: any) => {
               value={experience.department}
               disabled={!!disabled}
               onChange={(event) => {
-                setFieldValue(`experiences.${index}.department`, event.target.value);
+                const val = capitalize(event.target.value);
+                setFieldValue(`experiences.${index}.department`, val);
               }}
             />
           </Grid>
@@ -127,7 +131,8 @@ const WorkExperiences = (props: any) => {
               value={experience.designation}
               disabled={!!disabled}
               onChange={(event) => {
-                setFieldValue(`experiences.${index}.designation`, event.target.value);
+                const val = capitalize(event.target.value);
+                setFieldValue(`experiences.${index}.designation`, val);
               }}
             />
           </Grid>
@@ -141,7 +146,8 @@ const WorkExperiences = (props: any) => {
               value={experience.responsibilities}
               disabled={!!disabled}
               onChange={(event) => {
-                setFieldValue(`experiences.${index}.responsibilities`, event.target.value);
+                const val = capitalize(event.target.value);
+                setFieldValue(`experiences.${index}.responsibilities`, val);
               }}
             />
           </Grid>
@@ -155,7 +161,8 @@ const WorkExperiences = (props: any) => {
               value={experience.references}
               disabled={!!disabled}
               onChange={(event) => {
-                setFieldValue(`experiences.${index}.references`, event.target.value);
+                const val = capitalize(event.target.value);
+                setFieldValue(`experiences.${index}.references`, val);
               }}
             />
           </Grid>

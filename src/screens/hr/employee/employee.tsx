@@ -146,7 +146,7 @@ const HrEmployee = () => {
               isLoading={isLoading}
               tableId="employee-table"
               columns={[
-                { id: 'employeeCode', label: 'Employee Code' },
+                { id: 'employeeCode', label: 'Employee Code', sticky: true },
                 {
                   id: 'employeeName',
                   label: 'Full Name',
@@ -199,6 +199,7 @@ const HrEmployee = () => {
                   id: 'actions',
                   label: 'Actions',
                   isSort: false,
+                  sticky: true,
                   render(value, row) {
                     return (
                       <ThreeDotsActions

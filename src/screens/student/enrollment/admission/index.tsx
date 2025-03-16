@@ -51,6 +51,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 
 import type { IInquiryData } from '../Inquiry';
@@ -462,6 +463,7 @@ const AdmissionScreen = () => {
   const divisionDialog = useBoolean();
   const statusDialog = useBoolean();
   const openDetails = useBoolean();
+  const followUpDialog = useBoolean();
   const [open, setOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const [editData, setEditData] = useState<IInquiryData | null>(null);
@@ -678,6 +680,7 @@ const AdmissionScreen = () => {
             label: 'Actions',
             isSort: false,
             isFilter: false,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -696,6 +699,7 @@ const AdmissionScreen = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           divisionDialog.onTrue();
+                          setEditData(row as IInquiryData);
                           popover.onClose();
                         }}
                       >
@@ -709,6 +713,20 @@ const AdmissionScreen = () => {
                       >
                         <Iconify icon="tdesign:money" />
                         Pay Fees
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          followUpDialog.onTrue();
+                          setEditData(row as IInquiryData);
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify
+                          icon="icon-park:follow-up-date-sort"
+                          color="default.main"
+                          sx={{ mr: 2 }}
+                        />
+                        Follow Up
                       </MenuItem>
                     </MenuList>
                   )}
@@ -728,7 +746,7 @@ const AdmissionScreen = () => {
           setEditData(null);
           setOpen(false);
         }}
-        title="Registration"
+        title="Edit Admission"
       >
         <RegisterForm
           editData={editData}
@@ -740,10 +758,16 @@ const AdmissionScreen = () => {
       </CustomDialog>
       <CustomDialog
         open={divisionDialog.value}
-        handleClose={divisionDialog.onFalse}
+        handleClose={() => {
+          divisionDialog.onFalse();
+          setEditData(null);
+        }}
         title="Assign Division"
       >
-        <AssignDivisionForm handleClose={divisionDialog.onFalse} />
+        <AssignDivisionForm
+          handleClose={divisionDialog.onFalse}
+          standardName={editData?.standard?.name}
+        />
       </CustomDialog>
       <CustomDialog
         open={statusDialog.value}
@@ -751,6 +775,23 @@ const AdmissionScreen = () => {
         title="Change Status"
       >
         <ChangeStatusForm handleClose={statusDialog.onFalse} tabValue={tabs.value} />
+      </CustomDialog>
+
+      <CustomDialog
+        open={followUpDialog.value}
+        handleClose={() => {
+          setEditData(null);
+          followUpDialog.onFalse();
+        }}
+        title="Follow Up"
+      >
+        <CommunicationForm
+          handleCloseDialog={() => {
+            setEditData(null);
+            followUpDialog.onFalse();
+          }}
+          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+        />{' '}
       </CustomDialog>
 
       {dialogForCollectFees.value && (
@@ -995,16 +1036,32 @@ const DocumentsSections = () => {
   );
 };
 
-const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
+const AssignDivisionForm = ({
+  handleClose,
+  standardName,
+}: {
+  handleClose: () => void;
+  standardName?: string;
+}) => {
   const formik = useFormik({
     initialValues: {
       division: '',
+      standardName: standardName || '',
     },
     onSubmit: () => {},
   });
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
-      <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'Background.neutral',
+          gap: 2,
+        }}
+      >
+        <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
         <CustomSelect
           options={[]}
           value=""

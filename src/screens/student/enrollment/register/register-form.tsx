@@ -20,6 +20,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { UploadAvatar } from 'src/components/upload';
+import { useStandardAddress } from 'src/components/stardard-address';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -125,7 +126,7 @@ const RegisterForm = ({
             body: {
               // userId: editData?.studentBasicDetails?.userId || values.userId || res?.id,
               profilePicture: values.photo ? getBase64String(values.photo) : '',
-              aadhaarNo: values.adharNo,
+              aadhaarNo: String(values.adharNo),
               religion: values.religion,
               familyCast: values.familyCast,
               castType: values.castCategory,
@@ -157,7 +158,7 @@ const RegisterForm = ({
             profilePicture: values.photo ? getBase64String(values.photo) : '',
             mobileNo: values.mobileNo,
             email: values.email,
-            aadhaarNo: values.adharNo,
+            aadhaarNo: String(values.adharNo),
             religion: values.religion,
             familyCast: values.familyCast,
             castType: values.castCategory,
@@ -193,7 +194,7 @@ const RegisterForm = ({
               officeAddress: values.fatherOfficeAddress,
               designation: values.fatherDesignation,
               organisation: values.fatherOrganization,
-              aadhaarNo: values.fatherAadharNo,
+              aadhaarNo: String(values.fatherAadharNo),
               remarks: values.fatherRemarks,
               address: values.fatherAddress,
             },
@@ -209,7 +210,7 @@ const RegisterForm = ({
               officeAddress: values.motherOfficeAddress,
               designation: values.motherDesignation,
               organisation: values.motherOrganization,
-              aadhaarNo: values.motherAadharNo,
+              aadhaarNo: String(values.motherAadharNo),
               remarks: values.motherRemarks,
               address: values.motherAddress,
             },
@@ -225,7 +226,7 @@ const RegisterForm = ({
               officeAddress: values.guardianOfficeAddress,
               designation: values.guardianDesignation,
               organisation: values.guardianOrganization,
-              aadhaarNo: values.guardianAadharNo,
+              aadhaarNo: String(values.guardianAadharNo),
               remarks: values.guardianRemarks,
               address: values.guardianAddress,
             },
@@ -303,7 +304,7 @@ const RegisterForm = ({
             previousSchoolBoard: values.schoolBoard,
             previousSchoolMedium: values.schoolMedium,
             tcNo: values.tcNumber,
-            lastClassPassed: values.lastClassPassed,
+            lastClassPassed: String(values.lastClassPassed),
             percentage: values.percentage,
           },
         }).unwrap();
@@ -359,7 +360,7 @@ const RegisterForm = ({
   );
 
   console.log(validationSchemas[activeStep], 'sdfdsfdsfsdfds========');
-
+  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => {
@@ -435,7 +436,14 @@ const RegisterForm = ({
                 {allFields[step].map((field: FieldsType) => (
                   <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
                     {field.renderComp ? (
-                      field.renderComp({ formik, field })
+                      field.renderComp({
+                        formik,
+                        field,
+                        isEdit: true,
+                        RenderCountry,
+                        RenderState,
+                        RenderCity,
+                      })
                     ) : field.type === 'date' ? (
                       <DatePicker
                         label={field.label}
@@ -468,7 +476,9 @@ const RegisterForm = ({
                         helperText={formik.touched[field.name] && formik.errors[field.name]}
                         fullWidth
                         // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                        {...(field?.otherProps || {})}
+                        {...((typeof field?.otherProps === 'function'
+                          ? field?.otherProps({ formik })
+                          : field?.otherProps) || {})}
                       />
                     )}
                   </Grid>

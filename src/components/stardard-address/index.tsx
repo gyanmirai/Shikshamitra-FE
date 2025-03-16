@@ -53,6 +53,9 @@ export const useStandardAddress = ({
   const [cityValue, setCityValue] = useState<ICity | null>(null);
   const [pinCodeValue, setPinCodeValue] = useState<null | number | undefined>(null);
   const [addressValue, setAddressValue] = useState<null | string | undefined>(null);
+  console.log('countryValue---', countryValue);
+  console.log('stateValue---', stateValue);
+  console.log('cityValue---', cityValue);
 
   useEffect(() => {
     if (country) {
@@ -84,17 +87,21 @@ export const useStandardAddress = ({
   );
 
   const RenderCountry = useCallback(
-    ({ onChange, ...filedProp }: Partial<AutocompleteProps<ICountry, false, false, false>>) => (
+    ({
+      onChange,
+      value,
+      ...filedProp
+    }: Partial<AutocompleteProps<ICountry, false, false, false>>) => (
       <Autocomplete
         // loading={isLoading}
         noOptionsText="No Country Found"
         fullWidth
-        value={countryValue}
-        onChange={(e, value, ...rest) => {
+        value={value !== undefined ? value : countryValue}
+        onChange={(e, newValue, ...rest) => {
           setStateValue(null);
           setCityValue(null);
-          setCountryValue(value as ICountry);
-          onChange?.(e, value, ...rest);
+          setCountryValue(newValue as ICountry);
+          onChange?.(e, newValue, ...rest);
         }}
         options={allCountry || []}
         getOptionLabel={(option: any) => `${option?.isoCode} ${option?.name}`}
@@ -128,9 +135,10 @@ export const useStandardAddress = ({
         noOptionsText="No State Found"
         fullWidth
         value={stateValue}
-        onChange={(e, value) => {
+        onChange={(e, value, ...rest) => {
           setCityValue(null);
           setStateValue(value as IState);
+          onChange?.(e, value, ...rest);
         }}
         options={allState || []}
         getOptionLabel={(option: any) => `${option?.isoCode} ${option?.name}`}

@@ -7,6 +7,13 @@ import { Box, Button, TextField } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+const initialData = [
+  { id: 1, srNo: 1, grNo: 'GR001', name: 'John Doe', division: '' },
+  { id: 2, srNo: 2, grNo: 'GR002', name: 'Jane Smith', division: '' },
+  { id: 3, srNo: 3, grNo: 'GR003', name: 'Alice Johnson', division: '' },
+];
 
 const allCategory = [
   {
@@ -89,70 +96,70 @@ const BulkDataUpdateScreen = () => {
   const [subCategory, setSubCategory] = useState<string>('');
   const [allSubCategory, setAllSubCategory] = useState<{ name: string; id: string }[]>([]);
 
-  const [tableData] = useState([
-    { id: 1, srNo: 1, grNo: 'GR001', name: 'John Doe', division: '' },
-    { id: 2, srNo: 2, grNo: 'GR002', name: 'Jane Smith', division: '' },
-    { id: 3, srNo: 3, grNo: 'GR003', name: 'Alice Johnson', division: '' },
-  ]);
+  const [tableData, setTableData] = useState(initialData);
 
   const headerLabel = allSubCategory.find((cat: any) => cat.id === subCategory)?.name || '';
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
-        <Box display="flex" gap={2}>
-          <CustomSelect
-            options={allCategory}
-            label="Category"
-            value={category}
-            onChange={(val) => {
-              setAllSubCategory(allCategory.find((cat: any) => cat.id === val)?.subCategory || []);
-              setSubCategory('');
-              setCategory(val as string);
-            }}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { width: '200px' } }}
-            // disabled={!division}
-          />
-          <CustomSelect
-            options={allSubCategory}
-            label="Sub Category"
-            value={subCategory}
-            onChange={(val) => {
-              setSubCategory(val as string);
-            }}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { width: '200px' } }}
-            disabled={!category}
-          />
+      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
+          <Box display="flex" gap={2}>
+            <CustomSelect
+              options={allCategory}
+              label="Category"
+              value={category}
+              onChange={(val) => {
+                setAllSubCategory(
+                  allCategory.find((cat: any) => cat.id === val)?.subCategory || []
+                );
+                setSubCategory('');
+                setCategory(val as string);
+              }}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { width: '200px' } }}
+              // disabled={!division}
+            />
+            <CustomSelect
+              options={allSubCategory}
+              label="Sub Category"
+              value={subCategory}
+              onChange={(val) => {
+                setSubCategory(val as string);
+              }}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { width: '200px' } }}
+              disabled={!category}
+            />
+          </Box>
+          <Box display="flex" gap={2}>
+            {' '}
+            <Button startIcon={<Save />} variant="outlined" disabled={!category || !subCategory}>
+              Save
+            </Button>
+          </Box>
         </Box>
-        <Box display="flex" gap={2}>
-          {' '}
-          <Button startIcon={<Save />} variant="outlined" disabled={!category || !subCategory}>
-            Save
-          </Button>
-        </Box>
-      </Box>
-      {subCategory && (
-        <CustomizableTable
-          tableId="bulk-data-update-table"
-          columns={[
-            { id: 'srNo', label: 'Sr. No.' },
-            { id: 'grNo', label: 'GR No.' },
-            { id: 'name', label: 'Name' },
-            {
-              id: 'dynamic',
-              label: headerLabel,
-              isSort: false,
-              // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
-              render: (row: any) => <TextField size="small" label={headerLabel} />,
-            },
-          ]}
-          data={tableData}
-        />
-      )}
+        {subCategory && (
+          <CustomizableTable
+            tableId="bulk-data-update-table"
+            columns={[
+              { id: 'srNo', label: 'Sr. No.' },
+              { id: 'grNo', label: 'GR No.' },
+              { id: 'name', label: 'Name' },
+              {
+                id: 'dynamic',
+                label: headerLabel,
+                isSort: false,
+                // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
+                render: (row: any) => <TextField size="small" label={headerLabel} />,
+              },
+            ]}
+            data={tableData}
+          />
+        )}
+      </BackPopUpChecked>
     </Box>
   );
 };

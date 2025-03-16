@@ -8,7 +8,17 @@ import { useSelector } from 'react-redux';
 import React, { useMemo, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Tab, Card, Tabs, Paper, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Card,
+  Tabs,
+  Paper,
+  Divider,
+  TextField,
+  Typography,
+  Autocomplete,
+} from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -21,6 +31,7 @@ import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import {
   EmployeeAttendanceStatus,
   EmployeeAttendanceStatusColor,
+  EmployeeAttendanceStatusOptions,
 } from 'src/enums/employee-attendance-status';
 import {
   useGetEmployeeQuery,
@@ -30,7 +41,6 @@ import {
 
 import { Label } from 'src/components/label';
 import { CustomTabs } from 'src/components/custom-tabs';
-import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -232,6 +242,8 @@ const DateWise = ({
           {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: EmployeeAttendanceStatusOptions,
             render(value, row) {
               return (
                 <Label
@@ -303,58 +315,62 @@ const EmployeeWise = ({
     [setSearchParams]
   );
 
+  console.log('employees?.items---', employees?.items);
+  console.log('searchParams?.employeeId---', searchParams?.employeeId);
+
   return (
     <>
-      <CustomSelect
-        options={employees?.items || []}
-        isLoading={isLoading}
-        label="Select Employee"
-        value={searchParams?.employeeId}
-        labelKey="lastName"
-        valueKey="id"
-        onChange={(value) => {
-          // setEmployeeId(value as string);
-          setSearchParams({ employeeId: value as string });
-        }}
-        formControlProps={{
-          sx: {
-            width: '100%',
-            maxWidth: 300,
-          },
-        }}
-      />
-      &nbsp;
-      <DatePicker
-        format="DD-MM-YYYY"
-        label="Start Date"
-        value={startDate}
-        onChange={(value) => {
-          setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
-          // setDate(value);
-        }}
-        sx={{ mb: 2 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
-      />
-      &nbsp;
-      <DatePicker
-        format="DD-MM-YYYY"
-        label="End Date"
-        value={endDate}
-        onChange={(value) => {
-          setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
-          // setDate(value);
-        }}
-        sx={{ mb: 2 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
-      />
+      <Box display="flex" gap={1} mb={2}>
+        <Autocomplete
+          options={employees?.items || []}
+          getOptionLabel={(option: any) => option.lastName}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Schedule Type"
+              placeholder="Search Schedule Type"
+              size="small"
+              fullWidth
+              sx={{ width: '100%', minWidth: '250px' }}
+            />
+          )}
+          onChange={(e, value) => {
+            console.log('value----in autocomplete---', value);
+            setSearchParams({ employeeId: value?.id as string });
+            // formik.setFieldValue('examType', value?.id);
+          }}
+        />
+        &nbsp;
+        <DatePicker
+          format="DD-MM-YYYY"
+          label="Start Date"
+          value={startDate}
+          onChange={(value) => {
+            setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
+            // setDate(value);
+          }}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
+        &nbsp;
+        <DatePicker
+          format="DD-MM-YYYY"
+          label="End Date"
+          value={endDate}
+          onChange={(value) => {
+            setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
+            // setDate(value);
+          }}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
+      </Box>
       {searchParams?.employeeId && (
         <Box display="flex" gap={2}>
           <Card

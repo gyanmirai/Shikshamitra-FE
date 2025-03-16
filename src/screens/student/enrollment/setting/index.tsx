@@ -9,6 +9,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import ExamType from './exam-type';
 import Notification from './notification';
 import StudentDocumentType from './document-type';
 import InquiryPreference from './inquiryPreference';
@@ -34,6 +35,11 @@ const TABS = [
     value: 'entranceExamSlots',
     label: 'Entrance Exam Slots',
     component: () => <EntranceExamSlots />,
+  },
+  {
+    value: 'examType',
+    label: 'Exam Type',
+    component: () => <ExamType />,
   },
 ];
 

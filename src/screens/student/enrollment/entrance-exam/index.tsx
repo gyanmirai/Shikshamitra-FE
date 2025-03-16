@@ -24,7 +24,7 @@ import {
   useTheme,
   TextField,
   Typography,
-  ButtonGroup,
+  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -53,9 +53,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -211,7 +209,7 @@ const EntranceExamScreen = () => {
       {/* <CommonCalender data={[]} /> */}
       {/* </Card> */}
 
-      <ButtonGroup>
+      {/* <ButtonGroup>
         <Button
           variant={searchParams.view === 'calender' ? 'contained' : 'outlined'}
           color="inherit"
@@ -226,9 +224,9 @@ const EntranceExamScreen = () => {
         >
           <Iconify icon="lucide:layout-list" />
         </Button>
-      </ButtonGroup>
+      </ButtonGroup> */}
       <Box mt={2}>
-        {searchParams.view === 'calender' && (
+        {/* {searchParams.view === 'calender' && (
           <Box display="flex" height="700px">
             <CommonCalender
               data={calendarData}
@@ -244,82 +242,78 @@ const EntranceExamScreen = () => {
               // }}
             />
           </Box>
-        )}
+        )} */}
 
-        {searchParams.view === 'table' && (
-          <CustomizableTable
-            tableId="entrance-exam-table"
-            isLoading={isLoading}
-            columns={[
-              { id: 'date', label: 'Date', filterType: 'date' },
-              { id: 'examTime', label: 'Exam Time' },
-              {
-                id: 'name',
-                label: 'Student',
+        <CustomizableTable
+          tableId="entrance-exam-table"
+          isLoading={isLoading}
+          columns={[
+            { id: 'date', label: 'Date', filterType: 'date' },
+            { id: 'examTime', label: 'Exam Time' },
+            {
+              id: 'name',
+              label: 'Student',
+            },
+            {
+              id: 'medium',
+              label: 'Medium',
+            },
+            {
+              id: 'class',
+              label: 'Class',
+            },
+            {
+              id: 'passingMark',
+              label: 'Passing Marks',
+              filterType: 'number',
+            },
+            {
+              id: 'totalMarks',
+              label: 'Total Marks',
+              filterType: 'number',
+            },
+            {
+              id: 'obtainMarks',
+              label: 'Obtained Marks',
+              filterType: 'number',
+            },
+            {
+              id: 'percentage',
+              label: 'Percentage',
+              filterType: 'number',
+              render(value, row) {
+                return `${value}%`;
               },
-              {
-                id: 'medium',
-                label: 'Medium',
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              filterType: 'enum',
+              enumOptions: EntranceExamStatusOptions,
+              render(value, row) {
+                const color = EntranceExamStatusTypeColors[
+                  value as EntranceExamStatusType
+                ] as LabelColor;
+                return (
+                  <Label color={color}>
+                    {EntranceExamStatusType[value as EntranceExamStatusType]}
+                  </Label>
+                );
               },
-              {
-                id: 'class',
-                label: 'Class',
-              },
-              {
-                id: 'passingMark',
-                label: 'Passing Marks',
-                filterType: 'number',
-              },
-              {
-                id: 'totalMarks',
-                label: 'Total Marks',
-                filterType: 'number',
-              },
-              {
-                id: 'obtainMarks',
-                label: 'Obtained Marks',
-                filterType: 'number',
-              },
-              {
-                id: 'percentage',
-                label: 'Percentage',
-                filterType: 'number',
-                render(value, row) {
-                  return `${value}%`;
-                },
-              },
-              {
-                id: 'status',
-                label: 'Status',
-                filterType: 'enum',
-                enumOptions: EntranceExamStatusOptions,
-                render(value, row) {
-                  const color = EntranceExamStatusTypeColors[
-                    value as EntranceExamStatusType
-                  ] as LabelColor;
-                  return (
-                    <Label color={color}>
-                      {EntranceExamStatusType[value as EntranceExamStatusType]}
-                    </Label>
-                  );
-                },
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isFilter: false,
-                isSort: false,
-                render: (value, row) => (
-                  <ThreeDotsActions
-                    placement="right-top"
-                    actions={(props) => actions(props, row)}
-                  />
-                ),
-              },
-            ]}
-            data={tableData || []}
-          />
-        )}
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              isFilter: false,
+              sticky: true,
+              isSort: false,
+              render: (value, row) => (
+                <ThreeDotsActions placement="right-top" actions={(props) => actions(props, row)} />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
       </Box>
       <CustomDialog
         title="Result"
@@ -338,9 +332,13 @@ const EntranceExamScreen = () => {
 export default EntranceExamScreen;
 
 export const ExamForm = ({
+  studentName,
+  standardName,
   studentEnrollmentId,
   handleClose,
 }: {
+  studentName: string;
+  standardName: string;
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
 }) => {
@@ -381,6 +379,8 @@ export const ExamForm = ({
     [slots]
   );
 
+  console.log('allSlots', allSlots);
+
   const formik = useFormik({
     // enableReinitialize: true,
     initialValues: {
@@ -420,6 +420,16 @@ export const ExamForm = ({
 
   return (
     <form onSubmit={formik.handleSubmit}>
+      <Box display="flex" flexDirection="column" pl={2}>
+        <Typography variant="body2" gutterBottom>
+          <b>Student Name : </b>
+          {studentName}
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          <b>Class : </b>
+          {standardName}
+        </Typography>
+      </Box>
       <Scrollbar
         sx={{
           p: 3,
@@ -458,13 +468,25 @@ export const ExamForm = ({
             <Paper sx={{ p: 1, height: '100%' }}>
               <Grid container spacing={2}>
                 <Grid xs={4}>
-                  <TextField
-                    name="examType"
-                    value={formik.values.examType}
-                    onChange={formik.handleChange}
-                    label="Exam Type"
-                    size="small"
-                    fullWidth
+                  <Autocomplete
+                    options={[
+                      { id: 1, examType: 'abc' },
+                      { id: 2, examType: 'xyz' },
+                    ]}
+                    getOptionLabel={(option) => option.examType}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Exam Type"
+                        placeholder="Search Exam Type"
+                        size="small"
+                        fullWidth
+                        sx={{ width: '100%', minWidth: '200px' }}
+                      />
+                    )}
+                    onChange={(e, value) => {
+                      formik.setFieldValue('examType', value?.examType);
+                    }}
                   />
                 </Grid>
                 <Grid xs={4}>
@@ -479,7 +501,24 @@ export const ExamForm = ({
                   />
                 </Grid>
                 <Grid xs={4}>
-                  <CustomSelect
+                  <Autocomplete
+                    options={scheduleTypeOptions || []}
+                    getOptionLabel={(option) => option.name}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Schedule Type"
+                        placeholder="Search Schedule Type"
+                        size="small"
+                        fullWidth
+                        sx={{ width: '100%', minWidth: '200px' }}
+                      />
+                    )}
+                    onChange={(e, value) => {
+                      formik.setFieldValue('examType', value?.id);
+                    }}
+                  />
+                  {/* <CustomSelect
                     options={scheduleTypeOptions}
                     label="Schedule Type"
                     labelKey="name"
@@ -489,7 +528,7 @@ export const ExamForm = ({
                     formControlProps={{
                       fullWidth: true,
                     }}
-                  />
+                  /> */}
                 </Grid>
                 <Grid xs={4}>
                   <TextField
@@ -541,6 +580,9 @@ export const ExamForm = ({
                             }
                             label={slot.label}
                           />
+                          <Label variant="soft" color="success">
+                            5 / {slot.studentLimit}
+                          </Label>
                         </Grid>
                       ))}
                     </Grid>

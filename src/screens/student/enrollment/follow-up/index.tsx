@@ -19,6 +19,7 @@ import {
   TextField,
   IconButton,
   Typography,
+  Autocomplete,
   DialogActions,
 } from '@mui/material';
 
@@ -41,7 +42,6 @@ import {
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -290,14 +290,27 @@ export const CommunicationForm = ({
           format="DD-MM-YYYY"
           onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
         />
-        <CustomSelect
-          options={InquiryStatusTypeOptions}
+        <Autocomplete
+          options={InquiryStatusTypeOptions || []}
+          getOptionLabel={(option: any) => option.label}
+          id="employees"
           value={formik.values.status}
-          onChange={(val) => {
-            formik.setFieldValue('status', val);
+          loading={isLoading}
+          sx={{ minWidth: 300, width: '100%' }}
+          onChange={(_event: any, newValue: any | null) => {
+            formik.setFieldValue('status', newValue);
           }}
-          label="Change Status"
-          formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
+          size="small"
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              size="small"
+              label="Change Status"
+              placeholder="Search Status"
+              helperText={formik.touched.status && formik.errors.status}
+              error={formik.touched.status && Boolean(formik.errors.status)}
+            />
+          )}
         />
       </Box>
       <DialogActions>

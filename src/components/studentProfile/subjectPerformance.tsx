@@ -49,7 +49,7 @@ const SubjectPerformance = () => {
           {
             id: 'progress',
             label: 'Progress',
-            align: 'center',
+            align: 'left',
             minWidth: '200px',
             filterType: 'number',
             render(value, row) {

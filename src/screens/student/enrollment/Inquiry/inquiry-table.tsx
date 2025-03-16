@@ -29,10 +29,12 @@ import type { IInquiryData } from '.';
 const InquiryTable = ({
   dialog,
   followUpDialog,
+  issueRegistrationFormDialog,
   editData,
   setEditData,
 }: {
   dialog: UseBooleanReturn;
+  issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   editData: null | IInquiryData;
   setEditData: React.Dispatch<React.SetStateAction<null | IInquiryData>>;
@@ -70,7 +72,6 @@ const InquiryTable = ({
           label: 'Inquiry Number',
           sticky: true,
           minWidth: '162px',
-
           filterType: 'string',
         },
         { id: 'standard.name', label: 'Class' },
@@ -140,6 +141,16 @@ const InquiryTable = ({
                     >
                       <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
                       Follow Up
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        issueRegistrationFormDialog.onTrue();
+                        setEditData(row as IInquiryData);
+                        popover.onClose();
+                      }}
+                    >
+                      <Iconify icon="mdi-light:arrow-right" sx={{ mr: 2 }} />
+                      Issue Registration Form
                     </MenuItem>
                   </MenuList>
                 )}

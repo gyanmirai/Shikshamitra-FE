@@ -62,11 +62,11 @@ const RegistrationFormScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Registration Form Details"
+        heading="Issued Registration Form"
         links={[
           { name: 'Student' },
           { name: 'Student Enroll' },
-          { name: 'Registration Form Details' },
+          { name: 'Issued Registration Form' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

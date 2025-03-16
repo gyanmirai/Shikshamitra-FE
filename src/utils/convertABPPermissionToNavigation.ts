@@ -53,7 +53,7 @@ const firstDataset = [
             permission: 'Permission:StudentEnrollment.Inquiry',
           },
           {
-            title: 'Registration Form Details',
+            title: 'Issued Registration Form',
             path: '/student/enrollment/registration-form',
             _action: 'student-enrollment-registration-form',
             permission: 'Permission:StudentEnrollment.RegistrationForm',

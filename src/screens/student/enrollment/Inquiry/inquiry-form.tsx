@@ -413,19 +413,6 @@ const InquiryForm = ({
                       }}
                     />
                   </Grid>
-                  {editData && (
-                    <Grid item xs={12} md={4}>
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        size="small"
-                        name="formNo"
-                        label="Form Number"
-                        error={touched.formNo && errors.formNo}
-                        helperText={touched.formNo && errors.formNo}
-                      />
-                    </Grid>
-                  )}
                   <Grid item xs={12} md={4}>
                     <CustomSelect
                       name="class"

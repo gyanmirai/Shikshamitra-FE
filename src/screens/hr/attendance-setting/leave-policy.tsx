@@ -1,6 +1,9 @@
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
 import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -20,6 +23,7 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { AccurateRateType, AccurateRateTypeArray } from 'src/enums/accurate-rate';
 import {
   useGetEmployeeLeavePolicyQuery,
@@ -34,6 +38,7 @@ import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 interface ILeavePolicy {
   id: string;
@@ -53,7 +58,8 @@ const LeavePolicy = () => {
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   console.log('🚀 ~ file: leave-policy.tsx:55 ~ LeavePolicy ~ editData:', editData);
-
+  const dispatch = useDispatch();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
@@ -64,10 +70,17 @@ const LeavePolicy = () => {
     currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
   });
 
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dispatch(setIsChanges(false));
+      dialog.onFalse();
+      setEditData(null);
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setEditData(null);
+    }
   };
+
   const tableData = useMemo(
     () =>
       leavePolicyData?.items.map((item: ILeavePolicy) => ({
@@ -104,7 +117,7 @@ const LeavePolicy = () => {
         }
       />
       <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button startIcon={<Add />} onClick={dialog.onTrue} variant="contained">
+        <Button startIcon={<Add />} onClick={dialog.onTrue} variant="contained" size="small">
           Leave Policy
         </Button>
       </Box>
@@ -148,6 +161,9 @@ const LeavePolicy = () => {
           {
             id: 'action',
             label: 'Action',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -205,7 +221,10 @@ const LeavePolicy = () => {
         maxWidth="md"
         title="Leave Policy"
         open={dialog.value}
-        handleClose={handleClose}
+        handleClose={() => {
+          dialog.onFalse();
+          setEditData(null);
+        }}
       >
         <LeavePolicyForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
@@ -214,7 +233,13 @@ const LeavePolicy = () => {
 };
 export default LeavePolicy;
 
-const LeavePolicyForm = ({ handleClose, editData }: any) => {
+const LeavePolicyForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose: (e: any, isSubmit?: boolean) => void;
+  editData: any | null;
+}) => {
   const [tableData, setTableData] = useState([
     {
       id: 1,
@@ -272,7 +297,7 @@ const LeavePolicyForm = ({ handleClose, editData }: any) => {
             color: values.color,
           });
         }
-        handleClose();
+        handleClose(null, true);
         formik.resetForm();
       } catch (error) {
         console.log(error);
@@ -315,356 +340,358 @@ const LeavePolicyForm = ({ handleClose, editData }: any) => {
   };
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <Scrollbar
-        sx={{
-          p: 3,
-          bgcolor: 'background.neutral',
-        }}
-      >
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              name="leaveType"
-              label="Leave Type Name"
-              value={formik.values.leaveType}
-              onChange={formik.handleChange}
-              size="small"
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              name="leaveDays"
-              label="LeaveDays"
-              value={formik.values.leaveDays}
-              onChange={formik.handleChange}
-              size="small"
-              type="number"
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <CustomSelect
-              options={AccurateRateTypeArray}
-              label="Accrual Rate"
-              fullWidth
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              value={formik.values.accrualRate}
-              onChange={(val) => formik.setFieldValue('accrualRate', val)}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  name="carryForward"
-                  checked={formik.values.carryForward}
-                  onChange={formik.handleChange}
-                />
-              }
-              label="Enable Carry Forward"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <MuiColorInput
-              format="hex"
-              value={formik.values.color}
-              onChange={(color) => formik.setFieldValue('color', color)}
-              fullWidth
-              placeholder="color"
-              label="Color"
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is Negative Balance Allowed
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is Half Day Leave Allowed
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is Leave Cancellation Allowed
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is This Leave Encashable
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Do You Want to Consider the Week off as Leave if it is adjoining a Leave
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
-              Do You Want to Consider the Holiday as Leave if it is adjoining a Leave
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">Credit Rule</Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <CustomSelect
-              label="When Do You Want this Leave to be Credited"
-              value=""
-              onChange={(val) => {}}
-              options={[
-                { value: 'monthly', label: 'Monthly' },
-                { value: 'quarterly', label: 'Quarterly' },
-                { value: 'half-yearly', label: 'Half-Yearly' },
-                { value: 'yearly', label: 'Yearly' },
-              ]}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Leave Credit Card"
-              name=""
-              value=""
-              onChange={() => {}}
-              size="small"
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">Leave Request Criteria</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is This Leave Type Allowed to be Applied only in Advance
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', justifyItem: 'flex-end' }}>
-              <Button
-                variant="contained"
-                onClick={handleAddRow}
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <form onSubmit={formik.handleSubmit}>
+        <Scrollbar
+          sx={{
+            p: 3,
+            bgcolor: 'background.neutral',
+          }}
+        >
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="leaveType"
+                label="Leave Type Name"
+                value={formik.values.leaveType}
+                onChange={formik.handleChange}
                 size="small"
-                startIcon={<Add />}
-                className="mb-4"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="leaveDays"
+                label="LeaveDays"
+                value={formik.values.leaveDays}
+                onChange={formik.handleChange}
+                size="small"
+                type="number"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                options={AccurateRateTypeArray}
+                label="Accrual Rate"
+                fullWidth
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                value={formik.values.accrualRate}
+                onChange={(val) => formik.setFieldValue('accrualRate', val)}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    name="carryForward"
+                    checked={formik.values.carryForward}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="Enable Carry Forward"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <MuiColorInput
+                format="hex"
+                value={formik.values.color}
+                onChange={(color) => formik.setFieldValue('color', color)}
+                fullWidth
+                placeholder="color"
+                label="Color"
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is Negative Balance Allowed
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
               >
-                Row
-              </Button>
-            </Box>
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is Half Day Leave Allowed
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is Leave Cancellation Allowed
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is This Leave Encashable
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Do You Want to Consider the Week off as Leave if it is adjoining a Leave
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Do You Want to Consider the Holiday as Leave if it is adjoining a Leave
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2">Credit Rule</Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <CustomSelect
+                label="When Do You Want this Leave to be Credited"
+                value=""
+                onChange={(val) => {}}
+                options={[
+                  { value: 'monthly', label: 'Monthly' },
+                  { value: 'quarterly', label: 'Quarterly' },
+                  { value: 'half-yearly', label: 'Half-Yearly' },
+                  { value: 'yearly', label: 'Yearly' },
+                ]}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Leave Credit Card"
+                name=""
+                value=""
+                onChange={() => {}}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2">Leave Request Criteria</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is This Leave Type Allowed to be Applied only in Advance
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyItem: 'flex-end' }}>
+                <Button
+                  variant="contained"
+                  onClick={handleAddRow}
+                  size="small"
+                  startIcon={<Add />}
+                  className="mb-4"
+                >
+                  Row
+                </Button>
+              </Box>
 
-            <CustomizableTable
-              isFilter={false}
-              isPagination={false}
-              isShowedDense={false}
-              isSearch={false}
-              tableId="leave-form-table"
-              columns={[
-                {
-                  id: 'leaveDurationUpto',
-                  label: 'Leave Duration Upto',
-                  minWidth: '195px',
-                  align: 'left',
-                  render: (value, row) => (
-                    <TextField
-                      size="small"
-                      label="Enter Leave Duration"
-                      value={row.leaveDurationUpto}
-                      onChange={(e) => handleInputChange(e, row.id, 'leaveDurationUpto')}
-                      sx={{ width: '100%' }}
-                    />
-                  ),
-                },
-                {
-                  id: 'priorDaysRequired',
-                  label: 'Prior Days Required',
-                  minWidth: '195px',
-                  align: 'left',
-                  render: (value, row) => (
-                    <TextField
-                      label="Enter Prior Days Required"
-                      name={`priorDaysRequired-${row.id}`}
-                      value={row.priorDaysRequired}
-                      onChange={(e) => handleInputChange(e, row.id, 'priorDaysRequired')}
-                      size="small"
-                      fullWidth
-                    />
-                  ),
-                },
-                {
-                  id: 'maximumAdvanceDaysLimit',
-                  label: 'Maximum Advance Days Limit',
-                  minWidth: '265px',
-                  align: 'left',
-                  render: (value, row) => (
-                    <TextField
-                      label="Enter Maximum Advance Days Limit"
-                      name={`maximumAdvanceDaysLimit-${row.id}`}
-                      value={row.maximumAdvanceDaysLimit}
-                      onChange={(e) => handleInputChange(e, row.id, 'maximumAdvanceDaysLimit')}
-                      size="small"
-                      fullWidth
-                    />
-                  ),
-                },
-                {
-                  id: 'actions',
-                  label: 'Actions',
-                  isSort: false,
-                  render: (value, row) => (
-                    <ThreeDotsActions
-                      showThreeDots={false}
-                      showDeleteIcon
-                      handleDeleteClick={() => handleDeleteRow(row.id)}
-                      placement="right-top"
-                    />
-                  ),
-                },
-              ]}
-              data={tableData}
-            />
+              <CustomizableTable
+                isFilter={false}
+                isPagination={false}
+                isShowedDense={false}
+                isSearch={false}
+                tableId="leave-form-table"
+                columns={[
+                  {
+                    id: 'leaveDurationUpto',
+                    label: 'Leave Duration Upto',
+                    minWidth: '195px',
+                    align: 'left',
+                    render: (value, row) => (
+                      <TextField
+                        size="small"
+                        label="Enter Leave Duration"
+                        value={row.leaveDurationUpto}
+                        onChange={(e) => handleInputChange(e, row.id, 'leaveDurationUpto')}
+                        sx={{ width: '100%' }}
+                      />
+                    ),
+                  },
+                  {
+                    id: 'priorDaysRequired',
+                    label: 'Prior Days Required',
+                    minWidth: '195px',
+                    align: 'left',
+                    render: (value, row) => (
+                      <TextField
+                        label="Enter Prior Days Required"
+                        name={`priorDaysRequired-${row.id}`}
+                        value={row.priorDaysRequired}
+                        onChange={(e) => handleInputChange(e, row.id, 'priorDaysRequired')}
+                        size="small"
+                        fullWidth
+                      />
+                    ),
+                  },
+                  {
+                    id: 'maximumAdvanceDaysLimit',
+                    label: 'Maximum Advance Days Limit',
+                    minWidth: '265px',
+                    align: 'left',
+                    render: (value, row) => (
+                      <TextField
+                        label="Enter Maximum Advance Days Limit"
+                        name={`maximumAdvanceDaysLimit-${row.id}`}
+                        value={row.maximumAdvanceDaysLimit}
+                        onChange={(e) => handleInputChange(e, row.id, 'maximumAdvanceDaysLimit')}
+                        size="small"
+                        fullWidth
+                      />
+                    ),
+                  },
+                  {
+                    id: 'actions',
+                    label: 'Actions',
+                    isSort: false,
+                    render: (value, row) => (
+                      <ThreeDotsActions
+                        showThreeDots={false}
+                        showDeleteIcon
+                        handleDeleteClick={() => handleDeleteRow(row.id)}
+                        placement="right-top"
+                      />
+                    ),
+                  },
+                ]}
+                data={tableData}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is Back Dated Leave Request Allowed?
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="30" name="" value="" onChange={() => {}} size="small" fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Is Document Required for this Leave
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2">Leave Request Limits</Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Maximum No. of Requests employee can apply in tenure
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
+                <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Maximum No. of Requests employee can apply in Year
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
+                <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="05" name="" value="" onChange={() => {}} size="small" fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle2" gutterBottom>
+                Maximum No. of Requests employee can apply in Month
+              </Typography>
+              <RadioGroup
+                row
+                // value={rubricType}
+                // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
+              >
+                <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
+                <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
+              </RadioGroup>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is Back Dated Leave Request Allowed?
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="30" name="" value="" onChange={() => {}} size="small" fullWidth />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Is Document Required for this Leave
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="No" control={<Radio />} label="No" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">Leave Request Limits</Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Maximum No. of Requests employee can apply in tenure
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
-              <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Maximum No. of Requests employee can apply in Year
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
-              <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
-            </RadioGroup>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="05" name="" value="" onChange={() => {}} size="small" fullWidth />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" gutterBottom>
-              Maximum No. of Requests employee can apply in Month
-            </Typography>
-            <RadioGroup
-              row
-              // value={rubricType}
-              // onChange={(e) => setRubricType(e.target.value as 'predefined' | 'custom')}
-            >
-              <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
-              <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
-            </RadioGroup>
-          </Grid>
-        </Grid>
-      </Scrollbar>
-      <DialogActions>
-        <Button onClick={handleClose} variant="outlined">
-          Cancel
-        </Button>
-        <LoadingButton loading={isUpdateLoading || isLoading} type="submit" variant="contained">
-          Save
-        </LoadingButton>
-      </DialogActions>
-    </form>
+        </Scrollbar>
+        <DialogActions>
+          <Button onClick={handleClose} variant="outlined">
+            Cancel
+          </Button>
+          <LoadingButton loading={isUpdateLoading || isLoading} type="submit" variant="contained">
+            Save
+          </LoadingButton>
+        </DialogActions>
+      </form>
+    </BackPopUpChecked>
   );
 };

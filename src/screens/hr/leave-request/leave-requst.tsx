@@ -28,6 +28,7 @@ import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { TabComponentType } from '.';
 
@@ -209,81 +210,82 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         }
       }}
     >
-      {({ errors, touched, setFieldValue, values, submitForm }) => (
+      {({ initialValues, errors, touched, setFieldValue, values, submitForm }) => (
         <Form>
-          <Scrollbar sx={{ p: 2, height: '70vh' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <CustomSelect
-                  isLoading={isLeavePolicyLoading}
-                  options={leavePolicyData?.items || []}
-                  label="Leave Type"
-                  value={values.leaveType}
-                  name="leaveType"
-                  valueKey="id"
-                  disabled={editData}
-                  labelKey="leaveType"
-                  error={!!touched.leaveType && !!errors.leaveType}
-                  helperText={(touched.leaveType && errors.leaveType) || ''}
-                  onChange={(value) => {
-                    setFieldValue('leaveType', value);
-                  }}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <FormControlLabel
-                  control={
-                    <Field
-                      name="isHalfDay"
-                      as={Checkbox}
-                      checked={values.isHalfDay}
-                      disabled={editData}
-                      onChange={(e: any) => {
-                        setFieldValue('isHalfDay', e.target.checked);
-                        if (e.target.checked) {
-                          setFieldValue('endDate', null);
-                        }
-                      }}
-                    />
-                  }
-                  label="Half Day"
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <DateTimePicker
-                  label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
-                  onChange={(value) => setFieldValue('startDate', value)}
-                  format="DD-MM-YYYY HH:mm:ss"
-                  value={values.startDate}
-                  disabled={editData}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      helperText: touched.startDate && errors.startDate,
-                      error: touched.startDate && Boolean(errors.startDate),
-                    },
-                  }}
-                />
-              </Grid>
-              {!values.isHalfDay && (
+          <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+            <Scrollbar sx={{ p: 2, height: '70vh' }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <CustomSelect
+                    isLoading={isLeavePolicyLoading}
+                    options={leavePolicyData?.items || []}
+                    label="Leave Type"
+                    value={values.leaveType}
+                    name="leaveType"
+                    valueKey="id"
+                    disabled={editData}
+                    labelKey="leaveType"
+                    error={!!touched.leaveType && !!errors.leaveType}
+                    helperText={(touched.leaveType && errors.leaveType) || ''}
+                    onChange={(value) => {
+                      setFieldValue('leaveType', value);
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <FormControlLabel
+                    control={
+                      <Field
+                        name="isHalfDay"
+                        as={Checkbox}
+                        checked={values.isHalfDay}
+                        disabled={editData}
+                        onChange={(e: any) => {
+                          setFieldValue('isHalfDay', e.target.checked);
+                          if (e.target.checked) {
+                            setFieldValue('endDate', null);
+                          }
+                        }}
+                      />
+                    }
+                    label="Half Day"
+                  />
+                </Grid>
                 <Grid item xs={4}>
                   <DateTimePicker
-                    label="End Date and Time"
-                    onChange={(value) => setFieldValue('endDate', value)}
-                    value={values.endDate}
+                    label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
+                    onChange={(value) => setFieldValue('startDate', value)}
                     format="DD-MM-YYYY HH:mm:ss"
+                    value={values.startDate}
                     disabled={editData}
                     slotProps={{
                       textField: {
                         size: 'small',
-                        helperText: touched.endDate && errors.endDate,
-                        error: touched.endDate && Boolean(errors.endDate),
+                        helperText: touched.startDate && errors.startDate,
+                        error: touched.startDate && Boolean(errors.startDate),
                       },
                     }}
                   />
                 </Grid>
-              )}
-              {/* <Grid item xs={12}>
+                {!values.isHalfDay && (
+                  <Grid item xs={4}>
+                    <DateTimePicker
+                      label="End Date and Time"
+                      onChange={(value) => setFieldValue('endDate', value)}
+                      value={values.endDate}
+                      format="DD-MM-YYYY HH:mm:ss"
+                      disabled={editData}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          helperText: touched.endDate && errors.endDate,
+                          error: touched.endDate && Boolean(errors.endDate),
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
+                {/* <Grid item xs={12}>
                 <ColorPicker
                   selected={values.color}
                   onSelectColor={(color) => {
@@ -300,120 +302,126 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   disabled={editData}
                 />
               </Grid> */}
-              <Grid item xs={6}>
-                <Upload
-                  {...uploadProps}
-                  thumbnail
-                  value={values.docs}
-                  onDrop={(acceptedFiles) => {
-                    console.log(
-                      '🚀 ~ file: leave-requst.tsx:318 ~ AddLeaveRequest ~ acceptedFiles:',
-                      acceptedFiles
-                    );
-                    const file = acceptedFiles[0];
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => {
-                      const base64String = reader.result;
-                      setFieldValue('docs', base64String);
-                    };
-                  }}
-                  multiple={false}
-                  onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
-                  onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
-                  disabled={editData}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <Editor
-                  onChange={(value) => {
-                    setFieldValue('description', value);
-                  }}
-                  value={values.description}
-                  placeholder="Leave description"
-                  error={touched.description && Boolean(errors.description)}
-                  helperText={touched.description && errors.description}
-                  editable={!editData}
-                  sx={{ height: '100%' }}
-                  slotProps={{
-                    wrap: {
-                      height: '100%',
-                    },
-                  }}
-                />
-              </Grid>
+                <Grid item xs={6}>
+                  <Upload
+                    {...uploadProps}
+                    thumbnail
+                    value={values.docs}
+                    onDrop={(acceptedFiles) => {
+                      console.log(
+                        '🚀 ~ file: leave-requst.tsx:318 ~ AddLeaveRequest ~ acceptedFiles:',
+                        acceptedFiles
+                      );
+                      const file = acceptedFiles[0];
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = () => {
+                        const base64String = reader.result;
+                        setFieldValue('docs', base64String);
+                      };
+                    }}
+                    multiple={false}
+                    onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
+                    onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                    disabled={editData}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <Editor
+                    onChange={(value) => {
+                      setFieldValue('description', value);
+                    }}
+                    value={values.description}
+                    placeholder="Leave description"
+                    error={touched.description && Boolean(errors.description)}
+                    helperText={touched.description && errors.description}
+                    editable={!editData}
+                    sx={{ height: '100%' }}
+                    slotProps={{
+                      wrap: {
+                        height: '100%',
+                      },
+                    }}
+                  />
+                </Grid>
 
-              <Grid item xs={12} display="flex" justifyContent="flex-end">
-                {!editData && (
-                  <LoadingButton loading={isLoading} type="submit" variant="contained" size="small">
-                    Submit Leave Request
-                  </LoadingButton>
-                )}
-
-                {editData && (
-                  <>
-                    {editData.status !== EmployeeLeaveStatusType.Rejected && (
-                      <LoadingButton
-                        loading={isChangeStatusLoading}
-                        variant="contained"
-                        size="small"
-                        color="primary"
-                        onClick={async () => {
-                          setFieldValue('status', EmployeeLeaveStatusType.Approved);
-                          // submitForm();
-                          await changeStatus({
-                            id: editData.id,
-                            body: {
-                              status: EmployeeLeaveStatusType.Approved,
-                              rejectionReason: '',
-                            },
-                          });
-                          handleClose?.();
-                        }}
-                        style={{ marginRight: '10px' }}
-                      >
-                        Approve
-                      </LoadingButton>
-                    )}
+                <Grid item xs={12} display="flex" justifyContent="flex-end">
+                  {!editData && (
                     <LoadingButton
+                      loading={isLoading}
+                      type="submit"
                       variant="contained"
                       size="small"
-                      color="error"
-                      onClick={() => {
-                        setFieldValue('status', EmployeeLeaveStatusType.Rejected);
-                      }}
                     >
-                      Reject
+                      Submit Leave Request
                     </LoadingButton>
-                  </>
+                  )}
+
+                  {editData && (
+                    <>
+                      {editData.status !== EmployeeLeaveStatusType.Rejected && (
+                        <LoadingButton
+                          loading={isChangeStatusLoading}
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          onClick={async () => {
+                            setFieldValue('status', EmployeeLeaveStatusType.Approved);
+                            // submitForm();
+                            await changeStatus({
+                              id: editData.id,
+                              body: {
+                                status: EmployeeLeaveStatusType.Approved,
+                                rejectionReason: '',
+                              },
+                            });
+                            handleClose?.();
+                          }}
+                          style={{ marginRight: '10px' }}
+                        >
+                          Approve
+                        </LoadingButton>
+                      )}
+                      <LoadingButton
+                        variant="contained"
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          setFieldValue('status', EmployeeLeaveStatusType.Rejected);
+                        }}
+                      >
+                        Reject
+                      </LoadingButton>
+                    </>
+                  )}
+                </Grid>
+                {values.status === EmployeeLeaveStatusType.Rejected && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={4}
+                      variant="outlined"
+                      value={values.rejectionReason}
+                      label="Rejection Reason"
+                      onChange={(e) => setFieldValue('rejectionReason', e.target.value)}
+                      error={touched.rejectionReason && Boolean(errors.rejectionReason)}
+                      helperText={touched.rejectionReason && errors.rejectionReason}
+                      sx={{ my: 1 }}
+                    />
+                    <LoadingButton
+                      loading={isChangeStatusLoading}
+                      variant="contained"
+                      type="submit"
+                      sx={{ mt: 2 }}
+                    >
+                      Submit
+                    </LoadingButton>
+                  </Grid>
                 )}
               </Grid>
-              {values.status === EmployeeLeaveStatusType.Rejected && (
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="outlined"
-                    value={values.rejectionReason}
-                    label="Rejection Reason"
-                    onChange={(e) => setFieldValue('rejectionReason', e.target.value)}
-                    error={touched.rejectionReason && Boolean(errors.rejectionReason)}
-                    helperText={touched.rejectionReason && errors.rejectionReason}
-                    sx={{ my: 1 }}
-                  />
-                  <LoadingButton
-                    loading={isChangeStatusLoading}
-                    variant="contained"
-                    type="submit"
-                    sx={{ mt: 2 }}
-                  >
-                    Submit
-                  </LoadingButton>
-                </Grid>
-              )}
-            </Grid>
-          </Scrollbar>
+            </Scrollbar>
+          </BackPopUpChecked>
         </Form>
       )}
     </Formik>

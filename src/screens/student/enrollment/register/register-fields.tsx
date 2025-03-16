@@ -3,6 +3,7 @@ import type { SxProps, GridProps } from '@mui/material';
 
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
+import { capitalize } from 'lodash';
 import { useMemo, useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -65,7 +66,7 @@ export interface FieldsType {
   name: string;
   placeholder?: string;
   sx?: SxProps;
-  otherProps?: Record<string, any>;
+  otherProps?: Record<string, any> | ((props: any) => Record<string, any>);
   renderComp?: (props: any) => React.ReactNode;
   gridProps?: GridProps;
 }
@@ -363,9 +364,39 @@ export const generalFormFields: FieldsType[] = [
     },
   },
   { name: 'previousSchool', label: 'Previous School', type: 'text', otherProps: {} },
-  { name: 'firstName', label: 'First Name', type: 'text', otherProps: {} },
-  { name: 'lastName', label: 'last Name', type: 'text', otherProps: {} },
-  { name: 'middleName', label: 'Middle Name', type: 'text', otherProps: {} },
+  {
+    name: 'firstName',
+    label: 'First Name',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('firstName', newName);
+      },
+    }),
+  },
+  {
+    name: 'lastName',
+    label: 'last Name',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('lastName', newName);
+      },
+    }),
+  },
+  {
+    name: 'middleName',
+    label: 'Middle Name',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('middleName', newName);
+      },
+    }),
+  },
   {
     name: 'mobileNo',
     label: 'Contact Number',
@@ -512,9 +543,29 @@ export const generalFormFields: FieldsType[] = [
       </FormControl>
     ),
   },
-  { name: 'adharNo', label: 'Adhar No', type: 'text', otherProps: {} },
-  { name: 'religion', label: 'Religion', type: 'text', otherProps: {} },
-  { name: 'familyCast', label: 'Family Cast', type: 'text', otherProps: {} },
+  { name: 'adharNo', label: 'Adhar No', type: 'number', otherProps: {} },
+  {
+    name: 'religion',
+    label: 'Religion',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('religion', newName);
+      },
+    }),
+  },
+  {
+    name: 'familyCast',
+    label: 'Family Cast',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('familyCast', newName);
+      },
+    }),
+  },
   {
     name: 'castCategory',
     label: 'Cast Category',
@@ -555,9 +606,39 @@ export const generalFormFields: FieldsType[] = [
       </FormControl>
     ),
   },
-  { name: 'motherTongue', label: 'Mother Tongue', type: 'text', otherProps: {} },
-  { name: 'nationality', label: 'Nationality', type: 'text', otherProps: {} },
-  { name: 'birthPlace', label: 'Birth Place', type: 'text', otherProps: {} },
+  {
+    name: 'motherTongue',
+    label: 'Mother Tongue',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('motherTongue', newName);
+      },
+    }),
+  },
+  {
+    name: 'nationality',
+    label: 'Nationality',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('nationality', newName);
+      },
+    }),
+  },
+  {
+    name: 'birthPlace',
+    label: 'Birth Place',
+    type: 'text',
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('birthPlace', newName);
+      },
+    }),
+  },
   { name: 'temporaryGr', label: 'Temporary GR', type: 'text', otherProps: {} },
   { name: 'remarks', label: 'Remarks', type: 'text', otherProps: { multiline: true, rows: 2 } },
 ];
@@ -594,7 +675,6 @@ export const communicationFields: FieldsType[] = [
     otherProps: {},
     renderComp(props) {
       const { formik, isEdit } = props;
-
       return (
         <PhoneInput
           disabled={!isEdit}
@@ -717,7 +797,7 @@ export const communicationFields: FieldsType[] = [
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
-      const { formik, isEdit } = props;
+      const { formik, isEdit, RenderCountry, RenderState, RenderCity } = props;
       return (
         <>
           <Subheader
@@ -863,6 +943,7 @@ export const communicationFields: FieldsType[] = [
             onClick={() => {}}
             sx={{ pt: 0, fontWeight: 600 }}
           >
+            Permanent Address
             <Checkbox
               checked={formik.values.sameAsLocalForPermanent}
               size="small"
@@ -1259,7 +1340,9 @@ export const additionalDetailsFields: FieldsType[] = [
     name: 'bplCardNo',
     label: 'BPL Card No',
     type: 'text',
-    otherProps: {},
+    otherProps: ({ formik }: any) => ({
+      disabled: !formik.values.bplStudent,
+    }),
   },
   {
     name: 'personWithDisability',
@@ -1470,13 +1553,23 @@ export const previousSchoolFields: FieldsType[] = [
     name: 'schoolName',
     label: 'Previous School Name',
     type: 'text',
-    otherProps: {},
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('schoolName', newName);
+      },
+    }),
   },
   {
     name: 'schoolAddress',
     label: 'Previous School Address',
     type: 'text',
-    otherProps: {},
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('schoolAddress', newName);
+      },
+    }),
   },
   {
     name: 'schoolBoard',
@@ -1488,7 +1581,12 @@ export const previousSchoolFields: FieldsType[] = [
     name: 'schoolMedium',
     label: 'Previous School Medium',
     type: 'text',
-    otherProps: {},
+    otherProps: ({ formik }: any) => ({
+      onChange: (e: any) => {
+        const newName = capitalize(e.target.value);
+        formik.setFieldValue('schoolMedium', newName);
+      },
+    }),
   },
   {
     name: 'tcNumber',
@@ -1499,7 +1597,7 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'lastClassPassed',
     label: 'Last Class Passed',
-    type: 'text',
+    type: 'number',
     otherProps: {},
   },
   {
@@ -1571,6 +1669,7 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   academicYear: editData?.academicYearId || '',
   class: editData?.standardId || '',
   previousSchool: editData?.previousSchoolName || '',
+  photo: editData?.profilePicture || '',
 });
 
 export const documentFieldsInitialValues = (editData?: IInquiryData | null) => ({
@@ -1729,7 +1828,10 @@ function RenderFamilyInformation(props: any) {
                 name="fatherName"
                 label="Father Name"
                 value={formik.values.fatherName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('fatherName', value);
+                }}
                 error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
                 helperText={formik.touched.fatherName && formik.errors.fatherName}
                 fullWidth
@@ -1757,7 +1859,10 @@ function RenderFamilyInformation(props: any) {
                 name="fatherOccupation"
                 label="Father Occupation"
                 value={formik.values.fatherOccupation}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('fatherOccupation', value);
+                }}
                 error={formik.touched.fatherOccupation && Boolean(formik.errors.fatherOccupation)}
                 helperText={formik.touched.fatherOccupation && formik.errors.fatherOccupation}
                 fullWidth
@@ -1768,7 +1873,10 @@ function RenderFamilyInformation(props: any) {
                 name="fatherQualification"
                 label="Father Qualification"
                 value={formik.values.fatherQualification}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('fatherQualification', value);
+                }}
                 error={
                   formik.touched.fatherQualification && Boolean(formik.errors.fatherQualification)
                 }
@@ -1799,7 +1907,7 @@ function RenderFamilyInformation(props: any) {
                 fullWidth
                 size="small"
                 disabled={!isEdit}
-                inputProps={{
+                InputProps={{
                   startAdornment: (
                     <>
                       <Iconify icon="mdi-light:email" />{' '}
@@ -1853,7 +1961,10 @@ function RenderFamilyInformation(props: any) {
                 name="fatherDesignation"
                 label="Father Designation"
                 value={formik.values.fatherDesignation}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('fatherDesignation', value);
+                }}
                 error={formik.touched.fatherDesignation && Boolean(formik.errors.fatherDesignation)}
                 helperText={formik.touched.fatherDesignation && formik.errors.fatherDesignation}
                 fullWidth
@@ -1866,7 +1977,10 @@ function RenderFamilyInformation(props: any) {
                 label="Father Organization"
                 disabled={!isEdit}
                 value={formik.values.fatherOrganization}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('fatherOrganization', value);
+                }}
                 error={
                   formik.touched.fatherOrganization && Boolean(formik.errors.fatherOrganization)
                 }
@@ -1878,6 +1992,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="fatherAadharNo"
                 label="Father Aadhar No."
+                type="number"
                 disabled={!isEdit}
                 value={formik.values.fatherAadharNo}
                 onChange={formik.handleChange}
@@ -1928,7 +2043,10 @@ function RenderFamilyInformation(props: any) {
                 label="Mother Name"
                 disabled={!isEdit}
                 value={formik.values.motherName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('motherName', value);
+                }}
                 error={formik.touched.motherName && Boolean(formik.errors.motherName)}
                 helperText={formik.touched.motherName && formik.errors.motherName}
                 fullWidth
@@ -1956,7 +2074,10 @@ function RenderFamilyInformation(props: any) {
                 label="Mother Occupation"
                 disabled={!isEdit}
                 value={formik.values.motherOccupation}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('motherOccupation', value);
+                }}
                 error={formik.touched.motherOccupation && Boolean(formik.errors.motherOccupation)}
                 helperText={formik.touched.motherOccupation && formik.errors.motherOccupation}
                 fullWidth
@@ -1967,7 +2088,10 @@ function RenderFamilyInformation(props: any) {
                 label="Mother Qualification"
                 disabled={!isEdit}
                 value={formik.values.motherQualification}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('motherQualification', value);
+                }}
                 error={
                   formik.touched.motherQualification && Boolean(formik.errors.motherQualification)
                 }
@@ -1997,7 +2121,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.motherEmail && formik.errors.motherEmail}
                 fullWidth
                 size="small"
-                inputProps={{
+                InputProps={{
                   startAdornment: (
                     <>
                       <Iconify icon="mdi-light:email" />{' '}
@@ -2052,7 +2176,10 @@ function RenderFamilyInformation(props: any) {
                 label="Mother Designation"
                 disabled={!isEdit}
                 value={formik.values.motherDesignation}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('motherDesignation', value);
+                }}
                 error={formik.touched.motherDesignation && Boolean(formik.errors.motherDesignation)}
                 helperText={formik.touched.motherDesignation && formik.errors.motherDesignation}
                 fullWidth
@@ -2064,7 +2191,10 @@ function RenderFamilyInformation(props: any) {
                 label="Mother Organization"
                 disabled={!isEdit}
                 value={formik.values.motherOrganization}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('motherOrganization', value);
+                }}
                 error={
                   formik.touched.motherOrganization && Boolean(formik.errors.motherOrganization)
                 }
@@ -2076,6 +2206,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="motherAadharNo"
                 label="Mother Aadhar No."
+                type="number"
                 disabled={!isEdit}
                 value={formik.values.motherAadharNo}
                 onChange={formik.handleChange}
@@ -2126,7 +2257,10 @@ function RenderFamilyInformation(props: any) {
                 label="Guardian Name"
                 disabled={!isEdit}
                 value={formik.values.guardianName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('guardianName', value);
+                }}
                 error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
                 helperText={formik.touched.guardianName && formik.errors.guardianName}
                 fullWidth
@@ -2154,7 +2288,10 @@ function RenderFamilyInformation(props: any) {
                 label="Guardian Occupation"
                 disabled={!isEdit}
                 value={formik.values.guardianOccupation}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('guardianOccupation', value);
+                }}
                 error={
                   formik.touched.guardianOccupation && Boolean(formik.errors.guardianOccupation)
                 }
@@ -2167,7 +2304,10 @@ function RenderFamilyInformation(props: any) {
                 label="Guardian Qualification"
                 disabled={!isEdit}
                 value={formik.values.guardianQualification}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('guardianQualification', value);
+                }}
                 error={
                   formik.touched.guardianQualification &&
                   Boolean(formik.errors.guardianQualification)
@@ -2199,7 +2339,7 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.guardianEmail && formik.errors.guardianEmail}
                 fullWidth
                 size="small"
-                inputProps={{
+                InputProps={{
                   startAdornment: (
                     <>
                       <Iconify icon="mdi-light:email" />{' '}
@@ -2259,7 +2399,10 @@ function RenderFamilyInformation(props: any) {
                 label="Guardian Designation"
                 disabled={!isEdit}
                 value={formik.values.guardianDesignation}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('guardianDesignation', value);
+                }}
                 error={
                   formik.touched.guardianDesignation && Boolean(formik.errors.guardianDesignation)
                 }
@@ -2273,7 +2416,10 @@ function RenderFamilyInformation(props: any) {
                 label="Guardian Organization"
                 disabled={!isEdit}
                 value={formik.values.guardianOrganization}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('guardianOrganization', value);
+                }}
                 error={
                   formik.touched.guardianOrganization && Boolean(formik.errors.guardianOrganization)
                 }
@@ -2287,6 +2433,7 @@ function RenderFamilyInformation(props: any) {
               <TextField
                 name="guardianAadharNo"
                 label="Guardian Aadhar No."
+                type="number"
                 disabled={!isEdit}
                 value={formik.values.guardianAadharNo}
                 onChange={formik.handleChange}

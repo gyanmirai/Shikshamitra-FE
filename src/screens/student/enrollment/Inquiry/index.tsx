@@ -25,6 +25,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import InquiryForm from './inquiry-form';
 import InquiryTable from './inquiry-table';
 import { CommunicationForm } from '../follow-up';
+import IssueRegistrationForm from '../issue-registration-form/issueRegistrationForm';
 
 export interface IInquiryData {
   id: string;
@@ -70,6 +71,7 @@ export interface IInquiryData {
   studentMedicalRecords: StudentMedicalRecords;
   previousSchoolDetails: PreviousSchoolDetails;
   parentBankDetails: ParentBankDetails;
+  profilePicture?: string;
 }
 
 export interface ParentBankDetails {
@@ -191,6 +193,7 @@ const InquiryScreen = () => {
   const dispatch = useDispatch();
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
+  const issueRegistrationFormDialog = useBoolean();
   const links = dialog.value
     ? [
         { name: 'Student' },
@@ -234,6 +237,7 @@ const InquiryScreen = () => {
         <InquiryTable
           dialog={dialog}
           followUpDialog={followUpDialog}
+          issueRegistrationFormDialog={issueRegistrationFormDialog}
           editData={editData}
           setEditData={setEditData}
         />
@@ -254,6 +258,23 @@ const InquiryScreen = () => {
           }}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
+      </CustomDialog>
+
+      <CustomDialog
+        open={issueRegistrationFormDialog.value}
+        handleClose={() => {
+          setEditData(null);
+          issueRegistrationFormDialog.onFalse();
+        }}
+        title="Issue Registration Form"
+      >
+        <IssueRegistrationForm
+          handleClose={() => {
+            setEditData(null);
+            issueRegistrationFormDialog.onFalse();
+          }}
+          editData={editData as IInquiryData}
+        />
       </CustomDialog>
     </Box>
   );
