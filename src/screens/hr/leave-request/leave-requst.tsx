@@ -10,7 +10,9 @@ import { Form, Field, Formik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { Grid, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -77,7 +79,7 @@ interface FormValues {
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const { editData, handleClose } = props;
-
+  const leaveRequestModal = useBoolean();
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
@@ -97,6 +99,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
+
+  console.log('leavePolicyData?.items----', leavePolicyData?.items);
 
   const uploadProps = {
     multiple: true,
@@ -147,9 +151,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             const { startDate } = this.parent;
             if (isHalfDay) return true;
             if (startDate && value) {
-              const fullStartDate = dayjs(startDate, 'DD-MM-YYYY HH:mm:ss');
-              const endDate = dayjs(value, 'DD-MM-YYYY HH:mm:ss');
+              const fullStartDate = dayjs(startDate);
+              const endDate = dayjs(value);
+
               const isAfter = endDate.isAfter(fullStartDate);
+
               return isAfter || this.createError({ message: 'End date must be after start date' });
             }
             if (!value && !isHalfDay) {
@@ -213,9 +219,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       {({ initialValues, errors, touched, setFieldValue, values, submitForm }) => (
         <Form>
           <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-            <Scrollbar sx={{ p: 2, height: '70vh' }}>
+            <Scrollbar sx={{ p: 2, height: '30vh' }}>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6}>
                   <CustomSelect
                     isLoading={isLeavePolicyLoading}
                     options={leavePolicyData?.items || []}
@@ -232,7 +238,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={12} md={6}>
                   <FormControlLabel
                     control={
                       <Field
@@ -251,7 +257,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     label="Half Day"
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={values.isHalfDay ? 12 : 6}>
                   <DateTimePicker
                     label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
                     onChange={(value) => setFieldValue('startDate', value)}
@@ -260,6 +266,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     disabled={editData}
                     slotProps={{
                       textField: {
+                        fullWidth: true,
                         size: 'small',
                         helperText: touched.startDate && errors.startDate,
                         error: touched.startDate && Boolean(errors.startDate),
@@ -268,7 +275,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   />
                 </Grid>
                 {!values.isHalfDay && (
-                  <Grid item xs={4}>
+                  <Grid item xs={6}>
                     <DateTimePicker
                       label="End Date and Time"
                       onChange={(value) => setFieldValue('endDate', value)}
@@ -277,6 +284,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       disabled={editData}
                       slotProps={{
                         textField: {
+                          fullWidth: true,
+
                           size: 'small',
                           helperText: touched.endDate && errors.endDate,
                           error: touched.endDate && Boolean(errors.endDate),
@@ -286,22 +295,22 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   </Grid>
                 )}
                 {/* <Grid item xs={12}>
-                <ColorPicker
-                  selected={values.color}
-                  onSelectColor={(color) => {
-                    setFieldValue('color', color);
-                  }}
-                  colors={CALENDAR_COLOR_OPTIONS}
-                  slotProps={{
-                    button: {
-                      disabled: editData,
-                    },
-                  }}
-                  error={touched.color && Boolean(errors.color)}
-                  helperText={(touched.color && errors.color) || ''}
-                  disabled={editData}
-                />
-              </Grid> */}
+            <ColorPicker
+              selected={values.color}
+              onSelectColor={(color) => {
+                setFieldValue('color', color);
+              }}
+              colors={CALENDAR_COLOR_OPTIONS}
+              slotProps={{
+                button: {
+                  disabled: editData,
+                },
+              }}
+              error={touched.color && Boolean(errors.color)}
+              helperText={(touched.color && errors.color) || ''}
+              disabled={editData}
+            />
+          </Grid> */}
                 <Grid item xs={6}>
                   <Upload
                     {...uploadProps}
@@ -346,17 +355,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 </Grid>
 
                 <Grid item xs={12} display="flex" justifyContent="flex-end">
-                  {!editData && (
-                    <LoadingButton
-                      loading={isLoading}
-                      type="submit"
-                      variant="contained"
-                      size="small"
-                    >
-                      Submit Leave Request
-                    </LoadingButton>
-                  )}
-
                   {editData && (
                     <>
                       {editData.status !== EmployeeLeaveStatusType.Rejected && (
@@ -409,18 +407,28 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       helperText={touched.rejectionReason && errors.rejectionReason}
                       sx={{ my: 1 }}
                     />
-                    <LoadingButton
-                      loading={isChangeStatusLoading}
-                      variant="contained"
-                      type="submit"
-                      sx={{ mt: 2 }}
-                    >
-                      Submit
-                    </LoadingButton>
                   </Grid>
                 )}
               </Grid>
             </Scrollbar>
+            <DialogActions>
+              {!editData && (
+                <LoadingButton loading={isLoading} type="submit" variant="contained">
+                  Submit Leave Request
+                </LoadingButton>
+              )}
+
+              {values.status === EmployeeLeaveStatusType.Rejected && (
+                <LoadingButton
+                  loading={isChangeStatusLoading}
+                  variant="contained"
+                  type="submit"
+                  sx={{ mt: 2 }}
+                >
+                  Submit
+                </LoadingButton>
+              )}
+            </DialogActions>
           </BackPopUpChecked>
         </Form>
       )}

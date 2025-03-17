@@ -3,7 +3,8 @@ import type { UsePopoverReturn } from 'src/components/custom-popover';
 import dayjs from 'dayjs';
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -84,8 +85,21 @@ const LeaveHistory = (props: TabComponentType) => {
     setEditData(null);
     modal.onFalse();
   };
+
   return (
     <>
+      <Box display="flex" justifyContent="flex-end">
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => {
+            modal.onTrue();
+          }}
+        >
+          Leave Request
+        </Button>
+      </Box>
       <CustomizableTable
         isLoading={isLoading}
         tableId="leave-history-table"
@@ -165,7 +179,7 @@ const LeaveHistory = (props: TabComponentType) => {
         maxWidth="md"
         open={modal.value}
         handleClose={handleClose}
-        title="View Leave Request"
+        title={editData ? 'Review Leave Request' : 'Add Leave Request'}
       >
         <Box p={2}>
           <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
