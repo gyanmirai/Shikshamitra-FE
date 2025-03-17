@@ -54,6 +54,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -65,9 +66,11 @@ const EntranceExamScreen = () => {
   // const [view, setView] = React.useState('calender');
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
   const [editData, setEditData] = useState(null);
+  const [moveId, setMoveId] = useState<string | null>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const resultDialog = useBoolean();
+  const confirmMovePopup = useBoolean();
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
@@ -168,7 +171,8 @@ const EntranceExamScreen = () => {
         <MenuItem
           onClick={async () => {
             // dialog.onTrue()
-            await moveToAdmission(row.id);
+            confirmMovePopup.onTrue();
+            setMoveId(row.id);
             popover.onClose();
           }}
         >
@@ -177,7 +181,7 @@ const EntranceExamScreen = () => {
         </MenuItem>
       </MenuList>
     ),
-    [moveToAdmission, resultDialog]
+    [confirmMovePopup, resultDialog]
   );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -325,6 +329,29 @@ const EntranceExamScreen = () => {
       >
         <ResultForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
+
+      <ConfirmDialog
+        title="Move"
+        content="Are you sure want to move in admission ?"
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isLoading}
+            color="error"
+            onClick={async () => {
+              await moveToAdmission(moveId);
+              confirmMovePopup.onFalse();
+            }}
+          >
+            Move
+          </LoadingButton>
+        }
+        open={confirmMovePopup.value}
+        onClose={() => {
+          confirmMovePopup.onFalse();
+          setMoveId(null);
+        }}
+      />
     </Box>
   );
 };

@@ -3,6 +3,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Box, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -16,6 +17,7 @@ import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registrati
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -26,8 +28,10 @@ import type { IInquiryData } from '../Inquiry';
 
 const RegistrationFormScreen = () => {
   const [editData, setEditData] = useState<IInquiryData | null>(null);
+  const [moveId, setMoveId] = useState<string | null>(null);
   const [dates, setDates] = useState([]);
   const followUpDialog = useBoolean();
+  const confirmMovePopup = useBoolean();
   const {
     data: inquiryFormData,
     isLoading,
@@ -125,11 +129,10 @@ const RegistrationFormScreen = () => {
                     <MenuList>
                       <MenuItem
                         onClick={async (e) => {
+                          confirmMovePopup.onTrue();
                           // dialog.onTrue();
-                          e.stopPropagation();
+                          setMoveId(row.id);
                           popover.onClose();
-                          await moveToRegistration(row.id);
-                          refetch();
                         }}
                       >
                         <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
@@ -172,6 +175,30 @@ const RegistrationFormScreen = () => {
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
       </CustomDialog>
+
+      <ConfirmDialog
+        title="Move"
+        content="Are you sure want to move in registration ?"
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isLoading}
+            color="error"
+            onClick={async () => {
+              await moveToRegistration(moveId);
+              refetch();
+              confirmMovePopup.onFalse();
+            }}
+          >
+            Move
+          </LoadingButton>
+        }
+        open={confirmMovePopup.value}
+        onClose={() => {
+          confirmMovePopup.onFalse();
+          setMoveId(null);
+        }}
+      />
     </Box>
   );
 };
