@@ -113,7 +113,7 @@ const EntranceExamScreen = () => {
       entranceExamData?.items.map((i: any) => {
         const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
         const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
-        console.log(`${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`);
+
         const startExamDate = dayjs(
           dayjs(
             `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,

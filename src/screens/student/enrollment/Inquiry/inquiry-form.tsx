@@ -1,14 +1,15 @@
 import type { Dayjs } from 'dayjs';
+import type { FastFieldProps } from 'formik';
 import type { Board } from 'src/types/school';
 import type { ICity, IState, ICountry } from 'country-state-city';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useDispatch } from 'react-redux';
-import { Form, Field, Formik } from 'formik';
 import { matchIsValidTel } from 'mui-tel-input';
 import { useMemo, useState, useEffect } from 'react';
 import { isEqual, cloneDeep, capitalize } from 'lodash';
+import { Form, Field, Formik, FastField } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -35,7 +36,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
-import { InquiryStatusType } from 'src/enums/inquiry-status-type';
+import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
@@ -50,7 +51,9 @@ import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import StandardAddress, { useStandardAddress } from 'src/components/stardard-address';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 
 import { InquiryPreferenceForm } from '../setting/inquiryPreference';
 
@@ -93,8 +96,16 @@ const validationSchema = Yup.object().shape({
   pinCode: Yup.number()
     .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('Pin code is required'),
-  state: Yup.string(),
-  city: Yup.string(),
+  country: Yup.object({
+    name: Yup.string().required('country is required'),
+  }).required('country is required'),
+  state: Yup.object({
+    name: Yup.string().required('State is required'),
+  }).required('State is required'),
+  city: Yup.object({
+    name: Yup.string().required('City is required'),
+  }).required('City is required'),
+
   // board: Yup.string().required('Board is required'),
   // medium: Yup.string().required('Medium is required'),
 });
@@ -116,9 +127,9 @@ interface FormikValues {
   alternateContactDetails: string;
   previousSchool: string;
   inquiryPreferences: string;
-  country?: ICountry;
-  city?: ICity;
-  state?: IState;
+  country?: Partial<ICountry>;
+  city?: Partial<ICity>;
+  state?: Partial<IState>;
   pinCode: number;
   medium: string;
   formNo: string | undefined;
@@ -144,8 +155,10 @@ const InquiryForm = ({
       academicYear: editData?.academicYearId || '',
       class: editData?.standardId || '',
       lastName: editData?.lastName || '',
-      city: editData?.city || undefined,
-      state: editData?.state || undefined,
+      city: editData ? { name: editData?.city } : undefined,
+      state: editData
+        ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+        : undefined,
       pinCode: editData?.pinCode || 0,
       firstName: editData?.firstName || '',
       middleName: editData?.middleName || '',
@@ -161,7 +174,9 @@ const InquiryForm = ({
       inquiryPreferences: editData?.inquiryPreferenceId || '',
       board: editData?.educationBoardId || '',
       formNo: editData?.formNumber || undefined,
-      country: editData?.country || undefined,
+      country: editData
+        ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
+        : undefined,
       addressLine1: editData?.addressLine1 || '',
       addressLine2: editData?.addressLine2 || '',
       addressLine3: editData?.addressLine3 || '',
@@ -170,7 +185,7 @@ const InquiryForm = ({
     }),
     [editData]
   );
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
+
   const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
@@ -206,8 +221,13 @@ const InquiryForm = ({
         (item: Board) => item.academicYearId === editData.academicYearId
       );
       setBoards(findBoards);
+
+      if (editData.educationMediumId) {
+        getClassByMedium(editData.educationMediumId);
+      }
     }
-  }, [board?.items, editData]);
+  }, [board?.items, editData, getClassByMedium]);
+
   return (
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <Formik
@@ -234,8 +254,9 @@ const InquiryForm = ({
                   genderType: values.gender,
                   parentContactNumber: values.parentsContactNo,
                   alternativeContactNumber: values.alternateContactDetails,
-                  city: values.city,
-                  state: values.state,
+                  city: values?.city?.name,
+                  state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                  country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
                   pinCode: values.pinCode,
                   address: values.address,
                   inquiryStatusType: 0,
@@ -260,11 +281,12 @@ const InquiryForm = ({
                 genderType: values.gender,
                 parentContactNumber: values.parentsContactNo,
                 alternativeContactNumber: values.alternateContactDetails,
-                city: values.city,
-                state: values.state,
+                city: values?.city?.name,
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
                 pinCode: values.pinCode,
                 address: values.address,
-                inquiryStatusType: InquiryStatusType.Pending,
+                inquiryStatusType: FollowUpStatusType.Pending,
                 educationMediumId: values.medium,
                 academicYearId: values.academicYear,
                 standardId: values.class,
@@ -366,20 +388,25 @@ const InquiryForm = ({
                   </Grid>
 
                   <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      name="lastName"
-                      label="Last Name"
-                      error={touched.lastName && Boolean(errors.lastName)}
-                      helperText={touched.lastName && errors.lastName}
-                      value={values.lastName}
-                      onChange={(e) => {
-                        const value = capitalize(e.target.value);
+                    <FastField name="lastName">
+                      {({ field, form, meta }: FastFieldProps) => (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          name="lastName"
+                          label="Last Name"
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          value={field.value}
+                          onChange={(e) => {
+                            const value = capitalize(e.target.value);
+                            form.setFieldValue('lastName', value);
 
-                        setFieldValue('lastName', value);
-                      }}
-                    />
+                            // setFieldValue('lastName', value);
+                          }}
+                        />
+                      )}
+                    </FastField>
                   </Grid>
                   <Grid item xs={4}>
                     <TextField
@@ -601,7 +628,7 @@ const InquiryForm = ({
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <StandardAddress.RenderAddressField
+                    <TextField
                       name="addressLine1"
                       label="Address Line 1"
                       value={values.addressLine1}
@@ -614,7 +641,7 @@ const InquiryForm = ({
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <StandardAddress.RenderAddressField
+                    <TextField
                       name="addressLine2"
                       label="Address Line 2"
                       value={values.addressLine2}
@@ -627,7 +654,7 @@ const InquiryForm = ({
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <StandardAddress.RenderAddressField
+                    <TextField
                       name="addressLine3"
                       label="Address Line 3"
                       value={values.addressLine3}
@@ -640,26 +667,39 @@ const InquiryForm = ({
                     />
                   </Grid>
                   <Grid item xs={4}>
-                    <RenderCountry
+                    <CountryComponent
+                      value={values.country}
                       onChange={(_e, value) => {
                         setFieldValue('state', null);
                         setFieldValue('country', value);
                       }}
+                      error={touched.country && Boolean(errors.country)}
+                      helperText={touched.country && errors.country}
                     />
                   </Grid>
                   <Grid item xs={4}>
-                    <RenderState
+                    <StateComponent
+                      value={values.state}
                       onChange={(_e, value) => {
                         setFieldValue('city', null);
                         setFieldValue('state', value);
                       }}
+                      error={touched.state && Boolean(errors.state)}
+                      helperText={touched.state && errors.state}
+                      countryValue={values.country}
                     />
                   </Grid>
                   <Grid item xs={4}>
-                    <RenderCity onChange={(_e, value) => setFieldValue('city', value)} />
+                    <CityComponent
+                      value={values.city}
+                      onChange={(_e, value) => setFieldValue('city', value)}
+                      error={touched.city && Boolean(errors.city)}
+                      helperText={touched.city && errors.city}
+                      stateValue={values.state}
+                    />
                   </Grid>
                   <Grid item xs={4}>
-                    <StandardAddress.RenderPincode
+                    <TextField
                       name="pinCode"
                       value={values.pinCode}
                       onChange={handleChange}

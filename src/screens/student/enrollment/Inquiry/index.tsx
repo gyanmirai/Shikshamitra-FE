@@ -4,8 +4,8 @@ import type { YesNo } from 'src/enums/yes-no';
 import type { RootState } from 'src/redux/store';
 import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
+import type { IState, ICountry } from 'country-state-city';
 import type { EmployeeCastType } from 'src/enums/employee-cast';
-import type { ICity, IState, ICountry } from 'country-state-city';
 import type { Board, Medium, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
@@ -44,7 +44,7 @@ export interface IInquiryData {
   alternativeContactNumber: string;
   dueDate?: string;
   country: ICountry;
-  city: ICity;
+  city: string;
   state: IState;
   pinCode: number;
   address: string;

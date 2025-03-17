@@ -31,29 +31,31 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
       if (typeof window !== 'undefined') {
         const reduxStore = store.getState();
         const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
-        console.log('🚀 ~ currentYear:', currentYear);
 
-        // Set cookies using js-cookie library
         Cookies.set('AcademicYearId', currentYear?.id, {
-          expires: 7, // 7 days
+          expires: 7,
           path: '/',
-          sameSite: 'None',
-          secure: true, // Must be true since frontend is HTTP
+          secure: false,
+          domain: 'localhost',
+          sameSite: 'None', // <-- UNCOMMENT THIS LINE, set sameSite to 'Lax'
+          // hostOnly: false,
         });
         Cookies.set('EducationBoardId', currentBoard?.id, {
-          expires: 7, // 7 days
+          expires: 7,
           path: '/',
-          sameSite: 'None',
-          secure: true, // Must be true since frontend is HTTP
+          secure: false,
+          domain: 'localhost',
+          sameSite: 'None', // <-- UNCOMMENT THIS LINE, set sameSite to 'Lax'
+          // hostOnly: false,
         });
         Cookies.set('EducationMediumId', currentMedium?.id, {
-          expires: 7, // 7 days
+          expires: 7,
           path: '/',
-          sameSite: 'None',
-          secure: true, // Must be true since frontend is HTTP
+          secure: false,
+          domain: 'localhost',
+          sameSite: 'None', // <-- UNCOMMENT THIS LINE, set sameSite to 'Lax'
+          // hostOnly: false,
         });
-
-        console.log('Cookies set:', document.cookie);
 
         const token = store.getState().auth.user?.access_token;
 
@@ -73,6 +75,7 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
 
                   config.headers = config.headers || {};
                   config.headers.Authorization = `Bearer ${refreshedUser?.access_token}`;
+                  config.headers['X-Custom-Header'] = document.cookie;
                 } else {
                   handleLogout();
                 }
@@ -88,6 +91,7 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
                 refreshSubscribers.push((tokens: string) => {
                   config.headers = config.headers || {};
                   config.headers.Authorization = `Bearer ${tokens}`;
+                  config.headers['X-Custom-Header'] = document.cookie;
                   resolve();
                 });
               });
@@ -96,6 +100,7 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
             // Token is valid, attach to the request
             config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
+            config.headers['X-Custom-Header'] = document.cookie;
           }
         }
       }

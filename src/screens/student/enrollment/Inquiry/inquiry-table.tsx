@@ -14,9 +14,9 @@ import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
 import {
-  InquiryStatusType,
+  FollowUpStatusType,
   InquiryStatusTypeColors,
-  InquiryStatusTypeOptions,
+  FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 
 import { Label } from 'src/components/label';
@@ -103,16 +103,16 @@ const InquiryTable = ({
           minWidth: '180px',
         },
         {
-          id: 'inquiryStatusType',
+          id: 'followUpStatusType',
           label: 'Status',
           filterType: 'enum',
-          enumOptions: InquiryStatusTypeOptions,
+          enumOptions: FollowUpStatusTypeOptions,
           minWidth: '180px',
           align: 'left',
           render(value, row) {
-            const color = InquiryStatusTypeColors[value as InquiryStatusType] as LabelColor;
+            const color = InquiryStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
-            return <Label color={color}>{InquiryStatusType[value]}</Label>;
+            return <Label color={color}>{FollowUpStatusType[value]}</Label>;
           },
         },
         {

@@ -675,10 +675,10 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                         sx={{
                           fontSize: '14px',
                           width: column.minWidth,
-                          position: column.sticky ? 'sticky' : 'relative',
+                          position: 'sticky',
                           left: column.sticky ? 0 : 'auto',
                           right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
-                          zIndex: column.sticky ? 2 : 'auto',
+                          zIndex: column.sticky ? 99 : 10,
                           backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                           boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
 
@@ -835,7 +835,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 position: column.sticky ? 'sticky' : 'static',
                                 left: column.sticky ? 0 : 'auto',
                                 right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
-                                zIndex: column.sticky ? 2 : 'auto',
+                                zIndex: column.sticky ? 99 : 2,
                                 backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                                 boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
                               }}

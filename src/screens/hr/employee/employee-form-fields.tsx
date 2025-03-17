@@ -52,7 +52,9 @@ import PhoneInput from 'src/components/phone-input';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useStandardAddress } from 'src/components/stardard-address';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 
 import WorkExperiences from './work-experiance';
 
@@ -730,16 +732,15 @@ export const InformationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props: any) {
-      const { formik, RenderCountry } = props;
+      const { formik } = props;
       return (
-        <RenderCountry
+        <CountryComponent
           onChange={(_e: any, value: any) => {
             formik.setFieldValue('state', null);
-            console.log('country---------', value);
-            console.log('state in country -----', formik.values.state);
 
             formik.setFieldValue('country', value);
           }}
+          value={formik.values.country}
         />
       );
     },
@@ -750,17 +751,15 @@ export const InformationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props: any) {
-      console.log('state outside render state -----');
-
-      const { formik, RenderState } = props;
+      const { formik } = props;
       return (
-        <RenderState
+        <StateComponent
           onChange={(_e: any, value: any) => {
-            console.log('state in onchange -----');
             formik.setFieldValue('state', value);
             formik.setFieldValue('city', null);
-            // formik.setFieldValue('state', value);
           }}
+          value={formik.values.state}
+          countryValue={formik.values.country}
         />
       );
     },
@@ -771,8 +770,14 @@ export const InformationFields: FieldsType[] = [
     type: 'text',
     otherProps: {},
     renderComp(props: any) {
-      const { formik, RenderCity } = props;
-      return <RenderCity onChange={(_e: any, value: any) => formik.setFieldValue('city', value)} />;
+      const { formik } = props;
+      return (
+        <CityComponent
+          value={formik.values.city}
+          onChange={(_e: any, value: any) => formik.setFieldValue('city', value)}
+          stateValue={formik.values.state}
+        />
+      );
     },
   },
   {
@@ -967,27 +972,44 @@ export const allFields: FieldsType[][] = [
 
 function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
 
   return (
     <Stack spacing={2}>
-      <RenderCountry
+      <CountryComponent
+        value={formik.values.fatherCountry}
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('fatherState', null);
           formik.setFieldValue('fatherCountry', value);
         }}
       />
-      <RenderState
+      {/* <RenderCountry
+        onChange={(_e: any, value: any) => {
+          formik.setFieldValue('fatherState', null);
+          formik.setFieldValue('fatherCountry', value);
+        }}
+      /> */}
+      <StateComponent
+        value={formik.values.fatherState}
+        countryValue={formik.values.fatherCountry}
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('fatherState', value);
           formik.setFieldValue('fatherCity', null);
         }}
-      />{' '}
-      <RenderCity
+      />
+      {/* <RenderState
+        onChange={(_e: any, value: any) => {
+          formik.setFieldValue('fatherState', value);
+          formik.setFieldValue('fatherCity', null);
+        }}
+      />{' '} */}
+      <CityComponent
+        value={formik.values.fatherCity}
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('fatherCity', value);
         }}
+        stateValue={formik.values.fatherState}
       />
+
       <TextField
         name="fatherPinCode"
         label="Pincode"
@@ -1044,10 +1066,6 @@ function FatherAddressComponent(props: any) {
 
 function MotherAddressComponent(props: any) {
   const { formik, disabled } = props;
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
-
-  console.log('formik values---fatherCountry--', formik.values.fatherCountry);
-  console.log('formik values---motherCountry--', formik.values.motherCountry);
 
   return (
     <Stack spacing={2}>
@@ -1073,25 +1091,46 @@ function MotherAddressComponent(props: any) {
         }
         label="Same as Father Address"
       />
-      <RenderCountry
-        // value={formik.values.motherCountry}
+      <CountryComponent
+        value={formik.values.motherCountry}
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('motherState', null);
           formik.setFieldValue('motherCountry', value);
         }}
       />
+      {/* <RenderCountry
+        // value={formik.values.motherCountry}
+        onChange={(_e: any, value: any) => {
+          formik.setFieldValue('motherState', null);
+          formik.setFieldValue('motherCountry', value);
+        }}
+      /> */}
 
-      <RenderState
+      <StateComponent
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('motherState', value);
           formik.setFieldValue('motherCity', null);
         }}
+        value={formik.values.motherState}
+        countryValue={formik.values.motherCountry}
       />
-      <RenderCity
+
+      {/* <RenderState
+        onChange={(_e: any, value: any) => {
+          formik.setFieldValue('motherState', value);
+          formik.setFieldValue('motherCity', null);
+        }}
+
+        
+      /> */}
+      <CityComponent
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('motherCity', value);
         }}
+        value={formik.values.motherCity}
+        stateValue={formik.values.motherState}
       />
+
       <TextField
         name="motherPinCode"
         label="Pincode"
@@ -1148,7 +1187,7 @@ function MotherAddressComponent(props: any) {
 
 function SpouseAddressComponent(props: any) {
   const { formik, disabled } = props;
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
+
   return (
     <Stack spacing={2}>
       <FormControlLabel
@@ -1173,23 +1212,42 @@ function SpouseAddressComponent(props: any) {
         }
         label="Same as Father Address"
       />
-      <RenderCountry
+      <CountryComponent
+        value={formik.values.spouseCountry}
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('spouseState', null);
           formik.setFieldValue('spouseCountry', value);
         }}
       />
-      <RenderState
+      {/* <RenderCountry
+        onChange={(_e: any, value: any) => {
+          formik.setFieldValue('spouseState', null);
+          formik.setFieldValue('spouseCountry', value);
+        }}
+      /> */}
+      <StateComponent
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('spouseState', value);
           formik.setFieldValue('spouseCity', null);
         }}
+        value={formik.values.spouseState}
+        countryValue={formik.values.spouseCountry}
       />
-      <RenderCity
+      {/* <RenderState
+        onChange={(_e: any, value: any) => {
+          formik.setFieldValue('spouseState', value);
+          formik.setFieldValue('spouseCity', null);
+        }}
+      /> */}
+
+      <CityComponent
         onChange={(_e: any, value: any) => {
           formik.setFieldValue('spouseCity', value);
         }}
+        value={formik.values.spouseCity}
+        stateValue={formik.values.spouseState}
       />
+
       <TextField
         name="spousePinCode"
         label="Pincode"
@@ -1245,7 +1303,7 @@ function SpouseAddressComponent(props: any) {
 }
 
 function RenderFamilyInformation(props: any) {
-  const { formik, disabled, RenderCountry, RenderState, RenderCity } = props;
+  const { formik, disabled } = props;
 
   return (
     <Box sx={{ width: '100%' }}>

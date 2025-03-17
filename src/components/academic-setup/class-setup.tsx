@@ -224,7 +224,7 @@ interface IClassForm {
   organizationId: string | number;
 }
 export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm) => {
-  const [addOrganization, { isLoading }] = useQueryAndMutation({
+  const [addClass, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddClassMutation,
     popupConfig: {
@@ -232,7 +232,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
       successMessage: 'Class added Successfully',
     },
   });
-  const [updateOrganization, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateClass, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateClassMutation,
     popupConfig: {
@@ -241,27 +241,31 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
     },
   });
 
-  const formik = useFormik({
+  const formik = useFormik<{
+    class: string;
+    limit: number;
+  }>({
     initialValues: {
       class: editData ? editData.name : '',
-      limit: editData ? editData.limit : 0,
+      limit: editData ? editData.ageLowerLimit : 0,
     },
     validationSchema: Yup.object().shape({
       class: Yup.string().required('Class is required'),
     }),
     onSubmit: async (values) => {
       if (editData) {
-        await updateOrganization({
+        await updateClass({
           id: editData.id,
           body: {
             name: values.class,
+            ageLowerLimit: values.limit,
             educationMediumStageId: organizationId,
           },
         });
       } else {
-        await addOrganization({
+        await addClass({
           name: values.class,
-
+          ageLowerLimit: values.limit,
           educationMediumStageId: organizationId,
         });
       }
@@ -280,7 +284,6 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           value={formik.values.class}
           onChange={formik.handleChange}
           error={formik.touched.class && Boolean(formik.errors.class)}
-          // @ts-ignore
           helperText={formik.touched.class && formik.errors.class}
           size="small"
         />
@@ -289,10 +292,10 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           id="limitOfAge"
           name="limit"
           label="Limit Of Age"
+          type="number"
           value={formik.values.limit}
           onChange={formik.handleChange}
           error={formik.touched.limit && Boolean(formik.errors.limit)}
-          // @ts-ignore
           helperText={formik.touched.limit && formik.errors.limit}
           size="small"
         />

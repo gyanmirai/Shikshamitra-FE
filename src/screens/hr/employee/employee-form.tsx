@@ -22,7 +22,6 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { UploadAvatar } from 'src/components/upload';
-import { useStandardAddress } from 'src/components/stardard-address';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { allFields } from './employee-form-fields';
@@ -478,10 +477,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 export default EmployeeFrom;
 
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
-  console.log('formik values------', formik.values);
-
   const containerRef = React.useRef<HTMLElement>(null);
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
   return (
     <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
       {steps.map(
@@ -529,9 +525,6 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                           field.renderComp({
                             formik,
                             field,
-                            RenderCountry,
-                            RenderState,
-                            RenderCity,
                           })
                         ) : field.type === 'date' ? (
                           <DatePicker

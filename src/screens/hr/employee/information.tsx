@@ -11,7 +11,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useStandardAddress } from 'src/components/stardard-address';
 
 import {
   FamilyFields,
@@ -41,7 +40,6 @@ const TABS = [
 
 const EmployeeInformation = ({ editData }: { editData: any }) => {
   const [isEdit, setIsEdit] = useState(false);
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
 
   const onSubmit = (_val: any) => {};
   const formik = useFormik({
@@ -133,9 +131,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                         formik,
                         field,
                         disabled: !isEdit,
-                        RenderCountry,
-                        RenderState,
-                        RenderCity,
                       })
                     ) : field.type === 'date' ? (
                       <DatePicker
