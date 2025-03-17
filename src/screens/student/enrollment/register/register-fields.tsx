@@ -55,8 +55,10 @@ import { Subheader } from 'src/components/nav-section';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import UploadButton from 'src/components/upload-button';
-import StandardAddress from 'src/components/stardard-address';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -325,6 +327,408 @@ const RenderClass = (props: any) => {
       helperText={(touched.class && errors.class) || ''}
       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
     />
+  );
+};
+
+const RenderLocalAddressFields = (props: any) => {
+  const { formik, isEdit } = props;
+
+  return (
+    <>
+      <Subheader
+        data-title="Local Address"
+        open={formik.values.isOpenLocalAddress}
+        onClick={() => {
+          formik.setFieldValue('isOpenLocalAddress', !formik.values.isOpenLocalAddress);
+        }}
+        sx={{ pt: 0, fontWeight: 600 }}
+      >
+        Local Address
+      </Subheader>
+
+      <Collapse in={formik.values.isOpenLocalAddress}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <TextField
+              name="localAddressLine1"
+              label="Address Line 1"
+              disabled={!isEdit}
+              value={formik.values.localAddressLine1}
+              onChange={formik.handleChange}
+              error={formik.touched.localAddressLine1 && Boolean(formik.errors.localAddressLine1)}
+              helperText={formik.touched.localAddressLine1 && formik.errors.localAddressLine1}
+              fullWidth
+              placeholder="Address Line 1"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="localAddressLine2"
+              label="Address Line 2"
+              value={formik.values.localAddressLine2}
+              onChange={formik.handleChange}
+              error={formik.touched.localAddressLine2 && Boolean(formik.errors.localAddressLine2)}
+              helperText={formik.touched.localAddressLine2 && formik.errors.localAddressLine2}
+              fullWidth
+              placeholder="Address Line 2"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="localAddressLine3"
+              label="Address Line 3"
+              value={formik.values.localAddressLine3}
+              onChange={formik.handleChange}
+              error={formik.touched.localAddressLine3 && Boolean(formik.errors.localAddressLine3)}
+              helperText={formik.touched.localAddressLine3 && formik.errors.localAddressLine3}
+              fullWidth
+              placeholder="Address Line 3"
+              size="small"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <CountryComponent
+              value={formik.values.localCountry}
+              onChange={(_e, value) => {
+                formik.setFieldValue('localState', null);
+                formik.setFieldValue('localCountry', value);
+              }}
+              error={formik.touched.localCountry && Boolean(formik.errors.localCountry)}
+              helperText={formik.touched.localCountry && formik.errors.localCountry}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <StateComponent
+              value={formik.values.localState}
+              onChange={(_e, value) => {
+                formik.setFieldValue('localCity', null);
+                formik.setFieldValue('localState', value);
+              }}
+              error={formik.touched.localState && Boolean(formik.errors.localState)}
+              helperText={formik.touched.localState && formik.errors.localState}
+              countryValue={formik.values.localCountry}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <CityComponent
+              value={formik.values.localCity}
+              onChange={(_e, value) => formik.setFieldValue('localCity', value)}
+              error={formik.touched.localCity && Boolean(formik.errors.localCity)}
+              helperText={formik.touched.localCity && formik.errors.localCity}
+              stateValue={formik.values.localState}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="localPincode"
+              value={formik.values.localPincode}
+              onChange={formik.handleChange}
+              error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
+              helperText={formik.touched.localPincode && formik.errors.localPincode}
+              fullWidth
+              placeholder="Pincode"
+              size="small"
+              label="Pincode"
+            />
+          </Grid>
+        </Grid>
+      </Collapse>
+    </>
+  );
+};
+
+const RenderPermanentAddressFields = (props: any) => {
+  const { formik, isEdit } = props;
+  return (
+    <>
+      <Subheader
+        data-title="Permanent Address"
+        open={formik.values.isOpenPermanentAddress}
+        onClick={() => {}}
+        sx={{ pt: 0, fontWeight: 600 }}
+      >
+        <Checkbox
+          checked={formik.values.sameAsLocalForPermanent}
+          size="small"
+          disabled={!isEdit}
+          sx={{ p: 0 }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          onChange={(e) => {
+            formik.setFieldValue('sameAsLocalForPermanent', e.target.checked);
+            formik.setFieldValue('isOpenPermanentAddress', !e.target.checked);
+            if (e.target.checked) {
+              formik.setFieldValue('permanentAddressLine1', formik.values.localAddressLine1);
+              formik.setFieldValue('permanentAddressLine2', formik.values.localAddressLine2);
+              formik.setFieldValue('permanentAddressLine3', formik.values.localAddressLine3);
+              formik.setFieldValue('permanentCountry', formik.values.localCountry);
+              formik.setFieldValue('permanentState', formik.values.localState);
+              formik.setFieldValue('permanentCity', formik.values.localCity);
+              formik.setFieldValue('permanentPincode', formik.values.localPincode);
+            }
+          }}
+          name="sameAsLocal"
+        />{' '}
+        Permanent Address Same as Local Address{' '}
+      </Subheader>
+      <Collapse in={formik.values.isOpenPermanentAddress}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="permanentAddressLine1"
+              label="Address Line 1"
+              value={formik.values.permanentAddressLine1}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.permanentAddressLine1 && Boolean(formik.errors.permanentAddressLine1)
+              }
+              helperText={
+                formik.touched.permanentAddressLine1 && formik.errors.permanentAddressLine1
+              }
+              fullWidth
+              placeholder="Address Line 1"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="permanentAddressLine2"
+              label="Address Line 2"
+              value={formik.values.permanentAddressLine2}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.permanentAddressLine2 && Boolean(formik.errors.permanentAddressLine2)
+              }
+              helperText={
+                formik.touched.permanentAddressLine2 && formik.errors.permanentAddressLine2
+              }
+              fullWidth
+              placeholder="Address Line 2"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="permanentAddressLine3"
+              label="Address Line 3"
+              value={formik.values.permanentAddressLine3}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.permanentAddressLine3 && Boolean(formik.errors.permanentAddressLine3)
+              }
+              helperText={
+                formik.touched.permanentAddressLine3 && formik.errors.permanentAddressLine3
+              }
+              fullWidth
+              placeholder="Address Line 3"
+              size="small"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <CountryComponent
+              value={formik.values.permanentCountry}
+              onChange={(_e, value) => {
+                formik.setFieldValue('permanentState', null);
+                formik.setFieldValue('permanentCountry', value);
+              }}
+              error={formik.touched.permanentCountry && Boolean(formik.errors.permanentCountry)}
+              helperText={formik.touched.permanentCountry && formik.errors.permanentCountry}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <StateComponent
+              value={formik.values.permanentState}
+              onChange={(_e, value) => {
+                formik.setFieldValue('permanentCity', null);
+                formik.setFieldValue('permanentState', value);
+              }}
+              error={formik.touched.permanentState && Boolean(formik.errors.permanentState)}
+              helperText={formik.touched.permanentState && formik.errors.permanentState}
+              countryValue={formik.values.permanentCountry}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <CityComponent
+              value={formik.values.permanentCity}
+              onChange={(_e, value) => formik.setFieldValue('permanentCity', value)}
+              error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
+              helperText={formik.touched.permanentCity && formik.errors.permanentCity}
+              stateValue={formik.values.permanentState}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              name="permanentPincode"
+              disabled={!isEdit}
+              value={formik.values.permanentPincode}
+              onChange={formik.handleChange}
+              error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
+              helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
+              fullWidth
+              placeholder="Pincode"
+              size="small"
+              label="Pincode"
+            />
+          </Grid>
+        </Grid>
+      </Collapse>
+    </>
+  );
+};
+
+const RenderEmergencyAddressFields = (props: any) => {
+  const { formik, isEdit } = props;
+
+  return (
+    <>
+      <Subheader
+        data-title="Emergency Address"
+        open={formik.values.isOpenEmergencyAddress}
+        // onClick={() => {
+        //   formik.setFieldValue('isOpenEmergencyAddress', !formik.values.isOpenEmergencyAddress);
+        // }}
+        sx={{ pt: 0, fontWeight: 600 }}
+      >
+        <Checkbox
+          checked={formik.values.emergencySameAsLocal}
+          disabled={!isEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          onChange={(e) => {
+            formik.setFieldValue('emergencySameAsLocal', e.target.checked);
+            formik.setFieldValue('isOpenEmergencyAddress', !e.target.checked);
+            if (e.target.checked) {
+              formik.setFieldValue('emergencyAddressLine1', formik.values.localAddressLine1);
+              formik.setFieldValue('emergencyAddressLine2', formik.values.localAddressLine2);
+              formik.setFieldValue('emergencyAddressLine3', formik.values.localAddressLine3);
+              formik.setFieldValue('emergencyCountry', formik.values.localCountry);
+              formik.setFieldValue('emergencyState', formik.values.localState);
+              formik.setFieldValue('emergencyCity', formik.values.localCity);
+              formik.setFieldValue('emergencyPincode', formik.values.localPincode);
+            }
+          }}
+          sx={{ p: 0 }}
+        />{' '}
+        Emergency Address Same as Local Address{' '}
+      </Subheader>
+      <Collapse in={formik.values.isOpenEmergencyAddress}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="emergencyAddressLine1"
+              label="Address Line 1"
+              value={formik.values.emergencyAddressLine1}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.emergencyAddressLine1 && Boolean(formik.errors.emergencyAddressLine1)
+              }
+              helperText={
+                formik.touched.emergencyAddressLine1 && formik.errors.emergencyAddressLine1
+              }
+              fullWidth
+              placeholder="Address Line 1"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="emergencyAddressLine2"
+              label="Address Line 2"
+              value={formik.values.emergencyAddressLine2}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.emergencyAddressLine2 && Boolean(formik.errors.emergencyAddressLine2)
+              }
+              helperText={
+                formik.touched.emergencyAddressLine2 && formik.errors.emergencyAddressLine2
+              }
+              fullWidth
+              placeholder="Address Line 2"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              disabled={!isEdit}
+              name="emergencyAddressLine3"
+              label="Address Line 3"
+              value={formik.values.emergencyAddressLine3}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.emergencyAddressLine3 && Boolean(formik.errors.emergencyAddressLine3)
+              }
+              helperText={
+                formik.touched.emergencyAddressLine3 && formik.errors.emergencyAddressLine3
+              }
+              fullWidth
+              placeholder="Address Line 3"
+              size="small"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <CountryComponent
+              value={formik.values.emergencyCountry}
+              onChange={(_e, value) => {
+                formik.setFieldValue('emergencyState', null);
+                formik.setFieldValue('emergencyCountry', value);
+              }}
+              error={formik.touched.emergencyCountry && Boolean(formik.errors.emergencyCountry)}
+              helperText={formik.touched.emergencyCountry && formik.errors.emergencyCountry}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <StateComponent
+              value={formik.values.emergencyState}
+              onChange={(_e, value) => {
+                formik.setFieldValue('emergencyCity', null);
+                formik.setFieldValue('emergencyState', value);
+              }}
+              error={formik.touched.emergencyState && Boolean(formik.errors.emergencyState)}
+              helperText={formik.touched.emergencyState && formik.errors.emergencyState}
+              countryValue={formik.values.emergencyCountry}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <CityComponent
+              value={formik.values.emergencyCity}
+              onChange={(_e, value) => formik.setFieldValue('emergencyCity', value)}
+              error={formik.touched.emergencyCity && Boolean(formik.errors.emergencyCity)}
+              helperText={formik.touched.emergencyCity && formik.errors.emergencyCity}
+              stateValue={formik.values.emergencyState}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              name="emergencyPincode"
+              disabled={!isEdit}
+              value={formik.values.emergencyPincode}
+              onChange={formik.handleChange}
+              error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
+              helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
+              fullWidth
+              placeholder="Pincode"
+              size="small"
+              label="Pincode"
+            />
+          </Grid>
+        </Grid>
+      </Collapse>
+    </>
   );
 };
 
@@ -796,136 +1200,7 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
-    renderComp(props) {
-      const { formik, isEdit, RenderCountry, RenderState, RenderCity } = props;
-      return (
-        <>
-          <Subheader
-            data-title="Local Address"
-            open={formik.values.isOpenLocalAddress}
-            onClick={() => {
-              formik.setFieldValue('isOpenLocalAddress', !formik.values.isOpenLocalAddress);
-            }}
-            sx={{ pt: 0, fontWeight: 600 }}
-          >
-            Local Address
-          </Subheader>
-
-          <Collapse in={formik.values.isOpenLocalAddress}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  name="localAddressLine1"
-                  label="Address Line 1"
-                  disabled={!isEdit}
-                  value={formik.values.localAddressLine1}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.localAddressLine1 && Boolean(formik.errors.localAddressLine1)
-                  }
-                  helperText={formik.touched.localAddressLine1 && formik.errors.localAddressLine1}
-                  fullWidth
-                  placeholder="Address Line 1"
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="localAddressLine2"
-                  label="Address Line 2"
-                  value={formik.values.localAddressLine2}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.localAddressLine2 && Boolean(formik.errors.localAddressLine2)
-                  }
-                  helperText={formik.touched.localAddressLine2 && formik.errors.localAddressLine2}
-                  fullWidth
-                  placeholder="Address Line 2"
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="localAddressLine3"
-                  label="Address Line 3"
-                  value={formik.values.localAddressLine3}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.localAddressLine3 && Boolean(formik.errors.localAddressLine3)
-                  }
-                  helperText={formik.touched.localAddressLine3 && formik.errors.localAddressLine3}
-                  fullWidth
-                  placeholder="Address Line 3"
-                  size="small"
-                />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderCountry
-                  disabled={!isEdit}
-                  name="localCountry"
-                  value={formik.values.localCountry}
-                  onChange={(value) => formik.setFieldValue('localCountry', value)}
-                  error={formik.touched.localCountry && Boolean(formik.errors.localCountry)}
-                  helperText={formik.touched.localCountry && formik.errors.localCountry}
-                  fullWidth
-                  placeholder="Country"
-                  size="small"
-                  label="Country"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderState
-                  disabled={!isEdit}
-                  name="localState"
-                  value={formik.values.localState}
-                  onChange={formik.handleChange}
-                  error={formik.touched.state && Boolean(formik.errors.localState)}
-                  helperText={formik.touched.localState && formik.errors.localState}
-                  fullWidth
-                  placeholder="State"
-                  size="small"
-                  label="State"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderCity
-                  disabled={!isEdit}
-                  name="localCity"
-                  value={formik.values.localCity}
-                  onChange={formik.handleChange}
-                  error={formik.touched.localCity && Boolean(formik.errors.localCity)}
-                  helperText={formik.touched.localCity && formik.errors.localCity}
-                  fullWidth
-                  placeholder="City"
-                  size="small"
-                  label="City"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderPincode
-                  disabled={!isEdit}
-                  name="localPincode"
-                  value={formik.values.localPincode}
-                  onChange={formik.handleChange}
-                  error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
-                  helperText={formik.touched.localPincode && formik.errors.localPincode}
-                  fullWidth
-                  placeholder="Pincode"
-                  size="small"
-                  label="Pincode"
-                />
-              </Grid>
-            </Grid>
-          </Collapse>
-        </>
-      );
-    },
+    renderComp: RenderLocalAddressFields,
   },
   {
     name: 'permanentAddress',
@@ -933,166 +1208,7 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
-    renderComp(props) {
-      const { formik, isEdit } = props;
-      return (
-        <>
-          <Subheader
-            data-title="Permanent Address"
-            open={formik.values.isOpenPermanentAddress}
-            onClick={() => {}}
-            sx={{ pt: 0, fontWeight: 600 }}
-          >
-            Permanent Address
-            <Checkbox
-              checked={formik.values.sameAsLocalForPermanent}
-              size="small"
-              disabled={!isEdit}
-              sx={{ p: 0 }}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              onChange={(e) => {
-                formik.setFieldValue('sameAsLocalForPermanent', e.target.checked);
-                formik.setFieldValue('isOpenPermanentAddress', !e.target.checked);
-                if (e.target.checked) {
-                  formik.setFieldValue('permanentAddressLine1', formik.values.localAddressLine1);
-                  formik.setFieldValue('permanentAddressLine2', formik.values.localAddressLine2);
-                  formik.setFieldValue('permanentAddressLine3', formik.values.localAddressLine3);
-                  formik.setFieldValue('permanentCountry', formik.values.localCountry);
-                  formik.setFieldValue('permanentState', formik.values.localState);
-                  formik.setFieldValue('permanentCity', formik.values.localCity);
-                  formik.setFieldValue('permanentPincode', formik.values.localPincode);
-                }
-              }}
-              name="sameAsLocal"
-            />{' '}
-            Permanent Address Same as Local Address{' '}
-          </Subheader>
-          <Collapse in={formik.values.isOpenPermanentAddress}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="permanentAddressLine1"
-                  label="Address Line 1"
-                  value={formik.values.permanentAddressLine1}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.permanentAddressLine1 &&
-                    Boolean(formik.errors.permanentAddressLine1)
-                  }
-                  helperText={
-                    formik.touched.permanentAddressLine1 && formik.errors.permanentAddressLine1
-                  }
-                  fullWidth
-                  placeholder="Address Line 1"
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="permanentAddressLine2"
-                  label="Address Line 2"
-                  value={formik.values.permanentAddressLine2}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.permanentAddressLine2 &&
-                    Boolean(formik.errors.permanentAddressLine2)
-                  }
-                  helperText={
-                    formik.touched.permanentAddressLine2 && formik.errors.permanentAddressLine2
-                  }
-                  fullWidth
-                  placeholder="Address Line 2"
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="permanentAddressLine3"
-                  label="Address Line 3"
-                  value={formik.values.permanentAddressLine3}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.permanentAddressLine3 &&
-                    Boolean(formik.errors.permanentAddressLine3)
-                  }
-                  helperText={
-                    formik.touched.permanentAddressLine3 && formik.errors.permanentAddressLine3
-                  }
-                  fullWidth
-                  placeholder="Address Line 3"
-                  size="small"
-                />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderCountry
-                  name="permanentCountry"
-                  disabled={!isEdit}
-                  value={formik.values.permanentCountry}
-                  onChange={(value) => formik.setFieldValue('permanentCountry', value)}
-                  error={formik.touched.permanentCountry && Boolean(formik.errors.permanentCountry)}
-                  helperText={formik.touched.permanentCountry && formik.errors.permanentCountry}
-                  fullWidth
-                  placeholder="Country"
-                  size="small"
-                  label="Country"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderState
-                  name="permanentState"
-                  disabled={!isEdit}
-                  value={formik.values.permanentState}
-                  onChange={formik.handleChange}
-                  error={formik.touched.state && Boolean(formik.errors.permanentState)}
-                  helperText={formik.touched.permanentState && formik.errors.permanentState}
-                  fullWidth
-                  placeholder="State"
-                  size="small"
-                  label="State"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderCity
-                  name="permanentCity"
-                  disabled={!isEdit}
-                  value={formik.values.permanentCity}
-                  onChange={formik.handleChange}
-                  error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
-                  helperText={formik.touched.permanentCity && formik.errors.permanentCity}
-                  fullWidth
-                  placeholder="City"
-                  size="small"
-                  label="City"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderPincode
-                  name="permanentPincode"
-                  disabled={!isEdit}
-                  value={formik.values.permanentPincode}
-                  onChange={formik.handleChange}
-                  error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
-                  helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
-                  fullWidth
-                  placeholder="Pincode"
-                  size="small"
-                  label="Pincode"
-                />
-              </Grid>
-            </Grid>
-          </Collapse>
-        </>
-      );
-    },
+    renderComp: RenderPermanentAddressFields,
   },
   {
     name: 'emergencyAddress',
@@ -1100,165 +1216,7 @@ export const communicationFields: FieldsType[] = [
     type: 'text',
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
-    renderComp(props) {
-      const { formik, isEdit } = props;
-      return (
-        <>
-          <Subheader
-            data-title="Emergency Address"
-            open={formik.values.isOpenEmergencyAddress}
-            // onClick={() => {
-            //   formik.setFieldValue('isOpenEmergencyAddress', !formik.values.isOpenEmergencyAddress);
-            // }}
-            sx={{ pt: 0, fontWeight: 600 }}
-          >
-            <Checkbox
-              checked={formik.values.emergencySameAsLocal}
-              disabled={!isEdit}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              onChange={(e) => {
-                formik.setFieldValue('emergencySameAsLocal', e.target.checked);
-                formik.setFieldValue('isOpenEmergencyAddress', !e.target.checked);
-                if (e.target.checked) {
-                  formik.setFieldValue('emergencyAddressLine1', formik.values.localAddressLine1);
-                  formik.setFieldValue('emergencyAddressLine2', formik.values.localAddressLine2);
-                  formik.setFieldValue('emergencyAddressLine3', formik.values.localAddressLine3);
-                  formik.setFieldValue('emergencyCountry', formik.values.localCountry);
-                  formik.setFieldValue('emergencyState', formik.values.localState);
-                  formik.setFieldValue('emergencyCity', formik.values.localCity);
-                  formik.setFieldValue('emergencyPincode', formik.values.localPincode);
-                }
-              }}
-              sx={{ p: 0 }}
-            />{' '}
-            Emergency Address Same as Local Address{' '}
-          </Subheader>
-          <Collapse in={formik.values.isOpenEmergencyAddress}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="emergencyAddressLine1"
-                  label="Address Line 1"
-                  value={formik.values.emergencyAddressLine1}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.emergencyAddressLine1 &&
-                    Boolean(formik.errors.emergencyAddressLine1)
-                  }
-                  helperText={
-                    formik.touched.emergencyAddressLine1 && formik.errors.emergencyAddressLine1
-                  }
-                  fullWidth
-                  placeholder="Address Line 1"
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="emergencyAddressLine2"
-                  label="Address Line 2"
-                  value={formik.values.emergencyAddressLine2}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.emergencyAddressLine2 &&
-                    Boolean(formik.errors.emergencyAddressLine2)
-                  }
-                  helperText={
-                    formik.touched.emergencyAddressLine2 && formik.errors.emergencyAddressLine2
-                  }
-                  fullWidth
-                  placeholder="Address Line 2"
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderAddressField
-                  disabled={!isEdit}
-                  name="emergencyAddressLine3"
-                  label="Address Line 3"
-                  value={formik.values.emergencyAddressLine3}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.emergencyAddressLine3 &&
-                    Boolean(formik.errors.emergencyAddressLine3)
-                  }
-                  helperText={
-                    formik.touched.emergencyAddressLine3 && formik.errors.emergencyAddressLine3
-                  }
-                  fullWidth
-                  placeholder="Address Line 3"
-                  size="small"
-                />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderCountry
-                  disabled={!isEdit}
-                  name="emergencyCountry"
-                  value={formik.values.emergencyCountry}
-                  onChange={(value) => formik.setFieldValue('emergencyCountry', value)}
-                  error={formik.touched.emergencyCountry && Boolean(formik.errors.emergencyCountry)}
-                  helperText={formik.touched.emergencyCountry && formik.errors.emergencyCountry}
-                  fullWidth
-                  placeholder="Country"
-                  size="small"
-                  label="Country"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderState
-                  disabled={!isEdit}
-                  name="emergencyState"
-                  value={formik.values.emergencyState}
-                  onChange={formik.handleChange}
-                  error={formik.touched.state && Boolean(formik.errors.emergencyState)}
-                  helperText={formik.touched.emergencyState && formik.errors.emergencyState}
-                  fullWidth
-                  placeholder="State"
-                  size="small"
-                  label="State"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderCity
-                  disabled={!isEdit}
-                  name="emergencyCity"
-                  value={formik.values.emergencyCity}
-                  onChange={formik.handleChange}
-                  error={formik.touched.emergencyCity && Boolean(formik.errors.emergencyCity)}
-                  helperText={formik.touched.emergencyCity && formik.errors.emergencyCity}
-                  fullWidth
-                  placeholder="City"
-                  size="small"
-                  label="City"
-                  options={[]}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <StandardAddress.RenderPincode
-                  name="emergencyPincode"
-                  disabled={!isEdit}
-                  value={formik.values.emergencyPincode}
-                  onChange={formik.handleChange}
-                  error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
-                  helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
-                  fullWidth
-                  placeholder="Pincode"
-                  size="small"
-                  label="Pincode"
-                />
-              </Grid>
-            </Grid>
-          </Collapse>
-        </>
-      );
-    },
+    renderComp: RenderEmergencyAddressFields,
   },
   {
     name: 'remarks',

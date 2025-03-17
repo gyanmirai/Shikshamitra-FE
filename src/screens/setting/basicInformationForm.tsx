@@ -3,6 +3,7 @@
 // @ts-nocheck
 
 import type { FormikValues } from 'formik';
+import type { ICity, IState, ICountry } from 'country-state-city';
 
 import React from 'react';
 import * as Yup from 'yup';
@@ -21,7 +22,9 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import { useStandardAddress } from 'src/components/stardard-address';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 
 interface FormValues {
   instituteName: string;
@@ -30,10 +33,10 @@ interface FormValues {
   addressLine1: string;
   addressLine2: string;
   addressLine3: string;
-  city: string;
-  stateProvince: string;
+  city?: Partial<ICity>;
+  stateProvince?: Partial<IState>;
   zipPostalCode: string;
-  country: string;
+  country?: Partial<ICountry>;
   contactNumber: string;
   emailAddress: string;
   password: string;
@@ -93,7 +96,6 @@ const validationSchema = Yup.object().shape({
 });
 
 const BasicInformationForm: React.FC<any> = () => {
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
   const [addTenant, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddTenantMutation,
@@ -111,10 +113,10 @@ const BasicInformationForm: React.FC<any> = () => {
         addressLine1: '',
         addressLine2: '',
         addressLine3: '',
-        city: '',
-        stateProvince: '',
+        city: undefined,
+        stateProvince: undefined,
         zipPostalCode: '',
-        country: '',
+        country: undefined,
         contactNumber: '',
         emailAddress: '',
         password: '',
@@ -272,25 +274,32 @@ const BasicInformationForm: React.FC<any> = () => {
                   />
                 </Grid>
                 <Grid xs={4}>
-                  <RenderCountry
+                  <CountryComponent
                     onChange={(_e, value) => {
                       setFieldValue('stateProvince', null);
                       setFieldValue('country', value);
                     }}
                     size="small"
+                    value={values.country}
                     // fieldProps={{ size: 'small' }}
                   />
                 </Grid>
                 <Grid xs={4}>
-                  <RenderState
+                  <StateComponent
                     onChange={(_e, value) => {
                       setFieldValue('city', null);
                       setFieldValue('stateProvince', value);
                     }}
+                    value={values.stateProvince}
+                    countryValue={values.country}
                   />
                 </Grid>
                 <Grid xs={4}>
-                  <RenderCity onChange={(_e, value) => setFieldValue('city', value)} />
+                  <CityComponent
+                    value={values.city}
+                    onChange={(_e, value) => setFieldValue('city', value)}
+                    stateValue={values.stateProvince}
+                  />
                 </Grid>
                 <Grid xs={4}>
                   <TextField

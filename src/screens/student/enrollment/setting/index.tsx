@@ -10,17 +10,16 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ExamType from './exam-type';
-import Notification from './notification';
 import StudentDocumentType from './document-type';
 import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
 
 const TABS = [
-  {
-    value: 'notificationPreferences',
-    label: 'Notification Preferences',
-    component: () => <Notification />,
-  },
+  // {
+  //   value: 'notificationPreferences',
+  //   label: 'Notification Preferences',
+  //   component: () => <Notification />,
+  // },
   {
     value: 'defaultDocumentTypes',
     label: 'Default Document Types',
@@ -44,7 +43,7 @@ const TABS = [
 ];
 
 const StudentEnrollmentSettingScreen = () => {
-  const tabs = useTabs('notificationPreferences');
+  const tabs = useTabs('defaultDocumentTypes');
 
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (

@@ -240,6 +240,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
           children={{
             id: 'class',
             name: 'Class',
+            limitOfAge: 'ageLowerLimit',
             deleteMutation: useDeleteClassMutation,
             getLazyQuery: useLazyGetOrganizationByIdQuery,
             formComp: ({ editData: data, onCloseDialog: handleClose, id }: any) => (

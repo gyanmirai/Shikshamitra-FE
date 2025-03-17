@@ -20,7 +20,6 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { UploadAvatar } from 'src/components/upload';
-import { useStandardAddress } from 'src/components/stardard-address';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -359,8 +358,6 @@ const RegisterForm = ({
     [editData?.id, updateAdditionDetails]
   );
 
-  console.log(validationSchemas[activeStep], 'sdfdsfdsfsdfds========');
-  const { RenderCountry, RenderState, RenderCity } = useStandardAddress();
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => {
@@ -440,9 +437,6 @@ const RegisterForm = ({
                         formik,
                         field,
                         isEdit: true,
-                        RenderCountry,
-                        RenderState,
-                        RenderCity,
                       })
                     ) : field.type === 'date' ? (
                       <DatePicker

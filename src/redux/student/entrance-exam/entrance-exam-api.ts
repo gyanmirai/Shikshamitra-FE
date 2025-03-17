@@ -39,6 +39,13 @@ export const EntranceExamApi = createApi({
       }),
       invalidatesTags: ['Entrance-Exam'],
     }),
+    getEntranceExamByStudentId: builder.query({
+      query: (id) => ({
+        url: `/app/entrance-exam/by-student-enrollment-id/${id}`,
+        method: 'GET',
+      }),
+      providesTags: ['Entrance-Exam'],
+    }),
   }),
 });
 
@@ -47,4 +54,5 @@ export const {
   useUpdateEntranceExamMutation,
   useDeleteEntranceExamMutation,
   useGetEntranceExamQuery,
+  useGetEntranceExamByStudentIdQuery,
 } = EntranceExamApi;

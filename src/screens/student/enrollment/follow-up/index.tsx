@@ -19,7 +19,6 @@ import {
   TextField,
   IconButton,
   Typography,
-  Autocomplete,
   DialogActions,
 } from '@mui/material';
 
@@ -29,9 +28,9 @@ import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import {
-  InquiryStatusType,
+  FollowUpStatusType,
   InquiryStatusTypeColors,
-  InquiryStatusTypeOptions,
+  FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 import {
   useGetFollowUpQuery,
@@ -42,6 +41,7 @@ import {
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -98,13 +98,13 @@ const FollowUpScreen: React.FC = () => {
             id: 'inquiryStatusType',
             label: 'Status',
             filterType: 'enum',
-            enumOptions: InquiryStatusTypeOptions,
+            enumOptions: FollowUpStatusTypeOptions,
             minWidth: '180px',
             align: 'left',
             render(value, row) {
-              const color = InquiryStatusTypeColors[value as InquiryStatusType] as LabelColor;
+              const color = InquiryStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
-              return <Label color={color}>{InquiryStatusType[value]}</Label>;
+              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
             },
           },
           {
@@ -182,12 +182,12 @@ export const CommunicationForm = ({
   });
   const formik = useFormik<{
     msg: string;
-    status: InquiryStatusType;
+    status: FollowUpStatusType;
     dueDate: Dayjs | null;
   }>({
     initialValues: {
       msg: '',
-      status: data?.inquiryStatusType ?? InquiryStatusType.Pending,
+      status: data?.inquiryStatusType ?? FollowUpStatusType.Pending,
       dueDate: data?.dueDate ? dayjs(data?.dueDate) : null,
     },
     validationSchema: Yup.object({
@@ -290,27 +290,15 @@ export const CommunicationForm = ({
           format="DD-MM-YYYY"
           onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
         />
-        <Autocomplete
-          options={InquiryStatusTypeOptions || []}
-          getOptionLabel={(option: any) => option.label}
-          id="employees"
+        <CustomSelect
+          options={FollowUpStatusTypeOptions}
           value={formik.values.status}
-          loading={isLoading}
+          isLoading={isLoading}
           sx={{ minWidth: 300, width: '100%' }}
-          onChange={(_event: any, newValue: any | null) => {
+          onChange={(newValue) => {
             formik.setFieldValue('status', newValue);
           }}
           size="small"
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              label="Change Status"
-              placeholder="Search Status"
-              helperText={formik.touched.status && formik.errors.status}
-              error={formik.touched.status && Boolean(formik.errors.status)}
-            />
-          )}
         />
       </Box>
       <DialogActions>

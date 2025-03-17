@@ -9,7 +9,7 @@ export const StudentAdmissionApi = createApi({
   }),
   tagTypes: ['Student-Admission', 'Student-Document'],
   endpoints: (builder) => ({
-    getStudentRegistration: builder.query({
+    getStudentAdmission: builder.query({
       query: (params) => ({
         url: '/app/student-enrollment/student-admission',
         method: 'GET',
@@ -17,7 +17,16 @@ export const StudentAdmissionApi = createApi({
       }),
       providesTags: ['Student-Admission'],
     }),
+    changeAdmissionStatus: builder.mutation({
+      query: ({ body, approvalStatus }) => ({
+        url: `/app/student-enrollment/student-enrollment-approval-state?approvalState=${approvalStatus}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Student-Admission'],
+    }),
   }),
 });
 
-export const { useGetStudentRegistrationQuery } = StudentAdmissionApi;
+export const { useGetStudentAdmissionQuery, useChangeAdmissionStatusMutation } =
+  StudentAdmissionApi;
