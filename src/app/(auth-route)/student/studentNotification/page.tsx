@@ -1,7 +1,7 @@
 import React from 'react';
 
-import StudentNotificationScreen from 'src/screens/student/studentNotification/student-notification';
+import StudentNotificationTabScreen from 'src/screens/student/studentNotification/student-notification-tab';
 
-const studentNotification = () => <StudentNotificationScreen />;
+const studentNotification = () => <StudentNotificationTabScreen />;
 
 export default studentNotification;

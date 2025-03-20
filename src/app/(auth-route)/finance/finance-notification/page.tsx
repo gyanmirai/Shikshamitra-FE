@@ -1,7 +1,9 @@
 import React from 'react';
 
-import FinanceNotificationScreen from 'src/screens/finance/finance-notification/finance-notification-screen';
+import FinanceStaticNotificationScreen from 'src/screens/finance/finance-notification/finance-static-notification';
 
-const FinanceNotification = () => <FinanceNotificationScreen />;
+// import FinanceNotificationScreen from 'src/screens/finance/finance-notification/finance-notification-screen';
+
+const FinanceNotification = () => <FinanceStaticNotificationScreen />;
 
 export default FinanceNotification;
