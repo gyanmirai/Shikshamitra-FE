@@ -339,6 +339,7 @@ const CourseProgress = (props: TabComponentType) => {
                 label: 'Actions',
                 minWidth: '200px',
                 align: 'left',
+                sticky: true,
                 isFilter: false,
                 render(value: any, row: any) {
                   return (

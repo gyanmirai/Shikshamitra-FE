@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormik } from 'formik';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import {
   Box,
@@ -125,6 +125,8 @@ const RoleScreen = () => {
           {
             label: 'Action',
             id: 'action',
+            isSort: false,
+            isFilter: false,
             render: (value, data) => (
               <ThreeDotsActions
                 showDeleteIcon
@@ -158,6 +160,8 @@ export default RoleScreen;
 const RoleForm = ({ handleClose, editData }: any) => {
   const [modulePermissionData, setModulePermissionData] = useState([]);
   const [allPermissions, setAllPermissions] = useState([]);
+  console.log('🚀 ~ RoleForm ~ allPermissions:', allPermissions);
+
   const { data: permissionData } = useQueryAndMutation({
     type: 'query',
     options: {
@@ -189,22 +193,22 @@ const RoleForm = ({ handleClose, editData }: any) => {
       success: true,
     },
   });
-  useEffect(() => {
-    if (permissionData?.groups) {
-      setModulePermissionData(permissionData?.groups);
-      const allPer: any = [];
-      const recurFunction = (data: any) => {
-        data.forEach((item: any) => {
-          if (item?.permissions) {
-            allPer.splice(allPer.length, 0, ...item.permissions);
-            recurFunction(item?.permissions);
-          }
-        });
-      };
-      recurFunction(permissionData?.groups);
-      setAllPermissions(allPer);
-    }
-  }, [permissionData]);
+  // useEffect(() => {
+  //   if (permissionData?.groups) {
+  //     setModulePermissionData(permissionData?.groups);
+  //     const allPer: any = [];
+  //     const recurFunction = (data: any) => {
+  //       data.forEach((item: any) => {
+  //         if (item?.permissions) {
+  //           allPer.splice(allPer.length, 0, ...item.permissions);
+  //           recurFunction(item?.permissions);
+  //         }
+  //       });
+  //     };
+  //     recurFunction(permissionData?.groups);
+  //     setAllPermissions(allPer);
+  //   }
+  // }, [permissionData]);
 
   const formik = useFormik({
     initialValues: {
@@ -296,7 +300,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
             allPermissions={allPermissions}
             setAllPermissions={setAllPermissions}
           /> */}
-          <AssignModule />
+          <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
         </Scrollbar>
         <DialogActions sx={{ flexShrink: 0 }}>
           <Button onClick={handleClose}>Cancel</Button>

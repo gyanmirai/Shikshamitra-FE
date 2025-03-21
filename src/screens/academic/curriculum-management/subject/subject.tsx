@@ -59,73 +59,45 @@ export interface TSubjectTable {
 export const subjectData: TSubjectTable[] = [
   {
     id: 1,
+    subjectCode: 'MTH101',
     subjectName: 'Mathematics',
-    subjectCode: 'Math01',
-    scheduleDate: dayjs('2024-10-28'),
-    description: '',
-    subjectColor: '#f04622',
-    className: '1',
-    primaryTeacher: 'Ms. Johnson',
-    secondaryTeacher: ['Mr. Smith'],
-    prerequisites: 'Basic counting skills',
-    learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
+    subjectColor: 'blue',
+    primaryTeacher: 'Mr. Rajesh Sharma',
+    secondaryTeacher: ['Ms. Neha Verma', 'Mr. Suresh Kumar'],
+    scheduleDate: dayjs('2025-03-10', 'YYYY-MM-DD'),
+    prerequisites: 'Basic Arithmetic',
+    learningGoal: 'Understand algebra and geometry concepts',
     status: 'Publish',
+    className: '1',
+    description: '',
   },
   {
     id: 2,
+    subjectCode: 'SCI202',
     subjectName: 'Science',
-    subjectCode: 'Sci02',
-    scheduleDate: dayjs('2024-10-28'),
-    description: '',
-    subjectColor: '#4e7dbe',
-    className: '2',
-    primaryTeacher: 'Mr. Smith',
-    secondaryTeacher: ['Ms. Johnson'],
-    prerequisites: 'Interest in nature and environment',
-    learningGoal: 'Understand basic concepts of earth science and the environment.',
+    subjectColor: 'green',
+    primaryTeacher: 'Ms. Priya Mehta',
+    secondaryTeacher: ['Mr. Rohan Patel'],
+    scheduleDate: dayjs('2025-04-15', 'YYYY-MM-DD'),
+    prerequisites: 'Introduction to Biology',
+    learningGoal: 'Develop understanding of ecosystems and physics fundamentals',
     status: 'Unpublish',
+    className: '1',
+    description: '',
   },
   {
     id: 3,
-    subjectName: 'English',
-    subjectCode: 'Eng03',
-    scheduleDate: dayjs('2024-10-28'),
-    description: '',
-    subjectColor: '#4e7dbe',
-    className: '1',
-    primaryTeacher: 'Ms. Johnson',
-    secondaryTeacher: ['Mrs. Green'],
-    prerequisites: 'Basic reading skills',
-    learningGoal: 'Enhance reading comprehension and vocabulary.',
+    subjectCode: 'ENG301',
+    subjectName: 'English Literature',
+    subjectColor: 'purple',
+    primaryTeacher: 'Mrs. Kavita Shah',
+    secondaryTeacher: ['Ms. Pooja Iyer', 'Mr. Ankit Tiwari'],
+    scheduleDate: dayjs('2025-02-28', 'YYYY-MM-DD'),
+    prerequisites: 'Basic Grammar',
+    learningGoal: 'Improve writing and reading skills',
     status: 'Publish',
-  },
-  {
-    id: 4,
-    subjectName: 'History',
-    subjectCode: 'Hist01',
-    scheduleDate: dayjs('2024-10-28'),
-    description: '',
-    subjectColor: '#7abe4e',
     className: '1',
-    primaryTeacher: 'Ms. Johnson',
-    secondaryTeacher: ['Mrs. Green'],
-    prerequisites: 'Interest in past events',
-    learningGoal: 'Learn about important historical events and figures.',
-    status: 'Unpublish',
-  },
-  {
-    id: 5,
-    subjectName: 'Geography',
-    scheduleDate: dayjs('2024-10-28'),
-    subjectCode: 'Geo01',
     description: '',
-    subjectColor: '#4444',
-    className: '3',
-    primaryTeacher: 'Ms. Davis',
-    secondaryTeacher: ['Mrs. Green'],
-    prerequisites: 'Basic map reading skills',
-    learningGoal: 'Develop an understanding of world geography and countries.',
-    status: 'Publish',
   },
 ];
 
@@ -291,18 +263,18 @@ const Subject = (props: TabComponentType) => {
             formControlProps={{ sx: { width: '150px', mb: 2 } }}
             value={classes}
             onChange={(value) => {
-              // setClasses(value);
+              setClasses(value as string);
             }}
           />
           {classes && (
             <CustomizableTable
               tableId="subject-table"
               columns={[
-                { id: 'subjectCode', label: 'Subject Code', minWidth: '150px', align: 'left' },
+                { id: 'subjectCode', label: 'Subject Code', minWidth: '180px', align: 'left' },
                 {
                   id: 'subjectName',
                   label: 'Subject Name',
-                  minWidth: '180px',
+                  minWidth: '200px',
                   align: 'left',
                   render(value, row) {
                     return (
@@ -315,7 +287,7 @@ const Subject = (props: TabComponentType) => {
                 {
                   id: 'primaryTeacher',
                   label: 'Primary Teacher',
-                  minWidth: '180px',
+                  minWidth: '200px',
                   align: 'left',
                 },
                 {
@@ -361,11 +333,13 @@ const Subject = (props: TabComponentType) => {
                     </Typography>
                   ),
                 },
-                { id: 'prerequisites', label: 'Prerequisites' },
-                { id: 'learningGoal', label: 'Learning Goal', minWidth: '150px', align: 'left' },
+                { id: 'prerequisites', label: 'Prerequisites', minWidth: '200px', align: 'left' },
+                { id: 'learningGoal', label: 'Learning Goal', minWidth: '200px', align: 'left' },
                 {
                   id: 'status',
                   label: 'Publish',
+                  minWidth: '200px',
+                  align: 'left',
                   render: (value: string, row: any) => (
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Switch
@@ -379,6 +353,8 @@ const Subject = (props: TabComponentType) => {
                 {
                   id: 'action',
                   label: 'Actions',
+                  align: 'left',
+                  sticky: true,
                   isFilter: false,
                   isSort: false,
                   render(value, row) {

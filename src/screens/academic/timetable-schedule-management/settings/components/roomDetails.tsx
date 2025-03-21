@@ -102,6 +102,8 @@ const RoomDetails = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions

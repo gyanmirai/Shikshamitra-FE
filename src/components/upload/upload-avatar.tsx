@@ -13,7 +13,15 @@ import type { UploadProps } from './types';
 
 // ----------------------------------------------------------------------
 
-export function UploadAvatar({ sx, error, value, disabled, helperText, ...other }: UploadProps) {
+export function UploadAvatar({
+  sx,
+  error,
+  value,
+  title,
+  disabled,
+  helperText,
+  ...other
+}: UploadProps) {
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     multiple: false,
     disabled,
@@ -74,7 +82,10 @@ export function UploadAvatar({ sx, error, value, disabled, helperText, ...other 
     >
       <Iconify icon="solar:camera-add-bold" width={32} />
 
-      <Typography variant="caption">{hasFile ? 'Update photo' : 'Upload photo'}</Typography>
+      {/* <Typography variant="caption">{hasFile ? 'Update photo' : 'Upload photo'}</Typography> */}
+      <Typography variant="caption" fontSize={10}>
+        {title || 'Upload photo'}
+      </Typography>
     </Box>
   );
 

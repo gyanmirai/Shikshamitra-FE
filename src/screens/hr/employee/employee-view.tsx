@@ -16,7 +16,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PayrollSummary from './payroll-summary';
-import { EmployeeInformation } from './information';
+import EmployeeInformation from './information';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';

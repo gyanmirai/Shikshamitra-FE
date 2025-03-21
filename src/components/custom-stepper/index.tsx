@@ -126,6 +126,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   });
 
   console.log(formik.errors, 'formik.errors');
+  console.log(formik.touched, 'formik.touched');
 
   return (
     <Box sx={{ width: '100%', p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>

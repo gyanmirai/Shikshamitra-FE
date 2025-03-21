@@ -3,6 +3,7 @@
 // @ts-nocheck
 
 import type { FormikValues } from 'formik';
+import type { ICity, IState, ICountry } from 'country-state-city';
 
 import React from 'react';
 import * as Yup from 'yup';
@@ -10,23 +11,32 @@ import { useFormik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Box, Card, Stack, TextField, Typography } from '@mui/material';
+import { Box, Card, Stack, Divider, TextField, Typography } from '@mui/material';
 
 import { fData } from 'src/utils/format-number';
 
 import { useAddTenantMutation } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
+import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
+import { Scrollbar } from 'src/components/scrollbar';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 
 interface FormValues {
   instituteName: string;
   instituteLogo: File | null;
-  address: string;
-  city: string;
-  stateProvince: string;
+  instituteBanner: File | null;
+  addressLine1: string;
+  addressLine2: string;
+  addressLine3: string;
+  city?: Partial<ICity>;
+  stateProvince?: Partial<IState>;
   zipPostalCode: string;
-  country: string;
+  country?: Partial<ICountry>;
   contactNumber: string;
   emailAddress: string;
   password: string;
@@ -52,7 +62,24 @@ const validationSchema = Yup.object().shape({
       'File size is too large',
       (value: any) => value && value instanceof File && value.size <= 5 * 1024 * 1024 // 5MB
     ),
-  address: Yup.string().required('Address is required'),
+  instituteBanner: Yup.mixed()
+    .required('Institute Banner is required')
+    .test(
+      'fileType',
+      'Unsupported file format',
+      (value: any) =>
+        value &&
+        value instanceof File &&
+        ['image/jpeg', 'image/png', 'image/gif'].includes(value.type)
+    )
+    .test(
+      'fileSize',
+      'File size is too large',
+      (value: any) => value && value instanceof File && value.size <= 5 * 1024 * 1024 // 5MB
+    ),
+  addressLine1: Yup.string().required('Address Line 1 is required'),
+  addressLine2: Yup.string().required('Address Line 2 is required'),
+  addressLine3: Yup.string().required('Address Line 3 is required'),
   city: Yup.string().required('City is required'),
   stateProvince: Yup.string().required('State/Province is required'),
   zipPostalCode: Yup.string()
@@ -82,11 +109,14 @@ const BasicInformationForm: React.FC<any> = () => {
       initialValues: {
         instituteName: '',
         instituteLogo: null,
-        address: '',
-        city: '',
-        stateProvince: '',
+        instituteBanner: null,
+        addressLine1: '',
+        addressLine2: '',
+        addressLine3: '',
+        city: undefined,
+        stateProvince: undefined,
         zipPostalCode: '',
-        country: '',
+        country: undefined,
         contactNumber: '',
         emailAddress: '',
         password: '',
@@ -102,176 +132,261 @@ const BasicInformationForm: React.FC<any> = () => {
       },
     });
   return (
-    <form onSubmit={handleSubmit}>
-      <Typography variant="h5" sx={{ mb: 1 }}>
-        Basic Information
-      </Typography>
-      <Grid container spacing={2}>
-        {/* @ts-ignore */}
-        <Grid xs={12} sm={3.5} md={3.5}>
-          <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            <Box sx={{ mb: 5 }}>
-              <UploadAvatar
-                //   name="avatarUrl"
-                maxSize={3145728}
-                onDrop={(acceptedFiles: File[]) => {
-                  const value = acceptedFiles[0];
-                  setFieldValue('instituteLogo', value);
-                }}
-                value={values.instituteLogo}
-                error={touched.instituteLogo && Boolean(errors.instituteLogo)}
-                helperText={
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      mt: 3,
-                      mx: 'auto',
-                      display: 'block',
-                      textAlign: 'center',
-                      color: 'text.disabled',
+    <Scrollbar sx={{ height: 'calc(100vh - 150px)', overflow: 'auto' }}>
+      <form onSubmit={handleSubmit}>
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            backgroundColor: 'white',
+            zIndex: 10,
+            py: 2,
+          }}
+        >
+          <Typography variant="h5" sx={{ mb: 1 }}>
+            Basic Information
+          </Typography>
+        </Box>
+        <Grid container spacing={2}>
+          {/* @ts-ignore */}
+          <Grid xs={12} md={6}>
+            <Card sx={{ pt: 10, pb: 5, px: 3 }}>
+              <Box sx={{ mb: 5 }}>
+                <UploadAvatar
+                  // name="avatarUrl"
+                  title="Upload Institute Logo"
+                  maxSize={3145728}
+                  onDrop={(acceptedFiles: File[]) => {
+                    const value = acceptedFiles[0];
+                    setFieldValue('instituteLogo', value);
+                  }}
+                  value={values.instituteLogo}
+                  error={touched.instituteLogo && Boolean(errors.instituteLogo)}
+                  helperText={
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        mt: 3,
+                        mx: 'auto',
+                        display: 'block',
+                        textAlign: 'center',
+                        color: 'text.disabled',
+                      }}
+                    >
+                      Allowed *.jpeg, *.jpg, *.png, *.gif
+                      <br /> max size of {fData(3145728)}
+                    </Typography>
+                  }
+                />
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid xs={12} md={6}>
+            <Card sx={{ pt: 10, pb: 5, px: 3 }}>
+              <Box sx={{ mb: 5 }}>
+                <UploadAvatar
+                  // name="avatarUrl"
+                  title="Upload Institute Banner"
+                  maxSize={3145728}
+                  onDrop={(acceptedFiles: File[]) => {
+                    const value = acceptedFiles[0];
+                    setFieldValue('instituteBanner', value);
+                  }}
+                  value={values.instituteBanner}
+                  error={touched.instituteBanner && Boolean(errors.instituteBanner)}
+                  helperText={
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        mt: 3,
+                        mx: 'auto',
+                        display: 'block',
+                        textAlign: 'center',
+                        color: 'text.disabled',
+                      }}
+                    >
+                      Allowed *.jpeg, *.jpg, *.png, *.gif
+                      <br /> max size of {fData(3145728)}
+                    </Typography>
+                  }
+                />
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid xs={12}>
+            <Card
+              sx={{
+                p: 3,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Grid container spacing={3}>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="instituteName"
+                    label="Institute Name"
+                    value={values.instituteName}
+                    onChange={handleChange}
+                    error={touched.instituteName && Boolean(errors.instituteName)}
+                    helperText={touched.instituteName && errors.instituteName}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="addressLine1"
+                    label="Address Line 1"
+                    value={values.addressLine1}
+                    onChange={handleChange}
+                    error={touched.addressLine1 && Boolean(errors.addressLine1)}
+                    helperText={touched.addressLine1 && errors.addressLine1}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="addressLine2"
+                    label="Address Line 2"
+                    value={values.addressLine2}
+                    onChange={handleChange}
+                    error={touched.addressLine2 && Boolean(errors.addressLine2)}
+                    helperText={touched.addressLine2 && errors.addressLine2}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="addressLine3"
+                    label="Address Line 3"
+                    value={values.addressLine3}
+                    onChange={handleChange}
+                    error={touched.addressLine3 && Boolean(errors.addressLine3)}
+                    helperText={touched.addressLine3 && errors.addressLine3}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <CountryComponent
+                    onChange={(_e, value) => {
+                      setFieldValue('stateProvince', null);
+                      setFieldValue('country', value);
                     }}
-                  >
-                    Allowed *.jpeg, *.jpg, *.png, *.gif
-                    <br /> max size of {fData(3145728)}
-                  </Typography>
-                }
-              />
-            </Box>
-          </Card>
+                    size="small"
+                    value={values.country}
+                    // fieldProps={{ size: 'small' }}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <StateComponent
+                    onChange={(_e, value) => {
+                      setFieldValue('city', null);
+                      setFieldValue('stateProvince', value);
+                    }}
+                    value={values.stateProvince}
+                    countryValue={values.country}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <CityComponent
+                    value={values.city}
+                    onChange={(_e, value) => setFieldValue('city', value)}
+                    stateValue={values.stateProvince}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="zipPostalCode"
+                    label="ZIP/Postal Code"
+                    value={values.zipPostalCode}
+                    onChange={handleChange}
+                    type="number"
+                    error={touched.zipPostalCode && Boolean(errors.zipPostalCode)}
+                    helperText={touched.zipPostalCode && errors.zipPostalCode}
+                  />
+                </Grid>
+
+                <Grid xs={4}>
+                  <PhoneInput
+                    name="contactNumber"
+                    value={values.contactNumber}
+                    onChange={(value) => {
+                      setFieldValue('contactNumber', value);
+                    }}
+                    placeholder="Contact No."
+                    error={touched.contactNumber && Boolean(errors.contactNumber)}
+                    helperText={touched.contactNumber && errors.contactNumber}
+                    variant="outlined"
+                    label="Contact No."
+                    size="small"
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="emailAddress"
+                    label="Email Address"
+                    value={values.emailAddress}
+                    onChange={handleChange}
+                    error={touched.emailAddress && Boolean(errors.emailAddress)}
+                    helperText={touched.emailAddress && errors.emailAddress}
+                    autoComplete="off"
+                    InputProps={{
+                      startAdornment: (
+                        <>
+                          <Iconify icon="mdi-light:email" />{' '}
+                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                        </>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="password"
+                    label="Password"
+                    type="password"
+                    value={values.password}
+                    onChange={handleChange}
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                    autoComplete="off"
+                  />
+                </Grid>
+              </Grid>
+            </Card>
+          </Grid>
         </Grid>
 
-        <Grid xs={12} sm={8.5} md={8.5}>
-          <Card
-            sx={{
-              p: 3,
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <Grid container spacing={3}>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="instituteName"
-                  label="Institute Name"
-                  value={values.instituteName}
-                  onChange={handleChange}
-                  error={touched.instituteName && Boolean(errors.instituteName)}
-                  helperText={touched.instituteName && errors.instituteName}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="address"
-                  label="Address"
-                  value={values.address}
-                  onChange={handleChange}
-                  error={touched.address && Boolean(errors.address)}
-                  helperText={touched.address && errors.address}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="city"
-                  label="City"
-                  value={values.city}
-                  onChange={handleChange}
-                  error={touched.city && Boolean(errors.city)}
-                  helperText={touched.city && errors.city}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="stateProvince"
-                  label="State/Province"
-                  value={values.stateProvince}
-                  onChange={handleChange}
-                  error={touched.stateProvince && Boolean(errors.stateProvince)}
-                  helperText={touched.stateProvince && errors.stateProvince}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="zipPostalCode"
-                  label="ZIP/Postal Code"
-                  value={values.zipPostalCode}
-                  onChange={handleChange}
-                  error={touched.zipPostalCode && Boolean(errors.zipPostalCode)}
-                  helperText={touched.zipPostalCode && errors.zipPostalCode}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="country"
-                  label="Country"
-                  value={values.country}
-                  onChange={handleChange}
-                  error={touched.country && Boolean(errors.country)}
-                  helperText={touched.country && errors.country}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="contactNumber"
-                  label="Contact Number"
-                  value={values.contactNumber}
-                  onChange={handleChange}
-                  error={touched.contactNumber && Boolean(errors.contactNumber)}
-                  helperText={touched.contactNumber && errors.contactNumber}
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="emailAddress"
-                  label="Email Address"
-                  value={values.emailAddress}
-                  onChange={handleChange}
-                  error={touched.emailAddress && Boolean(errors.emailAddress)}
-                  helperText={touched.emailAddress && errors.emailAddress}
-                  autoComplete="off"
-                />
-              </Grid>
-              <Grid xs={4}>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  name="password"
-                  label="Password"
-                  type="password"
-                  value={values.password}
-                  onChange={handleChange}
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
-                  autoComplete="off"
-                />
-              </Grid>
-            </Grid>
-
-            <Stack alignItems="flex-end" sx={{ mt: 3, height: '100%', justifyContent: 'flex-end' }}>
-              <LoadingButton type="submit" variant="contained" loading={isLoading}>
-                Save changes
-              </LoadingButton>
-            </Stack>
-          </Card>
-        </Grid>
-      </Grid>
-    </form>
+        <Stack
+          alignItems="flex-end"
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            backgroundColor: 'white',
+            zIndex: 10,
+            py: 2,
+            textAlign: 'right',
+          }}
+        >
+          <LoadingButton type="submit" variant="contained" loading={isLoading}>
+            Save changes
+          </LoadingButton>
+        </Stack>
+      </form>
+    </Scrollbar>
   );
 };
 export default BasicInformationForm;

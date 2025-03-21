@@ -281,6 +281,28 @@ const HomeworkCreation = (props: TabComponentType) => {
     []
   );
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {row.status === 'publish' && (
+            <MenuItem
+              onClick={() => {
+                // viewSubmissionDialog.onTrue();
+              }}
+            >
+              {' '}
+              <Iconify icon="mdi:upload" sx={{ height: '16px', width: '16px' }} />
+              Submit
+            </MenuItem>
+          )}
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   const homeworkColumns: Column[] = [
     {
       id: 'title',
@@ -339,7 +361,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       minWidth: '200px',
       align: 'left',
       render: (value: any, row: any) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', ml: 8 }}>
           <Switch
             size="small"
             checked={row.status === 'publish'}
@@ -354,6 +376,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Actions',
       isSort: false,
       isFilter: false,
+      sticky: true,
       minWidth: '200px',
       align: 'left',
       render: (value: any, row: any) => (
@@ -430,7 +453,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       minWidth: '200px',
       align: 'left',
       render: (value: any, row: any) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', ml: 8 }}>
           <Switch
             size="small"
             checked={row.status === 'publish'}
@@ -445,21 +468,22 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'View Rubric',
       minWidth: '200px',
       align: 'left',
-      render: (value, row) => <Iconify icon="mdi:eye" width="16px" height="16px" />,
+      render: (value, row) => <Iconify icon="mdi:eye" width="16px" height="16px" sx={{ ml: 7 }} />,
     },
     {
       id: 'action',
       label: 'Action',
       minWidth: '200px',
+      sticky: true,
       align: 'left',
       isSort: false,
       isFilter: false,
       render: (value: any, row: any) => (
         <ThreeDotsActions
+          actions={(prop) => actions({ ...prop, row })}
           placement="right-top"
           showViewIcon
           showEditIcon
-          showThreeDots={false}
           handleEditClick={() => {}}
           handleViewClick={() => {
             submissionDialog.onTrue();
@@ -717,6 +741,17 @@ export const StudentSubmissions = () => {
       <>
         {' '}
         <MenuList>
+          {row.status === 'Submitted' && (
+            <MenuItem
+              onClick={() => {
+                viewSubmissionDialog.onTrue();
+              }}
+            >
+              {' '}
+              <Iconify icon="mdi:arrow" sx={{ height: '16px', width: '16px' }} />
+              Assign Grade
+            </MenuItem>
+          )}
           {(row.status === 'Pending' || row.status === 'Overdue') && (
             <MenuItem onClick={() => {}}>
               {' '}
@@ -727,7 +762,7 @@ export const StudentSubmissions = () => {
         </MenuList>
       </>
     ),
-    []
+    [viewSubmissionDialog]
   );
 
   return (
@@ -822,6 +857,8 @@ export const StudentSubmissions = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -829,8 +866,8 @@ export const StudentSubmissions = () => {
                   placement="right-top"
                   showViewIcon
                   handleViewClick={() => {
-                    viewSubmissionDialog.onTrue();
-                    setSelectedStudent(row);
+                    // viewSubmissionDialog.onTrue();
+                    // setSelectedStudent(row);
                   }}
                 />
               );
@@ -882,12 +919,12 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
   return (
     <Box display="flex" flexDirection="column" gap={2} p={1}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '70vh' }}>
           <PDFViewer width="100%" height="600">
             <CertificateDocument />
           </PDFViewer>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <CustomSelect
                 options={[
                   { value: 'A+', label: 'A+' },
@@ -912,7 +949,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
                 error={formik.touched.grade && Boolean(formik.errors.grade)}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <TextField
                 placeholder="Detailed Feedback"
                 multiline

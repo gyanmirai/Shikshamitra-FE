@@ -27,7 +27,7 @@ const StudentIDCard = ({ student }: any) => (
       {/* Left - Student Picture and Academic Year */}
       <Box display="flex" flexDirection="column" alignItems="center" mr={2}>
         <Avatar
-          src={student.photoUrl}
+          src={student.profilePicture}
           alt={student.name}
           sx={{ width: 80, height: 80, borderRadius: 0, border: '2px solid white' }}
         />

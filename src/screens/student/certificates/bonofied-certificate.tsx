@@ -3,7 +3,7 @@ import type { Medium, Division, Standards, Organization } from 'src/types/school
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -12,6 +12,8 @@ import { Box, Button, TextField, Autocomplete, DialogActions } from '@mui/materi
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -69,6 +71,7 @@ const BonofiedForm = () => {
       grNo: '',
       creationDate: null,
       reason: '',
+      student: null,
     },
     onSubmit: (val: any) => {
       // submit form logic
@@ -103,6 +106,31 @@ const BonofiedForm = () => {
       allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || ''
     );
   }, [allClass, classes, setFieldValue]);
+
+  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
+
+  useEffect(() => {
+    if (division && classes && organization) {
+      getStudents({
+        educationMediumStageId: organization,
+        standardId: classes,
+        divisionId: division,
+      });
+    }
+  }, [division, classes, organization, getStudents]);
+
+  const tableData = useMemo(
+    () =>
+      StudentsData?.items?.map((item: any) => ({
+        ...item,
+        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+      })) || [],
+    [StudentsData?.items]
+  );
+
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
@@ -155,15 +183,15 @@ const BonofiedForm = () => {
           </Grid>
           <Grid xs={3}>
             <Autocomplete
-              loading={false}
+              loading={isLoading}
               noOptionsText="No Student Found"
               fullWidth
-              // value={props.formik.values.sponsorStudent}
-              // onChange={(e, value: any) => {
-              //   props.formik.setFieldValue('sponsorStudent', value);
-              // }}
-              options={[]}
-              getOptionLabel={(option: any) => option?.firstName || ''}
+              value={values.student}
+              onChange={(e, value: any) => {
+                setFieldValue('student', value);
+              }}
+              options={tableData}
+              getOptionLabel={(option: any) => option?.name || ''}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -175,7 +203,7 @@ const BonofiedForm = () => {
               )}
               renderOption={(prop: any, option: any) => (
                 <li {...prop} key={option.id}>
-                  {option.firstName}
+                  {option.name}
                 </li>
               )}
             />

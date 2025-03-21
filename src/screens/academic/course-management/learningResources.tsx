@@ -303,8 +303,8 @@ const LearningResources = (props: TabComponentType) => {
                     minWidth: '200px',
                     align: 'left',
                   },
-                  { id: 'className', label: 'Class', minWidth: '200px' },
-                  { id: 'subject', label: 'Subject', minWidth: '200px' },
+                  { id: 'className', label: 'Class', minWidth: '200px', align: 'left' },
+                  { id: 'subject', label: 'Subject', minWidth: '200px', align: 'left' },
                   {
                     id: 'dateUploaded',
                     label: 'Date Uploaded',
@@ -317,9 +317,9 @@ const LearningResources = (props: TabComponentType) => {
                     id: 'status',
                     label: 'Publish',
                     minWidth: '200px',
-                    align: 'center',
+                    align: 'left',
                     render: (value, row) => (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', ml: 7 }}>
                         <Switch
                           size="small"
                           checked={value === 'Publish'}
@@ -333,6 +333,7 @@ const LearningResources = (props: TabComponentType) => {
                     label: 'Actions',
                     minWidth: '180px',
                     isSort: false,
+                    sticky: true,
                     isFilter: false,
                     render: (value, row) => (
                       <ThreeDotsActions

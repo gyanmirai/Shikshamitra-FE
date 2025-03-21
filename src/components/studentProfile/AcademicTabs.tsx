@@ -9,11 +9,13 @@ import { CustomTabs } from '../custom-tabs';
 import AcademicTimetable from './academicTimetable';
 import SubjectPerformance from './subjectPerformance';
 import HomeworkAssignment from './homeworkAssignment';
+import ProfileExamination from './profileExamination';
 
 const TABS = [
   { value: 'timetable', label: 'Timetable' },
   { value: 'subjectPerformace', label: 'Subject Performace' },
   { value: 'homework/assignments', label: 'Homework/Assignments' },
+  { value: 'examination', label: 'Examination' },
 ];
 const AcademicTabs = () => {
   const tabs = useTabs('timetable');
@@ -35,6 +37,7 @@ const AcademicTabs = () => {
           {tabs.value === 'timetable' && <AcademicTimetable />}
           {tabs.value === 'subjectPerformace' && <SubjectPerformance />}
           {tabs.value === 'homework/assignments' && <HomeworkAssignment />}
+          {tabs.value === 'examination' && <ProfileExamination />}
         </Box>
       </Scrollbar>
     </Card>

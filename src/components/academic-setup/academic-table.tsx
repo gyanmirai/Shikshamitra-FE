@@ -52,6 +52,7 @@ interface CustomAcademicTableProps {
   children?: CustomAcademicTableProps;
   dataKey: string;
   isParent?: boolean;
+  limitOfAge?: string;
 }
 
 export const CustomAcademicTable = ({
@@ -63,6 +64,7 @@ export const CustomAcademicTable = ({
   children = undefined,
   dataKey,
   isParent = false,
+  limitOfAge = undefined,
 }: CustomAcademicTableProps) => {
   const [getData, { data, isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -104,6 +106,7 @@ export const CustomAcademicTable = ({
               /> */}
               {/* )} */}
             </TableCell>
+            {typeof limitOfAge === 'string' && <TableCell align="center">Limit Of Age</TableCell>}
             {children && <TableCell align="center">Total {children.name}</TableCell>}
             <TableCell align="center">Action</TableCell>
             <TableCell align="right">
@@ -135,6 +138,7 @@ export const CustomAcademicTable = ({
                   name={name}
                   deleteMutation={deleteMutation}
                   children={children}
+                  limitOfAge={limitOfAge}
                 />
               ))
             ) : (
@@ -247,6 +251,7 @@ type CollapsibleTableRowProps = {
   deleteMutation: any;
   name: string;
   children?: CustomAcademicTableProps | undefined;
+  limitOfAge?: string;
 };
 
 function CollapsibleTableRow({
@@ -259,6 +264,7 @@ function CollapsibleTableRow({
   deleteMutation,
   name,
   children,
+  limitOfAge,
 }: CollapsibleTableRowProps) {
   const collapsible = useBoolean();
   const confirm = useBoolean(false);
@@ -373,6 +379,9 @@ function CollapsibleTableRow({
           )}
         </TableCell>
         <TableCell align="center">{`${row.name}${row?.strength ? ` (${row.strength})` : ''}`}</TableCell>
+        {typeof row[limitOfAge ?? 0] === 'number' && (
+          <TableCell align="center">{row[limitOfAge ?? 0]}</TableCell>
+        )}
         {children && <TableCell align="center">{row[children.dataKey].length}</TableCell>}
 
         <TableCell align="center" sx={{ display: 'flex', justifyContent: 'center' }}>

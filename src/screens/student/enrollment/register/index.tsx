@@ -91,12 +91,15 @@ const RegisterScreen = () => {
       >
         <ExamForm
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          studentName={`${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''} ${(editData as IInquiryData)?.lastName || ''}`.trim()}
+          standardName={(editData as IInquiryData)?.standard.name || ''}
           handleClose={() => {
             setEditData(null);
             dialog.onFalse();
           }}
         />{' '}
       </CustomDialog>
+
       <CustomDialog
         open={followUpDialog.value}
         handleClose={() => {

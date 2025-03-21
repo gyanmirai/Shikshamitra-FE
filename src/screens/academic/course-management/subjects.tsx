@@ -10,7 +10,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
   Grid,
@@ -22,15 +21,11 @@ import {
   MenuList,
   ListItem,
   TextField,
-  Accordion,
   Typography,
   IconButton,
-  ListItemIcon,
   ListItemText,
   DialogActions,
   CircularProgress,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -38,7 +33,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -61,11 +55,58 @@ interface TableRow {
   };
 }
 
-interface AssignmentRow {
-  title: string;
-  dueDate: string;
-  status: string;
-}
+export const chapterData = [
+  {
+    id: 1,
+    chapterNo: 1,
+    chapterName: 'Introduction to Algebra',
+    startDate: dayjs('2025-03-01').format('YYYY-MM-DD'),
+    endDate: dayjs('2025-04-01').format('YYYY-MM-DD'),
+    assignedTeacher: ['Mr. Rajesh Sharma', 'Ms. Neha Verma'],
+    viewMaterial: { videos: 5, pdfs: 3 },
+    progress: 75,
+  },
+  {
+    id: 2,
+    chapterNo: 2,
+    chapterName: 'Biology Basics',
+    startDate: dayjs('2025-02-15').format('YYYY-MM-DD'),
+    endDate: dayjs('2025-03-20').format('YYYY-MM-DD'),
+    assignedTeacher: ['Ms. Priya Mehta'],
+    viewMaterial: { videos: 8, pdfs: 4 },
+    progress: 60,
+  },
+  {
+    id: 3,
+    chapterNo: 3,
+    chapterName: 'Shakespeare’s Literature',
+    startDate: dayjs('2025-01-10').format('YYYY-MM-DD'),
+    endDate: dayjs('2025-02-05').format('YYYY-MM-DD'),
+    assignedTeacher: ['Mrs. Kavita Shah', 'Mr. Ankit Tiwari'],
+    viewMaterial: { videos: 6, pdfs: 2 },
+    progress: 90,
+  },
+  {
+    id: 4,
+    chapterNo: 4,
+    chapterName: 'World War History',
+    startDate: dayjs('2025-04-01').format('YYYY-MM-DD'),
+    endDate: dayjs('2025-05-15').format('YYYY-MM-DD'),
+    assignedTeacher: ['Mr. Arvind Joshi'],
+    viewMaterial: { videos: 4, pdfs: 1 },
+    progress: 50,
+  },
+  {
+    id: 5,
+    chapterNo: 5,
+    chapterName: 'Data Structures and Algorithms',
+    startDate: dayjs('2025-06-01').format('YYYY-MM-DD'),
+    endDate: dayjs('2025-07-10').format('YYYY-MM-DD'),
+    assignedTeacher: ['Mr. Vikas Nair', 'Ms. Divya Reddy'],
+    viewMaterial: { videos: 10, pdfs: 5 },
+    progress: 85,
+  },
+];
 
 const Subjects = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
@@ -236,18 +277,6 @@ const Subjects = (props: TabComponentType) => {
         <MenuList>
           <MenuItem
             onClick={() => {
-              setSelectedSubject(row.subjectName);
-              addChapterDialog.onTrue();
-              setIsEditMode(false);
-              setSelectedChapter(null);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="mdi:plus" />
-            Chapter
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
               // setSearchParams?.({
               //   tab: 'learningResources',
               //   class: classes,
@@ -262,7 +291,7 @@ const Subjects = (props: TabComponentType) => {
         </MenuList>
       </>
     ),
-    [addChapterDialog]
+    []
   );
 
   return (
@@ -343,6 +372,7 @@ const Subjects = (props: TabComponentType) => {
               value={subject}
               onChange={(val) => {
                 // setClasses(val as string);
+                setSubject(val as string);
               }}
               label="Subject"
               isLoading={isLoading}
@@ -355,28 +385,28 @@ const Subjects = (props: TabComponentType) => {
               {
                 id: 'chapterNo',
                 label: 'Chapter No',
-                minWidth: '180px',
+                minWidth: '130px',
                 align: 'left',
                 filterType: 'number',
               },
               {
                 id: 'chapterName',
                 label: 'Chapter Name',
-                minWidth: '200px',
+                minWidth: '180px',
                 align: 'left',
                 filterType: 'string',
               },
               {
                 id: 'startDate',
                 label: 'Start Date',
-                minWidth: '200px',
+                minWidth: '120px',
                 align: 'left',
                 filterType: 'date',
               },
               {
                 id: 'endDate',
                 label: 'End Date',
-                minWidth: '200px',
+                minWidth: '120px',
                 align: 'left',
                 filterType: 'date',
               },
@@ -396,20 +426,22 @@ const Subjects = (props: TabComponentType) => {
               {
                 id: 'viewMaterial',
                 label: 'View Material',
-                minWidth: '200px',
+                minWidth: '150px',
+                align: 'left',
                 isFilter: false,
                 render(value, row) {
                   // const { videos, pdfs } = value;
-                  return <Iconify icon="mdi:eye" />;
+                  return <Iconify icon="mdi:eye" sx={{ ml: 7 }} />;
                 },
               },
               {
                 id: 'progress',
                 label: 'Progress',
-                minWidth: '200px',
+                minWidth: '150px',
+                align: 'left',
                 render(value, row) {
                   return (
-                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <Box sx={{ position: 'relative', display: 'inline-flex', ml: 7 }}>
                       <CircularProgress variant="determinate" value={value} />
                       <Box
                         sx={{
@@ -441,6 +473,8 @@ const Subjects = (props: TabComponentType) => {
                 minWidth: '200px',
                 isSort: false,
                 isFilter: false,
+                align: 'left',
+                sticky: true,
                 render(value, row) {
                   return (
                     <ThreeDotsActions
@@ -459,7 +493,7 @@ const Subjects = (props: TabComponentType) => {
                 },
               },
             ]}
-            data={[]}
+            data={chapterData}
           />
         </>
       )}
@@ -732,187 +766,3 @@ interface ViewSubjectChapterProps {
   onAddNewChapter: () => void;
   onEditChapter: (chapter: any) => void;
 }
-
-const ViewSubjectChapter: React.FC<ViewSubjectChapterProps> = ({
-  onClose,
-  chapterData,
-  onAddNewChapter,
-  onEditChapter,
-}: ViewSubjectChapterProps) => {
-  const [subjectProgress, setSubjectProgress] = useState<number>(0);
-  const [division, setDivision] = useState<string>('All');
-  const [chapters, setChapters] = useState<any[]>([]); // State to hold chapter details
-
-  useEffect(() => {
-    if (division === 'All') {
-      setSubjectProgress(chapterData[0]?.subjectProgress || 0);
-      const allChapters = chapterData
-        .flatMap((chapter: any) => chapter.chapters || [])
-        .filter(
-          (chapter: any, index: number, self: any[]) =>
-            index === self.findIndex((c: any) => c.chapterName === chapter.chapterName)
-        );
-
-      setChapters(allChapters);
-    } else {
-      const selectedDivisionData = chapterData.find(
-        (chapter: any) => chapter.divisionName === division
-      );
-      setChapters(selectedDivisionData?.chapters || []);
-    }
-  }, [division, chapterData]);
-
-  const getDeadlineColor = (deadline: string) => {
-    const deadlineDate = dayjs(deadline);
-    const today = dayjs();
-    const diffInDays = deadlineDate.diff(today, 'day');
-    if (diffInDays < 0) {
-      return 'red';
-    }
-    if (diffInDays <= 7) {
-      return 'orange';
-    }
-    return 'green';
-  };
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          {/* Left side content */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <CustomSelect
-              label="Division"
-              options={[
-                { value: 'All', label: 'All' },
-                { value: 'A', label: 'A' },
-                { value: 'B', label: 'B' },
-              ]}
-              value={division}
-              onChange={(e) => {
-                setDivision(e as string);
-              }}
-              formControlProps={{ sx: { width: '200px' } }}
-            />
-            <Button
-              startIcon={<Iconify icon="mdi:plus" />}
-              variant="contained"
-              onClick={onAddNewChapter}
-            >
-              Chapter
-            </Button>
-          </Box>
-
-          {/* Right side content */}
-          {division === 'All' && (
-            <Label variant="soft" color={subjectProgress < 50 ? 'error' : 'success'}>
-              Subject Progress : {subjectProgress}% Completed
-            </Label>
-          )}
-        </Box>
-        <Box sx={{ mt: 3 }}>
-          {chapters.length > 0 &&
-            chapters.map((chapter) => (
-              <Accordion key={chapter.id}>
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  aria-controls={`panel${chapter.id}-content`}
-                  id={`panel${chapter.id}-header`}
-                >
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="h6">{chapter.chapterName}</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    {division !== 'All' && (
-                      <Label
-                        variant="soft"
-                        color={chapter.progress < 50 ? 'error' : 'success'}
-                        marginRight={2}
-                      >
-                        {chapter.progress}% Completed
-                      </Label>
-                    )}
-                    <Typography
-                      variant="subtitle2"
-                      style={{
-                        color: getDeadlineColor(chapter.timeLine),
-                        marginRight: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      {/* Icon for deadline can be added here */}
-                      {/* Placeholder for deadline icon */}
-                      <Iconify
-                        icon="solar:calendar-mark-bold-duotone"
-                        sx={{ height: '16px', width: '16px', color: 'black' }}
-                      />
-                      Deadline : {dayjs(chapter.timeLine).format('DD MMM YYYY')}
-                    </Typography>
-                    <ThreeDotsActions
-                      placement="right-top"
-                      onClickThreeDots={(e) => {
-                        e.stopPropagation();
-                      }}
-                      actions={({ popover }) => (
-                        <MenuList>
-                          <MenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditChapter(chapter);
-                              popover.onClose();
-                            }}
-                          >
-                            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-                            Edit Chapter
-                          </MenuItem>
-                        </MenuList>
-                      )}
-                    />
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {/* <Editor
-                    value={chapter.content}
-                    placeholder="Chapter Description"
-                    editable={false}
-                    sx={{ width: '100%', marginTop: '10px' }}
-                  />{' '} */}
-                  <Scrollbar sx={{ height: '150px' }}>
-                    <Box dangerouslySetInnerHTML={{ __html: chapter.content }} />
-                    {chapter.documents && chapter.documents.length > 0 && (
-                      <Box mt={2}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Attached Documents
-                        </Typography>
-                        <List>
-                          {chapter.documents.map((doc: any, index: any) => (
-                            <ListItem key={index}>
-                              <ListItemIcon>
-                                <Iconify icon="mdi:file-document-outline" />
-                              </ListItemIcon>
-                              <ListItemText primary={doc.name} />
-                              <IconButton href={doc.url} target="_blank">
-                                <Iconify icon="mdi:download" />
-                              </IconButton>
-                            </ListItem>
-                          ))}
-                        </List>
-                      </Box>
-                    )}
-                  </Scrollbar>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-        </Box>
-      </Scrollbar>
-    </Box>
-  );
-};

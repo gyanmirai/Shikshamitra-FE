@@ -54,6 +54,30 @@ export const StudentTakeAttendanceApi = createApi({
       }),
       providesTags: ['Student-Take-Attendance'],
     }),
+    getAttendanceByFilter: builder.query({
+      query: ({ attendanceDate, educationMediumStageId, standardId, divisionId }) => {
+        let paramsString = '';
+        if (attendanceDate) {
+          paramsString += `attendanceDate=${attendanceDate}&`;
+        }
+        if (educationMediumStageId) {
+          paramsString += `educationMediumStageId=${educationMediumStageId}&`;
+        }
+        if (standardId) {
+          paramsString += `standardId=${standardId}&`;
+        }
+        if (divisionId) {
+          paramsString += `divisionId=${divisionId}&`;
+        }
+        paramsString = paramsString.slice(0, -1);
+
+        return {
+          url: `/app/student-attendance/filtered-attendence-list?${paramsString}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['Student-Take-Attendance'],
+    }),
   }),
 });
 
@@ -64,4 +88,5 @@ export const {
   useGetStudentAttendanceQuery,
   useDeleteStudentAttendanceMutation,
   useUpdateStudentAttendanceMutation,
+  useGetAttendanceByFilterQuery,
 } = StudentTakeAttendanceApi;

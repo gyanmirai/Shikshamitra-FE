@@ -29,6 +29,7 @@ export type UploadProps = DropzoneOptions & {
   error?: boolean;
   sx?: SxProps<Theme>;
   thumbnail?: boolean;
+  title?: string;
   onDelete?: () => void;
   onUpload?: () => void;
   onRemoveAll?: () => void;

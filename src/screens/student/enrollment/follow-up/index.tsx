@@ -28,9 +28,9 @@ import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import {
-  InquiryStatusType,
-  InquiryStatusTypeColors,
-  InquiryStatusTypeOptions,
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 import {
   useGetFollowUpQuery,
@@ -95,16 +95,16 @@ const FollowUpScreen: React.FC = () => {
             align: 'left',
           },
           {
-            id: 'inquiryStatusType',
+            id: 'followUpStatusType',
             label: 'Status',
             filterType: 'enum',
-            enumOptions: InquiryStatusTypeOptions,
+            enumOptions: FollowUpStatusTypeOptions,
             minWidth: '180px',
             align: 'left',
             render(value, row) {
-              const color = InquiryStatusTypeColors[value as InquiryStatusType] as LabelColor;
+              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
-              return <Label color={color}>{InquiryStatusType[value]}</Label>;
+              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
             },
           },
           {
@@ -182,12 +182,12 @@ export const CommunicationForm = ({
   });
   const formik = useFormik<{
     msg: string;
-    status: InquiryStatusType;
+    status: FollowUpStatusType;
     dueDate: Dayjs | null;
   }>({
     initialValues: {
       msg: '',
-      status: data?.inquiryStatusType ?? InquiryStatusType.Pending,
+      status: data?.inquiryStatusType ?? FollowUpStatusType.Pending,
       dueDate: data?.dueDate ? dayjs(data?.dueDate) : null,
     },
     validationSchema: Yup.object({
@@ -291,13 +291,14 @@ export const CommunicationForm = ({
           onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
         />
         <CustomSelect
-          options={InquiryStatusTypeOptions}
+          options={FollowUpStatusTypeOptions}
           value={formik.values.status}
-          onChange={(val) => {
-            formik.setFieldValue('status', val);
+          isLoading={isLoading}
+          sx={{ minWidth: 300, width: '100%' }}
+          onChange={(newValue) => {
+            formik.setFieldValue('status', newValue);
           }}
-          label="Change Status"
-          formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
+          size="small"
         />
       </Box>
       <DialogActions>

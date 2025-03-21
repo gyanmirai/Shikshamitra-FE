@@ -3,6 +3,7 @@ import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 
 import { PFApi } from './PF/PFApi';
+import { StudentApi } from './student';
 import { userApi } from './user/userApi';
 import { roleApi } from './role/roleApi';
 import { yearApi } from './year/yearApi';
@@ -28,6 +29,7 @@ import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
+import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { StudentRegistrationApi } from './student/registration/registration-api';
@@ -88,6 +90,8 @@ const reducers = combineReducers({
   [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
   [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
   [StudentTakeAttendanceApi.reducerPath]: StudentTakeAttendanceApi.reducer,
+  [shiftManagementApi.reducerPath]: shiftManagementApi.reducer,
+  [StudentApi.reducerPath]: StudentApi.reducer,
 });
 
 const store = configureStore({
@@ -130,7 +134,9 @@ const store = configureStore({
       .concat(StudentCertificateApi.middleware)
       .concat(studentGrNumberApi.middleware)
       .concat(StudentCertificateApi.middleware)
-      .concat(StudentTakeAttendanceApi.middleware),
+      .concat(StudentTakeAttendanceApi.middleware)
+      .concat(shiftManagementApi.middleware)
+      .concat(StudentApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

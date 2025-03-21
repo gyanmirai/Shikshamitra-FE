@@ -3,19 +3,21 @@ import type { UsePopoverReturn } from 'src/components/custom-popover';
 import dayjs from 'dayjs';
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusTypeColor,
-} from 'src/enums/employee-leave-status';
-import {
   useGetEmployeeLeaveQuery,
   useEmployeeLeaveRequestStatusMutation,
 } from 'src/redux/employee/employeeApi';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusOptions,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -83,8 +85,21 @@ const LeaveHistory = (props: TabComponentType) => {
     setEditData(null);
     modal.onFalse();
   };
+
   return (
     <>
+      <Box display="flex" justifyContent="flex-end">
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => {
+            modal.onTrue();
+          }}
+        >
+          Leave Request
+        </Button>
+      </Box>
       <CustomizableTable
         isLoading={isLoading}
         tableId="leave-history-table"
@@ -99,10 +114,14 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Start Date',
             id: 'start',
+            filterType: 'date',
+            minWidth: '100px',
           },
           {
             label: 'End Date',
             id: 'end',
+            filterType: 'date',
+            minWidth: '100px',
           },
           {
             label: 'Half Day',
@@ -125,6 +144,8 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Status',
             id: 'statusValue',
+            filterType: 'enum',
+            enumOptions: EmployeeLeaveStatusOptions,
             render(value: number, row) {
               const status = EmployeeLeaveStatusType[row.status];
               return (
@@ -144,6 +165,9 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Action',
             id: 'action',
+            isFilter: false,
+            sticky: true,
+            isSort: false,
             render(value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
@@ -157,7 +181,7 @@ const LeaveHistory = (props: TabComponentType) => {
         maxWidth="md"
         open={modal.value}
         handleClose={handleClose}
-        title="View Leave Request"
+        title={editData ? 'Review Leave Request' : 'Add Leave Request'}
       >
         <Box p={2}>
           <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />

@@ -64,7 +64,7 @@ export const subjectTempData = {
   classes: [
     {
       id: '1',
-      name: '1',
+      name: '5',
       divisions: [
         {
           id: 'A',

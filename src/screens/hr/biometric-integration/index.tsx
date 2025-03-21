@@ -4,7 +4,10 @@ import React from 'react';
 
 import { Box, Button } from '@mui/material';
 
-import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
+import {
+  EmployeeAttendanceStatus,
+  EmployeeAttendanceStatusOptions,
+} from 'src/enums/employee-attendance-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -45,6 +48,8 @@ const BiometricIntegrationScreen = () => (
         {
           id: 'status',
           label: 'Status',
+          filterType: 'enum',
+          enumOptions: EmployeeAttendanceStatusOptions,
           render(value, row) {
             return (
               <Label

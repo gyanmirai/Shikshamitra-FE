@@ -123,17 +123,43 @@ const RegisterForm = ({
           await updateBasicDetails({
             id: editData?.id || values?.id,
             body: {
-              // userId: editData?.studentBasicDetails?.userId || values.userId || res?.id,
+              formNumber: values.formNo,
+              firstName: values.firstName,
+              middleName: values.middleName,
+              lastName: values.lastName,
+              previousSchoolName: values.previousSchool,
+
+              dateOfBirth: dateConvertor(values.dob?.format(dateFormat) || '') || '',
+              genderType: values.gender,
+              parentContactNumber: values.mobileNo,
+              alternativeContactNumber: values.alternativeContactNumber,
+
+              academicYearId: values.academicYear,
+              educationBoardId: values.board,
+              educationMediumId: values.medium,
+              standardId: values.class,
+              // userId: values.userId || res?.id,
               profilePicture: values.photo ? getBase64String(values.photo) : '',
-              aadhaarNo: values.adharNo,
+              mobileNo: values.mobileNo,
+              email: values.email,
+              aadhaarNo: String(values.adharNo),
               religion: values.religion,
               familyCast: values.familyCast,
               castType: values.castCategory,
               motherTongue: values.motherTongue,
               nationality: values.nationality,
               birthPlace: values.birthPlace,
-              temporaryGr: values.temporaryGr,
+              temporaryGr: +values.temporaryGr,
               remarks: values.remarks,
+              addressLine1: values.addressLine1,
+              addressLine2: values.addressLine2,
+              addressLine3: values.addressLine3,
+              city: values?.city?.name,
+              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              pinCode: String(values.pinCode),
+              inquiryPreferenceId: values.inquiryPreference,
+              // userId: editData?.userId,
             },
           }).unwrap();
         } else {
@@ -157,7 +183,7 @@ const RegisterForm = ({
             profilePicture: values.photo ? getBase64String(values.photo) : '',
             mobileNo: values.mobileNo,
             email: values.email,
-            aadhaarNo: values.adharNo,
+            aadhaarNo: String(values.adharNo),
             religion: values.religion,
             familyCast: values.familyCast,
             castType: values.castCategory,
@@ -166,6 +192,14 @@ const RegisterForm = ({
             birthPlace: values.birthPlace,
             temporaryGr: values.temporaryGr,
             remarks: values.remarks,
+            addressLine1: values.addressLine1,
+            addressLine2: values.addressLine2,
+            addressLine3: values.addressLine3,
+            city: values?.city?.name,
+            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+            pinCode: String(values.pinCode),
+            inquiryPreferenceId: values.inquiryPreference,
           }).unwrap();
           formik.setFieldValue('id', resp?.id);
         }
@@ -193,7 +227,7 @@ const RegisterForm = ({
               officeAddress: values.fatherOfficeAddress,
               designation: values.fatherDesignation,
               organisation: values.fatherOrganization,
-              aadhaarNo: values.fatherAadharNo,
+              aadhaarNo: String(values.fatherAadharNo),
               remarks: values.fatherRemarks,
               address: values.fatherAddress,
             },
@@ -209,7 +243,7 @@ const RegisterForm = ({
               officeAddress: values.motherOfficeAddress,
               designation: values.motherDesignation,
               organisation: values.motherOrganization,
-              aadhaarNo: values.motherAadharNo,
+              aadhaarNo: String(values.motherAadharNo),
               remarks: values.motherRemarks,
               address: values.motherAddress,
             },
@@ -225,7 +259,7 @@ const RegisterForm = ({
               officeAddress: values.guardianOfficeAddress,
               designation: values.guardianDesignation,
               organisation: values.guardianOrganization,
-              aadhaarNo: values.guardianAadharNo,
+              aadhaarNo: String(values.guardianAadharNo),
               remarks: values.guardianRemarks,
               address: values.guardianAddress,
             },
@@ -250,16 +284,31 @@ const RegisterForm = ({
             studentEmail: values.studentEmail,
             whatsAppNo: values.whatsAppContactNo,
             localAddress: values.localAddress,
-            localState: values.localState,
-            localCity: values.localCity,
+            localCountry: { name: values.localCountry.name, isoCode: values.localCountry.isoCode },
+            localState: { name: values.localState.name, isoCode: values.localState.isoCode },
+            localCity: values.localCity.name,
             localPinCode: values.localPincode,
             permanentAddress: values.permanentAddress,
-            permanentState: values.permanentState,
-            permanentCity: values.permanentCity,
+            permanentCountry: {
+              name: values?.permanentCountry?.name,
+              isoCode: values?.permanentCountry?.isoCode,
+            },
+            permanentState: {
+              name: values?.permanentState?.name,
+              isoCode: values?.permanentState?.isoCode,
+            },
+            permanentCity: values?.permanentCity?.name,
             permanentPinCode: values.permanentPincode,
             emergencyAddress: values.emergencyAddress,
-            emergencyState: values.emergencyState,
-            emergencyCity: values.emergencyCity,
+            emergencyState: {
+              name: values.emergencyState?.name,
+              isoCode: values.emergencyState?.isoCode,
+            },
+            emergencyCountry: {
+              name: values.emergencyCountry?.name,
+              isoCode: values.emergencyCountry?.isoCode,
+            },
+            emergencyCity: values?.emergencyCity?.name,
             emergencyPinCode: values.emergencyPincode,
             remarks: values.remarks,
           },
@@ -303,7 +352,7 @@ const RegisterForm = ({
             previousSchoolBoard: values.schoolBoard,
             previousSchoolMedium: values.schoolMedium,
             tcNo: values.tcNumber,
-            lastClassPassed: values.lastClassPassed,
+            lastClassPassed: String(values.lastClassPassed),
             percentage: values.percentage,
           },
         }).unwrap();
@@ -357,8 +406,6 @@ const RegisterForm = ({
     },
     [editData?.id, updateAdditionDetails]
   );
-
-  console.log(validationSchemas[activeStep], 'sdfdsfdsfsdfds========');
 
   return (
     <CustomStepperWithFormik
@@ -435,7 +482,11 @@ const RegisterForm = ({
                 {allFields[step].map((field: FieldsType) => (
                   <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
                     {field.renderComp ? (
-                      field.renderComp({ formik, field })
+                      field.renderComp({
+                        formik,
+                        field,
+                        isEdit: true,
+                      })
                     ) : field.type === 'date' ? (
                       <DatePicker
                         label={field.label}
@@ -468,7 +519,9 @@ const RegisterForm = ({
                         helperText={formik.touched[field.name] && formik.errors[field.name]}
                         fullWidth
                         // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                        {...(field?.otherProps || {})}
+                        {...((typeof field?.otherProps === 'function'
+                          ? field?.otherProps({ formik })
+                          : field?.otherProps) || {})}
                       />
                     )}
                   </Grid>

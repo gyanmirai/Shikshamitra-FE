@@ -2,11 +2,16 @@
 
 import type { IKanbanColumn } from 'src/types/kanban';
 import type { LabelColor } from 'src/components/label';
+import type { Division, Standards } from 'src/types/school';
+import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Tab,
@@ -15,32 +20,50 @@ import {
   Stack,
   Button,
   Drawer,
+  Dialog,
   Divider,
+  useTheme,
   MenuList,
   MenuItem,
   Checkbox,
+  Skeleton,
   TextField,
   IconButton,
   Typography,
   DialogActions,
   drawerClasses,
+  CircularProgress,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import calculateAge from 'src/utils/calculate-age';
+import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { GenderType } from 'src/enums/gender';
 import { paper, varAlpha } from 'src/theme/styles';
+import { DocumentType } from 'src/enums/documnet-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetStudentRegistrationQuery } from 'src/redux/student/admission/admission-api';
+import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
+import { RegistrationStatusType } from 'src/enums/registration-status-type';
+import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
+import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
+import {
+  useGetStudentDocumentsQuery,
+  useGetStudentDocumentByIdQuery,
+} from 'src/redux/student/registration/registration-api';
 import {
   AdmissionPaymentStatusType,
   AdmissionPaymentStatusOptions,
   AdmissionPaymentStatusTypeColors,
 } from 'src/enums/admission-payment-statusType';
+import {
+  useGetStudentAdmissionQuery,
+  useChangeAdmissionStatusMutation,
+  useAssignDivisionTOStudentMutation,
+} from 'src/redux/student/admission/admission-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -51,6 +74,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 
 import type { IInquiryData } from '../Inquiry';
@@ -457,47 +481,54 @@ const data = [
 // };
 
 const AdmissionScreen = () => {
-  const tabs = useTabs('pending');
+  const tabs = useTabs(RegistrationStatusType.Pending);
   const dialogForCollectFees = useBoolean();
   const divisionDialog = useBoolean();
   const statusDialog = useBoolean();
   const openDetails = useBoolean();
+  const followUpDialog = useBoolean();
   const [open, setOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const [editData, setEditData] = useState<IInquiryData | null>(null);
 
   const { data: admissionData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStudentRegistrationQuery,
+    currentQueryAndMutation: useGetStudentAdmissionQuery,
   });
 
   console.log('admissionData----', admissionData);
 
   const counts = useMemo(
     () => ({
-      pending: admissionData?.items.length,
-      approved: admissionData?.items.length,
-      rejected: admissionData?.items.length,
+      pending: admissionData?.items.filter(
+        (i: any) => i.studentEnrollmentApprovalState === RegistrationStatusType.Pending
+      )?.length,
+      approved: admissionData?.items.filter(
+        (i: any) => i.studentEnrollmentApprovalState === RegistrationStatusType.Approved
+      )?.length,
+      rejected: admissionData?.items.filter(
+        (i: any) => i.studentEnrollmentApprovalState === RegistrationStatusType.Rejected
+      )?.length,
     }),
-    [admissionData?.items.length]
+    [admissionData?.items]
   );
   const TABS = useMemo(
     () => [
       {
-        value: 'pending',
         label: 'Pending',
+        value: RegistrationStatusType.Pending,
         count: counts.pending || 0,
         color: 'warning',
       },
       {
-        value: 'approved',
         label: 'Approved',
+        value: RegistrationStatusType.Approved,
         count: counts.approved || 0,
         color: 'success',
       },
       {
-        value: 'rejected',
         label: 'Rejected',
+        value: RegistrationStatusType.Rejected,
         count: counts.rejected || 0,
         color: 'error',
       },
@@ -507,15 +538,17 @@ const AdmissionScreen = () => {
 
   const tableData = useMemo(
     () =>
-      admissionData?.items.map((item: IInquiryData) => ({
-        ...item,
-        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
-        doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType],
-      })),
-    [admissionData?.items]
+      admissionData?.items
+        .filter((i: any) => i.studentEnrollmentApprovalState === tabs.value)
+        .map((item: IInquiryData) => ({
+          ...item,
+          dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+          ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+          doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+          studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+          genderValue: GenderType[item?.genderType],
+        })),
+    [admissionData?.items, tabs.value]
   );
   return (
     <Box>
@@ -579,7 +612,7 @@ const AdmissionScreen = () => {
             renderColumn() {
               return (
                 <Checkbox
-                  checked={selectedStudents?.length === tableData?.length}
+                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
                   onChange={(e) => {
                     if (e.target.checked) {
                       setSelectedStudents(tableData);
@@ -593,14 +626,12 @@ const AdmissionScreen = () => {
             render(value, row) {
               return (
                 <Checkbox
-                  checked={!!selectedStudents.find((i: any) => i.inquiryNo === row.inquiryNo)}
+                  checked={!!selectedStudents.find((i: any) => i.id === row.id)}
                   onChange={(e) => {
                     if (e.target.checked) {
                       setSelectedStudents([...selectedStudents, row]);
                     } else {
-                      setSelectedStudents(
-                        selectedStudents.filter((i: any) => i.inquiryNo !== row.inquiryNo)
-                      );
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
                     }
                   }}
                 />
@@ -617,6 +648,7 @@ const AdmissionScreen = () => {
             filterType: 'string',
           },
           { id: 'standard.name', label: 'Class' },
+          { id: 'division.name', label: 'Division' },
           { id: 'studentName', label: 'Student Name', minWidth: '160px' },
           {
             id: 'dobValue',
@@ -646,7 +678,7 @@ const AdmissionScreen = () => {
             minWidth: '200px',
           },
 
-          { id: 'educationMedium.name', label: 'Organization' },
+          { id: 'educationMedium.name', label: 'Medium' },
 
           { id: 'inquiryNo', align: 'left', label: 'Inquiry No', minWidth: '104px' },
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
@@ -654,19 +686,20 @@ const AdmissionScreen = () => {
           { id: 'Name', label: 'Name' },
           { id: 'Code', label: 'Code' },
           { id: 'class', label: 'Class' },
-          { id: 'Organization', label: 'Organization' },
+          // { id: 'Organization', label: 'Organization' },
           { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '170px' },
           { id: 'totalAmount', label: 'Total Amount', minWidth: '135px', filterType: 'number' },
           { id: 'paidAmount', label: 'Paid Amount', minWidth: '125px', filterType: 'number' },
           {
-            id: 'StatusName',
+            id: 'feeStatusType',
             label: 'Payment Status',
             filterType: 'enum',
             enumOptions: AdmissionPaymentStatusOptions,
             render(value, row) {
               const color = AdmissionPaymentStatusTypeColors[
-                value as AdmissionPaymentStatusType
+                value as Partial<AdmissionPaymentStatusType>
               ] as LabelColor;
+
               return (
                 <Label color={color}>
                   {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
@@ -679,6 +712,7 @@ const AdmissionScreen = () => {
             label: 'Actions',
             isSort: false,
             isFilter: false,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -689,6 +723,7 @@ const AdmissionScreen = () => {
                     setOpen(true);
                   }}
                   handleViewClick={() => {
+                    setEditData(row as IInquiryData);
                     openDetails.onTrue();
                   }}
                   actions={({ popover }) => (
@@ -697,6 +732,7 @@ const AdmissionScreen = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           divisionDialog.onTrue();
+                          setEditData(row as IInquiryData);
                           popover.onClose();
                         }}
                       >
@@ -710,6 +746,20 @@ const AdmissionScreen = () => {
                       >
                         <Iconify icon="tdesign:money" />
                         Pay Fees
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          followUpDialog.onTrue();
+                          setEditData(row as IInquiryData);
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify
+                          icon="icon-park:follow-up-date-sort"
+                          color="default.main"
+                          sx={{ mr: 2 }}
+                        />
+                        Follow Up
                       </MenuItem>
                     </MenuList>
                   )}
@@ -729,7 +779,7 @@ const AdmissionScreen = () => {
           setEditData(null);
           setOpen(false);
         }}
-        title="Registration"
+        title="Edit Admission"
       >
         <RegisterForm
           editData={editData}
@@ -741,17 +791,49 @@ const AdmissionScreen = () => {
       </CustomDialog>
       <CustomDialog
         open={divisionDialog.value}
-        handleClose={divisionDialog.onFalse}
+        handleClose={() => {
+          divisionDialog.onFalse();
+          setEditData(null);
+        }}
         title="Assign Division"
       >
-        <AssignDivisionForm handleClose={divisionDialog.onFalse} />
+        <AssignDivisionForm
+          handleClose={divisionDialog.onFalse}
+          standard={editData?.standard}
+          studentID={editData?.id}
+          division={editData?.division}
+        />
       </CustomDialog>
       <CustomDialog
         open={statusDialog.value}
         handleClose={statusDialog.onFalse}
         title="Change Status"
       >
-        <ChangeStatusForm handleClose={statusDialog.onFalse} tabValue={tabs.value} />
+        <ChangeStatusForm
+          handleClose={() => {
+            setSelectedStudents([]);
+            statusDialog.onFalse();
+          }}
+          tabValue={tabs.value}
+          selectedStudents={selectedStudents}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        open={followUpDialog.value}
+        handleClose={() => {
+          setEditData(null);
+          followUpDialog.onFalse();
+        }}
+        title="Follow Up"
+      >
+        <CommunicationForm
+          handleCloseDialog={() => {
+            setEditData(null);
+            followUpDialog.onFalse();
+          }}
+          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+        />{' '}
       </CustomDialog>
 
       {dialogForCollectFees.value && (
@@ -779,7 +861,10 @@ const AdmissionScreen = () => {
       <Drawer
         anchor="right"
         open={openDetails.value}
-        onClose={openDetails.onFalse}
+        onClose={() => {
+          setEditData(null);
+          openDetails.onFalse();
+        }}
         slotProps={{ backdrop: { invisible: true } }}
         sx={{
           [`& .${drawerClasses.paper}`]: (theme) => ({
@@ -811,10 +896,20 @@ const AdmissionScreen = () => {
           <Scrollbar sx={{ height: '100%', p: 2 }}>
             <Iconify
               icon="zondicons:close-outline"
-              onClick={openDetails.onFalse}
+              onClick={() => {
+                setEditData(null);
+                openDetails.onFalse();
+              }}
               sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
             />
-            <StudentDetails tabValue={tabs.value} />
+            <StudentDetails
+              tabValue={tabs.value}
+              editData={editData}
+              onClose={() => {
+                setEditData(null);
+                openDetails.onFalse();
+              }}
+            />
           </Scrollbar>
         </Paper>
       </Drawer>
@@ -824,70 +919,188 @@ const AdmissionScreen = () => {
 
 export default AdmissionScreen;
 
-const StudentDetails = ({ tabValue }: any) => (
-  <Box>
-    <Typography variant="h6" mb={2}>
-      Student Details
-    </Typography>
-    <Typography variant="subtitle2" color="text.secondary">
-      Name : John Doe
-    </Typography>
-    <Typography variant="subtitle2" color="text.secondary">
-      Class : 3
-    </Typography>
-    <Typography variant="subtitle2" color="text.secondary">
-      Parent Name : Man Doe
-    </Typography>
-    <Typography variant="subtitle2" color="text.secondary">
-      Contact : +91 99243 12399
-    </Typography>
+const StudentDetails = ({ tabValue, editData, onClose }: any) => {
+  const [changeStatus, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeAdmissionStatusMutation,
+  });
 
-    <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-    <EntranceExamSections />
-    <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-    <DocumentsSections />
-    <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-    {tabValue === 'pending' && (
-      <>
-        <Button fullWidth variant="soft" color="success" sx={{ mt: 2 }}>
-          Approve Application
-        </Button>
-        <Button fullWidth variant="soft" color="error" sx={{ mt: 2 }}>
-          Reject Application
-        </Button>
-      </>
-    )}
+  return (
+    <Box>
+      <Typography variant="h6" mb={2}>
+        Student Details
+      </Typography>
+      <Typography variant="subtitle2" color="text.secondary">
+        Name : {editData?.firstName || `${editData?.lastName}` || `${editData?.middleName}` || '-'}
+      </Typography>
+      <Typography variant="subtitle2" color="text.secondary">
+        Class : {editData?.standard?.name}
+      </Typography>
+      <Typography variant="subtitle2" color="text.secondary">
+        Parent Name : {editData?.fatherDetails.name || '-'}
+      </Typography>
+      <Typography variant="subtitle2" color="text.secondary">
+        Contact :{editData?.parentContactNumber || '-'}
+      </Typography>
 
-    {tabValue === 'approved' && (
-      <>
-        <Button fullWidth variant="soft" color="error" sx={{ mt: 2 }}>
-          Reject Application
-        </Button>
-        <Button fullWidth variant="soft" color="info" sx={{ mt: 2 }}>
-          Request Information
-        </Button>
-      </>
-    )}
+      <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+      <EntranceExamSections editData={editData} />
+      <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+      <DocumentsSections editData={editData} />
+      <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+      {tabValue === RegistrationStatusType.Pending && (
+        <>
+          <Button
+            fullWidth
+            variant="soft"
+            color="success"
+            sx={{ mt: 2 }}
+            onClick={async () => {
+              await changeStatus({
+                approvalStatus: RegistrationStatusType.Approved,
+                body: [editData.id],
+              }).unwrap();
+              onClose();
+            }}
+          >
+            Approve Application
+          </Button>
+          <Button
+            fullWidth
+            variant="soft"
+            color="error"
+            sx={{ mt: 2 }}
+            onClick={async () => {
+              await changeStatus({
+                approvalStatus: RegistrationStatusType.Rejected,
+                body: [editData.id],
+              }).unwrap();
+              onClose();
+            }}
+          >
+            Reject Application
+          </Button>
+        </>
+      )}
 
-    {tabValue === 'rejected' && (
-      <>
-        <Button fullWidth variant="soft" color="success" sx={{ mt: 2 }}>
-          Approve Application
-        </Button>
-        <Button fullWidth variant="soft" color="info" sx={{ mt: 2 }}>
-          Request Information
-        </Button>
-      </>
-    )}
-    {/* <Button fullWidth variant="soft" sx={{ mt: 2 }}>
+      {tabValue === RegistrationStatusType.Approved && (
+        <>
+          <Button
+            fullWidth
+            variant="soft"
+            color="error"
+            sx={{ mt: 2 }}
+            onClick={async () => {
+              await changeStatus({
+                approvalStatus: RegistrationStatusType.Rejected,
+                body: [editData.id],
+              }).unwrap();
+              onClose();
+            }}
+          >
+            Reject Application
+          </Button>
+          <Button
+            fullWidth
+            variant="soft"
+            color="info"
+            sx={{ mt: 2 }}
+            onClick={async () => {
+              await changeStatus({
+                approvalStatus: RegistrationStatusType.Pending,
+                body: [editData.id],
+              }).unwrap();
+              onClose();
+            }}
+          >
+            Pending{' '}
+          </Button>
+        </>
+      )}
+
+      {tabValue === RegistrationStatusType.Rejected && (
+        <>
+          <Button
+            fullWidth
+            variant="soft"
+            color="success"
+            sx={{ mt: 2 }}
+            onClick={async () => {
+              await changeStatus({
+                approvalStatus: RegistrationStatusType.Approved,
+                body: [editData.id],
+              }).unwrap();
+              onClose();
+            }}
+          >
+            Approve Application
+          </Button>
+          <Button
+            fullWidth
+            variant="soft"
+            color="info"
+            sx={{ mt: 2 }}
+            onClick={async () => {
+              await changeStatus({
+                approvalStatus: RegistrationStatusType.Pending,
+                body: [editData.id],
+              }).unwrap();
+              onClose();
+            }}
+          >
+            Pending
+          </Button>
+        </>
+      )}
+      {/* <Button fullWidth variant="soft" sx={{ mt: 2 }}>
       Schedule Interview
     </Button> */}
-    <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
-  </Box>
-);
+      <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
+    </Box>
+  );
+};
 
-const EntranceExamSections = () => {
+const EntranceExamSections = ({ editData }: any) => {
   const exam = useBoolean(true);
+  const { data: entranceExamData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEntranceExamByStudentIdQuery,
+    params: editData?.id,
+    options: {
+      skip: !editData?.id,
+    },
+  });
+  const theme = useTheme();
+  const examData = useMemo(
+    () => ({
+      ...entranceExamData,
+      date: dayjs(entranceExamData?.examDate).format('DD-MM-YYYY'),
+      examTime: `${dayjs(entranceExamData?.entranceExamSlot?.startDate).format('hh:mm A')} to ${dayjs(
+        entranceExamData?.entranceExamSlot?.endDate
+      ).format('hh:mm A')}`,
+      name: `${entranceExamData?.studentEnrollment?.firstName} ${entranceExamData?.studentEnrollment?.lastName}`,
+      medium: entranceExamData?.studentEnrollment?.educationMedium?.name,
+      class: entranceExamData?.studentEnrollment?.standard?.name,
+      status:
+        entranceExamData?.marksObtained === null
+          ? 'Pending'
+          : entranceExamData?.marksObtained >= entranceExamData?.passingMark
+            ? 'Pass'
+            : 'Fail',
+      percentage:
+        entranceExamData?.marksObtained === null || entranceExamData?.totalMarks === 0
+          ? 0
+          : +(
+              ((entranceExamData?.marksObtained ?? 0) / (entranceExamData?.totalMarks ?? 1)) *
+              100
+            ).toFixed(2),
+      obtainMarks: entranceExamData?.marksObtained ?? '-',
+    }),
+    [entranceExamData]
+  );
+  const color = EntranceExamStatusTypeColors[
+    examData.status as EntranceExamStatusType
+  ] as LabelColor;
   return (
     <Stack spacing={1.5}>
       <Stack
@@ -910,20 +1123,20 @@ const EntranceExamSections = () => {
             <Box component="span" sx={{ width: 100, color: 'text.secondary', mr: 2 }}>
               Status
             </Box>
-            <Label color="success">Completed</Label>
+            <Label color={color}>{examData?.status}</Label>
           </Stack>
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 100, color: 'text.secondary', mr: 2 }}>
               Date
             </Box>
-            10/10/2024
+            {dayjs(editData?.examDate).format('DD/MM/YYYY')}
           </Stack>
 
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 100, color: 'text.secondary', mr: 2 }}>
               Obtained Marks
             </Box>
-            90/100
+            {examData?.obtainMarks || 0}/{examData?.totalMarks || 0}
           </Stack>
         </Stack>
       )}
@@ -931,8 +1144,36 @@ const EntranceExamSections = () => {
   );
 };
 
-const DocumentsSections = () => {
+const DocumentsSections = ({ editData }: any) => {
   const document = useBoolean(true);
+  const { data: documents, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentDocumentTypeQuery,
+  });
+
+  const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentDocumentsQuery,
+    params: editData?.id,
+  });
+
+  const tableData = useMemo(
+    () =>
+      documents?.items?.map((item: any) => ({
+        ...item,
+        statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+          ? 'Uploaded'
+          : 'Not Uploaded',
+        docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
+        statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+          ? 'success'
+          : 'warning',
+        uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
+      })) || [],
+    [documents?.items, employeeDocuments]
+  );
+  const viewDialog = useBoolean();
+  const [docId, setDocId] = useState<null | string>(null);
   return (
     <Stack spacing={1.5}>
       <Stack
@@ -951,74 +1192,143 @@ const DocumentsSections = () => {
 
       {document.value && (
         <Stack spacing={3} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            sx={{ typography: 'caption', textTransform: 'capitalize' }}
-          >
-            <Box component="span" sx={{ color: 'text.secondary', mr: 2 }}>
-              Birth Certificate
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Iconify icon="ri:eye-line" />
-              <Iconify icon="mingcute:download-line" />
-            </Box>
-          </Stack>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            sx={{ typography: 'caption', textTransform: 'capitalize' }}
-          >
-            <Box component="span" sx={{ color: 'text.secondary', mr: 2 }}>
-              Transfer Certificate
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Iconify icon="ri:eye-line" />
-              <Iconify icon="mingcute:download-line" />
-            </Box>
-          </Stack>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            sx={{ typography: 'caption', textTransform: 'capitalize' }}
-          >
-            <Box component="span" sx={{ color: 'text.secondary', mr: 2 }}>
-              Report Card
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Iconify icon="ri:eye-line" />
-              <Iconify icon="mingcute:download-line" />
-            </Box>
-          </Stack>
+          {isLoading ? (
+            <CircularProgress size={20} />
+          ) : tableData.length ? (
+            tableData?.map((item: any) => (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ typography: 'caption', textTransform: 'capitalize' }}
+              >
+                <Box component="span" sx={{ color: 'text.secondary', mr: 2 }}>
+                  {item.documentName}
+                </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Label color={item.uploadDocument ? 'success' : 'warning'}>
+                    {item.uploadDocument ? 'Uploaded' : 'Pending'}
+                  </Label>
+                  <IconButton disabled={!item.uploadDocument} sx={{ p: 0 }}>
+                    <Iconify
+                      icon="ri:eye-line"
+                      onClick={() => {
+                        setDocId(item.uploadDocument.id);
+                        viewDialog.onTrue();
+                      }}
+                    />
+                  </IconButton>
+                  <IconButton disabled={!item.uploadDocument} sx={{ p: 0 }}>
+                    <Iconify icon="mingcute:download-line" />
+                  </IconButton>
+                </Box>
+              </Stack>
+            ))
+          ) : (
+            'No Documents Found'
+          )}
         </Stack>
       )}
+      <Dialog open={viewDialog.value} onClose={viewDialog.onFalse}>
+        <ViewDocuments id={editData?.id} docId={docId} />
+      </Dialog>
     </Stack>
   );
 };
 
-const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
-  const formik = useFormik({
+const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
+  const { data: documents, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentDocumentByIdQuery,
+    params: { id, documentId: docId },
+  });
+
+  return (
+    <Box>
+      {isLoading ? (
+        <Skeleton variant="rectangular" height={300} />
+      ) : (
+        <iframe
+          src={convertBase64Format(documents.content)}
+          style={{ width: '100%', height: 500 }}
+          title="Employee Document"
+        />
+      )}
+    </Box>
+  );
+};
+
+const AssignDivisionForm = ({
+  handleClose,
+  standard,
+  studentID,
+  division,
+}: {
+  handleClose: () => void;
+  standard?: Standards;
+  studentID?: string;
+  division?: Division;
+}) => {
+  const [assignDivision, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAssignDivisionTOStudentMutation,
+  });
+  const formik = useFormik<{
+    division: string;
+    standardName: string;
+  }>({
     initialValues: {
-      division: '',
+      division: division?.id || '',
+      standardName: standard?.name || '',
     },
-    onSubmit: () => {},
+    validationSchema: Yup.object({
+      division: Yup.string().required('Required'),
+    }),
+    onSubmit: async (values) => {
+      try {
+        await assignDivision({
+          studentDivisionUpdates: [
+            {
+              studentId: studentID as string,
+              divisionId: values.division,
+            },
+          ],
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
-      <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'Background.neutral',
+          gap: 2,
+        }}
+      >
+        <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
         <CustomSelect
-          options={[]}
-          value=""
-          onChange={() => {}}
+          options={standard?.divisions || []}
+          value={formik.values.division}
+          onChange={(val) => formik.setFieldValue('division', val)}
           label="Division"
+          valueKey="id"
+          labelKey="name"
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={formik.touched.division && Boolean(formik.errors.division)}
+          helperText={(formik.touched.division && formik.errors.division) as string}
         />
       </Box>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button type="submit" variant="contained">
+        <LoadingButton loading={isLoading} type="submit" variant="contained">
           Assign
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );
@@ -1027,32 +1337,58 @@ const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
 interface ChangeStatusFormProps {
   handleClose: () => void;
   tabValue?: any; // Add correct type if `tabValue` is needed, or remove if unused
+  selectedStudents: any[];
 }
 
-const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({ handleClose, tabValue }: any) => {
-  const formik = useFormik({
+const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
+  handleClose,
+  tabValue,
+  selectedStudents,
+}: ChangeStatusFormProps) => {
+  const [changeStatus, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeAdmissionStatusMutation,
+  });
+  const formik = useFormik<{
+    status: RegistrationStatusType;
+  }>({
     initialValues: {
-      status: '',
+      status: 0,
     },
-    onSubmit: () => {},
+    onSubmit: async (values) => {
+      try {
+        const hasDivisions = selectedStudents.every((student) => !!student.divisionId);
+        if (!hasDivisions && values.status === RegistrationStatusType.Approved) {
+          toast.error('Please First assign division to Selected Students');
+          return;
+        }
+        await changeStatus({
+          approvalStatus: values.status,
+          body: selectedStudents.map((i: any) => i.id),
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
 
   const getStatusOptions = () => {
     switch (tabValue) {
-      case 'pending':
+      case RegistrationStatusType.Pending:
         return [
-          { label: 'Approved', value: 'approved' },
-          { label: 'Rejected', value: 'rejected' },
+          { label: 'Approved', value: RegistrationStatusType.Approved },
+          { label: 'Rejected', value: RegistrationStatusType.Rejected },
         ];
-      case 'approved':
+      case RegistrationStatusType.Approved:
         return [
-          { label: 'Rejected', value: 'rejected' },
-          { label: 'Requested', value: 'requested' },
+          { label: 'Rejected', value: RegistrationStatusType.Rejected },
+          { label: 'Pending', value: RegistrationStatusType.Pending },
         ];
-      case 'rejected':
+      case RegistrationStatusType.Rejected:
         return [
-          { label: 'Approved', value: 'approved' },
-          { label: 'Requested', value: 'requested' },
+          { label: 'Approved', value: RegistrationStatusType.Approved },
+          { label: 'Pending', value: RegistrationStatusType.Pending },
         ];
       default:
         return [];
@@ -1074,9 +1410,9 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({ handleClose, tabVal
       </Box>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button type="submit" variant="contained">
+        <LoadingButton loading={isLoading} type="submit" variant="contained">
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

@@ -4,11 +4,14 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
+
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
@@ -21,18 +24,39 @@ import BulkStudentAddScreen from './bulk-student-add';
 import BulkDataUpdateScreen from './bulk-data-update';
 import RollNoGenerationScreen from './roll-generation';
 
+import type { IInquiryData } from '../enrollment/Inquiry';
+
 const TABS = [
   {
     value: 'grGeneration',
     label: 'GR. No. Generation',
-    component: () => <GrNoGenerationScreen />,
+    component: (props: {
+      isLoading: boolean;
+      tableData: IInquiryData[];
+      allDivision: Division[];
+      division: string;
+    }) => <GrNoGenerationScreen {...props} />,
   },
   {
     value: 'rollGeneration',
     label: 'Roll No. Generation',
-    component: () => <RollNoGenerationScreen />,
+    component: (props: {
+      isLoading: boolean;
+      tableData: IInquiryData[];
+      allDivision: Division[];
+      division: string;
+    }) => <RollNoGenerationScreen {...props} />,
   },
-  { value: 'changeDivision', label: 'Change Division', component: () => <ChangeDivisionScreen /> },
+  {
+    value: 'changeDivision',
+    label: 'Change Division',
+    component: (props: {
+      isLoading: boolean;
+      tableData: IInquiryData[];
+      allDivision: Division[];
+      division: string;
+    }) => <ChangeDivisionScreen {...props} />,
+  },
   { value: 'changeClass', label: 'Change Class', component: () => <ChangeClassScreen /> },
   { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
   { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
@@ -46,6 +70,12 @@ const StudentManagementScreen = () => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClass] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
+  console.log('🚀 ~ StudentManagementScreen ~ allDivision:', {
+    allClass,
+    allOrganization,
+    allDivision,
+  });
+
   const [division, setDivision] = useState<string>('');
 
   const {
@@ -75,6 +105,30 @@ const StudentManagementScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
 
   const CurrentComponent = TABS.find((tab) => tab.value === searchParams.tab)?.component;
+
+  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
+
+  useEffect(() => {
+    if (division && classes && organization) {
+      getStudents({
+        educationMediumStageId: organization,
+        standardId: classes,
+        divisionId: division,
+      });
+    }
+  }, [division, classes, organization, getStudents]);
+
+  const tableData = useMemo(
+    () =>
+      StudentsData?.items?.map((item: any) => ({
+        ...item,
+        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+      })) || [],
+    [StudentsData?.items]
+  );
   return (
     <Box>
       <CustomBreadcrumbs
@@ -132,7 +186,7 @@ const StudentManagementScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {CurrentComponent?.({ tableData, isLoading, allDivision, division })}
       </Box>
     </Box>
   );

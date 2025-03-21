@@ -1,26 +1,26 @@
-export enum InquiryStatusType {
+export enum FollowUpStatusType {
   Pending,
   Interested,
   'Not Interested',
 }
 
-export const InquiryStatusTypeOptions = [
+export const FollowUpStatusTypeOptions = [
   {
     label: 'Pending',
-    value: InquiryStatusType.Pending,
+    value: FollowUpStatusType.Pending,
   },
   {
     label: 'Interested',
-    value: InquiryStatusType.Interested,
+    value: FollowUpStatusType.Interested,
   },
   {
     label: 'Not Interested',
-    value: InquiryStatusType['Not Interested'],
+    value: FollowUpStatusType['Not Interested'],
   },
 ];
 
-export const InquiryStatusTypeColors = {
-  [InquiryStatusType.Pending]: 'warning',
-  [InquiryStatusType.Interested]: 'success',
-  [InquiryStatusType['Not Interested']]: 'error',
+export const FollowUpStatusTypeColors = {
+  [FollowUpStatusType.Pending]: 'warning',
+  [FollowUpStatusType.Interested]: 'success',
+  [FollowUpStatusType['Not Interested']]: 'error',
 };
