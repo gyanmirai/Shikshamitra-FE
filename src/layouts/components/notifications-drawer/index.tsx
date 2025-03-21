@@ -30,30 +30,64 @@ import type { NotificationItemProps } from './notification-item';
 
 // ----------------------------------------------------------------------
 
-const TABS = [
-  { value: 'all', label: 'All', count: 22 },
-  { value: 'unread', label: 'Unread', count: 12 },
-  { value: 'archived', label: 'Archived', count: 10 },
-];
-
 // ----------------------------------------------------------------------
 
 export type NotificationsDrawerProps = IconButtonProps & {
   data?: NotificationItemProps[];
 };
 
-export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDrawerProps) {
+const notificationsData: NotificationItemProps[] = [
+  {
+    id: '1',
+    type: 'messsage',
+    title: 'message 1',
+    category: 'chat',
+    isUnRead: true,
+    avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+    createdAt: '2025-03-21T10:30:00Z',
+  },
+  {
+    id: '2',
+    type: 'messsage',
+    title: 'message 2',
+    category: 'chat',
+    isUnRead: false,
+    avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+    createdAt: '2025-03-21T10:30:00Z',
+  },
+  {
+    id: '3',
+    type: 'messsage',
+    title: 'message 4',
+    category: 'chat',
+    isUnRead: true,
+    avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+    createdAt: '2025-03-21T10:30:00Z',
+  },
+];
+export function NotificationsDrawer({
+  data = notificationsData,
+  sx,
+  ...other
+}: NotificationsDrawerProps) {
+  const [notifications, setNotifications] = useState(notificationsData);
+
+  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
+  const TABS = [
+    { value: 'all', label: 'All', count: notifications.length },
+    { value: 'unread', label: 'Unread', count: totalUnRead },
+  ];
   const drawer = useBoolean();
 
   const [currentTab, setCurrentTab] = useState('all');
 
+  const filteredNotifications = notifications.filter((notification) =>
+    currentTab === 'all' ? true : notification.isUnRead
+  );
+
   const handleChangeTab = useCallback((event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
   }, []);
-
-  const [notifications, setNotifications] = useState(data);
-
-  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
 
   const handleMarkAllAsRead = () => {
     setNotifications(notifications.map((notification) => ({ ...notification, isUnRead: false })));
@@ -77,9 +111,9 @@ export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDr
         <Iconify icon="mingcute:close-line" />
       </IconButton>
 
-      <IconButton>
+      {/* <IconButton>
         <Iconify icon="solar:settings-bold-duotone" />
-      </IconButton>
+      </IconButton> */}
     </Stack>
   );
 
@@ -111,7 +145,8 @@ export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDr
   const renderList = (
     <Scrollbar>
       <Box component="ul">
-        {notifications?.map((notification) => (
+        {filteredNotifications?.map((notification) => (
+          // console.log(notification, " notification");
           <Box component="li" key={notification.id} sx={{ display: 'flex' }}>
             <NotificationItem notification={notification} />
           </Box>

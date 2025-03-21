@@ -993,6 +993,11 @@ const communicationModule = {
           _action: 'notification',
         },
         {
+          title: 'Notification History',
+          path: '/communication/notification-history',
+          _action: 'notification-history',
+        },
+        {
           title: 'Settings',
           path: '/communication/settings',
           _action: 'settings',

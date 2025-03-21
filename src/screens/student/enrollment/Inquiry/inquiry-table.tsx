@@ -56,6 +56,7 @@ const InquiryTable = ({
   );
   return (
     <CustomizableTable
+      showCheckbox
       isLoading={isLoading}
       tableId="inquiry-table"
       startDateProps={{
