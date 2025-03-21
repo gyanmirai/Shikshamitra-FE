@@ -28,9 +28,12 @@ const personalInformationValidationSchema = Yup.object({
   qualification: Yup.string().required('Qualification is required'),
   role: Yup.string().required('Role is required'),
   //   identificationMark1: Yup.string().required('Identification mark is required'),
-  address: Yup.string().required('Address is required'),
-  state: Yup.string().required('State is required'),
-  city: Yup.string().required('City is required'),
+  addressLine1: Yup.string().required('Address Line 1 is required'),
+  addressLine2: Yup.string().required('Address Line 2 is required'),
+  addressLine3: Yup.string().required('Address Line 3 is required'),
+  country: Yup.object().required('Country is required'),
+  state: Yup.object().required('State is required'),
+  city: Yup.object().required('City is required'),
   pincode: Yup.number()
     .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
 
@@ -45,9 +48,13 @@ const familyInformationValidationSchema = Yup.object({
   fatherContactNo: Yup.string()
     .test('Mobile NO', 'mobile number is not valid', (value) => matchIsValidTel(value as string))
     .required('Mobile number is required'),
-  fatherAddress: Yup.string().required('Father address is required'),
-  fatherState: Yup.string().required('Father state is required'),
-  fatherCity: Yup.string().required('Father city is required'),
+  fatherAddress1: Yup.string().required('Father address 1 is required'),
+  fatherAddress2: Yup.string().required('Father address 2 is required'),
+
+  fatherAddress3: Yup.string().required('Father address 3 is required'),
+  fatherCountry: Yup.object().required('Father country is required'),
+  fatherState: Yup.object().required('Father state is required'),
+  fatherCity: Yup.object().required('Father city is required'),
   fatherPinCode: Yup.number()
     .test('pincode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('Father pin code is required'),
@@ -56,9 +63,12 @@ const familyInformationValidationSchema = Yup.object({
   motherContactNo: Yup.string()
     .test('Mobile NO', 'mobile number is not valid', (value) => matchIsValidTel(value as string))
     .required('Mobile number is required'),
-  motherAddress: Yup.string().required('Mother address is required'),
-  motherState: Yup.string().required('Mother state is required'),
-  motherCity: Yup.string().required('Mother city is required'),
+  motherAddress1: Yup.string().required('Mother address 1 is required'),
+  motherAddress2: Yup.string().required('Mother address 2 is required'),
+  motherAddress3: Yup.string().required('Mother address 3 is required'),
+  motherCountry: Yup.object().required('Mother country is required'),
+  motherState: Yup.object().required('Mother state is required'),
+  motherCity: Yup.object().required('Mother city is required'),
   motherPinCode: Yup.number()
     .test('pincode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('Mother pin code is required'),
@@ -67,9 +77,13 @@ const familyInformationValidationSchema = Yup.object({
   spouseContactNo: Yup.string()
     .test('Mobile NO', 'mobile number is not valid', (value) => matchIsValidTel(value as string))
     .required('Mobile number is required'),
-  spouseAddress: Yup.string().required('address is required'),
-  spouseState: Yup.string().required('state is required'),
-  spouseCity: Yup.string().required('city is required'),
+  spouseAddress1: Yup.string().required('spouse address 1 is required'),
+  spouseAddress2: Yup.string().required('spouse address 2 is required'),
+  spouseAddress3: Yup.string().required('spouse address 3 is required'),
+
+  spouseCountry: Yup.object().required('Spouse country is required'),
+  spouseState: Yup.object().required('state is required'),
+  spouseCity: Yup.object().required('city is required'),
   spousePinCode: Yup.number()
     .test('pincode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('pin code is required'),

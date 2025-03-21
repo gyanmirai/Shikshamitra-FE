@@ -72,6 +72,7 @@ const LectureSlots = () => {
           {
             id: 'actions',
             label: 'Actions',
+            sticky: true,
             isSort: false,
             isFilter: false,
             render(value, row) {

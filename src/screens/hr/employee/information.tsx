@@ -28,6 +28,7 @@ import {
 import type { FieldsType } from './employee-form-fields';
 
 const fields = [InformationFields, FamilyFields, WorkExperienceFields, PayrollFields];
+// const fields = [InformationFields];
 
 const TABS = [
   { value: 'personalInformation', label: 'Personal Information' },
@@ -37,8 +38,9 @@ const TABS = [
   //   { value: 'performanceAndDevelopment', label: 'Performance and Development' },
 ];
 
-export function EmployeeInformation({ editData }: { editData: any }) {
+const EmployeeInformation = ({ editData }: { editData: any }) => {
   const [isEdit, setIsEdit] = useState(false);
+
   const onSubmit = (_val: any) => {};
   const formik = useFormik({
     initialValues: {
@@ -125,7 +127,11 @@ export function EmployeeInformation({ editData }: { editData: any }) {
                     key={field.name}
                   >
                     {field.renderComp ? (
-                      field.renderComp({ formik, field, disabled: !isEdit })
+                      field.renderComp({
+                        formik,
+                        field,
+                        disabled: !isEdit,
+                      })
                     ) : field.type === 'date' ? (
                       <DatePicker
                         label={field.label}
@@ -189,4 +195,6 @@ export function EmployeeInformation({ editData }: { editData: any }) {
       </form>
     </Box>
   );
-}
+};
+
+export default EmployeeInformation;

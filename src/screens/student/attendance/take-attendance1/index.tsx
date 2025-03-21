@@ -5,8 +5,9 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Search, RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
@@ -29,8 +30,15 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { convertBase64Format } from 'src/utils/base64Formate';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
+import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useFillStudentAttendanceMutation } from 'src/redux/student/take-attendance/take-attendace-api';
+import {
+  useGetAttendanceByFilterQuery,
+  useFillStudentAttendanceMutation,
+} from 'src/redux/student/take-attendance/take-attendace-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -39,7 +47,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const TakeAttendanceScreen = () => {
-  const [fillStudentAttendance, { isLoading }] = useQueryAndMutation({
+  const [fillStudentAttendance] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useFillStudentAttendanceMutation,
   });
@@ -89,22 +97,54 @@ const TakeAttendanceScreen = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  // Dummy student data
-  const dummyStudents = [
-    { id: 1, name: 'John Doe', rollNo: '001', grNo: 'GR001', class: '10', division: 'A' },
-    { id: 2, name: 'Jane Smith', rollNo: '002', grNo: 'GR002', class: '10', division: 'A' },
-    { id: 3, name: 'Alice Johnson', rollNo: '003', grNo: 'GR003', class: '10', division: 'B' },
-    { id: 4, name: 'Bob Williams', rollNo: '004', grNo: 'GR004', class: '10', division: 'B' },
-    { id: 5, name: 'Charlie Brown', rollNo: '005', grNo: 'GR005', class: '10', division: 'C' },
-  ];
-
   const handleSave = async () => {
-    const response = await fillStudentAttendance({
-      attendanceDate: date, // Passing date as a query parameter
-      data: [{ studentId: '3fa85f64-5717-4562-b3fc-2c963f66afa6', isPresent: true }],
-    });
-    console.log('response of take attendance ---------', response);
+    try {
+      const response = await fillStudentAttendance({
+        attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true), // Passing date as a query parameter
+        data: studentData.map((student: any) => ({
+          studentId: student?.student?.id,
+          isPresent: student.isPresent,
+          remarks: student.remarks,
+        })),
+      }).unwrap();
+      toast.success('Attendance saved successfully');
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+    }
   };
+
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAttendanceByFilterQuery,
+    params: {
+      attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true),
+      educationMediumStageId: organization,
+      standardId: classes,
+      divisionId: division,
+    },
+    options: {
+      skip: !(date && organization && classes && division),
+    },
+  });
+
+  const [studentData, setStudentData] = useState([]);
+
+  useEffect(() => {
+    if (data?.items) {
+      setStudentData(
+        data?.items?.map((item: any) => ({
+          ...item,
+          name: `${item?.student?.firstName} ${item?.student?.lastName} ${item?.student?.middleName}`,
+          percentage: (item.presentDays / item.totalDays) * 100,
+        })) || []
+      );
+    }
+  }, [data?.items]);
+
+  const absentStudents = useMemo(
+    () => studentData.filter((item: any) => !item.isPresent),
+    [studentData]
+  );
 
   return (
     <Box>
@@ -120,6 +160,7 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => {
             setDate(val);
           }}
+          format="DD/MM/YYYY"
           slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
         />
 
@@ -174,7 +215,20 @@ const TakeAttendanceScreen = () => {
           </Button>
         </ButtonGroup>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button size="small" variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<RestartAlt />}
+            onClick={() => {
+              setStudentData(
+                data?.items?.map((item: any) => ({
+                  ...item,
+                  name: `${item?.student?.firstName} ${item?.student?.lastName} ${item?.student?.middleName}`,
+                  percentage: (item.presentDays / item.totalDays) * 100,
+                })) || []
+              );
+            }}
+          >
             Reset
           </Button>
 
@@ -218,20 +272,39 @@ const TakeAttendanceScreen = () => {
         }}
       >
         <Typography variant="body1" fontWeight={500} color="error">
-          Total Absent : 3
+          Total Absent : {absentStudents.length}
         </Typography>
-        {/* <Chip size="small" label="Present" color="success" icon={<CheckCircleOutlined />} /> */}
-        <Chip size="small" label="1 - John" color="error" icon={<CancelOutlined />} />
-        <Chip size="small" label="2 - Jasmin" color="error" icon={<CancelOutlined />} />
-        <Chip size="small" label="3 - Herbert" color="error" icon={<CancelOutlined />} />
+        {absentStudents.map((item: any) => (
+          <Chip
+            size="small"
+            label={`${item.student.rollNo} - ${item.name}`}
+            color="error"
+            icon={
+              <CancelOutlined
+                onClick={() => {
+                  setStudentData((studentDetails: any) =>
+                    studentDetails.map((student: any) =>
+                      item.id === student.id ? { ...item, isPresent: false } : item
+                    )
+                  );
+                }}
+              />
+            }
+          />
+        ))}
       </Box>
 
       {view === 'list' ? (
-        <ListView isSaved={isSaved} />
+        <ListView
+          isSaved={isSaved}
+          data={studentData}
+          setStudentData={setStudentData}
+          isLoading={isLoading}
+        />
       ) : (
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          {dummyStudents.map((student) => (
-            <AttendanceCard key={student.id} student={student} />
+          {studentData.map((student: any) => (
+            <AttendanceCard key={student.id} student={student} setStudentData={setStudentData} />
           ))}
         </Grid>
       )}
@@ -240,7 +313,7 @@ const TakeAttendanceScreen = () => {
 };
 export default TakeAttendanceScreen;
 
-const AttendanceCard = ({ student }: any) => {
+const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any) => {
   const a = null;
   return (
     <Grid item xs={12} sm={6} md={3}>
@@ -250,8 +323,12 @@ const AttendanceCard = ({ student }: any) => {
           width: '100%',
 
           borderLeft: (theme) =>
-            `4px solid ${student.rollNo === '001' ? theme.palette.error.main : theme.palette.success.main}`,
+            `4px solid ${!studentAttendanceData.isPresent ? theme.palette.error.main : theme.palette.success.main}`,
           cursor: 'pointer',
+          background: (theme) =>
+            !studentAttendanceData.isPresent
+              ? varAlpha(theme.palette.error.mainChannel, 0.05)
+              : varAlpha(theme.palette.success.mainChannel, 0.05),
         }}
       >
         <Box display="flex" gap={1} p={1.5} alignItems="center">
@@ -264,85 +341,91 @@ const AttendanceCard = ({ student }: any) => {
             }}
           >
             <img
-              src="https://images.rawpixel.com/image_png_200/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 200w, https://images.rawpixel.com/image_png_400/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 400w, https://images.rawpixel.com/image_png_600/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 600w, https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 1600w, https://images.rawpixel.com/image_png_1100/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 2400w, https://images.rawpixel.com/image_png_1300/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAzL2ZyZWVpbWFnZXNjb21wYW55X3Bob3RvX29mX3lvdW5nX2luZGlhbl9naXJsX2hvbGRpbmdfc3R1ZGVudF9iYV8zN2QyNjU4Yi0yOWIwLTQyZmQtODhmYy04OGU3ZTcxYmVlNDcucG5n.png 3000w"
+              src={convertBase64Format(studentAttendanceData?.student?.profilePicture)}
               alt="Student"
             />
           </Box>
           <Box flexGrow={1}>
-            <Typography variant="h6">{student.name}</Typography>
+            <Typography variant="h6">{studentAttendanceData?.name}</Typography>
             <Typography variant="body2">
-              <Label color="info">{student.rollNo}</Label>
+              <Label color="info">Roll No :-{studentAttendanceData?.student?.rollNo}</Label>
             </Typography>
-            <Typography variant="body2">Class: {student.class}</Typography>
-            <Typography variant="body2">Division: {student.division}</Typography>
+            <Typography variant="body2">
+              Class: {studentAttendanceData?.student?.standard?.name}
+            </Typography>
+            <Typography variant="body2">
+              Division: {studentAttendanceData?.student?.division?.name}
+            </Typography>
           </Box>
           {/* <Box> */}
-          <IconButton color="success" aria-label="mark present">
+          <IconButton
+            color="success"
+            aria-label="mark present"
+            onClick={() => {
+              setStudentData((studentData: any) =>
+                studentData.map((item: any) =>
+                  item.id === studentAttendanceData.id ? { ...item, isPresent: true } : item
+                )
+              );
+            }}
+          >
             <CheckCircleOutlined />
           </IconButton>
-          <IconButton color="error" aria-label="mark absent">
+          <IconButton
+            color="error"
+            aria-label="mark absent"
+            onClick={() => {
+              setStudentData((studentData: any) =>
+                studentData.map((item: any) =>
+                  item.id === studentAttendanceData.id ? { ...item, isPresent: false } : item
+                )
+              );
+            }}
+          >
             <CancelOutlined />
           </IconButton>
           {/* </Box> */}
         </Box>
         <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
-          <TextField size="small" label="Remarks" fullWidth multiline rows={2} />
+          <TextField
+            size="small"
+            label="Remarks"
+            fullWidth
+            multiline
+            rows={2}
+            value={studentAttendanceData?.remarks}
+            onChange={(e) => {
+              setStudentData((studentData: any) =>
+                studentData.map((item: any) =>
+                  item.id === studentAttendanceData.id ? { ...item, remarks: e.target.value } : item
+                )
+              );
+            }}
+          />
         </Box>
       </Paper>
     </Grid>
   );
 };
 
-const ListView = ({ isSaved }: any) => {
-  const dummyData = [
-    {
-      rollNo: '1',
-      name: 'John Doe',
-      grNo: 'GR001',
-      attendance: 'Present',
-      attendancePercentage: '80%',
-      totalPresentDays: '20/25',
-    },
-    {
-      rollNo: '2',
-      name: 'Jane Smith',
-      grNo: 'GR002',
-      attendance: 'Absent',
-      attendancePercentage: '70%',
-      totalPresentDays: '18/25',
-    },
-    {
-      rollNo: '3',
-      name: 'Alice Johnson',
-      grNo: 'GR003',
-      attendance: 'Present',
-      attendancePercentage: '90%',
-      totalPresentDays: '22/25',
-    },
-    {
-      rollNo: '4',
-      name: 'Bob Williams',
-      grNo: 'GR004',
-      attendance: 'Present',
-      attendancePercentage: '85%',
-      totalPresentDays: '21/25',
-    },
-    {
-      rollNo: '5',
-      name: 'Charlie Brown',
-      grNo: 'GR005',
-      attendance: 'Absent',
-      attendancePercentage: '75%',
-      totalPresentDays: '19/25',
-    },
-  ];
+const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
+  const a = null;
   return (
     <CustomizableTable
       tableId="student-attendance-list"
       isSearch={false}
+      isLoading={isLoading}
+      rowProps={(tableData: any) => ({
+        sx: {
+          background: (theme) =>
+            tableData.isPresent
+              ? varAlpha(theme.palette.success.mainChannel, 0.08)
+              : varAlpha(theme.palette.error.mainChannel, 0.08),
+        },
+      })}
       columns={[
-        { id: 'rollNo', label: 'Roll No', align: 'left', minWidth: '100px' },
-        { id: 'grNo', label: 'Gr No', align: 'left', minWidth: '100px' },
+        { id: 'student.rollNo', label: 'Roll No', align: 'left', minWidth: '100px' },
+        { id: 'student.grNoRecord', label: 'Gr No', align: 'left', minWidth: '100px' },
         {
           id: 'name',
           label: 'Name',
@@ -351,21 +434,30 @@ const ListView = ({ isSaved }: any) => {
           render(value, row) {
             return (
               <Box display="flex" alignItems="center" gap={1}>
-                <Avatar sx={{ width: 30, height: 30 }} alt={value} title={value} />
+                <Avatar
+                  src={
+                    row?.student?.profilePicture
+                      ? convertBase64Format(row?.student?.profilePicture)
+                      : ''
+                  }
+                  sx={{ width: 30, height: 30 }}
+                  alt={value}
+                  title={value}
+                />
                 {value}
               </Box>
             );
           },
         },
-        { id: 'totalPresentDays', label: 'Total Present Days', align: 'left', minWidth: '180px' },
+        { id: 'presentDays', label: 'Total Present Days', align: 'left', minWidth: '180px' },
         {
-          id: 'attendancePercentage',
+          id: 'percentage',
           label: 'Attendance Percentage',
           align: 'left',
           minWidth: '200px',
         },
         {
-          id: 'attendance',
+          id: 'isPresent',
           label: 'Attendance',
           isSort: false,
           render(value, row) {
@@ -379,7 +471,7 @@ const ListView = ({ isSaved }: any) => {
                 <Switch
                   size="small"
                   inputProps={{ 'aria-label': 'controlled' }}
-                  checked={value === 'Present'}
+                  checked={value}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
                       color: 'success.main',
@@ -400,6 +492,13 @@ const ListView = ({ isSaved }: any) => {
                       backgroundColor: 'error.main',
                     },
                   }}
+                  onChange={(e) => {
+                    setStudentData(
+                      data.map((item: any) =>
+                        item.id === row.id ? { ...item, isPresent: e.target.checked } : item
+                      )
+                    );
+                  }}
                 />
                 {/* <Typography component="small" fontSize="12px">
                   Present
@@ -408,34 +507,7 @@ const ListView = ({ isSaved }: any) => {
             );
           },
         },
-        // {
-        //   id: 'absentReason',
-        //   label: 'Absent Reason',
-        //   render(value, row) {
-        //     return row.attendance === 'Present' ? (
-        //       '-'
-        //     ) : (
-        //       <CustomSelect
-        //         options={[
-        //           { name: 'Sick', id: 'Sick' },
-        //           { name: 'Family Emergency', id: 'Family Emergency' },
-        //           { name: 'Transportation Issues', id: 'Transportation Issues' },
-        //           { name: 'Medical Appointment', id: 'Medical Appointment' },
-        //           { name: 'Religious Observance', id: 'Religious Observance' },
-        //           { name: 'Other', id: 'Other' },
-        //         ]}
-        //         value={value || 'Sick'}
-        //         onChange={(val) => {
-        //           console.log(val);
-        //         }}
-        //         label=""
-        //         labelKey="name"
-        //         valueKey="id"
-        //         formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
-        //       />
-        //     );
-        //   },
-        // },
+
         {
           id: 'remarks',
           label: 'Remarks',
@@ -448,6 +520,11 @@ const ListView = ({ isSaved }: any) => {
                 value={value || ''}
                 onChange={(e) => {
                   console.log(e.target.value);
+                  setStudentData(
+                    data.map((item: any) =>
+                      item.id === row.id ? { ...item, remarks: e.target.value } : item
+                    )
+                  );
                 }}
                 multiline
                 rows={2}
@@ -457,7 +534,7 @@ const ListView = ({ isSaved }: any) => {
           },
         },
       ]}
-      data={dummyData}
+      data={data}
     />
   );
 };

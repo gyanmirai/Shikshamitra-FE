@@ -2,27 +2,38 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 
+import { StudentApi } from 'src/redux/student';
 import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
 } from 'src/redux/student/studentGrNumber/student-gr-number-api';
 
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-const GrNoGenerationScreen = () => {
+import type { IInquiryData } from '../../enrollment/Inquiry';
+
+const GrNoGenerationScreen = ({
+  tableData: studentData,
+  isLoading,
+}: {
+  isLoading: boolean;
+  tableData: IInquiryData[];
+}) => {
   const [isManual, setIsManual] = useState<boolean>(false);
   const [startGrNo, setStartGrNo] = useState<number | null>(null);
-  const [tableData, setTableData] = useState([
-    { id: 1, srNo: 1, currentGrNo: 'GR001', name: 'John Doe', newGrNo: '' },
-    { id: 2, srNo: 2, currentGrNo: 'GR002', name: 'Jane Smith', newGrNo: '' },
-    { id: 3, srNo: 3, currentGrNo: 'GR003', name: 'Alice Johnson', newGrNo: '' },
-  ]);
+  const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
+
+  useEffect(() => {
+    setTableData(studentData);
+  }, [studentData]);
 
   const dispatch = useDispatch();
   const { currentBoard, currentMedium } = useSelector((state: RootState) => state.globalState);
@@ -31,7 +42,8 @@ const GrNoGenerationScreen = () => {
   const educationMediumId = currentMedium?.id || null;
   const educationMediumStageId = currentMedium?.educationMediumStages[0]?.id || null;
 
-  const [fetchStudents, { isLoading }] = useLazyGetStudentForGrNumberQuery();
+  const [fetchStudents, { isLoading: isStudentGrNumberLoading }] =
+    useLazyGetStudentForGrNumberQuery();
   const [updateStudentGrNumbers, { isLoading: isSaving }] = useUpdateStudentGrNumberMutation();
 
   const handleAutoGenerate = async () => {
@@ -55,7 +67,7 @@ const GrNoGenerationScreen = () => {
         setTableData((prevData) =>
           prevData.map((item, index) => ({
             ...item,
-            newGrNo: `GR${String(result + index).padStart(3, '0')}`,
+            grNoRecord: result + index,
           }))
         );
       }
@@ -68,9 +80,9 @@ const GrNoGenerationScreen = () => {
     setIsManual(true);
   };
 
-  const handleGrNumberChange = (id: number, newValue: string) => {
+  const handleGrNumberChange = (id: string, newValue: number) => {
     setTableData((prevData) =>
-      prevData.map((item) => (item.id === id ? { ...item, newGrNo: newValue } : item))
+      prevData.map((item) => (item.id === id ? { ...item, grNoRecord: newValue } : item))
     );
   };
 
@@ -78,60 +90,69 @@ const GrNoGenerationScreen = () => {
     const requestBody = {
       studentNumbers: tableData.map((item) => ({
         studentId: item.id,
-        grNo: item.newGrNo || item.currentGrNo, // Use new GR No if available, else keep the current one
+        grNo: item.grNoRecord ?? item.tempGrNo, // Use new GR No if available, else keep the current one
       })),
     };
 
-    console.log('Request body:', requestBody);
     try {
-      const response = await updateStudentGrNumbers(requestBody).unwrap();
-      console.log('GR Numbers updated successfully:', response);
-      alert('GR Numbers updated successfully!');
+      const response = await updateStudentGrNumbers({ body: requestBody }).unwrap();
+
+      toast.success('GR Numbers updated successfully!');
+      setIsManual(false);
+      dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {
       console.error('Failed to update GR Numbers:', error);
-      alert('Failed to update GR Numbers. Please try again.');
     }
   };
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-        <Button startIcon={<Save />} variant="outlined" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-        <Button startIcon={<Grading />} variant="outlined" onClick={handleManualToggle}>
-          Manual Generation
-        </Button>
-        <Button startIcon={<Refresh />} variant="contained" onClick={handleAutoGenerate}>
-          {isLoading ? 'Loading...' : 'Auto Generate'}
-        </Button>
-      </Box>
-      <CustomizableTable
-        tableId="gr-no-generation-table"
-        columns={[
-          { id: 'srNo', label: 'Sr. No.' },
-          { id: 'currentGrNo', label: 'Current GR No.' },
-          { id: 'name', label: 'Name' },
-          {
-            id: 'newGrNo',
-            label: 'New GR No.',
-            render(value, row) {
-              return isManual ? (
-                <TextField
-                  size="small"
-                  variant="standard"
-                  placeholder="Enter New GR No."
-                  value={row.newGrNo}
-                  onChange={(e) => handleGrNumberChange(row.id, e.target.value)}
-                />
-              ) : (
-                row.newGrNo
-              );
+      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
+          <Button
+            startIcon={<Save />}
+            variant="outlined"
+            onClick={handleSave}
+            disabled={isSaving || !tableData.some((item) => item.grNoRecord)}
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+          <Button startIcon={<Grading />} variant="outlined" onClick={handleManualToggle}>
+            Manual Generation
+          </Button>
+          <Button startIcon={<Refresh />} variant="contained" onClick={handleAutoGenerate}>
+            {isStudentGrNumberLoading ? 'Loading...' : 'Auto Generate'}
+          </Button>
+        </Box>
+        <CustomizableTable
+          tableId="gr-no-generation-table"
+          columns={[
+            // { id: 'srNo', label: 'Sr. No.' },
+            { id: 'tempGrNo', label: 'Current GR No.' },
+            { id: 'name', label: 'Name' },
+            {
+              id: 'grNoRecord',
+              label: 'New GR No.',
+
+              render(value, row) {
+                return isManual ? (
+                  <TextField
+                    size="small"
+                    variant="standard"
+                    placeholder="Enter New GR No."
+                    type="number"
+                    value={value}
+                    onChange={(e) => handleGrNumberChange(row.id, +e.target.value)}
+                  />
+                ) : (
+                  value
+                );
+              },
             },
-          },
-        ]}
-        data={tableData}
-      />
+          ]}
+          data={tableData}
+        />
+      </BackPopUpChecked>
     </Box>
   );
 };

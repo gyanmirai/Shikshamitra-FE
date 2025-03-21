@@ -23,7 +23,7 @@ import { navData } from 'src/layouts/config-nav-dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
-const AssignModule = () => {
+const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
   const { user } = useSelector((state: any) => state.auth);
   const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
   console.log('🚀 ~ file: modules.tsx:27 ~ AssignModule ~ data:', data);
@@ -80,8 +80,19 @@ const AssignModule = () => {
       >
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }}>
-              <Tree data={selectSubModule?.submodule || []} />
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 2,
+                p: 2,
+              }}
+            >
+              <Tree
+                data={selectSubModule?.submodule || []}
+                allPermissions={allPermissions}
+                setAllPermissions={setAllPermissions}
+              />
             </Box>
           </Grid>
         </Grid>
@@ -92,13 +103,20 @@ const AssignModule = () => {
 
 export default AssignModule;
 
-const Tree = ({ data, depth = 0 }: any) =>
-  data?.map((item: any) => <TreeSubList1 item={item} depth={depth} />);
+const Tree = ({ data, depth = 0, allPermissions, setAllPermissions }: any) =>
+  data?.map((item: any) => (
+    <TreeSubList
+      item={item}
+      depth={depth}
+      allPermissions={allPermissions}
+      setAllPermissions={setAllPermissions}
+    />
+  ));
 
-const TreeSubList1 = ({ item, depth }: any) => {
+const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) => {
   const open = useBoolean();
   return (
-    <Stack key={item.id} spacing={1} pl={depth * 4} width="350px">
+    <Stack key={item.id} spacing={1} pl={depth * 4} height="100%" maxWidth="350px" width="100%">
       <Paper
         elevation={4}
         sx={{
@@ -116,29 +134,174 @@ const TreeSubList1 = ({ item, depth }: any) => {
           <Typography variant="subtitle2" fontWeight={600}>
             {item.title}
           </Typography>
-          {item?.children?.length && (
-            <IconButton onClick={open.onToggle}>
-              <Iconify icon="eva:arrow-ios-downward-fill" />
-            </IconButton>
-          )}
+
+          <IconButton
+            onClick={open.onToggle}
+            sx={{ visibility: item?.children?.length ? 'visible' : 'hidden' }}
+          >
+            <Iconify icon="eva:arrow-ios-downward-fill" />
+          </IconButton>
         </Box>
         <Stack direction="row" spacing={0.2}>
-          <FormControlLabel control={<Checkbox size="small" />} label="View" />
-          <FormControlLabel control={<Checkbox size="small" />} label="Add" />
-          <FormControlLabel control={<Checkbox size="small" />} label="Edit" />
-          <FormControlLabel control={<Checkbox size="small" />} label="Delete" />
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={allPermissions.find((p: any) => p.name === item.permissionName)?.isGranted}
+              />
+            }
+            label="View"
+            onChange={(e: any) => {
+              if (e.target?.checked) {
+                setAllPermissions((pre: any) => {
+                  const isExists = pre.findIndex((p: any) => p.name === item.permissionName);
+                  if (isExists === -1) {
+                    return [...pre, { name: item.permissionName, isGranted: e.target.checked }];
+                  }
+                  pre[isExists].isGranted = e.target.checked;
+                  pre[isExists].name = item.permissionName;
+                  return pre;
+                });
+              } else {
+                setAllPermissions((prev: any) =>
+                  prev.filter((p: any) => p.name !== item.permissionName)
+                );
+              }
+            }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={
+                  allPermissions.find((p: any) => `${p.name}` === `${item.permissionName}.Create`)
+                    ?.isGranted
+                }
+              />
+            }
+            label="Add"
+            onChange={(e: any) => {
+              if (e.target?.checked) {
+                setAllPermissions((pre: any) => {
+                  const isExists = pre.findIndex(
+                    (p: any) => `${p.name}` === `${item.permissionName}.Create`
+                  );
+                  if (isExists === -1) {
+                    return [
+                      ...pre,
+                      { name: `${item.permissionName}.Create`, isGranted: e.target.checked },
+                    ];
+                  }
+                  pre[isExists].isGranted = e.target.checked;
+                  pre[isExists].name = `${item.permissionName}.Create`;
+                  return pre;
+                });
+              } else {
+                setAllPermissions((prev: any) =>
+                  prev.filter((p: any) => `${p.name}` !== `${item.permissionName}.Create`)
+                );
+              }
+            }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={
+                  allPermissions.find((p: any) => `${p.name}` === `${item.permissionName}.Edit`)
+                    ?.isGranted
+                }
+              />
+            }
+            label="Edit"
+            onChange={(e: any) => {
+              if (e.target?.checked) {
+                setAllPermissions((pre: any) => {
+                  const isExists = pre.findIndex(
+                    (p: any) => `${p.name}` === `${item.permissionName}.Edit`
+                  );
+                  if (isExists === -1) {
+                    return [
+                      ...pre,
+                      { name: `${item.permissionName}.Edit`, isGranted: e.target.checked },
+                    ];
+                  }
+                  pre[isExists].isGranted = e.target.checked;
+                  pre[isExists].name = `${item.permissionName}.Edit`;
+                  return pre;
+                });
+              } else {
+                setAllPermissions((prev: any) =>
+                  prev.filter((p: any) => `${p.name}` !== `${item.permissionName}.Edit`)
+                );
+              }
+            }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={
+                  allPermissions.find((p: any) => `${p.name}` === `${item.permissionName}.Delete`)
+                    ?.isGranted
+                }
+              />
+            }
+            label="Delete"
+            onChange={(e: any) => {
+              if (e.target?.checked) {
+                setAllPermissions((pre: any) => {
+                  const isExists = pre.findIndex(
+                    (p: any) => `${p.name}` === `${item.permissionName}.Delete`
+                  );
+                  if (isExists === -1) {
+                    return [
+                      ...pre,
+                      { name: `${item.permissionName}.Delete`, isGranted: e.target.checked },
+                    ];
+                  }
+                  pre[isExists].isGranted = e.target.checked;
+                  pre[isExists].name = `${item.permissionName}.Delete`;
+                  return pre;
+                });
+              } else {
+                setAllPermissions((prev: any) =>
+                  prev.filter((p: any) => `${p.name}` !== `${item.permissionName}.Delete`)
+                );
+              }
+            }}
+          />
         </Stack>
       </Paper>
       {open.value && item?.children?.length && (
-        <Fade timeout={700} in={open.value} easing={{ exit: '500' }}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, flexDirection: 'column' }}>
-            <TreeSubList item={item} depth={depth} />
-          </Box>
-        </Fade>
+        <Scrollbar
+          sx={{
+            height: '500px',
+            pr: 1,
+            bgcolor: 'background.neutral',
+            py: 1,
+            borderRadius: 1,
+          }}
+        >
+          <Fade timeout={700} in={open.value} easing={{ exit: '500' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1,
+                flexDirection: 'column',
+              }}
+            >
+              <Tree
+                data={item.children}
+                depth={depth + 1}
+                allPermissions={allPermissions}
+                setAllPermissions={setAllPermissions}
+              />
+            </Box>
+          </Fade>
+        </Scrollbar>
       )}
     </Stack>
   );
 };
-
-const TreeSubList = ({ item, depth }: any) =>
-  item?.children?.length > 0 ? <Tree data={item.children} depth={depth + 1} /> : null;

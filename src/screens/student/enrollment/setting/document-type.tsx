@@ -103,6 +103,7 @@ const StudentDocumentType = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <ThreeDotsActions

@@ -1,15 +1,11 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
 import { Box, Slide } from '@mui/material';
 
-import { yearApi } from 'src/redux/year/yearApi';
-import { boardApi } from 'src/redux/board/boardApi';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 
 import { Scrollbar } from '../scrollbar';
@@ -28,14 +24,6 @@ const SubLayout = ({ children }: any) => {
   const settings = useSettingsContext();
   const isNavMini = settings.navLayout === 'mini';
 
-  const yearLoading = useSelector(
-    (state: RootState) => yearApi.endpoints.getYear.select(undefined)(state)?.isLoading
-  );
-  const boardLoading = useSelector(
-    (state: RootState) => boardApi.endpoints.getBoards.select(undefined)(state)?.isLoading
-  );
-
-  const { loading } = useSelector((state: RootState) => state.auth);
   return (
     <Box
       display="flex"
@@ -65,9 +53,8 @@ const SubLayout = ({ children }: any) => {
       )}
       <Box
         sx={{
-          // maxWidth: '1440px',
           width: '100%',
-          // mx: 'auto',
+
           height: '100%',
           overflow: 'hidden',
 
@@ -83,26 +70,17 @@ const SubLayout = ({ children }: any) => {
           transition: 'all 0.3s ease-in-out',
         }}
       >
-        {/* {(yearLoading || boardLoading || isLoading) &&
-        removeLastSlash !== '/setting/academic-setup' ? (
-          <LoadingScreen />
-        ) : ( */}
         <Scrollbar
           sx={{
-            // maxWidth: '1440px',
             width: '100%',
             mx: 'auto',
             height: '100%',
             overflow: 'auto',
             p: 2,
-
-            // p: 1,
-            // bgcolor: (theme) => theme.palette.background.default,
           }}
         >
           {children}
         </Scrollbar>
-        {/* )} */}
       </Box>
     </Box>
   );

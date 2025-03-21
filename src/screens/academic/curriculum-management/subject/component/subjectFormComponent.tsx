@@ -102,7 +102,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '450px' }}>
+        <Scrollbar sx={{ p: 2, height: '40vh' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <CustomSelect
@@ -335,6 +335,8 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                   setIsDraft(true);
                   formik.handleSubmit();
                 }}
+                variant="contained"
+                color="warning"
               >
                 Save Draft
               </Button>

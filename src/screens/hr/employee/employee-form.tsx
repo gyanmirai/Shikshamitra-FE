@@ -56,10 +56,14 @@ export const personalInformationInitialValues = (editData: any) => ({
   qualification: editData ? editData.qualification : '',
   role: editData ? editData?.role?.id : '',
   identificationMark1: editData ? editData.identificationMark1 : '',
-
-  address: editData ? editData.address : '',
-  state: editData ? editData?.state : '',
-  city: editData ? editData?.city : '',
+  addressLine1: editData ? editData.address1 : '',
+  addressLine2: editData ? editData.address2 : '',
+  addressLine3: editData ? editData.address3 : '',
+  country: editData
+    ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
+    : undefined,
+  state: editData ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode } : undefined,
+  city: editData ? { name: editData?.city } : undefined,
   pincode: editData ? editData?.pinCode : '',
   employeeId: editData ? editData.id : '',
   organization: editData ? editData?.educationMediumStageId : '',
@@ -71,25 +75,72 @@ export const familyInformationInitialValues = (editData: any) => ({
   fatherName: editData ? editData.fatherDetails.name : '',
   fatherOccupation: editData ? editData.fatherDetails.occupation : '',
   fatherContactNo: editData ? editData.fatherDetails.contactNo : '',
-  fatherAddress: editData ? editData.fatherDetails.address : '',
-  fatherState: editData ? editData?.fatherDetails?.state : '',
-  fatherCity: editData ? editData?.fatherDetails?.city : '',
+  fatherAddress1: editData ? editData.fatherDetails.address1 : '',
+  fatherAddress2: editData ? editData.fatherDetails.address2 : '',
+  fatherAddress3: editData ? editData.fatherDetails.address3 : '',
+
+  fatherCountry: editData
+    ? {
+        name: editData?.fatherDetails?.countryName,
+        isoCode: editData?.fatherDetails?.countryIsoCode,
+      }
+    : undefined,
+  fatherState: editData
+    ? {
+        name: editData?.fatherDetails?.stateName,
+        isoCode: editData?.fatherDetails?.stateIsoCode,
+      }
+    : undefined,
+  fatherCity: editData ? { name: editData?.fatherDetails?.city } : undefined,
+
   fatherPinCode: editData ? editData?.fatherDetails?.pinCode : '',
   motherName: editData ? editData.motherDetails.name : '',
   motherOccupation: editData ? editData.motherDetails.occupation : '',
   motherContactNo: editData ? editData.motherDetails.contactNo : '',
-  motherAddress: editData ? editData.motherDetails.address : '',
-  motherState: editData ? editData?.motherDetails?.state : '',
-  motherCity: editData ? editData?.motherDetails?.city : '',
+  motherAddress1: editData ? editData.motherDetails.address1 : '',
+  motherAddress2: editData ? editData.motherDetails.address2 : '',
+  motherAddress3: editData ? editData.motherDetails.address3 : '',
+
+  motherCountry: editData
+    ? {
+        name: editData?.motherDetails?.countryName,
+        isoCode: editData?.motherDetails?.countryIsoCode,
+      }
+    : undefined,
+  motherState: editData
+    ? {
+        name: editData?.motherDetails?.stateName,
+        isoCode: editData?.motherDetails?.stateIsoCode,
+      }
+    : undefined,
+  motherCity: editData ? { name: editData?.motherDetails?.city } : undefined,
+
   motherPinCode: editData ? editData?.motherDetails?.pinCode : '',
   spouseName: editData ? editData.spouseDetails.name : '',
   spouseOccupation: editData ? editData.spouseDetails.occupation : '',
   spouseContactNo: editData ? editData.spouseDetails.contactNo : '',
-  spouseAddress: editData ? editData.spouseDetails.address : '',
-  spouseState: editData ? editData?.spouseDetails?.state : '',
-  spouseCity: editData ? editData?.spouseDetails?.city : '',
+
+  spouseAddress1: editData ? editData.spouseDetails.address1 : '',
+  spouseAddress2: editData ? editData.spouseDetails.address2 : '',
+  spouseAddress3: editData ? editData.spouseDetails.address3 : '',
+
+  spouseCountry: editData
+    ? {
+        name: editData?.spouseDetails?.countryName,
+        isoCode: editData?.spouseDetails?.countryIsoCode,
+      }
+    : undefined,
+  spouseState: editData
+    ? {
+        name: editData?.spouseDetails?.stateName,
+        isoCode: editData?.spouseDetails?.stateIsoCode,
+      }
+    : undefined,
+  spouseCity: editData ? { name: editData?.spouseDetails?.city } : undefined,
+
   spousePinCode: editData ? editData?.spouseDetails?.pinCode : '',
 });
+
 export const documentsInitialValues = () => ({ documents: new FormData() });
 
 export const workExperienceInitialValues = (editData: any) => ({
@@ -179,6 +230,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
+      console.log('values---handleBasicInformation--', values);
+
       if (!values.employeeId) {
         const resp = await addEmployee({
           // userId: res.data.id,
@@ -210,9 +263,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           roleId: values.role,
           identificationMark1: values.identificationMark1,
 
-          address: values.address,
-          city: values.city,
-          state: values.state,
+          address1: values.addressLine1,
+          address2: values.addressLine2,
+          address3: values.addressLine3,
+
+          country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+          city: values?.city?.name,
+          state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
           pincode: `${values.pincode}`,
           educationMediumStageId: values.organization,
         });
@@ -221,6 +278,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     },
     [addEmployee]
   );
+
   const handleFamilyInformation = useCallback(
     async (values: any, formik: any) => {
       const res = await updateFamilyInfo({
@@ -230,27 +288,44 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             name: values.fatherName,
             occupation: values.fatherOccupation,
             contactNo: values.fatherContactNo,
-            address: values.fatherAddress,
-            state: values.fatherState,
-            city: values.fatherCity,
+            address1: values.fatherAddress1,
+            address2: values.fatherAddress2,
+            address3: values.fatherAddress3,
+            countryName: values?.fatherCountry?.name,
+            countryIsoCode: values?.fatherCountry?.isoCode,
+            stateName: values?.fatherState?.name,
+            stateIsoCode: values?.fatherState?.isoCode,
+            city: values?.fatherCity?.name,
             pincode: values.fatherPinCode,
           },
           motherDetails: {
             name: values.motherName,
             occupation: values.motherOccupation,
             contactNo: values.motherContactNo,
-            address: values.motherAddress,
-            state: values.motherState,
-            city: values.motherCity,
+            address1: values.motherAddress1,
+            address2: values.motherAddress2,
+            address3: values.motherAddress3,
+
+            countryName: values?.motherCountry?.name,
+            countryIsoCode: values?.motherCountry?.isoCode,
+            stateName: values?.motherState?.name,
+            stateIsoCode: values?.motherState?.isoCode,
+
+            city: values?.motherCity?.name,
             pincode: values.motherPinCode,
           },
           spouseDetails: {
             name: values.spouseName,
             occupation: values.spouseOccupation,
             contactNo: values.spouseContactNo,
-            address: values.spouseAddress,
-            state: values.spouseState,
-            city: values.spouseCity,
+            address1: values.spouseAddress1,
+            address2: values.spouseAddress2,
+            address3: values.spouseAddress3,
+            countryName: values?.spouseCountry?.name,
+            countryIsoCode: values?.spouseCountry?.isoCode,
+            stateName: values?.spouseState?.name,
+            stateIsoCode: values?.spouseState?.isoCode,
+            city: values?.spouseCity?.name,
             pincode: values.spousePinCode,
           },
         },
@@ -325,9 +400,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             roleId: values.role,
             identificationMark1: values.identificationMark1,
 
-            address: values.address,
-            city: values.city,
-            state: values.state,
+            address1: values.addressLine1,
+            address2: values.addressLine2,
+            address3: values.addressLine3,
+
+            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+            city: values?.city?.name,
+            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+
             pincode: `${values.pincode}`,
             educationMediumStageId: values.organization,
           },
@@ -402,6 +482,7 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
+  console.log('formik values---', formik.values);
 
   return (
     <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
@@ -447,7 +528,10 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                         key={field.name}
                       >
                         {field.renderComp ? (
-                          field.renderComp({ formik, field })
+                          field.renderComp({
+                            formik,
+                            field,
+                          })
                         ) : field.type === 'date' ? (
                           <DatePicker
                             label={field.label}
@@ -485,7 +569,9 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                             helperText={formik.touched[field.name] && formik.errors[field.name]}
                             fullWidth
                             sx={{ ...(field?.sx || {}) }}
-                            {...(field?.otherProps || {})}
+                            {...((typeof field?.otherProps === 'function'
+                              ? field?.otherProps({ formik })
+                              : field?.otherProps) || {})}
                           />
                         )}
                       </Grid>

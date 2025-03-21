@@ -403,6 +403,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               {
                 id: 'action',
                 label: 'Action',
+                sticky: true,
                 isSort: false,
                 isFilter: false,
                 render: (value, row) => (

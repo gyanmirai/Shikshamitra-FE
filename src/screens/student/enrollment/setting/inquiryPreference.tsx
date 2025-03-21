@@ -86,6 +86,7 @@ const InquiryPreference = () => {
           {
             id: 'action',
             label: 'Action',
+            isFilter: false,
             isSort: false,
             render(value, row) {
               return (

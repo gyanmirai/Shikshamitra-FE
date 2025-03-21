@@ -77,7 +77,7 @@ const EntranceExamSlots = () => {
         }
       />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-        <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue}>
+        <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue} size="small">
           Slot
         </Button>
       </Box>
@@ -85,14 +85,16 @@ const EntranceExamSlots = () => {
         isLoading={isLoading}
         tableId="entrance-exam-slots"
         columns={[
-          { label: 'Start Time', id: 'startTime' },
-          { label: 'End Time', id: 'endTime' },
-          { label: 'Student Limit', id: 'studentLimit' },
-          { label: 'Room No', id: 'roomNo' },
-
+          { label: 'Slot Name', id: 'slotName' },
+          { label: 'Start Time', id: 'startTime', filterType: 'date' },
+          { label: 'End Time', id: 'endTime', filterType: 'date' },
+          { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
+          { label: 'Room No', id: 'roomNo', filterType: 'number' },
           {
             label: 'Action',
             id: 'action',
+            isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -142,6 +144,7 @@ export const SlotsForm = ({
 
   const formik = useFormik({
     initialValues: {
+      slotName: editData?.slotName || null,
       startTime: editData?.startDate ? dayjs(editData?.startDate) : null,
       endTime: editData?.endDate ? dayjs(editData?.endDate) : null,
       studentLimit: editData?.studentLimit || null,
@@ -149,6 +152,7 @@ export const SlotsForm = ({
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
+      slotName: Yup.string().required('Slot Name is required'),
       startTime: Yup.date()
         .test('startTime', 'Start time must be before end time', (value, context) => {
           if (context.parent.endTime && dayjs(context.parent.endTime).isBefore(dayjs(value))) {
@@ -174,6 +178,7 @@ export const SlotsForm = ({
           await updateSlot({
             id: editData.id,
             body: {
+              slotName: values.slotName,
               startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
               endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
               studentLimit: values.studentLimit,
@@ -182,6 +187,7 @@ export const SlotsForm = ({
           }).unwrap();
         } else {
           await addSlot({
+            slotName: values.slotName,
             startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
             endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
             studentLimit: values.studentLimit,
@@ -199,6 +205,21 @@ export const SlotsForm = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
         <Stack spacing={2}>
+          <TextField
+            name="slotName"
+            label="Slot Name"
+            value={formik.values.slotName}
+            onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
+            onBlur={formik.handleBlur}
+            size="small"
+            fullWidth
+            error={formik.touched.slotName && Boolean(formik.errors.slotName)}
+            helperText={
+              formik.touched.slotName && formik.errors.slotName
+                ? String(formik.errors.slotName)
+                : ''
+            }
+          />
           <MobileTimePicker
             label="Start Time"
             value={formik.values.startTime}

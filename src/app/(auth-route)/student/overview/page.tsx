@@ -4,14 +4,12 @@ import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { Box, Card, Divider, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
-import CustomizableView from 'src/components/customizable-view';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
@@ -31,7 +29,6 @@ const dashBoardSections = [
 ];
 
 const Overview = () => {
-  const router = useRouter();
   const [sections, setSections] = useState([
     {
       id: '0',
@@ -85,7 +82,24 @@ const Overview = () => {
           />
         }
       />
-      <CustomizableView sections={sections} setSections={setSections} />
+      {/* <CustomizableView sections={sections} setSections={setSections} /> */}
+      {/* <Grid2 container spacing={3}>
+        <Grid2 xs={12}>
+          <OverviewCard />
+        </Grid2>
+        <Grid2 xs={12} md={6}>
+          <RecentActivitiesNotification />
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={4}>
+          <StudentBirthDate />
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={4}>
+          <EnrollmentsTrends />
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={4}>
+          <StudentStrengthClassWise />
+        </Grid2>
+      </Grid2> */}
       <Grid2 container spacing={3}>
         {sections.map((section: any) => dashBoardSections[section.id])}
       </Grid2>

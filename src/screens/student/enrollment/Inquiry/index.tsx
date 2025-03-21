@@ -4,9 +4,9 @@ import type { YesNo } from 'src/enums/yes-no';
 import type { RootState } from 'src/redux/store';
 import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
+import type { IState, ICountry } from 'country-state-city';
 import type { EmployeeCastType } from 'src/enums/employee-cast';
-import type { ICity, IState, ICountry } from 'country-state-city';
-import type { Board, Medium, Standards, AcademicYear } from 'src/types/school';
+import type { Board, Medium, Division, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -25,9 +25,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import InquiryForm from './inquiry-form';
 import InquiryTable from './inquiry-table';
 import { CommunicationForm } from '../follow-up';
+import IssueRegistrationForm from '../issue-registration-form/issueRegistrationForm';
 
 export interface IInquiryData {
   id: string;
+  userId: string;
+  inquiryPreferencesId: string;
   studentEnrollmentState: number;
   inquiryNumber: string | undefined;
   formNumber: string;
@@ -35,6 +38,7 @@ export interface IInquiryData {
   email: string;
   middleName: string;
   lastName: string;
+  name: string;
   previousSchoolName: string;
   dateOfBirth: string;
   dateOfInquiry: string;
@@ -43,8 +47,11 @@ export interface IInquiryData {
   alternativeContactNumber: string;
   dueDate?: string;
   country: ICountry;
-  city: ICity;
+  city: string;
   state: IState;
+  tempGrNo: number;
+  grNoRecord: number;
+  rollNo: number;
   pinCode: number;
   address: string;
   addressLine1: string;
@@ -59,6 +66,8 @@ export interface IInquiryData {
   academicYear: AcademicYear;
   standardId: string;
   standard: Standards;
+  division: Division;
+  divisionId: string;
   inquiryPreferenceId: string;
   inquiryPreference: InquiryPreference;
   studentBasicDetails: StudentBasicDetails;
@@ -70,6 +79,16 @@ export interface IInquiryData {
   studentMedicalRecords: StudentMedicalRecords;
   previousSchoolDetails: PreviousSchoolDetails;
   parentBankDetails: ParentBankDetails;
+  profilePicture?: string;
+  aadhaarNo: string;
+  religion: string;
+  familyCast: string;
+  castType: EmployeeCastType;
+  motherTongue: string;
+  nationality: string;
+  birthPlace: string;
+  temporaryGr: string;
+  remarks: string;
 }
 
 export interface ParentBankDetails {
@@ -191,6 +210,7 @@ const InquiryScreen = () => {
   const dispatch = useDispatch();
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
+  const issueRegistrationFormDialog = useBoolean();
   const links = dialog.value
     ? [
         { name: 'Student' },
@@ -234,6 +254,7 @@ const InquiryScreen = () => {
         <InquiryTable
           dialog={dialog}
           followUpDialog={followUpDialog}
+          issueRegistrationFormDialog={issueRegistrationFormDialog}
           editData={editData}
           setEditData={setEditData}
         />
@@ -254,6 +275,23 @@ const InquiryScreen = () => {
           }}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
+      </CustomDialog>
+
+      <CustomDialog
+        open={issueRegistrationFormDialog.value}
+        handleClose={() => {
+          setEditData(null);
+          issueRegistrationFormDialog.onFalse();
+        }}
+        title="Issue Registration Form"
+      >
+        <IssueRegistrationForm
+          handleClose={() => {
+            setEditData(null);
+            issueRegistrationFormDialog.onFalse();
+          }}
+          editData={editData as IInquiryData}
+        />
       </CustomDialog>
     </Box>
   );

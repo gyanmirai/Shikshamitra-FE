@@ -392,7 +392,7 @@ const LeaveRequestForm = () => {
                 </Grid>
                 <Grid item xs={12} display="flex" justifyContent="flex-end">
                   <Button type="submit" variant="contained" size="small" color="primary">
-                    Submit Leave Request
+                    RequestSubmit Leave
                   </Button>
                 </Grid>
               </Grid>

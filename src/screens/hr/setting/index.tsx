@@ -67,7 +67,7 @@ const HrSetting = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" justifyContent="flex-end">
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
           Document
         </Button>
       </Box>
@@ -87,6 +87,9 @@ const HrSetting = () => {
           {
             label: 'Action',
             id: 'action',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
             render: (value, data) => (
               <ThreeDotsActions
                 showEditIcon

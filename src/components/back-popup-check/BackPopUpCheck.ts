@@ -8,8 +8,8 @@ export const BackPopUpChecked = ({
   currentValues,
   children,
 }: Record<string, any>) => {
-  console.log('initialValues', initialValues);
-  console.log('currentValues', currentValues);
+  console.log('initialValues BackPopUpChecked ----', initialValues);
+  console.log('currentValues BackPopUpChecked ----', currentValues);
   const isEqualValue = useMemo(
     () => JSON.stringify(initialValues) === JSON.stringify(currentValues),
     [initialValues, currentValues]

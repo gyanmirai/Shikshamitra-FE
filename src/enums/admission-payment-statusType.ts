@@ -1,20 +1,22 @@
 export enum AdmissionPaymentStatusType {
-  'Pending' = 'Pending',
-  'Complete' = 'Complete',
+  Paid = 1,
+  Unpaid = 2,
+  Partial = 3,
 }
 
 export const AdmissionPaymentStatusOptions = [
   {
-    label: 'Pending',
-    value: AdmissionPaymentStatusType.Pending,
+    label: 'Paid',
+    value: AdmissionPaymentStatusType.Paid,
   },
   {
-    label: 'Complete',
-    value: AdmissionPaymentStatusType.Complete,
+    label: 'Pending',
+    value: AdmissionPaymentStatusType.Unpaid,
   },
 ];
 
 export const AdmissionPaymentStatusTypeColors = {
-  [AdmissionPaymentStatusType.Pending]: 'warning',
-  [AdmissionPaymentStatusType.Complete]: 'success',
+  [AdmissionPaymentStatusType.Unpaid]: 'warning',
+  [AdmissionPaymentStatusType.Paid]: 'success',
+  [AdmissionPaymentStatusType.Partial]: 'error',
 };

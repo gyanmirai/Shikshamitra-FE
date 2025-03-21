@@ -15,7 +15,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LeaveHistory from './leave-history';
 import LeaveCalender from './leave-calender';
-import AddLeaveRequest from './leave-requst';
 
 export interface TabComponentType {
   searchParams?: useSearchParamReturnType[0];
@@ -33,12 +32,6 @@ const TABS = [
     value: 'leaveRequest',
     label: 'Leave Request',
     icon: <Iconify icon="pajamas:merge-request" width={20} />,
-    component: (props: TabComponentType) => <AddLeaveRequest {...props} />,
-  },
-  {
-    value: 'leaveHistory',
-    label: 'Leave History',
-    icon: <Iconify icon="mingcute:history-fill" width={20} />,
     component: (props: TabComponentType) => <LeaveHistory {...props} />,
   },
 ];

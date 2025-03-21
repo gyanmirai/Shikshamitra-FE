@@ -1,12 +1,19 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Paper, Avatar, Button, useTheme, Typography } from '@mui/material';
+
+import {
+  AttendanceStatusType,
+  AttendanceStatusOptions,
+  AttendanceStatusTypeColors,
+} from 'src/enums/attendance-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -470,8 +477,24 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                     },
                   ]}
                   columns={[
-                    { id: 'date', label: 'Date', minWidth: '10%' },
-                    { id: 'status', label: 'Status', minWidth: '10%' },
+                    { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
+                    {
+                      id: 'status',
+                      label: 'Status',
+                      minWidth: '10%',
+                      filterType: 'enum',
+                      enumOptions: AttendanceStatusOptions,
+                      render(value, row) {
+                        const color = AttendanceStatusTypeColors[
+                          value as AttendanceStatusType
+                        ] as LabelColor;
+                        return (
+                          <Label color={color}>
+                            {AttendanceStatusType[value as AttendanceStatusType]}
+                          </Label>
+                        );
+                      },
+                    },
                     { id: 'reason', label: 'Reason', minWidth: '10%' },
                     { id: 'remarks', label: 'Remarks', minWidth: '20%' },
                   ]}

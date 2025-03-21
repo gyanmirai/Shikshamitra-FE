@@ -1,6 +1,10 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import type { RootState } from 'src/redux/store';
+
+import { useFormik } from 'formik';
+import React, { useState, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -19,15 +23,21 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const LateArrivalPolicy = () => {
   const leaveRuleDialog = useBoolean();
   const assignEmployeeDialog = useBoolean();
+  const [editData, setEditData] = useState<any>(null);
+  const dispatch = useDispatch();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -46,6 +56,17 @@ const LateArrivalPolicy = () => {
     ),
     [assignEmployeeDialog]
   );
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dispatch(setIsChanges(false));
+      leaveRuleDialog.onFalse();
+      setEditData(null);
+    } else if (!isChanges) {
+      leaveRuleDialog.onFalse();
+      setEditData(null);
+    }
+  };
 
   return (
     <Box>
@@ -71,6 +92,9 @@ const LateArrivalPolicy = () => {
           {
             id: 'actions',
             label: 'Actions',
+            isFilter: false,
+            isSort: false,
+            sticky: true,
             render(value: any, row: any) {
               return (
                 <ThreeDotsActions
@@ -114,10 +138,13 @@ const LateArrivalPolicy = () => {
       />
       <CustomDialog
         open={leaveRuleDialog.value}
-        handleClose={leaveRuleDialog.onFalse}
+        handleClose={() => {
+          leaveRuleDialog.onFalse();
+          editData(null);
+        }}
         title="Add Leave Arrival Policy"
       >
-        <LateArrivalPolicyForm />
+        <LateArrivalPolicyForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
 
       <CustomDialog
@@ -133,56 +160,95 @@ const LateArrivalPolicy = () => {
 
 export default LateArrivalPolicy;
 
-const LateArrivalPolicyForm = () => (
-  <Box display="flex" flexDirection="column" gap={2}>
-    <form onSubmit={() => {}}>
-      <Scrollbar sx={{ p: 2, height: '200px', bgcolor: 'background.neutral' }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <TextField size="small" name="policyName" onChange={() => {}} label="Policy Name" />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TimePicker
-              label="Grace Period (Min)"
-              name="gracePeriod"
-              slotProps={{ textField: { size: 'small' } }}
-              sx={{ minWidth: '180px', width: '100%' }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              name="lateArrivalThreshold"
+const LateArrivalPolicyForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose: (e: any, isSubmit?: boolean) => void;
+  editData: any | null;
+}) => {
+  const formik = useFormik({
+    initialValues: {
+      policyName: editData?.policyName || '',
+      gracePeriod: editData?.gracePeriod === null ? '' : editData?.gracePeriod,
+      lateArrivalThreshold: editData?.lateArrivalThreshold || '',
+      penaltyAmount: editData?.penaltyAmount || '',
+    },
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          console.log('update data--');
+        } else {
+          console.log('add data--');
+        }
+        handleClose(null, true);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <form onSubmit={() => {}}>
+          <Scrollbar sx={{ p: 2, height: '200px', bgcolor: 'background.neutral' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  size="small"
+                  name="policyName"
+                  onChange={formik.handleChange}
+                  label="Policy Name"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TimePicker
+                  label="Grace Period (Min)"
+                  name="gracePeriod"
+                  slotProps={{ textField: { size: 'small' } }}
+                  sx={{ minWidth: '180px', width: '100%' }}
+                  onChange={(val) => {
+                    formik.setFieldValue('gracePeriod', val);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="lateArrivalThreshold"
+                  size="small"
+                  onChange={formik.handleChange}
+                  label="Late Arrival Threshold(Days)"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="penaltyAmount"
+                  onChange={formik.handleChange}
+                  label="Penalty Amount"
+                  size="small"
+                />
+              </Grid>
+            </Grid>
+          </Scrollbar>
+          <DialogActions>
+            <Button variant="outlined" size="small" onClick={handleClose}>
+              Cancel
+            </Button>
+            <LoadingButton
+              // loading={isLoading || isUpdateLoading}
+              type="submit"
+              variant="contained"
               size="small"
-              onChange={() => {}}
-              label="Late Arrival Threshold(Days)"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              name="penaltyAmount"
-              onChange={() => {}}
-              label="Penalty Amount"
-              size="small"
-            />
-          </Grid>
-        </Grid>
-      </Scrollbar>
-      <DialogActions>
-        <Button variant="outlined" size="small" onClick={() => {}}>
-          Cancel
-        </Button>
-        <LoadingButton
-          // loading={isLoading || isUpdateLoading}
-          type="submit"
-          variant="contained"
-          size="small"
-        >
-          Save
-        </LoadingButton>
-      </DialogActions>
-    </form>
-  </Box>
-);
+            >
+              Save
+            </LoadingButton>
+          </DialogActions>
+        </form>
+      </BackPopUpChecked>
+    </Box>
+  );
+};
 
 const AssignEmployeeForm = () => (
   <Box display="flex" flexDirection="column" gap={2}>

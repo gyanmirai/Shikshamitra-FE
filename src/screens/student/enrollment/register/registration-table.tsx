@@ -1,9 +1,10 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-
 import dayjs from 'dayjs';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
+
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import calculateAge from 'src/utils/calculate-age';
 
@@ -15,6 +16,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -31,6 +33,8 @@ const RegistrationTable = ({
   followUpDialog: UseBooleanReturn;
   setEditData: (data: null | IInquiryData) => void;
 }) => {
+  const [moveId, setMoveId] = useState<string | null>(null);
+  const confirmMovePopup = useBoolean();
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
@@ -49,7 +53,10 @@ const RegistrationTable = ({
               // if (row.progress < 50) {
               //   toast.error('Please Complete Registration Form First');
               // }
-              await moveToAdmission(row.id);
+              confirmMovePopup.onTrue();
+              // dialog.onTrue();
+              setMoveId(row.id);
+              pop.onClose();
             }}
           >
             <Iconify icon="mdi:arrow-right" sx={{ mr: 2 }} />
@@ -78,7 +85,7 @@ const RegistrationTable = ({
         </MenuList>
       </>
     ),
-    [dialog, followUpDialog, moveToAdmission, setEditData]
+    [confirmMovePopup, dialog, followUpDialog, setEditData]
   );
 
   const { data: registrationData, isLoading } = useQueryAndMutation({
@@ -100,113 +107,138 @@ const RegistrationTable = ({
   );
 
   return (
-    <CustomizableTable
-      tableId="student-registration-table"
-      isLoading={isLoading}
-      columns={[
-        { id: 'formNumber', label: 'Form No', minWidth: '110px' },
-        {
-          id: 'inquiryNumber',
-          label: 'Inquiry Number',
-          minWidth: '162px',
-          isFilter: true,
-          filterType: 'string',
-        },
-        { id: 'standard.name', label: 'Class' },
-        { id: 'studentName', label: 'Student Name', minWidth: '160px' },
-        {
-          id: 'dobValue',
-          label: 'DOB',
-          minWidth: '120px',
-          align: 'left',
-          isFilter: true,
-          filterType: 'date',
-        },
-        { id: 'ageValue', label: 'Age' },
-        {
-          id: 'doiValue',
-          label: 'DOI',
-          minWidth: '120px',
-          align: 'left',
-          filterType: 'date',
-          isDateRangeFilter: true,
-        },
-        { id: 'genderValue', label: 'Gender' },
-        { id: 'address', label: 'Address', minWidth: '120px' },
-        { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
-        { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
-        { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
-        {
-          id: 'inquiryPreference.preferenceName',
-          label: 'Inquiry Preferences',
-          minWidth: '200px',
-        },
+    <Box>
+      <CustomizableTable
+        tableId="student-registration-table"
+        isLoading={isLoading}
+        columns={[
+          { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+          {
+            id: 'inquiryNumber',
+            label: 'Inquiry Number',
+            minWidth: '162px',
+            isFilter: true,
+            filterType: 'string',
+          },
+          { id: 'standard.name', label: 'Class' },
+          { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+          {
+            id: 'dobValue',
+            label: 'DOB',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'date',
+          },
+          { id: 'ageValue', label: 'Age' },
+          {
+            id: 'doiValue',
+            label: 'DOI',
+            minWidth: '120px',
+            align: 'left',
+            filterType: 'date',
+            isDateRangeFilter: true,
+          },
+          { id: 'genderValue', label: 'Gender' },
+          { id: 'address', label: 'Address', minWidth: '120px' },
+          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
+          { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+          {
+            id: 'inquiryPreference.preferenceName',
+            label: 'Inquiry Preferences',
+            minWidth: '200px',
+          },
 
-        { id: 'educationMedium.name', label: 'Organization' },
+          { id: 'educationMedium.name', label: 'Organization' },
 
-        // { id: 'EmployeeDesignation', label: 'Role' },
-        {
-          id: 'progress',
-          label: 'Progress',
-          filterType: 'number',
-          render(value, row) {
-            return (
-              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                <CircularProgress variant="determinate" value={value} />
-                <Box
-                  sx={{
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                    right: 0,
-                    position: 'absolute',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-                    {value}%
-                  </Typography>
+          // { id: 'EmployeeDesignation', label: 'Role' },
+          {
+            id: 'progress',
+            label: 'Progress',
+            filterType: 'number',
+            render(value, row) {
+              return (
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress variant="determinate" value={value} />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+                      {value}%
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            );
+              );
+            },
           },
-        },
-        // {
-        //   id: 'StatusName',
-        //   label: 'Status',
-        //   render(value, row) {
-        //     return (
-        //       <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
-        //         {value}
-        //       </Label>
-        //     );
-        //   },
-        // },
-        {
-          id: 'actions',
-          label: 'Actions',
-          isSort: false,
-          isFilter: false,
-          sticky: true,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showEditIcon
-                handleEditClick={() => {
-                  setEditData(row as IInquiryData);
-                  formDialog.onTrue();
-                }}
-                actions={(prop) => actions({ ...prop, row })}
-                placement="right-top"
-              />
-            );
+          // {
+          //   id: 'StatusName',
+          //   label: 'Status',
+          //   render(value, row) {
+          //     return (
+          //       <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
+          //         {value}
+          //       </Label>
+          //     );
+          //   },
+          // },
+          {
+            id: 'actions',
+            label: 'Actions',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  showEditIcon
+                  handleEditClick={() => {
+                    setEditData(row as IInquiryData);
+                    formDialog.onTrue();
+                  }}
+                  actions={(prop) => actions({ ...prop, row })}
+                  placement="right-top"
+                />
+              );
+            },
           },
-        },
-      ]}
-      data={tableData || []}
-    />
+        ]}
+        data={tableData || []}
+      />
+
+      <ConfirmDialog
+        title="Move"
+        content="Are you sure want to move in admission ?"
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isLoading}
+            color="error"
+            onClick={async () => {
+              await moveToAdmission(moveId);
+              confirmMovePopup.onFalse();
+            }}
+          >
+            Move
+          </LoadingButton>
+        }
+        open={confirmMovePopup.value}
+        onClose={() => {
+          confirmMovePopup.onFalse();
+          setMoveId(null);
+        }}
+      />
+    </Box>
   );
 };
 

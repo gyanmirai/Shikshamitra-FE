@@ -143,3 +143,8 @@ html {
 .Mui-disabled {
   cursor: no-drop !important;
 }
+
+.MuiStepLabel-iconContainer.Mui-disabled,
+.MuiStepLabel-label.Mui-disabled {
+  cursor: default !important;
+}

@@ -13,7 +13,7 @@ export const StudentCertificateApi = createApi({
       query: ({ studentId, body }) => ({
         url: `/students/upload-certificate?studentId=${studentId}`,
         method: 'POST',
-        body,
+        data: body,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
