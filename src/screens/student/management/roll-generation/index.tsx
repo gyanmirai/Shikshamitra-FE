@@ -1,61 +1,72 @@
 'use client';
 
-import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 
+import { GenderType } from 'src/enums/gender';
+import { StudentApi } from 'src/redux/student';
 import { useUpdateStudentRollNumberMutation } from 'src/redux/student/roll-number/roll-number-api';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-const initialData = [
-  { id: 1, surname: 'Akbari', srNo: 1, grNo: 'GR001', name: 'Parth', rollNo: '', gender: 'Male' },
-  { id: 2, surname: 'Guhsar', srNo: 2, grNo: 'GR002', name: 'Hiren', rollNo: '', gender: 'Female' },
-  { id: 3, surname: 'Ram', srNo: 2, grNo: 'GR002', name: 'Jeet', rollNo: '', gender: 'Female' },
-  { id: 4, surname: 'Jignesh', srNo: 2, grNo: 'GR002', name: 'Hiren', rollNo: '', gender: 'Male' },
-];
+import type { IInquiryData } from '../../enrollment/Inquiry';
 
-const RollNoGenerationScreen = () => {
+const RollNoGenerationScreen = ({
+  tableData: studentData,
+  isLoading,
+}: {
+  isLoading: boolean;
+  tableData: IInquiryData[];
+}) => {
   const [arrangementType, setArrangementType] = useState('');
   const [isManual, setIsManual] = useState(false);
   const [arrangeBy, setArrangeBy] = useState('');
-  const [tableData, setTableData] = useState(initialData);
+  const [tableData, setTableData] = useState(studentData);
   const [error, setError] = useState<Record<number, string>>({});
-  console.log('tableData in roll number', tableData);
-  console.log('initialData in roll number', initialData);
+
+  const dispatch = useDispatch();
+
   const [updateStudentRollNumbers, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
   const handleAutoGenerate = () => {
-    let filteredData = [...initialData];
+    let filteredData = [...tableData];
 
     // Step 1: Filter based on Arrangement Type
     if (arrangementType === 'boysFirst') {
-      filteredData = filteredData.filter((item) => item.gender === 'Male');
+      filteredData = filteredData.filter((item) => item.genderType === GenderType.Male);
     } else if (arrangementType === 'girlsFirst') {
-      filteredData = filteredData.filter((item) => item.gender === 'Female');
+      filteredData = filteredData.filter((item) => item.genderType === GenderType.Female);
     }
 
     // Step 2: Sort based on Arrangement By
     if (arrangeBy === 'name') {
       filteredData.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (arrangeBy === 'surname') {
-      filteredData.sort((a, b) => a.surname.localeCompare(b.surname));
+    } else if (arrangeBy === 'lastName') {
+      filteredData.sort((a, b) => a.lastName.localeCompare(b.lastName));
     } else if (arrangeBy === 'grNo') {
-      filteredData.sort((a, b) => a.grNo.localeCompare(b.grNo));
+      filteredData.sort((a, b) => a.grNoRecord.toString().localeCompare(b.grNoRecord.toString()));
     }
 
     // Step 3: Assign Roll Numbers from 1
     filteredData = filteredData.map((item, index) => ({
       ...item,
-      rollNo: (index + 1).toString(), // Assign roll numbers sequentially
+      rollNo: index + 1, // Assign roll numbers sequentially
     }));
 
     setTableData(filteredData);
   };
 
-  const handleRollNoChange = (id: number, newValue: string) => {
+  useEffect(() => {
+    if (studentData) {
+      setTableData(studentData);
+    }
+  }, [studentData]);
+  const handleRollNoChange = (id: string, newValue: number) => {
     const updatedData = tableData.map((item) =>
       item.id === id ? { ...item, rollNo: newValue } : item
     );
@@ -83,18 +94,19 @@ const RollNoGenerationScreen = () => {
 
     console.log('Request body:', requestBody);
     try {
-      const response = await updateStudentRollNumbers(requestBody).unwrap();
-      console.log('GR Numbers updated successfully:', response);
-      alert('GR Numbers updated successfully!');
+      const response = await updateStudentRollNumbers({ body: requestBody }).unwrap();
+
+      toast.success('Roll Numbers updated successfully!');
+      setIsManual(false);
+      dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (err) {
       console.error('Failed to update GR Numbers:', err);
-      alert('Failed to update GR Numbers. Please try again.');
     }
   };
 
   return (
     <Box>
-      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
+      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
           <Box display="flex" gap={2}>
             <CustomSelect
@@ -155,10 +167,10 @@ const RollNoGenerationScreen = () => {
           <CustomizableTable
             tableId="roll-no-generation-table"
             columns={[
-              { id: 'srNo', label: 'Sr. No.' },
-              { id: 'grNo', label: 'GR No.' },
+              // { id: 'srNo', label: 'Sr. No.' },
+              { id: 'grNoRecord', label: 'GR No.' },
               { id: 'name', label: 'Name' },
-              { id: 'surname', label: 'Surname' },
+              // { id: 'surname', label: 'Surname' },
               {
                 id: 'rollNo',
                 label: 'Roll No.',
@@ -168,8 +180,9 @@ const RollNoGenerationScreen = () => {
                     <TextField
                       size="small"
                       variant="standard"
+                      type="number"
                       value={row.rollNo}
-                      onChange={(e) => handleRollNoChange(row.id, e.target.value)}
+                      onChange={(e) => handleRollNoChange(row.id, +e.target.value)}
                       error={Boolean(error[row.id])}
                       helperText={error[row.id]}
                       disabled={!isManual}

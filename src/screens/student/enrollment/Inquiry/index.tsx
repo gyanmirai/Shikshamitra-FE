@@ -6,7 +6,7 @@ import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
 import type { IState, ICountry } from 'country-state-city';
 import type { EmployeeCastType } from 'src/enums/employee-cast';
-import type { Board, Medium, Standards, AcademicYear } from 'src/types/school';
+import type { Board, Medium, Division, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -29,6 +29,8 @@ import IssueRegistrationForm from '../issue-registration-form/issueRegistrationF
 
 export interface IInquiryData {
   id: string;
+  userId: string;
+  inquiryPreferencesId: string;
   studentEnrollmentState: number;
   inquiryNumber: string | undefined;
   formNumber: string;
@@ -36,6 +38,7 @@ export interface IInquiryData {
   email: string;
   middleName: string;
   lastName: string;
+  name: string;
   previousSchoolName: string;
   dateOfBirth: string;
   dateOfInquiry: string;
@@ -46,6 +49,9 @@ export interface IInquiryData {
   country: ICountry;
   city: string;
   state: IState;
+  tempGrNo: number;
+  grNoRecord: number;
+  rollNo: number;
   pinCode: number;
   address: string;
   addressLine1: string;
@@ -60,6 +66,8 @@ export interface IInquiryData {
   academicYear: AcademicYear;
   standardId: string;
   standard: Standards;
+  division: Division;
+  divisionId: string;
   inquiryPreferenceId: string;
   inquiryPreference: InquiryPreference;
   studentBasicDetails: StudentBasicDetails;
@@ -72,6 +80,15 @@ export interface IInquiryData {
   previousSchoolDetails: PreviousSchoolDetails;
   parentBankDetails: ParentBankDetails;
   profilePicture?: string;
+  aadhaarNo: string;
+  religion: string;
+  familyCast: string;
+  castType: EmployeeCastType;
+  motherTongue: string;
+  nationality: string;
+  birthPlace: string;
+  temporaryGr: string;
+  remarks: string;
 }
 
 export interface ParentBankDetails {

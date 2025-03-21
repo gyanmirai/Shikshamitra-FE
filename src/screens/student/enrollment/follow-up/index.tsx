@@ -29,7 +29,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import {
   FollowUpStatusType,
-  InquiryStatusTypeColors,
+  FollowUpStatusTypeColors,
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 import {
@@ -95,14 +95,14 @@ const FollowUpScreen: React.FC = () => {
             align: 'left',
           },
           {
-            id: 'inquiryStatusType',
+            id: 'followUpStatusType',
             label: 'Status',
             filterType: 'enum',
             enumOptions: FollowUpStatusTypeOptions,
             minWidth: '180px',
             align: 'left',
             render(value, row) {
-              const color = InquiryStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
               return <Label color={color}>{FollowUpStatusType[value]}</Label>;
             },

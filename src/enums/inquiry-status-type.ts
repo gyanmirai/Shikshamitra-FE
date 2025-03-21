@@ -19,7 +19,7 @@ export const FollowUpStatusTypeOptions = [
   },
 ];
 
-export const InquiryStatusTypeColors = {
+export const FollowUpStatusTypeColors = {
   [FollowUpStatusType.Pending]: 'warning',
   [FollowUpStatusType.Interested]: 'success',
   [FollowUpStatusType['Not Interested']]: 'error',

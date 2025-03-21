@@ -2,14 +2,21 @@
 
 import type { Division } from 'src/types/school';
 
-import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
+import { Box } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const initialData = [
   { id: 1, srNo: 1, grNo: 'GR001', name: 'John Doe', division: '' },
@@ -17,27 +24,64 @@ const initialData = [
   { id: 3, srNo: 3, grNo: 'GR003', name: 'Alice Johnson', division: '' },
 ];
 
-const ChangeDivisionScreen = ({ allDivision }: any) => {
-  const [columDivision, setColumnDivision] = useState<string>('');
+const ChangeDivisionScreen = ({
+  tableData: studentData,
+  isLoading,
+  allDivision,
+  division,
+}: {
+  isLoading: boolean;
+  tableData: IInquiryData[];
+  allDivision: Division[];
+  division: string;
+}) => {
+  const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    setTableData(studentData);
+  }, [studentData]);
 
-  const [tableData, setTableData] = useState(initialData);
+  const [changeDivision, { isLoading: isChangeDivisionLoading, data }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeDivisionMutation,
+  });
+
+  const handelSave = async () => {
+    try {
+      const res = await changeDivision({
+        studentDivisionUpdates: tableData
+          .filter((student) => !!student.divisionId)
+          .map((student) => ({
+            studentId: student.id,
+            divisionId: student.divisionId,
+          })),
+      }).unwrap();
+      dispatch(StudentApi.util.invalidateTags(['Student']));
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+  };
 
   return (
     <Box>
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
-          <Button startIcon={<Save />} variant="outlined">
+          <LoadingButton
+            loading={isChangeDivisionLoading}
+            startIcon={<Save />}
+            variant="outlined"
+            onClick={handelSave}
+          >
             Save
-          </Button>
+          </LoadingButton>
         </Box>
         <CustomizableTable
           tableId="change-division-table"
           columns={[
-            { id: 'srNo', label: 'Sr. No.' },
-            { id: 'grNo', label: 'GR No.' },
+            { id: 'grNoRecord', label: 'GR No.' },
             { id: 'name', label: 'Name' },
             {
-              id: 'division',
+              id: 'divisionId',
               label: 'Division',
               isSort: false,
               // renderColumn(value) {
@@ -65,18 +109,19 @@ const ChangeDivisionScreen = ({ allDivision }: any) => {
                   <TableDivisionDropDown
                     allDivision={allDivision}
                     division={value}
+                    currentDivision={division}
                     onChange={(val) => {
                       const newData = tableData.map((item) => {
                         if (item.id === row.id) {
                           return {
                             ...item,
-                            division: val as string,
+                            divisionId: val as string,
                           };
                         }
                         return item;
                       });
 
-                      setTableData(newData);
+                      setTableData(newData as IInquiryData[]);
                     }}
                   />
                 );
@@ -95,14 +140,14 @@ export default ChangeDivisionScreen;
 interface TableDivisionDropDownProps {
   allDivision: Division[];
   division: string;
-
+  currentDivision: string;
   onChange: (val: string | string[] | number | number[]) => void;
 }
 
 const TableDivisionDropDown = ({
   allDivision,
   division,
-
+  currentDivision,
   onChange,
 }: TableDivisionDropDownProps) => (
   <CustomSelect

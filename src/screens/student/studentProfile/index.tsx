@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 
@@ -25,6 +26,12 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { convertBase64Format } from 'src/utils/base64Formate';
+
+import { GenderType } from 'src/enums/gender';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -44,71 +51,11 @@ import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
 
-const students = [
-  {
-    id: 1,
-    name: 'John Doe',
-    rollNo: '001',
-    GrNo: 'GR001',
-    class: '10th',
-    division: 'A',
-    medium: 'GUJ',
-    organization: 'Primary',
-    board: 'CBSE',
-    contactNo: '+91 12345 67890',
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    rollNo: '002',
-    GrNo: 'GR002',
-    class: '10th',
-    division: 'B',
-    medium: 'ENG',
-    organization: 'Primary',
-    board: 'ICSE',
-    contactNo: '+91 98765 43210',
-  },
-  {
-    id: 3,
-    name: 'Alice Johnson',
-    rollNo: '003',
-    GrNo: 'GR003',
-    class: '10th',
-    division: 'A',
-    medium: 'ENG',
-    organization: 'Secondary',
-    board: 'ICSE',
-    contactNo: '+91 55555 55555',
-  },
-  {
-    id: 4,
-    name: 'Bob Williams',
-    rollNo: '004',
-    GrNo: 'GR004',
-    class: '10th',
-    division: 'D',
-    medium: 'ENG',
-    organization: 'Secondary',
-    board: 'GSEB',
-    contactNo: '+91 11111 11111',
-  },
-  {
-    id: 5,
-    name: 'Emma Brown',
-    rollNo: '005',
-    GrNo: 'GR005',
-    class: '10th',
-    division: 'E',
-    medium: 'GUJ',
-    organization: 'Primary',
-    board: 'GSEB',
-    contactNo: '+91 99999 99999',
-  },
-];
+import type { IInquiryData } from '../enrollment/Inquiry';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
+  student: IInquiryData;
 }
 
 const TABS = [
@@ -116,61 +63,69 @@ const TABS = [
     value: 'dashboard',
     label: 'Dashboard',
     icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <StudentDashboard {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+      <StudentDashboard {...props} />
+    ),
   },
   {
     value: 'information',
     label: 'Information',
     icon: <Iconify icon="solar:user-id-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <StudentInformation {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+      <StudentInformation {...props} />
+    ),
   },
   {
     value: 'attendance',
     label: 'Attendance',
     icon: <Iconify icon="solar:bill-list-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Attendance {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Attendance {...props} />,
   },
   {
     value: 'academic',
     label: 'Academic',
     icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Academic {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Academic {...props} />,
   },
   {
     value: 'records',
     label: 'Records',
     icon: <Iconify icon="vaadin:records" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Records {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Records {...props} />,
   },
   {
     value: 'finance',
     label: 'Finance',
     icon: <Iconify icon="map:finance" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Finance {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Finance {...props} />,
   },
   {
     value: 'documents',
     label: 'Documents',
     icon: <Iconify icon="ion:documents" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Document {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Document {...props} />,
   },
   {
     value: 'communications',
     label: 'Communications',
     icon: <Iconify icon="maki:communications-tower" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Communication {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+      <Communication {...props} />
+    ),
   },
   {
     value: 'transportation',
     label: 'Transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <StudentTransportProfile {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+      <StudentTransportProfile {...props} />
+    ),
   },
   {
     value: 'library',
     label: 'Library',
     icon: <Iconify icon="mdi:library" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <Library {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Library {...props} />,
   },
 ];
 
@@ -220,7 +175,34 @@ export function StudentProfile() {
 
   // console.log('currentActiveComponent----', currentActiveComponent);
 
-  const currentStudent = students.find((item) => item.id === Number(searchParams?.student));
+  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
+
+  useEffect(() => {
+    if (division && classes && organization) {
+      getStudents({
+        educationMediumStageId: organization,
+        standardId: classes,
+        divisionId: division,
+      });
+    }
+  }, [division, classes, organization, getStudents]);
+
+  console.log(StudentsData, 'StudentsData');
+
+  const tableData = useMemo(
+    () =>
+      StudentsData?.items?.map((item: any) => ({
+        ...item,
+        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+      })) || [],
+    [StudentsData?.items]
+  );
+  const currentStudent: IInquiryData = tableData.find(
+    (item: IInquiryData) => item.id === searchParams.student
+  );
 
   return (
     <>
@@ -278,7 +260,8 @@ export function StudentProfile() {
           </Box>
           <CustomizableTable
             tableId="student-list"
-            data={students}
+            data={tableData}
+            isLoading={isLoading}
             columns={[
               {
                 id: 'name',
@@ -287,21 +270,21 @@ export function StudentProfile() {
                   <Box style={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar
                       sx={{ width: 32, height: 32, mr: 1 }}
-                      src={row.avatarUrl}
-                      alt={row.name}
+                      src={convertBase64Format(row.profilePicture)}
+                      alt={value}
                     />
                     <Typography component="span" fontSize="12px">
-                      {row.name}
+                      {value}
                     </Typography>
                   </Box>
                 ),
               },
               { id: 'rollNo', label: 'Roll No' },
-              { id: 'GrNo', label: 'Gr No' },
-              { id: 'organization', label: 'Organization' },
-              { id: 'class', label: 'Class' },
-              { id: 'division', label: 'Division' },
-              { id: 'contactNo', label: 'Contact No' },
+              { id: 'grNoRecord', label: 'Gr No' },
+              // { id: 'organization', label: 'Organization' },
+              // { id: 'class', label: 'Class' },
+              // { id: 'division', label: 'Division' },
+              { id: 'parentContactNumber', label: 'Contact No' },
               {
                 id: 'action',
                 label: 'Action',
@@ -350,23 +333,23 @@ export function StudentProfile() {
             >
               <Box display="flex" gap={2} alignItems="center">
                 <Avatar
-                  src="https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp"
+                  src={convertBase64Format(currentStudent?.profilePicture as string)}
                   sx={{ width: 64, height: 64 }}
                 />
                 <Label variant="filled" color="primary" sx={{ fontSize: '12px' }}>
-                  John Doe
+                  {currentStudent?.name || '-'}
                 </Label>
                 <Label variant="filled" color="info" sx={{ fontSize: '12px' }}>
-                  GR01
+                  Gr No {currentStudent?.grNoRecord || '-'}
                 </Label>
                 <Label variant="filled" color="secondary" sx={{ fontSize: '12px' }}>
-                  Roll No 20
+                  Roll No {currentStudent?.rollNo || '-'}
                 </Label>
                 <Label variant="filled" color="warning" sx={{ fontSize: '12px' }}>
-                  10-A
+                  {currentStudent?.standard?.name}-{currentStudent?.division?.name}
                 </Label>
                 <Label variant="filled" color="error" sx={{ fontSize: '12px' }}>
-                  Higher Secondary
+                  {currentStudent?.educationMedium?.name || '-'}
                 </Label>
               </Box>
               <Box display="flex" gap={2} alignItems="center">
@@ -422,23 +405,26 @@ export function StudentProfile() {
           <Dialog open={icardDialog.value} onClose={icardDialog.onFalse}>
             <StudentIDCard
               student={{
-                name: 'John Doe',
-                grNo: 'GR01',
-                rollNo: '20',
-                class: '10-A',
-                division: 'Higher Secondary',
-                contactNo: '9876543210',
-                email: 'johndoe@example.com',
-                address: '123 Main Street, City, Country',
-                dob: '1990-01-01',
-                bloodGroup: 'A+',
-                academicYear: '2023-2024',
-                gender: 'Male',
+                name: currentStudent?.name || 'John Doe',
+                grNo: currentStudent?.grNoRecord || '-',
+                rollNo: currentStudent?.rollNo || '-',
+                class: `${currentStudent?.standard?.name}-${currentStudent?.division?.name}`,
+                // division: 'Higher Secondary',
+                contactNo: currentStudent?.parentContactNumber || '-',
+                email: currentStudent?.email || '-',
+                address: currentStudent?.addressLine1 || '-',
+                dob: dayjs(currentStudent?.dateOfBirth).format('DD/MM/YYYY') || '-',
+                // bloodGroup:  || '-',
+                academicYear: currentStudent?.academicYear?.name || '-',
+                gender: GenderType[currentStudent?.genderType],
+                profilePicture: convertBase64Format(currentStudent?.profilePicture as string) || '',
               }}
             />
           </Dialog>
           {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
-          {currentActiveComponent?.component && <currentActiveComponent.component tabs={tabs} />}
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component tabs={tabs} student={currentStudent} />
+          )}
           {/* </Scrollbar> */}
         </>
       )}
