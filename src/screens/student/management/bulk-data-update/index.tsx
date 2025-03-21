@@ -1,104 +1,79 @@
 'use client';
 
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { Save } from '@mui/icons-material';
-import { Box, Button, TextField } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { allCategory } from './bulkDataFields';
+
 const initialData = [
-  { id: 1, srNo: 1, grNo: 'GR001', name: 'John Doe', division: '' },
-  { id: 2, srNo: 2, grNo: 'GR002', name: 'Jane Smith', division: '' },
-  { id: 3, srNo: 3, grNo: 'GR003', name: 'Alice Johnson', division: '' },
+  {
+    id: 1,
+    srNo: 1,
+    grNo: 'GR001',
+    name: 'John Doe',
+    division: '',
+    firstName: 'John',
+    dateOfBirth: dayjs('28-10-2024', 'DD-MM-YYYY'),
+    academicYear: '',
+    board: '',
+    class: '',
+  },
+  {
+    id: 2,
+    srNo: 2,
+    grNo: 'GR002',
+    name: 'Jane Smith',
+    division: '',
+    firstName: 'abc',
+    dateOfBirth: dayjs('03-10-2024', 'DD-MM-YYYY'),
+    academicYear: '',
+    board: '',
+    class: '',
+  },
+  {
+    id: 3,
+    srNo: 3,
+    grNo: 'GR003',
+    name: 'Alice Johnson',
+    division: '',
+    firstName: 'xyz',
+    dateOfBirth: dayjs('19-10-2025', 'DD-MM-YYYY'),
+    academicYear: '',
+    board: '',
+    class: '',
+  },
 ];
 
-const allCategory = [
-  {
-    name: 'General',
-    id: 'general',
-    subCategory: [
-      // { name: 'Roll No.', id: 'rollNo123' },
-      // { name: 'Gr. No.', id: 'grNo123' },
-      // { name: 'Last Name', id: 'lastName' },
-      { name: 'First Name', id: 'firstName' },
-      { name: 'Middle Name', id: 'middleName' },
-      { name: 'Gender', id: 'gender' },
-      { name: 'Fee Category', id: 'feeCategory' },
-      { name: 'Date Of birth', id: 'dateOfBirth' },
-      { name: 'BloodGroup', id: 'bloodGroup' },
-      { name: 'BirthPlace', id: 'birthPlace' },
-      { name: 'BirthTaluka', id: 'birthTaluka' },
-      { name: 'BirthDistrict', id: 'birthDistrict' },
-      { name: 'BirthState', id: 'birthState' },
-      { name: 'BirthCountry', id: 'birthCountry' },
-      { name: 'Religion', id: 'religion' },
-      { name: 'FamilyCaste', id: 'familyCaste' },
-      { name: 'FamilySubCast', id: 'familySubCast' },
-      { name: 'CasteCategory', id: 'casteCategory' },
-      { name: 'House', id: 'house' },
-      { name: 'MotherTongue', id: 'motherTongue' },
-      { name: 'Nationality', id: 'nationality' },
-      { name: 'UIDNumber', id: 'uidNumber' },
-      { name: 'AdhaarNumber', id: 'adhaarNumber' },
-      { name: 'PENNumber', id: 'penNumber' },
-      { name: 'Bank Name', id: 'bankName' },
-      { name: 'Branch Name', id: 'branchName' },
-      { name: 'IFSC Code', id: 'ifscCode' },
-      { name: 'Account No.', id: 'accountNo' },
-      { name: 'Account Holder Name', id: 'accountHolderName' },
-    ],
-  },
-  {
-    name: 'Admission',
-    id: 'admission',
-    subCategory: [
-      { name: 'Admission Category', id: 'admissionCategory' },
-      { name: 'Previous School', id: 'previousSchool' },
-      { name: 'Admission Date', id: 'admissionDate' },
-      { name: 'Admission Form Number', id: 'admissionFormNumber' },
-      { name: 'Transfer From', id: 'transferFrom' },
-      { name: 'PassingYear', id: 'passingYear' },
-      { name: 'LC Date', id: 'lcDate' },
-      { name: 'LeftReason', id: 'leftReason' },
-      { name: 'LCNumber', id: 'lcNumber' },
-      { name: 'Admission Standard', id: 'admissionStandard' },
-      { name: 'LC Submitted', id: 'lcSubmitted' },
-    ],
-  },
-  {
-    name: 'Contact Detail',
-    id: 'contactDetail',
-    subCategory: [
-      { name: 'Name', id: 'name' },
-      { name: 'DOB', id: 'dob' },
-      { name: 'Qualification', id: 'qualification' },
-      { name: 'Occupation', id: 'occupation' },
-      { name: 'Organization', id: 'organization' },
-      { name: 'Designation', id: 'designation' },
-      { name: 'Mail', id: 'mail' },
-      { name: 'Office Contact No.', id: 'officeContactNo' },
-      { name: 'Annual Income', id: 'annualIncome' },
-      { name: 'Name', id: 'name2' },
-      { name: 'DOB', id: 'dob2' },
-      { name: 'Qualification', id: 'qualification2' },
-      { name: 'Occupation', id: 'occupation2' },
-      { name: 'Mail', id: 'mail2' },
-      { name: 'Office Contact No.', id: 'officeContactNo2' },
-      { name: 'Annual Income', id: 'annualIncome2' },
-    ],
-  },
-];
 const BulkDataUpdateScreen = () => {
   const [category, setCategory] = useState<string>('');
   const [subCategory, setSubCategory] = useState<string>('');
-  const [allSubCategory, setAllSubCategory] = useState<{ name: string; id: string }[]>([]);
+  const [allSubCategory, setAllSubCategory] = useState<
+    { name: string; id: string; type: string }[]
+  >([]);
 
   const [tableData, setTableData] = useState(initialData);
 
-  const headerLabel = allSubCategory.find((cat: any) => cat.id === subCategory)?.name || '';
+  const selectedSubCategory = allSubCategory.find((cat: any) => cat.id === subCategory) || {
+    name: '',
+    id: '',
+    type: '',
+  };
+
+  const handleFieldChange = (rowId: any, value: any) => {
+    setTableData((prevData) =>
+      prevData.map((row) => (row.id === rowId ? { ...row, [selectedSubCategory.id]: value } : row))
+    );
+  };
+
+  console.log('tableData---', tableData);
 
   return (
     <Box>
@@ -121,17 +96,23 @@ const BulkDataUpdateScreen = () => {
               formControlProps={{ sx: { width: '200px' } }}
               // disabled={!division}
             />
-            <CustomSelect
-              options={allSubCategory}
-              label="Sub Category"
-              value={subCategory}
-              onChange={(val) => {
-                setSubCategory(val as string);
+            <Autocomplete
+              options={allSubCategory || []}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Sub Category"
+                  placeholder="Search Sub Category"
+                  size="small"
+                  fullWidth
+                  sx={{ width: '100%', minWidth: '200px' }}
+                />
+              )}
+              onChange={(e, value) => {
+                // formik.setFieldValue('examType', value?.id);
+                setSubCategory(value?.id || '');
               }}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { width: '200px' } }}
-              disabled={!category}
             />
           </Box>
           <Box display="flex" gap={2}>
@@ -145,15 +126,27 @@ const BulkDataUpdateScreen = () => {
           <CustomizableTable
             tableId="bulk-data-update-table"
             columns={[
-              { id: 'srNo', label: 'Sr. No.' },
-              { id: 'grNo', label: 'GR No.' },
-              { id: 'name', label: 'Name' },
+              { id: 'srNo', label: 'Sr. No.', minWidth: '150px', align: 'left' },
+              { id: 'grNo', label: 'GR No.', minWidth: '200px', align: 'left' },
+              { id: 'name', label: 'Name', minWidth: '200px', align: 'left' },
               {
-                id: 'dynamic',
-                label: headerLabel,
+                id: selectedSubCategory?.id || 'dynamic',
+                label: selectedSubCategory.name,
                 isSort: false,
+                minWidth: '200px',
+                align: 'left',
                 // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
-                render: (row: any) => <TextField size="small" label={headerLabel} />,
+                // render: (value, row: any) => renderDynamicField({ value, row , selectedSubCategory}),
+                render: (value, row: any) => (
+                  <RenderDynamicField
+                    value={value}
+                    row={row}
+                    selectedSubCategory={selectedSubCategory}
+                    onChange={(newValue: any) => handleFieldChange(row.id, newValue)}
+                  />
+                ),
+
+                // render: (row: any) => <TextField size="small" label={selectedSubCategory?.name} />,
               },
             ]}
             data={tableData}
@@ -166,27 +159,37 @@ const BulkDataUpdateScreen = () => {
 
 export default BulkDataUpdateScreen;
 
-// interface TableDivisionDropDownProps {
-//   allDivision: Division[];
-//   division: string;
-
-//   onChange: (val: string | string[]) => void;
-// }
-
-// const TableDivisionDropDown = ({
-//   allDivision,
-//   division,
-
-//   onChange,
-// }: TableDivisionDropDownProps) => (
-//   <CustomSelect
-//     options={allDivision}
-//     label="Division"
-//     value={division}
-//     onChange={onChange}
-//     labelKey="name"
-//     valueKey="id"
-//     formControlProps={{ sx: { width: '150px', textAlign: 'left' } }}
-//     onClick={(e) => e.stopPropagation()}
-//   />
-// );
+const RenderDynamicField = ({ value, row, selectedSubCategory, onChange }: any) =>
+  selectedSubCategory?.renderComp ? (
+    selectedSubCategory.renderComp({ value, row, onChange })
+  ) : selectedSubCategory.type === 'date' ? (
+    <DatePicker
+      label={selectedSubCategory.label}
+      name={selectedSubCategory.name}
+      value={value}
+      format="DD/MM/YYYY"
+      onChange={(newValue) => onChange(newValue)}
+      slotProps={{
+        textField: {
+          placeholder: selectedSubCategory.placeholder,
+          fullWidth: true,
+          size: 'small',
+          // helperText: formik.touched[field.name] && formik.errors[field.name],
+          // error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+        },
+      }}
+    />
+  ) : (
+    <TextField
+      fullWidth
+      variant="outlined"
+      label={selectedSubCategory.label} // Corrected `label` usage
+      size="small"
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      InputProps={{ sx: { width: '100%', maxWidth: '200px' } }}
+      {...((typeof selectedSubCategory?.otherProps === 'function'
+        ? selectedSubCategory?.otherProps({ onChange })
+        : selectedSubCategory?.otherProps) || {})}
+    />
+  );

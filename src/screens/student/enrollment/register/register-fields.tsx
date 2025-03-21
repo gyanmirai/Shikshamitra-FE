@@ -2389,7 +2389,7 @@ function RenderFamilyInformation(props: any) {
                   formik.setFieldValue('guardianContactNo', value);
                 }}
                 label="Guardian Contact No."
-                placeholder="Enter Spouse Contact No."
+                placeholder="Enter Guardian Contact No."
                 error={formik.touched.guardianContactNo && Boolean(formik.errors.guardianContactNo)}
               />
               <TextField

@@ -83,6 +83,23 @@ const Overview = () => {
         }
       />
       {/* <CustomizableView sections={sections} setSections={setSections} /> */}
+      {/* <Grid2 container spacing={3}>
+        <Grid2 xs={12}>
+          <OverviewCard />
+        </Grid2>
+        <Grid2 xs={12} md={6}>
+          <RecentActivitiesNotification />
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={4}>
+          <StudentBirthDate />
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={4}>
+          <EnrollmentsTrends />
+        </Grid2>
+        <Grid2 xs={12} md={6} lg={4}>
+          <StudentStrengthClassWise />
+        </Grid2>
+      </Grid2> */}
       <Grid2 container spacing={3}>
         {sections.map((section: any) => dashBoardSections[section.id])}
       </Grid2>

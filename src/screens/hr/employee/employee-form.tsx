@@ -56,9 +56,9 @@ export const personalInformationInitialValues = (editData: any) => ({
   qualification: editData ? editData.qualification : '',
   role: editData ? editData?.role?.id : '',
   identificationMark1: editData ? editData.identificationMark1 : '',
-  addressLine1: editData ? editData.addressLine1 : '',
-  addressLine2: editData ? editData.addressLine2 : '',
-  addressLine3: editData ? editData.addressLine3 : '',
+  addressLine1: editData ? editData.address1 : '',
+  addressLine2: editData ? editData.address2 : '',
+  addressLine3: editData ? editData.address3 : '',
   country: editData
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
     : undefined,
@@ -81,14 +81,14 @@ export const familyInformationInitialValues = (editData: any) => ({
 
   fatherCountry: editData
     ? {
-        name: editData?.fatherDetails?.country?.name,
-        isoCode: editData?.fatherDetails?.country?.isoCode,
+        name: editData?.fatherDetails?.countryName,
+        isoCode: editData?.fatherDetails?.countryIsoCode,
       }
     : undefined,
   fatherState: editData
     ? {
-        name: editData?.fatherDetails?.state?.name,
-        isoCode: editData?.fatherDetails?.state?.isoCode,
+        name: editData?.fatherDetails?.stateName,
+        isoCode: editData?.fatherDetails?.stateIsoCode,
       }
     : undefined,
   fatherCity: editData ? { name: editData?.fatherDetails?.city } : undefined,
@@ -103,14 +103,14 @@ export const familyInformationInitialValues = (editData: any) => ({
 
   motherCountry: editData
     ? {
-        name: editData?.motherDetails?.country?.name,
-        isoCode: editData?.motherDetails?.country?.isoCode,
+        name: editData?.motherDetails?.countryName,
+        isoCode: editData?.motherDetails?.countryIsoCode,
       }
     : undefined,
   motherState: editData
     ? {
-        name: editData?.motherDetails?.state?.name,
-        isoCode: editData?.motherDetails?.state?.isoCode,
+        name: editData?.motherDetails?.stateName,
+        isoCode: editData?.motherDetails?.stateIsoCode,
       }
     : undefined,
   motherCity: editData ? { name: editData?.motherDetails?.city } : undefined,
@@ -126,14 +126,14 @@ export const familyInformationInitialValues = (editData: any) => ({
 
   spouseCountry: editData
     ? {
-        name: editData?.spouseDetails?.country?.name,
-        isoCode: editData?.spouseDetails?.country?.isoCode,
+        name: editData?.spouseDetails?.countryName,
+        isoCode: editData?.spouseDetails?.countryIsoCode,
       }
     : undefined,
   spouseState: editData
     ? {
-        name: editData?.spouseDetails?.state?.name,
-        isoCode: editData?.spouseDetails?.state?.isoCode,
+        name: editData?.spouseDetails?.stateName,
+        isoCode: editData?.spouseDetails?.stateIsoCode,
       }
     : undefined,
   spouseCity: editData ? { name: editData?.spouseDetails?.city } : undefined,
@@ -291,10 +291,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address1: values.fatherAddress1,
             address2: values.fatherAddress2,
             address3: values.fatherAddress3,
-
-            country: { name: values?.fatherCountry?.name, isoCode: values?.fatherCountry?.isoCode },
+            countryName: values?.fatherCountry?.name,
+            countryIsoCode: values?.fatherCountry?.isoCode,
+            stateName: values?.fatherState?.name,
+            stateIsoCode: values?.fatherState?.isoCode,
             city: values?.fatherCity?.name,
-            state: { name: values?.fatherState?.name, isoCode: values?.fatherState?.isoCode },
             pincode: values.fatherPinCode,
           },
           motherDetails: {
@@ -305,9 +306,12 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address2: values.motherAddress2,
             address3: values.motherAddress3,
 
-            country: { name: values?.motherCountry?.name, isoCode: values?.motherCountry?.isoCode },
+            countryName: values?.motherCountry?.name,
+            countryIsoCode: values?.motherCountry?.isoCode,
+            stateName: values?.motherState?.name,
+            stateIsoCode: values?.motherState?.isoCode,
+
             city: values?.motherCity?.name,
-            state: { name: values?.motherState?.name, isoCode: values?.motherState?.isoCode },
             pincode: values.motherPinCode,
           },
           spouseDetails: {
@@ -317,11 +321,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address1: values.spouseAddress1,
             address2: values.spouseAddress2,
             address3: values.spouseAddress3,
-
-            country: { name: values?.spouseCountry?.name, isoCode: values?.spouseCountry?.isoCode },
+            countryName: values?.spouseCountry?.name,
+            countryIsoCode: values?.spouseCountry?.isoCode,
+            stateName: values?.spouseState?.name,
+            stateIsoCode: values?.spouseState?.isoCode,
             city: values?.spouseCity?.name,
-            state: { name: values?.spouseState?.name, isoCode: values?.spouseState?.isoCode },
-
             pincode: values.spousePinCode,
           },
         },
@@ -478,6 +482,8 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
+  console.log('formik values---', formik.values);
+
   return (
     <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
       {steps.map(

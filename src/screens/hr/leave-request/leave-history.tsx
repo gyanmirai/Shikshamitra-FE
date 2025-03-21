@@ -115,11 +115,13 @@ const LeaveHistory = (props: TabComponentType) => {
             label: 'Start Date',
             id: 'start',
             filterType: 'date',
+            minWidth: '100px',
           },
           {
             label: 'End Date',
             id: 'end',
             filterType: 'date',
+            minWidth: '100px',
           },
           {
             label: 'Half Day',

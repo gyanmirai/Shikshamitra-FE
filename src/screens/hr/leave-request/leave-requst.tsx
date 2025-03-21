@@ -414,7 +414,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             <DialogActions>
               {!editData && (
                 <LoadingButton loading={isLoading} type="submit" variant="contained">
-                  Submit Leave Request
+                  Submit
                 </LoadingButton>
               )}
 

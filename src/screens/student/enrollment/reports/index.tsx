@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Form, Field, Formik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
+import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
@@ -27,7 +28,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const validationSchema = Yup.object().shape({
   report: Yup.string().required('Report is required'),
   department: Yup.string().required('Department is required'),
-  status: Yup.string().required('Status is required'),
+  inquiryStatus: Yup.string().required('inquiryStatus is required'),
   designation: Yup.string().required('Designation is required'),
   employeeType: Yup.string().required('Employee Type is required'),
   employeeGroup: Yup.string().required('Employee Group is required'),
@@ -35,13 +36,18 @@ const validationSchema = Yup.object().shape({
 });
 
 const initialValues = {
-  department: 'all',
-  status: 'all',
-  designation: 'all',
-  employeeType: 'all',
-  employeeGroup: 'all',
-  gender: 'all',
   report: '',
+  viewMode: 'pdf',
+  board: '',
+  medium: '',
+  department: 'all',
+  class: '',
+  fromInquiryNumber: '',
+  toInquiryNumber: '',
+  fromDate: '',
+  toDate: '',
+  gender: 'all',
+  inquiryStatus: 'all',
 };
 
 const StudentReportsScreen = () => {
@@ -94,6 +100,40 @@ const StudentReportsScreen = () => {
                     </Field>
                   </Grid>
                   <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.viewMode && errors.viewMode} fullWidth>
+                      <InputLabel size="small">View Mode</InputLabel>
+                      <Select
+                        name="viewMode"
+                        value={values.viewMode}
+                        onChange={handleChange}
+                        label="View Mode"
+                        size="small"
+                      >
+                        <MenuItem value="pdf">PDF</MenuItem>
+                        <MenuItem value="admin">Screen</MenuItem>
+                      </Select>
+                      <FormHelperText>{touched.viewMode && errors.viewMode}</FormHelperText>
+                    </Field>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.board && errors.board} fullWidth>
+                      <InputLabel size="small">Board</InputLabel>
+                      <Select
+                        name="board"
+                        value={values.board}
+                        onChange={handleChange}
+                        label="View Mode"
+                        size="small"
+                      >
+                        <MenuItem value="pdf">CBSC</MenuItem>
+                        <MenuItem value="admin">GSEB</MenuItem>
+                      </Select>
+                      <FormHelperText>{touched.board && errors.board}</FormHelperText>
+                    </Field>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
                     <Field
                       as={FormControl}
                       error={touched.department && errors.department}
@@ -115,112 +155,165 @@ const StudentReportsScreen = () => {
                       <FormHelperText>{touched.department && errors.department}</FormHelperText>
                     </Field>
                   </Grid>
+
                   <Grid item xs={12} sm={6} md={4}>
-                    <Field as={FormControl} error={touched.status && errors.status} fullWidth>
-                      <InputLabel size="small">Status</InputLabel>
+                    <Field as={FormControl} error={touched.medium && errors.medium} fullWidth>
+                      <InputLabel size="small">medium</InputLabel>
                       <Select
-                        name="status"
-                        value={values.status}
+                        name="medium"
+                        value={values.medium}
                         onChange={handleChange}
-                        label="Status"
-                        size="small"
-                      >
-                        <MenuItem value="all">All</MenuItem>
-                        <MenuItem value="active">Active</MenuItem>
-                        <MenuItem value="left">Left</MenuItem>
-                        <MenuItem value="suspended">Suspended</MenuItem>
-                        <MenuItem value="retired">Retired</MenuItem>
-                      </Select>
-                      <FormHelperText>{touched.status && errors.status}</FormHelperText>
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Field
-                      as={FormControl}
-                      error={touched.designation && errors.designation}
-                      fullWidth
-                    >
-                      <InputLabel size="small">Designation</InputLabel>
-                      <Select
-                        name="designation"
-                        value={values.designation}
-                        onChange={handleChange}
-                        label="Designation"
+                        label="medium"
                         size="small"
                       >
                         <MenuItem value="all">All</MenuItem>
                         <MenuItem value="admin">Admin</MenuItem>
-                        <MenuItem value="principal">Principal</MenuItem>
-                        <MenuItem value="clerk">Clerk</MenuItem>
-                        <MenuItem value="director">Director</MenuItem>
-                        <MenuItem value="peon">Peon</MenuItem>
-                        <MenuItem value="receptionist">Receptionist</MenuItem>
-                        <MenuItem value="clerk">Clerk</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
                       </Select>
-                      <FormHelperText>{touched.designation && errors.designation}</FormHelperText>
+                      <FormHelperText>{touched.medium && errors.medium}</FormHelperText>
                     </Field>
                   </Grid>
+
                   <Grid item xs={12} sm={6} md={4}>
                     <Field
                       as={FormControl}
-                      error={touched.employeeType && errors.employeeType}
+                      error={touched.department && errors.department}
                       fullWidth
                     >
-                      <InputLabel size="small">Employee Type</InputLabel>
+                      <InputLabel size="small">department</InputLabel>
                       <Select
-                        name="employeeType"
-                        value={values.employeeType}
+                        name="department"
+                        value={values.department}
                         onChange={handleChange}
-                        label="Employee Type"
+                        label="department"
                         size="small"
                       >
                         <MenuItem value="all">All</MenuItem>
-                        <MenuItem value="consultant">Consultant / Advisor</MenuItem>
-                        <MenuItem value="probationer">Probationers</MenuItem>
-                        <MenuItem value="regular">Regular</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
                       </Select>
-                      <FormHelperText>{touched.employeeType && errors.employeeType}</FormHelperText>
+                      <FormHelperText>{touched.department && errors.department}</FormHelperText>
                     </Field>
                   </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.class && errors.class} fullWidth>
+                      <InputLabel size="small">class</InputLabel>
+                      <Select
+                        name="class"
+                        value={values.class}
+                        onChange={handleChange}
+                        label="class"
+                        size="small"
+                      >
+                        <MenuItem value="all">All</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
+                      </Select>
+                      <FormHelperText>{touched.class && errors.class}</FormHelperText>
+                    </Field>
+                  </Grid>
+
                   <Grid item xs={12} sm={6} md={4}>
                     <Field
                       as={FormControl}
-                      error={touched.employeeGroup && errors.employeeGroup}
+                      error={touched.fromInquiryNumber && errors.fromInquiryNumber}
                       fullWidth
                     >
-                      <InputLabel size="small">Employee Group</InputLabel>
+                      <InputLabel size="small">fromInquiryNumber</InputLabel>
                       <Select
-                        name="employeeGroup"
-                        value={values.employeeGroup}
+                        name="fromInquiryNumber"
+                        value={values.fromInquiryNumber}
                         onChange={handleChange}
-                        label="Employee Group"
+                        label="fromInquiryNumber"
                         size="small"
                       >
                         <MenuItem value="all">All</MenuItem>
-                        <MenuItem value="teaching">Teaching</MenuItem>
-                        <MenuItem value="non-teaching">Non Teaching</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
                       </Select>
                       <FormHelperText>
-                        {touched.employeeGroup && errors.employeeGroup}
+                        {touched.fromInquiryNumber && errors.fromInquiryNumber}
                       </FormHelperText>
                     </Field>
                   </Grid>
+
                   <Grid item xs={12} sm={6} md={4}>
-                    <Field as={FormControl} error={touched.gender && errors.gender} fullWidth>
-                      <InputLabel size="small">Gender</InputLabel>
+                    <Field
+                      as={FormControl}
+                      error={touched.toInquiryNumber && errors.toInquiryNumber}
+                      fullWidth
+                    >
+                      <InputLabel size="small">toInquiryNumber</InputLabel>
                       <Select
-                        name="gender"
-                        value={values.gender}
+                        name="toInquiryNumber"
+                        value={values.toInquiryNumber}
                         onChange={handleChange}
-                        label="Gender"
+                        label="toInquiryNumber"
                         size="small"
                       >
                         <MenuItem value="all">All</MenuItem>
-                        <MenuItem value="male">Male</MenuItem>
-                        <MenuItem value="female">Female</MenuItem>
-                        <MenuItem value="other">Other</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
                       </Select>
-                      <FormHelperText>{touched.gender && errors.gender}</FormHelperText>
+                      <FormHelperText>
+                        {touched.toInquiryNumber && errors.toInquiryNumber}
+                      </FormHelperText>
+                    </Field>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.fromDate && errors.fromDate} fullWidth>
+                      <DatePicker label="From Date" />
+                      {/* <Select
+                        name="fromDate"
+                        value={values.fromDate}
+                        onChange={handleChange}
+                        label="fromDate"
+                        size="small"
+                      >
+                        <MenuItem value="all">All</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
+                      </Select> */}
+                      <FormHelperText>{touched.fromDate && errors.fromDate}</FormHelperText>
+                    </Field>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field as={FormControl} error={touched.toDate && errors.toDate} fullWidth>
+                      <DatePicker label="To Date" />
+                    </Field>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Field
+                      as={FormControl}
+                      error={touched.inquiryStatus && errors.inquiryStatus}
+                      fullWidth
+                    >
+                      <InputLabel size="small">inquiryStatus</InputLabel>
+                      <Select
+                        name="inquiryStatus"
+                        value={values.inquiryStatus}
+                        onChange={handleChange}
+                        label="inquiryStatus"
+                        size="small"
+                      >
+                        <MenuItem value="all">All</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="teachers">Teachers</MenuItem>
+                        <MenuItem value="activity">Activity</MenuItem>
+                      </Select>
+                      <FormHelperText>
+                        {touched.inquiryStatus && errors.inquiryStatus}
+                      </FormHelperText>
                     </Field>
                   </Grid>
                   <Grid item xs={12} justifyContent="flex-end" display="flex">
