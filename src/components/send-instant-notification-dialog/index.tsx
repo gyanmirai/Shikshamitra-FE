@@ -28,6 +28,7 @@ const SendInstantNotificationDialog: React.FC<SendInstantNotificationDialogProps
     initialValues: {
       communicationChannel: [],
       message: '',
+      template: '',
     },
 
     onSubmit: async (values) => {
@@ -47,6 +48,16 @@ const SendInstantNotificationDialog: React.FC<SendInstantNotificationDialogProps
     { value: '[Parent Name]', label: 'Parent Name' },
   ];
 
+  const templateOptions = [
+    { value: 'template1', label: 'Template 1' },
+    { value: 'template2', label: 'Template 2' },
+  ];
+
+  const templateMessage = [
+    { value: 'template1', label: 'Template 1' },
+    { value: 'template2', label: 'Template 2' },
+  ];
+
   return (
     <CustomDialog maxWidth="md" title="Send Instant Notification" handleClose={onClose} open={open}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
@@ -58,6 +69,13 @@ const SendInstantNotificationDialog: React.FC<SendInstantNotificationDialogProps
               onChange={(e) => formik.setFieldValue('communicationChannel', e)}
               value={formik.values.communicationChannel}
               multiple
+              formControlProps={{ sx: { width: '100%', mt: 2 } }}
+            />
+            <CustomSelect
+              label="Select Template"
+              options={templateOptions}
+              onChange={(e) => formik.setFieldValue('template', e)}
+              value={formik.values.template}
               formControlProps={{ sx: { width: '100%', mt: 2 } }}
             />
           </Box>
