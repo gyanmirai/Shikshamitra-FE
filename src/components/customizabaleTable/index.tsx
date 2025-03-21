@@ -51,12 +51,15 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import debounce from 'src/utils/debounce';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
+import SendInstantNotificationDialog from '../send-instant-notification-dialog';
 
 dayjs.extend(isSameOrAfter);
 
@@ -113,6 +116,7 @@ interface CustomizableTableProps {
   endDateProps?: DatePickerProps<Dayjs>;
   dateProps?: DatePickerProps<Dayjs>;
   tableId: string;
+  showCheckbox?: boolean;
 }
 
 type IParams = {
@@ -148,11 +152,73 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   isShowedDense = true,
   rowProps = () => {},
   tableId,
+  showCheckbox = false,
 }) => {
-  columns = useMemo(
-    () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
-    [columns]
-  );
+  // columns = useMemo(
+  //   () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
+  //   [columns]
+  // );
+
+  const totalRows = data.length; // Get total number of rows
+
+  const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
+
+  columns = useMemo(() => {
+    let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
+
+    if (showCheckbox) {
+      updatedColumns = [
+        {
+          id: 'selectAll',
+          label: '', // Empty header
+          isFilter: false,
+          renderColumn: () => (
+            <Checkbox
+              checked={selectedRows.size > 0 && selectedRows.size === totalRows}
+              indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  // Select all rows
+                  const allRowIds = new Set(data.map((row) => row.id));
+                  setSelectedRows(allRowIds);
+                } else {
+                  // Deselect all
+                  setSelectedRows(new Set());
+                }
+              }}
+            />
+          ),
+          render: (value, row) => (
+            <Checkbox
+              checked={selectedRows.has(row.id)}
+              onChange={() => {
+                setSelectedRows((prev) => {
+                  const newSelection = new Set(prev);
+                  if (newSelection.has(row.id)) {
+                    newSelection.delete(row.id);
+                  } else {
+                    newSelection.add(row.id);
+                  }
+                  return newSelection;
+                });
+              }}
+            />
+          ),
+        },
+        ...updatedColumns,
+      ];
+    }
+
+    return updatedColumns;
+  }, [columns, showCheckbox, selectedRows, totalRows, data]);
+
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handleSendNotification = () => {
+    sendInstantNotificationDialogValue.onTrue();
+    const selectedRowIds = Array.from(selectedRows);
+    const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
+  };
 
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
@@ -494,140 +560,152 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   };
 
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
-        {isSearch && (
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            value={searchValue}
-            onChange={handleSearch}
-            InputProps={{
-              endAdornment: (
-                <>
-                  {searchValue ? (
-                    <IconButton size="small" onClick={() => setSearchValue('')}>
-                      <ClearIcon />
-                    </IconButton>
-                  ) : (
-                    <IconButton size="small">
-                      <SearchIcon />
-                    </IconButton>
-                  )}
-                </>
-              ),
-            }}
-          />
-        )}
+    <>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
+          {isSearch && (
+            <TextField
+              label="Search"
+              variant="outlined"
+              size="small"
+              value={searchValue}
+              onChange={handleSearch}
+              InputProps={{
+                endAdornment: (
+                  <>
+                    {searchValue ? (
+                      <IconButton size="small" onClick={() => setSearchValue('')}>
+                        <ClearIcon />
+                      </IconButton>
+                    ) : (
+                      <IconButton size="small">
+                        <SearchIcon />
+                      </IconButton>
+                    )}
+                  </>
+                ),
+              }}
+            />
+          )}
 
-        {isFilter && (
-          <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
-            <Box sx={{ ml: 2 }}>
-              <Button
-                // variant="outlined"
-                size="small"
-                startIcon={<RemoveRedEyeIcon />}
-                onClick={(event) => setColumnAnchorEl(event.currentTarget)}
-              >
-                Columns
-              </Button>
-              <Popover
-                open={Boolean(anchorColumnEl)}
-                anchorEl={anchorColumnEl}
-                onClose={() => setColumnAnchorEl(null)}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
-                }}
-              >
-                <Box sx={{ p: 2, width: 250 }}>
-                  <TextField
-                    fullWidth
+          {isFilter && (
+            <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
+              <Box sx={{ ml: 2 }}>
+                {selectedRows.size > 0 && (
+                  <Button
+                    // variant="outlined"
                     size="small"
-                    placeholder="Search columns"
-                    value={columnSearchTerm}
-                    onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
-                    sx={{ mb: 2 }}
-                  />
-                  <FormGroup>
-                    {columns
-                      .filter((column) =>
-                        column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
-                      )
-                      .map((column) => (
-                        <FormControlLabel
-                          key={column.id}
-                          control={
-                            <Checkbox
-                              checked={columnVisibility[column.id]}
-                              onChange={(e) => {
-                                handelChangeParams({
-                                  columnVisibility: {
-                                    ...columnVisibility,
-                                    [column.id]: e.target.checked,
-                                  },
-                                });
-                                // setColumnVisibility((prev) => ({
-                                //   ...prev,
-                                //   [column.id]: e.target.checked,
-                                // }));
-                              }}
-                            />
-                          }
-                          label={column.label}
-                        />
-                      ))}
-                  </FormGroup>
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
+                    startIcon={<Iconify icon="prime:send" />}
+                    onClick={handleSendNotification}
+                    sx={{ mr: 2 }}
+                  >
+                    Send Notification
+                  </Button>
+                )}
+                <Button
+                  // variant="outlined"
+                  size="small"
+                  startIcon={<RemoveRedEyeIcon />}
+                  onClick={(event) => setColumnAnchorEl(event.currentTarget)}
+                >
+                  Columns
+                </Button>
+                <Popover
+                  open={Boolean(anchorColumnEl)}
+                  anchorEl={anchorColumnEl}
+                  onClose={() => setColumnAnchorEl(null)}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                  }}
+                >
+                  <Box sx={{ p: 2, width: 250 }}>
+                    <TextField
+                      fullWidth
                       size="small"
-                      onClick={() => {
-                        // setColumnVisibility(
-                        //   Object.fromEntries(columns.map((column) => [column.id, true]))
-                        // );
-                        handelChangeParams({
-                          columnSearchTerm: '',
-                          columnVisibility: Object.fromEntries(
-                            columns.map((column) => [column.id, true])
-                          ),
-                        });
-                      }}
-                    >
-                      Reset
-                    </Button>
+                      placeholder="Search columns"
+                      value={columnSearchTerm}
+                      onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                    <FormGroup>
+                      {columns
+                        .filter((column) =>
+                          column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                        )
+                        .map((column) => (
+                          <FormControlLabel
+                            key={column.id}
+                            control={
+                              <Checkbox
+                                checked={columnVisibility[column.id]}
+                                onChange={(e) => {
+                                  handelChangeParams({
+                                    columnVisibility: {
+                                      ...columnVisibility,
+                                      [column.id]: e.target.checked,
+                                    },
+                                  });
+                                  // setColumnVisibility((prev) => ({
+                                  //   ...prev,
+                                  //   [column.id]: e.target.checked,
+                                  // }));
+                                }}
+                              />
+                            }
+                            label={column.label}
+                          />
+                        ))}
+                    </FormGroup>
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          // setColumnVisibility(
+                          //   Object.fromEntries(columns.map((column) => [column.id, true]))
+                          // );
+                          handelChangeParams({
+                            columnSearchTerm: '',
+                            columnVisibility: Object.fromEntries(
+                              columns.map((column) => [column.id, true])
+                            ),
+                          });
+                        }}
+                      >
+                        Reset
+                      </Button>
+                    </Box>
                   </Box>
-                </Box>
-              </Popover>{' '}
-            </Box>
+                </Popover>{' '}
+              </Box>
 
-            <Box>
-              <Button
-                startIcon={<Iconify icon="solar:export-bold" />}
-                size="small"
-                onClick={(event) => setExportAnchorEl(event.currentTarget)}
-              >
-                Export
-              </Button>
-              <Menu
-                anchorEl={exportAnchorEl}
-                open={Boolean(exportAnchorEl)}
-                onClose={() => setExportAnchorEl(null)}
-              >
-                <MenuItem onClick={() => handleExport('excel')}>
-                  <Iconify icon="solar:document-bold" />
-                  &nbsp; Export as Excel
-                </MenuItem>
+              <Box>
+                <Button
+                  startIcon={<Iconify icon="solar:export-bold" />}
+                  size="small"
+                  onClick={(event) => setExportAnchorEl(event.currentTarget)}
+                >
+                  Export
+                </Button>
+                <Menu
+                  anchorEl={exportAnchorEl}
+                  open={Boolean(exportAnchorEl)}
+                  onClose={() => setExportAnchorEl(null)}
+                >
+                  <MenuItem onClick={() => handleExport('excel')}>
+                    <Iconify icon="solar:document-bold" />
+                    &nbsp; Export as Excel
+                  </MenuItem>
 
-                <MenuItem onClick={() => handleExport('pdf')}>
-                  <Iconify icon="solar:document-bold" />
-                  &nbsp; Export as PDF
-                </MenuItem>
-                {/* <MenuItem onClick={() => handleExport('import')}>
+                  <MenuItem onClick={() => handleExport('pdf')}>
+                    <Iconify icon="solar:document-bold" />
+                    &nbsp; Export as PDF
+                  </MenuItem>
+                  {/* <MenuItem onClick={() => handleExport('import')}>
                 {' '}
                 <Iconify icon="solar:import-bold" />
                 &nbsp; Import
@@ -636,147 +714,149 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 <Iconify icon="fluent:print-28-filled" />
                 &nbsp; Print
               </MenuItem> */}
-              </Menu>
+                </Menu>
+              </Box>
             </Box>
-          </Box>
+          )}
+        </Box>
+        {filters.length > 0 && (
+          <FilterChips
+            filters={filters}
+            removeFilter={removeFilter}
+            columns={columns}
+            clearAllFilters={clearAllFilters}
+          />
         )}
-      </Box>
-      {filters.length > 0 && (
-        <FilterChips
-          filters={filters}
-          removeFilter={removeFilter}
-          columns={columns}
-          clearAllFilters={clearAllFilters}
+
+        <ColumnFilterMenu
+          anchorEl={filterAnchorEl}
+          onClose={() => setFilterAnchorEl(null)}
+          onApplyFilter={handleApplyColumnFilter}
         />
-      )}
-
-      <ColumnFilterMenu
-        anchorEl={filterAnchorEl}
-        onClose={() => setFilterAnchorEl(null)}
-        onApplyFilter={handleApplyColumnFilter}
-      />
-      <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
-        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }}>
-          <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
-            <TableHead>
-              <TableRow>
-                {columns.some((column) => column.children) && <TableCell />}
-                {columns.map(
-                  (column, index) =>
-                    columnVisibility[column.id] && (
-                      <TableCell
-                        key={column.id}
-                        align={column.align || 'center'}
-                        sx={{
-                          fontSize: '14px',
-                          width: column.minWidth,
-                          position: 'sticky',
-                          left: column.sticky ? 0 : 'auto',
-                          right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
-                          zIndex: column.sticky ? 99 : 10,
-                          backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                          boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
-
-                          ...(column.sticky ? { backgroundImage: 'none' } : {}),
-                          '& .column-filter-icon': {
-                            opacity: 0,
-                            transition: 'opacity 0.3s ease',
-                          },
-                          '&:hover .column-filter-icon': {
-                            opacity: 1,
-                          },
-                          '&::after': {
-                            borderRight: (theme) =>
-                              !column.sticky ? `1px solid ${theme.palette.grey[400]}` : 'none',
-                            content: '""',
-                            position: 'absolute',
-                            right: '0',
-                            bottom: '0',
-                            height: '40%',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                          },
-                          '&:last-child::after': {
-                            borderRight: 'none',
-                          },
-                        }}
-                      >
-                        <Box
+        <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
+          <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }}>
+            <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
+              <TableHead>
+                <TableRow>
+                  {columns.some((column) => column.children) && <TableCell />}
+                  {columns.map(
+                    (column, index) =>
+                      columnVisibility[column.id] && (
+                        <TableCell
+                          key={column.id}
+                          align={column.align || 'center'}
                           sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            cursor: column.isSort !== false ? 'pointer' : 'default',
-                            userSelect: 'none',
-                            fontWeight: 'bold',
-                            width: 'inherit',
-                            gap: 0.5,
+                            fontSize: '14px',
+                            width: column.minWidth,
+                            position: column.sticky ? 'sticky' : 'relative',
+                            left: column.sticky ? 0 : 'auto',
+                            right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
+                            zIndex: column.sticky ? 2 : 'auto',
+                            backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                            boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+
+                            ...(column.sticky ? { backgroundImage: 'none' } : {}),
+                            '& .column-filter-icon': {
+                              opacity: 0,
+                              transition: 'opacity 0.3s ease',
+                            },
+                            '&:hover .column-filter-icon': {
+                              opacity: 1,
+                            },
+                            '&::after': {
+                              borderRight: (theme) =>
+                                !column.sticky ? `1px solid ${theme.palette.grey[400]}` : 'none',
+                              content: '""',
+                              position: 'absolute',
+                              right: '0',
+                              bottom: '0',
+                              height: '40%',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                            },
+                            '&:last-child::after': {
+                              borderRight: 'none',
+                            },
                           }}
-                          onClick={() => column.isSort !== false && handleSort(column.id)}
                         >
                           <Box
-                            fontSize="14px"
-                            display="block"
-                            textAlign={column.align}
-                            gap={1}
-                            width="inherit"
-                            component="span"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              cursor: column.isSort !== false ? 'pointer' : 'default',
+                              userSelect: 'none',
+                              fontWeight: 'bold',
+                              width: 'inherit',
+                              gap: 0.5,
+                            }}
+                            onClick={() => column.isSort !== false && handleSort(column.id)}
                           >
-                            {column.label} {column?.renderColumn?.(column)}
-                          </Box>
-
-                          {column.isFilter && (
-                            <Iconify
-                              icon="lucide:list-filter"
-                              sx={{
-                                height: '16px',
-                                width: '16px',
-                                cursor: 'pointer',
-                                position: 'absolute',
-                                right: '4px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                              }}
-                              onClick={(e) => handleColumnFilterClick(e, column)}
-                              // className="column-filter-icon"
-                            />
-                          )}
-
-                          {column.isSort !== false && (
                             <Box
-                              width="50px"
-                              display="flex"
-                              justifyContent="center"
-                              alignItems="center"
-                              // sx={{
-                              //   position: 'absolute',
-                              //   left: '10px',
-                              //   top: '50%',
-                              //   transform: 'translateY(-50%)',
-                              //   mr: 0.5,
-                              // }}
+                              fontSize="14px"
+                              display="block"
+                              textAlign={column.align}
+                              gap={1}
+                              width="inherit"
+                              component="span"
                             >
-                              {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                                <Box component="span" sx={{ fontSize: '0.75em' }}>
-                                  {sorts.findIndex((sort) => sort.column === column.id) + 1}
-                                </Box>
-                              )}
-                              <IconButton
-                                size="small"
-                                sx={{
-                                  opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
-                                }}
-                              >
-                                {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                'asc' ? (
-                                  <ArrowUpwardIcon fontSize="inherit" />
-                                ) : (
-                                  <ArrowDownwardIcon fontSize="inherit" />
-                                )}
-                              </IconButton>
+                              {column.label} {column?.renderColumn?.(column)}
                             </Box>
-                          )}
-                        </Box>
-                        {/* <Divider
+
+                            {column.isFilter && (
+                              <Iconify
+                                icon="lucide:list-filter"
+                                sx={{
+                                  height: '16px',
+                                  width: '16px',
+                                  cursor: 'pointer',
+                                  position: 'absolute',
+                                  right: '4px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                }}
+                                onClick={(e) => handleColumnFilterClick(e, column)}
+                                // className="column-filter-icon"
+                              />
+                            )}
+
+                            {column.isSort !== false && (
+                              <Box
+                                width="50px"
+                                display="flex"
+                                justifyContent="center"
+                                alignItems="center"
+                                // sx={{
+                                //   position: 'absolute',
+                                //   left: '10px',
+                                //   top: '50%',
+                                //   transform: 'translateY(-50%)',
+                                //   mr: 0.5,
+                                // }}
+                              >
+                                {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                                  <Box component="span" sx={{ fontSize: '0.75em' }}>
+                                    {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                                  </Box>
+                                )}
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    opacity: sorts.find((sort) => sort.column === column.id)
+                                      ? 1
+                                      : 0,
+                                  }}
+                                >
+                                  {sorts.find((sort) => sort.column === column.id)?.direction ===
+                                  'asc' ? (
+                                    <ArrowUpwardIcon fontSize="inherit" />
+                                  ) : (
+                                    <ArrowDownwardIcon fontSize="inherit" />
+                                  )}
+                                </IconButton>
+                              </Box>
+                            )}
+                          </Box>
+                          {/* <Divider
                           orientation="vertical"
                           sx={{
                             width: column.sticky ? '0px' : '2px',
@@ -785,130 +865,141 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                             margin: '10px 2px',
                           }}
                         /> */}
-                      </TableCell>
-                    )
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    rowSpan={columns.length + 1}
-                    colSpan={columns.length + 1}
-                    sx={{ height: '50px' }}
-                  >
-                    {/* <CircularProgress color="primary" size={24} /> */}
-                    <Box className="loader" height={24} />
-                  </TableCell>
+                        </TableCell>
+                      )
+                  )}
                 </TableRow>
-              ) : paginatedData.length > 0 ? (
-                paginatedData.map((row, index) => (
-                  <React.Fragment key={index}>
-                    <TableRow
-                      hover
-                      tabIndex={-1}
-                      onClick={() => handleRowClick(row, index)}
-                      {...rowProps(row, index)}
+              </TableHead>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      rowSpan={columns.length + 1}
+                      colSpan={columns.length + 1}
+                      sx={{ height: '50px' }}
                     >
-                      {columns.some((column) => column.children) && (
-                        <TableCell sx={{ fontSize: '13px' }}>
-                          <IconButton size="small" onClick={() => handleExpandRow(index)}>
-                            {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                          </IconButton>
-                        </TableCell>
-                      )}
-                      {columns.map(
-                        (column, ind) =>
-                          columnVisibility[column.id] && (
-                            <TableCell
-                              key={column.id}
-                              align={column.align}
-                              sx={{
-                                alignItems: 'center',
-                                fontSize: '13px',
-                                position: column.sticky ? 'sticky' : 'static',
-                                left: column.sticky ? 0 : 'auto',
-                                right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
-                                zIndex: column.sticky ? 10 : 2,
-                                backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                                boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
-                              }}
-                            >
-                              {column.render
-                                ? column.render(_.get(row, column.id, ''), row)
-                                : _.get(row, column.id, '-')}
-                            </TableCell>
-                          )
-                      )}
-                    </TableRow>
-                    {columns.some((column) => column.children) && (
-                      <TableRow>
-                        <TableCell
-                          style={{ paddingBottom: 0, paddingTop: 0 }}
-                          colSpan={columns.length + 1}
-                        >
-                          <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
-                            <Box sx={{ margin: 1 }}>
-                              {columns.map((column) => column.children && column.children(row))}
-                            </Box>
-                          </Collapse>
-                        </TableCell>
+                      {/* <CircularProgress color="primary" size={24} /> */}
+                      <Box className="loader" height={24} />
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedData.length > 0 ? (
+                  paginatedData.map((row, index) => (
+                    <React.Fragment key={index}>
+                      <TableRow
+                        hover
+                        tabIndex={-1}
+                        onClick={() => handleRowClick(row, index)}
+                        {...rowProps(row, index)}
+                      >
+                        {columns.some((column) => column.children) && (
+                          <TableCell sx={{ fontSize: '13px' }}>
+                            <IconButton size="small" onClick={() => handleExpandRow(index)}>
+                              {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            </IconButton>
+                          </TableCell>
+                        )}
+                        {columns.map(
+                          (column, ind) =>
+                            columnVisibility[column.id] && (
+                              <TableCell
+                                key={column.id}
+                                align={column.align}
+                                sx={{
+                                  alignItems: 'center',
+                                  fontSize: '13px',
+                                  position: column.sticky ? 'sticky' : 'static',
+                                  left: column.sticky ? 0 : 'auto',
+                                  right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
+                                  zIndex: column.sticky ? 2 : 'auto',
+                                  backgroundColor: column.sticky
+                                    ? 'background.paper'
+                                    : 'transparent',
+                                  boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                                }}
+                              >
+                                {column.render
+                                  ? column.render(_.get(row, column.id, ''), row)
+                                  : _.get(row, column.id, '-')}
+                              </TableCell>
+                            )
+                        )}
                       </TableRow>
-                    )}
-                  </React.Fragment>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyContent />
-                  </TableCell>
-                </TableRow>
+                      {columns.some((column) => column.children) && (
+                        <TableRow>
+                          <TableCell
+                            style={{ paddingBottom: 0, paddingTop: 0 }}
+                            colSpan={columns.length + 1}
+                          >
+                            <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                              <Box sx={{ margin: 1 }}>
+                                {columns.map((column) => column.children && column.children(row))}
+                              </Box>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <EmptyContent />
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {isShowedDense && (
+            <Paper
+              elevation={0}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                p: 1,
+                width: '100%',
+              }}
+            >
+              {isShowedDense && (
+                <FormControlLabel
+                  control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
+                  label="Dense"
+                />
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {isShowedDense && (
-          <Paper
-            elevation={0}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1,
-              width: '100%',
-            }}
-          >
-            {isShowedDense && (
-              <FormControlLabel
-                control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
-                label="Dense"
-              />
-            )}
-            {isPagination && (
-              <TablePagination
-                rowsPerPageOptions={[10, 25, 100, { value: -1, label: 'All' }]}
-                component={Scrollbar}
-                count={serverSide ? totalCount || 0 : filteredData.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                size="small"
-                sx={{
-                  '& *': { fontSize: '14px !important' },
-                  '& svg': { fontSize: '18px !important' },
-                  '& .MuiToolbar-root': {
-                    minHeight: 'unset',
-                    height: 'auto',
-                  },
-                }}
-              />
-            )}
-          </Paper>
-        )}
-      </ComponentBlock>
-    </Card>
+              {isPagination && (
+                <TablePagination
+                  rowsPerPageOptions={[10, 25, 100, { value: -1, label: 'All' }]}
+                  component={Scrollbar}
+                  count={serverSide ? totalCount || 0 : filteredData.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  size="small"
+                  sx={{
+                    '& *': { fontSize: '14px !important' },
+                    '& svg': { fontSize: '18px !important' },
+                    '& .MuiToolbar-root': {
+                      minHeight: 'unset',
+                      height: 'auto',
+                    },
+                  }}
+                />
+              )}
+            </Paper>
+          )}
+        </ComponentBlock>
+      </Card>
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedRows}
+        />
+      )}
+    </>
   );
 };
 

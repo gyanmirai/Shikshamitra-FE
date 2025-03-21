@@ -598,6 +598,7 @@ const AdmissionScreen = () => {
         </Button>
       </Box>
       <CustomizableTable
+        showCheckbox
         tableId="student-enrollment-admission-table"
         isLoading={isLoading}
         columns={[

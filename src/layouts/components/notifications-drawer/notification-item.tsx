@@ -69,7 +69,7 @@ export function NotificationItem({ notification }: { notification: NotificationI
           }
         >
           {fToNow(notification.createdAt)}
-          {notification.category}
+          {/* {notification.category} */}
         </Stack>
       }
     />
