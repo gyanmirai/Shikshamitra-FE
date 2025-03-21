@@ -10,7 +10,7 @@ import { AppWidgetSummary } from './app-widget-summary';
 import type { StudentTabsComponentType } from '.';
 
 const StudentDashboard = (props: StudentTabsComponentType) => {
-  const { tabs } = props;
+  const { tabs, student } = props;
   return (
     <Box>
       <Grid container spacing={2} sx={{ width: '100%' }}>

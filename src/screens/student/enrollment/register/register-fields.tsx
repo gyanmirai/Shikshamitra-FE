@@ -41,6 +41,7 @@ import { Category, CategoryArray } from 'src/enums/studnet-category';
 import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
+import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
 import {
   useUploadDocumentsMutation,
   useGetStudentDocumentsQuery,
@@ -732,6 +733,30 @@ const RenderEmergencyAddressFields = (props: any) => {
   );
 };
 
+const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => {
+  const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetInquiryPreferenceQuery,
+  });
+  return (
+    <CustomSelect
+      label="Inquiry Preferences"
+      name="inquiryPreferences"
+      isLoading={inquiryPrefrenceLoading}
+      options={inquiryPreference?.items || []}
+      value={formik.values.inquiryPreferences}
+      labelKey="preferenceName"
+      valueKey="id"
+      onChange={(value) => formik.setFieldValue('inquiryPreferences', value)}
+      formControlProps={{
+        fullWidth: true,
+        sx: {
+          maxWidth: 'unset',
+        },
+      }}
+    />
+  );
+};
 export const generalFormFields: FieldsType[] = [
   { name: 'inquiryNo', label: 'Inquiry No', type: 'text', otherProps: { disabled: true } },
   { name: 'formNo', label: 'Form No', type: 'text' },
@@ -949,6 +974,15 @@ export const generalFormFields: FieldsType[] = [
   },
   { name: 'adharNo', label: 'Adhar No', type: 'number', otherProps: {} },
   {
+    name: 'inquryPrefrence',
+    label: 'Inquiry Prefrence',
+    type: 'text',
+    otherProps: {},
+    renderComp(props) {
+      return <RenderInquiryPrefrance {...props} />;
+    },
+  },
+  {
     name: 'religion',
     label: 'Religion',
     type: 'text',
@@ -1044,6 +1078,65 @@ export const generalFormFields: FieldsType[] = [
     }),
   },
   { name: 'temporaryGr', label: 'Temporary GR', type: 'text', otherProps: {} },
+  { name: 'addressLine1', label: 'Address Line 1', type: 'text', otherProps: {} },
+  { name: 'addressLine2', label: 'Address Line 2', type: 'text', otherProps: {} },
+  { name: 'addressLine3', label: 'Address Line 3', type: 'text', otherProps: {} },
+  {
+    name: 'country',
+    label: 'Country',
+    type: 'text',
+    otherProps: {},
+    renderComp(props) {
+      return (
+        <CountryComponent
+          value={props.formik.values.country}
+          onChange={(e, value) => {
+            props.formik.setFieldValue('country', value);
+          }}
+        />
+      );
+    },
+  },
+  {
+    name: 'state',
+    label: 'State',
+    type: 'text',
+    otherProps: {},
+    renderComp(props) {
+      return (
+        <StateComponent
+          value={props.formik.values.state}
+          onChange={(e, value) => {
+            props.formik.setFieldValue('state', value);
+          }}
+          countryValue={props.formik.values.country}
+        />
+      );
+    },
+  },
+  {
+    name: 'city',
+    label: 'City',
+    type: 'text',
+    otherProps: {},
+    renderComp(props) {
+      return (
+        <CityComponent
+          value={props.formik.values.city}
+          onChange={(e, value) => {
+            props.formik.setFieldValue('city', value);
+          }}
+          stateValue={props.formik.values.state}
+        />
+      );
+    },
+  },
+  {
+    name: 'pinCode',
+    label: 'Pin Code',
+    type: 'number',
+    otherProps: {},
+  },
   { name: 'remarks', label: 'Remarks', type: 'text', otherProps: { multiline: true, rows: 2 } },
 ];
 
@@ -1608,19 +1701,19 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
   age: calculateAge(dayjs(editData?.dateOfBirth).format()),
   gender: editData?.genderType || GenderType.Male,
-  adharNo: editData?.studentBasicDetails?.aadhaarNo || '',
-  religion: editData?.studentBasicDetails?.religion || '',
-  familyCast: editData ? editData?.studentBasicDetails?.familyCast : '',
-  castCategory: editData ? editData?.studentBasicDetails?.castType : null,
-  motherTongue: editData?.studentBasicDetails?.motherTongue || '',
-  nationality: editData?.studentBasicDetails?.nationality || '',
-  birthPlace: editData?.studentBasicDetails?.birthPlace || '',
-  temporaryGr: editData?.studentBasicDetails?.temporaryGr || '',
-  remarks: editData?.studentBasicDetails?.remarks || '',
+  adharNo: editData?.aadhaarNo || '',
+  religion: editData?.religion || '',
+  familyCast: editData ? editData?.familyCast : '',
+  castCategory: editData ? editData?.castType : null,
+  motherTongue: editData?.motherTongue || '',
+  nationality: editData?.nationality || '',
+  birthPlace: editData?.birthPlace || '',
+  temporaryGr: editData?.temporaryGr || '',
+  remarks: editData?.remarks || '',
   mobileNo: editData?.parentContactNumber || '',
   alternativeContactNumber: editData?.alternativeContactNumber || '',
   email: editData?.email || '',
-  userId: editData?.studentBasicDetails?.userId || null,
+  userId: editData?.userId || null,
   id: editData?.id || null,
   medium: editData?.educationMediumId || '',
   board: editData?.educationBoardId || '',
@@ -1628,6 +1721,18 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   class: editData?.standardId || '',
   previousSchool: editData?.previousSchoolName || '',
   photo: editData?.profilePicture || '',
+  city: editData?.city ? { name: editData?.city } : { name: '' },
+  state: editData?.state
+    ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+    : { name: '' },
+  country: editData?.country
+    ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
+    : { name: '' },
+  addressLine1: editData?.addressLine1 || '',
+  addressLine2: editData?.addressLine2 || '',
+  addressLine3: editData?.addressLine3 || '',
+  pinCode: editData?.pinCode || '',
+  inquiryPreferences: editData?.inquiryPreferencesId || [],
 });
 
 export const documentFieldsInitialValues = (editData?: IInquiryData | null) => ({

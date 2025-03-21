@@ -2,9 +2,12 @@
 
 import type { IKanbanColumn } from 'src/types/kanban';
 import type { LabelColor } from 'src/components/label';
+import type { Division, Standards } from 'src/types/school';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 
@@ -48,10 +51,6 @@ import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/
 import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
 import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
 import {
-  useGetStudentAdmissionQuery,
-  useChangeAdmissionStatusMutation,
-} from 'src/redux/student/admission/admission-api';
-import {
   useGetStudentDocumentsQuery,
   useGetStudentDocumentByIdQuery,
 } from 'src/redux/student/registration/registration-api';
@@ -60,6 +59,11 @@ import {
   AdmissionPaymentStatusOptions,
   AdmissionPaymentStatusTypeColors,
 } from 'src/enums/admission-payment-statusType';
+import {
+  useGetStudentAdmissionQuery,
+  useChangeAdmissionStatusMutation,
+  useAssignDivisionTOStudentMutation,
+} from 'src/redux/student/admission/admission-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -643,6 +647,7 @@ const AdmissionScreen = () => {
             filterType: 'string',
           },
           { id: 'standard.name', label: 'Class' },
+          { id: 'division.name', label: 'Division' },
           { id: 'studentName', label: 'Student Name', minWidth: '160px' },
           {
             id: 'dobValue',
@@ -672,7 +677,7 @@ const AdmissionScreen = () => {
             minWidth: '200px',
           },
 
-          { id: 'educationMedium.name', label: 'Organization' },
+          { id: 'educationMedium.name', label: 'Medium' },
 
           { id: 'inquiryNo', align: 'left', label: 'Inquiry No', minWidth: '104px' },
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
@@ -680,7 +685,7 @@ const AdmissionScreen = () => {
           { id: 'Name', label: 'Name' },
           { id: 'Code', label: 'Code' },
           { id: 'class', label: 'Class' },
-          { id: 'Organization', label: 'Organization' },
+          // { id: 'Organization', label: 'Organization' },
           { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '170px' },
           { id: 'totalAmount', label: 'Total Amount', minWidth: '135px', filterType: 'number' },
           { id: 'paidAmount', label: 'Paid Amount', minWidth: '125px', filterType: 'number' },
@@ -694,7 +699,6 @@ const AdmissionScreen = () => {
                 value as Partial<AdmissionPaymentStatusType>
               ] as LabelColor;
 
-              console.log(value, AdmissionPaymentStatusType[value]);
               return (
                 <Label color={color}>
                   {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
@@ -794,7 +798,9 @@ const AdmissionScreen = () => {
       >
         <AssignDivisionForm
           handleClose={divisionDialog.onFalse}
-          standardName={editData?.standard?.name}
+          standard={editData?.standard}
+          studentID={editData?.id}
+          division={editData?.division}
         />
       </CustomDialog>
       <CustomDialog
@@ -1058,6 +1064,10 @@ const EntranceExamSections = ({ editData }: any) => {
   const { data: entranceExamData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamByStudentIdQuery,
+    params: editData?.id,
+    options: {
+      skip: !editData?.id,
+    },
   });
   const theme = useTheme();
   const examData = useMemo(
@@ -1249,17 +1259,45 @@ const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
 
 const AssignDivisionForm = ({
   handleClose,
-  standardName,
+  standard,
+  studentID,
+  division,
 }: {
   handleClose: () => void;
-  standardName?: string;
+  standard?: Standards;
+  studentID?: string;
+  division?: Division;
 }) => {
-  const formik = useFormik({
+  const [assignDivision, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAssignDivisionTOStudentMutation,
+  });
+  const formik = useFormik<{
+    division: string;
+    standardName: string;
+  }>({
     initialValues: {
-      division: '',
-      standardName: standardName || '',
+      division: division?.id || '',
+      standardName: standard?.name || '',
     },
-    onSubmit: () => {},
+    validationSchema: Yup.object({
+      division: Yup.string().required('Required'),
+    }),
+    onSubmit: async (values) => {
+      try {
+        await assignDivision({
+          studentDivisionUpdates: [
+            {
+              studentId: studentID as string,
+              divisionId: values.division,
+            },
+          ],
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
   });
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
@@ -1274,18 +1312,22 @@ const AssignDivisionForm = ({
       >
         <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
         <CustomSelect
-          options={[]}
-          value=""
-          onChange={() => {}}
+          options={standard?.divisions || []}
+          value={formik.values.division}
+          onChange={(val) => formik.setFieldValue('division', val)}
           label="Division"
+          valueKey="id"
+          labelKey="name"
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={formik.touched.division && Boolean(formik.errors.division)}
+          helperText={(formik.touched.division && formik.errors.division) as string}
         />
       </Box>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button type="submit" variant="contained">
+        <LoadingButton loading={isLoading} type="submit" variant="contained">
           Assign
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );
@@ -1314,6 +1356,11 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     },
     onSubmit: async (values) => {
       try {
+        const hasDivisions = selectedStudents.every((student) => !!student.divisionId);
+        if (!hasDivisions && values.status === RegistrationStatusType.Approved) {
+          toast.error('Please First assign division to Selected Students');
+          return;
+        }
         await changeStatus({
           approvalStatus: values.status,
           body: selectedStudents.map((i: any) => i.id),

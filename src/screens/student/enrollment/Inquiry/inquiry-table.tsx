@@ -15,7 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
 import {
   FollowUpStatusType,
-  InquiryStatusTypeColors,
+  FollowUpStatusTypeColors,
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 
@@ -110,7 +110,7 @@ const InquiryTable = ({
           minWidth: '180px',
           align: 'left',
           render(value, row) {
-            const color = InquiryStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+            const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
             return <Label color={color}>{FollowUpStatusType[value]}</Label>;
           },

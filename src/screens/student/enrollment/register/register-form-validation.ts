@@ -129,17 +129,29 @@ const communicationFieldsValidation = Yup.object({
     'mobile number is not valid',
     (value) => !!value && matchIsValidTel(value as string)
   ),
-  localCountry: Yup.string(),
-  localState: Yup.string(),
-  localCity: Yup.string(),
+  localCountry: Yup.object({
+    name: Yup.string().required('Country is required'),
+  }),
+  localState: Yup.object({
+    name: Yup.string().required('State is required'),
+  }),
+  localCity: Yup.object({
+    name: Yup.string().required('City is required'),
+  }),
   localPincode: Yup.string(),
   localAddressLine1: Yup.string(),
   localAddressLine2: Yup.string(),
   localAddressLine3: Yup.string(),
   isOpenLocalAddress: Yup.boolean(),
-  emergencyCountry: Yup.string(),
-  emergencyState: Yup.string(),
-  emergencyCity: Yup.string(),
+  emergencyCountry: Yup.object({
+    name: Yup.string().required('Country is required'),
+  }),
+  emergencyState: Yup.object({
+    name: Yup.string().required('State is required'),
+  }),
+  emergencyCity: Yup.object({
+    name: Yup.string().required('City is required'),
+  }),
   emergencyPincode: Yup.string(),
   emergencyAddressLine1: Yup.string(),
   emergencyAddressLine2: Yup.string(),
@@ -149,9 +161,15 @@ const communicationFieldsValidation = Yup.object({
   permanentAddress: Yup.string(),
   permanentAddressLine2: Yup.string(),
   permanentAddressLine3: Yup.string(),
-  permanentCountry: Yup.string(),
-  permanentState: Yup.string(),
-  permanentCity: Yup.string(),
+  permanentCountry: Yup.object({
+    name: Yup.string().required('Country is required'),
+  }),
+  permanentState: Yup.object({
+    name: Yup.string().required('State is required'),
+  }),
+  permanentCity: Yup.object({
+    name: Yup.string().required('City is required'),
+  }),
   permanentPincode: Yup.string(),
   sameAsLocalForPermanent: Yup.boolean(),
   isOpenPermanentAddress: Yup.boolean(),

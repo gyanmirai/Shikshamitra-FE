@@ -58,6 +58,7 @@ const TABS = [
 ];
 
 export function StudentInformation(props: StudentTabsComponentType) {
+  const { student } = props;
   const [isEdit, setIsEdit] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -65,15 +66,15 @@ export function StudentInformation(props: StudentTabsComponentType) {
   console.log('isChanges-----', isChanges);
   const initialValues = useMemo(
     () => ({
-      ...generalFieldsInitialValues(),
-      ...familyFieldsInitialValues(),
-      ...CommunicationFieldsInitialValues(),
-      ...additionalDetailsInitialValues(),
-      ...medicalFieldsInitialValues(),
-      ...previousSchoolFieldsInitialValues(),
-      ...bankDetailsInitialValues(),
+      ...generalFieldsInitialValues(student),
+      ...familyFieldsInitialValues(student),
+      ...CommunicationFieldsInitialValues(student),
+      ...additionalDetailsInitialValues(student),
+      ...medicalFieldsInitialValues(student),
+      ...previousSchoolFieldsInitialValues(student),
+      ...bankDetailsInitialValues(student),
     }),
-    []
+    [student]
   );
 
   const formik: any = useFormik({
@@ -174,7 +175,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
                       {...(field.gridProps || {})}
                     >
                       {field.renderComp ? (
-                        field.renderComp({ formik, field })
+                        field.renderComp({ formik, field, isEdit: !isEdit })
                       ) : field.type === 'date' ? (
                         <DatePicker
                           label={field.label}

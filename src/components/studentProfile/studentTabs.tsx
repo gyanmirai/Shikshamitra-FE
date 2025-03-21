@@ -16,25 +16,25 @@ const TABS = [
     value: 'information',
     label: 'Information',
     icon: <Iconify icon="solar:user-id-bold" width={22} />,
-    component: (props: Record<string, string>) => <StudentInformation {...props} />,
+    component: (props: any) => <StudentInformation {...props} />,
   },
   {
     value: 'attendance',
     label: 'Attendance',
     icon: <Iconify icon="solar:bill-list-bold" width={22} />,
-    component: (props: Record<string, string>) => <Attendance {...props} />,
+    component: (props: any) => <Attendance {...props} />,
   },
   {
     value: 'academic',
     label: 'Academic',
     icon: <Iconify icon="solar:square-academic-cap-bold" width={22} />,
-    component: (props: Record<string, string>) => <Academic {...props} />,
+    component: (props: any) => <Academic {...props} />,
   },
   // {
   //   value: 'records',
   //   label: 'Records',
   //   icon: <Iconify icon="vaadin:records" width={22} />,
-  //   component: (props: Record<string, string>) => <Records {...props} />,
+  //   component: (props: StudentTabsComponentType) => <Records {...props} />,
   // },
   { value: 'finance', label: 'Finance', icon: <Iconify icon="map:finance" width={22} /> },
   { value: 'documents', label: 'Documents', icon: <Iconify icon="ion:documents" width={22} /> },
@@ -73,7 +73,7 @@ const StudentTabs = () => {
         ))}
       </Tabs>
       <Scrollbar sx={{ height: '100%', overflowY: 'auto' }}>
-        {currentActiveComponent?.component && <currentActiveComponent.component />}
+        {currentActiveComponent?.component && <currentActiveComponent.component tabs={tabs} />}
       </Scrollbar>
     </>
   );

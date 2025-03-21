@@ -249,6 +249,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             name: values.division,
             standardId: classId,
             strength: values.strength,
+            roomNumber: values.roomNo,
           },
         });
       } else {
@@ -256,6 +257,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           name: values.division,
           standardId: classId,
           strength: values.strength,
+          roomNumber: values.roomNo,
         });
       }
       handleClose();

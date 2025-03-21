@@ -154,8 +154,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     [columns]
   );
 
-  console.log('columns----', columns);
-
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
     rowsPerPage: 10, // Changed from 10 to -1
@@ -326,8 +324,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
           : filter.value;
         const isDateType = filter.valueType === 'date';
 
-        console.log(value, 'value', filter);
-
         if (isDateType) {
           switch (filter.type) {
             case 'equals':
@@ -497,7 +493,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     setFilterAnchorEl(null);
   };
 
-  console.log(paginatedData, 'paginatedData');
   return (
     <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
@@ -835,7 +830,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                 position: column.sticky ? 'sticky' : 'static',
                                 left: column.sticky ? 0 : 'auto',
                                 right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
-                                zIndex: column.sticky ? 99 : 2,
+                                zIndex: column.sticky ? 10 : 2,
                                 backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                                 boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
                               }}

@@ -277,11 +277,11 @@ const studentModule = {
               _action: 'student-reports',
             },
 
-            {
-              title: 'Setting',
-              path: '/student/setting',
-              _action: 'student-setting',
-            },
+            // {
+            //   title: 'Setting',
+            //   path: '/student/setting',
+            //   _action: 'student-setting',
+            // },
           ],
         },
         {
