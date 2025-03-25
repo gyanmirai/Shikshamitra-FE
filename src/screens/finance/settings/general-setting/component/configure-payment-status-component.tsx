@@ -4,6 +4,8 @@ import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetpaymentOptionQuery,
@@ -135,21 +137,21 @@ const ConfigurePaymentStatusComponent = () => {
             label="Add New Status"
             size="small"
             value={paymentStatus}
-            onChange={(e) => setpaymentStatus(e.target.value)}
+            onChange={(e) => setpaymentStatus(capitalizeWords(e.target.value))}
           />
           {isEdit ? (
             <Button
               onClick={handleAddPaymentStatus}
               variant="contained"
               size="small"
-              disabled={isUpdateLoading}
+              disabled={isUpdateLoading || paymentStatus.trim() === ''}
             >
               {isUpdateLoading ? 'Updating...' : ' Save'}
             </Button>
           ) : (
             <Button
               onClick={handleAddPaymentStatus}
-              disabled={ispaymentStatusLoading}
+              disabled={ispaymentStatusLoading || paymentStatus.trim() === ''}
               startIcon={<Iconify icon="ic:outline-plus" />}
               variant="contained"
               size="small"

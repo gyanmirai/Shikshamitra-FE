@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, Tooltip, TextField, Typography } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import CustomSelect from 'src/components/custom-select';
@@ -534,7 +536,7 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
             rows={4}
             name="remarks"
             label="Remarks By Authority"
-            value="collect via cash"
+            value="Collect Via Cash"
             onChange={formik.handleChange}
             size="small"
             disabled
@@ -545,7 +547,10 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
             name="remarks"
             label="Remarks"
             value={formik.values.remarks}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const capitalizedText = capitalizeWords(e.target.value);
+              formik.setFieldValue('remarks', capitalizedText);
+            }}
             size="small"
           />
         </Box>

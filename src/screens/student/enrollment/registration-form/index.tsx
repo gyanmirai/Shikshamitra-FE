@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { Box, Checkbox, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -21,6 +21,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { CommunicationForm } from '../follow-up';
 
@@ -59,9 +60,18 @@ const RegistrationFormScreen = () => {
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
-      })),
+      })) || [],
     [inquiryFormData?.items]
   );
+
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
 
   return (
     <Box>
@@ -77,8 +87,46 @@ const RegistrationFormScreen = () => {
 
       <CustomizableTable
         isLoading={isLoading}
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="student-registration-form-table"
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(tableData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           { id: 'formNumber', label: 'Form No', minWidth: '110px' },
           {
             id: 'inquiryNumber',
@@ -199,6 +247,15 @@ const RegistrationFormScreen = () => {
           setMoveId(null);
         }}
       />
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
     </Box>
   );
 };

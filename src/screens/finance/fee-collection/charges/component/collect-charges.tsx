@@ -437,7 +437,13 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
           {/* <Button type="submit" variant="outlined" size="medium" color='error'  >
             {`Total Charges ${formatNumber(1500, "INR")}`}
           </Button> */}
-          <Button type="submit" variant="outlined" size="medium" color="primary">
+          <Button
+            disabled={selectedChargesAmount < 1}
+            type="submit"
+            variant="outlined"
+            size="medium"
+            color="primary"
+          >
             {`Collect Charges ${formatNumber(selectedChargesAmount, 'INR')}`}
           </Button>
         </DialogActions>

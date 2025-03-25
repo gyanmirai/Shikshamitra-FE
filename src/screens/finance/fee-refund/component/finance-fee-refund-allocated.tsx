@@ -284,21 +284,9 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
             {
               id: 'refundAmount',
               label: 'Approved Refund Amount',
-              render: (value: any, row: any) => {
-                if (row.feeHead === 'Tuition') {
-                  return (
-                    <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                  );
-                }
-                if (row.feeHead === 'Library') {
-                  return (
-                    <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                  );
-                }
-                return (
-                  <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                );
-              },
+              render: (value: any, row: any) => (
+                <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
+              ),
             },
           ]}
           // data={[...paymentHistoryData, totalRow]}

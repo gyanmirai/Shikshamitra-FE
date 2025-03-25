@@ -276,12 +276,6 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           background: 'linear-gradient(to right, #fbe8d3, #e0f7fa)',
           boxShadow: 3,
           borderRadius: 2,
-          // transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          // '&:hover': {
-          //   transform: 'scale(1.02)',
-          //   boxShadow: 6,
-          //   cursor: 'pointer',
-          // },
         }}
       >
         {/* Left Section: Student Name and Avatar */}

@@ -7,10 +7,13 @@ import React, { useState } from 'react';
 import { Box, Button, Checkbox } from '@mui/material';
 import { Save, TransferWithinAStationSharp } from '@mui/icons-material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const initialData = [
   {
@@ -81,6 +84,14 @@ const ChangeClassScreen = ({ allClass }: any) => {
       examStatus: 'Passed',
     },
   ]);
+
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <Box>
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
@@ -97,6 +108,8 @@ const ChangeClassScreen = ({ allClass }: any) => {
           </Button>
         </Box>
         <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudent.length !== 0}
           tableId="change-class-table"
           columns={[
             {
@@ -195,6 +208,14 @@ const ChangeClassScreen = ({ allClass }: any) => {
           ]}
           data={tableData}
         />
+        {sendInstantNotificationDialogValue.value && (
+          <SendInstantNotificationDialog
+            open={sendInstantNotificationDialogValue.value}
+            onClose={sendInstantNotificationDialogValue.onFalse}
+            data={[]}
+            userList={selectedStudent}
+          />
+        )}
       </BackPopUpChecked>
     </Box>
   );

@@ -5,7 +5,7 @@ import type { EmployeeAttendance } from 'src/types/employee';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -15,12 +15,14 @@ import {
   Tabs,
   Paper,
   Divider,
+  Checkbox,
   TextField,
   Typography,
   Autocomplete,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -43,6 +45,7 @@ import { Label } from 'src/components/label';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import TeacherAttendanceTracking from './teacher-attendance-tracking';
 
@@ -182,6 +185,19 @@ const DateWise = ({
     ],
     [counts]
   );
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
+    tabs.onChange(event, newValue);
+    setSelectedStudents([]);
+  };
+
   return (
     <>
       {' '}
@@ -202,7 +218,7 @@ const DateWise = ({
       />
       <Tabs
         value={tabs.value}
-        onChange={tabs.onChange}
+        onChange={handleTabChange}
         sx={{
           mb: 2,
           '& .MuiTabs-flexContainer': { gap: 2 },
@@ -231,9 +247,47 @@ const DateWise = ({
       </Tabs>
       <Divider />
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="employee-attendance-table"
         isLoading={isLoading}
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(tableData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           { id: 'employeeName', label: 'Name' },
 
           { id: 'hoursWorked', label: 'Hours Worked' },
@@ -263,6 +317,14 @@ const DateWise = ({
         ]}
         data={tableData}
       />
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
     </>
   );
 };
@@ -318,6 +380,21 @@ const EmployeeWise = ({
   console.log('employees?.items---', employees?.items);
   console.log('searchParams?.employeeId---', searchParams?.employeeId);
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
+  const [tableData, setTableData] = useState(
+    data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
+      ...i,
+      status: EmployeeLeaveStatusType[i.statusType],
+    })) || []
+  );
   return (
     <>
       <Box display="flex" gap={1} mb={2}>
@@ -416,9 +493,47 @@ const EmployeeWise = ({
       )}
       {searchParams?.employeeId && (
         <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudents.length !== 0}
           tableId="employee-wise-attendance-table"
           isLoading={attendanceLoading}
           columns={[
+            {
+              id: 'checkBox',
+              align: 'left',
+              minWidth: '60px',
+              isSort: false,
+              isFilter: false,
+              label: '',
+              renderColumn() {
+                return (
+                  <Checkbox
+                    checked={tableData?.length && selectedStudents?.length === tableData?.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStudents(tableData || []);
+                      } else {
+                        setSelectedStudents([]);
+                      }
+                    }}
+                  />
+                );
+              },
+              render(value, row) {
+                return (
+                  <Checkbox
+                    checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStudents([...selectedStudents, row]);
+                      } else {
+                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                      }
+                    }}
+                  />
+                );
+              },
+            },
             {
               id: 'attendanceDate',
               label: 'Date',
@@ -474,12 +589,15 @@ const EmployeeWise = ({
             //   },
             // },
           ]}
-          data={
-            data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
-              ...i,
-              status: EmployeeLeaveStatusType[i.statusType],
-            })) || []
-          }
+          data={tableData}
+        />
+      )}
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
         />
       )}
     </>

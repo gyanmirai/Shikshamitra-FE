@@ -8,6 +8,8 @@ import React, { useMemo, useState, useEffect } from 'react';
 
 import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
@@ -139,7 +141,9 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
               name="taxName"
               label="Tax Name"
               value={formik.values.taxName}
-              onChange={formik.handleChange}
+              onChange={(e) => {
+                formik.setFieldValue('taxName', capitalizeWords(e.target.value));
+              }}
               size="small"
               error={formik.touched.taxName && Boolean(formik.errors.taxName)}
               helperText={formik.touched.taxName && formik.errors.taxName}

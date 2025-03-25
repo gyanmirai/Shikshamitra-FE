@@ -4,6 +4,8 @@ import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetfeeHeadQuery,
@@ -152,14 +154,14 @@ const SetDefaultFeeComponent = () => {
             label="Add New Fee Head"
             size="small"
             value={newFeeHead}
-            onChange={(e) => setNewFeeHead(e.target.value)}
+            onChange={(e) => setNewFeeHead(capitalizeWords(e.target.value))}
           />
           {isEdit ? (
             <Button
               variant="contained"
               size="small"
               onClick={handleAddFeeHead}
-              disabled={isUpdateLoading}
+              disabled={isUpdateLoading || newFeeHead.trim() === ''}
             >
               {isUpdateLoading ? 'Updating...' : 'Save'}
             </Button>
@@ -169,7 +171,7 @@ const SetDefaultFeeComponent = () => {
               variant="contained"
               size="small"
               onClick={handleAddFeeHead}
-              disabled={isAdding}
+              disabled={isAdding || newFeeHead.trim() === ''}
             >
               {isAdding ? 'Adding...' : 'Add New Fee Head'}
             </Button>

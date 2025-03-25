@@ -77,7 +77,11 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
       id: 'paymentMethod',
       label: 'Payment Method',
       render(value: any, row: any) {
-        return <Typography sx={{ fontSize: '12px' }}>{row.paymentMethod.join(' / ')}</Typography>;
+        return (
+          <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+            {row.paymentMethod.join(' , ')}
+          </Typography>
+        );
       },
     },
     {
@@ -85,8 +89,8 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
       label: 'Late Fee Charges',
       render(value: any, row: any) {
         return (
-          <Typography sx={{ fontSize: '12px' }}>
-            {`${row.lateFeeChargesAmount} / ${row.lateFeeChargesType} ₹`}
+          <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+            {`${row.lateFeeChargesAmount} ₹ / ${row.lateFeeChargesType} `}
           </Typography>
         );
       },

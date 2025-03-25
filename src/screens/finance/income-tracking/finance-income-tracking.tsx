@@ -130,7 +130,7 @@ const FinanceIncomeTrackingScreen = () => {
   };
 
   return (
-    <>
+    <Box height="100%">
       {open ? (
         <FinanceAddNewIncomeDialog
           onSave={handleSave}
@@ -141,7 +141,7 @@ const FinanceIncomeTrackingScreen = () => {
           allData={tableData}
         />
       ) : (
-        <>
+        <Box>
           <Box
             display="flex"
             flexDirection="row"
@@ -221,7 +221,7 @@ const FinanceIncomeTrackingScreen = () => {
             ]}
             data={tableData}
           />
-        </>
+        </Box>
       )}
 
       {dialogForDeleteConfirmation.value && (
@@ -243,7 +243,7 @@ const FinanceIncomeTrackingScreen = () => {
           data={selectedEntry}
         />
       )}
-    </>
+    </Box>
   );
 };
 

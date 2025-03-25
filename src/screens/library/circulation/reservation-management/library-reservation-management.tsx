@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { MenuItem, MenuList } from '@mui/material';
+import { Checkbox, MenuItem, MenuList } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const LibraryReservationManagement = () => {
   const dummyData = [
@@ -72,35 +75,90 @@ const LibraryReservationManagement = () => {
         )}
       />
     );
-  return (
-    <CustomizableTable
-      tableId="library-reservation-management"
-      columns={[
-        { id: 'bookId', label: 'Book Id' },
-        { id: 'title', label: 'Title' },
-        { id: 'memberName', label: 'Member Name' },
-        { id: 'requestedDate', label: 'Requested Date' },
-        {
-          id: 'status',
-          label: 'Status',
-          render(value, row) {
-            return (
-              <Label
-                variant="soft"
-                color={
-                  value === 'Collected' ? 'success' : value === 'Ready' ? 'secondary' : 'warning'
-                }
-              >
-                {value}
-              </Label>
-            );
-          },
-        },
 
-        { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-      ]}
-      data={dummyData}
-    />
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+  return (
+    <>
+      <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
+        tableId="library-reservation-management"
+        columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={!!dummyData?.length && selectedStudents?.length === dummyData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(dummyData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
+          { id: 'bookId', label: 'Book Id' },
+          { id: 'title', label: 'Title' },
+          { id: 'memberName', label: 'Member Name' },
+          { id: 'requestedDate', label: 'Requested Date' },
+          {
+            id: 'status',
+            label: 'Status',
+            render(value, row) {
+              return (
+                <Label
+                  variant="soft"
+                  color={
+                    value === 'Collected' ? 'success' : value === 'Ready' ? 'secondary' : 'warning'
+                  }
+                >
+                  {value}
+                </Label>
+              );
+            },
+          },
+        ]}
+        data={dummyData}
+      />
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
+    </>
   );
 };
 

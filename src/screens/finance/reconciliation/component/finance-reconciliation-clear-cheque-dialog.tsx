@@ -1,14 +1,17 @@
 import React from 'react';
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Button, TextField, DialogActions } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceReconciliationClearAndBounceChequeDialogProps {
   fromClearCheck: boolean;
@@ -21,6 +24,10 @@ interface FinanceReconciliationClearAndBounceChequeDialogProps {
 const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
   FinanceReconciliationClearAndBounceChequeDialogProps
 > = ({ fromClearCheck, dialogValue, data, onSave, onClose }) => {
+  const validationSchema = Yup.object({
+    checkBounceCharges: Yup.string().required('Bounce Charges is required'),
+    checkBounceReason: Yup.string().required('Reason is required'),
+  });
   const formik = useFormik({
     initialValues: {
       grNumber: '',
@@ -37,6 +44,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
       remarks: '',
       chequeClearDate: dayjs(),
     },
+    validationSchema,
     onSubmit: (values: any) => {
       console.log('Form Submitted type:', values);
       onSave(values);
@@ -172,33 +180,41 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
               </Grid2>
               {!fromClearCheck && (
                 <Grid2 container spacing={2}>
-                  <Grid2 xs={6}>
-                    <CustomSelect
-                      label="Check Bounce Reason"
-                      options={[]}
-                      value=""
-                      onChange={() => {}}
-                      fullWidth
-                    />
-                  </Grid2>
+                  {/* Check Bounce Reason */}
                   <Grid2 xs={6}>
                     <TextField
+                      size="small"
+                      label="Check Bounce Reason"
+                      name="checkBounceReason"
+                      value={formik.values.checkBounceReason}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       fullWidth
-                      disabled
+                      error={
+                        formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
+                      }
+                      helperText={
+                        formik.touched.checkBounceReason && formik.errors.checkBounceReason
+                      }
+                    />
+                  </Grid2>
+
+                  {/* Bounce Charges */}
+                  <Grid2 xs={6}>
+                    <NumericFormatCustom
+                      size="small"
                       name="checkBounceCharges"
                       label="Bounce Charges"
-                      size="small"
-                      value=""
-                      onChange={() => {}}
-                      // InputProps={{
-                      //   endAdornment: (
-                      //     <InputAdornment position="end">
-                      //       <Tooltip title="Includes ₹ 27 GST charges" arrow>
-                      //         <Iconify icon="material-symbols-light:info-outline" style={{ cursor: 'pointer' }} />
-                      //       </Tooltip>
-                      //     </InputAdornment>
-                      //   ),
-                      // }}
+                      value={formik.values.checkBounceCharges}
+                      onChange={formik.handleChange}
+                      fullWidth
+                      error={
+                        formik.touched.checkBounceCharges &&
+                        Boolean(formik.errors.checkBounceCharges)
+                      }
+                      helperText={
+                        formik.touched.checkBounceCharges && formik.errors.checkBounceCharges
+                      }
                     />
                   </Grid2>
                 </Grid2>
@@ -211,21 +227,28 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
               name="remarks"
               label="Remarks"
               value={formik.values.remarks}
-              onChange={formik.handleChange}
+              onChange={(e) => {
+                formik.setFieldValue('remarks', capitalizeWords(e.target.value));
+              }}
               size="small"
               type="text"
               fullWidth
             />
           </Scrollbar>
-        </form>
-        <DialogActions>
-          {/* <Button onClick={onClose} variant="contained" size="small">
+          <DialogActions>
+            {/* <Button onClick={onClose} variant="contained" size="small">
             Cancel
           </Button> */}
-          <Button type="submit" variant="contained" size="small">
-            Save
-          </Button>
-        </DialogActions>
+            <Button
+              disabled={!fromClearCheck && !formik.isValid}
+              type="submit"
+              variant="contained"
+              size="small"
+            >
+              Save
+            </Button>
+          </DialogActions>
+        </form>
       </Box>
     </CustomDialog>
   );

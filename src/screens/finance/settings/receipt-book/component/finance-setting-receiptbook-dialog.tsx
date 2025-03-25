@@ -1,11 +1,14 @@
 import type { RootState } from 'src/redux/store';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Card, Button, TextField, Typography } from '@mui/material';
+
+import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -49,9 +52,22 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
     }),
     [data, isEdit]
   );
+  const validationSchema = Yup.object().shape({
+    receiptBookName: Yup.string()
+      .trim()
+      .required('Receipt Book Name is required')
+      .min(2, 'Receipt Book Name must be at least 2 characters')
+      .max(50, 'Receipt Book Name cannot exceed 50 characters'),
 
+    receiptBookCode: Yup.string()
+      .trim()
+      .required('Receipt Book Code is required')
+      .matches(/^[A-Za-z0-9_-]+$/, 'Invalid Receipt Book Code format')
+      .max(20, 'Receipt Book Code cannot exceed 20 characters'),
+  });
   const formik = useFormik<FormikValue>({
     initialValues,
+    validationSchema,
     onSubmit: (values) => {
       const existingEntryIndex = allData.findIndex(
         (val: any) => val.receiptBookName.toLowerCase() === values.receiptBookName.toLowerCase()
@@ -85,7 +101,7 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
   };
 
   return (
-    <Box>
+    <Box display="flex" flexDirection="column" gap={2} height="100%">
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <CustomBreadcrumbs
           heading="Receipt Book"
@@ -103,39 +119,62 @@ const FinanceSettingReceiptbookDialog: React.FC<FinanceSettingReceiptbookDialogP
           </Button>
         </Box>
       </Box>
-      <form onSubmit={formik.handleSubmit}>
-        <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-          <Box display="flex" flexDirection="row" gap={2}>
-            <TextField
-              size="small"
-              fullWidth
-              name="receiptBookName"
-              label="Receipt Book Name"
-              value={formik.values.receiptBookName}
-              onChange={formik.handleChange}
-              error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
-              helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
-            />
+      <form
+        onSubmit={formik.handleSubmit}
+        style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      >
+        <Card
+          sx={{
+            height: '100%',
+            boxShadow: 'var(--shadows-4)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Box
+            pt="10px"
+            display="flex"
+            flexDirection="column"
+            height="100%"
+            gap={3}
+            flexGrow={1}
+            p={2}
+          >
+            <Box display="flex" flexDirection="row" gap={2}>
+              <TextField
+                size="small"
+                fullWidth
+                name="receiptBookName"
+                label="Receipt Book Name"
+                value={formik.values.receiptBookName}
+                onChange={(e) => {
+                  formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value));
+                }}
+                error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
+                helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
+              />
 
-            <TextField
-              size="small"
-              fullWidth
-              name="receiptBookCode"
-              label="Receipt Book Code"
-              value={formik.values.receiptBookCode}
-              onChange={formik.handleChange}
-              error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
-              helperText={formik.touched.receiptBookCode && formik.errors.receiptBookCode}
-            />
+              <TextField
+                size="small"
+                fullWidth
+                name="receiptBookCode"
+                label="Receipt Book Code"
+                value={formik.values.receiptBookCode}
+                onChange={formik.handleChange}
+                error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
+                helperText={formik.touched.receiptBookCode && formik.errors.receiptBookCode}
+              />
+            </Box>
           </Box>
-        </Box>
 
-        <DialogActions>
-          <Button type="submit" variant="outlined" size="small">
-            Save
-          </Button>
-        </DialogActions>
+          <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+            <Button type="submit" variant="outlined" size="small">
+              Save
+            </Button>
+          </Box>
+        </Card>
       </form>
+
       {showExistingEntryMessage ? (
         <Typography fontSize={13} color="error">
           Book Receipt Already exists

@@ -4,6 +4,7 @@ import { Grid, Button, TextField, Typography, DialogActions } from '@mui/materia
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -229,6 +230,44 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
     setlibraryFeeRefundAmount(formattedValue);
   };
 
+  const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
+
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+
+  const handleDiscountChange = (feeHead: string, value: string) => {
+    setDiscountValues((prev) => {
+      const updatedValues = {
+        ...prev,
+        [feeHead]: value.replace(/[^0-9.]/g, ''),
+      };
+
+      console.log(updatedValues, 'updatedValues'); // This will correctly show updated values
+
+      return updatedValues;
+    });
+  };
+
+  const calculateTotalDiscount = () => {
+    const totalDiscount = Object.values(discountValues).reduce(
+      (sum, value) => sum + (Number(value) || 0),
+      0
+    );
+
+    console.log('Total Discount Calculated:', totalDiscount); // ✅ Log total discount
+    return totalDiscount;
+  };
+
+  const [feeRefundremark, setFeeRefundRemark] = useState('');
+  // ✅ Use useEffect to correctly update isSaveEnabled when discountValues change
+  useEffect(() => {
+    const canSave =
+      Object.values(discountValues).some((val) => Number(val) > 0) && feeRefundremark !== '';
+    const totalDiscount = calculateTotalDiscount();
+
+    setIsSaveEnabled(canSave);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountValues, feeRefundremark]); // Depend on discountValues, so it updates correctly
+
   return (
     <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
@@ -262,71 +301,16 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
             { id: 'askForRefund', label: 'Ask For Refund' },
             {
               id: 'refundAmount',
-              label: 'Refund Amount',
-              render: (value: any, row: any) => {
-                if (row.feeHead === 'Tuition') {
-                  return (
-                    <NumericFormatCustom
-                      size="small"
-                      label="Tuition Discount"
-                      name="tuitionDiscount"
-                      value=""
-                      onChange={() => {}}
-                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-                    />
-                  );
-                }
-                if (row.feeHead === 'Library') {
-                  return (
-                    <NumericFormatCustom
-                      size="small"
-                      label="Library Discount"
-                      name="libraryDiscount"
-                      value=""
-                      onChange={() => {}}
-                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-                    />
-                  );
-                }
-                return (
-                  <NumericFormatCustom
-                    size="small"
-                    label="Total Discount"
-                    name="totalDiscount"
-                    value={totalFeeRefundAmount.toString()}
-                    onChange={() => {}}
-                    // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                    // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-                  />
-                );
-                // if (row.feeHead === 'Tuition') {
-                //   return (
-                //     <FormattedAmountInput
-                //       label="Tuition Refund"
-                //       value={tuitionFeeRefundAmount}
-                //       onChange={handleChangeForTuition}
-                //     />
-                //   );
-                // }
-                // if (row.feeHead === 'Library') {
-                //   return (
-                //     <FormattedAmountInput
-                //       label="Library Refund"
-                //       value={libraryFeeRefundAmount}
-                //       onChange={handleChangeForLibrary}
-                //     />
-                //   );
-                // }
-                // return (
-                //   <FormattedAmountInput
-                //     label="Total Refund"
-                //     value={formatNumber(totalFeeRefundAmount.toString())}
-                //     onChange={() => {}}
-                //   />
-                // );
-              },
+              label: 'Discount Amount',
+              render: (value: any, row: any) => (
+                <NumericFormatCustom
+                  size="small"
+                  label={`${row.feeHead} Discount`}
+                  name={`${row.feeHead.toLowerCase()}Discount`}
+                  value={discountValues[row.feeHead] || ''}
+                  onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                />
+              ),
             },
           ]}
           data={[...paymentHistoryData, totalRow]}
@@ -351,31 +335,20 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
             rows={4}
             name="remarks"
             label="Remarks"
-            value=""
-            onChange={() => {}}
+            value={feeRefundremark}
+            onChange={(e) => {
+              setFeeRefundRemark(capitalizeWords(e.target.value));
+            }}
             size="small"
             fullWidth
           />
         </Grid>
-
-        {/* <FeeRefundDialog
-          onSave={handleSave}
-          dialogValue
-          onClose={closeDialog}
-          data={selectedEntry}
-          isEdit={isEdit}
-          allData={paymentHistoryData}
-          total={totalRefundAmount}
-          tuitionFeeAmount={tuitionFeeRefundAmount}
-          libraryFeeFeeAmount={libraryFeeRefundAmount}
-          totalFeeAmount={totalFeeRefundAmount}
-        /> */}
       </Scrollbar>
       <DialogActions>
-        <Button type="submit" variant="contained" size="small">
+        <Button disabled={!isSaveEnabled} type="submit" variant="contained" size="small">
           Approved
         </Button>
-        <Button type="submit" variant="contained" size="small">
+        <Button disabled={!isSaveEnabled} type="submit" variant="contained" size="small">
           Reject
         </Button>
       </DialogActions>

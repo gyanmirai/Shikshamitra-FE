@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Button, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Checkbox, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -18,6 +18,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const AssignTeacher = () => {
   const assignTeacherDialog = useBoolean();
@@ -49,6 +50,37 @@ const AssignTeacher = () => {
     }
   }, [classData, classes]);
 
+  const [tableData, setTableData] = useState<any>([
+    {
+      className: '1',
+      division: 'A',
+      classTeacher: '',
+    },
+    {
+      className: '1',
+      division: 'B',
+      classTeacher: '',
+    },
+    {
+      className: '3',
+      division: 'C',
+      classTeacher: '',
+    },
+    {
+      className: '4',
+      division: 'D',
+      classTeacher: '',
+    },
+  ]);
+
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <Box>
       <CustomBreadcrumbs
@@ -72,8 +104,46 @@ const AssignTeacher = () => {
       />
 
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="assignTeacherTable"
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(tableData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           {
             id: 'className',
             label: 'Class',
@@ -104,29 +174,17 @@ const AssignTeacher = () => {
             },
           },
         ]}
-        data={[
-          {
-            className: '1',
-            division: 'A',
-            classTeacher: '',
-          },
-          {
-            className: '1',
-            division: 'B',
-            classTeacher: '',
-          },
-          {
-            className: '3',
-            division: 'C',
-            classTeacher: '',
-          },
-          {
-            className: '4',
-            division: 'D',
-            classTeacher: '',
-          },
-        ]}
+        data={tableData}
       />
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
 
       <CustomDialog
         open={assignTeacherDialog.value}

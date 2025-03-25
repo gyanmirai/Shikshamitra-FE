@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -12,6 +12,7 @@ import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import VehicleFormDialog from './add-vehicle-form-dialog';
 import TransportVehicleDetailView from '../../vehicleManagement/component/transport-vehicle-detail-view';
@@ -127,6 +128,15 @@ const TransportVehicleSettingScreen = () => {
     setOpen(false);
   };
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
   return (
     <>
       {open ? (
@@ -165,9 +175,49 @@ const TransportVehicleSettingScreen = () => {
           </Box>
 
           <CustomizableTable
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
             tableId="vehicle-management-table"
             data={Vehicledata}
             columns={[
+              {
+                id: 'checkBox',
+                align: 'left',
+                minWidth: '60px',
+                isSort: false,
+                isFilter: false,
+                label: '',
+                renderColumn() {
+                  return (
+                    <Checkbox
+                      checked={
+                        !!Vehicledata?.length && selectedStudents?.length === Vehicledata?.length
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents(Vehicledata || []);
+                        } else {
+                          setSelectedStudents([]);
+                        }
+                      }}
+                    />
+                  );
+                },
+                render(value: any, row: any) {
+                  return (
+                    <Checkbox
+                      checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, row]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                        }
+                      }}
+                    />
+                  );
+                },
+              },
               {
                 id: 'name',
                 label: 'Name',
@@ -227,6 +277,15 @@ const TransportVehicleSettingScreen = () => {
               },
             ]}
           />
+
+          {sendInstantNotificationDialogValue.value && (
+            <SendInstantNotificationDialog
+              open={sendInstantNotificationDialogValue.value}
+              onClose={sendInstantNotificationDialogValue.onFalse}
+              data={[]}
+              userList={selectedStudents}
+            />
+          )}
 
           <CustomDialog
             title="Vehicle Details"

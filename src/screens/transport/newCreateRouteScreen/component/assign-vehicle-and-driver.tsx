@@ -27,6 +27,7 @@ const AssignVehicleAndDriver = () => {
           id="route"
           name="routeName"
           label="Route Name"
+          // onChange={(e) => setRouteDetails({ ...routeDetails, routeName: e.target}
           // InputLabelProps={{
           //     style: {
           //         height: "100px",
