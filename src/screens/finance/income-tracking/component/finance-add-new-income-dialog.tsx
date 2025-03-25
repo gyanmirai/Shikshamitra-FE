@@ -265,7 +265,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
           </Box>
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
             {/* <Button size="small" variant="outlined" onClick={handleCloseDialog}>Cancel</Button> */}
-            <Button size="small" type="submit" variant="contained">
+            <Button size="small" type="submit" variant="outlined">
               Save
             </Button>
           </Box>
