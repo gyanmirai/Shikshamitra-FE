@@ -137,7 +137,7 @@ const TransportNotifiedPersonlistScreen = () => {
   const columnData = [
     {
       id: 'checkBox',
-      align: 'left',
+      align: 'left' as 'left',
       minWidth: '60px',
       isSort: false,
       isFilter: false,
@@ -205,7 +205,7 @@ const TransportNotifiedPersonlistScreen = () => {
   const columnDataForStaff = [
     {
       id: 'checkBox',
-      align: 'left',
+      align: 'left' as 'left',
       minWidth: '60px',
       isSort: false,
       isFilter: false,
