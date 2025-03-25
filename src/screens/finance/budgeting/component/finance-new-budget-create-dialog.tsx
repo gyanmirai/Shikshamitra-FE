@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Button } from '@mui/material';
+import { Box, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -155,39 +155,41 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
           >
             <Grid2 container spacing={2}>
               <Grid2 xs={6}>
-                <CustomSelect
-                  label="Category Type"
-                  options={[
-                    { value: '123', label: 'Income' },
-                    { value: '345', label: 'Expense' },
-                  ]}
-                  value={formik.values.categoryType}
-                  onChange={(value) => formik.setFieldValue('categoryType', value)}
-                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                  disabled={edit}
-                  error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
-                  helperText={
-                    formik.touched.categoryType && formik.errors.categoryType
-                      ? formik.errors.categoryType
-                      : ''
-                  }
-                />
+                <FormControl
+                  fullWidth
+                  error={Boolean(formik.touched.categoryType && formik.errors.categoryType)}
+                >
+                  <CustomSelect
+                    label="Category Type"
+                    options={[
+                      { value: '123', label: 'Income' },
+                      { value: '345', label: 'Expense' },
+                    ]}
+                    value={formik.values.categoryType}
+                    onChange={(value) => formik.setFieldValue('categoryType', value)}
+                    disabled={edit}
+                  />
+                  {formik.touched.categoryType && formik.errors.categoryType && (
+                    <FormHelperText>{String(formik.errors.categoryType)}</FormHelperText>
+                  )}
+                </FormControl>
               </Grid2>
               <Grid2 xs={6}>
-                <CustomSelect
-                  label="Select Category"
-                  options={categoryListBasedOnType}
-                  value={formik.values.categoryName}
-                  onChange={(value) => formik.setFieldValue('categoryName', value)}
-                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                  disabled={edit}
-                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
-                  helperText={
-                    formik.touched.categoryName && formik.errors.categoryName
-                      ? formik.errors.categoryName
-                      : ''
-                  }
-                />
+                <FormControl
+                  fullWidth
+                  error={Boolean(formik.touched.categoryName && formik.errors.categoryName)}
+                >
+                  <CustomSelect
+                    label="Select Category"
+                    options={categoryListBasedOnType}
+                    value={formik.values.categoryName}
+                    onChange={(value) => formik.setFieldValue('categoryName', value)}
+                    disabled={edit}
+                  />
+                  {formik.touched.categoryName && formik.errors.categoryName && (
+                    <FormHelperText>{String(formik.errors.categoryName)}</FormHelperText>
+                  )}
+                </FormControl>
               </Grid2>
             </Grid2>
 
@@ -203,7 +205,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                   error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
                   helperText={
                     formik.touched.fundAllocation && formik.errors.fundAllocation
-                      ? formik.errors.fundAllocation
+                      ? String(formik.errors.fundAllocation)
                       : ''
                   }
                 />
