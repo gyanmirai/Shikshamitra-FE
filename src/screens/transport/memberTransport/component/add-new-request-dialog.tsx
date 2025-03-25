@@ -13,6 +13,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -143,7 +145,9 @@ const TransportAddNewRequestDialog: React.FC<TransportAddNewRequestDialogProps> 
                 name="addressLine1"
                 label="Address Line 1"
                 value={formik.values.addressLine1}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('addressLine1', capitalizeWords(e.target.value));
+                }}
                 size="small"
                 fullWidth
               />
@@ -153,7 +157,9 @@ const TransportAddNewRequestDialog: React.FC<TransportAddNewRequestDialogProps> 
                 name="landmark"
                 label="Landmark"
                 value={formik.values.landmark}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('landmark', capitalizeWords(e.target.value));
+                }}
                 size="small"
                 fullWidth
               />
@@ -163,7 +169,9 @@ const TransportAddNewRequestDialog: React.FC<TransportAddNewRequestDialogProps> 
                 name="pickupPoint"
                 label="Preferred Pickup/Dropoff Point"
                 value={formik.values.pickupPoint}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('pickupPoint', capitalizeWords(e.target.value));
+                }}
                 size="small"
                 fullWidth
               />

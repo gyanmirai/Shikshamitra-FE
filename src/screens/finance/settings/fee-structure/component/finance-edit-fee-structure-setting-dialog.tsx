@@ -76,7 +76,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
   return (
     <CustomDialog
       maxWidth="xl"
-      title="Detail Fee Structure"
+      title="Detail Fee Structure For Class 1"
       open={dialogValue}
       handleClose={onClose}
     >
@@ -91,7 +91,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
         ))}
       </CustomTabs>
 
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '600px' }}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '700px' }}>
         {tabs.value === 'editable' && <EditableFeeStructureTable data={dummyData} />}
         {tabs.value === 'reference' && <ReadOnlyFeeStructureTable data={dummyData} />}
       </Scrollbar>

@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import * as yup from 'yup';
 import React, { useState } from 'react';
 
-import { Box, Button, MenuItem, MenuList } from '@mui/material';
+import { Box, Button, Checkbox, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -17,6 +17,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import ManageStopsWithRiders from './component/stop-details';
 import ViewRouteDetailsDialog from './view-route-details-dialog';
@@ -220,6 +221,15 @@ const NewCreateRouteScreen = () => {
     // setIsEdit(false);
     setOpen(false);
   };
+
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <>
       {open ? (
@@ -273,9 +283,49 @@ const NewCreateRouteScreen = () => {
 
           {/* Routes Table */}
           <CustomizableTable
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
             tableId="routes-table"
             data={routesData}
             columns={[
+              {
+                id: 'checkBox',
+                align: 'left',
+                minWidth: '60px',
+                isSort: false,
+                isFilter: false,
+                label: '',
+                renderColumn() {
+                  return (
+                    <Checkbox
+                      checked={
+                        !!routesData?.length && selectedStudents?.length === routesData?.length
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents(routesData || []);
+                        } else {
+                          setSelectedStudents([]);
+                        }
+                      }}
+                    />
+                  );
+                },
+                render(value, row) {
+                  return (
+                    <Checkbox
+                      checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, row]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                        }
+                      }}
+                    />
+                  );
+                },
+              },
               { id: 'routeName', label: 'Route Name' },
               { id: 'vehicle', label: 'Assigned Vehicle' },
               { id: 'driver', label: 'Assigned Driver' },
@@ -309,6 +359,14 @@ const NewCreateRouteScreen = () => {
         </>
       )}
 
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
       {/* View Route Details Dialog */}
       {ViewRouteDetailsdialog.value && (
         <ViewRouteDetailsDialog

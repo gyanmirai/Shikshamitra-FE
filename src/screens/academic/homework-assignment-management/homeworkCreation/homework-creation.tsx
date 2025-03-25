@@ -44,6 +44,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import HomeworkAssignmentCreationForm from './component/homeworkCreateDialog';
 import { dummyData } from '../../gradebook-performance-tracking/gradebook/gradebook';
@@ -694,16 +695,15 @@ export default HomeworkCreation;
 export const StudentSubmissions = () => {
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
   const dialog = useBoolean();
   const viewSubmissionDialog = useBoolean();
   const bulkGradeDialog = useBoolean();
 
   const handleSelectStudent = (studentId: string) => {
-    setSelectedStudents((prev) => {
+    setSelectedStudents((prev: any) => {
       if (prev.includes(studentId)) {
-        return prev.filter((id) => id !== studentId);
+        return prev.filter((id: any) => id !== studentId);
       }
       return [...prev, studentId];
     });
@@ -765,6 +765,15 @@ export const StudentSubmissions = () => {
     [viewSubmissionDialog]
   );
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
@@ -779,18 +788,56 @@ export const StudentSubmissions = () => {
         </Button>
       </Box>
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="student-submissions"
         columns={[
           {
-            id: 'select',
-            label: 'Select',
-            render: (value, row: any) => (
-              <Checkbox
-                checked={selectedStudents.includes(row.id)}
-                onChange={() => handleSelectStudent(row.id)}
-              />
-            ),
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(tableData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
           },
+          // {
+          //   id: 'select',
+          //   label: 'Select',
+          //   render: (value, row: any) => (
+          //     <Checkbox
+          //       checked={selectedStudents.includes(row.id)}
+          //       onChange={() => handleSelectStudent(row.id)}
+          //     />
+          //   ),
+          // },
           { id: 'studentName', label: 'Student Name', minWidth: '180px', align: 'left' },
           { id: 'assignments', label: 'Assignments' },
           { id: 'subject', label: 'Subject' },
@@ -877,6 +924,14 @@ export const StudentSubmissions = () => {
         data={tableData}
       />
 
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
       <CustomDialog
         open={viewSubmissionDialog.value}
         handleClose={handleCloseDialog}

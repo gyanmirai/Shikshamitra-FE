@@ -1,142 +1,14 @@
-// // import FinanceStudentFeeManagementComponent from './component/finance-student-fee-management-component';
-// import React, { useState } from "react";
-
-// import {
-//   Table, Paper, Button, Dialog, TableRow, TableBody,
-//   TableCell, TableHead, Typography, DialogTitle, DialogContent, TableContainer
-// } from "@mui/material";
-
-// // Dummy data for fee management
-// const studentFees = [
-//   {
-//     feeHead: "Tuition",
-//     paymentTerm: "Monthly",
-//     nextDueDate: "2024-11-15",
-//     status: "Paid",
-//     paymentHistory: [
-//       { date: "2024-10-15", amount: 5000, receipt: "Receipt #1001" },
-//       { date: "2024-09-15", amount: 5000, receipt: "Receipt #1000" },
-//     ],
-//   },
-//   {
-//     feeHead: "Library",
-//     paymentTerm: "Bi-Annually",
-//     nextDueDate: "2025-01-01",
-//     status: "Unpaid",
-//     paymentHistory: [
-//       { date: "2024-07-01", amount: 1500, receipt: "Receipt #1002" },
-//     ],
-//   },
-//   {
-//     feeHead: "Sports",
-//     paymentTerm: "Annually",
-//     nextDueDate: "2025-07-01",
-//     status: "Overdue",
-//     paymentHistory: [
-//       { date: "2024-07-01", amount: 3000, receipt: "Receipt #1003" },
-//     ],
-//   },
-// ];
-// const FinanceStudentStructureOverviewTabScreen = () => {
-
-//     // {/* <FinanceStudentFeeManagementComponent /> */}
-//     // {/* <FinanceStudentTransectionOverviewComponent /> */}
-
-//   const [open, setOpen] = useState(false);
-//   const [selectedFee, setSelectedFee] = useState<any>(null);
-
-//   const handleOpen = (fee:any) => {
-//     setSelectedFee(fee);
-//     setOpen(true);
-//   };
-
-//   const handleClose = () => {
-//     setOpen(false);
-//     setSelectedFee(null);
-//   };
-
-//   return (
-//     <div>
-//       <h2>Student Fee Management</h2>
-//       <TableContainer component={Paper}>
-//         <Table>
-//           <TableHead>
-//             <TableRow>
-//               <TableCell>Fee Head</TableCell>
-//               <TableCell>Payment Term</TableCell>
-//               <TableCell>Next Due Date</TableCell>
-//               <TableCell>Status</TableCell>
-//               <TableCell>Actions</TableCell>
-//             </TableRow>
-//           </TableHead>
-//           <TableBody>
-//             {studentFees.map((fee, index) => (
-//               <TableRow key={index}>
-//                 <TableCell>{fee.feeHead}</TableCell>
-//                 <TableCell>{fee.paymentTerm}</TableCell>
-//                 <TableCell>{fee.nextDueDate}</TableCell>
-//                 <TableCell>{fee.status}</TableCell>
-//                 <TableCell>
-//                   <Button variant="contained" onClick={() => handleOpen(fee)}>
-//                     View Details
-//                   </Button>
-//                 </TableCell>
-//               </TableRow>
-//             ))}
-//           </TableBody>
-//         </Table>
-//       </TableContainer>
-
-//       {/* Details Modal */}
-//       {selectedFee && (
-//         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-//           <DialogTitle>{`Details for ${selectedFee.feeHead}`}</DialogTitle>
-//           <DialogContent>
-//             <Typography variant="h6">Payment Term: {selectedFee.paymentTerm}</Typography>
-//             <Typography variant="h6">Next Due Date: {selectedFee.nextDueDate}</Typography>
-//             <Typography variant="h6">Status: {selectedFee.status}</Typography>
-//             <br />
-//             <Typography variant="subtitle1">Payment History:</Typography>
-//             {selectedFee.paymentHistory.map((payment:any, index:any) => (
-//               <div key={index} style={{ marginBottom: "10px" }}>
-//                 <Typography>
-//                   <strong>Date:</strong> {payment.date}
-//                 </Typography>
-//                 <Typography>
-//                   <strong>Amount:</strong> ${payment.amount}
-//                 </Typography>
-//                 <Typography>
-//                   <strong>Receipt:</strong> {payment.receipt}
-//                 </Typography>
-//               </div>
-//             ))}
-//             <br />
-//             <Button
-//               variant="contained"
-//               color="secondary"
-//               onClick={() => alert("Reminder sent")}
-//               style={{ marginRight: "10px" }}
-//             >
-//               Send Reminder
-//             </Button>
-//             <Button
-//               variant="contained"
-//               color="primary"
-//               onClick={() => alert("Receipt generated")}
-//             >
-//               Generate Receipt
-//             </Button>
-//           </DialogContent>
-//         </Dialog>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default FinanceStudentStructureOverviewTabScreen;
 import React, { useState } from 'react';
 
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Checkbox,
+  Accordion,
+  Typography,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -145,8 +17,10 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';
 
@@ -442,7 +316,6 @@ const FinanceStudentFeeManagement = () => {
   const dialog = useBoolean();
   const [open, setOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [studentsData, setStudentsData] = useState<any>(null);
 
   const handleOpen = (student: any) => {
     setSelectedStudent(student);
@@ -479,6 +352,14 @@ const FinanceStudentFeeManagement = () => {
     textAlign: 'right',
   };
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <>
       {/* <CustomBreadcrumbs
@@ -487,9 +368,92 @@ const FinanceStudentFeeManagement = () => {
         sx={{ px: 1, mb: 2 }}
         
       /> */}
+      <Grid container sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+        {/* <Grid item lg={2}>
+          <CustomSelect
+            label="Class"
+            name="className"
+            options={[]}
+            labelKey="name"
+            valueKey="name"
+            value={[]}
+            onChange={(value) => console.log('className', value)}
+            fullWidth
+          // formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+          />
+        </Grid> */}
+        <Grid item lg={2}>
+          <CustomSelect
+            label="Class"
+            name="className"
+            options={[]}
+            labelKey="name"
+            valueKey="name"
+            value={[]}
+            onChange={(value) => console.log('className', value)}
+            fullWidth
+            // formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+          />
+        </Grid>
+        <Grid item lg={2}>
+          <CustomSelect
+            fullWidth
+            label="Division"
+            labelKey="name"
+            valueKey="id"
+            options={[]}
+            value={[]}
+            onChange={(val) => {
+              console.log(val as string);
+            }}
+            // formControlProps={{
+            //   sx: { width: '100%', maxWidth: '150px' },
+            // }}
+          />
+        </Grid>
+      </Grid>
+
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="student-fee-management"
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={!!students?.length && selectedStudents?.length === students?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(students || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           {
             id: 'grNo',
             label: 'Gr No',
@@ -649,6 +613,15 @@ const FinanceStudentFeeManagement = () => {
         ]}
         data={students}
       />
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
 
       {/* Details Modal */}
       {selectedStudent && (

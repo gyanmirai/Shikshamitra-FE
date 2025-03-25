@@ -1,13 +1,14 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Button, DialogActions } from '@mui/material';
+import { Box, Card, Button } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -62,9 +63,24 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+  const validationSchema = Yup.object({
+    categoryType: Yup.string()
 
+      .required('Category type is required'),
+
+    categoryName: Yup.string().required('Category name is required'),
+
+    fundAllocation: Yup.string()
+      .required('Expense amount is required')
+      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+        const numericValue = Number(value);
+        return numericValue > 0;
+      }),
+  });
   const formik = useFormik({
     initialValues,
+    validationSchema,
     onSubmit: (values: any) => {
       console.log('Form Submitted:', values);
       onSave(values);
@@ -98,7 +114,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
   };
 
   return (
-    <>
+    <Box display="flex" flexDirection="column" gap={2} height="100%">
       <Box display="flex" flexDirection="column" gap={2}>
         <CustomBreadcrumbs
           heading="Budgeting"
@@ -116,68 +132,92 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
           }
         />
       </Box>
-      <form onSubmit={formik.handleSubmit}>
-        <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-          <Grid2 container spacing={2}>
-            <Grid2 xs={6}>
-              <CustomSelect
-                label="Category Type"
-                options={[
-                  { value: '123', label: 'Income' },
-                  { value: '345', label: 'Expense' },
-                ]}
-                value={formik.values.categoryType}
-                onChange={(value) => formik.setFieldValue('categoryType', value)}
-                formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                disabled={edit}
-              />
+      <form
+        onSubmit={formik.handleSubmit}
+        style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      >
+        <Card
+          sx={{
+            height: '100%',
+            boxShadow: 'var(--shadows-4)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Box
+            pt="10px"
+            display="flex"
+            flexDirection="column"
+            height="100%"
+            gap={3}
+            flexGrow={1}
+            p={2}
+          >
+            <Grid2 container spacing={2}>
+              <Grid2 xs={6}>
+                <CustomSelect
+                  label="Category Type"
+                  options={[
+                    { value: '123', label: 'Income' },
+                    { value: '345', label: 'Expense' },
+                  ]}
+                  value={formik.values.categoryType}
+                  onChange={(value) => formik.setFieldValue('categoryType', value)}
+                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                  disabled={edit}
+                  error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
+                  helperText={
+                    formik.touched.categoryType && formik.errors.categoryType
+                      ? formik.errors.categoryType
+                      : ''
+                  }
+                />
+              </Grid2>
+              <Grid2 xs={6}>
+                <CustomSelect
+                  label="Select Category"
+                  options={categoryListBasedOnType}
+                  value={formik.values.categoryName}
+                  onChange={(value) => formik.setFieldValue('categoryName', value)}
+                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                  disabled={edit}
+                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
+                  helperText={
+                    formik.touched.categoryName && formik.errors.categoryName
+                      ? formik.errors.categoryName
+                      : ''
+                  }
+                />
+              </Grid2>
             </Grid2>
-            <Grid2 xs={6}>
-              <CustomSelect
-                label="Select Category"
-                options={categoryListBasedOnType}
-                value={formik.values.categoryName}
-                onChange={(value) => formik.setFieldValue('categoryName', value)}
-                formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                disabled={edit}
-              />
-            </Grid2>
-          </Grid2>
 
-          <Grid2 container spacing={2}>
-            <Grid2 xs={6}>
-              <NumericFormatCustom
-                size="small"
-                label="Fund Allocation"
-                name="fundAllocation"
-                value={formik.values.fundAllocation}
-                onChange={formik.handleChange}
-                fullWidth
-                // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-              />
-              {/* <TextField
-                  name="fundAllocation"
+            <Grid2 container spacing={2}>
+              <Grid2 xs={6}>
+                <NumericFormatCustom
+                  size="small"
                   label="Fund Allocation"
+                  name="fundAllocation"
                   value={formik.values.fundAllocation}
                   onChange={formik.handleChange}
-                  size="small"
-                  type="number"
                   fullWidth
-                /> */}
+                  error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
+                  helperText={
+                    formik.touched.fundAllocation && formik.errors.fundAllocation
+                      ? formik.errors.fundAllocation
+                      : ''
+                  }
+                />
+              </Grid2>
             </Grid2>
-          </Grid2>
-        </Box>
-        <DialogActions>
-          {/* <Button onClick={onClose} variant="contained" size="small">
-            Cancel
-          </Button> */}
-          <Button type="submit" variant="outlined" size="small">
-            Save
-          </Button>
-        </DialogActions>
+          </Box>
+          <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+            <Button type="submit" variant="outlined" size="small">
+              Save
+            </Button>
+          </Box>
+        </Card>
       </form>
-    </>
+    </Box>
   );
 };
 

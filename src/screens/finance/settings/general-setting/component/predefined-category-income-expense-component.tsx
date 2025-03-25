@@ -22,7 +22,8 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
 
   return (
     <>
-      <Box display="flex" flex={1} flexDirection="column" gap={3} alignItems="center">
+      <Box display="flex" flex={1} flexDirection="row" gap={3} alignItems="center">
+        {/* Category Selection */}
         <CustomSelect
           options={
             budgetCategoryList?.items?.length > 0
@@ -41,8 +42,12 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
           formControlProps={{ sx: { minWidth: 275 } }}
           placeholder="No categories available"
         />
-        <TextField name="Addnewsubcategory" label="Add New Sub-Category" size="small" fullWidth />
-        <Box display="flex" width="100%" alignSelf="flex-end">
+
+        {/* Sub-category Input */}
+        <TextField name="Addnewsubcategory" label="Add New Sub-Category" size="small" />
+
+        {/* Button Wrapper for Center Alignment */}
+        <Box display="flex" alignItems="center">
           <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
             New Sub-Category
           </Button>

@@ -4,7 +4,17 @@ import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Card, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Paper,
+  Button,
+  Avatar,
+  MenuList,
+  MenuItem,
+  Checkbox,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -22,6 +32,7 @@ import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
@@ -96,6 +107,15 @@ const HrEmployee = () => {
     roleValue: item?.role?.name || 'Not Assigned',
     statusValue: EmployeeStatusType[item?.employeeStatusType],
   }));
+
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <>
       {open ? (
@@ -143,9 +163,51 @@ const HrEmployee = () => {
           />
           <Paper sx={{ px: 1, py: 2 }}>
             <CustomizableTable
+              onSendNotification={handlerSendNotification}
+              showCheckbox={selectedStudents.length !== 0}
               isLoading={isLoading}
               tableId="employee-table"
               columns={[
+                {
+                  id: 'checkBox',
+                  align: 'left',
+                  minWidth: '60px',
+                  isSort: false,
+                  isFilter: false,
+                  label: '',
+                  renderColumn() {
+                    return (
+                      <Checkbox
+                        checked={
+                          tableData?.length && selectedStudents?.length === tableData?.length
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStudents(tableData || []);
+                          } else {
+                            setSelectedStudents([]);
+                          }
+                        }}
+                      />
+                    );
+                  },
+                  render(value, row) {
+                    return (
+                      <Checkbox
+                        checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStudents([...selectedStudents, row]);
+                          } else {
+                            setSelectedStudents(
+                              selectedStudents.filter((i: any) => i.id !== row.id)
+                            );
+                          }
+                        }}
+                      />
+                    );
+                  },
+                },
                 { id: 'employeeCode', label: 'Employee Code', sticky: true },
                 {
                   id: 'employeeName',
@@ -221,6 +283,14 @@ const HrEmployee = () => {
               ]}
               data={tableData || []}
             />
+            {sendInstantNotificationDialogValue.value && (
+              <SendInstantNotificationDialog
+                open={sendInstantNotificationDialogValue.value}
+                onClose={sendInstantNotificationDialogValue.onFalse}
+                data={[]}
+                userList={selectedStudents}
+              />
+            )}
             <CustomDialog
               open={statusDialog.value}
               handleClose={handleCloseStatus}

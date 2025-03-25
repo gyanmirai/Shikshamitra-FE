@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -16,6 +16,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import TeacherReassign from './teacherReassignForm';
 
@@ -78,7 +79,7 @@ const Teacher = ({
 
   // const [selectedClass, setSelectedClass] = useState('All');
   // const [selectedSubject, setSelectedSubject] = useState('All');
-  const [selectedTeacher, setSelectedTeacher] = useState<any | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<any | null>([]);
 
   const [teacherData, setTeacherData] = useState<TTeacherData[]>(TeacherData);
   const dialog = useBoolean();
@@ -120,6 +121,13 @@ const Teacher = ({
     [teacherData, classData?.items, selectedSubject, classes]
   );
 
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <Box>
       <CustomBreadcrumbs
@@ -158,8 +166,48 @@ const Teacher = ({
         />
       </Box>
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedTeacher.length !== 0}
         tableId="teacher-table"
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={
+                    !!filteredData?.length && selectedTeacher?.length === filteredData?.length
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTeacher(filteredData || []);
+                    } else {
+                      setSelectedTeacher([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={selectedTeacher.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTeacher([...selectedTeacher, row]);
+                    } else {
+                      setSelectedTeacher(selectedTeacher.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           {
             id: 'subject',
             label: 'Subject',
@@ -199,7 +247,14 @@ const Teacher = ({
         ]}
         data={filteredData}
       />
-
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedTeacher}
+        />
+      )}
       <CustomDialog
         title="Reassign Teacher"
         open={dialog.value}

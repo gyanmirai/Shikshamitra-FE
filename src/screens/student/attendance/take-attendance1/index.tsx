@@ -21,6 +21,7 @@ import {
   Switch,
   Button,
   Divider,
+  Checkbox,
   TextField,
   Typography,
   IconButton,
@@ -45,6 +46,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const TakeAttendanceScreen = () => {
   const [fillStudentAttendance] = useQueryAndMutation({
@@ -410,131 +412,184 @@ const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any)
 
 const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
   const a = null;
+  const [selectedStudent, setSelectedStudent] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
-    <CustomizableTable
-      tableId="student-attendance-list"
-      isSearch={false}
-      isLoading={isLoading}
-      rowProps={(tableData: any) => ({
-        sx: {
-          background: (theme) =>
-            tableData.isPresent
-              ? varAlpha(theme.palette.success.mainChannel, 0.08)
-              : varAlpha(theme.palette.error.mainChannel, 0.08),
-        },
-      })}
-      columns={[
-        { id: 'student.rollNo', label: 'Roll No', align: 'left', minWidth: '100px' },
-        { id: 'student.grNoRecord', label: 'Gr No', align: 'left', minWidth: '100px' },
-        {
-          id: 'name',
-          label: 'Name',
-          align: 'left',
-          minWidth: '180px',
-          render(value, row) {
-            return (
-              <Box display="flex" alignItems="center" gap={1}>
-                <Avatar
-                  src={
-                    row?.student?.profilePicture
-                      ? convertBase64Format(row?.student?.profilePicture)
-                      : ''
-                  }
-                  sx={{ width: 30, height: 30 }}
-                  alt={value}
-                  title={value}
-                />
-                {value}
-              </Box>
-            );
+    <>
+      <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudent.length !== 0}
+        tableId="student-attendance-list"
+        isSearch={false}
+        isLoading={isLoading}
+        rowProps={(tableData: any) => ({
+          sx: {
+            background: (theme) =>
+              tableData.isPresent
+                ? varAlpha(theme.palette.success.mainChannel, 0.08)
+                : varAlpha(theme.palette.error.mainChannel, 0.08),
           },
-        },
-        { id: 'presentDays', label: 'Total Present Days', align: 'left', minWidth: '180px' },
-        {
-          id: 'percentage',
-          label: 'Attendance Percentage',
-          align: 'left',
-          minWidth: '200px',
-        },
-        {
-          id: 'isPresent',
-          label: 'Attendance',
-          isSort: false,
-          render(value, row) {
-            return isSaved.value ? (
-              <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>
-            ) : (
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                {/* <Typography component="small" fontSize="12px">
+        })}
+        columns={[
+          {
+            id: 'checkBox',
+            label: ' ',
+            isSort: false,
+            renderColumn: (value) => (
+              <Checkbox
+                checked={data.length === selectedStudent.length}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedStudent(data);
+                  } else {
+                    setSelectedStudent([]);
+                  }
+                }}
+              />
+            ),
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={selectedStudent.some((student: any) => student.id === row.id)}
+                  onChange={(e) => {
+                    if (!e.target.checked) {
+                      setSelectedStudent(
+                        selectedStudent.filter((student: any) => student.id !== row.id)
+                      );
+                    } else {
+                      setSelectedStudent([...selectedStudent, row]);
+                    }
+                  }}
+                />
+              );
+            },
+          },
+          { id: 'student.rollNo', label: 'Roll No', align: 'left', minWidth: '100px' },
+          { id: 'student.grNoRecord', label: 'Gr No', align: 'left', minWidth: '100px' },
+          {
+            id: 'name',
+            label: 'Name',
+            align: 'left',
+            minWidth: '180px',
+            render(value, row) {
+              return (
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Avatar
+                    src={
+                      row?.student?.profilePicture
+                        ? convertBase64Format(row?.student?.profilePicture)
+                        : ''
+                    }
+                    sx={{ width: 30, height: 30 }}
+                    alt={value}
+                    title={value}
+                  />
+                  {value}
+                </Box>
+              );
+            },
+          },
+          { id: 'presentDays', label: 'Total Present Days', align: 'left', minWidth: '180px' },
+          {
+            id: 'percentage',
+            label: 'Attendance Percentage',
+            align: 'left',
+            minWidth: '200px',
+          },
+          {
+            id: 'isPresent',
+            label: 'Attendance',
+            isSort: false,
+            render(value, row) {
+              return isSaved.value ? (
+                <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>
+              ) : (
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  {/* <Typography component="small" fontSize="12px">
                   Absent
                 </Typography> */}
-                <Switch
+                  <Switch
+                    size="small"
+                    inputProps={{ 'aria-label': 'controlled' }}
+                    checked={value}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: 'success.main',
+                        '&:hover': {
+                          backgroundColor: 'success.light',
+                        },
+                      },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                        backgroundColor: 'success.main',
+                      },
+                      '& .MuiSwitch-switchBase:not(.Mui-checked)': {
+                        color: 'error.main',
+                        '&:hover': {
+                          backgroundColor: 'error.light',
+                        },
+                      },
+                      '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
+                        backgroundColor: 'error.main',
+                      },
+                    }}
+                    onChange={(e) => {
+                      setStudentData(
+                        data.map((item: any) =>
+                          item.id === row.id ? { ...item, isPresent: e.target.checked } : item
+                        )
+                      );
+                    }}
+                  />
+                  {/* <Typography component="small" fontSize="12px">
+                  Present
+                </Typography> */}
+                </Stack>
+              );
+            },
+          },
+
+          {
+            id: 'remarks',
+            label: 'Remarks',
+            render(value, row) {
+              return row.attendance === 'Present' ? (
+                '-'
+              ) : (
+                <TextField
                   size="small"
-                  inputProps={{ 'aria-label': 'controlled' }}
-                  checked={value}
-                  sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: 'success.main',
-                      '&:hover': {
-                        backgroundColor: 'success.light',
-                      },
-                    },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: 'success.main',
-                    },
-                    '& .MuiSwitch-switchBase:not(.Mui-checked)': {
-                      color: 'error.main',
-                      '&:hover': {
-                        backgroundColor: 'error.light',
-                      },
-                    },
-                    '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
-                      backgroundColor: 'error.main',
-                    },
-                  }}
+                  value={value || ''}
                   onChange={(e) => {
+                    console.log(e.target.value);
                     setStudentData(
                       data.map((item: any) =>
-                        item.id === row.id ? { ...item, isPresent: e.target.checked } : item
+                        item.id === row.id ? { ...item, remarks: e.target.value } : item
                       )
                     );
                   }}
+                  multiline
+                  rows={2}
+                  sx={{ maxWidth: '200px', width: '100%' }}
                 />
-                {/* <Typography component="small" fontSize="12px">
-                  Present
-                </Typography> */}
-              </Stack>
-            );
+              );
+            },
           },
-        },
-
-        {
-          id: 'remarks',
-          label: 'Remarks',
-          render(value, row) {
-            return row.attendance === 'Present' ? (
-              '-'
-            ) : (
-              <TextField
-                size="small"
-                value={value || ''}
-                onChange={(e) => {
-                  console.log(e.target.value);
-                  setStudentData(
-                    data.map((item: any) =>
-                      item.id === row.id ? { ...item, remarks: e.target.value } : item
-                    )
-                  );
-                }}
-                multiline
-                rows={2}
-                sx={{ maxWidth: '200px', width: '100%' }}
-              />
-            );
-          },
-        },
-      ]}
-      data={data}
-    />
+        ]}
+        data={data}
+      />
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudent}
+        />
+      )}
+    </>
   );
 };

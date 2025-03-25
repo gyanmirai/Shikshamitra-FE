@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -11,6 +11,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import AddNewMemberDialog from './component/add-new-member-dialog';
 import CommonCtaComponent from '../component/common-cta-component';
@@ -200,6 +201,15 @@ const LibraryMemberManagementScreen = () => {
     setIsEdit(false);
     setOpen(false);
   };
+
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <>
       {open ? (
@@ -227,8 +237,49 @@ const LibraryMemberManagementScreen = () => {
           </Box>
 
           <CustomizableTable
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
             tableId="member-management"
             columns={[
+              {
+                id: 'checkBox',
+                align: 'left',
+                minWidth: '60px',
+                isSort: false,
+                isFilter: false,
+                label: '',
+                renderColumn() {
+                  return (
+                    <Checkbox
+                      checked={
+                        !!memberDummyData?.length &&
+                        selectedStudents?.length === memberDummyData?.length
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents(memberDummyData || []);
+                        } else {
+                          setSelectedStudents([]);
+                        }
+                      }}
+                    />
+                  );
+                },
+                render(value, row) {
+                  return (
+                    <Checkbox
+                      checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, row]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                        }
+                      }}
+                    />
+                  );
+                },
+              },
               { id: 'memberId', label: 'Member Id' },
               { id: 'role', label: 'Role' },
               { id: 'name', label: 'Name' },
@@ -286,6 +337,15 @@ const LibraryMemberManagementScreen = () => {
             data={memberDummyData}
           />
         </>
+      )}
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
       )}
 
       {dialogForDeleteConfirmation.value && (

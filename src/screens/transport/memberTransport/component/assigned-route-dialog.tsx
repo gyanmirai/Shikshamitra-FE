@@ -16,6 +16,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -41,6 +43,8 @@ interface FormikValue {
   pickupPoint: string;
   dropoffPoint: string;
   differentDropOffPoint: boolean;
+  others: string;
+  messageSentToStudent: string;
 }
 
 // Mock Data
@@ -94,6 +98,8 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
       pickupPoint: isEdit ? (data.pickupPoint ?? '') : '',
       dropoffPoint: isEdit ? (data.dropoffPoint ?? '') : '',
       differentDropOffPoint: false,
+      others: '',
+      messageSentToStudent: '',
     },
     onSubmit: (values) => {
       onSave(values);
@@ -358,8 +364,10 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
                 rows={3}
                 name="notes"
                 label="Others"
-                value=""
-                onChange={() => {}}
+                value={formik.values.others}
+                onChange={(e) => {
+                  formik.setFieldValue('others', capitalizeWords(e.target.value));
+                }}
                 size="small"
                 fullWidth
               />
@@ -370,8 +378,10 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
                 rows={3}
                 name="notified message"
                 label="Message Sent to Student"
-                value=""
-                onChange={() => {}}
+                value={formik.values.messageSentToStudent}
+                onChange={(e) => {
+                  formik.setFieldValue('messageSentToStudent', capitalizeWords(e.target.value));
+                }}
                 size="small"
                 fullWidth
               />

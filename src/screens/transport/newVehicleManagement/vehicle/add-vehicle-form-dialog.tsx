@@ -10,6 +10,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
@@ -114,7 +116,9 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
                 label="Vehicle Name"
                 name="vehicleName"
                 value={formik.values.vehicleName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('vehicleName', capitalizeWords(e.target.value));
+                }}
                 onBlur={formik.handleBlur}
                 error={formik.touched.vehicleName && Boolean(formik.errors.vehicleName)}
                 // helperText={formik.touched.vehicleName && formik.errors.vehicleName}
@@ -129,7 +133,9 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
                 label="Registration Number"
                 name="registrationNumber"
                 value={formik.values.registrationNumber}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('registrationNumber', e.target.value.toUpperCase());
+                }}
                 onBlur={formik.handleBlur}
                 error={
                   formik.touched.registrationNumber && Boolean(formik.errors.registrationNumber)
@@ -146,7 +152,9 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
                 label="Vehicle Type"
                 name="vehicleType"
                 value={formik.values.vehicleType}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('vehicleType', capitalizeWords(e.target.value));
+                }}
                 onBlur={formik.handleBlur}
                 error={formik.touched.vehicleType && Boolean(formik.errors.vehicleType)}
                 // helperText={formik.touched.vehicleType && formik.errors.vehicleType}
@@ -175,7 +183,9 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
                 label="Manufacturer"
                 name="manufacturer"
                 value={formik.values.manufacturer}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('manufacturer', capitalizeWords(e.target.value));
+                }}
                 onBlur={formik.handleBlur}
                 error={formik.touched.manufacturer && Boolean(formik.errors.manufacturer)}
                 // helperText={formik.touched.manufacturer && formik.errors.manufacturer}

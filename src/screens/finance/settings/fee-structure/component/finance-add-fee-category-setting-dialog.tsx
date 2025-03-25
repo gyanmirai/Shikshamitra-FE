@@ -10,6 +10,8 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
@@ -41,26 +43,10 @@ interface FormikValue {
   paymentDueDate: any;
   multipleApplicableGrade: string[];
   chargesType: string;
-  enterChargesAmount: string;
+
   lateFeeChargesType: string;
   lateFeeChargesAmount: string;
 }
-
-const validationSchema = Yup.object({
-  bookRecipt: Yup.string().required('Receipt Book is required'),
-  applicableGrade: Yup.string().required('Applicable Grade is required'),
-  feeHead: Yup.string().required('Fee Category is required'),
-  grossFee: Yup.string().required('Gross Fee is required'),
-  discountAmount: Yup.string().required('Discount Amount is required'),
-  discountRemark: Yup.string().required('Discount Remark is required'),
-  payableFee: Yup.string().required('Payable Fee is required'),
-  paymentMethod: Yup.array().min(1, 'At least one Payment Method is required'),
-  paymentDueDate: Yup.date().required('Payment Due Date is required').nullable(),
-  chargesType: Yup.string().required('Charges Type is required'),
-  enterChargesAmount: Yup.string().required('Charges Amount is required'),
-  lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
-  lateFeeChargesAmount: Yup.string().required('Late Fee Charges Amount is required'),
-});
 
 const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingDialogProps> = ({
   dialogValue,
@@ -90,16 +76,48 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       paymentDueDate: dayjs(),
       multipleApplicableGrade: [],
       chargesType: '',
-      enterChargesAmount: '',
+
       lateFeeChargesType: '',
       lateFeeChargesAmount: '',
     }),
     []
   );
 
+  const validationSchema = Yup.object({
+    bookRecipt: Yup.string().required('Receipt Book is required'),
+    applicableGrade: Yup.string().required('Applicable Grade is required'),
+    feeHead: Yup.string().required('Fee Category is required'),
+    grossFee: Yup.string().required('Gross Fee is required'),
+    discountAmount: Yup.string()
+      .transform((value) => value.replace(/[^0-9.]/g, ''))
+      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+        if (!value) return true; // Allow empty values (optional)
+        const numericValue = Number(value);
+        return numericValue > 0;
+      }),
+
+    // discountRemark: Yup.string().required('Discount Remark is required'),
+    // payableFee: Yup.string().required('Payable Fee is required'),
+    paymentMethod: Yup.array().min(1, 'At least one Payment Method is required'),
+    paymentDueDate: Yup.date().required('Payment Due Date is required'),
+
+    // lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
+    lateFeeChargesAmount: Yup.string()
+      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+        if (!value) return true; // Allow empty values when not required
+        return Number(value) > 0;
+      })
+      .when('lateFeeChargesType', {
+        is: 'perDay',
+        then: (schema) =>
+          schema.required('Late Fee Charges Amount is required when type is per day'),
+      }),
+  });
+
   const formik = useFormik<FormikValue>({
     initialValues,
-    // validationSchema,
+    validationSchema,
     onSubmit: (values) => {
       console.log('Form submitted', values);
 
@@ -114,8 +132,33 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
         return;
       }
 
-      setFeeHeadListForFeeStructure((prev) => [...prev, values]);
+      setFeeHeadListForFeeStructure((prev) => [
+        ...prev,
+        {
+          ...values,
+          lateFeeChargesAmount:
+            values.lateFeeChargesType === 'none' ? 0 : values.lateFeeChargesAmount,
+        },
+      ]);
+
       setIsFieldsDisabled(true);
+
+      // resetForm({
+      //   values: {
+      //     feeHead: '',
+      //     grossFee: '',
+      //     discountAmount: '',
+      //     discountRemark: '',
+      //     payableFee: '',
+      //     paymentMethod: [],
+      //     lateFeeChargesAmount: '',
+      //     lateFeeChargesType: '',
+
+      //     // Keep these fields unchanged
+      //     applicableGrade: values.applicableGrade,
+      //     bookRecipt: values.bookRecipt,
+      //   },
+      // });
       formik.setValues({
         ...values, // Keep existing values
         feeHead: '',
@@ -162,6 +205,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     formik.setValues(row);
   };
 
+  const handleSubmit = () => {};
+
   return (
     <>
       <form onSubmit={formik.handleSubmit}>
@@ -188,15 +233,15 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
               Add
             </Button>
             <Button
-              startIcon={<Iconify icon="icon-park-twotone:clear-format" />}
+              startIcon={<Iconify icon="si:add-duotone" />}
               variant="contained"
               size="small"
               onClick={handleClear}
               disabled={feeHeadListForFeeStructure.length === 0}
             >
-              Clear
+              Add For Other Class
             </Button>
-            <Button variant="contained" size="small" onClick={handleCloseDialog}>
+            <Button variant="contained" size="small" onClick={handleSubmit}>
               Submit
             </Button>
           </Box>
@@ -296,7 +341,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
               label="Discount Remark"
               name="discountRemark"
               value={formik.values.discountRemark}
-              onChange={formik.handleChange}
+              onChange={(e) => {
+                formik.setFieldValue('discountRemark', capitalizeWords(e.target.value));
+              }}
               error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
               helperText={formik.touched.discountRemark && formik.errors.discountRemark}
             />
@@ -341,20 +388,24 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <NumericFormatCustom
-              size="small"
-              fullWidth
-              label="Late Fee Charges Amount"
-              name="lateFeeChargesAmount"
-              value={formik.values.lateFeeChargesAmount}
-              onChange={formik.handleChange}
-              error={
-                formik.touched.lateFeeChargesAmount && Boolean(formik.errors.lateFeeChargesAmount)
-              }
-              helperText={formik.touched.lateFeeChargesAmount && formik.errors.lateFeeChargesAmount}
-            />
-          </Grid>
+          {formik.values.lateFeeChargesType === 'perDay' && (
+            <Grid item xs={12} md={6}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Late Fee Charges Amount"
+                name="lateFeeChargesAmount"
+                value={formik.values.lateFeeChargesAmount}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.lateFeeChargesAmount && Boolean(formik.errors.lateFeeChargesAmount)
+                }
+                helperText={
+                  formik.touched.lateFeeChargesAmount && formik.errors.lateFeeChargesAmount
+                }
+              />
+            </Grid>
+          )}
           <Grid item xs={12} md={6}>
             <DatePicker
               label="Fees Due Date"
@@ -375,3 +426,20 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
 };
 
 export default FinanceAddFeeCategorySettingDialog;
+function resetForm(arg0: {
+  values: {
+    feeHead: string;
+    grossFee: string;
+    discountAmount: string;
+    discountRemark: string;
+    payableFee: string;
+    paymentMethod: never[];
+    lateFeeChargesAmount: string;
+    lateFeeChargesType: string;
+    // Keep these fields unchanged
+    applicableGrade: string;
+    bookRecipt: string;
+  };
+}) {
+  throw new Error('Function not implemented.');
+}

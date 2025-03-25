@@ -25,8 +25,8 @@ import {
   useTheme,
   MenuList,
   MenuItem,
-  Checkbox,
   Skeleton,
+  Checkbox,
   TextField,
   IconButton,
   Typography,
@@ -73,6 +73,7 @@ import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
@@ -547,9 +548,23 @@ const AdmissionScreen = () => {
           doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
           studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
           genderValue: GenderType[item?.genderType],
-        })),
+        })) || [],
     [admissionData?.items, tabs.value]
   );
+
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
+    setSelectedStudents([]);
+    tabs.onChange(event, newValue);
+  };
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -560,7 +575,7 @@ const AdmissionScreen = () => {
       <Box display="flex" gap={1} alignItems="flex-start">
         <Tabs
           value={tabs.value}
-          onChange={tabs.onChange}
+          onChange={handleTabChange}
           sx={{
             mb: 2,
             '& .MuiTabs-flexContainer': { gap: 2 },
@@ -598,7 +613,8 @@ const AdmissionScreen = () => {
         </Button>
       </Box>
       <CustomizableTable
-        showCheckbox
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="student-enrollment-admission-table"
         isLoading={isLoading}
         columns={[
@@ -615,7 +631,7 @@ const AdmissionScreen = () => {
                   checked={tableData?.length && selectedStudents?.length === tableData?.length}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setSelectedStudents(tableData);
+                      setSelectedStudents(tableData || []);
                     } else {
                       setSelectedStudents([]);
                     }
@@ -626,7 +642,7 @@ const AdmissionScreen = () => {
             render(value, row) {
               return (
                 <Checkbox
-                  checked={!!selectedStudents.find((i: any) => i.id === row.id)}
+                  checked={selectedStudents.some((i: any) => i.id === row.id)}
                   onChange={(e) => {
                     if (e.target.checked) {
                       setSelectedStudents([...selectedStudents, row]);
@@ -771,6 +787,15 @@ const AdmissionScreen = () => {
         ]}
         data={tableData || []}
       />
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
 
       <CustomDialog
         maxWidth="xl"

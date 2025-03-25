@@ -2,7 +2,7 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList } from '@mui/material';
+import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,6 +10,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import TransportRequestDialog from './component/transport-request-dialog';
 import TransportRouteAssignedDialog from './component/assigned-route-dialog';
@@ -100,6 +101,42 @@ const TransportRequestScreen = () => {
   ];
 
   const columnData = [
+    {
+      id: 'checkBox',
+      align: 'left' as 'left',
+      minWidth: '60px',
+      isSort: false,
+      isFilter: false,
+      label: '',
+      renderColumn() {
+        return (
+          <Checkbox
+            checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedStudents(tableData || []);
+              } else {
+                setSelectedStudents([]);
+              }
+            }}
+          />
+        );
+      },
+      render(value: any, row: any) {
+        return (
+          <Checkbox
+            checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedStudents([...selectedStudents, row]);
+              } else {
+                setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              }
+            }}
+          />
+        );
+      },
+    },
     { id: 'grNo', label: 'Gr No' },
     { id: 'name', label: 'Name' },
     { id: 'grade', label: 'Standard' },
@@ -143,6 +180,44 @@ const TransportRequestScreen = () => {
   ];
 
   const columnDataForStaff = [
+    {
+      id: 'checkBox',
+      align: 'left' as 'left',
+      minWidth: '60px',
+      isSort: false,
+      isFilter: false,
+      label: '',
+      renderColumn() {
+        return (
+          <Checkbox
+            checked={
+              !!tableDataForStaff?.length && selectedStudents?.length === tableDataForStaff?.length
+            }
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedStudents(tableDataForStaff || []);
+              } else {
+                setSelectedStudents([]);
+              }
+            }}
+          />
+        );
+      },
+      render(value: any, row: any) {
+        return (
+          <Checkbox
+            checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedStudents([...selectedStudents, row]);
+              } else {
+                setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              }
+            }}
+          />
+        );
+      },
+    },
     { id: 'employeeNo', label: 'Employee No' },
     { id: 'name', label: 'Name' },
 
@@ -200,13 +275,34 @@ const TransportRequestScreen = () => {
     setIsStaff(false);
     assignedRouteDialog.onFalse();
   };
+
+  const sendInstantNotificationDialogValueForStudent = useBoolean();
+  const sendInstantNotificationDialogValueForStaff = useBoolean();
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValueForStudent.value) {
+      sendInstantNotificationDialogValueForStudent.onTrue();
+    }
+  };
+
+  const handlerSendNotificationForStaff = () => {
+    if (!sendInstantNotificationDialogValueForStaff.value) {
+      sendInstantNotificationDialogValueForStaff.onTrue();
+    }
+  };
+
+  const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: any) => {
+    setSelectedStudents([]);
+    setSearchParams({ tab: value });
+  };
   return (
     <>
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <Box>
           <Tabs
             value={searchParams.tab}
-            onChange={(e, value) => setSearchParams({ tab: value })}
+            onChange={(e, value) => handleTabChange(e, value)}
             sx={{
               mb: 2,
               '& .MuiTabs-flexContainer': { gap: 2 },
@@ -252,10 +348,22 @@ const TransportRequestScreen = () => {
 
       <Divider />
       {searchParams.tab === 'student' && (
-        <CustomizableTable data={tableData} columns={columnData} tableId="student" />
+        <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudents.length !== 0}
+          data={tableData}
+          columns={columnData}
+          tableId="student"
+        />
       )}
       {searchParams.tab === 'staff' && (
-        <CustomizableTable data={tableDataForStaff} columns={columnDataForStaff} tableId="staff" />
+        <CustomizableTable
+          onSendNotification={handlerSendNotificationForStaff}
+          showCheckbox={selectedStudents.length !== 0}
+          data={tableDataForStaff}
+          columns={columnDataForStaff}
+          tableId="staff"
+        />
       )}
       {assignedRouteDialog.value && (
         <TransportRouteAssignedDialog
@@ -267,6 +375,24 @@ const TransportRequestScreen = () => {
           allData={tableData}
           isStaff={isStaff}
           clickFromTable
+        />
+      )}
+
+      {sendInstantNotificationDialogValueForStudent.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValueForStudent.value}
+          onClose={sendInstantNotificationDialogValueForStudent.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
+
+      {sendInstantNotificationDialogValueForStaff.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValueForStaff.value}
+          onClose={sendInstantNotificationDialogValueForStaff.onFalse}
+          data={[]}
+          userList={selectedStudents}
         />
       )}
 
