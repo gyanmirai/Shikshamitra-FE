@@ -194,7 +194,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                         formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
                       }
                       helperText={
-                        formik.touched.checkBounceReason && formik.errors.checkBounceReason
+                        formik.touched.checkBounceReason &&
+                        (formik.errors.checkBounceReason as string)
                       }
                     />
                   </Grid2>
@@ -213,7 +214,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                         Boolean(formik.errors.checkBounceCharges)
                       }
                       helperText={
-                        formik.touched.checkBounceCharges && formik.errors.checkBounceCharges
+                        formik.touched.checkBounceCharges &&
+                        (formik.errors.checkBounceCharges as string)
                       }
                     />
                   </Grid2>
