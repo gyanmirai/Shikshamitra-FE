@@ -6,14 +6,14 @@ interface CustomPlaceholderInputProps {
   value: string;
   onChange: (newValue: string) => void;
   placeholderOptions: { value: string; label: string }[];
-  isFromView: boolean;
+  isFromView?: boolean;
 }
 
 const CustomPlaceholderInput: React.FC<CustomPlaceholderInputProps> = ({
   value,
   onChange,
   placeholderOptions,
-  isFromView,
+  isFromView = false,
 }) => {
   const [cursorPos, setCursorPos] = useState<number | null>(null);
   const [anchorEl, setAnchorEl] = useState<{ top: number; left: number } | null>(null);
