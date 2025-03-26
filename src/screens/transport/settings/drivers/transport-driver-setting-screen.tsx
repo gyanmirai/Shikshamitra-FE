@@ -173,7 +173,6 @@ const TransportDriverSettingScreen = () => {
           dialogValue={driverDetailsDilog.value}
         />
       )}
-      ;
     </>
   );
 };

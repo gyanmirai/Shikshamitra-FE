@@ -193,11 +193,12 @@ const EditNotificationDialog: React.FC<EditNotificationDialogProps> = ({
                   </Box>
 
                   <CustomPlaceholderInput
+                    isFromView={isFromView ?? false}
                     value={recipient.message}
                     onChange={(newValue: string) =>
                       updateRecipient(recipient.name, 'message', newValue)
                     }
-                    placeholderOptions={recipient.placeHolderOptions}
+                    placeholderOptions={recipient.placeHolderOptions ?? []}
                   />
                 </Grid>
               </Box>
