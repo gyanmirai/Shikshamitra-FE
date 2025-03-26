@@ -563,6 +563,12 @@ const hrModule = {
           ],
         },
         {
+          title: 'Notification',
+          path: '/hr/hr-notification',
+          _action: 'hr-notification',
+        },
+
+        {
           title: 'Setting',
           path: '/hr/setting',
           _action: 'hr-setting',
@@ -1319,6 +1325,11 @@ const transportModule = {
           title: 'Reports & Analytics',
           path: '/transport/reports-analytics',
           _action: 'reports-analytics',
+        },
+        {
+          title: 'Notification',
+          path: '/transport/transport-notification',
+          _action: 'transport-notification',
         },
         {
           title: 'Settings',

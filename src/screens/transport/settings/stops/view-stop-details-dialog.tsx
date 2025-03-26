@@ -24,7 +24,7 @@ const ViewStopDetailDialog: React.FC<ViewStopDetailDialogProps> = ({ dialogValue
       handleClose={onClose}
       open={dialogValue}
     >
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '500px' }}>
+      <Scrollbar sx={{ p: 3, height: '500px' }}>
         <CustomizableTable
           tableId="view-stop-detail-table"
           isShowedDense={false}
