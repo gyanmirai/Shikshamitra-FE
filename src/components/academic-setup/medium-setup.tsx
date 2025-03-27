@@ -2,6 +2,7 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { capitalize } from 'lodash';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -10,6 +11,7 @@ import {
   Tab,
   Box,
   Tabs,
+  Stack,
   Button,
   MenuList,
   MenuItem,
@@ -22,28 +24,18 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useDeleteDivisionMutation } from 'src/redux/division/divisionApi';
-import { useDeleteClassMutation, useLazyGetClassByIdQuery } from 'src/redux/class/classApi';
-import {
-  useDeleteOrganizationMutation,
-  useLazyGetOrganizationByIdQuery,
-} from 'src/redux/oraganization/oraganization';
 import {
   useGetMediumQuery,
   useAddMediumMutation,
   useDeleteMediumMutation,
   useUpdateMediumMutation,
-  useLazyGetMediumByIdQuery,
 } from 'src/redux/medium/mediumApi';
 
 import { Iconify } from '../iconify';
-import { ClassForm } from './class-setup';
 import CustomDialog from '../customDialog';
-import { DivisionForm } from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
-import { CustomAcademicTable } from './academic-table';
-import { OrganizationForm } from './organization-setup';
+import { CustomStyling } from '../tree-view/custom-styling';
 
 export interface EducationMedium {
   id: string;
@@ -165,12 +157,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
         handleClose={onCloseDialog}
         open={modal.value}
       >
-        <MediumForm
-          boardId={boardId}
-          handleClose={onCloseDialog}
-          handleSetTeb={handleSetTeb}
-          editData={editData}
-        />
+        <MediumForm boardId={boardId} handleClose={onCloseDialog} editData={editData} />
       </CustomDialog>
       <Box
         display="flex"
@@ -226,7 +213,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
           Medium
         </Button>
       </Box>
-      {tabs.value && (
+      {/* {tabs.value && (
         <CustomAcademicTable
           id={tabs.value}
           deleteMutation={useDeleteOrganizationMutation}
@@ -259,7 +246,8 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
             },
           }}
         />
-      )}
+      )} */}
+      <CustomStyling />
     </Box>
   );
 };
@@ -268,11 +256,11 @@ export default MediumSetup;
 
 interface IMediumForm {
   handleClose: () => void;
-  handleSetTeb: (value: Record<string, any>) => void;
   editData: null | Record<string, any>;
   boardId: string | number;
 }
-const MediumForm = ({ handleClose, handleSetTeb, editData, boardId }: IMediumForm) => {
+export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
+  const confirm = useBoolean();
   const [addMedium, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddMediumMutation,
@@ -297,58 +285,84 @@ const MediumForm = ({ handleClose, handleSetTeb, editData, boardId }: IMediumFor
     validationSchema: Yup.object().shape({
       medium: Yup.string().required('Medium is required'),
     }),
-    onSubmit: async (values) => {
+    onSubmit: (values) => {
+      confirm.onTrue();
+    },
+  });
+
+  const onSubmit = async () => {
+    try {
       if (editData) {
         const res = await updateMedium({
           id: editData.id,
           body: {
-            name: values.medium,
+            name: formik.values.medium,
             educationBoardId: boardId,
           },
-        });
-        if (!res.error) {
-          handleSetTeb(res);
-        }
+        }).unwrap();
       } else {
         const res = await addMedium({
-          name: values.medium,
+          name: formik.values.medium,
           educationBoardId: boardId,
-        });
-        if (!res.error) {
-          handleSetTeb(res);
-        }
+        }).unwrap();
       }
       handleClose();
-    },
-  });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <TextField
-        fullWidth
-        id="medium"
-        name="medium"
-        label="Medium Name"
-        value={formik.values.medium}
-        onChange={formik.handleChange}
-        error={formik.touched.medium && Boolean(formik.errors.medium)}
-        // @ts-ignore
-        helperText={formik.touched.medium && formik.errors.medium}
-        size="small"
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={() => {
+          confirm.onFalse();
+        }}
+        title={`${editData ? 'Update' : 'Create'}`}
+        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Medium ?`}
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isLoading || isUpdateLoading}
+            // color="error"
+            onClick={onSubmit}
+          >
+            Confirm
+          </LoadingButton>
+        }
       />
-      <DialogActions>
-        <Button variant="outlined" size="small" onClick={handleClose}>
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdateLoading}
-          type="submit"
-          variant="contained"
+      <Stack spacing={2} direction="column" p={2}>
+        <TextField
+          fullWidth
+          id="medium"
+          name="medium"
+          label="Medium Name"
+          autoFocus
+          value={formik.values.medium}
+          onChange={(e) => {
+            const newName = capitalize(e.target.value);
+            formik.setFieldValue('medium', newName);
+          }}
+          error={formik.touched.medium && Boolean(formik.errors.medium)}
+          // @ts-ignore
+          helperText={formik.touched.medium && formik.errors.medium}
           size="small"
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
+        />
+        <DialogActions sx={{ p: 0 }}>
+          <Button variant="outlined" size="small" onClick={handleClose}>
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isLoading || isUpdateLoading}
+            type="submit"
+            variant="contained"
+            size="small"
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+      </Stack>
     </Box>
   );
 };

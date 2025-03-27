@@ -27,6 +27,7 @@ import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
+import { studentGroupApi } from './student/student-group/student-group';
 import { StudentCertificateApi } from './student/certificate/certificate';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
@@ -92,6 +93,7 @@ const reducers = combineReducers({
   [StudentTakeAttendanceApi.reducerPath]: StudentTakeAttendanceApi.reducer,
   [shiftManagementApi.reducerPath]: shiftManagementApi.reducer,
   [StudentApi.reducerPath]: StudentApi.reducer,
+  [studentGroupApi.reducerPath]: studentGroupApi.reducer,
 });
 
 const store = configureStore({
@@ -136,7 +138,8 @@ const store = configureStore({
       .concat(StudentCertificateApi.middleware)
       .concat(StudentTakeAttendanceApi.middleware)
       .concat(shiftManagementApi.middleware)
-      .concat(StudentApi.middleware),
+      .concat(StudentApi.middleware)
+      .concat(studentGroupApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

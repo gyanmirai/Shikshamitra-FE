@@ -27,13 +27,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { IInquiryData } from '.';
 
 const InquiryTable = ({
-  dialog,
+  setParams,
   followUpDialog,
   issueRegistrationFormDialog,
   editData,
   setEditData,
 }: {
-  dialog: UseBooleanReturn;
+  setParams: (obj: Record<string, any>) => void;
   issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   editData: null | IInquiryData;
@@ -128,7 +128,7 @@ const InquiryTable = ({
                 placement="right-top"
                 showEditIcon
                 handleEditClick={() => {
-                  dialog.onTrue();
+                  setParams({ isForm: 'true' });
                   setEditData(row as IInquiryData);
                 }}
                 actions={({ popover }) => (

@@ -9,9 +9,9 @@ import { Box, Dialog, useTheme, IconButton, Typography } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-type CustomDialogProps = DialogProps & {
+type CustomDialogProps = Omit<DialogProps, 'title'> & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
-  title: string;
+  title: React.ReactNode | string;
   children: React.ReactNode;
   paperProps?: PaperProps;
 };
