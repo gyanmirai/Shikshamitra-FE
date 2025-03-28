@@ -285,8 +285,8 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
         onClose={() => {
           confirm.onFalse();
         }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Sandard ?`}
+        title={`${editData ? 'Update Division' : 'Create Division'}`}
+        content={`Are you sure want to ${editData ? `Update Division ${editData?.name} to ${formik.values.division}` : `Create Division ${formik.values.division}`}  ?`}
         action={
           <LoadingButton
             variant="contained"

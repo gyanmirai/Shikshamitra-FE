@@ -9,6 +9,7 @@ import {
   Table,
   Stack,
   Button,
+  Tooltip,
   Checkbox,
   TableRow,
   Collapse,
@@ -86,6 +87,7 @@ const RoleScreen = () => {
     <Box p={1}>
       <CustomBreadcrumbs
         heading="Role Management"
+        description="Defines and controls user roles, permissions, and access levels within the system, ensuring users have appropriate privileges based on their responsibilities."
         links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'Role Management' }]}
         sx={{ px: 1, mb: 3 }}
         action={
@@ -148,7 +150,23 @@ const RoleScreen = () => {
         isLoading={isLoading}
       />
 
-      <CustomDialog title="Add Role" handleClose={handleClose} open={open} fullScreen>
+      <CustomDialog
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            {editData ? 'Update Role' : 'Create Role'}{' '}
+            <Tooltip
+              arrow
+              placement="right"
+              title="Roles help assign specific permissions to users based on their responsibilities, ensuring secure and efficient access control within the system"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>{' '}
+          </Box>
+        }
+        handleClose={handleClose}
+        open={open}
+        fullScreen
+      >
         <RoleForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>
@@ -160,7 +178,6 @@ export default RoleScreen;
 const RoleForm = ({ handleClose, editData }: any) => {
   const [modulePermissionData, setModulePermissionData] = useState([]);
   const [allPermissions, setAllPermissions] = useState([]);
-  console.log('🚀 ~ RoleForm ~ allPermissions:', allPermissions);
 
   const { data: permissionData } = useQueryAndMutation({
     type: 'query',
@@ -274,7 +291,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
               onBlur={formik.handleBlur}
             />
           </Box>
-
+          {/* <Divider sx={{ mt: 1 }} /> */}
           {/* <FormControlLabel
             control={
               <Checkbox
