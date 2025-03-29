@@ -56,6 +56,12 @@ interface FormikValues {
   ifscNumber: string;
   upiId: string;
 }
+
+interface feeRefundOptions {
+  feeHead: string;
+  refundAmount: string;
+}
+
 const columnsTable = [
   { key: 'feeHead', label: 'Fee Head' },
   { key: 'refundAmount', label: 'Refund Amount' },
@@ -72,12 +78,9 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
   libraryFeeFeeAmount,
   totalFeeAmount,
 }) => {
-  console.log('selectedEntry', data);
-  console.log('alldata', allData);
+  const datax: feeRefundOptions[] = [];
 
-  const datax: any[] = [];
-
-  allData.forEach((val: any) => {
+  allData.forEach((val: feeRefundOptions) => {
     const refundData = {
       feeHead: val.feeHead,
       refundAmount: val.refundAmount,
@@ -122,18 +125,14 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
       upiId: '',
     },
     // validationSchema: validationSchema,  // Uncomment this if you have validation schema
-    onSubmit: (values) => {
-      // const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
-
-      console.log('Form Submitted type', values);
-    },
+    onSubmit: (values) => {},
   });
 
-  const [chequeAmountState, setChequeAmountState] = useState('');
-  const [bankAmountState, setBankAmountState] = useState('');
-  const [cardAmountState, setCardAmountState] = useState('');
-  const [onlineAmountState, setOnlineAmountState] = useState('');
-  const [cashAmountState, setCashAmountState] = useState('');
+  const [chequeAmountState, setChequeAmountState] = useState<string>('');
+  const [bankAmountState, setBankAmountState] = useState<string>('');
+  const [cardAmountState, setCardAmountState] = useState<string>('');
+  const [, setOnlineAmountState] = useState<string>('');
+  const [, setCashAmountState] = useState<string>('');
   const handleBankAmountChange = (formattedValue: string, numericValue: number) => {
     setBankAmountState(formattedValue);
   };
@@ -149,125 +148,6 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
   const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
     setCashAmountState(formattedValue);
   };
-
-  const dataForRefund = [
-    {
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Tuition',
-      paidAmount: '10000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'June-2024',
-              date: '15-01-2024',
-              status: 'Unpaid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: '54j8',
-                  paymentStatus: 'Success',
-                },
-                { paymentMode: 'Cash', amount: '2000' },
-                {
-                  paymentMode: 'Online',
-                  amount: '1000',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Failed',
-                },
-                {
-                  paymentMode: 'Online',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Check',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Not Clear',
-                  charges: 500,
-                },
-              ],
-            },
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Library',
-      paidAmount: '4000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
 
   return (
     <Box>

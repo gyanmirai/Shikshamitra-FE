@@ -15,7 +15,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import TransportRouteAssignedDialog from './component/assigned-route-dialog';
+import { assignments, assignmentsForStaff } from './data/member-transport-screen-data';
 import TransportNotifyParentsDialog from '../starffTransport/component/transport-notify-parents.dialog';
+
+import type { StaffAssignment, StudentAssignment } from './data/member-transport-screen-data';
 
 const TABS = [
   {
@@ -35,72 +38,8 @@ const TABS = [
     //   component: () => <FinanceStudentStructureOverview />,
   },
 ];
-const assignmentsForStaff: any = [
-  {
-    name: 'Ms. Anjali Verma',
-    grade: '-',
-    id: 9,
-    assignedRoute: 'R108',
-    pickupPoint: 'School',
-    dropoffPoint: 'Ved',
-    role: 'Teacher',
-    employeeNo: '567',
-  },
-  {
-    name: 'Mr. Rahul Gandhi',
-    grade: '-',
-    id: 11,
-    assignedRoute: 'R109',
-    pickupPoint: 'School',
-    dropoffPoint: 'Dindoli',
-    role: 'Teacher',
-    employeeNo: '568',
-  },
-  {
-    name: 'Ms. Kavita Desai',
-    grade: '-',
-    id: 10,
-    assignedRoute: 'R110',
-    pickupPoint: 'School',
-    dropoffPoint: 'Godadara',
-    role: 'Teacher',
-    employeeNo: '569',
-  },
-];
 
-const assignments: any = [
-  {
-    name: 'Aarav Patel',
-    grade: '1',
-    id: 1,
-    assignedRoute: 'R101',
-    pickupPoint: 'School',
-    dropoffPoint: 'Dindoli',
-    role: 'Student',
-    grNo: '570',
-  },
-  {
-    name: 'Meera Shah',
-    grade: '2',
-    id: 3,
-    assignedRoute: 'R102',
-    pickupPoint: 'School',
-    dropoffPoint: 'Godadara',
-    role: 'Student',
-    grNo: '571',
-  },
-];
-
-const handleChange = (e: any) => {
-  console.log(e);
-};
-
-const handleSaveForBulk = (e: any) => {
-  console.log(e);
-};
-const handleSaveNotify = (e: any) => {
-  console.log(e);
-};
+const handleSaveNotify = (e: any) => {};
 
 const MemberTransportScreen = () => {
   const sendInstantNotificationDialogValueForStudent = useBoolean();
@@ -276,11 +215,12 @@ const MemberTransportScreen = () => {
   const dialogForBulkEdit = useBoolean();
   const dialogNotify = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState();
-  const [isEdit, setIsEdit] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
-  const [clickFromTable, setClickFromTable] = useState(false);
-  const [tableData, setTableData] = useState(assignments);
-  const [tableDataForStaff, setTableDataForStaff] = useState(assignmentsForStaff);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [isStaff, setIsStaff] = useState<boolean>(false);
+  const [clickFromTable, setClickFromTable] = useState<boolean>(false);
+  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff, setTableDataForStaff] =
+    useState<StaffAssignment[]>(assignmentsForStaff);
   const closeDialog = () => {
     setClickFromTable(false);
     setIsStaff(false);
@@ -296,35 +236,29 @@ const MemberTransportScreen = () => {
   };
 
   const handleSave = (e: any) => {
-    const { id, name, grade, assignedRoute, pickupPoint, dropoffPoint } = e;
-
-    if (isEdit) {
-      const existingIndex = tableData.findIndex((val: any) => val.id === id);
-
-      if (existingIndex !== -1) {
-        const updatedData = tableData.map((val: any, index: any) =>
-          index === existingIndex ? { ...val, assignedRoute, pickupPoint, dropoffPoint } : val
-        );
-        setTableData(updatedData);
-
-        closeDialog();
-        return;
-      }
-    }
-
-    const studentRouteData = {
-      id,
-      name,
-      grade,
-      assignedRoute,
-      pickupPoint,
-      dropoffPoint,
-    };
-
-    const updatedData = [...tableData, studentRouteData];
-
-    setTableData(updatedData);
-    closeDialog();
+    // const { id, name, grade, assignedRoute, pickupPoint, dropoffPoint } = e;
+    // if (isEdit) {
+    //   const existingIndex = tableData.findIndex((val: any) => val.id === id);
+    //   if (existingIndex !== -1) {
+    //     const updatedData = tableData.map((val: any, index: any) =>
+    //       index === existingIndex ? { ...val, assignedRoute, pickupPoint, dropoffPoint } : val
+    //     );
+    //     setTableData(updatedData);
+    //     closeDialog();
+    //     return;
+    //   }
+    // }
+    // const studentRouteData = {
+    //   id,
+    //   name,
+    //   grade,
+    //   assignedRoute,
+    //   pickupPoint,
+    //   dropoffPoint,
+    // };
+    // const updatedData = [...tableData, studentRouteData];
+    // setTableData(updatedData);
+    // closeDialog();
   };
 
   const [searchParams, setSearchParams] = useState({ tab: 'student' });

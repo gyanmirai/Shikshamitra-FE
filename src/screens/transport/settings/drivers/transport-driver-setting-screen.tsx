@@ -9,85 +9,16 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { Driverdata } from '../data/transport-driver-data';
 import DriverFormDialog from './transport-driver-form-dialog';
 import TransportDriverDetailsDialog from './transport-driver-details-dialog';
 
-const TransportDriverSettingScreen = () => {
-  const Driverdata = [
-    {
-      id: 'driver1',
-      name: 'Rakesh Mahajan',
-      age: '34',
-      licenseNumber: 'DL123456',
-      licenseExpiryDate: '20-05-2025',
-      contactNumber: '+91-234-567-8951',
-      address: '123 Main Street, Anytown, USA',
-      emergencyContact: {
-        name: 'Ravi Mahajan',
-        number: '+91-234-567-8951',
-      },
-      experience: '10 years',
-      workingHours: {
-        morning: '6 AM - 9 AM',
-        evening: '3 PM - 6 PM',
-      },
-      status: 'Active',
-      vehicle: {
-        id: 'bus1',
-        name: 'School Bus 1',
-        capacity: 40,
-      },
-      assignedRoute: 'route1',
-    },
-    {
-      id: 'driver2',
-      name: 'Rajesh Patel',
-      age: '40',
-      licenseNumber: 'DL654321',
-      licenseExpiryDate: '08-15-2024',
-      contactNumber: '+91-234-567-8928',
-      address: '456 Elm Street, Anytown, USA',
-      emergencyContact: {
-        name: 'Poonam Patel',
-        number: '+91-234-567-8928',
-      },
-      experience: '15 years',
-      workingHours: {
-        morning: '5 AM - 8 AM',
-        evening: '2 PM - 5 PM',
-      },
-      status: 'Inactive',
-      vehicle: {
-        id: 'bus2',
-        name: 'School Bus 2',
-        capacity: 50,
-      },
-      assignedRoute: 'route2',
-    },
-    {
-      id: 'driver1',
-      name: 'Sumit Mahajan',
-      age: '34',
-      licenseNumber: 'DL123456',
-      licenseExpiryDate: '08-08-2025',
-      contactNumber: '+91-234-567-8908',
-      address: '123 Main Street, Anytown, USA',
-      emergencyContact: {
-        name: 'Ravi Mahajan',
-        number: '+91-234-567-8908',
-      },
-      experience: '10 years',
-      workingHours: {
-        morning: '6 AM - 9 AM',
-        evening: '3 PM - 6 PM',
-      },
-      status: 'Active',
-    },
-  ];
+import type { Driver } from '../data/transport-driver-data';
 
+const TransportDriverSettingScreen = () => {
   const driverDetailsDilog = useBoolean();
   const driverFormDilog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState<any>();
+  const [selectedEntry, setSelectedEntry] = useState<Driver>();
   const [isEdit, setIsEdit] = useState<any>(FamilyRestroomRounded);
   return (
     <>
@@ -127,7 +58,7 @@ const TransportDriverSettingScreen = () => {
                       <MenuItem
                         onClick={() => {
                           // setIsEdit(true);
-                          setSelectedEntry(row);
+                          setSelectedEntry(row as Driver);
 
                           driverDetailsDilog.onTrue();
                         }}
@@ -138,7 +69,7 @@ const TransportDriverSettingScreen = () => {
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);
-                          setSelectedEntry(row);
+                          setSelectedEntry(row as Driver);
 
                           driverFormDilog.onTrue();
                         }}

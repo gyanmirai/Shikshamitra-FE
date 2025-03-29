@@ -4,28 +4,9 @@ import React from 'react';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { data } from './dummy_data/notification_data';
+
 const NotificationHistoryScreen = () => {
-  console.log('NotificationHistoryScreen');
-
-  const data = [
-    {
-      date: '08-01-2025',
-      time: '12:00 PM',
-      message: 'This is a notification message.',
-      communicationChannel: 'Email',
-      sentTo: 'John Doe',
-      receivedFrom: 'Admin',
-    },
-    {
-      date: '08-01-2025',
-      time: '12:00 PM',
-      message: 'This is a notification message.',
-      communicationChannel: 'Email',
-      sentTo: ['abc', 'def'],
-      receivedFrom: 'Admin',
-    },
-  ];
-
   const column = [
     { id: 'date', label: 'Date' },
     { id: 'time', label: 'Time' },

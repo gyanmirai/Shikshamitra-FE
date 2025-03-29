@@ -47,6 +47,22 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
   const [categoryListBasedOnType, setCategoryListBasedOnType] = useState<any>([]);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  const validationSchema = Yup.object({
+    categoryType: Yup.string()
+
+      .required('Category type is required'),
+
+    categoryName: Yup.string().required('Category name is required'),
+
+    fundAllocation: Yup.string()
+      .required('Expense amount is required')
+      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+        const numericValue = Number(value);
+        return numericValue > 0;
+      }),
+  });
+
   const initialValues = useMemo(
     () => ({
       startDate: dayjs(edit ? data.startDate : '2024-04-24', 'YYYY-MM-DD'),
@@ -63,26 +79,11 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
-  const validationSchema = Yup.object({
-    categoryType: Yup.string()
 
-      .required('Category type is required'),
-
-    categoryName: Yup.string().required('Category name is required'),
-
-    fundAllocation: Yup.string()
-      .required('Expense amount is required')
-      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        const numericValue = Number(value);
-        return numericValue > 0;
-      }),
-  });
   const formik = useFormik({
     initialValues,
     validationSchema,
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       onSave(values);
     },
   });
@@ -103,6 +104,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
     const isChanged = !isEqual(formik.values, initialValues);
     dispatch(setIsChanges(isChanged));
   }, [dispatch, formik.values, initialValues]);
+
   // Close dialog handler
   const handleCloseDialog = () => {
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {

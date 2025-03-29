@@ -21,13 +21,14 @@ interface FinanceReconciliationClearAndBounceChequeDialogProps {
   onClose: () => void;
 }
 
+const validationSchema = Yup.object({
+  checkBounceCharges: Yup.string().required('Bounce Charges is required'),
+  checkBounceReason: Yup.string().required('Reason is required'),
+});
+
 const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
   FinanceReconciliationClearAndBounceChequeDialogProps
 > = ({ fromClearCheck, dialogValue, data, onSave, onClose }) => {
-  const validationSchema = Yup.object({
-    checkBounceCharges: Yup.string().required('Bounce Charges is required'),
-    checkBounceReason: Yup.string().required('Reason is required'),
-  });
   const formik = useFormik({
     initialValues: {
       grNumber: '',
@@ -46,7 +47,6 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
     },
     validationSchema,
     onSubmit: (values: any) => {
-      console.log('Form Submitted type:', values);
       onSave(values);
     },
   });

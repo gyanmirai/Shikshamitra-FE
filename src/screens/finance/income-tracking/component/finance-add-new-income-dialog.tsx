@@ -19,6 +19,22 @@ import { Iconify } from 'src/components/iconify/iconify';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
+const validationSchema = Yup.object().shape({
+  incomeSource: Yup.string().required('Income source is required'),
+  incomeAmount: Yup.string()
+    .required('Income amount is required')
+    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+      const numericValue = Number(value);
+      return numericValue > 0;
+    }),
+  paymentMethod: Yup.string().required('Payment method is required'),
+  date: Yup.date().required('Date is required').typeError('Invalid date'),
+  paymentStatus: Yup.string().required('Payment status is required'),
+  incomeName: Yup.string().required('Income name is required'),
+  notes: Yup.string().optional(), // Optional field
+});
+
 interface FinanceAddNewIncomeDialogProps {
   dialogValue: boolean;
   data: any;
@@ -47,7 +63,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
   isEdit,
   allData,
 }) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState<boolean>(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
@@ -67,22 +83,6 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
     }),
     [data, isEdit]
   );
-
-  const validationSchema = Yup.object().shape({
-    incomeSource: Yup.string().required('Income source is required'),
-    incomeAmount: Yup.string()
-      .required('Income amount is required')
-      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        const numericValue = Number(value);
-        return numericValue > 0;
-      }),
-    paymentMethod: Yup.string().required('Payment method is required'),
-    date: Yup.date().required('Date is required').typeError('Invalid date'),
-    paymentStatus: Yup.string().required('Payment status is required'),
-    incomeName: Yup.string().required('Income name is required'),
-    notes: Yup.string().optional(), // Optional field
-  });
 
   const formik = useFormik<FormikValue>({
     initialValues,

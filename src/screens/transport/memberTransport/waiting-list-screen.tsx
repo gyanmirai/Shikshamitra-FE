@@ -12,7 +12,14 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import RouteAvailableNotifyDialog from './component/route_available_notify-dialog';
+import { assignments, assignmentsForStaff } from './data/waiting-screen-list-data';
 import TransportStudentAndStaffUpdateInfoDialog from '../starffTransport/component/transport-student-update-route-dialog';
+
+import type {
+  Assignment,
+  StaffAssignment,
+  StudentAssignment,
+} from './data/member-transport-screen-data';
 
 const TABS = [
   {
@@ -36,69 +43,8 @@ const TransportWaitingListScreen = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectedIdsforStaff, setSelectedIdsForStaff] = useState<number[]>([]);
 
-  const dialogForRequest = useBoolean();
   const assignedRouteDialog = useBoolean();
   const notifyDialog = useBoolean();
-  const assignments: any = [
-    {
-      name: 'Aarav Patel',
-      grade: '1',
-      id: 1,
-      assignedRoute: 'R101',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      role: 'Student',
-      grNo: '570',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Meera Shah',
-      grade: '2',
-      id: 3,
-      assignedRoute: 'R102',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Student',
-      grNo: '571',
-      declinedReason: 'Not Serving at This Stop',
-    },
-  ];
-
-  const assignmentsForStaff: any = [
-    {
-      name: 'Ms. Anjali Verma',
-      grade: '-',
-      id: 9,
-      assignedRoute: 'R108',
-      pickupPoint: 'School',
-      dropoffPoint: 'Ved',
-      role: 'Teacher',
-      employeeNo: '567',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Mr. Rahul Gandhi',
-      grade: '-',
-      id: 11,
-      assignedRoute: 'R109',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      role: 'Teacher',
-      employeeNo: '568',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Ms. Kavita Desai',
-      grade: '-',
-      id: 10,
-      assignedRoute: 'R110',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Teacher',
-      employeeNo: '569',
-      declinedReason: 'Not Serving at This Stop',
-    },
-  ];
 
   const columnData = [
     {
@@ -191,10 +137,11 @@ const TransportWaitingListScreen = () => {
     { id: 'declinedReason', label: 'Declined Reason' },
   ];
 
-  const [tableData, setTableData] = useState(assignments);
-  const [tableDataForStaff, setTableDataForStaff] = useState(assignmentsForStaff);
+  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff, setTableDataForStaff] =
+    useState<StaffAssignment[]>(assignmentsForStaff);
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
-  const [isStaff, setIsStaff] = useState(false);
+  const [isStaff, setIsStaff] = useState<boolean>(false);
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
@@ -208,7 +155,7 @@ const TransportWaitingListScreen = () => {
 
   const sendInstantNotificationDialogValueForStudent = useBoolean();
   const sendInstantNotificationDialogValueForStaff = useBoolean();
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents, setSelectedStudents] = useState<Assignment[]>([]);
 
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValueForStudent.value) {
@@ -222,7 +169,7 @@ const TransportWaitingListScreen = () => {
     }
   };
 
-  const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: any) => {
+  const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: string) => {
     setSelectedStudents([]);
     setSearchParams({ tab: value });
   };

@@ -2,8 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react';
 
 import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -11,6 +9,10 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+
+import { additionalDiscountData } from '../student-fee-data/student-additional-discount-data';
+
+import type { AdditionalDiscount } from '../student-fee-data/student-additional-discount-data';
 
 interface FinanceStudentAdditionalDiscountDialogProps {
   dialogValue: boolean;
@@ -21,140 +23,11 @@ interface FinanceStudentAdditionalDiscountDialogProps {
 const FinanceStudentAdditionalDiscountDialog: React.FC<
   FinanceStudentAdditionalDiscountDialogProps
 > = ({ dialogValue, selectedData, onClose }) => {
-  const data = [
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Tuition',
-      paidAmount: '10000',
-      payableFee: '10000',
-      generalDiscount: '0',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'June-2024',
-              date: '15-01-2024',
-              status: 'Unpaid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: '54j8',
-                  paymentStatus: 'Success',
-                },
-                { paymentMode: 'Cash', amount: '2000' },
-                {
-                  paymentMode: 'Online',
-                  amount: '1000',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Failed',
-                },
-                {
-                  paymentMode: 'Online',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Check',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Not Clear',
-                  charges: 500,
-                },
-              ],
-            },
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Library',
-      paidAmount: '4000',
-      refundAmount: '0',
-      payableFee: '4000',
-      generalDiscount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
-
-  const dialog = useBoolean();
-  // const [selectedEntry, setSelectedEntry] = useState(data);
-  // const [isEdit, setIsEdit] = useState(false);
-
-  const [paymentHistoryData, setPaymentHistoryData] = useState(data);
+  const [paymentHistoryData] = useState<AdditionalDiscount[]>(additionalDiscountData);
 
   const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
   const [remarkValues, setRemarkValues] = useState<{ [key: string]: string }>({});
-  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+  const [isSaveEnabled, setIsSaveEnabled] = useState<boolean>(false);
 
   const handleDiscountChange = (feeHead: string, value: string) => {
     setDiscountValues((prev) => {
@@ -162,8 +35,6 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
         ...prev,
         [feeHead]: value.replace(/[^0-9.]/g, ''),
       };
-
-      console.log(updatedValues, 'updatedValues'); // This will correctly show updated values
 
       return updatedValues;
     });
@@ -173,10 +44,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
   useEffect(() => {
     const canSave = Object.values(discountValues).some((val) => Number(val) > 0);
     const totalDiscount = calculateTotalDiscount();
-    console.log(discountValues, 'Current Discount Values');
-    console.log(canSave, 'Updated CanSave');
 
-    console.log('Total Discount in handleDiscountChange:', totalDiscount); // ✅ Log total
     setIsSaveEnabled(canSave);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountValues]); // Depend on discountValues, so it updates correctly
@@ -187,7 +55,6 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
       0
     );
 
-    console.log('Total Discount Calculated:', totalDiscount); // ✅ Log total discount
     return totalDiscount;
   };
 
@@ -206,9 +73,6 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
     }, 0);
 
   const totalRow = useMemo(() => {
-    console.log('Recalculating totalRow...');
-    console.log('Current paymentHistoryData:', paymentHistoryData);
-    console.log('Current discountValues:', discountValues);
     const totalDiscount = Object.values(discountValues).reduce(
       (acc, value) => acc + Number(value || 0),
       0
@@ -225,8 +89,6 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentHistoryData, discountValues]); // ✅ Ensure dependencies are tracked correctly
-
-  const handlerSave = () => {};
 
   return (
     <CustomDialog
@@ -334,7 +196,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
       <DialogActions>
         <Button
           disabled={!isSaveEnabled}
-          onClick={handlerSave}
+          onClick={() => {}}
           type="submit"
           variant="contained"
           size="small"

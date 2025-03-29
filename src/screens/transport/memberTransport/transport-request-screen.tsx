@@ -15,6 +15,13 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import TransportRequestDialog from './component/transport-request-dialog';
 import TransportRouteAssignedDialog from './component/assigned-route-dialog';
 import TransportAddNewRequestDialog from './component/add-new-request-dialog';
+import { assignments, assignmentsForStaff } from './data/transport-request-screen-data';
+
+import type {
+  Assignment,
+  StaffAssignment,
+  StudentAssignment,
+} from './data/member-transport-screen-data';
 
 const TABS = [
   {
@@ -39,66 +46,6 @@ const TransportRequestScreen = () => {
   const dialogForRequest = useBoolean();
   const addNewRequestDialog = useBoolean();
   const assignedRouteDialog = useBoolean();
-  const assignments: any = [
-    {
-      name: 'Aarav Patel',
-      grade: '1',
-      id: 1,
-      assignedRoute: 'R101',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      preferable: '-',
-      role: 'Student',
-      grNo: '570',
-    },
-    {
-      name: 'Meera Shah',
-      grade: '2',
-      id: 3,
-      assignedRoute: 'R102',
-      pickupPoint: 'School',
-      dropoffPoint: '-',
-      preferable: 'Godadara',
-      role: 'Student',
-      grNo: '571',
-    },
-  ];
-
-  const assignmentsForStaff: any = [
-    {
-      name: 'Ms. Anjali Verma',
-      grade: '-',
-      id: 9,
-      assignedRoute: 'R108',
-      pickupPoint: 'School',
-      dropoffPoint: 'Ved',
-      preferable: '-',
-      role: 'Teacher',
-      employeeNo: '567',
-    },
-    {
-      name: 'Mr. Rahul Gandhi',
-      grade: '-',
-      id: 11,
-      assignedRoute: 'R109',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      preferable: '-',
-      role: 'Teacher',
-      employeeNo: '568',
-    },
-    {
-      name: 'Ms. Kavita Desai',
-      grade: '-',
-      id: 10,
-      assignedRoute: 'R110',
-      pickupPoint: 'School',
-      dropoffPoint: '-',
-      preferable: 'Godadara',
-      role: 'Teacher',
-      employeeNo: '569',
-    },
-  ];
 
   const columnData = [
     {
@@ -261,10 +208,11 @@ const TransportRequestScreen = () => {
     },
   ];
 
-  const [tableData, setTableData] = useState(assignments);
-  const [tableDataForStaff, setTableDataForStaff] = useState(assignmentsForStaff);
+  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff, setTableDataForStaff] =
+    useState<StaffAssignment[]>(assignmentsForStaff);
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
-  const [isStaff, setIsStaff] = useState(false);
+  const [isStaff, setIsStaff] = useState<boolean>(false);
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
@@ -278,7 +226,7 @@ const TransportRequestScreen = () => {
 
   const sendInstantNotificationDialogValueForStudent = useBoolean();
   const sendInstantNotificationDialogValueForStaff = useBoolean();
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents, setSelectedStudents] = useState<Assignment[]>([]);
 
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValueForStudent.value) {
@@ -292,7 +240,7 @@ const TransportRequestScreen = () => {
     }
   };
 
-  const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: any) => {
+  const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: string) => {
     setSelectedStudents([]);
     setSearchParams({ tab: value });
   };

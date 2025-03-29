@@ -22,6 +22,12 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 
+import {
+  availableGrades,
+  pickupPointsList,
+  assignedRoutesList,
+} from '../data/assigned-route-dialog-data';
+
 // Props Interface
 interface TransportRouteAssignedDialogProps {
   dialogValue: boolean;
@@ -47,32 +53,6 @@ interface FormikValue {
   messageSentToStudent: string;
 }
 
-// Mock Data
-const availableGrades = [
-  { grade: '1', availableStudents: ['Aarav Patel'] },
-  { grade: '2', availableStudents: ['Meera Shah'] },
-  { grade: '3', availableStudents: ['Rohan Joshi'] },
-  { grade: '9', availableStudents: ['Vikram Mehta', 'Rahul Gandhi'] },
-  { grade: '10', availableStudents: ['Priya Desai', 'Anjali Verma'] },
-  { grade: '11', availableStudents: ['Sanjay Kumar'] },
-  { grade: '12', availableStudents: ['Neha Sharma', 'Kavita Desai'] },
-];
-
-const assignedRoutesList = [
-  { value: 'R101', label: 'R101' },
-  { value: 'R102', label: 'R102' },
-  { value: 'R103', label: 'R103' },
-  { value: 'R104', label: 'R104' },
-];
-
-const pickupPointsList = [
-  { value: 'School', label: 'School' },
-  { value: 'Dindoli', label: 'Dindoli' },
-  { value: 'Godadara', label: 'Godadara' },
-  { value: 'Mini Bazar', label: 'Mini Bazar' },
-  { value: 'Ved', label: 'Ved' },
-];
-
 // Main Component
 const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> = ({
   dialogValue,
@@ -84,8 +64,8 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
   isStaff,
   clickFromTable,
 }) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
-  const [userType, setUserType] = useState<any>('student');
+  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState<boolean>(false);
+  const [userType, setUserType] = useState<string>('student');
   const [dropoffPoint, setDifferentDropOffPoint] = useState<boolean>(false);
 
   // Formik Setup
@@ -103,7 +83,6 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
     },
     onSubmit: (values) => {
       onSave(values);
-      console.log('Form Submitted', values);
     },
   });
 
