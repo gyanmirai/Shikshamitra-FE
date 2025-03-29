@@ -15,10 +15,12 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-interface ReceiptBook {
+export interface ReceiptBook {
   id: number;
   receiptBookName: string;
   receiptBookCode: string;
+  toggle?: boolean;
+  action?: string;
 }
 
 interface Props {
