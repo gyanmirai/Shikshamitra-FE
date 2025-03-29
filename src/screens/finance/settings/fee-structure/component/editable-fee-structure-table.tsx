@@ -18,8 +18,43 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import type { FeeItem } from '../data/fee-structure-data';
+
+const validationSchema = Yup.object({
+  fees: Yup.array().of(
+    Yup.object().shape({
+      feeHead: Yup.string().required('Fee Head is required'),
+      grossFee: Yup.string()
+        .required('Income amount is required')
+        .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+          const numericValue = Number(value);
+          return numericValue > 0;
+        }),
+      generalDiscount: Yup.string()
+        .required('Income amount is required')
+        .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+          const numericValue = Number(value);
+          return numericValue > -1;
+        }),
+      payableFee: Yup.number().required('Payable Fee is required'),
+      paymentMethod: Yup.array().min(1, 'At least one payment method is required'),
+      lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
+      lateFeeChargesAmount: Yup.string()
+        .required('Income amount is required')
+        .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+          const numericValue = Number(value);
+          return numericValue > 0;
+        }),
+      active: Yup.boolean().required('Status is required'),
+    })
+  ),
+});
+
 interface EditableFeeStructureTableProps {
-  data: any[];
+  data: FeeItem[];
 }
 
 const EditableFeeStructureTable: React.FC<EditableFeeStructureTableProps> = ({ data }) => {
@@ -35,40 +70,6 @@ const EditableFeeStructureTable: React.FC<EditableFeeStructureTableProps> = ({ d
     { value: 'check', label: 'Check' },
     { value: 'online', label: 'Online' },
   ];
-
-  // Define validation schema
-  const validationSchema = Yup.object({
-    fees: Yup.array().of(
-      Yup.object().shape({
-        feeHead: Yup.string().required('Fee Head is required'),
-        grossFee: Yup.string()
-          .required('Income amount is required')
-          .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-          .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-            const numericValue = Number(value);
-            return numericValue > 0;
-          }),
-        generalDiscount: Yup.string()
-          .required('Income amount is required')
-          .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-          .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-            const numericValue = Number(value);
-            return numericValue > -1;
-          }),
-        payableFee: Yup.number().required('Payable Fee is required'),
-        paymentMethod: Yup.array().min(1, 'At least one payment method is required'),
-        lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
-        lateFeeChargesAmount: Yup.string()
-          .required('Income amount is required')
-          .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-          .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-            const numericValue = Number(value);
-            return numericValue > 0;
-          }),
-        active: Yup.boolean().required('Status is required'),
-      })
-    ),
-  });
 
   const formik = useFormik({
     initialValues: {
@@ -340,7 +341,7 @@ const EditableFeeStructureTable: React.FC<EditableFeeStructureTableProps> = ({ d
                         );
                         return (
                           <Switch
-                            checked={formik.values.fees[index].active}
+                            checked={formik.values.fees[index].isActive}
                             onChange={(e) =>
                               formik.setFieldValue(`fees[${index}].active`, e.target.checked)
                             }

@@ -20,12 +20,12 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 const SetDefaultFeeComponent = () => {
-  const [newFeeHead, setNewFeeHead] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [selectedFeeHeadId, setSelectedFeeHeadId] = useState(null);
-  const [selectedFeeHeadName, setSelectedFeeHeadName] = useState(null);
+  const [newFeeHead, setNewFeeHead] = useState<string>('');
+  const [isAdding, setIsAdding] = useState<boolean>(false);
+  const [selectedFeeHeadId, setSelectedFeeHeadId] = useState<string | null>(null);
+  const [selectedFeeHeadName, setSelectedFeeHeadName] = useState<string | null>(null);
   const dialogForDeleteConfirmation = useBoolean();
-  const [isEdit, setIsEdit] = useState(false);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const { data: feeHeadList, isLoading: isFeeHeadLoading } = useQueryAndMutation({
     type: 'query',

@@ -20,9 +20,15 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 const ConfigurePaymentStatusComponent = () => {
-  const [isEdit, setIsEdit] = useState(false);
-  const [paymentStatus, setpaymentStatus] = useState('');
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<any>(null);
+  interface PaymentStatus {
+    paymentStatusOptionName: string;
+    [key: string]: any;
+  }
+
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<PaymentStatus | null>(null);
+
   const dialogForDeleteConfirmation = useBoolean();
 
   const { data: paymentStatusList, isLoading: ispaymentStatusLoading } = useQueryAndMutation({
@@ -59,14 +65,14 @@ const ConfigurePaymentStatusComponent = () => {
 
   const handleAddPaymentStatus = async () => {
     if (isEdit) {
-      console.log('paymentStatus', selectedPaymentStatus);
       if (!paymentStatus.trim()) {
         alert('Payment status cannot be empty!');
         return;
       }
 
       const isDuplicate = paymentStatusList?.items?.some(
-        (item: any) => item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
+        (item: PaymentStatus) =>
+          item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
       );
 
       if (isDuplicate) {
@@ -75,13 +81,25 @@ const ConfigurePaymentStatusComponent = () => {
       }
 
       try {
+        if (!selectedPaymentStatus) {
+          console.error('No payment status selected');
+          return;
+        }
+
         await updatePaymentStatus({
           id: selectedPaymentStatus.id,
           body: {
             paymentStatusOptionName: paymentStatus,
           },
         }).unwrap();
-        setpaymentStatus('');
+
+        await updatePaymentStatus({
+          id: selectedPaymentStatus?.id,
+          body: {
+            paymentStatusOptionName: paymentStatus,
+          },
+        }).unwrap();
+        setPaymentStatus('');
         setIsEdit(false);
       } catch (error) {
         console.error('Failed to update Payment status:', error);
@@ -93,7 +111,8 @@ const ConfigurePaymentStatusComponent = () => {
       }
 
       const isDuplicate = paymentStatusList?.items?.some(
-        (item: any) => item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
+        (item: PaymentStatus) =>
+          item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
       );
 
       if (isDuplicate) {
@@ -103,17 +122,16 @@ const ConfigurePaymentStatusComponent = () => {
 
       try {
         await addPaymentStatus({ paymentStatusOptionName: paymentStatus }).unwrap();
-        setpaymentStatus('');
+        setPaymentStatus('');
       } catch (error) {
         console.error('Failed to add Payment status:', error);
       }
     }
   };
 
-  const handleEditClick = (data: any) => {
-    console.log('data for Edit', data);
+  const handleEditClick = (data: PaymentStatus) => {
     setIsEdit(true);
-    setpaymentStatus(data.paymentStatusOptionName);
+    setPaymentStatus(data.paymentStatusOptionName);
     setSelectedPaymentStatus(data);
   };
 
@@ -137,7 +155,7 @@ const ConfigurePaymentStatusComponent = () => {
             label="Add New Status"
             size="small"
             value={paymentStatus}
-            onChange={(e) => setpaymentStatus(capitalizeWords(e.target.value))}
+            onChange={(e) => setPaymentStatus(capitalizeWords(e.target.value))}
           />
           {isEdit ? (
             <Button
@@ -183,7 +201,7 @@ const ConfigurePaymentStatusComponent = () => {
               {
                 id: 'action',
                 label: 'Action',
-                render(row: any, value) {
+                render(_, value) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}
@@ -201,7 +219,7 @@ const ConfigurePaymentStatusComponent = () => {
                       }}
                       showEditIcon
                       handleEditClick={() => {
-                        handleEditClick(value);
+                        handleEditClick(value as PaymentStatus);
                       }}
                     />
                   );
@@ -225,8 +243,8 @@ const ConfigurePaymentStatusComponent = () => {
           description={
             <>
               Are you sure you want to delete{' '}
-              <strong>{`${selectedPaymentStatus.paymentStatusOptionName} Payment status`}</strong> ?
-              This action cannot be undone.
+              <strong>{`${selectedPaymentStatus?.paymentStatusOptionName} Payment status`}</strong>{' '}
+              ? This action cannot be undone.
             </>
           }
           isDeleteLoading={isDeleteLoading}

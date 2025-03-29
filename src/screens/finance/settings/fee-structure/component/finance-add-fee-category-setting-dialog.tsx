@@ -21,6 +21,37 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import FinanceAddedFeeHeadForFeeStructure from './finance-added-fee-head-for-fee-structure';
 
+const validationSchema = Yup.object({
+  bookRecipt: Yup.string().required('Receipt Book is required'),
+  applicableGrade: Yup.string().required('Applicable Grade is required'),
+  feeHead: Yup.string().required('Fee Category is required'),
+  grossFee: Yup.string().required('Gross Fee is required'),
+  discountAmount: Yup.string()
+    .transform((value) => value.replace(/[^0-9.]/g, ''))
+    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+      if (!value) return true; // Allow empty values (optional)
+      const numericValue = Number(value);
+      return numericValue > 0;
+    }),
+
+  // discountRemark: Yup.string().required('Discount Remark is required'),
+  // payableFee: Yup.string().required('Payable Fee is required'),
+  paymentMethod: Yup.array().min(1, 'At least one Payment Method is required'),
+  paymentDueDate: Yup.date().required('Payment Due Date is required'),
+
+  // lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
+  lateFeeChargesAmount: Yup.string()
+    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+      if (!value) return true; // Allow empty values when not required
+      return Number(value) > 0;
+    })
+    .when('lateFeeChargesType', {
+      is: 'perDay',
+      then: (schema) => schema.required('Late Fee Charges Amount is required when type is per day'),
+    }),
+});
+
 interface FinanceAddFeeCategorySettingDialogProps {
   dialogValue: boolean;
   data: any;
@@ -56,10 +87,23 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   isEdit,
   allData,
 }) => {
+  interface FeeStructure {
+    feeHead: string;
+    grossFee: string;
+    discountAmount: string;
+    discountRemark: string;
+    payableFee: string;
+    paymentMethod: string[];
+    lateFeeChargesAmount: string;
+    lateFeeChargesType: string;
+    applicableGrade: string;
+    bookRecipt: string;
+  }
+
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<any[]>([]);
+  const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<FeeStructure[]>([]);
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false); // Controls disabling of receipt book & grade
 
   const initialValues = useMemo<FormikValue>(
@@ -83,44 +127,10 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     []
   );
 
-  const validationSchema = Yup.object({
-    bookRecipt: Yup.string().required('Receipt Book is required'),
-    applicableGrade: Yup.string().required('Applicable Grade is required'),
-    feeHead: Yup.string().required('Fee Category is required'),
-    grossFee: Yup.string().required('Gross Fee is required'),
-    discountAmount: Yup.string()
-      .transform((value) => value.replace(/[^0-9.]/g, ''))
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        if (!value) return true; // Allow empty values (optional)
-        const numericValue = Number(value);
-        return numericValue > 0;
-      }),
-
-    // discountRemark: Yup.string().required('Discount Remark is required'),
-    // payableFee: Yup.string().required('Payable Fee is required'),
-    paymentMethod: Yup.array().min(1, 'At least one Payment Method is required'),
-    paymentDueDate: Yup.date().required('Payment Due Date is required'),
-
-    // lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
-    lateFeeChargesAmount: Yup.string()
-      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        if (!value) return true; // Allow empty values when not required
-        return Number(value) > 0;
-      })
-      .when('lateFeeChargesType', {
-        is: 'perDay',
-        then: (schema) =>
-          schema.required('Late Fee Charges Amount is required when type is per day'),
-      }),
-  });
-
   const formik = useFormik<FormikValue>({
     initialValues,
     validationSchema,
     onSubmit: (values) => {
-      console.log('Form submitted', values);
-
       const isDuplicate = feeHeadListForFeeStructure.some(
         (item) =>
           item.feeHead === values.feeHead &&
@@ -132,33 +142,17 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
         return;
       }
 
-      setFeeHeadListForFeeStructure((prev) => [
+      setFeeHeadListForFeeStructure((prev: FeeStructure[]) => [
         ...prev,
         {
           ...values,
           lateFeeChargesAmount:
             values.lateFeeChargesType === 'none' ? 0 : values.lateFeeChargesAmount,
-        },
+        } as FeeStructure,
       ]);
 
       setIsFieldsDisabled(true);
 
-      // resetForm({
-      //   values: {
-      //     feeHead: '',
-      //     grossFee: '',
-      //     discountAmount: '',
-      //     discountRemark: '',
-      //     payableFee: '',
-      //     paymentMethod: [],
-      //     lateFeeChargesAmount: '',
-      //     lateFeeChargesType: '',
-
-      //     // Keep these fields unchanged
-      //     applicableGrade: values.applicableGrade,
-      //     bookRecipt: values.bookRecipt,
-      //   },
-      // });
       formik.setValues({
         ...values, // Keep existing values
         feeHead: '',

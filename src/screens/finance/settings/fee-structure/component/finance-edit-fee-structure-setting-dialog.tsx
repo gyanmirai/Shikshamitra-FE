@@ -8,6 +8,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 
+import { feestructureDummyData } from '../data/fee-structure-data';
 import EditableFeeStructureTable from './editable-fee-structure-table';
 import ReadOnlyFeeStructureTable from './read-only-fee-structure-table';
 
@@ -22,49 +23,6 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
   onClose,
   data,
 }) => {
-  const dummyData = [
-    {
-      feeHead: 'Admission',
-      grossFee: 1000,
-      payableFee: 1000,
-      generalDiscount: 0,
-      paymentMethod: ['cash'],
-      lateFeeChargesType: 'fixed',
-      lateFeeChargesAmount: '1000',
-      isActive: true,
-    },
-    {
-      feeHead: 'Tuition',
-      grossFee: 5000,
-      payableFee: 4500,
-      generalDiscount: 500,
-      paymentMethod: ['cash', 'online'],
-      lateFeeChargesType: 'perDay',
-      lateFeeChargesAmount: '1',
-      isActive: true,
-    },
-    {
-      feeHead: 'Sports',
-      grossFee: 5000,
-      payableFee: 4500,
-      generalDiscount: 500,
-      paymentMethod: ['cash'],
-      lateFeeChargesType: 'perDay',
-      lateFeeChargesAmount: '1',
-      isActive: false,
-    },
-    {
-      feeHead: 'Transport',
-      grossFee: 5000,
-      payableFee: 4500,
-      generalDiscount: 500,
-      paymentMethod: ['cash'],
-      lateFeeChargesType: 'fixed',
-      lateFeeChargesAmount: '1000',
-      isActive: false,
-    },
-  ];
-
   // Define tab options
   const TABS = [
     { value: 'reference', label: 'Reference' },
@@ -92,8 +50,8 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
       </CustomTabs>
 
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '700px' }}>
-        {tabs.value === 'editable' && <EditableFeeStructureTable data={dummyData} />}
-        {tabs.value === 'reference' && <ReadOnlyFeeStructureTable data={dummyData} />}
+        {tabs.value === 'editable' && <EditableFeeStructureTable data={feestructureDummyData} />}
+        {tabs.value === 'reference' && <ReadOnlyFeeStructureTable data={feestructureDummyData} />}
       </Scrollbar>
     </CustomDialog>
   );

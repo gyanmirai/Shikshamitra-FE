@@ -39,6 +39,28 @@ interface FormikValue {
   notes?: string;
 }
 
+const validationSchema = Yup.object().shape({
+  expenseCategory: Yup.string().required('Expense category is required'),
+
+  expenseAmount: Yup.string()
+    .required('Expense amount is required')
+    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+      const numericValue = Number(value);
+      return numericValue > 0;
+    }),
+
+  paymentMethod: Yup.string().required('Payment method is required'),
+
+  date: Yup.date().required('Date is required').typeError('Invalid date'),
+
+  paymentStatus: Yup.string().required('Payment status is required'),
+
+  expenseName: Yup.string().required('Expense name is required'),
+
+  notes: Yup.string().nullable(),
+});
+
 const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogProps> = ({
   dialogValue,
   data,
@@ -47,7 +69,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
   isEdit,
   allData,
 }) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const [, setShowExistingEntryMessage] = useState<boolean>(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
@@ -68,28 +90,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
     [data, isEdit]
   );
 
-  const validationSchema = Yup.object().shape({
-    expenseCategory: Yup.string().required('Expense category is required'),
-
-    expenseAmount: Yup.string()
-      .required('Expense amount is required')
-      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        const numericValue = Number(value);
-        return numericValue > 0;
-      }),
-
-    paymentMethod: Yup.string().required('Payment method is required'),
-
-    date: Yup.date().required('Date is required').typeError('Invalid date'),
-
-    paymentStatus: Yup.string().required('Payment status is required'),
-
-    expenseName: Yup.string().required('Expense name is required'),
-
-    notes: Yup.string().nullable(),
-  });
-
   const formik = useFormik<FormikValue>({
     initialValues,
     validationSchema,
@@ -109,7 +109,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
       } else {
         onSave(values);
       }
-      console.log('Form Submitted:', values);
     },
     enableReinitialize: true,
   });
@@ -213,8 +212,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                   fullWidth
                   error={formik.touched.expenseAmount && Boolean(formik.errors.expenseAmount)}
                   helperText={formik.touched.expenseAmount && formik.errors.expenseAmount}
-                  // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                  // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -238,8 +235,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                   format="DD-MM-YYYY"
                   slotProps={{ textField: { size: 'small', fullWidth: true } }}
                   disabled={isEdit}
-                  // error={formik.touched.date && Boolean(formik.errors.date)}
-                  // helperText={formik.touched.date ? formik.errors.date || '' : ''}
                 />
               </Grid>
 
@@ -276,7 +271,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
           </Box>
 
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            {/* <Button size="small" variant="outlined" onClick={handleCloseDialog}>Cancel</Button> */}
             <Button size="small" type="submit" variant="outlined">
               Save
             </Button>

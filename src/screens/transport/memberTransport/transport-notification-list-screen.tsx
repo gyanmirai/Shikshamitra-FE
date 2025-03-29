@@ -11,6 +11,10 @@ import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import { assignments, assignmentsForStaff } from './data/transport-notification-list-data';
+
+import type { StaffAssignment, StudentAssignment } from './data/member-transport-screen-data';
+
 const TABS = [
   {
     value: 'student',
@@ -54,85 +58,6 @@ const TransportNotifiedPersonlistScreen = () => {
     setSelectedStudents([]);
     setSearchParams({ tab: value });
   };
-
-  const assignments: any = [
-    {
-      name: 'Aarav Patel',
-      grade: '1',
-      id: 1,
-      assignedRoute: 'R101',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      role: 'Student',
-      grNo: '570',
-      declinedReason: 'Vehicle Capacity is Full',
-      status: 'Intrested',
-      reason: '-',
-    },
-    {
-      name: 'Meera Shah',
-      grade: '2',
-      id: 3,
-      assignedRoute: 'R102',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Student',
-      grNo: '571',
-      declinedReason: 'Not Serving at This Stop',
-      status: 'Not Intrested',
-      reason: 'Use Own Vehicle',
-    },
-    {
-      name: 'Meera Shah',
-      grade: '2',
-      id: 3,
-      assignedRoute: 'R102',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Student',
-      grNo: '571',
-      declinedReason: 'Not Serving at This Stop',
-      status: 'Pending',
-      reason: '-',
-    },
-  ];
-
-  const assignmentsForStaff: any = [
-    {
-      name: 'Ms. Anjali Verma',
-      grade: '-',
-      id: 9,
-      assignedRoute: 'R108',
-      pickupPoint: 'School',
-      dropoffPoint: 'Ved',
-      role: 'Teacher',
-      employeeNo: '567',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Mr. Rahul Gandhi',
-      grade: '-',
-      id: 11,
-      assignedRoute: 'R109',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      role: 'Teacher',
-      employeeNo: '568',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Ms. Kavita Desai',
-      grade: '-',
-      id: 10,
-      assignedRoute: 'R110',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Teacher',
-      employeeNo: '569',
-      declinedReason: 'Not Serving at This Stop',
-      status: 'pending',
-    },
-  ];
 
   const columnData = [
     {
@@ -269,8 +194,9 @@ const TransportNotifiedPersonlistScreen = () => {
     },
   ];
 
-  const [tableData, setTableData] = useState(assignments);
-  const [tableDataForStaff, setTableDataForStaff] = useState(assignmentsForStaff);
+  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff, setTableDataForStaff] =
+    useState<StaffAssignment[]>(assignmentsForStaff);
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
   const [isStaff, setIsStaff] = useState(false);
 

@@ -5,8 +5,8 @@ import { Box, Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 const AssignVehicleAndDriver = () => {
-  const [selectedVehicle, setSelectedVehicle] = useState<any>('');
-  const [selectedDriver, setSelectedDriver] = useState<any>('');
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+  const [selectedDriver, setSelectedDriver] = useState<string>('');
 
   const handleChange = (value: any, field: 'vehicle' | 'driver') => {
     const selectedValue = Array.isArray(value) ? value[0] : value;
@@ -47,7 +47,6 @@ const AssignVehicleAndDriver = () => {
             label="Assign Vehicle"
             name="vehicle"
             value={selectedVehicle}
-            // @ts-ignore
             onChange={(value) => handleChange(value, 'vehicle')}
             // formControlProps={{ fullWidth: true, sx: { height: "300px" } }}
             // sx={{ height: "300px" }}
@@ -65,7 +64,6 @@ const AssignVehicleAndDriver = () => {
           label="Assign Driver"
           name="driver"
           value={selectedDriver}
-          // @ts-ignore
           onChange={(value) => handleChange(value, 'driver')}
           formControlProps={{ fullWidth: true }}
         />

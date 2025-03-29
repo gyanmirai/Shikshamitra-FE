@@ -55,7 +55,6 @@ const TransportAddNewRequestDialog: React.FC<TransportAddNewRequestDialogProps> 
       landmark: '',
     },
     onSubmit: (values) => {
-      console.log('Submitted Values:', values);
       onClose();
     },
   });

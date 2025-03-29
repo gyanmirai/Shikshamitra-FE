@@ -22,300 +22,15 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import { studentsDataForFeeStructure } from './data/student-fee-structure-data';
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';
 
-const students = [
-  {
-    grNo: 1,
-    rollNo: 34,
-    studentId: 123,
-    name: 'Vishal Rameshbhai Patel',
-    grade: 10,
-    paymentTerm: 'Monthly',
-    paymentTermNumber: 12,
-    totalPending: 26000,
-    totalPaid: 52000,
-    totalGeneralDiscount: 3000,
-    totalAdditionalDiscount: 0,
-
-    discountAmount: 0,
-    fixedReduction: 0,
-    overAllDueDate: '20-04-2025',
-    totalFees: 81000,
-    finalFees: 78000,
-    totalDueAfterDiscount: 0,
-    fees: [
-      {
-        feeHeadId: 198,
-        feeHead: 'Tuition',
-        totalFees: 63000,
-        finalFees: 60000,
-        grossAmount: 5250,
-        payableAmount: 5000,
-        totalPaidAmount: 40000,
-        discount: 3000 / 12,
-        totalDiscount: 3000,
-        paymentDates: [
-          {
-            month: 'May-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'April-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'March-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'Feb-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'Jan-2025',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Dec-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Nov-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Oct-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Sep-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Aug-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'July-2024',
-            date: '15-02-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'June-2024',
-            date: '15-01-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-        ],
-      },
-      {
-        feeHeadId: 230,
-        feeHead: 'Library',
-        totalFees: 18000,
-        finalFees: 18000,
-        grossAmount: 1500,
-        paybleAmount: 1500,
-        totalPaidAmount: 12000,
-        discount: 0,
-        totalDiscount: 0,
-        paymentDates: [
-          {
-            month: 'May-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'April-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'March-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'Feb-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'Jan-2025',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Dec-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Nov-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Oct-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Sep-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Aug-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'July-2024',
-            date: '15-02-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'June-2024',
-            date: '15-01-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-        ],
-      },
-    ],
-  },
-  // {
-  //   studentId: 1235,
-  //   name: 'John Wick',
-  //   grade: 10,
-  //   paymentTerm: 'Yearly',
-  //   totalPending: 38000,
-  //   totalPaid: 40000,
-  //   discountAmount: 0,
-  //   fixedReduction: 0,
-  //   overAllDueDate: '20-04-2025',
-  //   totalFees: 81000,
-  //   finalFees: 78000,
-  //   totalDueAfterDiscount: 0,
-  //   fees: [
-  //     {
-  //       feeHeadId: 198,
-  //       feeHead: 'Tuition',
-  //       totalFees: 60000,
-  //       amount: 60000,
-  //       paymentDates: [{ month: 'April-2024', date: '15-04-2024', status: 'Paid', paidAmount: "60000", pendingAmount: "0" },],
-  //     },
-  //     {
-  //       feeHeadId: 230,
-  //       feeHead: 'Library',
-  //       totalFees: 18000,
-  //       amount: 18000,
-  //       paymentDates: [{ month: 'April-2024', date: '15-04-2024', status: 'Paid', paidAmount: "18000", pendingAmount: "0" },],
-  //     },
-  //   ],
-  // },
-  // {
-  //   studentId: 12357,
-  //   name: 'Jack Sparrow',
-  //   grade: 10,
-  //   paymentTerm: 'Quartly',
-  //   totalPending: 38000,
-  //   totalPaid: 40000,
-  //   discountAmount: 0,
-  //   fixedReduction: 0,
-  //   overAllDueDate: '20-04-2025',
-  //   totalFees: 78000,
-  //   totalDueAfterDiscount: 0,
-  //   fees: [
-  //     {
-  //       feeHeadId: 198,
-  //       feeHead: 'Tuition',
-  //       totalFees: 60000,
-  //       amount: 15000,
-  //       paymentDates: [
-  //         { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
-  //         { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
-  //       ],
-  //     },
-  //     {
-  //       feeHeadId: 230,
-  //       feeHead: 'Library',
-  //       totalFees: 18000,
-  //       amount: 4500,
-  //       paymentDates: [
-  //         { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
-  //         { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
-  //       ],
-  //     },
-  //   ],
-  // },
-];
+import type { StudentForFeeStructure } from './data/student-fee-structure-data';
 
 const FinanceStudentFeeManagement = () => {
   const dialog = useBoolean();
   const [open, setOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentForFeeStructure | null>();
 
   const handleOpen = (student: any) => {
     setSelectedStudent(student);
@@ -332,9 +47,7 @@ const FinanceStudentFeeManagement = () => {
     setSelectedStudent(null);
   };
 
-  const feeStructureSaveHandler = (data: any) => {
-    console.log('data for edit fee structure', data);
-  };
+  const feeStructureSaveHandler = (data: any) => {};
 
   const headerCellStyle = {
     border: '1px solid #ccc',
@@ -428,10 +141,13 @@ const FinanceStudentFeeManagement = () => {
             renderColumn() {
               return (
                 <Checkbox
-                  checked={!!students?.length && selectedStudents?.length === students?.length}
+                  checked={
+                    !!studentsDataForFeeStructure?.length &&
+                    selectedStudents?.length === studentsDataForFeeStructure?.length
+                  }
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setSelectedStudents(students || []);
+                      setSelectedStudents(studentsDataForFeeStructure || []);
                     } else {
                       setSelectedStudents([]);
                     }
@@ -611,7 +327,7 @@ const FinanceStudentFeeManagement = () => {
             },
           },
         ]}
-        data={students}
+        data={studentsDataForFeeStructure}
       />
 
       {sendInstantNotificationDialogValue.value && (

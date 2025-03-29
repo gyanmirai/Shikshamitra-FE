@@ -6,8 +6,10 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import type { FeeItem } from '../data/fee-structure-data';
+
 interface ReadOnlyFeeStructureTableProps {
-  data: any[];
+  data: FeeItem[];
 }
 
 const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ data }) => {
