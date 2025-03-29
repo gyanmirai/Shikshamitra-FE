@@ -320,7 +320,24 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           confirm.onFalse();
         }}
         title={`${editData ? 'Update Medium' : 'Create Medium'}`}
-        content={`Are you sure want to ${editData ? `Update Medium ${editData?.name} to ${formik.values.medium}` : `Create Medium  ${formik.values.medium}`} ?`}
+        content={
+          <>
+            {' '}
+            Are you sure you want to {editData ? 'Update' : 'Create '}{' '}
+            {editData ? (
+              editData.name === formik.values.medium ? (
+                ''
+              ) : (
+                <>
+                  <b>{editData.name}</b> to <b>{formik.values.medium}</b>
+                </>
+              )
+            ) : (
+              <b>{formik.values.medium}</b>
+            )}{' '}
+            Medium ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
