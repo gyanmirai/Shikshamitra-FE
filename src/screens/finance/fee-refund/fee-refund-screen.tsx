@@ -803,7 +803,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
           onClose={() => {
             dialogForApprovalRequest.onFalse();
           }}
-          selectedData={selectedStudent}
+          // selectedData={selectedStudent}
         />
       )}
 
