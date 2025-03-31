@@ -8,6 +8,7 @@ type ItemProps = {
   group: string;
   title: string;
   path: string;
+  shortcutKeyName: string;
 };
 
 export function getAllItems({ data }: { data: NavSectionProps['data'] }) {
@@ -20,6 +21,7 @@ export function getAllItems({ data }: { data: NavSectionProps['data'] }) {
       group: group && group.length > 1 ? group[0] : option.subheader,
       title: option.title,
       path: option.path,
+      shortcutKeyName: option.shortcutKeyName,
     };
   });
 

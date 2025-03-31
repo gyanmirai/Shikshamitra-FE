@@ -1,13 +1,14 @@
 'use client';
 
 import type { BoxProps } from '@mui/material/Box';
-import type { NavSectionProps } from 'src/components/nav-section';
+import type { NavSectionProps, NavItemBaseProps } from 'src/components/nav-section';
 
 import Link from 'next/link';
-import { useState, useCallback } from 'react';
+import nProgress from 'nprogress';
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -38,6 +39,39 @@ export type SearchbarProps = BoxProps & {
   data?: NavSectionProps['data'];
 };
 
+const useBindShortcutKey = (items: NavSectionProps['data']) => {
+  const router = useRouter();
+  const navData = useMemo(() => {
+    const ans: { path: string; shortcutKeyName: string }[] = [];
+    const recursionFn = (data: NavItemBaseProps[]) => {
+      data.forEach((item) => {
+        if (item.path) {
+          ans.push({ path: item.path, shortcutKeyName: item.shortcutKeyName as string });
+        }
+        if (item.children) {
+          recursionFn(item.children);
+        }
+      });
+    };
+    recursionFn(items?.[0]?.items);
+    return ans;
+  }, [items]);
+
+  for (let i = 0; i < navData.length; i += 1) {
+    const item = navData[i];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useHotkeys(item.shortcutKeyName, (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      nProgress.start();
+      router.push(item.path);
+    });
+  }
+
+  return null;
+};
+
 export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps) {
   const theme = useTheme();
 
@@ -46,20 +80,12 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
   const search = useBoolean();
 
   const [searchQuery, setSearchQuery] = useState('');
+  useBindShortcutKey(navItems);
 
   const handleClose = useCallback(() => {
     search.onFalse();
     setSearchQuery('');
   }, [search]);
-
-  // const handleKeyDown = (event: KeyboardEvent) => {
-  //   if (event.key === 'k' && event.metaKey) {
-  //     search.onToggle();
-  //     setSearchQuery('');
-  //   }
-  // };
-
-  // useEventListener('keydown', handleKeyDown);
 
   useHotkeys('ctrl+shift+k', (e) => {
     e.preventDefault();
@@ -98,7 +124,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
       .map((group, index) => (
         <Box component="ul" key={`${group}-${index}`}>
           {dataGroups[group].map((item) => {
-            const { title, path } = item;
+            const { title, path, shortcutKeyName } = item;
 
             const partsTitle = parse(title, match(title, searchQuery));
 
@@ -116,6 +142,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
                     path={partsPath}
                     title={partsTitle}
                     groupLabel={searchQuery && group}
+                    shortcutKeyName={shortcutKeyName}
                   />
                 </Box>
               </Box>

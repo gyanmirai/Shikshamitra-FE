@@ -18,6 +18,7 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ChangeClassScreen from './change-class';
+import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
 import BulkStudentAddScreen from './bulk-student-add';
@@ -60,21 +61,15 @@ const TABS = [
   { value: 'changeClass', label: 'Change Class', component: () => <ChangeClassScreen /> },
   { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
   { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
+  { value: 'groupManageMent', label: 'Group Management', component: () => <GroupManagement /> },
 ];
 
 const StudentManagementScreen = () => {
-  // const [allMediums, setAllMediums] = useState<Medium[]>([]);
-  // const [medium, setMedium] = useState<string>('');
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClass] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  console.log('🚀 ~ StudentManagementScreen ~ allDivision:', {
-    allClass,
-    allOrganization,
-    allDivision,
-  });
 
   const [division, setDivision] = useState<string>('');
 

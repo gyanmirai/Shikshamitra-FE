@@ -75,38 +75,6 @@ type RoleData = {
   children?: RoleData[];
 };
 
-const roleData: RoleData = {
-  name: 'Admin',
-  count: 2,
-  children: [
-    {
-      name: 'Principle',
-      count: 2,
-      employee: [],
-      children: [
-        {
-          name: 'Teacher',
-          count: 20,
-        },
-        {
-          name: 'Clerk',
-          count: 5,
-          children: [
-            {
-              name: 'Accountant',
-              count: 2,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Peon',
-      count: 7,
-    },
-  ],
-};
-
 type OrgChartListProps<T extends RoleData> = {
   data: T;
   depth: number;

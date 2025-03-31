@@ -266,6 +266,7 @@ export const CommunicationForm = ({
           onChange={formik.handleChange}
           multiline
           rows={2}
+          autoFocus
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
