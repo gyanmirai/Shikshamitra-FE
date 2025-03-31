@@ -51,8 +51,6 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import debounce from 'src/utils/debounce';
 
 import { Iconify } from '../iconify';
@@ -160,17 +158,60 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     [columns]
   );
 
-  const totalRows = data.length; // Get total number of rows
+  // const totalRows = data.length; // Get total number of rows
 
-  const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
+  // const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
 
-  const sendInstantNotificationDialogValue = useBoolean();
+  // columns = useMemo(() => {
+  //   let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
 
-  const handleSendNotification = () => {
-    // sendInstantNotificationDialogValue.onTrue();
-    // const selectedRowIds = Array.from(selectedRows);
-    // const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
-  };
+  //   if (showCheckbox) {
+  //     updatedColumns = [
+  //       {
+  //         id: 'selectAll',
+  //         label: '', // Empty header
+  //         isFilter: false,
+  //         renderColumn: () => (
+  //           <Checkbox
+  //             checked={selectedRows.size > 0 && selectedRows.size === totalRows}
+  //             indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
+  //             onChange={(e) => {
+  //               if (e.target.checked) {
+  //                 // Select all rows
+  //                 const allRowIds = new Set(data.map((row) => row.id));
+  //                 setSelectedRows(allRowIds);
+
+  //               } else {
+  //                 // Deselect all
+  //                 setSelectedRows(new Set());
+
+  //               }
+  //             }}
+  //           />
+  //         ),
+  //         render: (value, row) => (
+  //           <Checkbox
+  //             checked={selectedRows.has(row.id)}
+  //             onChange={() => {
+  //               setSelectedRows((prev) => {
+  //                 const newSelection = new Set(prev);
+  //                 if (newSelection.has(row.id)) {
+  //                   newSelection.delete(row.id);
+  //                 } else {
+  //                   newSelection.add(row.id);
+  //                 }
+  //                 return newSelection;
+  //               });
+  //             }}
+  //           />
+  //         ),
+  //       },
+  //       ...updatedColumns,
+  //     ];
+  //   }
+
+  //   return updatedColumns;
+  // }, [columns, showCheckbox, selectedRows, totalRows, data]);
 
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,

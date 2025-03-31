@@ -179,6 +179,7 @@ const InquiryTable = ({
                   showEditIcon
                   handleEditClick={() => {
                     setParams({ isForm: 'true' });
+
                     setEditData(row as IInquiryData);
                   }}
                   actions={({ popover }) => (
