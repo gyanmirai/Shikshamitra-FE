@@ -80,8 +80,13 @@ const FinanceGeneralSettingTab = () => {
     <Box>
       <CustomBreadcrumbs
         heading="General Settings"
-        links={[{ name: 'Finance' }, { name: 'General Settings' }, { name: breadcrumbTabName }]}
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'General Settings' },
+          { name: breadcrumbTabName },
+        ]}
         sx={{ px: 1, mb: 2 }}
+        description="This is the General Settings section for the Finance module, where you can manage fee heads, payment status options, and other required fields and details related to financial operations."
       />
       <Card>
         <CustomTabs

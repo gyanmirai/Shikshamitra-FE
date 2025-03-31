@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -8,6 +8,7 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface FinanceFeeRefundedViewDialogProps {
@@ -229,7 +230,23 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
   };
 
   return (
-    <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="xl"
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">Fee Refund</Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title="The Fee Refund Details dialog displays all refund-related information for the student, including the refund mode, approved refund amount, requested date, and more."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <Box display="flex" gap={3} alignItems="center">
           <Typography fontSize="14px">

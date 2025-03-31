@@ -119,8 +119,9 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
     <Box display="flex" flexDirection="column" gap={2} height="100%">
       <Box display="flex" flexDirection="column" gap={2}>
         <CustomBreadcrumbs
+          description="you can define budget allocations for the current financial year. Select the category, choose the type (Income or Expense), and enter the amount you want to allocate"
           heading="Budgeting"
-          links={[{ name: 'Finance' }, { name: 'Budgeting' }]}
+          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Budgeting' }]}
           sx={{ px: 1, mb: 2 }}
           action={
             <Button

@@ -120,6 +120,7 @@ const FinanceExpenseTrackingScreen = () => {
 
   return (
     <>
+      {/* dialog for adding new expense */}
       {open ? (
         <FinanceAddExpenseTrackingDialog
           onSave={handleSave}
@@ -143,7 +144,10 @@ const FinanceExpenseTrackingScreen = () => {
               heading="Expense Tracking"
               links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
               sx={{ px: 1, mb: 2 }}
+              description="The Expense Tracking screen provides a detailed overview of all recorded expenses. You can track expense categories, view transaction details, and monitor financial records efficiently."
             />
+
+            {/* button for adding a new expense */}
             <Box
               sx={{ mr: '15px', mb: '20px' }}
               gap={3}
@@ -245,6 +249,7 @@ const FinanceExpenseTrackingScreen = () => {
         />
       )}
 
+      {/* view the details of particular expense based on category  */}
       {dialogForDetailsInExpense.value && (
         <FinanceExpenseDetailsDialog
           dialogValue={dialogForDetailsInExpense.value}

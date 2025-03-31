@@ -66,8 +66,12 @@ const FinanceStaticNotificationScreen = () => {
       <Box display="flex" flexDirection="row" justifyContent="space-between">
         <CustomBreadcrumbs
           heading="Notification Settings"
-          links={[{ name: 'Finance' }, { name: 'Notification Settings' }]}
+          links={[
+            { name: 'Finance', href: 'finance/dashboard' },
+            { name: 'Notification Settings' },
+          ]}
           sx={{ px: 1, mb: 2 }}
+          description="In the Notification Settings, you can customize the message for each notification and enable or disable it as needed."
         />
         {/* <Button startIcon={<Iconify icon="eva:arrow-back-fill" />} size="small" variant='contained' onClick={closeHandler}>Back</Button> */}
       </Box>

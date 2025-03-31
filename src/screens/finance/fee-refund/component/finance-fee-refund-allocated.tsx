@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Typography, DialogActions } from '@mui/material';
+import { Box, Button, Tooltip, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -78,7 +79,23 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
   };
 
   return (
-    <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="xl"
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">Fee Refund</Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title="Refunds can be processed only after approval of the student's refund request. You can view the requested refund amount, the approved amount, and any remarks. Please review the remarks carefully before initiating the refund process."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <Box display="flex" flexDirection="row" gap={2} py="12px">
           <Typography>

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   Box,
   Grid,
+  Tooltip,
   Checkbox,
   Accordion,
   Typography,
@@ -342,7 +343,18 @@ const FinanceStudentFeeManagement = () => {
       {/* Details Modal */}
       {selectedStudent && (
         <CustomDialog
-          title={`Fee Details for ${selectedStudent.name} / Standard: ${selectedStudent.grade}th -A `}
+          title={
+            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+              <Typography variant="h5">{`Fee Details for ${selectedStudent.name} / Standard: ${selectedStudent.grade}th -A `}</Typography>
+              <Tooltip
+                arrow
+                placement="right"
+                title="This dialog displays the fee details of a Vishal, where you can find a complete overview of their fee information."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </Tooltip>
+            </Box>
+          }
           open={open}
           handleClose={handleClose}
           maxWidth="xl"

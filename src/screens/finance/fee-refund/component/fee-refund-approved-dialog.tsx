@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -122,7 +123,23 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
   }, [discountValues, feeRefundremark]); // Depend on discountValues, so it updates correctly
 
   return (
-    <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="xl"
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">Fee Refund Approval Dialog</Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title="This is the Approval Dialog, where you can approve a refund request by entering the refund amount for the student. You can also view the requested amount in the Ask for Refund column."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <CustomizableTable
           tableId="fee-refund-table"

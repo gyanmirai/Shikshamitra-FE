@@ -51,8 +51,6 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import debounce from 'src/utils/debounce';
 
 import { Iconify } from '../iconify';
@@ -164,7 +162,85 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
 
   const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
 
-  const sendInstantNotificationDialogValue = useBoolean();
+  // columns = useMemo(() => {
+  //   let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
+
+  //   if (showCheckbox) {
+  //     updatedColumns = [
+  //       {
+  //         id: 'selectAll',
+  //         label: '', // Empty header
+  //         isFilter: false,
+  //         renderColumn: () => (
+  //           <Checkbox
+  //             checked={selectedRows.size > 0 && selectedRows.size === totalRows}
+  //             indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
+  //             onChange={(e) => {
+  //               if (e.target.checked) {
+  //                 // Select all rows
+  //                 const allRowIds = new Set(data.map((row) => row.id));
+  //                 setSelectedRows(allRowIds);
+  //               } else {
+  //                 // Deselect all
+  //                 setSelectedRows(new Set());
+  //               }
+  //             }}
+  //           />
+  //         ),
+  //         render: (value, row) => (
+  //           <Checkbox
+  //             checked={selectedRows.has(row.id)}
+  //             onChange={() => {
+  //               setSelectedRows((prev) => {
+  //                 const newSelection = new Set(prev);
+  //                 if (newSelection.has(row.id)) {
+  //                   newSelection.delete(row.id);
+  //                 } else {
+  //                   newSelection.add(row.id);
+  //                 }
+  //                 return newSelection;
+  //               });
+  //             }}
+  //           />
+  //         ),
+  //       },
+  //       ...updatedColumns,
+  //     ];
+  //   }
+
+  //   return updatedColumns;
+  // }, [columns, showCheckbox, selectedRows, totalRows, data]);
+
+  //               }
+  //             }}
+  //           />
+  //         ),
+  //         render: (value, row) => (
+  //           <Checkbox
+  //             checked={selectedRows.has(row.id)}
+  //             onChange={() => {
+  //               setSelectedRows((prev) => {
+  //                 const newSelection = new Set(prev);
+  //                 if (newSelection.has(row.id)) {
+  //                   newSelection.delete(row.id);
+  //                 } else {
+  //                   newSelection.add(row.id);
+  //                 }
+  //                 return newSelection;
+  //               });
+  //             }}
+  //           />
+  //         ),
+  //       },
+  //       ...updatedColumns,
+  //     ];
+  //   }
+
+  const handleSendNotification = () => {
+    // sendInstantNotificationDialogValue.onTrue();
+    // const selectedRowIds = Array.from(selectedRows);
+    // const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
+  };
 
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
@@ -653,14 +729,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                   &nbsp; Export as PDF
                 </MenuItem>
                 {/* <MenuItem onClick={() => handleExport('import')}>
-                {' '}
-                <Iconify icon="solar:import-bold" />
-                &nbsp; Import
-              </MenuItem>
-              <MenuItem onClick={() => handleExport('print')}>
-                <Iconify icon="fluent:print-28-filled" />
-                &nbsp; Print
-              </MenuItem> */}
+              {' '}
+              <Iconify icon="solar:import-bold" />
+              &nbsp; Import
+            </MenuItem>
+            <MenuItem onClick={() => handleExport('print')}>
+              <Iconify icon="fluent:print-28-filled" />
+              &nbsp; Print
+            </MenuItem> */}
               </Menu>
             </Box>
           </Box>
@@ -802,14 +878,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           )}
                         </Box>
                         {/* <Divider
-                          orientation="vertical"
-                          sx={{
-                            width: column.sticky ? '0px' : '2px',
-                            background: (theme) => theme.palette.divider,
-                            height: '20px',
-                            margin: '10px 2px',
-                          }}
-                        /> */}
+                        orientation="vertical"
+                        sx={{
+                          width: column.sticky ? '0px' : '2px',
+                          background: (theme) => theme.palette.divider,
+                          height: '20px',
+                          margin: '10px 2px',
+                        }}
+                      /> */}
                       </TableCell>
                     )
                 )}

@@ -1,10 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, Tooltip, Typography } from '@mui/material';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -153,7 +154,23 @@ const FeeCollectionMonthWise: React.FC<FeeCollectionMonthWiseProps> = ({
   // }, [formik.values.selectedTerms, students.fees]);
 
   return (
-    <CustomDialog maxWidth="lg" title="Fee Collection" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      maxWidth="lg"
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">Yor Are Collecting Fees For Vishal</Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title="To collect the fee, please select the term. The pending fee will automatically appear in the due amount input under Fee-wise. Enter the received amount in the Received Amount input field."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
         <form onSubmit={formik.handleSubmit}>
           <Box display="flex" justifyContent="space-between" alignItems="center">

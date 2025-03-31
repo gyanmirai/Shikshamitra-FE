@@ -207,7 +207,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
         <Box display="flex" justifyContent="space-between">
           <CustomBreadcrumbs
             heading="Fee Structure"
-            links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              { name: 'Settings' },
+              { name: 'Fee Structure' },
+            ]}
+            description="This is the Fee Structure section, where you can create fee structures as needed."
           />
           <Box display="flex" gap={2}>
             <Button
@@ -410,6 +415,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
           </Grid>
         </Grid>
       </form>
+
+      {/* We can create multiple fee heads for a single fee structure. Previous entries are listed below in a table, similar to a to-do list, for easy tracking and management. */}
       <FinanceAddedFeeHeadForFeeStructure
         onDelete={handleDelete}
         onEdit={handleEdit}
