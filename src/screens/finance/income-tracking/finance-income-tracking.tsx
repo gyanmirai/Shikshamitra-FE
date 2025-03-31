@@ -76,6 +76,7 @@ const FinanceIncomeTrackingScreen = () => {
 
   return (
     <Box height="100%">
+      {/* for adding new income based on category */}
       {open ? (
         <FinanceAddNewIncomeDialog
           onSave={() => {}}
@@ -94,6 +95,7 @@ const FinanceIncomeTrackingScreen = () => {
             alignItems="center"
           >
             <CustomBreadcrumbs
+              description="The Income Tracking screen provides an overview of all recorded income transactions. You can track income sources, view transaction details, and monitor financial records efficiently."
               heading="Income Tracking"
               links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
               sx={{ px: 1, mb: 2 }}
@@ -181,6 +183,7 @@ const FinanceIncomeTrackingScreen = () => {
         />
       )}
 
+      {/* details of the income based on source type */}
       {dialogForDetailsInSource.value && (
         <FinanceIncomeDetailsDialog
           dialogValue={dialogForDetailsInSource.value}

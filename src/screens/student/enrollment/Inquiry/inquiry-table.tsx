@@ -68,6 +68,42 @@ const InquiryTable = ({
         label: 'End Date Of Inquiry',
       }}
       columns={[
+        // {
+        //   id: 'checkBox',
+        //   align: 'left',
+        //   minWidth: '60px',
+        //   isSort: false,
+        //   isFilter: false,
+        //   label: '',
+        //   renderColumn() {
+        //     return (
+        //       <Checkbox
+        //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+        //         onChange={(e) => {
+        //           if (e.target.checked) {
+        //             setSelectedStudents(tableData || []);
+        //           } else {
+        //             setSelectedStudents([]);
+        //           }
+        //         }}
+        //       />
+        //     );
+        //   },
+        //   render(value, row) {
+        //     return (
+        //       <Checkbox
+        //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+        //         onChange={(e) => {
+        //           if (e.target.checked) {
+        //             setSelectedStudents([...selectedStudents, row]);
+        //           } else {
+        //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+        //           }
+        //         }}
+        //       />
+        //     );
+        //   },
+        // },
         {
           id: 'inquiryNumber',
           label: 'Inquiry Number',

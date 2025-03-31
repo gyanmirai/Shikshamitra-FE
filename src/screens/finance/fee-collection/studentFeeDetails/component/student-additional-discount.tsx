@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -93,7 +94,18 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
   return (
     <CustomDialog
       maxWidth="xl"
-      title="Additional Discount"
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">Additional Discount</Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title="This is the Additional Discount dialog, where the discount is applied only to this specific student and is applicable to the payable fee."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
       open={dialogValue}
       handleClose={onClose}
     >

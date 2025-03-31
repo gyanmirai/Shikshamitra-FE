@@ -5,12 +5,13 @@ import { useFormik } from 'formik';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify/iconify';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceReconciliationClearAndBounceChequeDialogProps {
@@ -52,7 +53,25 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
   });
   return (
     <CustomDialog
-      title={fromClearCheck ? 'Clear Cheque' : 'Bounce Cheque'}
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">
+            {fromClearCheck ? 'Clearing Cheque' : 'Bounce Cheque'}
+          </Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title={
+              fromClearCheck
+                ? 'If a payment is made by cheque and it has been cleared, simply click the Cleared Cheque button to ensure our system reflects the latest data accurately.'
+                : 'This is the Bounced Cheque dialog, where you can mark a cheque as bounced. You can manually enter the reason for the bounce and apply any applicable bounced cheque charges before updating the system.'
+            }
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
+      // title={fromClearCheck ? 'Clear Cheque' : 'Bounce Cheque'}
       open={dialogValue}
       handleClose={onClose}
       maxWidth="md"

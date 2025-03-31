@@ -443,6 +443,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               alignItems="center"
             >
               <CustomBreadcrumbs
+                description="This is the Refund Screen, where all created refund requests are displayed. By clicking the Approve action from the table, you can review and make a decision on the refund request. To create a new request, click on the Create Request Button"
                 heading="Fee Refunds"
                 links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
                 sx={{ px: 1, mb: 2 }}
@@ -456,6 +457,8 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               </Box>
             </Box>
           )}
+
+          {/* fee refund screen view for fee collection screen  */}
 
           {fromStudentDetailedView && (
             <CustomizableTable
@@ -579,6 +582,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
             />
           )}
 
+          {/* fee refund view for fee refund route or fee refund menu */}
           {!fromStudentDetailedView && (
             <CustomizableTable
               onSendNotification={handlerSendNotification}
@@ -797,6 +801,8 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
           userList={selectedStudent}
         />
       )}
+
+      {/* dialog for the approved the refund request */}
       {dialogForApprovalRequest.value && (
         <FinanceFeeCollectionRefundApprovedDialog
           dialogValue={dialogForApprovalRequest.value}
@@ -807,6 +813,8 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
         />
       )}
 
+      {/* dialog for the refund initiate */}
+
       {dialog.value && (
         <FinanceFeeRefundAllocationDialog
           dialogValue={dialog.value}
@@ -816,6 +824,8 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
           selectedData={selectedStudent}
         />
       )}
+
+      {/* dialog for the details view of refund request */}
 
       {dialogForFeeRefundedView.value && (
         <FinanceFeeRefundedViewDialog

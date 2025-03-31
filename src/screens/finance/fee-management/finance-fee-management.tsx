@@ -56,8 +56,13 @@ const FinanceFeeManagementScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        description="This is the Fee Management section, where you can view all fee details for a particular student under the Student Fee Management tab. Additionally, the Fee Structure Overview tab allows you to view all active fee structures."
         heading="Fee Management"
-        links={[{ name: 'Finance' }, { name: 'Fee Management' }, { name: activeTabName }]}
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Fee Management' },
+          { name: activeTabName },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Card>
