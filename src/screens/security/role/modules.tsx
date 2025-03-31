@@ -26,6 +26,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
   const { user } = useSelector((state: any) => state.auth);
   const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
+  console.log('🚀 ~ file: modules.tsx:27 ~ AssignModule ~ data:', data);
 
   const stackRef = useRef<any>();
   const [selectSubModule, setSelectSubModule] = useState<any>(null);
@@ -146,9 +147,7 @@ const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) =>
             control={
               <Checkbox
                 size="small"
-                checked={
-                  allPermissions?.find((p: any) => p.name === item.permissionName)?.isGranted
-                }
+                checked={allPermissions.find((p: any) => p.name === item.permissionName)?.isGranted}
               />
             }
             label="View"
@@ -175,7 +174,7 @@ const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) =>
               <Checkbox
                 size="small"
                 checked={
-                  allPermissions?.find((p: any) => `${p.name}` === `${item.permissionName}.Create`)
+                  allPermissions.find((p: any) => `${p.name}` === `${item.permissionName}.Create`)
                     ?.isGranted
                 }
               />
@@ -209,7 +208,7 @@ const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) =>
               <Checkbox
                 size="small"
                 checked={
-                  allPermissions?.find((p: any) => `${p.name}` === `${item.permissionName}.Edit`)
+                  allPermissions.find((p: any) => `${p.name}` === `${item.permissionName}.Edit`)
                     ?.isGranted
                 }
               />
@@ -243,7 +242,7 @@ const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) =>
               <Checkbox
                 size="small"
                 checked={
-                  allPermissions?.find((p: any) => `${p.name}` === `${item.permissionName}.Delete`)
+                  allPermissions.find((p: any) => `${p.name}` === `${item.permissionName}.Delete`)
                     ?.isGranted
                 }
               />

@@ -37,7 +37,6 @@ const UserManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="User Management"
-        description="The process of creating, managing, and controlling user accounts, roles, and permissions within a system to ensure secure and efficient access to resources."
         links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'User Management' }]}
         sx={{ px: 1, mb: 3 }}
       />

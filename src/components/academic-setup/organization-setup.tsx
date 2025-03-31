@@ -281,8 +281,8 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
         onClose={() => {
           confirm.onFalse();
         }}
-        title={`${editData ? 'Update Organization' : 'Create Organization'}`}
-        content={`Are you sure want to ${editData ? `Update Organization ${editData?.name} to ${formik.values.organization}` : `Create Organization ${formik.values.organization}`} ?`}
+        title={`${editData ? 'Update' : 'Create'}`}
+        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Organization ?`}
         action={
           <LoadingButton
             variant="contained"

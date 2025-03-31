@@ -7,7 +7,7 @@ import * as yup from 'yup';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
-import { Box, Button, Divider, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -133,6 +133,7 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
         acc[findBoard.id] = [...(acc[findBoard.id] || []), curr];
         return acc;
       }, {});
+      console.log('🚀 ~ medium ~ medium:', medium);
 
       const organization = accessControl.educationMediumStages.reduce((acc: any, curr: any) => {
         const mediums = Object.values(medium).flat(Infinity);
@@ -143,6 +144,7 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
         });
         return acc;
       }, {});
+      console.log('🚀 ~ organization ~ organization:', organization);
 
       const standard = accessControl.standards.reduce((acc: any, curr: any) => {
         const organizations = Object.values(organization).flat(Infinity);
@@ -153,6 +155,7 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
         });
         return acc;
       }, {});
+      console.log('🚀 ~ standard ~ standard:', standard);
 
       const division = accessControl.divisions.reduce((acc: any, curr: any) => {
         const standards = Object.values(standard).flat(Infinity);
@@ -163,6 +166,7 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
         });
         return acc;
       }, {});
+      console.log('🚀 ~ division ~ division:', division);
 
       return {
         board,
@@ -174,6 +178,8 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
     }
     return { board: [], medium: {}, organization: {}, class: {}, division: {} };
   }, [accessControl, isLoading]);
+
+  console.log(initial, 'initial');
 
   const initialValues = {
     user,
@@ -194,6 +200,7 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
+      // validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
       validationSchema={yup.object().shape({})}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) {
@@ -219,12 +226,15 @@ export const AccessControlForm = ({ user, handleClose }: any) => {
 
         setActiveStep(activeStep + 1);
       }}
-      renderItem={({ activeStep: step, formik }: any) => (
-        <Box p={2}>
-          {' '}
-          {renderItem[step as keyof typeof renderItem]({ activeStep: step, formik })}
-        </Box>
-      )}
+      renderItem={({ activeStep: step, formik }: any) => {
+        console.log(formik, '][][][');
+        return (
+          <Box p={2}>
+            {' '}
+            {renderItem[step as keyof typeof renderItem]({ activeStep: step, formik })}
+          </Box>
+        );
+      }}
     />
   );
 };
@@ -262,87 +272,70 @@ const UserScreenStep = ({ formik }: any) => {
 };
 
 const BoardScreenStep = ({ formik }: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: boards, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
-
-  const allBoards = boards?.items?.filter(
-    (board: Board) => board.academicYearId === currentYear.id
-  );
   return (
-    <Box sx={{ maxWidth: 300, width: '100%' }}>
-      <Typography variant="body2" fontWeight={600} color="text.secondary">
-        (Academic Year :-{currentYear.name})
-      </Typography>
-      <Divider sx={{ my: 1 }} />
-      <Autocomplete
-        multiple
-        id="tags-standard"
-        loading={isLoading}
-        options={allBoards || []}
-        value={formik.values.board}
-        onChange={(_event: any, newValue: any | null) => {
-          formik.setFieldValue('board', newValue);
-        }}
-        getOptionLabel={(option: any) => option.name}
-        sx={{ maxWidth: 300, width: '100%' }}
-        ChipProps={{
-          variant: 'outlined',
-          size: 'small',
-        }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="outlined"
-            size="small"
-            label="Select Board"
-            placeholder="Select Board"
-          />
-        )}
-      />
-    </Box>
+    <Autocomplete
+      multiple
+      id="tags-standard"
+      loading={isLoading}
+      options={boards?.items || []}
+      value={formik.values.board}
+      onChange={(_event: any, newValue: any | null) => {
+        formik.setFieldValue('board', newValue);
+      }}
+      getOptionLabel={(option: any) => option.name}
+      sx={{ maxWidth: 300, width: '100%' }}
+      ChipProps={{
+        variant: 'outlined',
+        size: 'small',
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="outlined"
+          size="small"
+          label="Select Board"
+          placeholder="Select Board"
+        />
+      )}
+    />
   );
 };
 
 const MediumScreenStep = ({ formik }: any) => (
   <Box display="flex" gap={2} flexWrap="wrap">
     {formik.values.board.map((board: Board) => (
-      <Box sx={{ maxWidth: 300, width: '100%' }}>
-        <Typography variant="body2" fontWeight={600} color="text.secondary">
-          (Board :-{board.name})
-        </Typography>
-        <Divider sx={{ my: 1 }} />
-        <Autocomplete
-          options={board.educationMediums || []}
-          getOptionLabel={(option: any) => option.name}
-          id="controlled-demo"
-          value={formik?.values?.medium?.[board.id]}
-          loading={false}
-          fullWidth
-          onChange={(_event: any, newValue: any | null) => {
-            formik.setFieldValue(`medium.${board.id}`, newValue);
-          }}
-          multiple
-          ChipProps={{
-            variant: 'outlined',
-            size: 'small',
-          }}
-          size="small"
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              label="Select Medium"
-              helperText={formik.touched.medium?.[board.name] && formik.errors.medium?.[board.name]}
-              error={
-                formik.touched.medium?.[board.name] && Boolean(formik.errors.medium?.[board.name])
-              }
-            />
-          )}
-        />
-      </Box>
+      <Autocomplete
+        options={board.educationMediums || []}
+        getOptionLabel={(option: any) => option.name}
+        id="controlled-demo"
+        value={formik?.values?.medium?.[board.id]}
+        loading={false}
+        sx={{ maxWidth: 300, width: '100%' }}
+        onChange={(_event: any, newValue: any | null) => {
+          formik.setFieldValue(`medium.${board.id}`, newValue);
+        }}
+        multiple
+        ChipProps={{
+          variant: 'outlined',
+          size: 'small',
+        }}
+        size="small"
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            size="small"
+            label={`Select Medium for Board ${board.name}`}
+            helperText={formik.touched.medium?.[board.name] && formik.errors.medium?.[board.name]}
+            error={
+              formik.touched.medium?.[board.name] && Boolean(formik.errors.medium?.[board.name])
+            }
+          />
+        )}
+      />
     ))}
   </Box>
 );

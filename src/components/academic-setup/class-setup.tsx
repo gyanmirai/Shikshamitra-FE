@@ -258,7 +258,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
       class: Yup.string().required('Class is required'),
     }),
     onSubmit: async (values) => {
-      confirm.onTrue();
+      confirm.onFalse();
     },
   });
 
@@ -294,8 +294,8 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
         onClose={() => {
           confirm.onFalse();
         }}
-        title={`${editData ? 'Update Standard' : 'Create Standard'}`}
-        content={`Are you sure want to ${editData ? `Update Standard ${editData?.name} to ${formik.values.class}` : `Create Standard ${formik.values.class}`} ?`}
+        title={`${editData ? 'Update' : 'Create'}`}
+        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Sandard ?`}
         action={
           <LoadingButton
             variant="contained"

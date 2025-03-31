@@ -1,4 +1,3 @@
-import type { TooltipProps } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
 import type { BreadcrumbsProps } from '@mui/material/Breadcrumbs';
 
@@ -12,14 +11,12 @@ export type BreadcrumbsLinkProps = {
 };
 
 export type CustomBreadcrumbsProps = BreadcrumbsProps & {
-  heading?: string | React.ReactNode;
-  description?: string;
+  heading?: string;
   moreLink?: string[];
   activeLast?: boolean;
   action?: React.ReactNode;
   links: BreadcrumbsLinkProps[];
   sx?: SxProps<Theme>;
-  tooltipProps?: TooltipProps;
   slotProps?: {
     action: SxProps<Theme>;
     heading: SxProps<Theme>;
