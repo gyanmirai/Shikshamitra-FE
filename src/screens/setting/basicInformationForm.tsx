@@ -5,31 +5,49 @@
 import type { FormikValues } from 'formik';
 import type { ICity, IState, ICountry } from 'country-state-city';
 
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Box, Card, Stack, Divider, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  List,
+  Card,
+  Stack,
+  Button,
+  Divider,
+  ListItem,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
-import { fData } from 'src/utils/format-number';
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useAddTenantMutation } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
-import { UploadAvatar } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { EmptyContent } from 'src/components/empty-content';
+import { RemoveButton } from 'src/components/file-thumbnail';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
+import { fileThumbnailClasses } from 'src/components/file-thumbnail/classes';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
 interface FormValues {
   instituteName: string;
-  instituteLogo: File | null;
-  instituteBanner: File | null;
+  instituteLogo: string[];
+  instituteBanner: string[];
   addressLine1: string;
   addressLine2: string;
   addressLine3: string;
@@ -40,6 +58,7 @@ interface FormValues {
   contactNumber: string;
   emailAddress: string;
   password: string;
+  principleSign: string[];
 }
 
 const validationSchema = Yup.object().shape({
@@ -104,128 +123,158 @@ const BasicInformationForm: React.FC<any> = () => {
       successMessage: 'Tenant Added Successfully',
     },
   });
-  const { values, errors, touched, handleChange, handleSubmit, setFieldValue } =
-    useFormik<FormValues>({
-      initialValues: {
-        instituteName: '',
-        instituteLogo: null,
-        instituteBanner: null,
-        addressLine1: '',
-        addressLine2: '',
-        addressLine3: '',
-        city: undefined,
-        stateProvince: undefined,
-        zipPostalCode: '',
-        country: undefined,
-        contactNumber: '',
-        emailAddress: '',
-        password: '',
-      },
-      validationSchema,
-      onSubmit: (formValues: FormikValues) => {
-        console.log(formValues);
-        addTenant({
-          name: formValues.instituteName,
-          adminEmailAddress: formValues.emailAddress,
-          adminPassword: formValues.password,
-        });
-      },
-    });
+  const formik = useFormik<FormValues>({
+    initialValues: {
+      instituteName: '',
+      instituteLogo: [],
+      instituteBanner: [],
+      addressLine1: '',
+      addressLine2: '',
+      addressLine3: '',
+      city: undefined,
+      stateProvince: undefined,
+      zipPostalCode: '',
+      country: undefined,
+      contactNumber: '',
+      emailAddress: '',
+      password: '',
+      principleSign: [],
+    },
+    validationSchema,
+    onSubmit: (formValues: FormikValues) => {
+      console.log(formValues);
+      addTenant({
+        name: formValues.instituteName,
+        adminEmailAddress: formValues.emailAddress,
+        adminPassword: formValues.password,
+      });
+    },
+  });
+  const { values, errors, touched, handleChange, handleSubmit, setFieldValue } = formik;
   return (
-    <Scrollbar sx={{ height: 'calc(100vh - 150px)', overflow: 'auto' }}>
-      <form onSubmit={handleSubmit}>
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 0,
-            backgroundColor: 'white',
-            zIndex: 10,
-            py: 2,
-          }}
-        >
-          <Typography variant="h5" sx={{ mb: 1 }}>
-            Basic Information
-          </Typography>
-        </Box>
+    <Box
+      component="form"
+      sx={{ height: 'calc(100% - 74px)', display: 'flex', flexDirection: 'column' }}
+      onSubmit={handleSubmit}
+    >
+      <Scrollbar
+        sx={{
+          p: 2,
+          height: '100%',
+        }}
+      >
         <Grid container spacing={2}>
-          {/* @ts-ignore */}
-          <Grid xs={12} md={6}>
-            <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-              <Box sx={{ mb: 5 }}>
-                <UploadAvatar
-                  // name="avatarUrl"
-                  title="Upload Institute Logo"
-                  maxSize={3145728}
-                  onDrop={(acceptedFiles: File[]) => {
-                    const value = acceptedFiles[0];
-                    setFieldValue('instituteLogo', value);
-                  }}
-                  value={values.instituteLogo}
-                  error={touched.instituteLogo && Boolean(errors.instituteLogo)}
-                  helperText={
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        mt: 3,
-                        mx: 'auto',
-                        display: 'block',
-                        textAlign: 'center',
-                        color: 'text.disabled',
-                      }}
-                    >
-                      Allowed *.jpeg, *.jpg, *.png, *.gif
-                      <br /> max size of {fData(3145728)}
-                    </Typography>
-                  }
-                />
-              </Box>
-            </Card>
-          </Grid>
+          {/* <Grid xs={12} sm={6} md={4}>
+          <Card sx={{ p: 1, height: '100%' }}>
+            <CardHeader title="Upload Institute Logo" sx={{ textAlign: 'center' }} />
+            <Upload
+              multiple
+              accept={{ 'image/*': [] }}
+              thumbnail
+              value={values.instituteLogo}
+              onDrop={(acceptedFiles) => {
+                const files = acceptedFiles;
+                const promises = files.map(
+                  (file) =>
+                    new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = () => resolve(reader.result);
+                    })
+                );
+                Promise.all(promises).then((base64Strings) => {
+                  setFieldValue('instituteLogo', base64Strings);
+                });
+              }}
+              onRemove={(file) => {
+                setFieldValue(
+                  'instituteLogo',
+                  values.instituteLogo.filter((uploadFile) => file !== uploadFile)
+                );
+              }}
+              onRemoveAll={() => {
+                setFieldValue('instituteLogo', []);
+              }}
+              sx={{
+                '&>div': {
+                  bgcolor: 'unset',
+                  border: 'none',
+                  boxShadow: 'none',
+                },
+              }}
+            />
+          </Card>
+        </Grid>
 
-          <Grid xs={12} md={6}>
-            <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-              <Box sx={{ mb: 5 }}>
-                <UploadAvatar
-                  // name="avatarUrl"
-                  title="Upload Institute Banner"
-                  maxSize={3145728}
-                  onDrop={(acceptedFiles: File[]) => {
-                    const value = acceptedFiles[0];
-                    setFieldValue('instituteBanner', value);
+        <Grid xs={12} sm={6} md={4}>
+          <Card sx={{ p: 1, height: '100%' }}>
+            <CardHeader title="Upload Institute Banner" sx={{ textAlign: 'center' }} />
+            <CardContent>
+              <UploadAvatar
+                // name="avatarUrl"
+                title="Upload Institute Banner"
+                maxSize={3145728}
+                onDrop={(acceptedFiles: File[]) => {
+                  const value = acceptedFiles[0];
+                  setFieldValue('instituteBanner', value);
+                }}
+                value={values.instituteBanner}
+                error={touched.instituteBanner && Boolean(errors.instituteBanner)}
+                helperText={
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      mt: 3,
+                      mx: 'auto',
+                      display: 'block',
+                      textAlign: 'center',
+                      color: 'text.disabled',
+                    }}
+                  >
+                    Allowed *.jpeg, *.jpg, *.png, *.gif
+                    <br /> max size of {fData(3145728)}
+                  </Typography>
+                }
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid xs={12} sm={6} md={4}>
+          <Card sx={{ p: 1, height: '100%' }}>
+            <CardHeader title="Principle sign" sx={{ textAlign: 'center' }} />
+            <UploadAvatar
+              // name="avatarUrl"
+              title="Principle sign"
+              maxSize={3145728}
+              onDrop={(acceptedFiles: File[]) => {
+                const value = acceptedFiles[0];
+                setFieldValue('instituteBanner', value);
+              }}
+              value={values.instituteBanner}
+              error={touched.instituteBanner && Boolean(errors.instituteBanner)}
+              helperText={
+                <Typography
+                  variant="caption"
+                  sx={{
+                    mt: 3,
+                    mx: 'auto',
+                    display: 'block',
+                    textAlign: 'center',
+                    color: 'text.disabled',
                   }}
-                  value={values.instituteBanner}
-                  error={touched.instituteBanner && Boolean(errors.instituteBanner)}
-                  helperText={
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        mt: 3,
-                        mx: 'auto',
-                        display: 'block',
-                        textAlign: 'center',
-                        color: 'text.disabled',
-                      }}
-                    >
-                      Allowed *.jpeg, *.jpg, *.png, *.gif
-                      <br /> max size of {fData(3145728)}
-                    </Typography>
-                  }
-                />
-              </Box>
-            </Card>
-          </Grid>
+                >
+                  Allowed *.jpeg, *.jpg, *.png, *.gif
+                  <br /> max size of {fData(3145728)}
+                </Typography>
+              }
+            />
+          </Card>
+        </Grid> */}
 
           <Grid xs={12}>
-            <Card
-              sx={{
-                p: 3,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Grid container spacing={3}>
-                <Grid xs={4}>
+            <Box>
+              <Grid container spacing={2}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -237,7 +286,7 @@ const BasicInformationForm: React.FC<any> = () => {
                     helperText={touched.instituteName && errors.instituteName}
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -249,7 +298,7 @@ const BasicInformationForm: React.FC<any> = () => {
                     helperText={touched.addressLine1 && errors.addressLine1}
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -261,7 +310,7 @@ const BasicInformationForm: React.FC<any> = () => {
                     helperText={touched.addressLine2 && errors.addressLine2}
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -273,7 +322,7 @@ const BasicInformationForm: React.FC<any> = () => {
                     helperText={touched.addressLine3 && errors.addressLine3}
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <CountryComponent
                     onChange={(_e, value) => {
                       setFieldValue('stateProvince', null);
@@ -281,10 +330,11 @@ const BasicInformationForm: React.FC<any> = () => {
                     }}
                     size="small"
                     value={values.country}
+                    fullWidth
                     // fieldProps={{ size: 'small' }}
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <StateComponent
                     onChange={(_e, value) => {
                       setFieldValue('city', null);
@@ -292,16 +342,18 @@ const BasicInformationForm: React.FC<any> = () => {
                     }}
                     value={values.stateProvince}
                     countryValue={values.country}
+                    fullWidth
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <CityComponent
                     value={values.city}
                     onChange={(_e, value) => setFieldValue('city', value)}
                     stateValue={values.stateProvince}
+                    fullWidth
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -315,7 +367,7 @@ const BasicInformationForm: React.FC<any> = () => {
                   />
                 </Grid>
 
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <PhoneInput
                     name="contactNumber"
                     value={values.contactNumber}
@@ -330,7 +382,7 @@ const BasicInformationForm: React.FC<any> = () => {
                     size="small"
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -351,7 +403,7 @@ const BasicInformationForm: React.FC<any> = () => {
                     }}
                   />
                 </Grid>
-                <Grid xs={4}>
+                <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -366,10 +418,33 @@ const BasicInformationForm: React.FC<any> = () => {
                   />
                 </Grid>
               </Grid>
-            </Card>
+            </Box>
+          </Grid>
+          <Grid xs={12}>
+            <BasicInformationAssets
+              formik={formik}
+              name="instituteLogo"
+              title="Upload Institute Logo"
+            />
+          </Grid>
+          <Grid xs={12}>
+            <BasicInformationAssets
+              formik={formik}
+              name="instituteBanner"
+              title="Upload Institute Banner"
+            />
+          </Grid>
+          <Grid xs={12}>
+            <BasicInformationAssets
+              formik={formik}
+              name="principleSign"
+              title="Upload Principle Sign"
+            />
           </Grid>
         </Grid>
+      </Scrollbar>
 
+      <DialogActions sx={{ flexShrink: 0, p: 2 }}>
         <Stack
           alignItems="flex-end"
           sx={{
@@ -385,8 +460,163 @@ const BasicInformationForm: React.FC<any> = () => {
             Save changes
           </LoadingButton>
         </Stack>
-      </form>
-    </Scrollbar>
+      </DialogActions>
+    </Box>
   );
 };
-export default BasicInformationForm;
+
+const BasicInformation = () => {
+  const form = useBoolean();
+  return (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <CustomBreadcrumbs
+        heading="Basic Information"
+        links={[{ name: 'Institute Setup' }, { name: 'Basic Information' }]}
+        sx={{ px: 1 }}
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={form.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            onClick={form.onToggle}
+          >
+            {form.value ? 'Back' : 'Institute'}
+          </Button>
+        }
+      />
+      {form.value ? (
+        <BasicInformationForm />
+      ) : (
+        <CustomizableTable
+          tableId="institute-setup"
+          columns={[
+            { label: 'Institute Name', id: 'instituteName' },
+            { label: 'Institute Logo', id: 'instituteLogo' },
+            { label: 'Institute Banner', id: 'instituteBanner' },
+            { label: 'Principle Sign', id: 'principleSign' },
+            { label: 'Address', id: 'address' },
+            { label: 'Country', id: 'country' },
+            { label: 'State', id: 'state' },
+            { label: 'City', id: 'city' },
+            { label: 'ZIP/Postal Code', id: 'pincode' },
+            { label: 'Contact Number', id: 'contactNumber' },
+            { label: 'Email Address', id: 'emailAddress' },
+            { label: 'Action', id: 'action', sticky: true },
+          ]}
+          data={[]}
+        />
+      )}
+    </Box>
+  );
+};
+export default BasicInformation;
+
+const BasicInformationAssets = ({ formik, name, title }: any) => {
+  const priviewDialog = useBoolean();
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  return (
+    <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 1 }}>
+      <Box>
+        <Typography variant="body1" fontWeight={600}>
+          {title}
+        </Typography>
+        <Upload
+          multiple
+          isPreview={false}
+          accept={{ 'image/*': [] }}
+          thumbnail
+          value={formik.values[name]}
+          onDrop={async (acceptedFiles) => {
+            const base64StringArray = await Promise.all(
+              acceptedFiles.map(
+                async (file) =>
+                  new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                      resolve(reader.result);
+                    };
+                  })
+              )
+            );
+            formik.setFieldValue(name, base64StringArray);
+          }}
+          onRemove={(file) => {}}
+          onRemoveAll={() => {}}
+          sx={{
+            '& svg': {
+              height: '110px',
+            },
+            '& > div': {
+              p: 2,
+            },
+          }}
+        />
+      </Box>
+      <Box sx={{ flexGrow: 1 }}>
+        <Typography variant="body1" fontWeight={600}>
+          Preview
+        </Typography>
+        {formik.values?.[name]?.length ? (
+          <List sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {formik.values?.[name]?.map((image: string, index: number) => (
+              <ListItem key={index} sx={{ width: 'auto', p: 0 }}>
+                <Card sx={{ p: 1, position: 'relative' }} elevation={3}>
+                  <RemoveButton
+                    onClick={() => {
+                      const newLogos = formik.values[name].filter(
+                        (_: string, i: number) => i !== index
+                      );
+                      formik.setFieldValue(name, newLogos);
+                    }}
+                    className={fileThumbnailClasses.removeBtn}
+                    sx={{ zIndex: 2 }}
+                  />
+
+                  <Button
+                    onClick={() => {
+                      setPreviewImage(image);
+                      priviewDialog.onTrue();
+                    }}
+                    style={{ border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}
+                  >
+                    <img
+                      src={image}
+                      alt={`Preview ${index + 1}`}
+                      style={{ height: '100px', width: 'auto', zIndex: 1 }}
+                    />
+                  </Button>
+                </Card>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <EmptyContent
+            title="Please upload images"
+            slotProps={{ title: { fontSize: '14px !important' } }}
+          />
+        )}
+      </Box>
+
+      <CustomDialog
+        maxWidth="md"
+        open={priviewDialog.value}
+        handleClose={priviewDialog.onFalse}
+        title="Preview"
+        paperProps={{
+          sx: {
+            height: '80vh',
+          },
+        }}
+      >
+        <Box width="100%" height="100%">
+          <img
+            src={previewImage as string}
+            alt="Preview"
+            style={{ height: '100%', width: '100%', objectFit: 'fill' }}
+          />
+        </Box>
+      </CustomDialog>
+    </Card>
+  );
+};

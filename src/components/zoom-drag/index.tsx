@@ -2,9 +2,9 @@ import { useRef, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
-const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.5, zoomFactor = 0.1 }: any) => {
+const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 }: any) => {
   const containerRef = useRef(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.8);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
@@ -72,6 +72,8 @@ const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.5, zoomFactor = 0.1 
         overflow: 'hidden',
         position: 'relative',
         cursor: isDragging ? 'grabbing' : 'grab',
+        display: 'flex',
+        justifyContent: 'center',
       }}
     >
       <div

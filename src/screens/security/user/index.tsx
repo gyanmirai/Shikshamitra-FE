@@ -37,6 +37,7 @@ const UserManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="User Management"
+        description="The process of creating, managing, and controlling user accounts, roles, and permissions within a system to ensure secure and efficient access to resources."
         links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'User Management' }]}
         sx={{ px: 1, mb: 3 }}
       />
@@ -96,7 +97,7 @@ const UserManagementScreen = () => {
         ]}
       />
       <CustomDialog fullScreen title="Permissions" open={dialog.value} handleClose={dialog.onFalse}>
-        <UserPermission />
+        <AssignModule />
       </CustomDialog>
       <CustomDialog
         maxWidth="md"
@@ -111,12 +112,3 @@ const UserManagementScreen = () => {
 };
 
 export default UserManagementScreen;
-
-const UserPermission = () => {
-  const a = null;
-  return (
-    <Box>
-      <AssignModule />
-    </Box>
-  );
-};

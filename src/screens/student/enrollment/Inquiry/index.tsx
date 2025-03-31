@@ -4,8 +4,8 @@ import type { YesNo } from 'src/enums/yes-no';
 import type { RootState } from 'src/redux/store';
 import type { GenderType } from 'src/enums/gender';
 import type { Category } from 'src/enums/studnet-category';
-import type { IState, ICountry } from 'country-state-city';
 import type { EmployeeCastType } from 'src/enums/employee-cast';
+import type { ICity, IState, ICountry } from 'country-state-city';
 import type { Board, Medium, Division, Standards, AcademicYear } from 'src/types/school';
 
 import React, { useState } from 'react';
@@ -15,6 +15,7 @@ import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -49,6 +50,7 @@ export interface IInquiryData {
   country: ICountry;
   city: string;
   state: IState;
+  village: string;
   tempGrNo: number;
   grNoRecord: number;
   rollNo: number;
@@ -88,6 +90,8 @@ export interface IInquiryData {
   nationality: string;
   birthPlace: string;
   temporaryGr: string;
+  panNo: string;
+  apparId: string;
   remarks: string;
 }
 
@@ -169,25 +173,25 @@ export interface StudentCommunicationDetails {
   localAddressLine1: string;
   localAddressLine2: string;
   localAddressLine3: string;
-  localCountry: string;
-  localState: string;
-  localCity: string;
+  localCountry: ICountry;
+  localState: IState;
+  localCity: ICity;
   localPinCode: string;
 
   permanentAddressLine1: string;
   permanentAddressLine2: string;
   permanentAddressLine3: string;
-  permanentCountry: string;
-  permanentState: string;
-  permanentCity: string;
+  permanentCountry: ICountry;
+  permanentState: IState;
+  permanentCity: ICity;
   permanentPinCode: string;
 
   emergencyAddressLine1: string;
   emergencyAddressLine2: string;
   emergencyAddressLine3: string;
-  emergencyCountry: string;
-  emergencyState: string;
-  emergencyCity: string;
+  emergencyCountry: ICountry;
+  emergencyState: IState;
+  emergencyCity: ICity;
   emergencyPinCode: string;
   remarks: string;
 }
@@ -205,28 +209,30 @@ export interface StudentAdditionalDetails {
   sponsorName?: string; // Add any additional fields as required
 }
 const InquiryScreen = () => {
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
   const [editData, setEditData] = useState<null | IInquiryData>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const dialog = useBoolean();
   const followUpDialog = useBoolean();
   const issueRegistrationFormDialog = useBoolean();
-  const links = dialog.value
-    ? [
-        { name: 'Student' },
-        { name: 'Student Enrollment' },
-        { name: 'Inquiry' },
-        { name: 'Inquiry Form' },
-      ]
-    : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Student' },
+          { name: 'Student Enrollment' },
+          { name: 'Inquiry' },
+          { name: 'Inquiry Form' },
+        ]
+      : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
-      dialog.onFalse();
+      setParams({ isForm: 'false' });
+
       setEditData(null);
     } else if (!isChanges) {
-      dialog.onFalse();
+      setParams({ isForm: 'false' });
       setEditData(null);
     }
   };
@@ -234,25 +240,26 @@ const InquiryScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Inquiry"
+        description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
         links={links}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
             size="small"
-            startIcon={dialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
-            onClick={dialog.value ? handleClose : dialog.onTrue}
+            onClick={params.isForm === 'true' ? handleClose : () => setParams({ isForm: 'true' })}
           >
-            {dialog.value ? 'Back' : 'Inquiry'}
+            {params.isForm === 'true' ? 'Back' : 'Inquiry'}
           </Button>
         }
       />
 
-      {dialog.value ? (
+      {params.isForm === 'true' ? (
         <InquiryForm handleClose={handleClose} editData={editData} />
       ) : (
         <InquiryTable
-          dialog={dialog}
+          setParams={setParams}
           followUpDialog={followUpDialog}
           issueRegistrationFormDialog={issueRegistrationFormDialog}
           editData={editData}

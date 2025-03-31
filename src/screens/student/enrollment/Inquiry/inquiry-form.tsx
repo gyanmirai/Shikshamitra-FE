@@ -138,6 +138,7 @@ interface FormikValues {
   addressLine2: string;
   addressLine3: string;
   email: string;
+  village: string;
 }
 
 const InquiryForm = ({
@@ -181,6 +182,7 @@ const InquiryForm = ({
       addressLine2: editData?.addressLine2 || '',
       addressLine3: editData?.addressLine3 || '',
       email: editData?.email || '',
+      village: editData?.village || '',
       // organization: editData?. || '',
     }),
     [editData]
@@ -268,6 +270,7 @@ const InquiryForm = ({
                   inquiryPreferenceId: values.inquiryPreferences,
                   email: values.email,
                   educationBoardId: values.board,
+                  village: values.village,
                 },
               }).unwrap();
             } else {
@@ -296,6 +299,8 @@ const InquiryForm = ({
                 standardId: values.class,
                 inquiryPreferenceId: values.inquiryPreferences,
                 educationBoardId: values.board,
+                email: values.email,
+                village: values.village,
               }).unwrap();
             }
             handleClose(null, true);
@@ -336,6 +341,7 @@ const InquiryForm = ({
                       value={values.academicYear}
                       labelKey="name"
                       valueKey="id"
+                      autoFocus
                       onChange={(value) => {
                         const findBoards = board?.items.filter(
                           (item: Board) => item.academicYearId === value
@@ -700,6 +706,19 @@ const InquiryForm = ({
                       error={touched.city && Boolean(errors.city)}
                       helperText={touched.city && errors.city}
                       stateValue={values.state}
+                    />
+                  </Grid>
+                  <Grid item xs={4}>
+                    <TextField
+                      name="village"
+                      value={values.village}
+                      onChange={handleChange}
+                      error={touched.village && Boolean(errors.village)}
+                      helperText={touched.village && errors.village}
+                      fullWidth
+                      placeholder="Village"
+                      size="small"
+                      label="Village"
                     />
                   </Grid>
                   <Grid item xs={4}>

@@ -1,5 +1,7 @@
 'use client';
 
+import type { Board } from 'src/types/school';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRef, useState, useEffect, useCallback } from 'react';
@@ -10,6 +12,7 @@ import {
   Tab,
   Box,
   Tabs,
+  Stack,
   Button,
   MenuList,
   MenuItem,
@@ -20,7 +23,7 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { BoardList } from 'src/enums/board';
+import { BoardEnum, BoardList } from 'src/enums/board';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetBoardsQuery,
@@ -237,8 +240,16 @@ interface IBoardForm {
   handleSetTeb: (value: Record<string, any>) => void;
   editData: null | Record<string, any>;
   academicYearId: string | number;
+  boards?: Board[];
 }
-const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoardForm) => {
+export const BoardForm = ({
+  handleClose,
+  handleSetTeb,
+  editData,
+  academicYearId,
+  boards,
+}: IBoardForm) => {
+  const confirm = useBoolean();
   const [addBoard, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddBoardMutation,
@@ -256,6 +267,25 @@ const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoa
     },
   });
 
+  const boardOptions =
+    boards?.length === 2
+      ? []
+      : boards?.length === 0
+        ? BoardList
+        : boards?.find((board: any) => board.type === BoardEnum.CBSE)
+          ? [
+              {
+                value: BoardEnum.GSEB,
+                label: 'GSEB',
+              },
+            ]
+          : [
+              {
+                value: BoardEnum.CBSE,
+                label: 'CBSE',
+              },
+            ];
+
   const formik = useFormik({
     initialValues: {
       board: editData ? editData.name : '',
@@ -264,64 +294,86 @@ const BoardForm = ({ handleClose, handleSetTeb, editData, academicYearId }: IBoa
       board: Yup.string().required('Board is required'),
     }),
     onSubmit: async (values) => {
+      confirm.onTrue();
+    },
+  });
+  const onSubmit = async () => {
+    try {
       if (editData) {
         const res = await updateBoard({
           id: editData.id,
           body: {
-            type: +values.board,
+            type: +formik.values.board,
             academicYearId,
           },
-        });
-        if (!res.error) {
-          handleSetTeb(res);
-        }
+        }).unwrap();
       } else {
         const res = await addBoard({
-          type: +values.board,
+          type: +formik.values.board,
           academicYearId,
-        });
-        if (!res.error) {
-          handleSetTeb(res);
-        }
+        }).unwrap();
       }
       handleClose();
-    },
-  });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <CustomSelect
-        fullWidth
-        id="board"
-        name="board"
-        label="Board Name"
-        value={formik.values.board}
-        onChange={(val) => formik.setFieldValue('board', val)}
-        error={formik.touched.board && Boolean(formik.errors.board)}
-        helperText={((formik.touched.board && formik.errors.board) || '') as string}
-        size="small"
-        options={BoardList}
-        formControlProps={{
-          fullWidth: true,
-          sx: {
-            maxWidth: 'unset',
-          },
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={() => {
+          confirm.onFalse();
         }}
+        title={`${editData ? 'Update' : 'Create'}`}
+        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Education Board ?`}
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isLoading || isUpdateLoading}
+            // color="error"
+            onClick={onSubmit}
+          >
+            Confirm
+          </LoadingButton>
+        }
       />
-
-      <DialogActions>
-        <Button variant="outlined" size="small" onClick={handleClose}>
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdateLoading}
-          type="submit"
-          variant="contained"
+      <Stack spacing={2} p={2}>
+        <CustomSelect
+          fullWidth
+          id="board"
+          name="board"
+          autoFocus
+          label="Board Name"
+          value={formik.values.board}
+          onChange={(val) => formik.setFieldValue('board', val)}
+          error={formik.touched.board && Boolean(formik.errors.board)}
+          helperText={((formik.touched.board && formik.errors.board) || '') as string}
           size="small"
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
+          options={boardOptions}
+          formControlProps={{
+            fullWidth: true,
+            sx: {
+              maxWidth: 'unset',
+            },
+          }}
+        />
+
+        <DialogActions sx={{ p: 0 }}>
+          <Button variant="outlined" size="small" onClick={handleClose}>
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isLoading || isUpdateLoading}
+            type="submit"
+            variant="contained"
+            size="small"
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+      </Stack>
     </Box>
   );
 };

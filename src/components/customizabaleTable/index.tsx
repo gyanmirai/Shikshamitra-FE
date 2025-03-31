@@ -154,70 +154,70 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   tableId,
   showCheckbox = false,
 }) => {
-  // columns = useMemo(
-  //   () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
-  //   [columns]
-  // );
+  columns = useMemo(
+    () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
+    [columns]
+  );
 
   const totalRows = data.length; // Get total number of rows
 
   const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
 
-  columns = useMemo(() => {
-    let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
+  // columns = useMemo(() => {
+  //   let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
 
-    if (showCheckbox) {
-      updatedColumns = [
-        {
-          id: 'selectAll',
-          label: '', // Empty header
-          isFilter: false,
-          renderColumn: () => (
-            <Checkbox
-              checked={selectedRows.size > 0 && selectedRows.size === totalRows}
-              indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  // Select all rows
-                  const allRowIds = new Set(data.map((row) => row.id));
-                  setSelectedRows(allRowIds);
-                } else {
-                  // Deselect all
-                  setSelectedRows(new Set());
-                }
-              }}
-            />
-          ),
-          render: (value, row) => (
-            <Checkbox
-              checked={selectedRows.has(row.id)}
-              onChange={() => {
-                setSelectedRows((prev) => {
-                  const newSelection = new Set(prev);
-                  if (newSelection.has(row.id)) {
-                    newSelection.delete(row.id);
-                  } else {
-                    newSelection.add(row.id);
-                  }
-                  return newSelection;
-                });
-              }}
-            />
-          ),
-        },
-        ...updatedColumns,
-      ];
-    }
+  //   if (showCheckbox) {
+  //     updatedColumns = [
+  //       {
+  //         id: 'selectAll',
+  //         label: '', // Empty header
+  //         isFilter: false,
+  //         renderColumn: () => (
+  //           <Checkbox
+  //             checked={selectedRows.size > 0 && selectedRows.size === totalRows}
+  //             indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
+  //             onChange={(e) => {
+  //               if (e.target.checked) {
+  //                 // Select all rows
+  //                 const allRowIds = new Set(data.map((row) => row.id));
+  //                 setSelectedRows(allRowIds);
+  //               } else {
+  //                 // Deselect all
+  //                 setSelectedRows(new Set());
+  //               }
+  //             }}
+  //           />
+  //         ),
+  //         render: (value, row) => (
+  //           <Checkbox
+  //             checked={selectedRows.has(row.id)}
+  //             onChange={() => {
+  //               setSelectedRows((prev) => {
+  //                 const newSelection = new Set(prev);
+  //                 if (newSelection.has(row.id)) {
+  //                   newSelection.delete(row.id);
+  //                 } else {
+  //                   newSelection.add(row.id);
+  //                 }
+  //                 return newSelection;
+  //               });
+  //             }}
+  //           />
+  //         ),
+  //       },
+  //       ...updatedColumns,
+  //     ];
+  //   }
 
-    return updatedColumns;
-  }, [columns, showCheckbox, selectedRows, totalRows, data]);
+  //   return updatedColumns;
+  // }, [columns, showCheckbox, selectedRows, totalRows, data]);
 
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handleSendNotification = () => {
-    sendInstantNotificationDialogValue.onTrue();
-    const selectedRowIds = Array.from(selectedRows);
-    const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
+    // sendInstantNotificationDialogValue.onTrue();
+    // const selectedRowIds = Array.from(selectedRows);
+    // const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
   };
 
   const [tableConfig, setTableConfig] = useState<IParams>({
@@ -370,14 +370,16 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchValue(event.target.value);
-      // setParams({ searchTerm: event.target.value });
+      // Reset to first page when searching
+      handelChangeParams({ page: 0 });
+
       debounce(() => {
         if (serverSide && onServerSearch) {
           onServerSearch(event.target.value);
         }
       });
     },
-    [serverSide, onServerSearch]
+    [serverSide, onServerSearch, handelChangeParams]
   );
 
   const applyFilter = useCallback(
@@ -748,10 +750,10 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                           sx={{
                             fontSize: '14px',
                             width: column.minWidth,
-                            position: column.sticky ? 'sticky' : 'relative',
+                            position: 'sticky',
                             left: column.sticky ? 0 : 'auto',
                             right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
-                            zIndex: column.sticky ? 2 : 'auto',
+                            zIndex: column.sticky ? 99 : 10,
                             backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                             boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
 
@@ -910,7 +912,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                                   position: column.sticky ? 'sticky' : 'static',
                                   left: column.sticky ? 0 : 'auto',
                                   right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
-                                  zIndex: column.sticky ? 2 : 'auto',
+                                  zIndex: column.sticky ? 10 : 2,
                                   backgroundColor: column.sticky
                                     ? 'background.paper'
                                     : 'transparent',

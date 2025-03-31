@@ -42,13 +42,23 @@ function StandardNode(props: any) {
       <Typography variant="subtitle2" noWrap sx={{ mb: 0.5 }}>
         {name || title}
       </Typography>
-      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        <Typography component="span" variant="caption" onClick={() => onRolesClick(item)}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', p: 0.5 }}>
+        <Typography
+          sx={{ cursor: 'pointer' }}
+          component="span"
+          variant="caption"
+          onClick={() => onRolesClick(item)}
+        >
           {' '}
           Roles ({count})
         </Typography>{' '}
         |{' '}
-        <Typography component="span" variant="caption" onClick={() => onUserClick(item)}>
+        <Typography
+          sx={{ cursor: 'pointer' }}
+          component="span"
+          variant="caption"
+          onClick={() => onUserClick(item)}
+        >
           {' '}
           Users ({count})
         </Typography>

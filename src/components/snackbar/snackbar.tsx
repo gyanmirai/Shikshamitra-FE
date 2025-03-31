@@ -16,8 +16,9 @@ export function Snackbar() {
         gap={12}
         closeButton
         offset={16}
+        duration={Infinity}
         visibleToasts={4}
-        position="top-center"
+        position="bottom-right"
         className={toasterClasses.root}
         toastOptions={{
           unstyled: true,
