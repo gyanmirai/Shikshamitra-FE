@@ -29,14 +29,12 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import type { IInquiryData } from '.';
 
 const InquiryTable = ({
-  dialog,
   followUpDialog,
   issueRegistrationFormDialog,
   editData,
   setEditData,
   setParams,
 }: {
-  dialog: UseBooleanReturn;
   issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   editData: null | IInquiryData;
