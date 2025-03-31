@@ -1,0 +1,39 @@
+name: Deploy Next.js to Azure
+
+on:
+  push:
+    branches:
+      - main # Change this if using a different branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Next.js App
+        run: npm run build
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: nextjs-app
+          path: .next
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'be-shikshamitra'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D5A897CBA1394CC89303DF4618925EA6 }}
+          package: .
