@@ -1930,7 +1930,7 @@ function RenderFamilyInformation(props: any) {
             <Typography variant="h6" gutterBottom>
               Father Details
             </Typography>
-            <Stack spacing={3}>
+            <Stack spacing={2}>
               <TextField
                 name="fatherName"
                 label="Father Name"
@@ -2147,7 +2147,7 @@ function RenderFamilyInformation(props: any) {
             <Typography variant="h6" gutterBottom>
               Mother Details
             </Typography>
-            <Stack spacing={3}>
+            <Stack spacing={2}>
               <TextField
                 name="motherName"
                 label="Mother Name"
@@ -2363,7 +2363,7 @@ function RenderFamilyInformation(props: any) {
             <Typography variant="h6" gutterBottom>
               Guardian Details
             </Typography>
-            <Stack spacing={3}>
+            <Stack spacing={2}>
               <TextField
                 name="guardianName"
                 label="Guardian Name"

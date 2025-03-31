@@ -240,7 +240,6 @@ const InquiryScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Inquiry"
-        description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
         links={links}
         sx={{ px: 1, mb: 2 }}
         action={

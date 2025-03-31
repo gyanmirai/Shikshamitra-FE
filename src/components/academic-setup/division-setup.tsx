@@ -286,24 +286,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           confirm.onFalse();
         }}
         title={`${editData ? 'Update Division' : 'Create Division'}`}
-        content={
-          <>
-            {' '}
-            Are you sure you want to {editData ? 'Update' : 'Create '}{' '}
-            {editData ? (
-              editData.name === formik.values.division ? (
-                ''
-              ) : (
-                <>
-                  <b>{editData.name}</b> to <b>{formik.values.division}</b>
-                </>
-              )
-            ) : (
-              <b>{formik.values.division}</b>
-            )}{' '}
-            Division ?
-          </>
-        }
+        content={`Are you sure want to ${editData ? `Update Division ${editData?.name} to ${formik.values.division}` : `Create Division ${formik.values.division}`}  ?`}
         action={
           <LoadingButton
             variant="contained"

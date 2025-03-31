@@ -77,7 +77,6 @@ const RegistrationFormScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Issued Registration Form"
-        description="An Issued Registration Form in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
         links={[
           { name: 'Student' },
           { name: 'Student Enroll' },

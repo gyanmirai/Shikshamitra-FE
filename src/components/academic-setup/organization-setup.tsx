@@ -282,24 +282,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           confirm.onFalse();
         }}
         title={`${editData ? 'Update Organization' : 'Create Organization'}`}
-        content={
-          <>
-            {' '}
-            Are you sure you want to {editData ? 'Update' : 'Create '}{' '}
-            {editData ? (
-              editData.name === formik.values.organization ? (
-                ''
-              ) : (
-                <>
-                  <b>{editData.name}</b> to <b>{formik.values.organization}</b>
-                </>
-              )
-            ) : (
-              <b>{formik.values.organization}</b>
-            )}{' '}
-            Medium ?
-          </>
-        }
+        content={`Are you sure want to ${editData ? `Update Organization ${editData?.name} to ${formik.values.organization}` : `Create Organization ${formik.values.organization}`} ?`}
         action={
           <LoadingButton
             variant="contained"

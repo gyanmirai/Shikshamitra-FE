@@ -29,7 +29,6 @@ export function Upload({
   helperText,
   onRemoveAll,
   multiple = false,
-  isPreview = true,
   ...other
 }: UploadProps) {
   const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections } = useDropzone({
@@ -116,7 +115,7 @@ export function Upload({
       <RejectionFiles files={[...fileRejections]} />
 
       {/* Multi files */}
-      {isPreview && renderMultiPreview}
+      {renderMultiPreview}
     </Box>
   );
 }

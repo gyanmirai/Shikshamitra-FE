@@ -295,24 +295,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           confirm.onFalse();
         }}
         title={`${editData ? 'Update Standard' : 'Create Standard'}`}
-        content={
-          <>
-            {' '}
-            Are you sure you want to {editData ? 'Update' : 'Create '} Standard
-            {editData ? (
-              editData.name === formik.values.class ? (
-                ''
-              ) : (
-                <>
-                  <b> {editData.name}</b> to <b> {formik.values.class}</b>
-                </>
-              )
-            ) : (
-              <b> {formik.values.class}</b>
-            )}{' '}
-            ?
-          </>
-        }
+        content={`Are you sure want to ${editData ? `Update Standard ${editData?.name} to ${formik.values.class}` : `Create Standard ${formik.values.class}`} ?`}
         action={
           <LoadingButton
             variant="contained"

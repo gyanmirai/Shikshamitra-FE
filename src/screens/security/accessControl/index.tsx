@@ -104,13 +104,7 @@ const AccessControlScreen = () => {
   );
 };
 
-export const AccessControlForm = ({
-  user,
-  handleClose,
-}: {
-  user?: any;
-  handleClose?: () => void;
-}) => {
+export const AccessControlForm = ({ user, handleClose }: any) => {
   const [activeStep, setActiveStep] = React.useState(0);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 

@@ -97,7 +97,7 @@ const UserManagementScreen = () => {
         ]}
       />
       <CustomDialog fullScreen title="Permissions" open={dialog.value} handleClose={dialog.onFalse}>
-        <AssignModule />
+        <UserPermission />
       </CustomDialog>
       <CustomDialog
         maxWidth="md"
@@ -112,3 +112,12 @@ const UserManagementScreen = () => {
 };
 
 export default UserManagementScreen;
+
+const UserPermission = () => {
+  const a = null;
+  return (
+    <Box>
+      <AssignModule />
+    </Box>
+  );
+};

@@ -63,7 +63,6 @@ export function MultiFilePreview({
 
       {files.map((file) => {
         const { name } = fileData(file);
-        console.log('🚀 ~ {files.map ~ name:', name);
 
         if (thumbnail) {
           return (

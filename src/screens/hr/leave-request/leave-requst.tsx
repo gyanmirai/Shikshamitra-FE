@@ -100,6 +100,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
 
+  console.log('leavePolicyData?.items----', leavePolicyData?.items);
+
   const uploadProps = {
     multiple: true,
     accept: { 'image/*': [] },
@@ -315,6 +317,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     thumbnail
                     value={values.docs}
                     onDrop={(acceptedFiles) => {
+                      console.log(
+                        '🚀 ~ file: leave-requst.tsx:318 ~ AddLeaveRequest ~ acceptedFiles:',
+                        acceptedFiles
+                      );
                       const file = acceptedFiles[0];
                       const reader = new FileReader();
                       reader.readAsDataURL(file);
