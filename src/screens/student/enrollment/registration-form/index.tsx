@@ -3,8 +3,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 
-import { LoadingButton } from '@mui/lab';
-import { Box, Checkbox, MenuItem, MenuList } from '@mui/material';
+import { Box, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -17,17 +16,17 @@ import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registrati
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { CommunicationForm } from '../follow-up';
+import RegisterForm from '../register/register-form';
 
 import type { IInquiryData } from '../Inquiry';
 
 const RegistrationFormScreen = () => {
+  const registerFormDialog = useBoolean();
   const [editData, setEditData] = useState<IInquiryData | null>(null);
   const [moveId, setMoveId] = useState<string | null>(null);
   const [dates, setDates] = useState([]);
@@ -60,23 +59,15 @@ const RegistrationFormScreen = () => {
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
-      })) || [],
+      })),
     [inquiryFormData?.items]
   );
-
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Issued Registration Form"
+        description="An Issued Registration Form in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
         links={[
           { name: 'Student' },
           { name: 'Student Enroll' },
@@ -87,46 +78,8 @@ const RegistrationFormScreen = () => {
 
       <CustomizableTable
         isLoading={isLoading}
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
         tableId="student-registration-form-table"
         columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
           { id: 'formNumber', label: 'Form No', minWidth: '110px' },
           {
             id: 'inquiryNumber',
@@ -177,9 +130,10 @@ const RegistrationFormScreen = () => {
                     <MenuList>
                       <MenuItem
                         onClick={async (e) => {
-                          confirmMovePopup.onTrue();
                           // dialog.onTrue();
-                          setMoveId(row.id);
+                          // setMoveId(row.id);
+                          registerFormDialog.onTrue();
+                          setEditData(row as IInquiryData);
                           popover.onClose();
                         }}
                       >
@@ -208,6 +162,24 @@ const RegistrationFormScreen = () => {
         data={tableData || []}
       />
       <CustomDialog
+        maxWidth="xl"
+        open={registerFormDialog.value}
+        handleClose={() => {
+          setEditData(null);
+          registerFormDialog.onFalse();
+        }}
+        title="Move to Admission"
+      >
+        <RegisterForm
+          editData={editData}
+          handleClose={() => {
+            setEditData(null);
+            registerFormDialog.onFalse();
+          }}
+          isComeFromIssueForm
+        />
+      </CustomDialog>
+      <CustomDialog
         open={followUpDialog.value}
         handleClose={() => {
           setEditData(null);
@@ -224,7 +196,7 @@ const RegistrationFormScreen = () => {
         />{' '}
       </CustomDialog>
 
-      <ConfirmDialog
+      {/* <ConfirmDialog
         title="Move"
         content="Are you sure want to move in registration ?"
         action={
@@ -246,15 +218,7 @@ const RegistrationFormScreen = () => {
           confirmMovePopup.onFalse();
           setMoveId(null);
         }}
-      />
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
+      /> */}
     </Box>
   );
 };

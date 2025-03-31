@@ -51,6 +51,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import debounce from 'src/utils/debounce';
 
 import { Iconify } from '../iconify';
@@ -114,7 +116,7 @@ interface CustomizableTableProps {
   dateProps?: DatePickerProps<Dayjs>;
   tableId: string;
   showCheckbox?: boolean;
-  onSendNotification?: () => void;
+  onSendNotification?: (data: any) => void;
 }
 
 type IParams = {
@@ -158,9 +160,11 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     [columns]
   );
 
-  // const totalRows = data.length; // Get total number of rows
+  const totalRows = data.length; // Get total number of rows
 
-  // const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
+  const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
+
+  const sendInstantNotificationDialogValue = useBoolean();
 
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
@@ -312,14 +316,16 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchValue(event.target.value);
-      // setParams({ searchTerm: event.target.value });
+      // Reset to first page when searching
+      handelChangeParams({ page: 0 });
+
       debounce(() => {
         if (serverSide && onServerSearch) {
           onServerSearch(event.target.value);
         }
       });
     },
-    [serverSide, onServerSearch]
+    [serverSide, onServerSearch, handelChangeParams]
   );
 
   const applyFilter = useCallback(

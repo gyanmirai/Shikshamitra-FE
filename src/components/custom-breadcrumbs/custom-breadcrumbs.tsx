@@ -1,9 +1,11 @@
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
+import { Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 
+import { Iconify } from '../iconify';
 import { BreadcrumbsLink } from './breadcrumb-link';
 
 import type { CustomBreadcrumbsProps } from './types';
@@ -18,13 +20,23 @@ export function CustomBreadcrumbs({
   activeLast,
   slotProps,
   sx,
+  description,
+  tooltipProps,
   ...other
 }: CustomBreadcrumbsProps) {
   const lastLink = links[links.length - 1].name;
 
   const renderHeading = (
-    <Typography variant="h4" sx={{ mb: 2, ...slotProps?.heading }}>
-      {heading}
+    <Typography
+      variant="h4"
+      sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2, ...slotProps?.heading }}
+    >
+      {heading}{' '}
+      {description && (
+        <Tooltip arrow placement="right" title={description} {...tooltipProps}>
+          <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+        </Tooltip>
+      )}
     </Typography>
   );
 

@@ -2,6 +2,8 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { capitalize } from 'lodash';
+import { useDispatch } from 'react-redux';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -22,6 +24,7 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { boardApi } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetClassQuery,
@@ -224,6 +227,7 @@ interface IClassForm {
   organizationId: string | number;
 }
 export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm) => {
+  const confirm = useBoolean();
   const [addClass, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddClassMutation,
@@ -240,6 +244,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
       successMessage: 'Class updated Successfully',
     },
   });
+  const dispatch = useDispatch();
 
   const formik = useFormik<{
     class: string;
@@ -247,42 +252,90 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
   }>({
     initialValues: {
       class: editData ? editData.name : '',
-      limit: editData ? editData.ageLowerLimit : 0,
+      limit: editData ? editData.ageLowerLimit : 5,
     },
     validationSchema: Yup.object().shape({
       class: Yup.string().required('Class is required'),
     }),
     onSubmit: async (values) => {
+      confirm.onTrue();
+    },
+  });
+
+  const onSubmit = async () => {
+    try {
       if (editData) {
         await updateClass({
           id: editData.id,
           body: {
-            name: values.class,
-            ageLowerLimit: values.limit,
+            name: formik.values.class,
+            ageLowerLimit: formik.values.limit,
             educationMediumStageId: organizationId,
           },
-        });
+        }).unwrap();
       } else {
         await addClass({
-          name: values.class,
-          ageLowerLimit: values.limit,
+          name: formik.values.class,
+          ageLowerLimit: formik.values.limit,
           educationMediumStageId: organizationId,
-        });
+        }).unwrap();
       }
+      dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       handleClose();
-    },
-  });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <Stack spacing={2} direction="column">
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={() => {
+          confirm.onFalse();
+        }}
+        title={`${editData ? 'Update Standard' : 'Create Standard'}`}
+        content={
+          <>
+            {' '}
+            Are you sure you want to {editData ? 'Update' : 'Create '} Standard
+            {editData ? (
+              editData.name === formik.values.class ? (
+                ''
+              ) : (
+                <>
+                  <b> {editData.name}</b> to <b> {formik.values.class}</b>
+                </>
+              )
+            ) : (
+              <b> {formik.values.class}</b>
+            )}{' '}
+            ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isLoading || isUpdateLoading}
+            // color="error"
+            onClick={onSubmit}
+          >
+            Confirm
+          </LoadingButton>
+        }
+      />
+      <Stack spacing={2} direction="column" p={2}>
         <TextField
           fullWidth
           id="class"
           name="class"
+          autoFocus
           label="Class Name"
           value={formik.values.class}
-          onChange={formik.handleChange}
+          onChange={(e) => {
+            const newName = capitalize(e.target.value);
+            formik.setFieldValue('class', newName);
+          }}
           error={formik.touched.class && Boolean(formik.errors.class)}
           helperText={formik.touched.class && formik.errors.class}
           size="small"
@@ -299,20 +352,20 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           helperText={formik.touched.limit && formik.errors.limit}
           size="small"
         />
+        <DialogActions sx={{ p: 0 }}>
+          <Button variant="outlined" size="small" onClick={handleClose}>
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isLoading || isUpdateLoading}
+            type="submit"
+            variant="contained"
+            size="small"
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
       </Stack>
-      <DialogActions>
-        <Button variant="outlined" size="small" onClick={handleClose}>
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdateLoading}
-          type="submit"
-          variant="contained"
-          size="small"
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
     </Box>
   );
 };

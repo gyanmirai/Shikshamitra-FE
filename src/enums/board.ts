@@ -1,15 +1,15 @@
-export enum Board {
+export enum BoardEnum {
   CBSE,
   GSEB,
 }
 
 export const BoardList = [
   {
-    value: Board.CBSE,
+    value: BoardEnum.CBSE,
     label: 'CBSE',
   },
   {
-    value: Board.GSEB,
+    value: BoardEnum.GSEB,
     label: 'GSEB',
   },
 ];
