@@ -162,57 +162,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
 
   // const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
 
-  // columns = useMemo(() => {
-  //   let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
-
-  //   if (showCheckbox) {
-  //     updatedColumns = [
-  //       {
-  //         id: 'selectAll',
-  //         label: '', // Empty header
-  //         isFilter: false,
-  //         renderColumn: () => (
-  //           <Checkbox
-  //             checked={selectedRows.size > 0 && selectedRows.size === totalRows}
-  //             indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
-  //             onChange={(e) => {
-  //               if (e.target.checked) {
-  //                 // Select all rows
-  //                 const allRowIds = new Set(data.map((row) => row.id));
-  //                 setSelectedRows(allRowIds);
-
-  //               } else {
-  //                 // Deselect all
-  //                 setSelectedRows(new Set());
-
-  //               }
-  //             }}
-  //           />
-  //         ),
-  //         render: (value, row) => (
-  //           <Checkbox
-  //             checked={selectedRows.has(row.id)}
-  //             onChange={() => {
-  //               setSelectedRows((prev) => {
-  //                 const newSelection = new Set(prev);
-  //                 if (newSelection.has(row.id)) {
-  //                   newSelection.delete(row.id);
-  //                 } else {
-  //                   newSelection.add(row.id);
-  //                 }
-  //                 return newSelection;
-  //               });
-  //             }}
-  //           />
-  //         ),
-  //       },
-  //       ...updatedColumns,
-  //     ];
-  //   }
-
-  //   return updatedColumns;
-  // }, [columns, showCheckbox, selectedRows, totalRows, data]);
-
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
     rowsPerPage: 10, // Changed from 10 to -1
@@ -363,16 +312,14 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchValue(event.target.value);
-      // Reset to first page when searching
-      handelChangeParams({ page: 0 });
-
+      // setParams({ searchTerm: event.target.value });
       debounce(() => {
         if (serverSide && onServerSearch) {
           onServerSearch(event.target.value);
         }
       });
     },
-    [serverSide, onServerSearch, handelChangeParams]
+    [serverSide, onServerSearch]
   );
 
   const applyFilter = useCallback(

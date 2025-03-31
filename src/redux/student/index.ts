@@ -38,13 +38,6 @@ export const StudentApi = createApi({
       }),
       invalidatesTags: ['Student'],
     }),
-    getAllStudents: builder.query({
-      query: () => ({
-        url: `/app/student`,
-        method: 'GET',
-      }),
-      providesTags: ['Student'],
-    }),
   }),
 });
 
@@ -52,5 +45,4 @@ export const {
   useGetFilterStudentsQuery,
   useLazyGetFilterStudentsQuery,
   useChangeDivisionMutation,
-  useGetAllStudentsQuery,
 } = StudentApi;

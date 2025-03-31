@@ -29,17 +29,19 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import type { IInquiryData } from '.';
 
 const InquiryTable = ({
-  setParams,
+  dialog,
   followUpDialog,
   issueRegistrationFormDialog,
   editData,
   setEditData,
+  setParams,
 }: {
-  setParams: (obj: Record<string, any>) => void;
+  dialog: UseBooleanReturn;
   issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   editData: null | IInquiryData;
   setEditData: React.Dispatch<React.SetStateAction<null | IInquiryData>>;
+  setParams: React.Dispatch<React.SetStateAction<{ isForm: string }>>;
 }) => {
   const { data: inquiryData, isLoading } = useQueryAndMutation({
     type: 'query',

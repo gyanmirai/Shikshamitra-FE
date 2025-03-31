@@ -37,7 +37,6 @@ export type NavItemStateProps = {
 
 export type NavItemBaseProps = {
   path?: string;
-  shortcutKeyName?: string;
   title: string;
   _action?: string;
   children?: any;
@@ -83,6 +82,5 @@ export type NavSectionProps = Omit<NavListProps, 'data' | 'depth'> & {
     _action?: string;
     isSubLayout?: boolean;
     submodule?: NavItemBaseProps[];
-    shortcutKeyName?: string;
   }[];
 };

@@ -36,7 +36,7 @@ const RegistrationTable = ({
 }) => {
   const [moveId, setMoveId] = useState<string | null>(null);
   const confirmMovePopup = useBoolean();
-  const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
+  const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: {
@@ -271,7 +271,7 @@ const RegistrationTable = ({
         action={
           <LoadingButton
             variant="contained"
-            loading={isMoveToAdmissionLoading}
+            loading={isLoading}
             color="error"
             onClick={async () => {
               await moveToAdmission(moveId);

@@ -7,11 +7,9 @@ import { fileToBase64 } from 'src/utils/file-to-base64';
 import { getBase64String } from 'src/utils/get-base64-string';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
-import { Category } from 'src/enums/studnet-category';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useUpdateBasicDetailsMutation,
-  useMoveToRegistrationMutation,
   useUpdateFamilyDetailsMutation,
   useAddStudentRegistrationMutation,
   useUpdateParentBankDetailsMutation,
@@ -56,11 +54,9 @@ const steps = [
 const RegisterForm = ({
   editData,
   handleClose,
-  isComeFromIssueForm = false,
 }: {
   editData: null | IInquiryData;
   handleClose: (e: any, isSubmit?: boolean) => void;
-  isComeFromIssueForm?: boolean;
 }) => {
   const [activeStep, setActiveStep] = useState(0);
 
@@ -101,14 +97,6 @@ const RegisterForm = ({
   const [updateBankDetails] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateParentBankDetailsMutation,
-  });
-  const [moveToRegistration] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useMoveToRegistrationMutation,
-    popupConfig: {
-      successMessage: 'Student moved to registration successfully',
-      success: true,
-    },
   });
 
   const handleGeneralFormSubmit = useCallback(
@@ -152,7 +140,7 @@ const RegisterForm = ({
               standardId: values.class,
               // userId: values.userId || res?.id,
               profilePicture: values.photo ? getBase64String(values.photo) : '',
-              // mobileNo: values.mobileNo,
+              mobileNo: values.mobileNo,
               email: values.email,
               aadhaarNo: String(values.adharNo),
               religion: values.religion,
@@ -171,15 +159,9 @@ const RegisterForm = ({
               country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
               pinCode: String(values.pinCode),
               inquiryPreferenceId: values.inquiryPreference,
-              village: values.village,
-              apparId: values.apparId,
-              panNo: values.panNo,
-              userId: editData?.userId,
+              // userId: editData?.userId,
             },
           }).unwrap();
-          if (isComeFromIssueForm) {
-            await moveToRegistration(editData?.id);
-          }
         } else {
           const resp = await addRegistration({
             formNumber: values.formNo,
@@ -218,9 +200,6 @@ const RegisterForm = ({
             country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
             pinCode: String(values.pinCode),
             inquiryPreferenceId: values.inquiryPreference,
-            village: values.village,
-            apparId: values.apparId,
-            panNo: values.panNo,
           }).unwrap();
           formik.setFieldValue('id', resp?.id);
         }
@@ -228,7 +207,7 @@ const RegisterForm = ({
         throw new Error(error);
       }
     },
-    [addRegistration, editData, isComeFromIssueForm, moveToRegistration, updateBasicDetails]
+    [addRegistration, editData, updateBasicDetails]
   );
   const handleFamilyFormSubmit = useCallback(
     async (values: any, formik: any) => {
@@ -243,7 +222,7 @@ const RegisterForm = ({
               qualification: values.fatherQualification,
               contactNo: values.fatherContactNo,
               email: values.fatherEmail,
-              passOutYear: +values.fatherPassOutYear,
+              passOutYear: values.fatherPassOutYear,
               officeNo: values.fatherOfficeNo,
               officeAddress: values.fatherOfficeAddress,
               designation: values.fatherDesignation,
@@ -259,7 +238,7 @@ const RegisterForm = ({
               qualification: values.motherQualification,
               contactNo: values.motherContactNo,
               email: values.motherEmail,
-              passOutYear: +values.motherPassOutYear,
+              passOutYear: values.motherPassOutYear,
               officeNo: values.motherOfficeNo,
               officeAddress: values.motherOfficeAddress,
               designation: values.motherDesignation,
@@ -275,7 +254,7 @@ const RegisterForm = ({
               qualification: values.guardianQualification,
               contactNo: values.guardianContactNo,
               email: values.guardianEmail,
-              passOutYear: +values.guardianPassOutYear,
+              passOutYear: values.guardianPassOutYear,
               officeNo: values.guardianOfficeNo,
               officeAddress: values.guardianOfficeAddress,
               designation: values.guardianDesignation,
@@ -305,27 +284,30 @@ const RegisterForm = ({
             studentEmail: values.studentEmail,
             whatsAppNo: values.whatsAppContactNo,
             localAddress: values.localAddress,
-            localCountryName: values?.localCountry?.name || '',
-            localCountryIsoCode: values?.localCountry?.isoCode || '',
-            localStateName: values?.localState?.name || '',
-            localStateIsoCode: values?.localState?.isoCode || '',
+            localCountry: { name: values.localCountry.name, isoCode: values.localCountry.isoCode },
+            localState: { name: values.localState.name, isoCode: values.localState.isoCode },
             localCity: values.localCity.name,
             localPinCode: values.localPincode,
             permanentAddress: values.permanentAddress,
-            permanentCountryName: values?.permanentCountry?.name || '',
-            permanentCountryIsoCode: values?.permanentCountry?.isoCode || '',
-
-            permanentStateName: values?.permanentState?.name || '',
-            permanentStateIsoCode: values?.permanentState?.isoCode || '',
-
+            permanentCountry: {
+              name: values?.permanentCountry?.name,
+              isoCode: values?.permanentCountry?.isoCode,
+            },
+            permanentState: {
+              name: values?.permanentState?.name,
+              isoCode: values?.permanentState?.isoCode,
+            },
             permanentCity: values?.permanentCity?.name,
             permanentPinCode: values.permanentPincode,
             emergencyAddress: values.emergencyAddress,
-            emergencyStateName: values.emergencyState?.name || '',
-            emergencyStateIsoCode: values.emergencyState?.isoCode || '',
-            emergencyCountryName: values.emergencyCountry?.name || '',
-            emergencyCountryIsoCode: values.emergencyCountry?.isoCode || '',
-
+            emergencyState: {
+              name: values.emergencyState?.name,
+              isoCode: values.emergencyState?.isoCode,
+            },
+            emergencyCountry: {
+              name: values.emergencyCountry?.name,
+              isoCode: values.emergencyCountry?.isoCode,
+            },
             emergencyCity: values?.emergencyCity?.name,
             emergencyPinCode: values.emergencyPincode,
             remarks: values.remarks,
@@ -343,10 +325,10 @@ const RegisterForm = ({
         await updateMedicalDetails({
           id: editData?.id || values?.id,
           body: {
-            weight: +values.weight,
-            height: +values.height,
-            bodyMassIndex: +values.bmi,
-            haemoglobin: +values.haemoglobin,
+            weight: values.weight,
+            height: values.height,
+            bodyMassIndex: values.bmi,
+            haemoglobin: values.haemoglobin,
             allergies: values.allergies,
             covidVaccination: values.covidVaccination,
             childImmunisation: values.childImmunisation,
@@ -371,7 +353,7 @@ const RegisterForm = ({
             previousSchoolMedium: values.schoolMedium,
             tcNo: values.tcNumber,
             lastClassPassed: String(values.lastClassPassed),
-            percentage: +values.percentage,
+            percentage: values.percentage,
           },
         }).unwrap();
       } catch (error) {
@@ -407,7 +389,7 @@ const RegisterForm = ({
           id: editData?.id || values?.id,
           body: {
             category: values.category,
-            rightToEducation: values.category === Category.Rte,
+            rightToEducation: values.RTE,
             bplStudent: values.bplStudent,
             bplCardNo: values.bplCardNo,
             personWithDisability: values.personWithDisability,
@@ -415,7 +397,7 @@ const RegisterForm = ({
             emergencyContactNo: values.emergencyContactNo,
             singleParentChild: values.singleParentChild,
             singleChild: values.singleChild,
-            sponsorName: values.sponsorStudent.id,
+            sponsorName: values.sponsorName,
           },
         }).unwrap();
       } catch (error) {

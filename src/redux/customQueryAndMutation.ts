@@ -1,8 +1,6 @@
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 
-import { Alert } from '@mui/material';
-
 interface IQueryAndMutation<T> {
   type: 'query' | 'mutation';
   currentQueryAndMutation: (
@@ -45,34 +43,12 @@ function useQueryAndMutation<T>({
 
   useEffect(() => {
     if (isError && popupConfig.error) {
-      toast.custom((t) => (
-        <Alert
-          severity="error"
-          variant="filled"
-          onClose={() => {
-            toast.dismiss(t);
-          }}
-        >
-          {error?.data?.error?.message || popupConfig.errorMessage}
-        </Alert>
-      ));
-      // toast.error(error?.data?.error?.message || popupConfig.errorMessage);
+      toast.error(error?.data?.error?.message || popupConfig.errorMessage);
     }
   }, [error, isError, popupConfig.error, popupConfig.errorMessage]);
   useEffect(() => {
     if (isSuccess && popupConfig.success) {
-      // toast.success(popupConfig.successMessage);
-      toast.custom((t) => (
-        <Alert
-          severity="success"
-          variant="filled"
-          onClose={() => {
-            toast.dismiss(t);
-          }}
-        >
-          {popupConfig.successMessage}
-        </Alert>
-      ));
+      toast.success(popupConfig.successMessage);
     }
   }, [isSuccess, popupConfig.success, popupConfig.successMessage]);
 

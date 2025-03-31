@@ -463,6 +463,8 @@ export const ExamForm = ({
     [slots]
   );
 
+  console.log('allSlots', allSlots);
+
   const formik = useFormik({
     // enableReinitialize: true,
     initialValues: {
@@ -555,7 +557,6 @@ export const ExamForm = ({
                       { id: 1, examType: 'abc' },
                       { id: 2, examType: 'xyz' },
                     ]}
-                    autoFocus
                     getOptionLabel={(option) => option.examType}
                     renderInput={(params) => (
                       <TextField

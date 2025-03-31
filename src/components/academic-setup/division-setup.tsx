@@ -2,8 +2,6 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -12,7 +10,6 @@ import {
   Tab,
   Box,
   Tabs,
-  Stack,
   Button,
   MenuList,
   MenuItem,
@@ -24,7 +21,6 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { boardApi } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetDivisionQuery,
@@ -218,7 +214,6 @@ interface IDivisionForm {
   classId: string | number;
 }
 export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) => {
-  const confirm = useBoolean();
   const [addDivision, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddDivisionMutation,
@@ -235,7 +230,6 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
       successMessage: 'Division updated Successfully',
     },
   });
-  const dispatch = useDispatch();
 
   const formik = useFormik({
     initialValues: {
@@ -248,112 +242,82 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
       strength: Yup.number().required('Strength is required'),
     }),
     onSubmit: async (values) => {
-      confirm.onTrue();
-    },
-  });
-  const onSubmit = async () => {
-    try {
       if (editData) {
         await updatedivision({
           id: editData.id,
           body: {
-            name: formik.values.division,
+            name: values.division,
             standardId: classId,
-            strength: formik.values.strength,
-            roomNumber: formik.values.roomNo,
+            strength: values.strength,
+            roomNumber: values.roomNo,
           },
-        }).unwrap();
+        });
       } else {
         await addDivision({
-          name: formik.values.division,
+          name: values.division,
           standardId: classId,
-          strength: formik.values.strength,
-          roomNumber: formik.values.roomNo,
-        }).unwrap();
+          strength: values.strength,
+          roomNumber: values.roomNo,
+        });
       }
-      dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       handleClose();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    },
+  });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-        }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Sandard ?`}
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isLoading || isUpdateLoading}
-            // color="error"
-            onClick={onSubmit}
-          >
-            Confirm
-          </LoadingButton>
-        }
+    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+      <TextField
+        fullWidth
+        id="division"
+        name="division"
+        label="Division Name"
+        value={formik.values.division}
+        onChange={formik.handleChange}
+        error={formik.touched.division && Boolean(formik.errors.division)}
+        // @ts-ignore
+        helperText={formik.touched.division && formik.errors.division}
+        size="small"
       />
-      <Stack spacing={2} direction="column" p={2}>
-        <TextField
-          fullWidth
-          id="division"
-          name="division"
-          label="Division Name"
-          autoFocus
-          value={formik.values.division}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('division', newName);
-          }}
-          error={formik.touched.division && Boolean(formik.errors.division)}
-          // @ts-ignore
-          helperText={formik.touched.division && formik.errors.division}
+      <TextField
+        fullWidth
+        sx={{ mt: 2 }}
+        id="strength"
+        name="strength"
+        type="number"
+        label="Strength"
+        value={formik.values.strength}
+        onChange={formik.handleChange}
+        error={formik.touched.strength && Boolean(formik.errors.strength)}
+        // @ts-ignore
+        helperText={formik.touched.strength && formik.errors.strength}
+        size="small"
+      />
+      <TextField
+        fullWidth
+        sx={{ mt: 2 }}
+        id="roomNo"
+        name="roomNo"
+        label="Room No"
+        value={formik.values.roomNo}
+        onChange={formik.handleChange}
+        error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
+        // @ts-ignore
+        helperText={formik.touched.roomNo && formik.errors.roomNo}
+        size="small"
+      />
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading || isUpdateLoading}
+          type="submit"
+          variant="contained"
           size="small"
-        />
-        <TextField
-          fullWidth
-          id="strength"
-          name="strength"
-          type="number"
-          label="Strength"
-          value={formik.values.strength}
-          onChange={formik.handleChange}
-          error={formik.touched.strength && Boolean(formik.errors.strength)}
-          // @ts-ignore
-          helperText={formik.touched.strength && formik.errors.strength}
-          size="small"
-        />
-        <TextField
-          fullWidth
-          id="roomNo"
-          name="roomNo"
-          label="Room No"
-          value={formik.values.roomNo}
-          onChange={formik.handleChange}
-          error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
-          // @ts-ignore
-          helperText={formik.touched.roomNo && formik.errors.roomNo}
-          size="small"
-        />
-        <DialogActions sx={{ p: 0 }}>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            type="submit"
-            variant="contained"
-            size="small"
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Stack>
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
 };

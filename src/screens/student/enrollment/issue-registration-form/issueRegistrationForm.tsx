@@ -26,6 +26,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
   const initialValues = {
     formNumber: '',
   };
+  console.log('editData---', editData);
 
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',

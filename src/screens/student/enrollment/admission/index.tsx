@@ -1338,7 +1338,6 @@ const AssignDivisionForm = ({
       >
         <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
         <CustomSelect
-          autoFocus
           options={standard?.divisions || []}
           value={formik.values.division}
           onChange={(val) => formik.setFieldValue('division', val)}

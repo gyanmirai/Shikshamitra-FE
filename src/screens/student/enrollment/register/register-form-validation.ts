@@ -13,12 +13,12 @@ const generalFieldValidation = Yup.object({
   adharNo: Yup.string()
     .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
     .required('Adhar No is required'),
-  religion: Yup.string(),
-  familyCast: Yup.string(),
+  religion: Yup.string().required('Religion is required'),
+  familyCast: Yup.string().required('Family Cast is required'),
   castCategory: Yup.string()
 
     .required('Cast Category is required'),
-  motherTongue: Yup.string(),
+  motherTongue: Yup.string().required('Mother Tongue is required'),
   nationality: Yup.string(),
   birthPlace: Yup.string(),
   temporaryGr: Yup.string(),
@@ -31,10 +31,11 @@ const generalFieldValidation = Yup.object({
     )
     .required('Mobile number is required'),
   alternativeContactNumber: Yup.string()
-    .test('Mobile NO', 'mobile number is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
+    .test(
+      'Mobile NO',
+      'mobile number is not valid',
+      (value) => !!value && matchIsValidTel(value as string)
     )
-
     .test('unique', 'Alternate contact number cannot be same as contact number', function (value) {
       return !value || value !== this.parent.mobileNo;
     }),
@@ -44,19 +45,21 @@ const generalFieldValidation = Yup.object({
   academicYear: Yup.string().required('Academic Year is required'),
   class: Yup.string().required('Class is required'),
   previousSchool: Yup.string(),
-  photo: Yup.string(),
+  photo: Yup.string().required('Photo is required'),
 });
 
 const familyFieldsValidation = Yup.object({
   fatherName: Yup.string().required('Father name is required'),
-  fatherDob: Yup.string(),
+  fatherDob: Yup.date().required('Father date of birth is required'),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
-  fatherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  fatherContactNo: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
   fatherEmail: Yup.string().email('Invalid email format'),
-  fatherPassOutYear: Yup.string(),
+  fatherPassOutYear: Yup.string().required('Father pass out year is required'),
   fatherOfficeNo: Yup.string(),
   fatherOfficeAddress: Yup.string(),
   fatherDesignation: Yup.string(),
@@ -64,16 +67,17 @@ const familyFieldsValidation = Yup.object({
   fatherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   fatherRemarks: Yup.string(),
   fatherAddress: Yup.string(),
-
-  motherName: Yup.string(),
-  motherDob: Yup.string(),
+  motherName: Yup.string().required('Mother name is required'),
+  motherDob: Yup.date().required('Mother date of birth is required'),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
-  motherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  motherContactNo: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
   motherEmail: Yup.string().email('Invalid email format'),
-  motherPassOutYear: Yup.string(),
+  motherPassOutYear: Yup.string().required('Mother pass out year is required'),
   motherOfficeNo: Yup.string(),
   motherOfficeAddress: Yup.string(),
   motherDesignation: Yup.string(),
@@ -83,14 +87,16 @@ const familyFieldsValidation = Yup.object({
   motherAddress: Yup.string(),
 
   guardianName: Yup.string(),
-  guardianDob: Yup.string(),
+  guardianDob: Yup.date(),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
-  guardianContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  guardianContactNo: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
   guardianEmail: Yup.string().email('Invalid email format'),
-  guardianPassOutYear: Yup.string(),
+  guardianPassOutYear: Yup.string().required('Guardian pass out year is required'),
   guardianOfficeNo: Yup.string(),
   guardianOfficeAddress: Yup.string(),
   guardianDesignation: Yup.string(),
@@ -101,43 +107,51 @@ const familyFieldsValidation = Yup.object({
 });
 
 const communicationFieldsValidation = Yup.object({
-  primaryContactNumber: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  primaryContactNumber: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
-  parentContactNumber: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  parentContactNumber: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
   parentEmail: Yup.string().email('Invalid email format'),
-  studentContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  studentContactNo: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
   studentEmail: Yup.string().email('Invalid email format'),
-  whatsAppContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  whatsAppContactNo: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
-  // localCountry: Yup.object({
-  //   name: Yup.string().required('Country is required'),
-  // }),
-  // localState: Yup.object({
-  //   name: Yup.string().required('State is required'),
-  // }),
-  // localCity: Yup.object({
-  //   name: Yup.string().required('City is required'),
-  // }),
+  localCountry: Yup.object({
+    name: Yup.string().required('Country is required'),
+  }),
+  localState: Yup.object({
+    name: Yup.string().required('State is required'),
+  }),
+  localCity: Yup.object({
+    name: Yup.string().required('City is required'),
+  }),
   localPincode: Yup.string(),
   localAddressLine1: Yup.string(),
   localAddressLine2: Yup.string(),
   localAddressLine3: Yup.string(),
   isOpenLocalAddress: Yup.boolean(),
-  // emergencyCountry: Yup.object({
-  //   name: Yup.string().required('Country is required'),
-  // }),
-  // emergencyState: Yup.object({
-  //   name: Yup.string().required('State is required'),
-  // }),
-  // emergencyCity: Yup.object({
-  //   name: Yup.string().required('City is required'),
-  // }),
+  emergencyCountry: Yup.object({
+    name: Yup.string().required('Country is required'),
+  }),
+  emergencyState: Yup.object({
+    name: Yup.string().required('State is required'),
+  }),
+  emergencyCity: Yup.object({
+    name: Yup.string().required('City is required'),
+  }),
   emergencyPincode: Yup.string(),
   emergencyAddressLine1: Yup.string(),
   emergencyAddressLine2: Yup.string(),
@@ -147,15 +161,15 @@ const communicationFieldsValidation = Yup.object({
   permanentAddress: Yup.string(),
   permanentAddressLine2: Yup.string(),
   permanentAddressLine3: Yup.string(),
-  // permanentCountry: Yup.object({
-  //   name: Yup.string().required('Country is required'),
-  // }),
-  // permanentState: Yup.object({
-  //   name: Yup.string().required('State is required'),
-  // }),
-  // permanentCity: Yup.object({
-  //   name: Yup.string().required('City is required'),
-  // }),
+  permanentCountry: Yup.object({
+    name: Yup.string().required('Country is required'),
+  }),
+  permanentState: Yup.object({
+    name: Yup.string().required('State is required'),
+  }),
+  permanentCity: Yup.object({
+    name: Yup.string().required('City is required'),
+  }),
   permanentPincode: Yup.string(),
   sameAsLocalForPermanent: Yup.boolean(),
   isOpenPermanentAddress: Yup.boolean(),
@@ -165,46 +179,48 @@ const communicationFieldsValidation = Yup.object({
 const additionalDetailsValidations = Yup.object({
   category: Yup.string(),
   RTE: Yup.boolean(),
-  bplStudent: Yup.boolean().nullable(),
+  bplStudent: Yup.boolean(),
   bplCardNo: Yup.string(),
-  personWithDisability: Yup.boolean().nullable(),
+  personWithDisability: Yup.boolean(),
   secondLanguage: Yup.string(),
-  emergencyContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  emergencyContactNo: Yup.string().test(
+    'Mobile NO',
+    'mobile number is not valid',
+    (value) => !!value && matchIsValidTel(value as string)
   ),
   singleParentChild: Yup.boolean(),
   singleChild: Yup.boolean(),
-  // sponsorStudent: Yup.boolean(),
+  sponsorStudent: Yup.boolean(),
   sponsorName: Yup.string(),
 });
 
 const medicalDetailsValidations = Yup.object({
-  weight: Yup.number(),
-  height: Yup.string(),
-  bmi: Yup.string(),
+  weight: Yup.number().required('Weight is required'),
+  height: Yup.string().required('Height is required'),
+  bmi: Yup.string().required('BMI is required'),
   pulseRate: Yup.string(),
-  haemoglobin: Yup.string(),
+  haemoglobin: Yup.string().required('Haemoglobin is required'),
   allergies: Yup.string(),
   covidVaccination: Yup.number().required('Covid vaccination is required'),
   childImmunisation: Yup.boolean(),
   immunisationRemarks: Yup.string(),
 });
 const previousSchoolValidation = Yup.object({
-  schoolName: Yup.string(),
+  schoolName: Yup.string().required('School name is required'),
   schoolAddress: Yup.string(),
   schoolBoard: Yup.string(),
   schoolMedium: Yup.string(),
   tcNumber: Yup.string(),
   lastClassPassed: Yup.string(),
-  percentage: Yup.string(),
+  percentage: Yup.string().required('Percentage is required'),
 });
 
 const bankDetailsValidation = Yup.object({
-  bankName: Yup.string(),
-  accountNo: Yup.string(),
-  ifscCode: Yup.string(),
-  branchName: Yup.string(),
-  accountHolderName: Yup.string(),
+  bankName: Yup.string().required('Bank name is required'),
+  accountNo: Yup.string().required('Account number is required'),
+  ifscCode: Yup.string().required('IFSC code is required'),
+  branchName: Yup.string().required('Branch name is required'),
+  accountHolderName: Yup.string().required('Account holder name is required'),
 });
 
 export const validationSchemas = [

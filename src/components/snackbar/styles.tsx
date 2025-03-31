@@ -11,10 +11,10 @@ import { toasterClasses } from './classes';
 export const StyledToaster = styled(Toaster)(({ theme }) => {
   const baseStyles = {
     toastDefault: {
-      // padding: theme.spacing(1, 1, 1, 1.5),
-      // boxShadow: theme.customShadows.z8,
+      padding: theme.spacing(1, 1, 1, 1.5),
+      boxShadow: theme.customShadows.z8,
       color: theme.vars.palette.background.paper,
-      backgroundColor: 'unset',
+      backgroundColor: theme.vars.palette.text.primary,
     },
     toastColor: {
       padding: theme.spacing(0.5, 1, 0.5, 0.5),
@@ -59,13 +59,10 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
     [`& .${toasterClasses.toast}`]: {
       gap: 12,
       width: '100%',
-      maxWidth: '400px',
       minHeight: 52,
       display: 'flex',
       borderRadius: 12,
       alignItems: 'center',
-      padding: 0,
-      backgroundColor: 'none',
     },
     /*
      * Content

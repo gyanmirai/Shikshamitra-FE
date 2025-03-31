@@ -261,7 +261,7 @@ const AssignTeacherForm: React.FC<AssignTeacherFormProps> = ({
             </Grid>
           </Grid>
         </Scrollbar>
-        <DialogActions sx={{ px: 0 }}>
+        <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
             {isEdit ? 'Update' : 'Assign'}

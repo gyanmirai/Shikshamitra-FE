@@ -19,16 +19,9 @@ type Props = {
   }[];
   groupLabel: string;
   onClickItem?: () => void;
-  shortcutKeyName: string;
 };
 
-export function ResultItem({
-  title,
-  path,
-  groupLabel,
-  onClickItem = () => {},
-  shortcutKeyName,
-}: Props) {
+export function ResultItem({ title, path, groupLabel, onClickItem = () => {} }: Props) {
   return (
     <ListItemButton
       onClick={onClickItem}
@@ -71,7 +64,6 @@ export function ResultItem({
         ))}
       />
 
-      {shortcutKeyName && <Label>{shortcutKeyName}</Label>}
       {groupLabel && <Label color="info">{groupLabel}</Label>}
     </ListItemButton>
   );

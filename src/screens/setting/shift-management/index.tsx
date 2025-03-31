@@ -5,25 +5,12 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as yup from 'yup';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add, ArrowBack } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Step,
-  Card,
-  styled,
-  Button,
-  Stepper,
-  StepLabel,
-  TextField,
-  Typography,
-  StepContent,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -143,23 +130,13 @@ const ShiftManageMentScreen = () => {
 
 export default ShiftManageMentScreen;
 
-const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
-  '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.palette.error.main : theme.palette.primary.main,
-  },
-  '& .MuiStepLabel-label': {
-    color: error ? theme.palette.error.main : theme.palette.text.primary,
-    fontWeight: error ? 'bold' : 'normal',
-  },
-}));
-
 const ShiftManageMentForm = ({ handleClose, editData }: any) => {
   const [addShift, { isLaoding: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddShiftMutation,
   });
 
-  const [updateShift, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateShift, { isLoading: isUpdateLoiading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateShiftMutation,
   });
@@ -195,6 +172,8 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
         .required('End Time is required'),
     }),
     onSubmit: async (values) => {
+      console.log('🚀 ~ onSubmit:async ~ values:', values);
+
       try {
         if (editData) {
           await updateShift({
@@ -218,116 +197,17 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
       }
     },
   });
-  const steps = [
-    {
-      label: 'Shift Name',
-      content: () => (
-        <TextField
-          label="Name"
-          name="name"
-          value={formik.values.name}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('name', newName);
-          }}
-          error={formik.touched.name && Boolean(formik.errors.name)}
-          // helperText={formik.touched.name && formik.errors.name}
-          size="small"
-        />
-      ),
-    },
-    {
-      label: 'Shift Start Time',
-      content: () => (
-        <MobileTimePicker
-          label="Start Time"
-          value={formik.values.startTime}
-          format="hh:mm A"
-          onChange={(date) => formik.setFieldValue('startTime', date)}
-          slotProps={{
-            textField: {
-              size: 'small',
 
-              // helperText: formik.touched.startTime && formik.errors.startTime,
-              error: !!formik.errors.startTime && formik.touched.startTime,
-            },
-          }}
-        />
-      ),
-    },
-    {
-      label: 'Shift End Time',
-      content: () => (
-        <MobileTimePicker
-          label="End Time"
-          format="hh:mm A"
-          value={formik.values.endTime}
-          onChange={(date) => formik.setFieldValue('endTime', date)}
-          slotProps={{
-            textField: {
-              size: 'small',
-
-              // helperText: formik.touched.endTime && formik.errors.endTime,
-              error: !!formik.errors.endTime && formik.touched.endTime,
-            },
-          }}
-        />
-      ),
-    },
-  ];
-
-  const validation = (index: number) => {
-    if (index === 0 && formik.errors.name && formik.touched.name) {
-      return {
-        msg: formik.errors.name,
-        value: true,
-      };
-    }
-    if (index === 1 && formik.errors.startTime && formik.touched.startTime) {
-      return {
-        msg: formik.errors.startTime,
-        value: true,
-      };
-    }
-    if (index === 2 && formik.errors.endTime && formik.touched.endTime) {
-      return {
-        msg: formik.errors.endTime,
-        value: true,
-      };
-    }
-    return {
-      msg: '',
-      value: false,
-    };
-  };
   return (
-    <Card sx={{ height: '100%' }}>
-      <Box
-        component="form"
-        onSubmit={formik.handleSubmit}
-        height="100%"
-        display="flex"
-        flexDirection="column"
-      >
-        <Box sx={{ p: 2, height: '100%' }}>
-          <Stepper orientation="vertical" sx={{ ' & .MuiStepConnector-line': { display: 'none' } }}>
-            {steps.map((step, index) => (
-              <Step key={index} expanded>
-                <CustomStepLabel
-                  error={validation(index).value}
-                  sx={{ '& svg': { color: 'primary.main' } }}
-                >
-                  {step.label}{' '}
-                  <small>{validation(index).value && `(${validation(index).msg})`}</small>
-                </CustomStepLabel>
-                <StepContent>
-                  <Typography>{step.content()}</Typography>
-                </StepContent>
-              </Step>
-            ))}
-          </Stepper>
-
-          {/* <Grid container spacing={2}>
+    <Box
+      component="form"
+      onSubmit={formik.handleSubmit}
+      height="100%"
+      display="flex"
+      flexDirection="column"
+    >
+      <Box sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
+        <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <TextField
               label="Name"
@@ -372,19 +252,14 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
               }}
             />
           </Grid>
-        </Grid> */}
-        </Box>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <LoadingButton
-            type="submit"
-            variant="contained"
-            loading={isAddLoading || isUpdateLoading}
-          >
-            Save
-          </LoadingButton>
-        </DialogActions>
+        </Grid>
       </Box>
-    </Card>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
+        <LoadingButton type="submit" variant="contained" loading={isAddLoading || isUpdateLoiading}>
+          Save
+        </LoadingButton>
+      </DialogActions>
+    </Box>
   );
 };

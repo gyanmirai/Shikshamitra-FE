@@ -2,8 +2,6 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -12,7 +10,6 @@ import {
   Tab,
   Box,
   Tabs,
-  Stack,
   Button,
   MenuList,
   MenuItem,
@@ -24,7 +21,6 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { boardApi } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetOrganizationQuery,
@@ -220,7 +216,6 @@ interface IOrganizationForm {
   mediumId: string;
 }
 export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizationForm) => {
-  const confirm = useBoolean();
   const [addOrganization, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddOrganizationMutation,
@@ -238,8 +233,6 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
     },
   });
 
-  const dispatch = useDispatch();
-
   const formik = useFormik({
     initialValues: {
       organization: editData ? editData.name : '',
@@ -248,83 +241,51 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
       organization: Yup.string().required('Organization is required'),
     }),
     onSubmit: async (values) => {
-      confirm.onTrue();
-    },
-  });
-  const onSubmit = async () => {
-    try {
       if (editData) {
         await updateOrganization({
           id: editData.id,
           body: {
-            name: formik.values.organization,
+            name: values.organization,
             educationMediumId: mediumId,
           },
-        }).unwrap();
+        });
       } else {
         await addOrganization({
-          name: formik.values.organization,
+          name: values.organization,
           educationMediumId: mediumId,
-        }).unwrap();
+        });
       }
-      dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       handleClose();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    },
+  });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-        }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Organization ?`}
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isLoading || isUpdateLoading}
-            // color="error"
-            onClick={onSubmit}
-          >
-            Confirm
-          </LoadingButton>
-        }
+    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+      <TextField
+        fullWidth
+        id="board"
+        name="organization"
+        label="Organization Name"
+        value={formik.values.organization}
+        onChange={formik.handleChange}
+        error={formik.touched.organization && Boolean(formik.errors.organization)}
+        // @ts-ignore
+        helperText={formik.touched.organization && formik.errors.organization}
+        size="small"
       />
-      <Stack spacing={2} direction="column" p={2}>
-        <TextField
-          fullWidth
-          id="board"
-          name="organization"
-          label="Organization Name"
-          autoFocus
-          value={formik.values.organization}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('organization', newName);
-          }}
-          error={formik.touched.organization && Boolean(formik.errors.organization)}
-          // @ts-ignore
-          helperText={formik.touched.organization && formik.errors.organization}
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading || isUpdateLoading}
+          type="submit"
+          variant="contained"
           size="small"
-        />
-        <DialogActions sx={{ p: 0 }}>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            type="submit"
-            variant="contained"
-            size="small"
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Stack>
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
 };

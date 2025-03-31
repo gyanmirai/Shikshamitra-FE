@@ -266,7 +266,7 @@ function CollapsibleTableRow({
   children,
   limitOfAge,
 }: CollapsibleTableRowProps) {
-  const collapsible = useBoolean(true);
+  const collapsible = useBoolean();
   const confirm = useBoolean(false);
   const [childEditData, setChildEditData] = useState<CustomAcademicTableProps | undefined>(
     undefined
@@ -408,25 +408,23 @@ function CollapsibleTableRow({
         <TableCell align="right" />
       </TableRow>
 
-      {children && (
-        <TableRow>
-          <TableCell align="center" sx={{ py: 0 }} colSpan={6}>
-            <Collapse in={collapsible.value} timeout="auto" unmountOnExit>
-              <Paper
-                variant="outlined"
-                sx={{
-                  py: 2,
-                  mb: 2,
-                  borderRadius: 1.5,
-                  ...(collapsible.value && { boxShadow: (theme) => theme.customShadows.z20 }),
-                }}
-              >
-                {children && <CustomAcademicTable {...children} id={row.id} />}
-              </Paper>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      )}
+      <TableRow>
+        <TableCell align="center" sx={{ py: 0 }} colSpan={6}>
+          <Collapse in={collapsible.value} timeout="auto" unmountOnExit>
+            <Paper
+              variant="outlined"
+              sx={{
+                py: 2,
+                mb: 2,
+                borderRadius: 1.5,
+                ...(collapsible.value && { boxShadow: (theme) => theme.customShadows.z20 }),
+              }}
+            >
+              {children && <CustomAcademicTable {...children} id={row.id} />}
+            </Paper>
+          </Collapse>
+        </TableCell>
+      </TableRow>
     </>
   );
 }

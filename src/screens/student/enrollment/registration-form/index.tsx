@@ -3,6 +3,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Box, Checkbox, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -16,18 +17,17 @@ import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registrati
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { CommunicationForm } from '../follow-up';
-import RegisterForm from '../register/register-form';
 
 import type { IInquiryData } from '../Inquiry';
 
 const RegistrationFormScreen = () => {
-  const registerFormDialog = useBoolean();
   const [editData, setEditData] = useState<IInquiryData | null>(null);
   const [moveId, setMoveId] = useState<string | null>(null);
   const [dates, setDates] = useState([]);
@@ -177,10 +177,9 @@ const RegistrationFormScreen = () => {
                     <MenuList>
                       <MenuItem
                         onClick={async (e) => {
+                          confirmMovePopup.onTrue();
                           // dialog.onTrue();
-                          // setMoveId(row.id);
-                          registerFormDialog.onTrue();
-                          setEditData(row as IInquiryData);
+                          setMoveId(row.id);
                           popover.onClose();
                         }}
                       >
@@ -209,24 +208,6 @@ const RegistrationFormScreen = () => {
         data={tableData || []}
       />
       <CustomDialog
-        maxWidth="xl"
-        open={registerFormDialog.value}
-        handleClose={() => {
-          setEditData(null);
-          registerFormDialog.onFalse();
-        }}
-        title="Move to Admission"
-      >
-        <RegisterForm
-          editData={editData}
-          handleClose={() => {
-            setEditData(null);
-            registerFormDialog.onFalse();
-          }}
-          isComeFromIssueForm
-        />
-      </CustomDialog>
-      <CustomDialog
         open={followUpDialog.value}
         handleClose={() => {
           setEditData(null);
@@ -243,7 +224,7 @@ const RegistrationFormScreen = () => {
         />{' '}
       </CustomDialog>
 
-      {/* <ConfirmDialog
+      <ConfirmDialog
         title="Move"
         content="Are you sure want to move in registration ?"
         action={
@@ -265,7 +246,7 @@ const RegistrationFormScreen = () => {
           confirmMovePopup.onFalse();
           setMoveId(null);
         }}
-      /> */}
+      />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}
