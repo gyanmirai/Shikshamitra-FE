@@ -294,8 +294,8 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
         onClose={() => {
           confirm.onFalse();
         }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Sandard ?`}
+        title={`${editData ? 'Update Standard' : 'Create Standard'}`}
+        content={`Are you sure want to ${editData ? `Update Standard ${editData?.name} to ${formik.values.class}` : `Create Standard ${formik.values.class}`} ?`}
         action={
           <LoadingButton
             variant="contained"
