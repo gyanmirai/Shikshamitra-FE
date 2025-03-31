@@ -1101,8 +1101,8 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
         onClose={() => {
           confirm.onFalse();
         }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Academic Year ?`}
+        title={`${editData ? 'Update Academic Year' : 'Create Academic Year'}`}
+        content={`Are you sure want to ${editData ? 'Update Academic Year' : 'Create Academic Year'} ?`}
         action={
           <LoadingButton
             variant="contained"

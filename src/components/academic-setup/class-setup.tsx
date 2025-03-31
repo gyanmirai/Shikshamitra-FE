@@ -258,7 +258,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
       class: Yup.string().required('Class is required'),
     }),
     onSubmit: async (values) => {
-      confirm.onFalse();
+      confirm.onTrue();
     },
   });
 

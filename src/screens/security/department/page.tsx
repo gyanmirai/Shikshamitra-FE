@@ -120,7 +120,6 @@ const Department = () => {
   const roleAndUserDialog = useBoolean();
   const organizationUnitDialog = useBoolean();
   const [editData, setEditData] = useState<any>(null);
-  console.log('🚀 ~ file: page.tsx:155 ~ Department ~ editData:', editData);
 
   const [parentData, setParentData] = useState(null);
   const { data: organizationUnit } = useQueryAndMutation({
