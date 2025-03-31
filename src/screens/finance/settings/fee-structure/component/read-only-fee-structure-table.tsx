@@ -6,8 +6,10 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import type { FeeItem } from '../data/fee-structure-data';
+
 interface ReadOnlyFeeStructureTableProps {
-  data: any[];
+  data: FeeItem[];
 }
 
 const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ data }) => {
@@ -77,7 +79,11 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
       id: 'paymentMethod',
       label: 'Payment Method',
       render(value: any, row: any) {
-        return <Typography sx={{ fontSize: '12px' }}>{row.paymentMethod.join(' / ')}</Typography>;
+        return (
+          <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+            {row.paymentMethod.join(' , ')}
+          </Typography>
+        );
       },
     },
     {
@@ -85,8 +91,8 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
       label: 'Late Fee Charges',
       render(value: any, row: any) {
         return (
-          <Typography sx={{ fontSize: '12px' }}>
-            {`${row.lateFeeChargesAmount} / ${row.lateFeeChargesType} ₹`}
+          <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+            {`${row.lateFeeChargesAmount} ₹ / ${row.lateFeeChargesType} `}
           </Typography>
         );
       },

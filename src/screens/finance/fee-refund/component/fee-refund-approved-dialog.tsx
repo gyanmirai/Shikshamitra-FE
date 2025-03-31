@@ -4,6 +4,7 @@ import { Grid, Button, TextField, Typography, DialogActions } from '@mui/materia
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -11,169 +12,25 @@ import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import { studentPayment } from '../data/fee-refund-approved-dialog-data';
+
+import type { StudentPayment } from '../data/fee-refund-approved-dialog-data';
+
 interface FinanceFeeCollectionRefundTabProps {
   dialogValue: boolean;
-  selectedData: any;
   onClose: () => void;
 }
 
 const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRefundTabProps> = ({
   dialogValue,
-  selectedData,
   onClose,
 }) => {
-  const historyData = [
-    {
-      className: '1A',
-      grNo: '101',
-      receiptNo: 'RCPT001',
-      refundDate: '01-05-2024',
-      amount: 1500,
-      modeOfPayment: 'Cheque',
-      transactionId: 'TXN12345',
-      receiptBook: 'RB001',
-    },
-    {
-      className: '2B',
-      grNo: '102',
-      receiptNo: 'RCPT002',
-      refundDate: '15-05-2024',
-      amount: 2000,
-      modeOfPayment: 'Transaction',
-      transactionId: 'TXN12346',
-      receiptBook: 'RB002',
-    },
-  ];
-  const data = [
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Tuition',
-      paidAmount: '10000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      askForRefund: 2000,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'June-2024',
-              date: '15-01-2024',
-              status: 'Unpaid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: '54j8',
-                  paymentStatus: 'Success',
-                },
-                { paymentMode: 'Cash', amount: '2000' },
-                {
-                  paymentMode: 'Online',
-                  amount: '1000',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Failed',
-                },
-                {
-                  paymentMode: 'Online',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Check',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Not Clear',
-                  charges: 500,
-                },
-              ],
-            },
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Library',
-      paidAmount: '4000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      askForRefund: 2000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
-
   const dialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(data);
-  const [isEdit, setIsEdit] = useState(false);
-  // const [tableData, setTableData] = useState(data);
-  const [paymentHistoryData, setPaymentHistoryData] = useState(data);
+  const [, setSelectedEntry] = useState<StudentPayment[]>(studentPayment);
+  const [, setIsEdit] = useState(false);
+  const [paymentHistoryData, setPaymentHistoryData] = useState<StudentPayment[]>(studentPayment);
 
-  const handleRefundChange = (index: any, value: any) => {
+  const handleRefundChange = (index: string, value: string) => {
     const newData = [...paymentHistoryData];
     const existingIndex = newData.findIndex((val) => val.paymentId === index);
     newData[existingIndex].refundAmount = value;
@@ -181,7 +38,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
   };
 
   const totalRefundAmount: number = paymentHistoryData.reduce(
-    (total: any, item: any) => total + Number(item.refundAmount),
+    (total: number, item: StudentPayment) => total + Number(item.refundAmount),
     0
   );
 
@@ -208,9 +65,9 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
     dialog.onTrue();
   };
 
-  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState('');
-  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState('');
-  const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState(0);
+  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState<string>('');
+  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState<string>('');
+  const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState<number>(0);
 
   const parseNumericValue = (formattedValue: string) =>
     parseFloat(formattedValue.replace(/,/g, '')) || 0;
@@ -228,6 +85,41 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
   const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
     setlibraryFeeRefundAmount(formattedValue);
   };
+
+  const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
+
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+
+  const handleDiscountChange = (feeHead: string, value: string) => {
+    setDiscountValues((prev) => {
+      const updatedValues = {
+        ...prev,
+        [feeHead]: value.replace(/[^0-9.]/g, ''),
+      };
+
+      return updatedValues;
+    });
+  };
+
+  const calculateTotalDiscount = () => {
+    const totalDiscount = Object.values(discountValues).reduce(
+      (sum, value) => sum + (Number(value) || 0),
+      0
+    );
+
+    return totalDiscount;
+  };
+
+  const [feeRefundremark, setFeeRefundRemark] = useState('');
+  // ✅ Use useEffect to correctly update isSaveEnabled when discountValues change
+  useEffect(() => {
+    const canSave =
+      Object.values(discountValues).some((val) => Number(val) > 0) && feeRefundremark !== '';
+    const totalDiscount = calculateTotalDiscount();
+
+    setIsSaveEnabled(canSave);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountValues, feeRefundremark]); // Depend on discountValues, so it updates correctly
 
   return (
     <CustomDialog maxWidth="xl" title="Fee Refund" open={dialogValue} handleClose={onClose}>
@@ -262,71 +154,16 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
             { id: 'askForRefund', label: 'Ask For Refund' },
             {
               id: 'refundAmount',
-              label: 'Refund Amount',
-              render: (value: any, row: any) => {
-                if (row.feeHead === 'Tuition') {
-                  return (
-                    <NumericFormatCustom
-                      size="small"
-                      label="Tuition Discount"
-                      name="tuitionDiscount"
-                      value=""
-                      onChange={() => {}}
-                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-                    />
-                  );
-                }
-                if (row.feeHead === 'Library') {
-                  return (
-                    <NumericFormatCustom
-                      size="small"
-                      label="Library Discount"
-                      name="libraryDiscount"
-                      value=""
-                      onChange={() => {}}
-                      // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                      // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-                    />
-                  );
-                }
-                return (
-                  <NumericFormatCustom
-                    size="small"
-                    label="Total Discount"
-                    name="totalDiscount"
-                    value={totalFeeRefundAmount.toString()}
-                    onChange={() => {}}
-                    // error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-                    // helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-                  />
-                );
-                // if (row.feeHead === 'Tuition') {
-                //   return (
-                //     <FormattedAmountInput
-                //       label="Tuition Refund"
-                //       value={tuitionFeeRefundAmount}
-                //       onChange={handleChangeForTuition}
-                //     />
-                //   );
-                // }
-                // if (row.feeHead === 'Library') {
-                //   return (
-                //     <FormattedAmountInput
-                //       label="Library Refund"
-                //       value={libraryFeeRefundAmount}
-                //       onChange={handleChangeForLibrary}
-                //     />
-                //   );
-                // }
-                // return (
-                //   <FormattedAmountInput
-                //     label="Total Refund"
-                //     value={formatNumber(totalFeeRefundAmount.toString())}
-                //     onChange={() => {}}
-                //   />
-                // );
-              },
+              label: 'Discount Amount',
+              render: (value: any, row: any) => (
+                <NumericFormatCustom
+                  size="small"
+                  label={`${row.feeHead} Discount`}
+                  name={`${row.feeHead.toLowerCase()}Discount`}
+                  value={discountValues[row.feeHead] || ''}
+                  onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                />
+              ),
             },
           ]}
           data={[...paymentHistoryData, totalRow]}
@@ -351,31 +188,20 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
             rows={4}
             name="remarks"
             label="Remarks"
-            value=""
-            onChange={() => {}}
+            value={feeRefundremark}
+            onChange={(e) => {
+              setFeeRefundRemark(capitalizeWords(e.target.value));
+            }}
             size="small"
             fullWidth
           />
         </Grid>
-
-        {/* <FeeRefundDialog
-          onSave={handleSave}
-          dialogValue
-          onClose={closeDialog}
-          data={selectedEntry}
-          isEdit={isEdit}
-          allData={paymentHistoryData}
-          total={totalRefundAmount}
-          tuitionFeeAmount={tuitionFeeRefundAmount}
-          libraryFeeFeeAmount={libraryFeeRefundAmount}
-          totalFeeAmount={totalFeeRefundAmount}
-        /> */}
       </Scrollbar>
       <DialogActions>
-        <Button type="submit" variant="contained" size="small">
+        <Button disabled={!isSaveEnabled} type="submit" variant="contained" size="small">
           Approved
         </Button>
-        <Button type="submit" variant="contained" size="small">
+        <Button disabled={!isSaveEnabled} type="submit" variant="contained" size="small">
           Reject
         </Button>
       </DialogActions>

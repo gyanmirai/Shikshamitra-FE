@@ -1,142 +1,14 @@
-// // import FinanceStudentFeeManagementComponent from './component/finance-student-fee-management-component';
-// import React, { useState } from "react";
-
-// import {
-//   Table, Paper, Button, Dialog, TableRow, TableBody,
-//   TableCell, TableHead, Typography, DialogTitle, DialogContent, TableContainer
-// } from "@mui/material";
-
-// // Dummy data for fee management
-// const studentFees = [
-//   {
-//     feeHead: "Tuition",
-//     paymentTerm: "Monthly",
-//     nextDueDate: "2024-11-15",
-//     status: "Paid",
-//     paymentHistory: [
-//       { date: "2024-10-15", amount: 5000, receipt: "Receipt #1001" },
-//       { date: "2024-09-15", amount: 5000, receipt: "Receipt #1000" },
-//     ],
-//   },
-//   {
-//     feeHead: "Library",
-//     paymentTerm: "Bi-Annually",
-//     nextDueDate: "2025-01-01",
-//     status: "Unpaid",
-//     paymentHistory: [
-//       { date: "2024-07-01", amount: 1500, receipt: "Receipt #1002" },
-//     ],
-//   },
-//   {
-//     feeHead: "Sports",
-//     paymentTerm: "Annually",
-//     nextDueDate: "2025-07-01",
-//     status: "Overdue",
-//     paymentHistory: [
-//       { date: "2024-07-01", amount: 3000, receipt: "Receipt #1003" },
-//     ],
-//   },
-// ];
-// const FinanceStudentStructureOverviewTabScreen = () => {
-
-//     // {/* <FinanceStudentFeeManagementComponent /> */}
-//     // {/* <FinanceStudentTransectionOverviewComponent /> */}
-
-//   const [open, setOpen] = useState(false);
-//   const [selectedFee, setSelectedFee] = useState<any>(null);
-
-//   const handleOpen = (fee:any) => {
-//     setSelectedFee(fee);
-//     setOpen(true);
-//   };
-
-//   const handleClose = () => {
-//     setOpen(false);
-//     setSelectedFee(null);
-//   };
-
-//   return (
-//     <div>
-//       <h2>Student Fee Management</h2>
-//       <TableContainer component={Paper}>
-//         <Table>
-//           <TableHead>
-//             <TableRow>
-//               <TableCell>Fee Head</TableCell>
-//               <TableCell>Payment Term</TableCell>
-//               <TableCell>Next Due Date</TableCell>
-//               <TableCell>Status</TableCell>
-//               <TableCell>Actions</TableCell>
-//             </TableRow>
-//           </TableHead>
-//           <TableBody>
-//             {studentFees.map((fee, index) => (
-//               <TableRow key={index}>
-//                 <TableCell>{fee.feeHead}</TableCell>
-//                 <TableCell>{fee.paymentTerm}</TableCell>
-//                 <TableCell>{fee.nextDueDate}</TableCell>
-//                 <TableCell>{fee.status}</TableCell>
-//                 <TableCell>
-//                   <Button variant="contained" onClick={() => handleOpen(fee)}>
-//                     View Details
-//                   </Button>
-//                 </TableCell>
-//               </TableRow>
-//             ))}
-//           </TableBody>
-//         </Table>
-//       </TableContainer>
-
-//       {/* Details Modal */}
-//       {selectedFee && (
-//         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-//           <DialogTitle>{`Details for ${selectedFee.feeHead}`}</DialogTitle>
-//           <DialogContent>
-//             <Typography variant="h6">Payment Term: {selectedFee.paymentTerm}</Typography>
-//             <Typography variant="h6">Next Due Date: {selectedFee.nextDueDate}</Typography>
-//             <Typography variant="h6">Status: {selectedFee.status}</Typography>
-//             <br />
-//             <Typography variant="subtitle1">Payment History:</Typography>
-//             {selectedFee.paymentHistory.map((payment:any, index:any) => (
-//               <div key={index} style={{ marginBottom: "10px" }}>
-//                 <Typography>
-//                   <strong>Date:</strong> {payment.date}
-//                 </Typography>
-//                 <Typography>
-//                   <strong>Amount:</strong> ${payment.amount}
-//                 </Typography>
-//                 <Typography>
-//                   <strong>Receipt:</strong> {payment.receipt}
-//                 </Typography>
-//               </div>
-//             ))}
-//             <br />
-//             <Button
-//               variant="contained"
-//               color="secondary"
-//               onClick={() => alert("Reminder sent")}
-//               style={{ marginRight: "10px" }}
-//             >
-//               Send Reminder
-//             </Button>
-//             <Button
-//               variant="contained"
-//               color="primary"
-//               onClick={() => alert("Receipt generated")}
-//             >
-//               Generate Receipt
-//             </Button>
-//           </DialogContent>
-//         </Dialog>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default FinanceStudentStructureOverviewTabScreen;
 import React, { useState } from 'react';
 
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Checkbox,
+  Accordion,
+  Typography,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -145,304 +17,20 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import { studentsDataForFeeStructure } from './data/student-fee-structure-data';
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';
 
-const students = [
-  {
-    grNo: 1,
-    rollNo: 34,
-    studentId: 123,
-    name: 'Vishal Rameshbhai Patel',
-    grade: 10,
-    paymentTerm: 'Monthly',
-    paymentTermNumber: 12,
-    totalPending: 26000,
-    totalPaid: 52000,
-    totalGeneralDiscount: 3000,
-    totalAdditionalDiscount: 0,
-
-    discountAmount: 0,
-    fixedReduction: 0,
-    overAllDueDate: '20-04-2025',
-    totalFees: 81000,
-    finalFees: 78000,
-    totalDueAfterDiscount: 0,
-    fees: [
-      {
-        feeHeadId: 198,
-        feeHead: 'Tuition',
-        totalFees: 63000,
-        finalFees: 60000,
-        grossAmount: 5250,
-        payableAmount: 5000,
-        totalPaidAmount: 40000,
-        discount: 3000 / 12,
-        totalDiscount: 3000,
-        paymentDates: [
-          {
-            month: 'May-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'April-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'March-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'Feb-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '5000',
-          },
-          {
-            month: 'Jan-2025',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Dec-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Nov-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Oct-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Sep-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Aug-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'July-2024',
-            date: '15-02-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-          {
-            month: 'June-2024',
-            date: '15-01-2024',
-            status: 'Paid',
-            paidAmount: '5000',
-            pendingAmount: '0',
-          },
-        ],
-      },
-      {
-        feeHeadId: 230,
-        feeHead: 'Library',
-        totalFees: 18000,
-        finalFees: 18000,
-        grossAmount: 1500,
-        paybleAmount: 1500,
-        totalPaidAmount: 12000,
-        discount: 0,
-        totalDiscount: 0,
-        paymentDates: [
-          {
-            month: 'May-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'April-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'March-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'Feb-2025',
-            date: '15-03-2024',
-            status: 'Unpaid',
-            paidAmount: '0',
-            pendingAmount: '1500',
-          },
-          {
-            month: 'Jan-2025',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Dec-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Nov-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Oct-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Sep-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'Aug-2024',
-            date: '15-03-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'July-2024',
-            date: '15-02-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-          {
-            month: 'June-2024',
-            date: '15-01-2024',
-            status: 'Paid',
-            paidAmount: '1500',
-            pendingAmount: '0',
-          },
-        ],
-      },
-    ],
-  },
-  // {
-  //   studentId: 1235,
-  //   name: 'John Wick',
-  //   grade: 10,
-  //   paymentTerm: 'Yearly',
-  //   totalPending: 38000,
-  //   totalPaid: 40000,
-  //   discountAmount: 0,
-  //   fixedReduction: 0,
-  //   overAllDueDate: '20-04-2025',
-  //   totalFees: 81000,
-  //   finalFees: 78000,
-  //   totalDueAfterDiscount: 0,
-  //   fees: [
-  //     {
-  //       feeHeadId: 198,
-  //       feeHead: 'Tuition',
-  //       totalFees: 60000,
-  //       amount: 60000,
-  //       paymentDates: [{ month: 'April-2024', date: '15-04-2024', status: 'Paid', paidAmount: "60000", pendingAmount: "0" },],
-  //     },
-  //     {
-  //       feeHeadId: 230,
-  //       feeHead: 'Library',
-  //       totalFees: 18000,
-  //       amount: 18000,
-  //       paymentDates: [{ month: 'April-2024', date: '15-04-2024', status: 'Paid', paidAmount: "18000", pendingAmount: "0" },],
-  //     },
-  //   ],
-  // },
-  // {
-  //   studentId: 12357,
-  //   name: 'Jack Sparrow',
-  //   grade: 10,
-  //   paymentTerm: 'Quartly',
-  //   totalPending: 38000,
-  //   totalPaid: 40000,
-  //   discountAmount: 0,
-  //   fixedReduction: 0,
-  //   overAllDueDate: '20-04-2025',
-  //   totalFees: 78000,
-  //   totalDueAfterDiscount: 0,
-  //   fees: [
-  //     {
-  //       feeHeadId: 198,
-  //       feeHead: 'Tuition',
-  //       totalFees: 60000,
-  //       amount: 15000,
-  //       paymentDates: [
-  //         { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
-  //         { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
-  //       ],
-  //     },
-  //     {
-  //       feeHeadId: 230,
-  //       feeHead: 'Library',
-  //       totalFees: 18000,
-  //       amount: 4500,
-  //       paymentDates: [
-  //         { month: 'March-2025', date: '15-01-2024', status: 'Unpaid' },
-  //         { month: 'Feb-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'Oct-2024', date: '15-01-2024', status: 'Paid' },
-  //         { month: 'June-2024', date: '15-01-2024', status: 'Paid' },
-  //       ],
-  //     },
-  //   ],
-  // },
-];
+import type { StudentForFeeStructure } from './data/student-fee-structure-data';
 
 const FinanceStudentFeeManagement = () => {
   const dialog = useBoolean();
   const [open, setOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [studentsData, setStudentsData] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentForFeeStructure | null>();
 
   const handleOpen = (student: any) => {
     setSelectedStudent(student);
@@ -459,9 +47,7 @@ const FinanceStudentFeeManagement = () => {
     setSelectedStudent(null);
   };
 
-  const feeStructureSaveHandler = (data: any) => {
-    console.log('data for edit fee structure', data);
-  };
+  const feeStructureSaveHandler = (data: any) => {};
 
   const headerCellStyle = {
     border: '1px solid #ccc',
@@ -479,6 +65,14 @@ const FinanceStudentFeeManagement = () => {
     textAlign: 'right',
   };
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
   return (
     <>
       {/* <CustomBreadcrumbs
@@ -487,9 +81,95 @@ const FinanceStudentFeeManagement = () => {
         sx={{ px: 1, mb: 2 }}
         
       /> */}
+      <Grid container sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+        {/* <Grid item lg={2}>
+          <CustomSelect
+            label="Class"
+            name="className"
+            options={[]}
+            labelKey="name"
+            valueKey="name"
+            value={[]}
+            onChange={(value) => console.log('className', value)}
+            fullWidth
+          // formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+          />
+        </Grid> */}
+        <Grid item lg={2}>
+          <CustomSelect
+            label="Class"
+            name="className"
+            options={[]}
+            labelKey="name"
+            valueKey="name"
+            value={[]}
+            onChange={(value) => console.log('className', value)}
+            fullWidth
+            // formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
+          />
+        </Grid>
+        <Grid item lg={2}>
+          <CustomSelect
+            fullWidth
+            label="Division"
+            labelKey="name"
+            valueKey="id"
+            options={[]}
+            value={[]}
+            onChange={(val) => {
+              console.log(val as string);
+            }}
+            // formControlProps={{
+            //   sx: { width: '100%', maxWidth: '150px' },
+            // }}
+          />
+        </Grid>
+      </Grid>
+
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="student-fee-management"
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={
+                    !!studentsDataForFeeStructure?.length &&
+                    selectedStudents?.length === studentsDataForFeeStructure?.length
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(studentsDataForFeeStructure || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           {
             id: 'grNo',
             label: 'Gr No',
@@ -647,8 +327,17 @@ const FinanceStudentFeeManagement = () => {
             },
           },
         ]}
-        data={students}
+        data={studentsDataForFeeStructure}
       />
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
 
       {/* Details Modal */}
       {selectedStudent && (

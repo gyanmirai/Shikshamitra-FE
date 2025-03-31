@@ -490,6 +490,12 @@ const hrModule = {
           ],
         },
         {
+          title: 'Notification',
+          path: '/hr/hr-notification',
+          _action: 'hr-notification',
+        },
+
+        {
           title: 'Setting',
           path: '/hr/setting',
           _action: 'hr-setting',
@@ -1296,6 +1302,16 @@ const transportModule = {
           _action: 'transport-reports',
           shortcutKey: 'Alt+T+6',
           shortcutKeyName: 'Alt+T+6',
+        },
+        {
+          title: 'Notification',
+          path: '/transport/transport-notification',
+          _action: 'transport-notification',
+        },
+        {
+          title: 'Notification',
+          path: '/transport/transport-notification',
+          _action: 'transport-notification',
         },
         {
           title: 'Settings',

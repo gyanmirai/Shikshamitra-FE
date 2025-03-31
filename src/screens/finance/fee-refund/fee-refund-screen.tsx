@@ -4,7 +4,7 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
 
-import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Tooltip, MenuItem, MenuList, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -26,6 +26,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import FeeRefundRequestDialog from './component/fee-refund-request-dialog';
 import FinanceFeeRefundedViewDialog from './component/fee-refunded-view-dialog';
@@ -37,7 +38,7 @@ interface FeeRefundScreenProps {
 }
 
 const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedView = false }) => {
-  const studentRefundData = [
+  const studentRefundData: any = [
     {
       studentName: 'Vishal Rameshbhai Patel',
       standard: 10,
@@ -409,7 +410,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
   const dialogForCreateRequest = useBoolean();
   const dialogForApprovalRequest = useBoolean();
   const dialogForFeeRefundedView = useBoolean();
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
@@ -420,6 +421,12 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
   const handleClose = () => {
     setOpen(false);
     setEditData(null);
+  };
+
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    sendInstantNotificationDialogValue.onTrue();
   };
 
   return (
@@ -436,7 +443,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               alignItems="center"
             >
               <CustomBreadcrumbs
-                heading="Fee Refund"
+                heading="Fee Refunds"
                 links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
                 sx={{ px: 1, mb: 2 }}
               />
@@ -574,9 +581,53 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
 
           {!fromStudentDetailedView && (
             <CustomizableTable
+              onSendNotification={handlerSendNotification}
+              showCheckbox={selectedStudent.length !== 0}
               tableId="student-refund-table"
               data={studentRefundData}
               columns={[
+                {
+                  id: 'checkBox',
+                  align: 'left',
+                  minWidth: '60px',
+                  isSort: false,
+                  isFilter: false,
+                  label: '',
+                  renderColumn() {
+                    return (
+                      <Checkbox
+                        checked={
+                          !!studentRefundData?.length &&
+                          selectedStudent?.length === studentRefundData?.length
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStudent(studentRefundData || []);
+                          } else {
+                            setSelectedStudent([]);
+                          }
+                        }}
+                      />
+                    );
+                  },
+                  render(value, row) {
+                    return (
+                      <Checkbox
+                        checked={
+                          Array.isArray(selectedStudent) &&
+                          selectedStudent.some((i) => i.id === row.id)
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStudent([...selectedStudent, row]);
+                          } else {
+                            setSelectedStudent(selectedStudent.filter((i: any) => i.id !== row.id));
+                          }
+                        }}
+                      />
+                    );
+                  },
+                },
                 {
                   id: 'rollNo',
                   label: 'Roll No',
@@ -738,14 +789,21 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
           )}
         </>
       )}
-
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudent}
+        />
+      )}
       {dialogForApprovalRequest.value && (
         <FinanceFeeCollectionRefundApprovedDialog
           dialogValue={dialogForApprovalRequest.value}
           onClose={() => {
             dialogForApprovalRequest.onFalse();
           }}
-          selectedData={selectedStudent}
+          // selectedData={selectedStudent}
         />
       )}
 

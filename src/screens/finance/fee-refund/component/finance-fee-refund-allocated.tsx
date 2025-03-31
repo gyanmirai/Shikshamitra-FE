@@ -11,6 +11,9 @@ import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundPaymentDialog from './fee-refund-payment-dialog';
+import { studentPayment } from '../data/fee-refund-approved-dialog-data';
+
+import type { StudentPayment } from '../data/fee-refund-approved-dialog-data';
 
 interface FinanceFeeRefundAllocationDialogProps {
   dialogValue: boolean;
@@ -23,158 +26,12 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
   selectedData,
   onClose,
 }) => {
-  const historyData = [
-    {
-      className: '1A',
-      grNo: '101',
-      receiptNo: 'RCPT001',
-      refundDate: '01-05-2024',
-      amount: 1500,
-      modeOfPayment: 'Cheque',
-      transactionId: 'TXN12345',
-      receiptBook: 'RB001',
-    },
-    {
-      className: '2B',
-      grNo: '102',
-      receiptNo: 'RCPT002',
-      refundDate: '15-05-2024',
-      amount: 2000,
-      modeOfPayment: 'Transaction',
-      transactionId: 'TXN12346',
-      receiptBook: 'RB002',
-    },
-  ];
-  const data = [
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Tuition',
-      paidAmount: '10000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      askForRefund: 2000,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'June-2024',
-              date: '15-01-2024',
-              status: 'Unpaid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: '54j8',
-                  paymentStatus: 'Success',
-                },
-                { paymentMode: 'Cash', amount: '2000' },
-                {
-                  paymentMode: 'Online',
-                  amount: '1000',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Failed',
-                },
-                {
-                  paymentMode: 'Online',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Check',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Not Clear',
-                  charges: 500,
-                },
-              ],
-            },
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Library',
-      paidAmount: '4000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      askForRefund: 2000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
-
   const dialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(data);
-  const [isEdit, setIsEdit] = useState(false);
-  // const [tableData, setTableData] = useState(data);
-  const [paymentHistoryData, setPaymentHistoryData] = useState(data);
+  const [selectedEntry, setSelectedEntry] = useState<StudentPayment[]>(studentPayment);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [paymentHistoryData, setPaymentHistoryData] = useState<StudentPayment[]>(studentPayment);
 
-  const handleRefundChange = (index: any, value: any) => {
+  const handleRefundChange = (index: string, value: string) => {
     const newData = [...paymentHistoryData];
     const existingIndex = newData.findIndex((val) => val.paymentId === index);
     newData[existingIndex].refundAmount = value;
@@ -182,19 +39,9 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
   };
 
   const totalRefundAmount: number = paymentHistoryData.reduce(
-    (total: any, item: any) => total + Number(item.refundAmount),
+    (total: number, item: StudentPayment) => total + Number(item.refundAmount),
     0
   );
-
-  // const totalRow = {
-  //   paymentId: '',
-  //   feeHead: '',
-  //   paidAmount: 'Total',
-  //   refundAmount: totalRefundAmount,
-
-  //   paidDate: '',
-  //   status: '',
-  // };
 
   const handleSave = () => {};
 
@@ -209,9 +56,9 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
     dialog.onTrue();
   };
 
-  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState('');
-  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState('');
-  const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState(0);
+  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState<string>('');
+  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState<string>('');
+  const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState<number>(0);
 
   const parseNumericValue = (formattedValue: string) =>
     parseFloat(formattedValue.replace(/,/g, '')) || 0;
@@ -284,21 +131,9 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
             {
               id: 'refundAmount',
               label: 'Approved Refund Amount',
-              render: (value: any, row: any) => {
-                if (row.feeHead === 'Tuition') {
-                  return (
-                    <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                  );
-                }
-                if (row.feeHead === 'Library') {
-                  return (
-                    <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                  );
-                }
-                return (
-                  <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                );
-              },
+              render: (value: any, row: any) => (
+                <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
+              ),
             },
           ]}
           // data={[...paymentHistoryData, totalRow]}

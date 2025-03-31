@@ -4,6 +4,8 @@ import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import capitalizeWords from 'src/utils/capitalizeText';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetbudgetCategoryQuery,
@@ -128,17 +130,27 @@ const PresetCategoryAndDepartmentForBudget = () => {
         <Box px="15px" display="flex" flexDirection="row" gap={3} alignItems="center">
           <TextField
             value={budgetCategory}
-            onChange={(e) => setbudgetCategory(e.target.value)}
+            onChange={(e) => setbudgetCategory(capitalizeWords(e.target.value))}
             name="category"
             label="Add New Category"
             size="small"
           />
           {isEdit ? (
-            <Button onClick={handlerAddBudgetCategory} variant="contained" size="small">
+            <Button
+              onClick={handlerAddBudgetCategory}
+              variant="contained"
+              size="small"
+              disabled={
+                isAddCategoryLoading || isBudgetUpdateLoading || budgetCategory.trim() === ''
+              }
+            >
               {isBudgetUpdateLoading ? 'Updating...' : 'Save'}
             </Button>
           ) : (
             <Button
+              disabled={
+                isAddCategoryLoading || isBudgetUpdateLoading || budgetCategory.trim() === ''
+              }
               onClick={handlerAddBudgetCategory}
               startIcon={<Iconify icon="ic:outline-plus" />}
               variant="contained"

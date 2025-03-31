@@ -34,11 +34,63 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility
   const dialog = useBoolean();
   const confirmRejectDialog = useBoolean();
+
+  const [tableData, setTableData] = useState([
+    {
+      medium: 'English',
+      organization: 'Primary',
+      class: '10th',
+      division: 'A',
+      student: 'John Doe',
+      leaveType: 'Sick Leave',
+
+      startDate: '01-05-2023',
+      endDate: '03-05-2023',
+      description: 'Fever and cold',
+      status: 'Approved',
+    },
+    {
+      medium: 'Spanish',
+      organization: 'Secondary',
+      class: '9th',
+      division: 'B',
+      student: 'Jane Smith',
+      leaveType: 'Personal Leave',
+
+      startDate: '10-05-2023',
+      endDate: '12-05-2023',
+      description: 'Family event',
+      status: 'Pending',
+    },
+    {
+      medium: 'French',
+      organization: 'Primary',
+      class: '11th',
+      division: 'C',
+      student: 'Alice Johnson',
+      leaveType: 'Vacation',
+
+      startDate: '01-06-2023',
+      endDate: '07-06-2023',
+      description: 'Summer vacation',
+      status: 'Approved',
+    },
+  ]);
+
+  const [selectedStudent, setSelectedStudent] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
 
   return (
     <Box>
@@ -53,8 +105,43 @@ const LeaveAndAbsentScreen = () => {
         }
       />
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudent.length !== 0}
         tableId="leave-absent-table"
         columns={[
+          {
+            id: 'checkBox',
+            label: ' ',
+            isSort: false,
+            renderColumn: (value) => (
+              <Checkbox
+                checked={tableData.length === selectedStudent.length}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedStudent(tableData);
+                  } else {
+                    setSelectedStudent([]);
+                  }
+                }}
+              />
+            ),
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={selectedStudent.some((student: any) => student.id === row.id)}
+                  onChange={(e) => {
+                    if (!e.target.checked) {
+                      setSelectedStudent(
+                        selectedStudent.filter((student: any) => student.id !== row.id)
+                      );
+                    } else {
+                      setSelectedStudent([...selectedStudent, row]);
+                    }
+                  }}
+                />
+              );
+            },
+          },
           {
             id: 'student',
             label: 'Student',
@@ -116,47 +203,7 @@ const LeaveAndAbsentScreen = () => {
             },
           },
         ]}
-        data={[
-          {
-            medium: 'English',
-            organization: 'Primary',
-            class: '10th',
-            division: 'A',
-            student: 'John Doe',
-            leaveType: 'Sick Leave',
-
-            startDate: '01-05-2023',
-            endDate: '03-05-2023',
-            description: 'Fever and cold',
-            status: 'Approved',
-          },
-          {
-            medium: 'Spanish',
-            organization: 'Secondary',
-            class: '9th',
-            division: 'B',
-            student: 'Jane Smith',
-            leaveType: 'Personal Leave',
-
-            startDate: '10-05-2023',
-            endDate: '12-05-2023',
-            description: 'Family event',
-            status: 'Pending',
-          },
-          {
-            medium: 'French',
-            organization: 'Primary',
-            class: '11th',
-            division: 'C',
-            student: 'Alice Johnson',
-            leaveType: 'Vacation',
-
-            startDate: '01-06-2023',
-            endDate: '07-06-2023',
-            description: 'Summer vacation',
-            status: 'Approved',
-          },
-        ]}
+        data={tableData}
       />
       <CustomDialog
         maxWidth="md"
@@ -174,6 +221,15 @@ const LeaveAndAbsentScreen = () => {
       >
         <LeaveAbsent handleClose={confirmRejectDialog.onFalse} />
       </CustomDialog>
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudent}
+        />
+      )}
     </Box>
   );
 };

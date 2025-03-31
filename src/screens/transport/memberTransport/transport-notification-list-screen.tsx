@@ -2,14 +2,18 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Tab, Tabs, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
+import { Box, Tab, Tabs, Divider, Checkbox } from '@mui/material';
 
-import IconEnum from 'src/utils/common-icon';
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+
+import { assignments, assignmentsForStaff } from './data/transport-notification-list-data';
+
+import type { StaffAssignment, StudentAssignment } from './data/member-transport-screen-data';
 
 const TABS = [
   {
@@ -31,126 +35,62 @@ const TABS = [
 ];
 
 const TransportNotifiedPersonlistScreen = () => {
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [selectedIdsforStaff, setSelectedIdsForStaff] = useState<number[]>([]);
-  const assignments: any = [
-    {
-      name: 'Aarav Patel',
-      grade: '1',
-      id: 1,
-      assignedRoute: 'R101',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      role: 'Student',
-      grNo: '570',
-      declinedReason: 'Vehicle Capacity is Full',
-      status: 'Intrested',
-      reason: '-',
-    },
-    {
-      name: 'Meera Shah',
-      grade: '2',
-      id: 3,
-      assignedRoute: 'R102',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Student',
-      grNo: '571',
-      declinedReason: 'Not Serving at This Stop',
-      status: 'Not Intrested',
-      reason: 'Use Own Vehicle',
-    },
-    {
-      name: 'Meera Shah',
-      grade: '2',
-      id: 3,
-      assignedRoute: 'R102',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Student',
-      grNo: '571',
-      declinedReason: 'Not Serving at This Stop',
-      status: 'Pending',
-      reason: '-',
-    },
-  ];
+  // const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  // const [selectedIdsforStaff, setSelectedIdsForStaff] = useState<number[]>([]);
 
-  const assignmentsForStaff: any = [
-    {
-      name: 'Ms. Anjali Verma',
-      grade: '-',
-      id: 9,
-      assignedRoute: 'R108',
-      pickupPoint: 'School',
-      dropoffPoint: 'Ved',
-      role: 'Teacher',
-      employeeNo: '567',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Mr. Rahul Gandhi',
-      grade: '-',
-      id: 11,
-      assignedRoute: 'R109',
-      pickupPoint: 'School',
-      dropoffPoint: 'Dindoli',
-      role: 'Teacher',
-      employeeNo: '568',
-      declinedReason: 'Vehicle Capacity is Full',
-    },
-    {
-      name: 'Ms. Kavita Desai',
-      grade: '-',
-      id: 10,
-      assignedRoute: 'R110',
-      pickupPoint: 'School',
-      dropoffPoint: 'Godadara',
-      role: 'Teacher',
-      employeeNo: '569',
-      declinedReason: 'Not Serving at This Stop',
-      status: 'pending',
-    },
-  ];
+  const sendInstantNotificationDialogValueForStudent = useBoolean();
+  const sendInstantNotificationDialogValueForStaff = useBoolean();
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValueForStudent.value) {
+      sendInstantNotificationDialogValueForStudent.onTrue();
+    }
+  };
+
+  const handlerSendNotificationForStaff = () => {
+    if (!sendInstantNotificationDialogValueForStaff.value) {
+      sendInstantNotificationDialogValueForStaff.onTrue();
+    }
+  };
+
+  const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: any) => {
+    setSelectedStudents([]);
+    setSearchParams({ tab: value });
+  };
 
   const columnData = [
     {
-      id: 'select',
+      id: 'checkBox',
+      align: 'left' as 'left',
+      minWidth: '60px',
+      isSort: false,
+      isFilter: false,
       label: '',
       renderColumn() {
         return (
           <Checkbox
-            checked={tableData.length > 0 && selectedIds.length === tableData.length}
-            indeterminate={selectedIds.length > 0 && selectedIds.length < tableData.length}
+            checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
             onChange={(e) => {
-              const { checked } = e.target;
-              if (checked) {
-                // Select all rows
-                const allIds = tableData.map((row: any) => row.id);
-                setSelectedIds(allIds);
+              if (e.target.checked) {
+                setSelectedStudents(tableData || []);
               } else {
-                // Deselect all rows
-                setSelectedIds([]);
+                setSelectedStudents([]);
               }
             }}
           />
         );
       },
-
       render(value: any, row: any) {
-        const isChecked = selectedIds.includes(row.id);
         return (
           <Checkbox
-            checked={isChecked}
+            checked={!!selectedStudents.some((i: any) => i.id === row.id)}
             onChange={(e) => {
-              const { checked } = e.target;
-              setSelectedIds((prevSelected) => {
-                if (checked) {
-                  // Add row ID to selection
-                  return [...prevSelected, row.id];
-                }
-                // Remove row ID from selection
-                return prevSelected.filter((id) => id !== row.id);
-              });
+              if (e.target.checked) {
+                setSelectedStudents([...selectedStudents, row]);
+              } else {
+                setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              }
             }}
           />
         );
@@ -185,76 +125,42 @@ const TransportNotifiedPersonlistScreen = () => {
         );
       },
     },
-
-    {
-      id: 'action',
-      label: 'Action',
-      render(value: any, row: any) {
-        return (
-          <ThreeDotsActions
-            disabled={selectedIds.length === tableData.length}
-            placement="right-top"
-            actions={({ popover }: any) => (
-              <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    // notifyDialog.onTrue();
-                  }}
-                >
-                  <Iconify icon={IconEnum.NOTIFICATION} />?
-                </MenuItem>
-              </MenuList>
-            )}
-          />
-        );
-      },
-    },
   ];
 
   const columnDataForStaff = [
     {
-      id: 'select',
+      id: 'checkBox',
+      align: 'left' as 'left',
+      minWidth: '60px',
+      isSort: false,
+      isFilter: false,
       label: '',
       renderColumn() {
         return (
           <Checkbox
             checked={
-              tableData.length > 0 && selectedIdsforStaff.length === tableDataForStaff.length
-            }
-            indeterminate={
-              selectedIdsforStaff.length > 0 &&
-              selectedIdsforStaff.length < tableDataForStaff.length
+              !!tableDataForStaff?.length && selectedStudents?.length === tableDataForStaff?.length
             }
             onChange={(e) => {
-              const { checked } = e.target;
-              if (checked) {
-                // Select all rows
-                const allIds = tableDataForStaff.map((row: any) => row.id);
-                setSelectedIdsForStaff(allIds);
+              if (e.target.checked) {
+                setSelectedStudents(tableDataForStaff || []);
               } else {
-                // Deselect all rows
-                setSelectedIdsForStaff([]);
+                setSelectedStudents([]);
               }
             }}
           />
         );
       },
-
       render(value: any, row: any) {
-        const isChecked = selectedIdsforStaff.includes(row.id);
         return (
           <Checkbox
-            checked={isChecked}
+            checked={!!selectedStudents.some((i: any) => i.id === row.id)}
             onChange={(e) => {
-              const { checked } = e.target;
-              setSelectedIdsForStaff((prevSelected) => {
-                if (checked) {
-                  // Add row ID to selection
-                  return [...prevSelected, row.id];
-                }
-                // Remove row ID from selection
-                return prevSelected.filter((id) => id !== row.id);
-              });
+              if (e.target.checked) {
+                setSelectedStudents([...selectedStudents, row]);
+              } else {
+                setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              }
             }}
           />
         );
@@ -286,34 +192,11 @@ const TransportNotifiedPersonlistScreen = () => {
         );
       },
     },
-
-    {
-      id: 'action',
-      label: 'Action',
-      render(value: any, row: any) {
-        return (
-          <ThreeDotsActions
-            disabled={selectedIdsforStaff.length === tableDataForStaff.length}
-            placement="right-top"
-            actions={({ popover }: any) => (
-              <MenuList>
-                <MenuItem
-                  onClick={() => {
-                    // notifyDialog.onTrue();
-                  }}
-                >
-                  <Iconify icon="mdi:bell-notification-outline" />?
-                </MenuItem>
-              </MenuList>
-            )}
-          />
-        );
-      },
-    },
   ];
 
-  const [tableData, setTableData] = useState(assignments);
-  const [tableDataForStaff, setTableDataForStaff] = useState(assignmentsForStaff);
+  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff, setTableDataForStaff] =
+    useState<StaffAssignment[]>(assignmentsForStaff);
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
   const [isStaff, setIsStaff] = useState(false);
 
@@ -321,13 +204,14 @@ const TransportNotifiedPersonlistScreen = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+
   return (
     <>
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <Box>
           <Tabs
             value={searchParams.tab}
-            onChange={(e, value) => setSearchParams({ tab: value })}
+            onChange={(e, value) => handleTabChange(e, value)}
             sx={{
               mb: 2,
               '& .MuiTabs-flexContainer': { gap: 2 },
@@ -372,6 +256,8 @@ const TransportNotifiedPersonlistScreen = () => {
       <Divider />
       {searchParams.tab === 'student' && (
         <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudents.length !== 0}
           data={tableData}
           columns={columnData}
           tableId="student-transport-notification-list-screen"
@@ -379,9 +265,29 @@ const TransportNotifiedPersonlistScreen = () => {
       )}
       {searchParams.tab === 'staff' && (
         <CustomizableTable
+          onSendNotification={handlerSendNotificationForStaff}
+          showCheckbox={selectedStudents.length !== 0}
           data={tableDataForStaff}
           columns={columnDataForStaff}
           tableId="staff-transport-notification-list-screen"
+        />
+      )}
+
+      {sendInstantNotificationDialogValueForStudent.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValueForStudent.value}
+          onClose={sendInstantNotificationDialogValueForStudent.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
+
+      {sendInstantNotificationDialogValueForStaff.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValueForStaff.value}
+          onClose={sendInstantNotificationDialogValueForStaff.onFalse}
+          data={[]}
+          userList={selectedStudents}
         />
       )}
     </>

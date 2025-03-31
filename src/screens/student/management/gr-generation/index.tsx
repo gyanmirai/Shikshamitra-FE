@@ -6,8 +6,10 @@ import { toast } from 'sonner';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
+import { Box, Button, Checkbox, TextField } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { StudentApi } from 'src/redux/student';
 import {
@@ -17,6 +19,7 @@ import {
 
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
@@ -105,6 +108,15 @@ const GrNoGenerationScreen = ({
     }
   };
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
   return (
     <Box>
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
@@ -125,9 +137,47 @@ const GrNoGenerationScreen = ({
           </Button>
         </Box>
         <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudents.length !== 0}
           tableId="gr-no-generation-table"
           columns={[
             // { id: 'srNo', label: 'Sr. No.' },
+            {
+              id: 'checkBox',
+              align: 'left',
+              minWidth: '60px',
+              isSort: false,
+              isFilter: false,
+              label: '',
+              renderColumn() {
+                return (
+                  <Checkbox
+                    checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStudents(tableData || []);
+                      } else {
+                        setSelectedStudents([]);
+                      }
+                    }}
+                  />
+                );
+              },
+              render(value, row) {
+                return (
+                  <Checkbox
+                    checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStudents([...selectedStudents, row]);
+                      } else {
+                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                      }
+                    }}
+                  />
+                );
+              },
+            },
             { id: 'tempGrNo', label: 'Current GR No.' },
             { id: 'name', label: 'Name' },
             {
@@ -153,6 +203,14 @@ const GrNoGenerationScreen = ({
           data={tableData}
         />
       </BackPopUpChecked>
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
     </Box>
   );
 };

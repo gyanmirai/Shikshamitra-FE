@@ -14,6 +14,8 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import { chargesData } from '../charges-data/charges_data';
+
 interface FinanceCollectChargesProps {
   dialogValue: boolean;
   onClose: () => void;
@@ -41,159 +43,17 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
       cashAmount: '',
       chargesList: [],
     },
-    onSubmit: (values) => {
-      console.log('Form submitted with values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
-  // const ChargesHeadList = [
-  //   { value: 'latefee', label: 'Late Fee' },
-  //   { value: 'bouncecheck', label: 'Check Bounce' },
-  // ];
-  const chargesList = [
-    { value: 'lateFeeJan', label: 'Tuition-Jan ₹ 150', type: 'latefee' },
-    { value: 'lateFeeFeb', label: 'Tuition-Feb ₹ 150', type: 'latefee' },
-    { value: 'lateFeeMarch', label: 'Tuition-March ₹ 150', type: 'lateFee' },
-    { value: 'bounceCheckJan', label: 'Bounce Check - Sports-Jan ₹ 500', type: 'bouncecheck' },
-    { value: 'bounceCheckFeb', label: 'Bounce Check - Sports-Feb ₹ 500', type: 'bouncecheck' },
-  ];
-
-  // Filter the charges based on selected fee type
-  // const filteredCharges = chargesList.filter((charge) =>
-  //   formik.values.feeType.includes(charge.type)
-  // );
-
-  const chargesData = [
-    {
-      srNo: 1,
-      chargeHead: 'Late Fee',
-      chargeId: '674773',
-      chargeType: 'latefee',
-      appliedDate: '15-08-2024',
-      overdueDate: '20-08-2024',
-      amount: 300,
-      status: 'Pending',
-      description: 'Late fee for overdue payment of Tuition Fee.',
-      details: [
-        {
-          dueDate: '01-01-2025',
-          chargesPerDay: '5',
-          totalCharges: 150,
-          status: 'Paid',
-          feeHead: 'Tuition',
-          noOfDay: 30,
-          chargesHead: 'Late Fee',
-          chargesHeadId: 567,
-        },
-        {
-          dueDate: '01-02-2025',
-          chargesPerDay: '5',
-          totalCharges: 150,
-          status: 'Pending',
-          feeHead: 'Tuition',
-          noOfDay: 60,
-          chargesHead: 'Late Fee',
-          chargesHeadId: 367,
-        },
-        {
-          dueDate: '01-03-2025',
-          chargesPerDay: '5',
-          totalCharges: 150,
-          status: 'Pending',
-          feeHead: 'Tuition',
-          noOfDay: 120,
-          chargesHead: 'Late Fee',
-          chargesHeadId: 369,
-        },
-      ],
-    },
-    {
-      srNo: 2,
-      chargeHead: 'Late Fee',
-      chargeId: '874912',
-      chargeType: 'latefee',
-      appliedDate: '10-09-2024',
-      overdueDate: '15-09-2024',
-      amount: 500,
-      status: 'Pending',
-      description: 'Late fee for overdue payment of Sports Fee.',
-      details: [
-        {
-          dueDate: '01-04-2025',
-          chargesPerDay: '10',
-          totalCharges: 300,
-          status: 'Paid',
-          feeHead: 'Sports',
-          noOfDay: 30,
-          chargesHead: 'Late Fee',
-          chargesHeadId: 389,
-        },
-        {
-          dueDate: '01-05-2025',
-          chargesPerDay: '10',
-          totalCharges: 300,
-          status: 'Pending',
-          feeHead: 'Sports',
-          noOfDay: 60,
-          chargesHead: 'Late Fee',
-          chargesHeadId: 399,
-        },
-        {
-          dueDate: '01-06-2025',
-          chargesPerDay: '10',
-          totalCharges: 300,
-          status: 'Pending',
-          feeHead: 'Sports',
-          noOfDay: 120,
-          chargesHead: 'Late Fee',
-          chargesHeadId: 349,
-        },
-      ],
-    },
-
-    // {
-    //   srNo: 3,
-    //   chargeHead: 'Check Bounce',
-    //   chargeId: '874912',
-    //   chargeType: 'bouncecheck',
-    //   appliedDate: '10-09-2024',
-    //   overdueDate: '15-09-2024',
-    //   amount: 500,
-    //   status: 'Pending',
-    //   description: 'Bounce check for the payment of the sports fee of ₹ 5,000.',
-    //   details: [
-    //     {
-    //       feeHead: 'Tuition',
-    //       checkDate: "15-10-2024",
-    //       receivedCheckDate: "15-10-2024",
-    //       chequeAmount: 5000,
-    //       noOfDay: '-',
-    //       chargesPerDay: null,
-    //       // charges: 500,
-    //       bankName: "Sbi",
-    //       totalCharges: 500,
-    //       status: 'Pending',
-    //       chargesHead: "Check Bounce",
-    //       chargesHeadId: 359,
-    //     },
-
-    //   ],
-    // },
-  ];
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [charges, setCharges] = useState(chargesData);
+  const [charges] = useState(chargesData);
   const filteredChargesData = charges.filter((charge) =>
     formik.values.feeType.includes(charge.chargeType)
   );
 
-  // .filter((s) => s.chargeHead !== "Check Bounce")
-
   const filteredDetails = charges
     .map((charge) => charge.details) // Get the 'details' array from each charge
     .flat(); // Flatten the nested arrays of details into a single array
-  // Filter out "Bounce Check" chargeHead
-  console.log('filterChargeData', filteredChargesData);
 
   const [selectedCharges, setSelectedCharges] = useState<any[]>([]);
   const [selectedChargesAmount, setSelectedChargesAmount] = useState(0);
@@ -433,11 +293,13 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
           )}
         </Scrollbar>
         <DialogActions>
-          {/* <Box></Box> */}
-          {/* <Button type="submit" variant="outlined" size="medium" color='error'  >
-            {`Total Charges ${formatNumber(1500, "INR")}`}
-          </Button> */}
-          <Button type="submit" variant="outlined" size="medium" color="primary">
+          <Button
+            disabled={selectedChargesAmount < 1}
+            type="submit"
+            variant="outlined"
+            size="medium"
+            color="primary"
+          >
             {`Collect Charges ${formatNumber(selectedChargesAmount, 'INR')}`}
           </Button>
         </DialogActions>

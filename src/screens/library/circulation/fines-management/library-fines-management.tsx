@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { MenuItem, MenuList, Typography } from '@mui/material';
+import { Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,6 +10,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import CollectFinesDialog from './component/collect-fines-dialog';
 
@@ -101,7 +102,6 @@ const LibraryFineManagement = () => {
             onClick={() => {
               setSelectedMember(row); // Set selected student data
               collectFineDialog.onTrue(); // Open dialog
-              popover.close(); // Close popover
             }}
           >
             <Iconify icon="mingcute:pig-money-line" />
@@ -117,11 +117,58 @@ const LibraryFineManagement = () => {
     collectFineDialog.onFalse(); // Close dialog
   };
 
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
   return (
     <>
       <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
         tableId="library-fine-management"
         columns={[
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={!!dummyData?.length && selectedStudents?.length === dummyData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(dummyData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           { id: 'memberId', label: 'Gr No' },
           { id: 'memberName', label: 'Name' },
           { id: 'role', label: 'Role' },
@@ -150,6 +197,15 @@ const LibraryFineManagement = () => {
         ]}
         data={dummyData}
       />
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
+      )}
 
       {collectFineDialog.value && (
         <CollectFinesDialog

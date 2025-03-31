@@ -18,6 +18,7 @@ import {
   Button,
   Avatar,
   Dialog,
+  Checkbox,
   Typography,
   IconButton,
 } from '@mui/material';
@@ -38,6 +39,7 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import Records from './records';
 import Finance from './finance';
@@ -203,6 +205,15 @@ export function StudentProfile() {
   const currentStudent: IInquiryData = tableData.find(
     (item: IInquiryData) => item.id === searchParams.student
   );
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  const handlerSendNotification = () => {
+    if (!sendInstantNotificationDialogValue.value) {
+      sendInstantNotificationDialogValue.onTrue();
+    }
+  };
 
   return (
     <>
@@ -259,10 +270,48 @@ export function StudentProfile() {
             />
           </Box>
           <CustomizableTable
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
             tableId="student-list"
             data={tableData}
             isLoading={isLoading}
             columns={[
+              {
+                id: 'checkBox',
+                align: 'left',
+                minWidth: '60px',
+                isSort: false,
+                isFilter: false,
+                label: '',
+                renderColumn() {
+                  return (
+                    <Checkbox
+                      checked={tableData?.length && selectedStudents?.length === tableData?.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents(tableData || []);
+                        } else {
+                          setSelectedStudents([]);
+                        }
+                      }}
+                    />
+                  );
+                },
+                render(value, row) {
+                  return (
+                    <Checkbox
+                      checked={selectedStudents.some((i: any) => i.id === row.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, row]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                        }
+                      }}
+                    />
+                  );
+                },
+              },
               {
                 id: 'name',
                 label: 'Name',
@@ -308,6 +357,15 @@ export function StudentProfile() {
             ]}
           />
         </>
+      )}
+
+      {sendInstantNotificationDialogValue.value && (
+        <SendInstantNotificationDialog
+          open={sendInstantNotificationDialogValue.value}
+          onClose={sendInstantNotificationDialogValue.onFalse}
+          data={[]}
+          userList={selectedStudents}
+        />
       )}
 
       {currentStudent && (

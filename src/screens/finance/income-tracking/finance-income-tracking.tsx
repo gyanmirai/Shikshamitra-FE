@@ -14,73 +14,20 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
+import { incomeData } from './data/income-screen-data';
 import FinanceAddNewIncomeDialog from './component/finance-add-new-income-dialog';
 import FinanceIncomeDetailsDialog from './component/finance-income-details-dialog';
 
-interface Data {
-  incomeSource: string;
-  incomeAmount: string;
-  paymentMethod: string;
-  date: string;
-  id: number;
-  paymentStatus: string;
-  action?: string;
-  incomeList?: any;
-}
-
-let data: Data[] = [
-  {
-    id: 1,
-    incomeSource: 'Fees',
-    incomeAmount: '50000',
-    paymentMethod: 'Online',
-    date: '12-12-2024',
-    paymentStatus: 'Paid',
-    action: 'View',
-    incomeList: [
-      {
-        incomeName: 'Tuition Fees',
-        amount: 25000,
-        date: '11-10-2024',
-      },
-      {
-        incomeName: 'Tuition Fees',
-        amount: 25000,
-        date: '12-10-2024',
-      },
-    ],
-  },
-  {
-    id: 2,
-    incomeSource: 'Donation',
-    incomeAmount: '500000',
-    paymentMethod: 'Online',
-    date: '10-10-2024',
-    paymentStatus: 'Paid',
-    action: 'View',
-    incomeList: [
-      {
-        incomeName: 'Sks Trust',
-        amount: 250000,
-        date: '11-10-2024',
-      },
-      {
-        incomeName: 'Gyan Mirai',
-        amount: 250000,
-        date: '12-08-2024',
-      },
-    ],
-  },
-];
+import type { IncomeData } from './data/income-screen-data';
 
 const FinanceIncomeTrackingScreen = () => {
   const dialog = useBoolean();
   const dialogForDetailsInSource = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(data);
-  const [isEdit, setIsEdit] = useState(false);
-  const [tableData, setTableData] = useState(data);
-  const [open, setOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<IncomeData>(incomeData[0]);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [tableData] = useState<IncomeData[]>(incomeData);
+  const [open, setOpen] = useState<boolean>(false);
 
   const closeDialogForDetailsInSource = () => {
     dialogForDetailsInSource.onFalse();
@@ -88,40 +35,38 @@ const FinanceIncomeTrackingScreen = () => {
 
   useEffect(() => {}, [selectedEntry, isEdit]);
 
-  const handleSave = (dataFromDialog: Data) => {
-    const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
+  // const handleSave = (dataFromDialog: Data) => {
+  //   const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
 
-    if (dataFromDialog) {
-      const existingEntryIndex = data.findIndex((val) => id === val.id);
+  //   if (dataFromDialog) {
+  //     const existingEntryIndex = data.findIndex((val) => id === val.id);
 
-      const newIncomeEntry = {
-        incomeSource,
-        incomeAmount,
-        paymentMethod,
-        date,
-        paymentStatus,
-        id,
-        action: isEdit ? 'edit' : 'add',
-      };
+  //     const newIncomeEntry = {
+  //       incomeSource,
+  //       incomeAmount,
+  //       paymentMethod,
+  //       date,
+  //       paymentStatus,
+  //       id,
+  //       action: isEdit ? 'edit' : 'add',
+  //     };
 
-      const updatedData = [...data];
+  //     const updatedData = [...data];
 
-      if (isEdit && existingEntryIndex !== -1) {
-        updatedData[existingEntryIndex] = newIncomeEntry;
-      } else {
-        updatedData.push(newIncomeEntry);
-      }
+  //     if (isEdit && existingEntryIndex !== -1) {
+  //       updatedData[existingEntryIndex] = newIncomeEntry;
+  //     } else {
+  //       updatedData.push(newIncomeEntry);
+  //     }
 
-      setTableData(updatedData);
-    }
+  //     setTableData(updatedData);
+  //   }
 
-    console.log('Updated Data:', dataFromDialog);
-  };
+  // };
 
   const handleDelete = (item: any) => {
-    data = data.filter((val) => val.id !== item.id || val.id !== item.id);
-
-    setTableData([...data]);
+    // data = data.filter((val) => val.id !== item.id || val.id !== item.id);
+    // setTableData([...data]);
   };
 
   const handleClose = () => {
@@ -130,10 +75,10 @@ const FinanceIncomeTrackingScreen = () => {
   };
 
   return (
-    <>
+    <Box height="100%">
       {open ? (
         <FinanceAddNewIncomeDialog
-          onSave={handleSave}
+          onSave={() => {}}
           dialogValue={dialog.value}
           onClose={handleClose}
           data={selectedEntry}
@@ -141,7 +86,7 @@ const FinanceIncomeTrackingScreen = () => {
           allData={tableData}
         />
       ) : (
-        <>
+        <Box>
           <Box
             display="flex"
             flexDirection="row"
@@ -221,7 +166,7 @@ const FinanceIncomeTrackingScreen = () => {
             ]}
             data={tableData}
           />
-        </>
+        </Box>
       )}
 
       {dialogForDeleteConfirmation.value && (
@@ -243,7 +188,7 @@ const FinanceIncomeTrackingScreen = () => {
           data={selectedEntry}
         />
       )}
-    </>
+    </Box>
   );
 };
 
