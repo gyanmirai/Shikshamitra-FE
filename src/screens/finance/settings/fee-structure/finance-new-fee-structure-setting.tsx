@@ -104,7 +104,12 @@ const FinanceNewFeeStructureSetting = () => {
           >
             <CustomBreadcrumbs
               heading="Fee Structure"
-              links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
+              links={[
+                { name: 'Finance', href: '/finance/dashboard' },
+                { name: 'Settings' },
+                { name: 'Fee Structure' },
+              ]}
+              description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
               sx={{ px: 1, mb: 2 }}
             />
             <Box display="flex" flexDirection="row" justifyContent="flex-end">

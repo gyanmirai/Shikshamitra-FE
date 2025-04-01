@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Box, Switch, Typography } from '@mui/material';
+import { Box, Switch, Tooltip, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -9,6 +9,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import ReadOnlyFeeStructureTable from 'src/screens/finance/settings/fee-structure/component/read-only-fee-structure-table';
 
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify/iconify';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -155,7 +156,18 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
 
       <CustomDialog
         maxWidth="xl"
-        title="Detail Fee Structure"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Detail Fee Structure For 1st standard</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This is the detailed fee structure for 1st standard, applicable to all students of that class except for specific scenarios."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
         open={detaiFeeStructure.value}
         handleClose={() => {
           detaiFeeStructure.onFalse();

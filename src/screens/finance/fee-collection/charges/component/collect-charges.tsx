@@ -4,13 +4,23 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Button,
+  Tooltip,
+  Checkbox,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -71,7 +81,23 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
   };
 
   return (
-    <CustomDialog fullScreen title="Charges Collection" open={dialogValue} handleClose={onClose}>
+    <CustomDialog
+      fullScreen
+      title={
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Typography variant="h5">Charges Collection</Typography>
+          <Tooltip
+            arrow
+            placement="right"
+            title="These charges include any late fees and bounced check charges, if applicable; otherwise, the amount will be 0.You can select multiple charges and collect them together."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </Tooltip>
+        </Box>
+      }
+      open={dialogValue}
+      handleClose={onClose}
+    >
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '800px' }}>
           <Box display="flex" flexDirection="row" gap={2} py="12px" pb="20px">
@@ -309,98 +335,3 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
 };
 
 export default FinanceCollectCharges;
-// children(row) {
-//   const isLateFee = row.chargeHead === 'Late Fee';
-//   const dynamicColumns = isLateFee
-//     ? [
-//       { id: 'dueDate', label: 'Due Date' },
-//       {
-//         id: 'chargesPerDay',
-//         label: 'Charges Per Day',
-//         render(chargesPerDayValue: any) {
-//           return (
-//             <Typography fontSize="12px">
-//               {formatNumber(chargesPerDayValue, 'INR')}
-//             </Typography>
-//           );
-//         },
-//       },
-//       {
-//         id: 'totalCharges',
-//         label: 'Total Charges',
-//         render(totalCharges: any) {
-//           return (
-//             <Typography fontSize="12px">
-//               {formatNumber(totalCharges, 'INR')}
-//             </Typography>
-//           );
-//         },
-//       },
-//       {
-//         id: 'status',
-//         label: 'Status',
-//         render(statusValue: any) {
-//           return statusValue ? (
-//             <Label
-//               variant="soft"
-//               color={
-//                 statusValue === 'Overdue'
-//                   ? 'error'
-//                   : statusValue === 'Pending'
-//                     ? 'warning'
-//                     : statusValue === 'Paid'
-//                       ? 'success'
-//                       : 'default'
-//               }
-//             >
-//               {statusValue}
-//             </Label>
-//           ) : (
-//             <Box />
-//           );
-//         },
-//       },
-//     ]
-//     : [
-//       { id: 'feeHead', label: 'Fee Head' },
-//       { id: 'checkDate', label: 'Date on Check' },
-//       { id: 'receivedCheckDate', label: 'Received Check Date' },
-//       { id: 'chequeAmount', label: 'Cheque Amount' },
-//       { id: 'charges', label: 'Charges' },
-//       { id: 'bankName', label: 'Bank Name' },
-//       {
-//         id: 'status',
-//         label: 'Status',
-//         render(statusValue: any) {
-//           return statusValue ? (
-//             <Label
-//               variant="soft"
-//               color={
-//                 statusValue === 'Overdue'
-//                   ? 'error'
-//                   : statusValue === 'Pending'
-//                     ? 'warning'
-//                     : statusValue === 'Paid'
-//                       ? 'success'
-//                       : 'default'
-//               }
-//             >
-//               {statusValue}
-//             </Label>
-//           ) : (
-//             <Box />
-//           );
-//         },
-//       },
-//     ];
-
-//   return (
-//     <CustomizableTable
-//       isShowedDense={false}
-//       isFilter={false}
-//       isSearch={false}
-//       columns={dynamicColumns}
-//       data={row.details || []} // Ensure details is an array
-//     />
-//   );
-// },

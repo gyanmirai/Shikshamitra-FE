@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,6 +22,7 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -117,7 +118,22 @@ const EntranceExamSlots = () => {
         data={tableData || []}
       />
 
-      <CustomDialog title="Slots" open={dialog.value} handleClose={handleClose}>
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Slots</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+        open={dialog.value}
+        handleClose={handleClose}
+      >
         <SlotsForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>

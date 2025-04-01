@@ -9,7 +9,9 @@ import {
   Stack,
   Switch,
   Button,
+  Tooltip,
   TextField,
+  Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -25,6 +27,7 @@ import {
   useDeleteStudentDocumentTypeMutation,
 } from 'src/redux/student/document-type/document-type-api';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -125,7 +128,22 @@ const StudentDocumentType = () => {
         ]}
         data={documents?.items || []}
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Document">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={handleClose}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Document</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+      >
         <DocumentForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>

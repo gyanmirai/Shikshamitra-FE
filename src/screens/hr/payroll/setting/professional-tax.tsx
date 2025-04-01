@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, DialogActions } from '@mui/material';
+import { Box, Stack, Button, Tooltip, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,6 +19,7 @@ import {
   useUpdateProfessionalTaxMutation,
 } from 'src/redux/ProfessionalTax/ProfessionalTaxApi';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -142,7 +143,22 @@ const ProfessionalTax = () => {
         ]}
         data={tableData || []}
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Create New Tax Range">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={handleClose}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Create New Tax Range</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="In this section, you can create a Professional Tax entry by setting the tax range, allowing for customized tax deductions based on salary brackets."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+      >
         <ProfessionalTaxForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>

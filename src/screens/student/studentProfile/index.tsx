@@ -219,8 +219,13 @@ export function StudentProfile() {
     <>
       <CustomBreadcrumbs
         heading="Student List"
-        links={[{ name: 'Student' }, { name: 'Student Records' }, { name: 'Student List' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard' },
+          { name: 'Student Records' },
+          { name: 'Student List' },
+        ]}
         sx={{ px: 1, mb: 2 }}
+        description="This section displays a list of all students. Click on a students name to be redirected to their detailed profile view."
         action={
           currentStudent && (
             <Button

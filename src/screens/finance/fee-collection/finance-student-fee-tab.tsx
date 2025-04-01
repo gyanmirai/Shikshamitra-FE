@@ -36,7 +36,8 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({
     <>
       <CustomBreadcrumbs
         heading="Fee Collection"
-        links={[{ name: 'Finance' }, { name: 'Fee Collection' }]}
+        description="The Fee Collection tab serves as a single-window system for managing fee-related tasks. Here, you can collect fees, apply charges, provide additional discounts, process refunds, and view a student's complete fee details, including their fee structure, payment history, pending fees, and refund history."
+        links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Collection' }]}
         sx={{ px: 1, mb: 2 }}
       />
 

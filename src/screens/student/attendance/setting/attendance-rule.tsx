@@ -7,10 +7,12 @@ import {
   Box,
   Grid,
   Button,
+  Tooltip,
   MenuItem,
   MenuList,
   Checkbox,
   TextField,
+  Typography,
   DialogActions,
   InputAdornment,
   FormControlLabel,
@@ -171,7 +173,22 @@ const AttendanceRule = () => {
         }
       />
 
-      <CustomDialog title="Add Rule" open={dialog.value} handleClose={handleClose}>
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Add Rule</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="Here, you can create rules for half-day and late attendance, defining the criteria."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+        open={dialog.value}
+        handleClose={handleClose}
+      >
         <AttendanceRuleForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </>

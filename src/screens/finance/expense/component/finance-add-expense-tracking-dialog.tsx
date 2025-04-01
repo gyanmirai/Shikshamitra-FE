@@ -133,6 +133,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
           heading="Expense Tracking"
           links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
           sx={{ px: 1, mb: 2 }}
+          description="The Expense Tracking dialog allows you to add and manage expense records. Enter the expense category, amount, date, and relevant details to ensure accurate financial tracking."
         />
         <Box
           sx={{ mr: '15px', mb: '20px' }}

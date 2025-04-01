@@ -44,8 +44,13 @@ const StudentCertificatesScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Certificates"
-        links={[{ name: 'Student' }, { name: 'Student Records' }, { name: 'Certificates' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard' },
+          { name: 'Student Records' },
+          { name: 'Certificates' },
+        ]}
         sx={{ px: 1, mb: 2 }}
+        description="This tab allows you to generate various certificates, such as Bonafide, Leaving, and more."
       />
       <Card
         sx={{

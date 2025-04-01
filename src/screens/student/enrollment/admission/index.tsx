@@ -569,9 +569,9 @@ const AdmissionScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Admission"
-        description="Registration in School ERP software allows you to manage student enrollment, admissions, and academic records efficiently in one place"
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Admission' }]}
         sx={{ px: 1, mb: 2 }}
+        description="This is the Admission tab, where you can manage student admissions by approving or rejecting applications."
       />
       <Box display="flex" gap={1} alignItems="flex-start">
         <Tabs

@@ -12,8 +12,10 @@ import {
   Box,
   Grid,
   Button,
+  Tooltip,
   Checkbox,
   TextField,
+  Typography,
   DialogActions,
   InputAdornment,
   FormControlLabel,
@@ -35,6 +37,7 @@ import {
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -151,7 +154,18 @@ const AttendanceRule = () => {
       />
 
       <CustomDialog
-        title="Add Rule"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Add Rule</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="In this dialog, you can create attendance rules by defining criteria such as working hours, attendance thresholds, and any specific conditions that apply to employees."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();

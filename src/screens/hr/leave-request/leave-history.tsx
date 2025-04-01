@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import React, { useMemo, useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Button, Checkbox, MenuItem, MenuList } from '@mui/material';
+import { Box, Button, Tooltip, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -236,7 +236,20 @@ const LeaveHistory = (props: TabComponentType) => {
         maxWidth="md"
         open={modal.value}
         handleClose={handleClose}
-        title={editData ? 'Review Leave Request' : 'Add Leave Request'}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">
+              {editData ? 'Review Leave Request' : 'Add Leave Request'}
+            </Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title=" you can create a new leave request by selecting the employee, leave type, start and end dates, and providing any additional notes or reasons for the leave."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
       >
         <Box p={2}>
           <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />

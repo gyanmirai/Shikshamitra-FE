@@ -29,6 +29,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
       heading={heading}
       links={[{ name: 'Student' }, { name: 'Auto Notification Configuration' }]}
       sx={{ px: 1, mb: 2 }}
+      description="In the Notification Settings, you can customize the message for each notification and enable or disable it as needed."
     />
     <Box
       sx={{ mr: '15px', mb: '20px' }}

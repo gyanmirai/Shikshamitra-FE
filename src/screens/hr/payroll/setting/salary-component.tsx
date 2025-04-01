@@ -9,6 +9,7 @@ import {
   Box,
   Grid,
   Button,
+  Tooltip,
   Checkbox,
   TextField,
   Typography,
@@ -29,6 +30,7 @@ import {
   useUpdatePayElementMutation,
 } from 'src/redux/payElement/payElementApi';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -159,7 +161,18 @@ const SalaryComponent = () => {
       />
       <CustomDialog
         maxWidth="sm"
-        title="Add Salary Component"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Add Salary Component</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="In this section, you can define various salary components such as basic salary, allowances, bonuses, deductions, and more. These components are used to calculate the employee's total salary.."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
         handleClose={handleClose}
         open={dialog.value}
       >

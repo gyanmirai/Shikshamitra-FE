@@ -129,6 +129,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
           heading="Income Tracking"
           links={[{ name: 'Finance' }, { name: 'Income Tracking' }]}
           sx={{ px: 1, mb: 2 }}
+          description="The Income Tracking allows you to add and manage income records. Enter the income source, amount, date, and relevant details to keep the system updated with accurate financial data"
         />
         <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
           <Button

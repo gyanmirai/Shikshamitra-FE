@@ -136,6 +136,7 @@ const HrEventsAndHolidaysScreen = () => {
             Back
           </Button>
         }
+        description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
       <Card>
         <HrEventsAndHolidaysForm handleClose={handleClose} editData={editData} />
@@ -152,6 +153,7 @@ const HrEventsAndHolidaysScreen = () => {
             Event & Holidays
           </Button>
         }
+        description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
         <DatePicker

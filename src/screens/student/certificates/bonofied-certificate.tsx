@@ -8,7 +8,15 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import {
+  Box,
+  Button,
+  Tooltip,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,6 +27,7 @@ import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bon
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const BonofiedCertificate = () => {
@@ -46,7 +55,18 @@ const BonofiedCertificate = () => {
       />
       <CustomDialog
         maxWidth="lg"
-        title="Create Bonafide"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Create Bonafide</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This certificate verifies that the student is officially enrolled in the institution and serves as proof of their academic status."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
         open={dialog.value}
         handleClose={dialog.onFalse}
       >

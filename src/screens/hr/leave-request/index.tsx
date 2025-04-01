@@ -53,6 +53,11 @@ const LeaveRequest = () => {
           { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
+        description={
+          currentActiveComponent?.value === 'leaveRequest'
+            ? 'On this screen, you can create new leave requests for employees. The screen also displays a list of all previously created requests, where you can approve or reject them as needed.'
+            : 'The Leave Calendar provides a visual overview of all employee leave requests. You can view the leave status for each employee on specific dates and track approved, pending, or rejected leaves.'
+        }
       />
       <CustomTabs
         value={searchParams.tab}
