@@ -50,6 +50,7 @@ const StudentEnrollmentSettingScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Setting"
+        description="Student enrollment setting allows you to manage student enrollment, admissions records efficiently in one place"
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
       />

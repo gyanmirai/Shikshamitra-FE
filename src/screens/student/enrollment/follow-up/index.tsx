@@ -74,6 +74,7 @@ const FollowUpScreen: React.FC = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Follow Up"
+        description="Follow up with students and parents to ensure their inquiries are addressed promptly and effectively."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Follow Up' }]}
         sx={{ px: 1, mb: 2 }}
       />

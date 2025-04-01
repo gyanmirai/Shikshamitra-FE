@@ -51,6 +51,7 @@ import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -96,18 +97,12 @@ const validationSchema = Yup.object().shape({
   pinCode: Yup.number()
     .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('Pin code is required'),
-  country: Yup.object({
-    name: Yup.string().required('country is required'),
-  }).required('country is required'),
-  state: Yup.object({
-    name: Yup.string().required('State is required'),
-  }).required('State is required'),
-  city: Yup.object({
-    name: Yup.string().required('City is required'),
-  }).required('City is required'),
+  country: Yup.string().required('country is required'),
+  state: Yup.string().required('State is required'),
+  city: Yup.string().required('City is required'),
 
-  // board: Yup.string().required('Board is required'),
-  // medium: Yup.string().required('Medium is required'),
+  board: Yup.string().required('Board is required'),
+  medium: Yup.string().required('Medium is required'),
 });
 
 interface FormikValues {
@@ -333,296 +328,338 @@ const InquiryForm = ({
               >
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={4}>
-                    <CustomSelect
-                      name="academicYear"
-                      label="Academic Year"
-                      isLoading={yearLoading}
-                      options={academicYear?.items || []}
-                      value={values.academicYear}
-                      labelKey="name"
-                      valueKey="id"
-                      autoFocus
-                      onChange={(value) => {
-                        const findBoards = board?.items.filter(
-                          (item: Board) => item.academicYearId === value
-                        );
-                        setBoards(findBoards);
-                        setFieldValue('board', '');
-                        setFieldValue('academicYear', value);
-                      }}
+                    <ShakingTextField
                       error={!!(touched.academicYear && errors.academicYear) || false}
-                      helperText={(touched.academicYear && errors.academicYear) || ''}
-                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    />
+                    >
+                      <CustomSelect
+                        name="academicYear"
+                        label="Academic Year"
+                        isLoading={yearLoading}
+                        options={academicYear?.items || []}
+                        value={values.academicYear}
+                        labelKey="name"
+                        valueKey="id"
+                        autoFocus
+                        onChange={(value) => {
+                          const findBoards = board?.items.filter(
+                            (item: Board) => item.academicYearId === value
+                          );
+                          setBoards(findBoards);
+                          setFieldValue('board', '');
+                          setFieldValue('academicYear', value);
+                        }}
+                        error={!!(touched.academicYear && errors.academicYear) || false}
+                        helperText={(touched.academicYear && errors.academicYear) || ''}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <CustomSelect
-                      name="board"
-                      label="Board"
-                      isLoading={boardLoading}
-                      options={boards || []}
-                      labelKey="name"
-                      valueKey="id"
-                      value={values.board}
-                      onChange={(value) => {
-                        setFieldValue('medium', '');
-
-                        setFieldValue('board', value);
-                      }}
-                      error={!!(touched.board && errors.board) || false}
-                      helperText={(touched.board && errors.board) || ''}
-                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                      disabled={!values.academicYear}
-                    />
+                    <ShakingTextField error={!!(touched.board && errors.board) || false}>
+                      <CustomSelect
+                        name="board"
+                        label="Board"
+                        isLoading={boardLoading}
+                        options={boards || []}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.board}
+                        onChange={(value) => {
+                          setFieldValue('medium', '');
+                          setFieldValue('board', value);
+                        }}
+                        error={!!(touched.board && errors.board) || false}
+                        helperText={(touched.board && errors.board) || ''}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                        disabled={!values.academicYear}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <CustomSelect
-                      name="medium"
-                      label="Medium"
-                      disabled={!values.board}
-                      options={
-                        board?.items?.find((item: Board) => item.id === values.board)
-                          ?.educationMediums || []
-                      }
-                      value={values.medium}
-                      labelKey="name"
-                      valueKey="id"
-                      onChange={async (value) => {
-                        await getClassByMedium(value);
-                        setFieldValue('medium', value);
-                      }}
-                      error={!!(touched.medium && errors.medium) || false}
-                      helperText={(touched.medium && errors.medium) || ''}
-                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={4}>
-                    <FastField name="lastName">
-                      {({ field, form, meta }: FastFieldProps) => (
-                        <TextField
-                          fullWidth
-                          size="small"
-                          name="lastName"
-                          label="Last Name"
-                          error={meta.touched && Boolean(meta.error)}
-                          helperText={meta.touched && meta.error}
-                          value={field.value}
-                          onChange={(e) => {
-                            const value = capitalize(e.target.value);
-                            form.setFieldValue('lastName', value);
-
-                            // setFieldValue('lastName', value);
-                          }}
-                        />
-                      )}
-                    </FastField>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      name="firstName"
-                      label="First Name"
-                      error={touched.firstName && Boolean(errors.firstName)}
-                      helperText={touched.firstName && errors.firstName}
-                      value={values.firstName}
-                      onChange={(e) => {
-                        const value = capitalize(e.target.value);
-
-                        setFieldValue('firstName', value);
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      name="middleName"
-                      label="Middle Name"
-                      error={touched.middleName && Boolean(errors.middleName)}
-                      helperText={touched.middleName && errors.middleName}
-                      value={values.middleName}
-                      onChange={(e) => {
-                        const value = capitalize(e.target.value);
-
-                        setFieldValue('middleName', value);
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <CustomSelect
-                      name="class"
-                      label="Class"
-                      disabled={!values.medium}
-                      isLoading={classLoading}
-                      labelKey="name"
-                      valueKey="id"
-                      options={classes || []}
-                      value={values.class}
-                      onChange={(value) => setFieldValue('class', value)}
-                      error={!!(touched.class && errors.class) || false}
-                      helperText={(touched.class && errors.class) || ''}
-                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Field
-                      as={TextField}
-                      fullWidth
-                      size="small"
-                      name="previousSchool"
-                      label="Previous School"
-                      error={touched.previousSchool && errors.previousSchool}
-                      helperText={touched.previousSchool && errors.previousSchool}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <DatePicker
-                      label="Date of Birth"
-                      name="dateOfBirth"
-                      value={values.dateOfBirth}
-                      format="DD/MM/YYYY"
-                      onChange={(newValue) => {
-                        const date = newValue?.format();
-                        if (date) {
-                          const age = calculateAge(date);
-                          setFieldValue('age', age);
+                    <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
+                      <CustomSelect
+                        name="medium"
+                        label="Medium"
+                        disabled={!values.board}
+                        options={
+                          board?.items?.find((item: Board) => item.id === values.board)
+                            ?.educationMediums || []
                         }
-                        setFieldValue('dateOfBirth', newValue);
-                      }}
-                      disableFuture
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
-                          error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
-                        },
-                      }}
-                    />
+                        value={values.medium}
+                        labelKey="name"
+                        valueKey="id"
+                        onChange={async (value) => {
+                          await getClassByMedium(value);
+                          setFieldValue('medium', value);
+                        }}
+                        error={!!(touched.medium && errors.medium) || false}
+                        helperText={(touched.medium && errors.medium) || ''}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                      />
+                    </ShakingTextField>
                   </Grid>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      value={values.age}
-                      fullWidth
-                      size="small"
-                      name="age"
-                      label="Age"
-                      disabled
-                    />
+
+                  <Grid item xs={4}>
+                    <ShakingTextField error={!!(touched.lastName && errors.lastName) || false}>
+                      <FastField name="lastName">
+                        {({ field, form, meta }: FastFieldProps) => (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="lastName"
+                            label="Last Name"
+                            error={meta.touched && Boolean(meta.error)}
+                            helperText={meta.touched && meta.error}
+                            value={field.value}
+                            onChange={(e) => {
+                              const value = capitalize(e.target.value);
+                              form.setFieldValue('lastName', value);
+                            }}
+                          />
+                        )}
+                      </FastField>
+                    </ShakingTextField>
                   </Grid>
-                  <Grid item xs={12} md={4}>
-                    <DatePicker
-                      label="Date of Inquiry"
-                      name="dateOfInquiry"
-                      value={values.dateOfInquiry}
-                      format="DD/MM/YYYY"
-                      onChange={(newValue) => setFieldValue('dateOfInquiry', newValue)}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                          helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
-                          error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
-                        },
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth>
-                      <InputLabel id="dropdown-label" size="small">
-                        Gender
-                      </InputLabel>
-                      <Select
-                        labelId="dropdown-label"
-                        id="dropdown"
-                        value={values.gender}
-                        onChange={handleChange}
+                  <Grid item xs={4}>
+                    <ShakingTextField error={!!(touched.firstName && errors.firstName) || false}>
+                      <TextField
+                        fullWidth
                         size="small"
-                        label="Gender"
-                        name="gender"
-                      >
-                        {GenderTypeArray.map((i, index) => (
-                          <MenuItem key={i} value={index}>
-                            {GenderType[index]}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                        name="firstName"
+                        label="First Name"
+                        error={touched.firstName && Boolean(errors.firstName)}
+                        helperText={touched.firstName && errors.firstName}
+                        value={values.firstName}
+                        onChange={(e) => {
+                          const value = capitalize(e.target.value);
+                          setFieldValue('firstName', value);
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <ShakingTextField error={!!(touched.middleName && errors.middleName) || false}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        name="middleName"
+                        label="Middle Name"
+                        error={touched.middleName && Boolean(errors.middleName)}
+                        helperText={touched.middleName && errors.middleName}
+                        value={values.middleName}
+                        onChange={(e) => {
+                          const value = capitalize(e.target.value);
+                          setFieldValue('middleName', value);
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField
-                      value={values.email}
-                      fullWidth
-                      size="small"
-                      name="email"
-                      label="Email"
-                      onChange={handleChange}
-                      placeholder="Email"
-                      error={touched.email && Boolean(errors.email)}
-                      helperText={touched.email && errors.email}
-                      InputProps={{
-                        startAdornment: (
-                          <>
-                            <Iconify icon="mdi-light:email" />{' '}
-                            <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                          </>
-                        ),
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <PhoneInput
-                      name="parentsContactNo"
-                      value={values.parentsContactNo}
-                      onChange={(value) => {
-                        setFieldValue('parentsContactNo', value);
-                      }}
-                      placeholder="Parents Contact No."
-                      error={touched.parentsContactNo && Boolean(errors.parentsContactNo)}
-                      helperText={touched.parentsContactNo && errors.parentsContactNo}
-                      variant="outlined"
-                      label="Parents Contact No."
-                      size="small"
-                    />
+                    <ShakingTextField error={!!(touched.class && errors.class) || false}>
+                      <CustomSelect
+                        name="class"
+                        label="Class"
+                        disabled={!values.medium}
+                        isLoading={classLoading}
+                        labelKey="name"
+                        valueKey="id"
+                        options={classes || []}
+                        value={values.class}
+                        onChange={(value) => setFieldValue('class', value)}
+                        error={!!(touched.class && errors.class) || false}
+                        helperText={(touched.class && errors.class) || ''}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <PhoneInput
-                      name="alternateContactDetails"
-                      value={values.alternateContactDetails}
-                      onChange={(value) => {
-                        setFieldValue('alternateContactDetails', value);
-                      }}
-                      placeholder="Alternate Contact Details"
+                    <ShakingTextField
+                      error={!!(touched.previousSchool && errors.previousSchool) || false}
+                    >
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        size="small"
+                        name="previousSchool"
+                        label="Previous School"
+                        error={touched.previousSchool && errors.previousSchool}
+                        helperText={touched.previousSchool && errors.previousSchool}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField
+                      error={!!(touched.dateOfBirth && errors.dateOfBirth) || false}
+                    >
+                      <DatePicker
+                        label="Date of Birth"
+                        name="dateOfBirth"
+                        value={values.dateOfBirth}
+                        format="DD/MM/YYYY"
+                        onChange={(newValue) => {
+                          const date = newValue?.format();
+                          if (date) {
+                            const age = calculateAge(date);
+                            setFieldValue('age', age);
+                          }
+                          setFieldValue('dateOfBirth', newValue);
+                        }}
+                        disableFuture
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            size: 'small',
+                            helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
+                            error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField>
+                      <TextField
+                        value={values.age}
+                        fullWidth
+                        size="small"
+                        name="age"
+                        label="Age"
+                        disabled
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField
+                      error={!!(touched.dateOfInquiry && errors.dateOfInquiry) || false}
+                    >
+                      <DatePicker
+                        label="Date of Inquiry"
+                        name="dateOfInquiry"
+                        value={values.dateOfInquiry}
+                        format="DD/MM/YYYY"
+                        onChange={(newValue) => setFieldValue('dateOfInquiry', newValue)}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
+                            error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
+                      <FormControl fullWidth>
+                        <InputLabel id="dropdown-label" size="small">
+                          Gender
+                        </InputLabel>
+                        <Select
+                          labelId="dropdown-label"
+                          id="dropdown"
+                          value={values.gender}
+                          onChange={handleChange}
+                          size="small"
+                          label="Gender"
+                          name="gender"
+                        >
+                          {GenderTypeArray.map((i, index) => (
+                            <MenuItem key={i} value={index}>
+                              {GenderType[index]}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField error={!!(touched.email && errors.email) || false}>
+                      <TextField
+                        value={values.email}
+                        fullWidth
+                        size="small"
+                        name="email"
+                        label="Email"
+                        onChange={handleChange}
+                        placeholder="Email"
+                        error={touched.email && Boolean(errors.email)}
+                        helperText={touched.email && errors.email}
+                        InputProps={{
+                          startAdornment: (
+                            <>
+                              <Iconify icon="mdi-light:email" />{' '}
+                              <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                            </>
+                          ),
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField
+                      error={!!(touched.parentsContactNo && errors.parentsContactNo) || false}
+                    >
+                      <PhoneInput
+                        name="parentsContactNo"
+                        value={values.parentsContactNo}
+                        onChange={(value) => {
+                          setFieldValue('parentsContactNo', value);
+                        }}
+                        placeholder="Parents Contact No."
+                        error={touched.parentsContactNo && Boolean(errors.parentsContactNo)}
+                        helperText={touched.parentsContactNo && errors.parentsContactNo}
+                        variant="outlined"
+                        label="Parents Contact No."
+                        size="small"
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField
                       error={
-                        touched.alternateContactDetails && Boolean(errors.alternateContactDetails)
+                        !!(touched.alternateContactDetails && errors.alternateContactDetails) ||
+                        false
                       }
-                      helperText={touched.alternateContactDetails && errors.alternateContactDetails}
-                      variant="outlined"
-                      label="Alternate Contact Details"
-                      onBlur={handleBlur}
-                    />
+                    >
+                      <PhoneInput
+                        name="alternateContactDetails"
+                        value={values.alternateContactDetails}
+                        onChange={(value) => {
+                          setFieldValue('alternateContactDetails', value);
+                        }}
+                        placeholder="Alternate Contact Details"
+                        error={
+                          touched.alternateContactDetails && Boolean(errors.alternateContactDetails)
+                        }
+                        helperText={
+                          touched.alternateContactDetails && errors.alternateContactDetails
+                        }
+                        variant="outlined"
+                        label="Alternate Contact Details"
+                        onBlur={handleBlur}
+                      />
+                    </ShakingTextField>
                   </Grid>
-
                   <Grid item xs={12} md={4}>
-                    <CustomSelect
-                      label="Inquiry Preferences"
-                      name="inquiryPreferences"
-                      isLoading={inquiryPrefrenceLoading}
-                      options={inquiryPreference?.items || []}
-                      value={values.inquiryPreferences}
-                      labelKey="preferenceName"
-                      valueKey="id"
-                      onChange={(value) => setFieldValue('inquiryPreferences', value)}
-                      formControlProps={{
-                        fullWidth: true,
-                        sx: {
-                          maxWidth: 'unset',
-                        },
-                      }}
-                    />
+                    <ShakingTextField>
+                      <CustomSelect
+                        label="Inquiry Preferences"
+                        name="inquiryPreferences"
+                        isLoading={inquiryPrefrenceLoading}
+                        options={inquiryPreference?.items || []}
+                        value={values.inquiryPreferences}
+                        labelKey="preferenceName"
+                        valueKey="id"
+                        onChange={(value) => setFieldValue('inquiryPreferences', value)}
+                        formControlProps={{
+                          fullWidth: true,
+                          sx: {
+                            maxWidth: 'unset',
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
                     <Typography
                       variant="body2"
                       fontWeight={500}
@@ -638,101 +675,123 @@ const InquiryForm = ({
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField
-                      name="addressLine1"
-                      label="Address Line 1"
-                      value={values.addressLine1}
-                      onChange={handleChange}
-                      error={touched.addressLine1 && Boolean(errors.addressLine1)}
-                      helperText={touched.addressLine1 && errors.addressLine1}
-                      fullWidth
-                      placeholder="Address Line 1"
-                      size="small"
-                    />
+                    <ShakingTextField
+                      error={!!(touched.addressLine1 && errors.addressLine1) || false}
+                    >
+                      <TextField
+                        name="addressLine1"
+                        label="Address Line 1"
+                        value={values.addressLine1}
+                        onChange={handleChange}
+                        error={touched.addressLine1 && Boolean(errors.addressLine1)}
+                        helperText={touched.addressLine1 && errors.addressLine1}
+                        fullWidth
+                        placeholder="Address Line 1"
+                        size="small"
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField
-                      name="addressLine2"
-                      label="Address Line 2"
-                      value={values.addressLine2}
-                      onChange={handleChange}
-                      error={touched.addressLine2 && Boolean(errors.addressLine2)}
-                      helperText={(touched.addressLine2 && errors.addressLine2) || ''}
-                      fullWidth
-                      placeholder="Address Line 2"
-                      size="small"
-                    />
+                    <ShakingTextField
+                      error={!!(touched.addressLine2 && errors.addressLine2) || false}
+                    >
+                      <TextField
+                        name="addressLine2"
+                        label="Address Line 2"
+                        value={values.addressLine2}
+                        onChange={handleChange}
+                        error={touched.addressLine2 && Boolean(errors.addressLine2)}
+                        helperText={(touched.addressLine2 && errors.addressLine2) || ''}
+                        fullWidth
+                        placeholder="Address Line 2"
+                        size="small"
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField
-                      name="addressLine3"
-                      label="Address Line 3"
-                      value={values.addressLine3}
-                      onChange={handleChange}
-                      error={touched.addressLine3 && Boolean(errors.addressLine3)}
-                      helperText={(touched.addressLine3 && errors.addressLine3) || ''}
-                      fullWidth
-                      placeholder="Address Line 3"
-                      size="small"
-                    />
+                    <ShakingTextField
+                      error={!!(touched.addressLine3 && errors.addressLine3) || false}
+                    >
+                      <TextField
+                        name="addressLine3"
+                        label="Address Line 3"
+                        value={values.addressLine3}
+                        onChange={handleChange}
+                        error={touched.addressLine3 && Boolean(errors.addressLine3)}
+                        helperText={(touched.addressLine3 && errors.addressLine3) || ''}
+                        fullWidth
+                        placeholder="Address Line 3"
+                        size="small"
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
-                    <CountryComponent
-                      value={values.country}
-                      onChange={(_e, value) => {
-                        setFieldValue('state', null);
-                        setFieldValue('country', value);
-                      }}
-                      error={touched.country && Boolean(errors.country)}
-                      helperText={touched.country && errors.country}
-                    />
+                    <ShakingTextField error={!!(touched.country && errors.country) || false}>
+                      <CountryComponent
+                        value={values.country}
+                        onChange={(_e, value) => {
+                          setFieldValue('state', null);
+                          setFieldValue('country', value);
+                        }}
+                        error={touched.country && Boolean(errors.country)}
+                        helperText={touched.country && errors.country}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
-                    <StateComponent
-                      value={values.state}
-                      onChange={(_e, value) => {
-                        setFieldValue('city', null);
-                        setFieldValue('state', value);
-                      }}
-                      error={touched.state && Boolean(errors.state)}
-                      helperText={touched.state && errors.state}
-                      countryValue={values.country}
-                    />
+                    <ShakingTextField error={!!(touched.state && errors.state) || false}>
+                      <StateComponent
+                        value={values.state}
+                        onChange={(_e, value) => {
+                          setFieldValue('city', null);
+                          setFieldValue('state', value);
+                        }}
+                        error={touched.state && Boolean(errors.state)}
+                        helperText={touched.state && errors.state}
+                        countryValue={values.country}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
-                    <CityComponent
-                      value={values.city}
-                      onChange={(_e, value) => setFieldValue('city', value)}
-                      error={touched.city && Boolean(errors.city)}
-                      helperText={touched.city && errors.city}
-                      stateValue={values.state}
-                    />
+                    <ShakingTextField error={!!(touched.city && errors.city) || false}>
+                      <CityComponent
+                        value={values.city}
+                        onChange={(_e, value) => setFieldValue('city', value)}
+                        error={touched.city && Boolean(errors.city)}
+                        helperText={touched.city && errors.city}
+                        stateValue={values.state}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
-                    <TextField
-                      name="village"
-                      value={values.village}
-                      onChange={handleChange}
-                      error={touched.village && Boolean(errors.village)}
-                      helperText={touched.village && errors.village}
-                      fullWidth
-                      placeholder="Village"
-                      size="small"
-                      label="Village"
-                    />
+                    <ShakingTextField error={!!(touched.village && errors.village) || false}>
+                      <TextField
+                        name="village"
+                        value={values.village}
+                        onChange={handleChange}
+                        error={touched.village && Boolean(errors.village)}
+                        helperText={touched.village && errors.village}
+                        fullWidth
+                        placeholder="Village"
+                        size="small"
+                        label="Village"
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
-                    <TextField
-                      name="pinCode"
-                      value={values.pinCode}
-                      onChange={handleChange}
-                      error={touched.pinCode && Boolean(errors.pinCode)}
-                      helperText={touched.pinCode && errors.pinCode}
-                      fullWidth
-                      placeholder="Pincode"
-                      size="small"
-                      label="Pincode"
-                    />
+                    <ShakingTextField error={!!(touched.pinCode && errors.pinCode) || false}>
+                      <TextField
+                        name="pinCode"
+                        value={values.pinCode}
+                        onChange={handleChange}
+                        error={touched.pinCode && Boolean(errors.pinCode)}
+                        helperText={touched.pinCode && errors.pinCode}
+                        fullWidth
+                        placeholder="Pincode"
+                        size="small"
+                        label="Pincode"
+                      />
+                    </ShakingTextField>
                   </Grid>
                 </Grid>
               </Scrollbar>

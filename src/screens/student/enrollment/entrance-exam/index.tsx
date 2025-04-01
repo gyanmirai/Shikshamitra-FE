@@ -210,6 +210,7 @@ const EntranceExamScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Entrance Exam"
+        description="Entrance Exam: Schedule and manage entrance exams for student admissions."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Entrance Exam' }]}
         sx={{ px: 1, mb: 2 }}
         action={

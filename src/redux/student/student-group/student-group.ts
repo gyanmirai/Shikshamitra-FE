@@ -25,8 +25,8 @@ export const studentGroupApi = createApi({
       invalidatesTags: ['studentGroup'],
     }),
     updateStudentGroup: builder.mutation({
-      query: (body) => ({
-        url: `/app/student-group`,
+      query: ({ body, id }) => ({
+        url: `/app/student-group/${id}`,
         method: 'PUT',
         data: body,
       }),

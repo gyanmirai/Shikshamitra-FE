@@ -23,7 +23,26 @@ export const tenantApi = createApi({
       }),
       providesTags: ['Tenant'],
     }),
+    getAllTenants: builder.query({
+      query: () => ({
+        url: '/multi-tenancy/tenants',
+      }),
+      providesTags: ['Tenant'],
+    }),
+    updateTenant: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/multi-tenancy/tenants/${id}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Tenant'],
+    }),
   }),
 });
 
-export const { useAddTenantMutation, useGetTenantByIdQuery } = tenantApi;
+export const {
+  useAddTenantMutation,
+  useGetTenantByIdQuery,
+  useGetAllTenantsQuery,
+  useUpdateTenantMutation,
+} = tenantApi;

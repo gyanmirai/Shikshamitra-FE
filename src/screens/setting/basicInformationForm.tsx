@@ -2,33 +2,41 @@
 
 // @ts-nocheck
 
-import type { FormikValues } from 'formik';
 import type { ICity, IState, ICountry } from 'country-state-city';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { capitalize } from 'lodash';
 import React, { useState } from 'react';
+import { matchIsValidTel } from 'mui-tel-input';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
+import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import {
   Box,
   List,
   Card,
   Stack,
+  Dialog,
   Button,
   Divider,
   ListItem,
   TextField,
+  IconButton,
   Typography,
+  DialogContent,
   DialogActions,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { useAddTenantMutation } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  useAddTenantMutation,
+  useGetAllTenantsQuery,
+  useUpdateTenantMutation,
+} from 'src/redux/tenant/tenantApi';
 
 import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
@@ -37,6 +45,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { EmptyContent } from 'src/components/empty-content';
 import { RemoveButton } from 'src/components/file-thumbnail';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CityComponent from 'src/components/stardard-address/city-component';
@@ -66,55 +75,39 @@ const validationSchema = Yup.object().shape({
     .required('Institute Name is required')
     .min(2, 'Institute Name must be at least 2 characters')
     .max(100, 'Institute Name must not exceed 100 characters'),
-  instituteLogo: Yup.mixed()
-    .required('Institute Logo is required')
-    .test(
-      'fileType',
-      'Unsupported file format',
-      (value: any) =>
-        value &&
-        value instanceof File &&
-        ['image/jpeg', 'image/png', 'image/gif'].includes(value.type)
-    )
-    .test(
-      'fileSize',
-      'File size is too large',
-      (value: any) => value && value instanceof File && value.size <= 5 * 1024 * 1024 // 5MB
-    ),
-  instituteBanner: Yup.mixed()
-    .required('Institute Banner is required')
-    .test(
-      'fileType',
-      'Unsupported file format',
-      (value: any) =>
-        value &&
-        value instanceof File &&
-        ['image/jpeg', 'image/png', 'image/gif'].includes(value.type)
-    )
-    .test(
-      'fileSize',
-      'File size is too large',
-      (value: any) => value && value instanceof File && value.size <= 5 * 1024 * 1024 // 5MB
-    ),
+  instituteLogo: Yup.array()
+    .of(Yup.string())
+    .min(1, 'At least one Institute Logo is required')
+    .required('Institute Logo is required'),
+  instituteBanner: Yup.array()
+    .of(Yup.string())
+    .min(1, 'At least one Institute Banner is required')
+    .required('Institute Banner is required'),
   addressLine1: Yup.string().required('Address Line 1 is required'),
   addressLine2: Yup.string().required('Address Line 2 is required'),
   addressLine3: Yup.string().required('Address Line 3 is required'),
-  city: Yup.string().required('City is required'),
-  stateProvince: Yup.string().required('State/Province is required'),
-  zipPostalCode: Yup.string()
-    .required('ZIP/Postal Code is required')
-    .matches(/^[0-9]{5}(-[0-9]{4})?$/, 'Invalid ZIP/Postal Code format'),
-  country: Yup.string().required('Country is required'),
+  city: Yup.object()
+    .shape({ name: Yup.string().required('City is required') })
+    .required('City is required'),
+  stateProvince: Yup.object()
+    .shape({ name: Yup.string().required('State is required') })
+    .required('State is required'),
+  // zipPostalCode: Yup.string()
+  //   .required('ZIP/Postal Code is required')
+  //   .matches(/^[0-9]{5}(-[0-9]{4})?$/, 'Invalid ZIP/Postal Code format'),
+  country: Yup.object()
+    .shape({ name: Yup.string().required('Country is required') })
+    .required('Country is required'),
   contactNumber: Yup.string()
     .required('Contact Number is required')
-    .matches(
-      /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/,
-      'Invalid phone number format'
+    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
+      matchIsValidTel((value || '') as string)
     ),
   emailAddress: Yup.string().required('Email Address is required').email('Invalid email format'),
+  principleSign: Yup.array().of(Yup.string()).min(1, 'At least one Principle Sign is required'),
 });
 
-const BasicInformationForm: React.FC<any> = () => {
+const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddTenantMutation,
@@ -123,34 +116,110 @@ const BasicInformationForm: React.FC<any> = () => {
       successMessage: 'Tenant Added Successfully',
     },
   });
+  const [updateTenant, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateTenantMutation,
+    popupConfig: {
+      success: true,
+      successMessage: 'Tenant Updated Successfully',
+    },
+  });
   const formik = useFormik<FormValues>({
     initialValues: {
-      instituteName: '',
-      instituteLogo: [],
-      instituteBanner: [],
-      addressLine1: '',
-      addressLine2: '',
-      addressLine3: '',
-      city: undefined,
-      stateProvince: undefined,
-      zipPostalCode: '',
-      country: undefined,
-      contactNumber: '',
-      emailAddress: '',
+      instituteName: editData?.name || '',
+      instituteLogo: editData?.extraProperties?.Logo || [],
+      instituteBanner: editData?.extraProperties?.Banner || [],
+      addressLine1: editData?.extraProperties?.Address1 || '',
+      addressLine2: editData?.extraProperties?.Address2 || '',
+      addressLine3: editData?.extraProperties?.Address3 || '',
+      city: editData?.extraProperties?.City ? { name: editData?.extraProperties?.City } : undefined,
+      stateProvince: editData?.extraProperties?.State
+        ? {
+            name: editData?.extraProperties?.State?.name,
+            isoCode: editData?.extraProperties?.State?.isoCode,
+          }
+        : undefined,
+      zipPostalCode: editData?.extraProperties?.PostalCode || '',
+      country: editData?.extraProperties?.Country
+        ? {
+            name: editData?.extraProperties?.Country?.name,
+            isoCode: editData?.extraProperties?.Country?.isoCode,
+          }
+        : undefined,
+      contactNumber: editData?.extraProperties?.ContactNumber || '',
+      emailAddress: editData?.adminEmailAddress || '',
       password: '',
-      principleSign: [],
+      principleSign: editData?.extraProperties?.PrincipleSign || [],
     },
     validationSchema,
-    onSubmit: (formValues: FormikValues) => {
-      console.log(formValues);
-      addTenant({
-        name: formValues.instituteName,
-        adminEmailAddress: formValues.emailAddress,
-        adminPassword: formValues.password,
-      });
+    onSubmit: async (formValues: FormValues) => {
+      try {
+        if (editData) {
+          await updateTenant({
+            id: editData.id,
+            body: {
+              name: formValues.instituteName,
+              adminEmailAddress: formValues.emailAddress,
+              adminPassword: formValues.password,
+              extraProperties: {
+                Country: {
+                  name: formValues.country?.name,
+                  isoCode: formValues.country?.isoCode,
+                },
+                State: {
+                  name: formValues.stateProvince?.name,
+                  isoCode: formValues.stateProvince?.isoCode,
+                },
+                City: formValues.city?.name,
+                Address1: formValues.addressLine1,
+                Address2: formValues.addressLine2,
+                Address3: formValues.addressLine3,
+                ContactNumber: formValues.contactNumber,
+                PostalCode: formValues.zipPostalCode,
+                InstituteName: formValues.instituteName,
+                Logo: formValues.instituteLogo,
+                Banner: formValues.instituteBanner,
+                PrincipleSign: formValues.principleSign,
+              },
+            },
+          }).unwrap();
+        } else {
+          await addTenant({
+            name: formValues.instituteName,
+            adminEmailAddress: formValues.emailAddress,
+            adminPassword: formValues.password,
+            extraProperties: {
+              Country: {
+                name: formValues.country?.name,
+                isoCode: formValues.country?.isoCode,
+              },
+              State: {
+                name: formValues.stateProvince?.name,
+                isoCode: formValues.stateProvince?.isoCode,
+              },
+              City: formValues.city?.name,
+              Address1: formValues.addressLine1,
+              Address2: formValues.addressLine2,
+              Address3: formValues.addressLine3,
+              ContactNumber: formValues.contactNumber,
+              PostalCode: formValues.zipPostalCode,
+              InstituteName: formValues.instituteName,
+              Logo: formValues.instituteLogo,
+              Banner: formValues.instituteBanner,
+              PrincipleSign: formValues.principleSign,
+            },
+          }).unwrap();
+        }
+
+        handleClose?.();
+      } catch (error) {
+        console.log(error);
+      }
     },
   });
   const { values, errors, touched, handleChange, handleSubmit, setFieldValue } = formik;
+  console.log('🚀 ~ values:', values);
+
   return (
     <Box
       component="form"
@@ -163,7 +232,7 @@ const BasicInformationForm: React.FC<any> = () => {
           height: '100%',
         }}
       >
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* <Grid xs={12} sm={6} md={4}>
           <Card sx={{ p: 1, height: '100%' }}>
             <CardHeader title="Upload Institute Logo" sx={{ textAlign: 'center' }} />
@@ -273,7 +342,7 @@ const BasicInformationForm: React.FC<any> = () => {
 
           <Grid xs={12}>
             <Box>
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 <Grid xs={12} sm={6} md={4} lg={3}>
                   <TextField
                     fullWidth
@@ -281,7 +350,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     name="instituteName"
                     label="Institute Name"
                     value={values.instituteName}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const newValue = capitalize(e.target.value);
+                      setFieldValue('instituteName', newValue);
+                    }}
                     error={touched.instituteName && Boolean(errors.instituteName)}
                     helperText={touched.instituteName && errors.instituteName}
                   />
@@ -293,7 +365,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     name="addressLine1"
                     label="Address Line 1"
                     value={values.addressLine1}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const newValue = capitalize(e.target.value);
+                      setFieldValue('addressLine1', newValue);
+                    }}
                     error={touched.addressLine1 && Boolean(errors.addressLine1)}
                     helperText={touched.addressLine1 && errors.addressLine1}
                   />
@@ -305,7 +380,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     name="addressLine2"
                     label="Address Line 2"
                     value={values.addressLine2}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const newValue = capitalize(e.target.value);
+                      setFieldValue('addressLine2', newValue);
+                    }}
                     error={touched.addressLine2 && Boolean(errors.addressLine2)}
                     helperText={touched.addressLine2 && errors.addressLine2}
                   />
@@ -317,7 +395,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     name="addressLine3"
                     label="Address Line 3"
                     value={values.addressLine3}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const newValue = capitalize(e.target.value);
+                      setFieldValue('addressLine3', newValue);
+                    }}
                     error={touched.addressLine3 && Boolean(errors.addressLine3)}
                     helperText={touched.addressLine3 && errors.addressLine3}
                   />
@@ -331,6 +412,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     size="small"
                     value={values.country}
                     fullWidth
+                    // @ts-ignore
+                    error={touched.country && Boolean(errors?.country?.name)}
+                    // @ts-ignore
+                    helperText={touched.country && errors?.country?.name}
                     // fieldProps={{ size: 'small' }}
                   />
                 </Grid>
@@ -343,6 +428,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     value={values.stateProvince}
                     countryValue={values.country}
                     fullWidth
+                    // @ts-ignore
+                    error={touched?.stateProvince && Boolean(errors?.stateProvince?.name)}
+                    // @ts-ignore
+                    helperText={touched?.stateProvince && errors?.stateProvince?.name}
                   />
                 </Grid>
                 <Grid xs={12} sm={6} md={4} lg={3}>
@@ -351,6 +440,10 @@ const BasicInformationForm: React.FC<any> = () => {
                     onChange={(_e, value) => setFieldValue('city', value)}
                     stateValue={values.stateProvince}
                     fullWidth
+                    // @ts-ignore
+                    error={touched.city && Boolean(errors.city?.name)}
+                    // @ts-ignore
+                    helperText={touched.city && errors.city?.name}
                   />
                 </Grid>
                 <Grid xs={12} sm={6} md={4} lg={3}>
@@ -403,20 +496,22 @@ const BasicInformationForm: React.FC<any> = () => {
                     }}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    name="password"
-                    label="Password"
-                    type="password"
-                    value={values.password}
-                    onChange={handleChange}
-                    error={touched.password && Boolean(errors.password)}
-                    helperText={touched.password && errors.password}
-                    autoComplete="off"
-                  />
-                </Grid>
+                {!editData && (
+                  <Grid xs={12} sm={6} md={4} lg={3}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="password"
+                      label="Password"
+                      type="password"
+                      value={values.password}
+                      onChange={handleChange}
+                      error={touched.password && Boolean(errors.password)}
+                      helperText={touched.password && errors.password}
+                      autoComplete="off"
+                    />
+                  </Grid>
+                )}
               </Grid>
             </Box>
           </Grid>
@@ -456,7 +551,7 @@ const BasicInformationForm: React.FC<any> = () => {
             textAlign: 'right',
           }}
         >
-          <LoadingButton type="submit" variant="contained" loading={isLoading}>
+          <LoadingButton type="submit" variant="contained" loading={isLoading || isUpdateLoading}>
             Save changes
           </LoadingButton>
         </Stack>
@@ -467,10 +562,22 @@ const BasicInformationForm: React.FC<any> = () => {
 
 const BasicInformation = () => {
   const form = useBoolean();
+  const viewDialog = useBoolean();
+  const [currentAsset, setCurrentAsset] = useState<null | string[]>(null);
+  const [editData, setEditData] = useState<any>(null);
+  const handleClose = () => {
+    form.onFalse();
+    setEditData(null);
+  };
+  const { data: tenants } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllTenantsQuery,
+  });
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Basic Information"
+        description="Manage and create tenant information for schools, including institute details, contact information, and assets like logos and banners."
         links={[{ name: 'Institute Setup' }, { name: 'Basic Information' }]}
         sx={{ px: 1 }}
         action={
@@ -478,32 +585,114 @@ const BasicInformation = () => {
             variant="contained"
             size="small"
             startIcon={form.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            onClick={form.onToggle}
+            onClick={form.value ? handleClose : form.onTrue}
           >
             {form.value ? 'Back' : 'Institute'}
           </Button>
         }
       />
       {form.value ? (
-        <BasicInformationForm />
+        <BasicInformationForm handleClose={handleClose} editData={editData} />
       ) : (
         <CustomizableTable
           tableId="institute-setup"
           columns={[
-            { label: 'Institute Name', id: 'instituteName' },
-            { label: 'Institute Logo', id: 'instituteLogo' },
-            { label: 'Institute Banner', id: 'instituteBanner' },
-            { label: 'Principle Sign', id: 'principleSign' },
-            { label: 'Address', id: 'address' },
-            { label: 'Country', id: 'country' },
-            { label: 'State', id: 'state' },
-            { label: 'City', id: 'city' },
-            { label: 'ZIP/Postal Code', id: 'pincode' },
-            { label: 'Contact Number', id: 'contactNumber' },
-            { label: 'Email Address', id: 'emailAddress' },
-            { label: 'Action', id: 'action', sticky: true },
+            { label: 'Institute Name', id: 'name' },
+            {
+              label: 'Institute Logo',
+              id: 'extraProperties.Logo',
+              render(value, row) {
+                return (
+                  <IconButton
+                    disabled={!value}
+                    onClick={() => {
+                      viewDialog.onTrue();
+                      setCurrentAsset(value);
+                    }}
+                  >
+                    <Iconify
+                      icon="carbon:view-filled"
+                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                    />
+                  </IconButton>
+                );
+              },
+            },
+            {
+              label: 'Institute Banner',
+              id: 'extraProperties.Banner',
+              render(value, row) {
+                return (
+                  <IconButton
+                    disabled={!value}
+                    onClick={() => {
+                      viewDialog.onTrue();
+                      setCurrentAsset(value);
+                    }}
+                  >
+                    <Iconify
+                      icon="carbon:view-filled"
+                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                    />
+                  </IconButton>
+                );
+              },
+            },
+            {
+              label: 'Principle Sign',
+              id: 'extraProperties.PrincipleSign',
+              render(value, row) {
+                return (
+                  <IconButton
+                    disabled={!value}
+                    onClick={() => {
+                      viewDialog.onTrue();
+                      setCurrentAsset(value);
+                    }}
+                  >
+                    <Iconify
+                      icon="carbon:view-filled"
+                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                    />
+                  </IconButton>
+                );
+              },
+            },
+            { label: 'Address', id: 'extraProperties.Address1' },
+            { label: 'Country', id: 'extraProperties.Country.name' },
+            { label: 'State', id: 'extraProperties.State.name' },
+            { label: 'City', id: 'extraProperties.City' },
+            { label: 'ZIP/Postal Code', id: 'extraProperties.PostalCode' },
+            { label: 'Contact Number', id: 'extraProperties.ContactNumber' },
+            {
+              label: 'Action',
+              id: 'action',
+              sticky: true,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    showEditIcon
+                    handleEditClick={() => {
+                      setEditData(row);
+                      form.onTrue();
+                    }}
+                    showThreeDots={false}
+                  />
+                );
+              },
+            },
           ]}
-          data={[]}
+          data={tenants?.items || []}
+        />
+      )}
+      {viewDialog.value && (
+        <ImageSlider
+          images={currentAsset as string[]}
+          onClose={() => {
+            setCurrentAsset(null);
+            viewDialog.onFalse();
+          }}
+          open={viewDialog.value}
         />
       )}
     </Box>
@@ -526,6 +715,8 @@ const BasicInformationAssets = ({ formik, name, title }: any) => {
           accept={{ 'image/*': [] }}
           thumbnail
           value={formik.values[name]}
+          error={formik.touched[name] && formik.errors[name]}
+          helperText={formik.touched[name] && formik.errors[name]}
           onDrop={async (acceptedFiles) => {
             const base64StringArray = await Promise.all(
               acceptedFiles.map(
@@ -539,7 +730,7 @@ const BasicInformationAssets = ({ formik, name, title }: any) => {
                   })
               )
             );
-            formik.setFieldValue(name, base64StringArray);
+            formik.setFieldValue(name, [...formik.values[name], ...base64StringArray]);
           }}
           onRemove={(file) => {}}
           onRemoveAll={() => {}}
@@ -618,5 +809,68 @@ const BasicInformationAssets = ({ formik, name, title }: any) => {
         </Box>
       </CustomDialog>
     </Card>
+  );
+};
+
+interface ImageSliderProps {
+  images: string[];
+  open: boolean;
+  onClose: () => void;
+}
+
+const ImageSlider: React.FC<ImageSliderProps> = ({ images, open, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogContent sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+        <IconButton
+          onClick={handlePrev}
+          sx={{
+            position: 'absolute',
+            left: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: (theme) => theme.palette.grey[500],
+            color: 'white',
+            '&:hover': {
+              background: (theme) => theme.palette.grey[600],
+            },
+          }}
+        >
+          <ArrowBack />
+        </IconButton>
+        <Box
+          component="img"
+          src={images[currentIndex]}
+          alt={`Slide ${currentIndex + 1}`}
+          sx={{ maxHeight: '80vh', maxWidth: '100%', objectFit: 'contain' }}
+        />
+        <IconButton
+          onClick={handleNext}
+          sx={{
+            position: 'absolute',
+            right: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: (theme) => theme.palette.grey[500],
+            color: 'white',
+            '&:hover': {
+              background: (theme) => theme.palette.grey[600],
+            },
+          }}
+        >
+          <ArrowForward />
+        </IconButton>
+      </DialogContent>
+    </Dialog>
   );
 };
