@@ -93,6 +93,7 @@ export interface IInquiryData {
   panNo: string;
   apparId: string;
   remarks: string;
+  onboardingProgressState: number;
 }
 
 export interface ParentBankDetails {

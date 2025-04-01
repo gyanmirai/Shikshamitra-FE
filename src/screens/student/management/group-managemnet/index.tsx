@@ -91,6 +91,7 @@ const GroupManagement = () => {
                 <ThreeDotsActions
                   showEditIcon
                   showDeleteIcon
+                  showThreeDots={false}
                   handleEditClick={() => {
                     setEditData(row as IGroup);
                     dialog.onTrue();
@@ -106,7 +107,11 @@ const GroupManagement = () => {
         ]}
         data={groupData?.items || []}
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Add Group">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={handleClose}
+        title={editData ? 'Update Group' : 'Add Group'}
+      >
         <GroupManagementForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
     </Box>
@@ -178,7 +183,7 @@ const GroupManagementForm = ({
             variant="contained"
             loading={isLoading || isUpdateLoading}
           >
-            Add
+            {editData ? 'Update' : 'Add'}
           </LoadingButton>
         </DialogActions>
       </Stack>

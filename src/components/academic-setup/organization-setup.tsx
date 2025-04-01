@@ -24,6 +24,9 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { getBase64String } from 'src/utils/get-base64-string';
+import { convertBase64Format } from 'src/utils/base64Formate';
+
 import { boardApi } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -36,6 +39,7 @@ import {
 import { Iconify } from '../iconify';
 import ClassSetup from './class-setup';
 import CustomDialog from '../customDialog';
+import UploadButton from '../upload-button';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 
@@ -243,6 +247,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
   const formik = useFormik({
     initialValues: {
       organization: editData ? editData.name : '',
+      banner: editData ? editData?.bannerPicture : null,
     },
     validationSchema: Yup.object().shape({
       organization: Yup.string().required('Organization is required'),
@@ -259,12 +264,14 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           body: {
             name: formik.values.organization,
             educationMediumId: mediumId,
+            bannerPicture: formik.values.banner,
           },
         }).unwrap();
       } else {
         await addOrganization({
           name: formik.values.organization,
           educationMediumId: mediumId,
+          bannerPicture: formik.values.banner,
         }).unwrap();
       }
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
@@ -273,7 +280,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
       console.log(error);
     }
   };
-
+  console.log(formik.values.banner || '');
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <ConfirmDialog
@@ -328,6 +335,33 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           helperText={formik.touched.organization && formik.errors.organization}
           size="small"
         />
+        <UploadButton
+          variant="outlined"
+          onChange={async (e) => {
+            const base64: string = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(e.target.files[0]);
+              reader.onload = () => {
+                resolve(reader.result as string);
+              };
+            });
+            formik.setFieldValue('banner', getBase64String(base64));
+          }}
+        >
+          Upload Banner
+        </UploadButton>
+        {formik.values.banner && (
+          <Box
+            component="img"
+            src={convertBase64Format(formik.values.banner)}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '5px',
+            }}
+          />
+        )}
         <DialogActions sx={{ p: 0 }}>
           <Button variant="outlined" size="small" onClick={handleClose}>
             Cancel

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import React, { useMemo, useState, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -51,9 +52,12 @@ const RegistrationTable = ({
         <MenuList>
           <MenuItem
             onClick={async () => {
-              // if (row.progress < 50) {
-              //   toast.error('Please Complete Registration Form First');
-              // }
+              if (row.percentage < 50) {
+                toast.error('Please Complete Registration Form First');
+                pop.onClose();
+
+                return;
+              }
               confirmMovePopup.onTrue();
               // dialog.onTrue();
               setMoveId(row.id);
@@ -105,6 +109,7 @@ const RegistrationTable = ({
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
+        percentage: (item.onboardingProgressState / 8) * 100,
       })) || [],
     [registrationData?.items]
   );
@@ -203,7 +208,7 @@ const RegistrationTable = ({
 
           // { id: 'EmployeeDesignation', label: 'Role' },
           {
-            id: 'progress',
+            id: 'percentage',
             label: 'Progress',
             filterType: 'number',
             render(value, row) {
@@ -222,7 +227,7 @@ const RegistrationTable = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="body2" component="small" color="text.secondary">
                       {value}%
                     </Typography>
                   </Box>

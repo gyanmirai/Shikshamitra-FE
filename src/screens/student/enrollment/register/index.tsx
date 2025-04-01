@@ -55,6 +55,7 @@ const RegisterScreen = () => {
       <CustomBreadcrumbs
         heading="Registration"
         links={links}
+        description="Registration in School ERP software allows you to manage student enrollment, admissions, and academic records efficiently in one place"
         // sx={{ px: 1, mb: 2 }}
         action={
           <Button

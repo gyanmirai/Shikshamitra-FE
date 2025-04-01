@@ -62,6 +62,7 @@ const StudentReportsScreen = () => {
     <Box sx={{ height: '100%' }}>
       <CustomBreadcrumbs
         heading="Reports"
+        description="Reports provide detailed insights into student enrollment statistics, trends, and registration data to help manage admissions effectively."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -269,7 +270,7 @@ const StudentReportsScreen = () => {
 
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.fromDate && errors.fromDate} fullWidth>
-                      <DatePicker label="From Date" />
+                      <DatePicker label="From Date" slotProps={{ textField: { size: 'small' } }} />
                       {/* <Select
                         name="fromDate"
                         value={values.fromDate}
@@ -288,7 +289,7 @@ const StudentReportsScreen = () => {
 
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.toDate && errors.toDate} fullWidth>
-                      <DatePicker label="To Date" />
+                      <DatePicker label="To Date" slotProps={{ textField: { size: 'small' } }} />
                     </Field>
                   </Grid>
 
