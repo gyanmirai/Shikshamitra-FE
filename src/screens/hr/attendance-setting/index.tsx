@@ -12,24 +12,22 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LeavePolicy from './leave-policy';
-import Notification from './notification';
 import AttendanceRule from './attendance-rule';
 import LateArrivalPolicy from './lateArrivalPolicy';
-import NotificationMethod from './notification-method';
 
 const TABS = [
-  {
-    value: 'notification',
-    label: 'Notification',
-    icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
-    component: () => <Notification />,
-  },
-  {
-    value: 'method',
-    label: 'Notification Method',
-    icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
-    component: () => <NotificationMethod />,
-  },
+  // {
+  //   value: 'notification',
+  //   label: 'Notification',
+  //   icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
+  //   component: () => <Notification />,
+  // },
+  // {
+  //   value: 'method',
+  //   label: 'Notification Method',
+  //   icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
+  //   component: () => <NotificationMethod />,
+  // },
   {
     value: 'rule',
     label: 'Attendance Rule',
@@ -51,7 +49,7 @@ const TABS = [
 ];
 
 const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
   console.log('🚀 ~ file: index.tsx:54 ~ HrAttendanceSettingScreen ~ searchParams:', searchParams);
 
   const currentActiveComponent = useMemo(
@@ -70,6 +68,7 @@ const HrAttendanceSettingScreen = () => {
         heading={currentActiveComponent?.label}
         links={[{ name: 'HR' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
+        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
       />
       <CustomTabs
         value={searchParams.tab}

@@ -160,6 +160,7 @@ const HrEmployee = () => {
                 Employee
               </Button>
             }
+            description="This section displays a list of employees. Click on the View action to access their detailed profile information."
           />
           <Paper sx={{ px: 1, py: 2 }}>
             <CustomizableTable

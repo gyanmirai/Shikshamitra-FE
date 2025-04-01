@@ -5,7 +5,7 @@ import { MuiColorInput } from 'mui-color-input';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -17,6 +17,7 @@ import {
   useUpdateStudentAttendanceTypeMutation,
 } from 'src/redux/student/attendance-type/attendance-type-api';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -128,7 +129,22 @@ const AttendanceType = () => {
           </LoadingButton>
         }
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Attendance Type">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={handleClose}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Attendance Type</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="You can add different attendance types (e.g., Sick, Casual, etc.) and assign a specific color to each for better visibility."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+      >
         <AttendanceTypeForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>

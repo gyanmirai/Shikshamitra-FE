@@ -13,10 +13,12 @@ import {
   Box,
   Grid,
   Button,
+  Tooltip,
   MenuList,
   MenuItem,
   Checkbox,
   TextField,
+  Typography,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -142,7 +144,18 @@ const LateArrivalPolicy = () => {
           leaveRuleDialog.onFalse();
           editData(null);
         }}
-        title="Add Leave Arrival Policy"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Add Leave Arrival Policy</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="In this dialog, you can create a late arrival policy by setting rules for how late arrivals are handled, including permissible time, penalties."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
       >
         <LateArrivalPolicyForm handleClose={handleClose} editData={editData} />
       </CustomDialog>

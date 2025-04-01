@@ -42,6 +42,7 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -63,6 +64,7 @@ const AttendanceTrackingScreen = () => {
         heading="Attendance Tracking"
         links={[{ name: 'HR' }, { name: 'Attendance Tracking' }]}
         sx={{ px: 1, mb: 3 }}
+        description="On the Attendance Tracking screen, you can view the attendance status of all employees or students, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
         <TeacherAttendanceTracking searchParams={searchParams} setSearchParams={setSearchParams} />
@@ -169,18 +171,21 @@ const DateWise = ({
         label: 'Present',
         count: counts.Present || 0,
         color: 'success',
+        icon: <Iconify icon="oui:check-in-circle-empty" />,
       },
       {
         value: EmployeeAttendanceStatus.FullDayLeave,
         label: 'Absent',
         count: counts.Absent || 0,
         color: 'error',
+        icon: <Iconify icon="mdi:cross-circle-outline" />,
       },
       {
         value: EmployeeAttendanceStatus.HalfDayLeave,
         label: 'Half-Day',
         count: counts['Half-Day'] || 0,
         color: 'warning',
+        icon: <Iconify icon="radix-icons:half-2" />,
       },
     ],
     [counts]
@@ -229,6 +234,7 @@ const DateWise = ({
           <Tab
             sx={{ fontSize: '12px' }}
             key={tab.value}
+            icon={tab.icon}
             label={
               <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                 {tab.label}{' '}

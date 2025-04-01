@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -16,6 +16,7 @@ import {
   useDeletePFMutation,
 } from 'src/redux/PF/PFApi';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -119,7 +120,18 @@ const PF = () => {
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}
-        title={editData ? 'Update PF' : 'Create New PF'}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">{editData ? 'Update PF' : 'Create New PF'}</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="In this section, you can create a new Provident Fund (PF) entry by specifying the percentage to be deducted from the employee's salary."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
       >
         <PFForm editData={editData} handleClose={handleClose} />
       </CustomDialog>

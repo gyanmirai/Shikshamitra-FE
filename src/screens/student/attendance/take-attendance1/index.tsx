@@ -154,6 +154,7 @@ const TakeAttendanceScreen = () => {
         heading="Take Attendance"
         links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Take Attendance' }]}
         sx={{ px: 1, mb: 2 }}
+        description="This section allows you to mark attendance for students. You can select the date, and then record the attendance status for each student, such as present, absent."
       />
       <Box display="flex" gap={2} flexWrap="wrap">
         <DatePicker

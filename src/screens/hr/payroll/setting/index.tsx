@@ -45,6 +45,7 @@ const PayrollSettingScreen = () => {
         heading="Setting"
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
+        description="In this section, you can configure payroll settings, including Professional Tax, Provident Fund (PF), and Salary Components to ensure accurate salary processing."
       />
       <Card
         sx={{

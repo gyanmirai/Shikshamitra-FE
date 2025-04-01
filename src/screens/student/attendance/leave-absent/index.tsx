@@ -16,10 +16,12 @@ import {
   Stack,
   Button,
   Avatar,
+  Tooltip,
   Checkbox,
   MenuItem,
   TextField,
   IconButton,
+  Typography,
   Autocomplete,
   DialogActions,
   FormControlLabel,
@@ -29,6 +31,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -103,6 +106,7 @@ const LeaveAndAbsentScreen = () => {
             Add Leave Request
           </Button>
         }
+        description="On this page, you can create new leave requests. All previously created requests are listed below, where you can approve or reject them as needed."
       />
       <CustomizableTable
         onSendNotification={handlerSendNotification}
@@ -209,7 +213,18 @@ const LeaveAndAbsentScreen = () => {
         maxWidth="md"
         open={dialog.value}
         handleClose={dialog.onFalse}
-        title="Leave Request"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Leave Request</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="From here, you can create a leave request by selecting the student and providing the necessary details such as leave dates, reason, and any additional notes."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
       >
         <LeaveRequestForm />
       </CustomDialog>

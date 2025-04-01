@@ -9,6 +9,7 @@ import {
   Box,
   Grid,
   Button,
+  Tooltip,
   MenuList,
   MenuItem,
   TextField,
@@ -104,7 +105,18 @@ const StatutoryTemplate = () => {
       />
       <CustomDialog
         maxWidth="sm"
-        title="Add Statutory Component"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Add Statutory Component</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This section allows you to create and manage statutory templates for compliance with legal requirements. You can configure templates for tax calculations, deductions, benefits, and other statutory obligations as per the applicable laws."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
         handleClose={dialog.onFalse}
         open={dialog.value}
       >

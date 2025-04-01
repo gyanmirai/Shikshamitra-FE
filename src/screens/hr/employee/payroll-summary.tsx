@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, Button, CardHeader, Typography, CardContent } from '@mui/material';
+import { Box, Card, Grid, Alert, Button, CardHeader, Typography, CardContent } from '@mui/material';
 
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
@@ -93,6 +93,21 @@ const PayrollSummary = ({ employee }: any) => {
         </Card>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
+        <Button
+          startIcon={<Iconify icon="ion:email" />}
+          variant="contained"
+          color="warning"
+          sx={{
+            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            color: 'warning.main',
+            '&:hover': {
+              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            },
+          }}
+        >
+          Preview Payslip
+        </Button>
+
         <Button
           startIcon={<Iconify icon="ion:download" />}
           variant="contained"
@@ -196,6 +211,16 @@ const PayrollSummary = ({ employee }: any) => {
               { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
             ]}
           />
+        </Grid>
+
+        <Grid item xs={12} pb="20px">
+          <Alert
+            variant="outlined"
+            icon={false}
+            sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'inherit' }}
+          >
+            Net Salary : {formatCurrency(24000)}
+          </Alert>
         </Grid>
       </Grid>
     </Box>

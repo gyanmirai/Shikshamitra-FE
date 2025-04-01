@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -18,6 +18,7 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -109,7 +110,18 @@ const InquiryPreference = () => {
         ]}
         data={inquiryPreference?.items || []}
       />
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Inquiry Preference">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={handleClose}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Inquiry Preference</Typography>
+            <Tooltip arrow placement="right" title="?.">
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+      >
         <InquiryPreferenceForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>

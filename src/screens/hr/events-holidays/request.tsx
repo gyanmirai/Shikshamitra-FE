@@ -18,6 +18,7 @@ const EventsAndHolidaysRequest = () => (
       heading="Request"
       links={[{ name: 'HR' }, { name: 'Events & Holidays' }, { name: 'Request' }]}
       sx={{ px: 1, mb: 2 }}
+      description="The Request Screen allows you to handle various requests. You can approve or reject requests based on the details provided."
     />
     <CustomizableTable
       tableId="event-holiday-request"

@@ -13,6 +13,7 @@ import {
   Radio,
   Button,
   Switch,
+  Tooltip,
   TextField,
   RadioGroup,
   Typography,
@@ -35,6 +36,7 @@ import {
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -219,7 +221,18 @@ const LeavePolicy = () => {
 
       <CustomDialog
         maxWidth="md"
-        title="Leave Policy"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Leave Policy</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="In this dialog, you can create a leave policy by setting rules for different leave types (e.g., sick, casual), leave entitlements, and approval workflows."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();
