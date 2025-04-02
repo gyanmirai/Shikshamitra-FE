@@ -6,13 +6,14 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Card, Button, TextField, Typography } from '@mui/material';
+import { Box, Card, Grid, Button, TextField, Typography } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 export interface ReceiptBook {
@@ -121,31 +122,43 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
       >
         <Card sx={{ height: '100%', boxShadow: 4, display: 'flex', flexDirection: 'column' }}>
           <Box p={2} display="flex" flexDirection="column" gap={3} flexGrow={1}>
-            <Box display="flex" gap={2}>
-              <TextField
-                size="small"
-                fullWidth
-                name="receiptBookName"
-                label="Receipt Book Name"
-                value={formik.values.receiptBookName}
-                onChange={(e) =>
-                  formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value))
-                }
-                error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
-                helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
-              />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <ShakingTextField
+                  error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
+                >
+                  <TextField
+                    size="small"
+                    fullWidth
+                    name="receiptBookName"
+                    label="Receipt Book Name"
+                    value={formik.values.receiptBookName}
+                    onChange={(e) =>
+                      formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value))
+                    }
+                    error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
+                    helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-              <TextField
-                size="small"
-                fullWidth
-                name="receiptBookCode"
-                label="Receipt Book Code"
-                value={formik.values.receiptBookCode}
-                onChange={formik.handleChange}
-                error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
-                helperText={formik.touched.receiptBookCode && formik.errors.receiptBookCode}
-              />
-            </Box>
+              <Grid item xs={12} sm={6}>
+                <ShakingTextField
+                  error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
+                >
+                  <TextField
+                    size="small"
+                    fullWidth
+                    name="receiptBookCode"
+                    label="Receipt Book Code"
+                    value={formik.values.receiptBookCode}
+                    onChange={formik.handleChange}
+                    error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
+                    helperText={formik.touched.receiptBookCode && formik.errors.receiptBookCode}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </Grid>
           </Box>
 
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>

@@ -56,7 +56,6 @@ const RegisterScreen = () => {
         heading="Registration"
         description="This is the Registration tab, where you can register new students online. For students who are qualified and interested, you can move them directly to Admission. Before proceeding, if you need to schedule an exam, you can do so for the students."
         links={links}
-        description="Registration in School ERP software allows you to manage student enrollment, admissions, and academic records efficiently in one place"
         // sx={{ px: 1, mb: 2 }}
         action={
           <Button

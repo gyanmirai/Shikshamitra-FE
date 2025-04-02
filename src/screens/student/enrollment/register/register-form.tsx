@@ -22,6 +22,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { UploadAvatar } from 'src/components/upload';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -523,24 +524,28 @@ const RegisterForm = ({
                         }}
                       />
                     ) : (
-                      <TextField
-                        key={field.name}
-                        type={field.type}
-                        size="small"
-                        label={field.label}
-                        name={field.name}
-                        placeholder={field.placeholder}
-                        value={formik.values[field.name]}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+                      <ShakingTextField
                         error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                        helperText={formik.touched[field.name] && formik.errors[field.name]}
-                        fullWidth
-                        // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                        {...((typeof field?.otherProps === 'function'
-                          ? field?.otherProps({ formik })
-                          : field?.otherProps) || {})}
-                      />
+                      >
+                        <TextField
+                          key={field.name}
+                          type={field.type}
+                          size="small"
+                          label={field.label}
+                          name={field.name}
+                          placeholder={field.placeholder}
+                          value={formik.values[field.name]}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                          helperText={formik.touched[field.name] && formik.errors[field.name]}
+                          fullWidth
+                          // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                          {...((typeof field?.otherProps === 'function'
+                            ? field?.otherProps({ formik })
+                            : field?.otherProps) || {})}
+                        />
+                      </ShakingTextField>
                     )}
                   </Grid>
                 ))}

@@ -445,7 +445,7 @@ const FeeRefundScreen: React.FC<FeeRefundScreenProps> = ({ fromStudentDetailedVi
               <CustomBreadcrumbs
                 description="This is the Refund Screen, where all created refund requests are displayed. By clicking the Approve action from the table, you can review and make a decision on the refund request. To create a new request, click on the Create Request Button"
                 heading="Fee Refunds"
-                links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
+                links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Refund' }]}
                 sx={{ px: 1, mb: 2 }}
               />
 

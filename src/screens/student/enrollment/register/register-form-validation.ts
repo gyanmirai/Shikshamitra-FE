@@ -21,7 +21,7 @@ const generalFieldValidation = Yup.object({
   motherTongue: Yup.string(),
   nationality: Yup.string(),
   birthPlace: Yup.string(),
-  temporaryGr: Yup.string(),
+
   remarks: Yup.string(),
   mobileNo: Yup.string()
     .test(
@@ -45,6 +45,9 @@ const generalFieldValidation = Yup.object({
   class: Yup.string().required('Class is required'),
   previousSchool: Yup.string(),
   photo: Yup.string(),
+  state: Yup.string().required('State is required'),
+  country: Yup.string().required('Country is required'),
+  temporaryGr: Yup.string().required('Temporary GR is required'),
 });
 
 const familyFieldsValidation = Yup.object({

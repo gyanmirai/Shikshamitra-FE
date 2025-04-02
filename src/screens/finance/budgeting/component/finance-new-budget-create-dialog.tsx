@@ -8,12 +8,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Button, FormControl, FormHelperText } from '@mui/material';
+import { Box, Card, Button } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -158,9 +159,8 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
           >
             <Grid2 container spacing={2}>
               <Grid2 xs={6}>
-                <FormControl
-                  fullWidth
-                  error={Boolean(formik.touched.categoryType && formik.errors.categoryType)}
+                <ShakingTextField
+                  error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
                 >
                   <CustomSelect
                     label="Category Type"
@@ -171,16 +171,18 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                     value={formik.values.categoryType}
                     onChange={(value) => formik.setFieldValue('categoryType', value)}
                     disabled={edit}
+                    error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
+                    helperText={
+                      formik.touched.categoryType && formik.errors.categoryType
+                        ? String(formik.errors.categoryType)
+                        : ''
+                    }
                   />
-                  {formik.touched.categoryType && formik.errors.categoryType && (
-                    <FormHelperText>{String(formik.errors.categoryType)}</FormHelperText>
-                  )}
-                </FormControl>
+                </ShakingTextField>
               </Grid2>
               <Grid2 xs={6}>
-                <FormControl
-                  fullWidth
-                  error={Boolean(formik.touched.categoryName && formik.errors.categoryName)}
+                <ShakingTextField
+                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
                 >
                   <CustomSelect
                     label="Select Category"
@@ -188,30 +190,37 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                     value={formik.values.categoryName}
                     onChange={(value) => formik.setFieldValue('categoryName', value)}
                     disabled={edit}
-                  />
-                  {formik.touched.categoryName && formik.errors.categoryName && (
-                    <FormHelperText>{String(formik.errors.categoryName)}</FormHelperText>
-                  )}
-                </FormControl>
+                    error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
+                    helperText={
+                      formik.touched.categoryName && formik.errors.categoryName
+                        ? String(formik.errors.categoryName)
+                        : ''
+                    }
+                  />{' '}
+                </ShakingTextField>
               </Grid2>
             </Grid2>
 
             <Grid2 container spacing={2}>
               <Grid2 xs={6}>
-                <NumericFormatCustom
-                  size="small"
-                  label="Fund Allocation"
-                  name="fundAllocation"
-                  value={formik.values.fundAllocation}
-                  onChange={formik.handleChange}
-                  fullWidth
+                <ShakingTextField
                   error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
-                  helperText={
-                    formik.touched.fundAllocation && formik.errors.fundAllocation
-                      ? String(formik.errors.fundAllocation)
-                      : ''
-                  }
-                />
+                >
+                  <NumericFormatCustom
+                    size="small"
+                    label="Fund Allocation"
+                    name="fundAllocation"
+                    value={formik.values.fundAllocation}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
+                    helperText={
+                      formik.touched.fundAllocation && formik.errors.fundAllocation
+                        ? String(formik.errors.fundAllocation)
+                        : ''
+                    }
+                  />
+                </ShakingTextField>
               </Grid2>
             </Grid2>
           </Box>

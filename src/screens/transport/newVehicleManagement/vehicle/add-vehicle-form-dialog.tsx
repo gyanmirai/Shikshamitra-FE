@@ -17,6 +17,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 interface VehicleFormDialogProps {
@@ -44,6 +45,8 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
     insurancePolicyNumber: Yup.string().required('Insurance policy number is required'),
     insuranceExpiryDate: Yup.date().required('Insurance expiry date is required'),
     dailyInspectionChecklist: Yup.string().required('Inspection checklist is required'),
+    assignedRoute: Yup.string().required('Assigned route is required'),
+    assignedDriver: Yup.string().required('Assigned driver is required'),
   });
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -60,6 +63,8 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
       insurancePolicyNumber: '',
       insuranceExpiryDate: dayjs(),
       dailyInspectionChecklist: '',
+      assignedRoute: '',
+      assignedDriver: '',
     }),
     []
   );
@@ -110,122 +115,163 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
           <Grid container spacing={2}>
             {/* Vehicle Name */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Vehicle Name"
-                name="vehicleName"
-                value={formik.values.vehicleName}
-                onChange={(e) => {
-                  formik.setFieldValue('vehicleName', capitalizeWords(e.target.value));
-                }}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={formik.touched.vehicleName && Boolean(formik.errors.vehicleName)}
-                // helperText={formik.touched.vehicleName && formik.errors.vehicleName}
-              />
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Vehicle Name"
+                  name="vehicleName"
+                  value={formik.values.vehicleName}
+                  onChange={(e) => {
+                    formik.setFieldValue('vehicleName', capitalizeWords(e.target.value));
+                  }}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.vehicleName && Boolean(formik.errors.vehicleName)}
+                  helperText={formik.touched.vehicleName ? String(formik.errors.vehicleName) : ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Registration Number */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Registration Number"
-                name="registrationNumber"
-                value={formik.values.registrationNumber}
-                onChange={(e) => {
-                  formik.setFieldValue('registrationNumber', e.target.value.toUpperCase());
-                }}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={
                   formik.touched.registrationNumber && Boolean(formik.errors.registrationNumber)
                 }
-                // helperText={formik.touched.registrationNumber && formik.errors.registrationNumber}
-              />
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Registration Number"
+                  name="registrationNumber"
+                  value={formik.values.registrationNumber}
+                  onChange={(e) => {
+                    formik.setFieldValue('registrationNumber', e.target.value.toUpperCase());
+                  }}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.registrationNumber && Boolean(formik.errors.registrationNumber)
+                  }
+                  helperText={
+                    formik.touched.registrationNumber
+                      ? String(formik.errors.registrationNumber)
+                      : ''
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Vehicle Type */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Vehicle Type"
-                name="vehicleType"
-                value={formik.values.vehicleType}
-                onChange={(e) => {
-                  formik.setFieldValue('vehicleType', capitalizeWords(e.target.value));
-                }}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={formik.touched.vehicleType && Boolean(formik.errors.vehicleType)}
-                // helperText={formik.touched.vehicleType && formik.errors.vehicleType}
-              />
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Vehicle Type"
+                  name="vehicleType"
+                  value={formik.values.vehicleType}
+                  onChange={(e) => {
+                    formik.setFieldValue('vehicleType', capitalizeWords(e.target.value));
+                  }}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.vehicleType && Boolean(formik.errors.vehicleType)}
+                  helperText={formik.touched.vehicleType ? String(formik.errors.vehicleType) : ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Fuel Type"
-                name="fuelType"
-                // value={formik.values.insurancePolicyNumber}
-                // onChange={formik.handleChange}
-                // onBlur={formik.handleBlur}
-                // error={formik.touched.insurancePolicyNumber && Boolean(formik.errors.insurancePolicyNumber)}
-                // helperText={formik.touched.insurancePolicyNumber && formik.errors.insurancePolicyNumber}
-              />
+              <ShakingTextField error={formik.touched.fuelType && Boolean(formik.errors.fuelType)}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Fuel Type"
+                  name="fuelType"
+                  value={formik.values.fuelType}
+                  onChange={formik.handleChange}
+                  // onBlur={formik.handleBlur}
+                  error={formik.touched.fuelType && Boolean(formik.errors.fuelType)}
+                  helperText={formik.touched.fuelType ? String(formik.errors.fuelType) : ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Manufacturer */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Manufacturer"
-                name="manufacturer"
-                value={formik.values.manufacturer}
-                onChange={(e) => {
-                  formik.setFieldValue('manufacturer', capitalizeWords(e.target.value));
-                }}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={formik.touched.manufacturer && Boolean(formik.errors.manufacturer)}
-                // helperText={formik.touched.manufacturer && formik.errors.manufacturer}
-              />
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Manufacturer"
+                  name="manufacturer"
+                  value={formik.values.manufacturer}
+                  onChange={(e) => {
+                    formik.setFieldValue('manufacturer', capitalizeWords(e.target.value));
+                  }}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.manufacturer && Boolean(formik.errors.manufacturer)}
+                  helperText={formik.touched.manufacturer ? String(formik.errors.manufacturer) : ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Seating Capacity */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Seating Capacity"
-                name="seatingCapacity"
-                type="number"
-                value={formik.values.seatingCapacity}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={formik.touched.seatingCapacity && Boolean(formik.errors.seatingCapacity)}
-                // helperText={formik.touched.seatingCapacity && formik.errors.seatingCapacity}
-              />
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Seating Capacity"
+                  name="seatingCapacity"
+                  type="number"
+                  value={formik.values.seatingCapacity}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.seatingCapacity && Boolean(formik.errors.seatingCapacity)}
+                  helperText={
+                    formik.touched.seatingCapacity && formik.errors.seatingCapacity
+                      ? String(formik.errors.seatingCapacity)
+                      : ''
+                  }
+                />{' '}
+              </ShakingTextField>
             </Grid>
 
             {/* Insurance Policy Number */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Insurance Policy Number"
-                name="insurancePolicyNumber"
-                value={formik.values.insurancePolicyNumber}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={
                   formik.touched.insurancePolicyNumber &&
                   Boolean(formik.errors.insurancePolicyNumber)
                 }
-                // helperText={
-                //   formik.touched.insurancePolicyNumber && formik.errors.insurancePolicyNumber
-                // }
-              />
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Insurance Policy Number"
+                  name="insurancePolicyNumber"
+                  value={formik.values.insurancePolicyNumber}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.insurancePolicyNumber &&
+                    Boolean(formik.errors.insurancePolicyNumber)
+                  }
+                  helperText={
+                    formik.touched.insurancePolicyNumber
+                      ? String(formik.errors.insurancePolicyNumber)
+                      : ''
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Insurance Expiry Date */}
@@ -278,30 +324,48 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
                             </Grid> */}
 
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <CustomSelect
-                options={[]}
-                label="Assigned Driver"
-                value=""
-                onChange={(e) => {
-                  const value = Math.min(100, Math.max(0, Number(e)));
-                  formik.setFieldValue('discountPercantage', value);
-                }}
-                formControlProps={{ sx: { minWidth: 275 } }}
-                placeholder="No categories available"
-              />
+              <ShakingTextField
+                error={formik.touched.assignedDriver && Boolean(formik.errors.assignedDriver)}
+              >
+                <CustomSelect
+                  options={[
+                    { value: 'sumit', label: 'sumit' },
+                    { value: 'sumit1', label: 'sumit1' },
+                    { value: 'sumit2', label: 'sumit2' },
+                  ]}
+                  label="Assigned Driver"
+                  value={formik.values.assignedDriver}
+                  onChange={formik.handleChange}
+                  formControlProps={{ sx: { minWidth: 275 } }}
+                  placeholder="No categories available"
+                  error={formik.touched.assignedDriver && Boolean(formik.errors.assignedDriver)}
+                  helperText={
+                    formik.touched.assignedDriver ? String(formik.errors.assignedDriver) : ''
+                  }
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
-              <CustomSelect
-                options={[]}
-                label="Assigned Route"
-                value=""
-                onChange={(e) => {
-                  const value = Math.min(100, Math.max(0, Number(e)));
-                  formik.setFieldValue('discountPercantage', value);
-                }}
-                formControlProps={{ sx: { minWidth: 275 } }}
-                placeholder="No categories available"
-              />
+              <ShakingTextField
+                error={formik.touched.assignedRoute && Boolean(formik.errors.assignedRoute)}
+              >
+                <CustomSelect
+                  options={[
+                    { value: 'route1', label: 'route1' },
+                    { value: 'route2', label: 'route2' },
+                    { value: 'route3', label: 'route3' },
+                  ]}
+                  label="Assigned Route"
+                  value={formik.values.assignedRoute}
+                  onChange={formik.handleChange}
+                  formControlProps={{ sx: { minWidth: 275 } }}
+                  placeholder="No categories available"
+                  error={formik.touched.assignedRoute && Boolean(formik.errors.assignedRoute)}
+                  helperText={
+                    formik.touched.assignedRoute ? String(formik.errors.assignedRoute) : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Uploads */}
