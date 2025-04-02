@@ -32,11 +32,11 @@ const RegisterScreen = () => {
   const followUpDialog = useBoolean();
   const links = formDialog.value
     ? [
-        { name: 'Student' },
-        { name: 'Student Enroll' },
-        { name: 'Registration' },
-        { name: 'Registration Form' },
-      ]
+      { name: 'Student' },
+      { name: 'Student Enroll' },
+      { name: 'Registration' },
+      { name: 'Registration Form' },
+    ]
     : [{ name: 'Student' }, { name: 'Student Enroll' }, { name: 'Registration' }];
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
