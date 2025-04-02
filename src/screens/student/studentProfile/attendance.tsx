@@ -75,7 +75,8 @@ const Dot: React.FC<DotProps> = ({
 const Attendance = (props: StudentTabsComponentType) => {
   const [activeButton, setActiveButton] = useState<'monthly' | 'yearly'>('monthly');
   const theme = useTheme();
-
+  const [year, setYear] = useState<string>(dayjs().format('YYYY'));
+  const [month, setMonth] = useState<string>(dayjs().format('MM'));
   return (
     <Box
       sx={{
@@ -131,12 +132,15 @@ const Attendance = (props: StudentTabsComponentType) => {
         <CustomSelect
           label="Year"
           options={[
+            { value: '2025', label: '2025' },
             { value: '2024', label: '2024' },
             { value: '2023', label: '2023' },
             { value: '2022', label: '2022' },
           ]}
-          onChange={() => {}}
-          value=""
+          onChange={(val) => {
+            setMonth(val as string);
+          }}
+          value={year}
           formControlProps={{
             sx: { width: '100%', maxWidth: '200px' },
           }}
@@ -144,12 +148,23 @@ const Attendance = (props: StudentTabsComponentType) => {
         <CustomSelect
           label="Month"
           options={[
-            { value: 'jan', label: 'January' },
-            { value: 'feb', label: 'February' },
-            { value: 'mar', label: 'March' },
+            { value: '01', label: 'January' },
+            { value: '02', label: 'February' },
+            { value: '03', label: 'March' },
+            { value: '04', label: 'April' },
+            { value: '05', label: 'May' },
+            { value: '06', label: 'June' },
+            { value: '07', label: 'July' },
+            { value: '08', label: 'August' },
+            { value: '09', label: 'September' },
+            { value: '10', label: 'October' },
+            { value: '11', label: 'November' },
+            { value: '12', label: 'December' },
           ]}
-          onChange={() => {}}
-          value=""
+          onChange={(val) => {
+            setMonth(val as string);
+          }}
+          value={month}
           formControlProps={{
             sx: { width: '100%', maxWidth: '200px' },
           }}
@@ -285,26 +300,26 @@ const Attendance = (props: StudentTabsComponentType) => {
               slots={{
                 day: (prop: any) => {
                   const { day, today } = prop;
-                  const absent = day.format('DD-MM-YYYY') === '22-07-2024';
+                  console.log('day----', day);
+
+                  const absent = day.format('DD-MM-YYYY') === '01-04-2025';
                   const isSunday = day.day() === 0;
-                  const isHalfDay = day.format('DD-MM-YYYY') === '17-07-2024';
-                  const isHoliday = day.format('DD-MM-YYYY') === '18-07-2024';
+                  const isHalfDay = day.format('DD-MM-YYYY') === '04-04-2025';
+                  const isHoliday = day.format('DD-MM-YYYY') === '03-04-2025';
 
                   const disabled = isSunday || isHoliday || prop.disabled;
                   let toolTipTitle = '';
-                  if (absent) {
-                    toolTipTitle = 'Doctors Appointment';
-                  } else if (isHoliday) {
-                    toolTipTitle = 'Public Holiday';
-                  } else if (isHalfDay) {
-                    toolTipTitle = 'Half Day';
-                  } else if (today) {
-                    toolTipTitle = 'Today date';
-                  }
-
                   let backgroundColor = '';
+
                   if (absent) {
                     backgroundColor = 'error.main';
+                    toolTipTitle = 'Doctors Appointment';
+                  }
+                  if (isHalfDay) {
+                    toolTipTitle = 'Half Day';
+                  }
+                  if (isHoliday) {
+                    toolTipTitle = 'Public Holiday';
                   }
                   return (
                     <Tooltip title={toolTipTitle} arrow placement="top">
