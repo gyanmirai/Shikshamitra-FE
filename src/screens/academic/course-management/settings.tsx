@@ -13,7 +13,8 @@ const Settings = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
       heading="Settings"
-      links={[{ name: 'Academic and Assignment' }, { name: 'Course' }, { name: 'Settings' }]}
+      description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
+      links={[{ name: 'Academic and Assignment' }, { name: 'Syllabus' }, { name: 'Settings' }]}
       sx={{ px: 1, mb: 2 }}
     />
     <Grid container spacing={2}>

@@ -5,6 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import { useFormik } from 'formik';
 import React, { useState, useCallback } from 'react';
 
+import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
@@ -22,6 +23,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -82,6 +84,7 @@ const resourceInitialData: TResourceData[] = [
 const LearningResources = (props: TabComponentType) => {
   const { searchParams } = props;
   const [view, setView] = useState('list');
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
 
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
@@ -90,7 +93,6 @@ const LearningResources = (props: TabComponentType) => {
   const [isEdit, setIsEdit] = useState(false);
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   // const dialog = useBoolean();
-  const [open, setOpen] = useState(false);
   const confirm_dialog = useBoolean();
 
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -130,7 +132,7 @@ const LearningResources = (props: TabComponentType) => {
   const closeDialog = () => {
     setIsEdit(false);
     setSelectedEntry(null);
-    setOpen(false);
+    setParams({ isForm: 'false' });
   };
 
   const handleStatusChange = (id: number, value: string) => {
@@ -167,57 +169,48 @@ const LearningResources = (props: TabComponentType) => {
     []
   );
 
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Academic and Assignment' },
+          { name: 'Syllabus' },
+          { name: 'Learning Resources' },
+          { name: 'Add Learning Resource' },
+        ]
+      : [{ name: 'Academic and Assignment' }, { name: 'Syllabus' }, { name: 'Learning Resources' }];
+
   return (
     <>
-      {/* Breadcrumbs Section */}
-      {open ? (
-        <CustomBreadcrumbs
-          heading="Learning Resources"
-          links={[
-            { name: 'Academic and Assignment' },
-            { name: 'Course' },
-            { name: 'Learning Resources' },
-            { name: 'Add Learning Resource' },
-          ]}
-          sx={{ px: 1, mb: 2 }}
-          action={
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="eva:arrow-back-fill" />}
-              onClick={closeDialog}
-            >
-              Back
-            </Button>
-          }
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Learning Resources"
-          links={[
-            { name: 'Academic and Assignment' },
-            { name: 'Course' },
-            { name: 'Learning Resources' },
-          ]}
-          sx={{ px: 1, mb: 2 }}
-          action={
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={() => {
-                setOpen(true);
-              }}
-              disabled={!classes || !subject}
-            >
-              Resource
-            </Button>
-          }
-        />
-      )}
+      {/* CustomBreadcrumbs component for navigation and page header */}
+      <CustomBreadcrumbs
+        heading="Learning Resources"
+        description={
+          params.isForm === 'true'
+            ? 'Create or update learning resource details, including the title, content, and associated subject. Manage resources efficiently by adding new ones or editing existing entries.'
+            : 'Manage and organize learning resources for each subject efficiently. View the list of resources, add new ones, update existing resources, or remove them as needed.'
+        }
+        links={links}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={
+              params.isForm === 'true'
+                ? closeDialog
+                : () => {
+                    setParams({ isForm: 'true' });
+                  }
+            }
+          >
+            {params.isForm === 'true' ? 'Back' : 'Learning Resources'}
+          </Button>
+        }
+      />
 
       {/* Dialog for Creating/Editing Resource */}
-      {open && (
+      {params.isForm === 'true' ? (
         <Card>
           <CreateNewResource
             onSave={handleSave}
@@ -228,9 +221,7 @@ const LearningResources = (props: TabComponentType) => {
             currentSubject={subject}
           />
         </Card>
-      )}
-
-      {!open && (
+      ) : (
         <>
           {/* Filters Section */}
           <Box display="flex" flexDirection="row" gap={2} mb={2}>
@@ -346,7 +337,7 @@ const LearningResources = (props: TabComponentType) => {
                         handleEditClick={() => {
                           setIsEdit(true);
                           setSelectedEntry(row);
-                          setOpen(true);
+                          setParams({ isForm: true });
                         }}
                       />
                     ),
