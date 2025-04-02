@@ -41,11 +41,11 @@ const RegisterScreen = () => {
   // Dynamic breadcrumb links based on form dialog state
   const links = formDialog.value
     ? [
-        { name: 'Student' },
-        { name: 'Student Enroll' },
-        { name: 'Registration' },
-        { name: 'Registration Form' },
-      ]
+      { name: 'Student' },
+      { name: 'Student Enroll' },
+      { name: 'Registration' },
+      { name: 'Registration Form' },
+    ]
     : [{ name: 'Student' }, { name: 'Student Enroll' }, { name: 'Registration' }];
 
   // Handler for closing the form dialog
