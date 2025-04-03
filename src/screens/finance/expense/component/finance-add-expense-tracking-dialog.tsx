@@ -16,6 +16,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -176,56 +177,74 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
           <Box display="flex" flexDirection="column" gap={2} height="100%" flexGrow={1} p={2}>
             <Grid container spacing={3} pt="10px">
               <Grid item xs={6}>
-                <CustomSelect
-                  label="Expense Category"
-                  options={[]}
-                  value={formik.values.expenseCategory}
-                  onChange={(value) => formik.setFieldValue('expenseCategory', value)}
-                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                  disabled={isEdit}
+                <ShakingTextField
                   error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
-                  helperText={
-                    formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''
-                  }
-                />
+                >
+                  <CustomSelect
+                    label="Expense Category"
+                    options={[]}
+                    value={formik.values.expenseCategory}
+                    onChange={(value) => formik.setFieldValue('expenseCategory', value)}
+                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                    disabled={isEdit}
+                    error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
+                    helperText={
+                      formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''
+                    }
+                  />
+                </ShakingTextField>
               </Grid>
               <Grid item xs={6}>
-                <TextField
-                  name="expenseName"
-                  label="Expense Name"
-                  value={formik.values.expenseName}
-                  onChange={(e) => {
-                    formik.setFieldValue('expenseName', capitalizeWords(e.target.value));
-                  }}
-                  size="small"
-                  fullWidth
+                <ShakingTextField
                   error={formik.touched.expenseName && Boolean(formik.errors.expenseName)}
-                  helperText={formik.touched.expenseName && formik.errors.expenseName}
-                />
+                >
+                  <TextField
+                    name="expenseName"
+                    label="Expense Name"
+                    value={formik.values.expenseName}
+                    onChange={(e) => {
+                      formik.setFieldValue('expenseName', capitalizeWords(e.target.value));
+                    }}
+                    size="small"
+                    fullWidth
+                    error={formik.touched.expenseName && Boolean(formik.errors.expenseName)}
+                    helperText={formik.touched.expenseName && formik.errors.expenseName}
+                  />
+                </ShakingTextField>
               </Grid>
               <Grid item xs={6}>
-                <NumericFormatCustom
-                  size="small"
-                  label="Expense Amount"
-                  name="expenseAmount"
-                  value={formik.values.expenseAmount}
-                  onChange={formik.handleChange}
-                  fullWidth
+                <ShakingTextField
                   error={formik.touched.expenseAmount && Boolean(formik.errors.expenseAmount)}
-                  helperText={formik.touched.expenseAmount && formik.errors.expenseAmount}
-                />
+                >
+                  <NumericFormatCustom
+                    size="small"
+                    label="Expense Amount"
+                    name="expenseAmount"
+                    value={formik.values.expenseAmount}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={formik.touched.expenseAmount && Boolean(formik.errors.expenseAmount)}
+                    helperText={formik.touched.expenseAmount && formik.errors.expenseAmount}
+                  />
+                </ShakingTextField>
               </Grid>
               <Grid item xs={6}>
-                <CustomSelect
-                  label="Payment Method"
-                  options={[]}
-                  value={formik.values.paymentMethod}
-                  onChange={(value) => formik.setFieldValue('paymentMethod', value)}
-                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                  disabled={isEdit}
+                <ShakingTextField
                   error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                  helperText={formik.touched.paymentMethod ? formik.errors.paymentMethod || '' : ''}
-                />
+                >
+                  <CustomSelect
+                    label="Payment Method"
+                    options={[]}
+                    value={formik.values.paymentMethod}
+                    onChange={(value) => formik.setFieldValue('paymentMethod', value)}
+                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                    disabled={isEdit}
+                    error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+                    helperText={
+                      formik.touched.paymentMethod ? formik.errors.paymentMethod || '' : ''
+                    }
+                  />
+                </ShakingTextField>
               </Grid>
 
               <Grid item xs={6}>
@@ -239,7 +258,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 />
               </Grid>
 
-              <Grid item xs={6}>
+              {/* <Grid item xs={6}>
                 <CustomSelect
                   label="Payment Status"
                   options={[]}
@@ -250,7 +269,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                   error={formik.touched.paymentStatus && Boolean(formik.errors.paymentStatus)}
                   helperText={formik.touched.paymentStatus ? formik.errors.paymentStatus || '' : ''}
                 />
-              </Grid>
+              </Grid> */}
 
               <Grid item xs={12}>
                 <TextField

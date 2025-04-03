@@ -16,6 +16,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
@@ -160,59 +161,77 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
             <Box flexGrow={1} p={2}>
               <Grid container spacing={3} pt="10px">
                 <Grid item xs={6}>
-                  <CustomSelect
-                    label="Income Category"
-                    options={[
-                      { label: 'Donation', value: 'Donation' },
-                      { label: 'Fees', value: 'Fees' },
-                    ]}
-                    value={formik.values.incomeSource}
-                    onChange={(value) => formik.setFieldValue('incomeSource', value)}
-                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                    disabled={isEdit}
+                  <ShakingTextField
                     error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
-                    helperText={formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''}
-                  />
+                  >
+                    <CustomSelect
+                      label="Income Category"
+                      options={[
+                        { label: 'Donation', value: 'Donation' },
+                        { label: 'Fees', value: 'Fees' },
+                      ]}
+                      value={formik.values.incomeSource}
+                      onChange={(value) => formik.setFieldValue('incomeSource', value)}
+                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                      disabled={isEdit}
+                      error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
+                      helperText={
+                        formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
+                      }
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid item xs={6}>
-                  <TextField
-                    name="incomeName"
-                    label="Income Name"
-                    value={formik.values.incomeName}
-                    onChange={(e) =>
-                      formik.setFieldValue('incomeName', capitalizeWords(e.target.value))
-                    }
-                    size="small"
-                    fullWidth
+                  <ShakingTextField
                     error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
-                    helperText={formik.touched.incomeName && formik.errors.incomeName}
-                  />
+                  >
+                    <TextField
+                      name="incomeName"
+                      label="Income Name"
+                      value={formik.values.incomeName}
+                      onChange={(e) =>
+                        formik.setFieldValue('incomeName', capitalizeWords(e.target.value))
+                      }
+                      size="small"
+                      fullWidth
+                      error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
+                      helperText={formik.touched.incomeName && formik.errors.incomeName}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid item xs={6}>
-                  <NumericFormatCustom
-                    size="small"
-                    label="Income Amount"
-                    name="incomeAmount"
-                    value={formik.values.incomeAmount}
-                    onChange={formik.handleChange}
-                    fullWidth
+                  <ShakingTextField
                     error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
-                    helperText={formik.touched.incomeAmount && formik.errors.incomeAmount}
-                  />
+                  >
+                    <NumericFormatCustom
+                      size="small"
+                      label="Income Amount"
+                      name="incomeAmount"
+                      value={formik.values.incomeAmount}
+                      onChange={formik.handleChange}
+                      fullWidth
+                      error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
+                      helperText={formik.touched.incomeAmount && formik.errors.incomeAmount}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid item xs={6}>
-                  <CustomSelect
-                    label="Payment Method"
-                    options={[{ label: 'Online', value: 'Online' }]}
-                    value={formik.values.paymentMethod}
-                    onChange={(value) => formik.setFieldValue('paymentMethod', value)}
-                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                    disabled={isEdit}
+                  <ShakingTextField
                     error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                    helperText={
-                      formik.touched.paymentMethod ? formik.errors.paymentMethod || '' : ''
-                    }
-                  />
+                  >
+                    <CustomSelect
+                      label="Payment Method"
+                      options={[{ label: 'Online', value: 'Online' }]}
+                      value={formik.values.paymentMethod}
+                      onChange={(value) => formik.setFieldValue('paymentMethod', value)}
+                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                      disabled={isEdit}
+                      error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+                      helperText={
+                        formik.touched.paymentMethod ? formik.errors.paymentMethod || '' : ''
+                      }
+                    />
+                  </ShakingTextField>
                 </Grid>
 
                 <Grid item xs={6}>
@@ -228,7 +247,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={6}>
+                {/* <Grid item xs={6}>
                   <CustomSelect
                     label="Payment Status"
                     options={[{ label: 'Paid', value: 'Paid' }]}
@@ -241,7 +260,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                       formik.touched.paymentStatus ? formik.errors.paymentStatus || '' : ''
                     }
                   />
-                </Grid>
+                </Grid> */}
 
                 <Grid item xs={12}>
                   <TextField

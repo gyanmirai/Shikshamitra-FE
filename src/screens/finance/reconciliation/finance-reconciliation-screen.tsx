@@ -42,7 +42,7 @@ const FinanceReconciliationScreen = () => {
         heading="Reconciliation"
         description="The Reconciliation tab displays all payments made by cheque. You can also move cheques to Cleared or Bounced by clicking the action button"
         links={[
-          { name: 'Finance' },
+          { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Reconciliation' },
           {
             name:
