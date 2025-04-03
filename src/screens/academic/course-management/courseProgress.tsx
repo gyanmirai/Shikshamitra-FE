@@ -207,11 +207,12 @@ const CourseProgress = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Course Progress"
+        heading="Syllabus Progress"
+        description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
           { name: 'Academic and Assignment' },
-          { name: 'Course Management' },
-          { name: 'Course Progress' },
+          { name: 'Syllabus' },
+          { name: 'Syllabus Progress' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

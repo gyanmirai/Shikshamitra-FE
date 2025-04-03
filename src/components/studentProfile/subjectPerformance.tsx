@@ -12,8 +12,8 @@ interface Subject {
 }
 
 const subjectsProgress: Subject[] = [
-  { id: 1, subjectName: 'Mathematics', progress: 80 },
-  { id: 2, subjectName: 'Science', progress: 65 },
+  { id: 1, subjectName: 'Mathematics', progress: 20 },
+  { id: 2, subjectName: 'Science', progress: 45 },
   { id: 3, subjectName: 'English', progress: 90 },
   { id: 4, subjectName: 'History', progress: 70 },
   { id: 5, subjectName: 'Geography', progress: 60 },
@@ -55,7 +55,11 @@ const SubjectPerformance = () => {
             render(value, row) {
               return (
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress variant="determinate" value={value} />
+                  <CircularProgress
+                    variant="determinate"
+                    value={value}
+                    color={value < 30 ? 'error' : value < 50 ? 'warning' : 'success'}
+                  />
                   <Box
                     sx={{
                       top: 0,
@@ -68,7 +72,7 @@ const SubjectPerformance = () => {
                       justifyContent: 'center',
                     }}
                   >
-                    <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="caption" component="div">
                       {value}%
                     </Typography>
                   </Box>
@@ -94,7 +98,7 @@ const SubjectPerformance = () => {
             id: 1,
             chapterName: 'Introduction to React',
             teacherName: 'John Doe',
-            progress: 75,
+            progress: 25,
             timeLine: '2025-03-08',
           },
           {
@@ -108,7 +112,7 @@ const SubjectPerformance = () => {
             id: 3,
             chapterName: 'Advanced JavaScript',
             teacherName: 'Alice Johnson',
-            progress: 90,
+            progress: 40,
             timeLine: '2025-03-20',
           },
           {
@@ -181,7 +185,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
               value={progress}
               size={50}
               thickness={2}
-              color="success"
+              color={progress < 30 ? 'error' : progress < 50 ? 'warning' : 'success'}
             />
             <Box
               top={0}
