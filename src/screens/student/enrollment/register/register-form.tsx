@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -63,12 +64,7 @@ const RegisterForm = ({
   isComeFromIssueForm?: boolean;
 }) => {
   const [activeStep, setActiveStep] = useState(0);
-
-  // const [addUser] = useQueryAndMutation({
-  //   type: 'mutation',
-  //   currentQueryAndMutation: useAddUserMutation,
-  //   isThrowError: true,
-  // });
+  const router = useRouter();
 
   const [addRegistration] = useQueryAndMutation({
     type: 'mutation',
@@ -114,23 +110,6 @@ const RegisterForm = ({
   const handleGeneralFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
-        // let res = null;
-
-        // if (!values.userId && !editData?.studentBasicDetails?.userId) {
-        //   res = await addUser({
-        //     userName: `${values.firstName}${values.lastName}`,
-        //     name: values.firstName,
-        //     surname: values.lastName,
-        //     email: values.email,
-        //     phoneNumber: values.mobileNo,
-        //     isActive: true,
-        //     lockoutEnabled: true,
-        //     roleNames: [],
-        //     password: 'Test@123',
-        //   }).unwrap();
-
-        //   formik.setFieldValue('userId', res?.id);
-        // }
         if (editData) {
           await updateBasicDetails({
             id: editData?.id || values?.id,
@@ -179,6 +158,7 @@ const RegisterForm = ({
           }).unwrap();
           if (isComeFromIssueForm) {
             await moveToRegistration(editData?.id);
+            router.push('/student/enrollment/registration');
           }
         } else {
           const resp = await addRegistration({
@@ -228,7 +208,7 @@ const RegisterForm = ({
         throw new Error(error);
       }
     },
-    [addRegistration, editData, isComeFromIssueForm, moveToRegistration, updateBasicDetails]
+    [addRegistration, editData, isComeFromIssueForm, moveToRegistration, router, updateBasicDetails]
   );
   const handleFamilyFormSubmit = useCallback(
     async (values: any, formik: any) => {
