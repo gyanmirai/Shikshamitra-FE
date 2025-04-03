@@ -51,6 +51,7 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -59,13 +60,14 @@ import CountryComponent from 'src/components/stardard-address/country-component'
 import WorkExperiences from './work-experiance';
 
 const RenderRole = (props: any) => {
+  // Fetch roles data using custom hook and get loading state
+  // useQueryAndMutation is a wrapper around RTK Query hooks
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
   });
+  // Destructure formik and disabled props from component props
   const { formik, disabled } = props;
-  console.log('role items-----', data);
-  console.log('formik.values.role---', formik.values.role);
 
   return (
     <Autocomplete
@@ -92,10 +94,13 @@ const RenderRole = (props: any) => {
   );
 };
 const RenderOrganization = (props: any) => {
+  // Fetch organizations data using custom hook and get loading state
+  // useQueryAndMutation is a wrapper around RTK Query hooks
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetOrganizationQuery,
   });
+  // Destructure formik and disabled props from component props
   const { formik, disabled } = props;
   return (
     <FormControl
@@ -140,42 +145,55 @@ const RenderOrganization = (props: any) => {
 };
 
 export const RenderDocuments = (props: any) => {
+  // Get employeeId from props
   const { employeeId } = props;
+  // Boolean state for view dialog
   const viewDialog = useBoolean();
+  // State to store document ID
   const [docId, setDocId] = useState<null | string>(null);
 
+  // Mutation hook for uploading new documents
   const [uploadDocument] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUploadDocumentsMutation,
   });
 
+  // Mutation hook for updating existing documents
   const [updateDocument] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeUpdateDocumentMutation,
   });
 
+  // Query hook to fetch all available document types
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDocumentsQuery,
   });
 
+  // Query hook to fetch documents specific to the employee
   const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeDocumentsQuery,
     params: employeeId,
   });
 
+  // Memoized table data that combines document types and employee documents
+  // Maps through all documents and checks if employee has uploaded them
   const tableData = useMemo(
     () =>
       documents?.items?.map((item: any) => ({
         ...item,
+        // Check if document is uploaded by comparing file names
         statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
           ? 'Uploaded'
           : 'Not Uploaded',
+        // Convert document types from enum to readable string
         docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
+        // Set status color based on upload status
         statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
           ? 'success'
           : 'warning',
+        // Store the uploaded document reference if exists
         uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
       })) || [],
     [documents?.items, employeeDocuments]
@@ -273,6 +291,8 @@ export const RenderDocuments = (props: any) => {
 };
 
 const ViewDocuments = ({ employeeId, docId }: { employeeId: string; docId: string | null }) => {
+  // Fetch employee document by employeeId and documentId using RTK Query hook
+  // Returns document data and loading state for displaying in the UI
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeDocumentByIdQuery,
@@ -981,6 +1001,8 @@ function FatherAddressComponent(props: any) {
           formik.setFieldValue('fatherState', null);
           formik.setFieldValue('fatherCountry', value);
         }}
+        error={formik.touched.fatherCountry && Boolean(formik.errors.fatherCountry)}
+        helperText={formik.touched.fatherCountry && formik.errors.fatherCountry}
       />
       {/* <RenderCountry
         onChange={(_e: any, value: any) => {
@@ -995,6 +1017,8 @@ function FatherAddressComponent(props: any) {
           formik.setFieldValue('fatherState', value);
           formik.setFieldValue('fatherCity', null);
         }}
+        error={formik.touched.fatherState && Boolean(formik.errors.fatherState)}
+        helperText={formik.touched.fatherState && formik.errors.fatherState}
       />
       {/* <RenderState
         onChange={(_e: any, value: any) => {
@@ -1008,58 +1032,76 @@ function FatherAddressComponent(props: any) {
           formik.setFieldValue('fatherCity', value);
         }}
         stateValue={formik.values.fatherState}
+        error={formik.touched.fatherCity && Boolean(formik.errors.fatherCity)}
+        helperText={formik.touched.fatherCity && formik.errors.fatherCity}
       />
 
-      <TextField
-        name="fatherPinCode"
-        label="Pincode"
-        value={formik.values.fatherPinCode}
-        onChange={formik.handleChange}
+      <ShakingTextField
         error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
-        helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="fatherAddress1"
-        multiline
-        rows={3}
-        label="Father Address 1"
-        value={formik.values.fatherAddress1}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="fatherPinCode"
+          label="Pincode"
+          value={formik.values.fatherPinCode}
+          onChange={formik.handleChange}
+          error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
+          helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
-        helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="fatherAddress2"
-        multiline
-        rows={3}
-        label="Father Address 2"
-        value={formik.values.fatherAddress2}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="fatherAddress1"
+          multiline
+          rows={3}
+          label="Father Address 1"
+          value={formik.values.fatherAddress1}
+          onChange={formik.handleChange}
+          error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
+          helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
-        helperText={formik.touched.fatherAddress2 && formik.errors.fatherAddress2}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="fatherAddress3"
-        multiline
-        rows={3}
-        label="Father Address 3"
-        value={formik.values.fatherAddress3}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="fatherAddress2"
+          multiline
+          rows={3}
+          label="Father Address 2"
+          value={formik.values.fatherAddress2}
+          onChange={formik.handleChange}
+          error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
+          helperText={formik.touched.fatherAddress2 && formik.errors.fatherAddress2}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
-        helperText={formik.touched.fatherAddress3 && formik.errors.fatherAddress3}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
+      >
+        <TextField
+          name="fatherAddress3"
+          multiline
+          rows={3}
+          label="Father Address 3"
+          value={formik.values.fatherAddress3}
+          onChange={formik.handleChange}
+          error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
+          helperText={formik.touched.fatherAddress3 && formik.errors.fatherAddress3}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
     </Stack>
   );
 }
@@ -1097,6 +1139,8 @@ function MotherAddressComponent(props: any) {
           formik.setFieldValue('motherState', null);
           formik.setFieldValue('motherCountry', value);
         }}
+        error={formik.touched.motherCountry && Boolean(formik.errors.motherCountry)}
+        helperText={formik.touched.motherCountry && formik.errors.motherCountry}
       />
       {/* <RenderCountry
         // value={formik.values.motherCountry}
@@ -1113,6 +1157,8 @@ function MotherAddressComponent(props: any) {
         }}
         value={formik.values.motherState}
         countryValue={formik.values.motherCountry}
+        error={formik.touched.motherState && Boolean(formik.errors.motherState)}
+        helperText={formik.touched.motherState && formik.errors.motherState}
       />
 
       {/* <RenderState
@@ -1129,58 +1175,75 @@ function MotherAddressComponent(props: any) {
         }}
         value={formik.values.motherCity}
         stateValue={formik.values.motherState}
+        error={formik.touched.motherCity && Boolean(formik.errors.motherCity)}
+        helperText={formik.touched.motherCity && formik.errors.motherCity}
       />
-
-      <TextField
-        name="motherPinCode"
-        label="Pincode"
-        value={formik.values.motherPinCode}
-        onChange={formik.handleChange}
+      <ShakingTextField
         error={formik.touched.motherPinCode && Boolean(formik.errors.motherPinCode)}
-        helperText={formik.touched.motherPinCode && formik.errors.motherPinCode}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="motherAddress1"
-        multiline
-        rows={3}
-        label="Mother Address 1"
-        value={formik.values.motherAddress1}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="motherPinCode"
+          label="Pincode"
+          value={formik.values.motherPinCode}
+          onChange={formik.handleChange}
+          error={formik.touched.motherPinCode && Boolean(formik.errors.motherPinCode)}
+          helperText={formik.touched.motherPinCode && formik.errors.motherPinCode}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
-        helperText={formik.touched.motherAddress1 && formik.errors.motherAddress1}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="motherAddress2"
-        multiline
-        rows={3}
-        label="Mother Address 2"
-        value={formik.values.motherAddress2}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="motherAddress1"
+          multiline
+          rows={3}
+          label="Mother Address 1"
+          value={formik.values.motherAddress1}
+          onChange={formik.handleChange}
+          error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
+          helperText={formik.touched.motherAddress1 && formik.errors.motherAddress1}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
-        helperText={formik.touched.motherAddress2 && formik.errors.motherAddress2}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="motherAddress3"
-        multiline
-        rows={3}
-        label="Mother Address 3"
-        value={formik.values.motherAddress3}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="motherAddress2"
+          multiline
+          rows={3}
+          label="Mother Address 2"
+          value={formik.values.motherAddress2}
+          onChange={formik.handleChange}
+          error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
+          helperText={formik.touched.motherAddress2 && formik.errors.motherAddress2}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
-        helperText={formik.touched.motherAddress3 && formik.errors.motherAddress3}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
+      >
+        <TextField
+          name="motherAddress3"
+          multiline
+          rows={3}
+          label="Mother Address 3"
+          value={formik.values.motherAddress3}
+          onChange={formik.handleChange}
+          error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
+          helperText={formik.touched.motherAddress3 && formik.errors.motherAddress3}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
     </Stack>
   );
 }
@@ -1218,6 +1281,8 @@ function SpouseAddressComponent(props: any) {
           formik.setFieldValue('spouseState', null);
           formik.setFieldValue('spouseCountry', value);
         }}
+        error={formik.touched.spouseCountry && Boolean(formik.errors.spouseCountry)}
+        helperText={formik.touched.spouseCountry && formik.errors.spouseCountry}
       />
       {/* <RenderCountry
         onChange={(_e: any, value: any) => {
@@ -1232,6 +1297,8 @@ function SpouseAddressComponent(props: any) {
         }}
         value={formik.values.spouseState}
         countryValue={formik.values.spouseCountry}
+        error={formik.touched.spouseState && Boolean(formik.errors.spouseState)}
+        helperText={formik.touched.spouseState && formik.errors.spouseState}
       />
       {/* <RenderState
         onChange={(_e: any, value: any) => {
@@ -1246,58 +1313,75 @@ function SpouseAddressComponent(props: any) {
         }}
         value={formik.values.spouseCity}
         stateValue={formik.values.spouseState}
+        error={formik.touched.spouseCity && Boolean(formik.errors.spouseCity)}
+        helperText={formik.touched.spouseCity && formik.errors.spouseCity}
       />
-
-      <TextField
-        name="spousePinCode"
-        label="Pincode"
-        value={formik.values.spousePinCode}
-        onChange={formik.handleChange}
+      <ShakingTextField
         error={formik.touched.spousePinCode && Boolean(formik.errors.spousePinCode)}
-        helperText={formik.touched.spousePinCode && formik.errors.spousePinCode}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="spouseAddress1"
-        multiline
-        rows={3}
-        label="Spouse Address 1"
-        value={formik.values.spouseAddress1}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="spousePinCode"
+          label="Pincode"
+          value={formik.values.spousePinCode}
+          onChange={formik.handleChange}
+          error={formik.touched.spousePinCode && Boolean(formik.errors.spousePinCode)}
+          helperText={formik.touched.spousePinCode && formik.errors.spousePinCode}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
-        helperText={formik.touched.spouseAddress1 && formik.errors.spouseAddress1}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="spouseAddress2"
-        multiline
-        rows={3}
-        label="Spouse Address 2"
-        value={formik.values.spouseAddress2}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="spouseAddress1"
+          multiline
+          rows={3}
+          label="Spouse Address 1"
+          value={formik.values.spouseAddress1}
+          onChange={formik.handleChange}
+          error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
+          helperText={formik.touched.spouseAddress1 && formik.errors.spouseAddress1}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
-        helperText={formik.touched.spouseAddress2 && formik.errors.spouseAddress2}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
-      <TextField
-        name="spouseAddress3"
-        multiline
-        rows={3}
-        label="Spouse Address 3"
-        value={formik.values.spouseAddress3}
-        onChange={formik.handleChange}
+      >
+        <TextField
+          name="spouseAddress2"
+          multiline
+          rows={3}
+          label="Spouse Address 2"
+          value={formik.values.spouseAddress2}
+          onChange={formik.handleChange}
+          error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
+          helperText={formik.touched.spouseAddress2 && formik.errors.spouseAddress2}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
-        helperText={formik.touched.spouseAddress3 && formik.errors.spouseAddress3}
-        fullWidth
-        size="small"
-        disabled={!!disabled}
-      />
+      >
+        <TextField
+          name="spouseAddress3"
+          multiline
+          rows={3}
+          label="Spouse Address 3"
+          value={formik.values.spouseAddress3}
+          onChange={formik.handleChange}
+          error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
+          helperText={formik.touched.spouseAddress3 && formik.errors.spouseAddress3}
+          fullWidth
+          size="small"
+          disabled={!!disabled}
+        />
+      </ShakingTextField>
     </Stack>
   );
 }
@@ -1314,20 +1398,25 @@ function RenderFamilyInformation(props: any) {
               Father Details
             </Typography>
             <Stack spacing={2}>
-              <TextField
-                name="fatherName"
-                label="Father Name"
-                value={formik.values.fatherName}
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('fatherName', value);
-                }}
+              <ShakingTextField
                 error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
-                helperText={formik.touched.fatherName && formik.errors.fatherName}
-                fullWidth
-                size="small"
-                disabled={!!disabled}
-              />
+              >
+                <TextField
+                  name="fatherName"
+                  label="Father Name"
+                  value={formik.values.fatherName}
+                  onChange={(e) => {
+                    const value = capitalize(e.target.value);
+                    formik.setFieldValue('fatherName', value);
+                  }}
+                  error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
+                  helperText={formik.touched.fatherName && formik.errors.fatherName}
+                  fullWidth
+                  size="small"
+                  disabled={!!disabled}
+                />
+              </ShakingTextField>
+
               <TextField
                 name="fatherOccupation"
                 label="Father Occupation"
@@ -1342,16 +1431,21 @@ function RenderFamilyInformation(props: any) {
                 size="small"
                 disabled={!!disabled}
               />
-              <PhoneInput
-                name="fatherContactNo"
-                value={formik.values.fatherContactNo}
-                onChange={(value) => {
-                  formik.setFieldValue('fatherContactNo', value);
-                }}
-                placeholder="Enter Father Contact No."
+              <ShakingTextField
                 error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
-                disabled={!!disabled}
-              />
+              >
+                <PhoneInput
+                  name="fatherContactNo"
+                  value={formik.values.fatherContactNo}
+                  onChange={(value) => {
+                    formik.setFieldValue('fatherContactNo', value);
+                  }}
+                  placeholder="Enter Father Contact No."
+                  error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
+                  disabled={!!disabled}
+                />
+              </ShakingTextField>
+
               <FatherAddressComponent formik={formik} disabled={disabled} />
             </Stack>
           </Box>
@@ -1362,20 +1456,24 @@ function RenderFamilyInformation(props: any) {
               Mother Details
             </Typography>
             <Stack spacing={2}>
-              <TextField
-                name="motherName"
-                label="Mother Name"
-                value={formik.values.motherName}
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('motherName', value);
-                }}
+              <ShakingTextField
                 error={formik.touched.motherName && Boolean(formik.errors.motherName)}
-                helperText={formik.touched.motherName && formik.errors.motherName}
-                fullWidth
-                size="small"
-                disabled={!!disabled}
-              />
+              >
+                <TextField
+                  name="motherName"
+                  label="Mother Name"
+                  value={formik.values.motherName}
+                  onChange={(e) => {
+                    const value = capitalize(e.target.value);
+                    formik.setFieldValue('motherName', value);
+                  }}
+                  error={formik.touched.motherName && Boolean(formik.errors.motherName)}
+                  helperText={formik.touched.motherName && formik.errors.motherName}
+                  fullWidth
+                  size="small"
+                  disabled={!!disabled}
+                />
+              </ShakingTextField>
               <TextField
                 name="motherOccupation"
                 label="Mother Occupation"
@@ -1390,16 +1488,20 @@ function RenderFamilyInformation(props: any) {
                 size="small"
                 disabled={!!disabled}
               />
-              <PhoneInput
-                name="motherContactNo"
-                value={formik.values.motherContactNo}
-                onChange={(value) => {
-                  formik.setFieldValue('motherContactNo', value);
-                }}
-                placeholder="Enter Mother Contact No."
+              <ShakingTextField
                 error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
-                disabled={!!disabled}
-              />
+              >
+                <PhoneInput
+                  name="motherContactNo"
+                  value={formik.values.motherContactNo}
+                  onChange={(value) => {
+                    formik.setFieldValue('motherContactNo', value);
+                  }}
+                  placeholder="Enter Mother Contact No."
+                  error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
+                  disabled={!!disabled}
+                />
+              </ShakingTextField>
 
               <MotherAddressComponent formik={formik} disabled={disabled} />
             </Stack>
@@ -1411,20 +1513,24 @@ function RenderFamilyInformation(props: any) {
               Spouse Details
             </Typography>
             <Stack spacing={2}>
-              <TextField
-                name="spouseName"
-                label="Spouse Name"
-                value={formik.values.spouseName}
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('spouseName', value);
-                }}
+              <ShakingTextField
                 error={formik.touched.spouseName && Boolean(formik.errors.spouseName)}
-                helperText={formik.touched.spouseName && formik.errors.spouseName}
-                fullWidth
-                size="small"
-                disabled={!!disabled}
-              />
+              >
+                <TextField
+                  name="spouseName"
+                  label="Spouse Name"
+                  value={formik.values.spouseName}
+                  onChange={(e) => {
+                    const value = capitalize(e.target.value);
+                    formik.setFieldValue('spouseName', value);
+                  }}
+                  error={formik.touched.spouseName && Boolean(formik.errors.spouseName)}
+                  helperText={formik.touched.spouseName && formik.errors.spouseName}
+                  fullWidth
+                  size="small"
+                  disabled={!!disabled}
+                />
+              </ShakingTextField>
               <TextField
                 name="spouseOccupation"
                 label="Spouse Occupation"
@@ -1439,16 +1545,20 @@ function RenderFamilyInformation(props: any) {
                 size="small"
                 disabled={!!disabled}
               />
-              <PhoneInput
-                name="spouseContactNo"
-                value={formik.values.spouseContactNo}
-                onChange={(value) => {
-                  formik.setFieldValue('spouseContactNo', value);
-                }}
-                placeholder="Enter Spouse Contact No."
+              <ShakingTextField
                 error={formik.touched.spouseContactNo && Boolean(formik.errors.spouseContactNo)}
-                disabled={!!disabled}
-              />
+              >
+                <PhoneInput
+                  name="spouseContactNo"
+                  value={formik.values.spouseContactNo}
+                  onChange={(value) => {
+                    formik.setFieldValue('spouseContactNo', value);
+                  }}
+                  placeholder="Enter Spouse Contact No."
+                  error={formik.touched.spouseContactNo && Boolean(formik.errors.spouseContactNo)}
+                  disabled={!!disabled}
+                />
+              </ShakingTextField>
               <SpouseAddressComponent formik={formik} disabled={disabled} />
             </Stack>
           </Box>

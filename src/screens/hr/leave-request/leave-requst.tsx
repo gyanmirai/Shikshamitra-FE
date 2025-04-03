@@ -30,6 +30,7 @@ import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { TabComponentType } from '.';
@@ -78,15 +79,22 @@ interface FormValues {
 }
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
+  // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
+
+  // Modal state for leave request form
   const leaveRequestModal = useBoolean();
+
+  // Mutation hook for changing leave request status
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
 
+  // Get employee data from redux store
   const { employee } = useSelector((state: RootState) => state.auth);
 
+  // Mutation hook for adding new leave request
   const [addLeave, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEmployeeLeaveMutation,
@@ -95,16 +103,20 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       successMessage: 'Leave request added successfully',
     },
   });
+
+  // Query hook to fetch employee leave policy data
   const { data: leavePolicyData, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
 
+  // Configuration for file upload component
   const uploadProps = {
     multiple: true,
     accept: { 'image/*': [] },
   };
 
+  // Handler to remove a single file attachment
   const handleRemoveFile = useCallback(
     (
       inputFile: File | string,
@@ -116,13 +128,13 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     []
   );
 
+  // Handler to remove all file attachments
   const handleRemoveAllFiles = useCallback(
     (values: FormValues, setFieldValue: (field: string, value: any) => void) => {
       setFieldValue('docs', '');
     },
     []
   );
-
   return (
     <Formik
       enableReinitialize
@@ -220,21 +232,23 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             <Scrollbar sx={{ p: 2, height: '30vh' }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <CustomSelect
-                    isLoading={isLeavePolicyLoading}
-                    options={leavePolicyData?.items || []}
-                    label="Leave Type"
-                    value={values.leaveType}
-                    name="leaveType"
-                    valueKey="id"
-                    disabled={editData}
-                    labelKey="leaveType"
-                    error={!!touched.leaveType && !!errors.leaveType}
-                    helperText={(touched.leaveType && errors.leaveType) || ''}
-                    onChange={(value) => {
-                      setFieldValue('leaveType', value);
-                    }}
-                  />
+                  <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
+                    <CustomSelect
+                      isLoading={isLeavePolicyLoading}
+                      options={leavePolicyData?.items || []}
+                      label="Leave Type"
+                      value={values.leaveType}
+                      name="leaveType"
+                      valueKey="id"
+                      disabled={editData}
+                      labelKey="leaveType"
+                      error={!!touched.leaveType && !!errors.leaveType}
+                      helperText={(touched.leaveType && errors.leaveType) || ''}
+                      onChange={(value) => {
+                        setFieldValue('leaveType', value);
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
@@ -256,40 +270,44 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   />
                 </Grid>
                 <Grid item xs={values.isHalfDay ? 12 : 6}>
-                  <DateTimePicker
-                    label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
-                    onChange={(value) => setFieldValue('startDate', value)}
-                    format="DD-MM-YYYY HH:mm:ss"
-                    value={values.startDate}
-                    disabled={editData}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        helperText: touched.startDate && errors.startDate,
-                        error: touched.startDate && Boolean(errors.startDate),
-                      },
-                    }}
-                  />
-                </Grid>
-                {!values.isHalfDay && (
-                  <Grid item xs={6}>
+                  <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DateTimePicker
-                      label="End Date and Time"
-                      onChange={(value) => setFieldValue('endDate', value)}
-                      value={values.endDate}
+                      label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
+                      onChange={(value) => setFieldValue('startDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
+                      value={values.startDate}
                       disabled={editData}
                       slotProps={{
                         textField: {
                           fullWidth: true,
-
                           size: 'small',
-                          helperText: touched.endDate && errors.endDate,
-                          error: touched.endDate && Boolean(errors.endDate),
+                          helperText: touched.startDate && errors.startDate,
+                          error: touched.startDate && Boolean(errors.startDate),
                         },
                       }}
                     />
+                  </ShakingTextField>
+                </Grid>
+                {!values.isHalfDay && (
+                  <Grid item xs={6}>
+                    <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
+                      <DateTimePicker
+                        label="End Date and Time"
+                        onChange={(value) => setFieldValue('endDate', value)}
+                        value={values.endDate}
+                        format="DD-MM-YYYY HH:mm:ss"
+                        disabled={editData}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+
+                            size: 'small',
+                            helperText: touched.endDate && errors.endDate,
+                            error: touched.endDate && Boolean(errors.endDate),
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                 )}
                 {/* <Grid item xs={12}>
@@ -330,22 +348,24 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   />
                 </Grid>
                 <Grid item xs={6}>
-                  <Editor
-                    onChange={(value) => {
-                      setFieldValue('description', value);
-                    }}
-                    value={values.description}
-                    placeholder="Leave description"
-                    error={touched.description && Boolean(errors.description)}
-                    helperText={touched.description && errors.description}
-                    editable={!editData}
-                    sx={{ height: '100%' }}
-                    slotProps={{
-                      wrap: {
-                        height: '100%',
-                      },
-                    }}
-                  />
+                  <ShakingTextField error={touched.description && Boolean(errors.description)}>
+                    <Editor
+                      onChange={(value) => {
+                        setFieldValue('description', value);
+                      }}
+                      value={values.description}
+                      placeholder="Leave description"
+                      error={touched.description && Boolean(errors.description)}
+                      helperText={touched.description && errors.description}
+                      editable={!editData}
+                      sx={{ height: '100%' }}
+                      slotProps={{
+                        wrap: {
+                          height: '100%',
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
 
                 <Grid item xs={12} display="flex" justifyContent="flex-end">

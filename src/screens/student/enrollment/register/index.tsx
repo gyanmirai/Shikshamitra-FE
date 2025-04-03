@@ -24,21 +24,32 @@ import RegistrationTable from './registration-table';
 import type { IInquiryData } from '../Inquiry';
 
 const RegisterScreen = () => {
+  // State to store and manage the selected inquiry data for editing
   const [editData, setEditData] = useState<null | IInquiryData>(null);
+
+  // Custom boolean hook to manage form dialog visibility
   const formDialog = useBoolean();
+
+  // Redux state to track if there are unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  // Custom boolean hooks to manage different dialog states
   const dialog = useBoolean();
   const followUpDialog = useBoolean();
+
+  // Dynamic breadcrumb links based on form dialog state
   const links = formDialog.value
     ? [
-      { name: 'Student' },
-      { name: 'Student Enroll' },
-      { name: 'Registration' },
-      { name: 'Registration Form' },
-    ]
+        { name: 'Student' },
+        { name: 'Student Enroll' },
+        { name: 'Registration' },
+        { name: 'Registration Form' },
+      ]
     : [{ name: 'Student' }, { name: 'Student Enroll' }, { name: 'Registration' }];
 
+  // Handler for closing the form dialog
+  // Checks for unsaved changes and prompts user confirmation if needed
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       formDialog.onFalse();
@@ -49,13 +60,11 @@ const RegisterScreen = () => {
       setEditData(null);
     }
   };
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Registration"
         links={links}
-        description="Registration allows you to manage student enrollment, admissions, and academic records efficiently in one place"
         // sx={{ px: 1, mb: 2 }}
         action={
           <Button

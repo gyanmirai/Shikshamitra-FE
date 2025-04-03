@@ -1,6 +1,9 @@
 import * as Yup from 'yup';
 import { matchIsValidTel } from 'mui-tel-input';
 
+// validation schema for student registration
+// Validates various student-specific information and characteristics
+
 const generalFieldValidation = Yup.object({
   inquiryNo: Yup.string(),
   formNo: Yup.string().required('Form No is required'),
@@ -45,14 +48,14 @@ const generalFieldValidation = Yup.object({
   class: Yup.string().required('Class is required'),
   previousSchool: Yup.string(),
   photo: Yup.string(),
-  state: Yup.string().required('State is required'),
-  country: Yup.string().required('Country is required'),
+  // state: Yup.string().required('State is required'),
+  // country: Yup.string().required('Country is required'),
   temporaryGr: Yup.string().required('Temporary GR is required'),
 });
 
 const familyFieldsValidation = Yup.object({
   fatherName: Yup.string().required('Father name is required'),
-  fatherDob: Yup.string().nullable(),
+  fatherDob: Yup.string().required('Father DOB is required'),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
   fatherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -69,7 +72,7 @@ const familyFieldsValidation = Yup.object({
   fatherAddress: Yup.string(),
 
   motherName: Yup.string().required('Mother name is required'),
-  motherDob: Yup.string().nullable(),
+  motherDob: Yup.string().required('Mother DOB is required'),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
   motherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -85,8 +88,8 @@ const familyFieldsValidation = Yup.object({
   motherRemarks: Yup.string(),
   motherAddress: Yup.string(),
 
-  guardianName: Yup.string(),
-  guardianDob: Yup.string().nullable(),
+  guardianName: Yup.string().required('Guardian name is required'),
+  guardianDob: Yup.string().required('Guardian DOB is required'),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
   guardianContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -180,7 +183,6 @@ const additionalDetailsValidations = Yup.object({
   // sponsorStudent: Yup.boolean(),
   sponsorName: Yup.string(),
 });
-
 const medicalDetailsValidations = Yup.object({
   weight: Yup.number(),
   height: Yup.string(),
@@ -210,6 +212,15 @@ const bankDetailsValidation = Yup.object({
   accountHolderName: Yup.string(),
 });
 
+// Array of validation schemas for different sections of the student registration form
+// Index 0: General fields validation (student basic details)
+// Index 1: Empty object for future use or placeholder
+// Index 2: Family details validation (parent/guardian information)
+// Index 3: Communication details validation (address and contact info)
+// Index 4: Additional details validation (category, RTE, emergency contacts)
+// Index 5: Medical details validation (health and immunization records)
+// Index 6: Previous school details validation (academic history)
+// Index 7: Bank details validation (financial information)
 export const validationSchemas = [
   generalFieldValidation,
   Yup.object({}),

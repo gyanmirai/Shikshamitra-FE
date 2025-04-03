@@ -57,6 +57,7 @@ import { Subheader } from 'src/components/nav-section';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import UploadButton from 'src/components/upload-button';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -75,42 +76,54 @@ export interface FieldsType {
   gridProps?: GridProps;
 }
 export const RenderDocuments = (props: any) => {
+  // Get the student ID from props
   const { id } = props;
+  // Dialog state for viewing documents
   const viewDialog = useBoolean();
+  // State to store the selected document ID
   const [docId, setDocId] = useState<null | string>(null);
 
+  // Mutation hook for uploading new documents
   const [uploadDocument] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUploadDocumentsMutation,
   });
 
+  // Mutation hook for updating existing documents
   const [updateDocument] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useStudentUpdateDocumentMutation,
   });
 
+  // Query hook to fetch all document types
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
   });
 
+  // Query hook to fetch student's uploaded documents using student ID
   const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: id,
   });
 
+  // Memoized table data that combines document types with uploaded documents status
   const tableData = useMemo(
     () =>
       documents?.items?.map((item: any) => ({
         ...item,
+        // Check if document is uploaded by comparing file names
         statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
           ? 'Uploaded'
           : 'Not Uploaded',
+        // Convert document type enum to readable string
         docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
+        // Set status color based on document upload status
         statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
           ? 'success'
           : 'warning',
+        // Store the uploaded document details if found
         uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
       })) || [],
     [documents?.items, employeeDocuments]
@@ -207,6 +220,8 @@ export const RenderDocuments = (props: any) => {
 };
 
 const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
+  // Fetch student document data using the provided student ID and document ID
+  // Returns document content and loading state for rendering
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentByIdQuery,
@@ -229,8 +244,11 @@ const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
 };
 
 const RenderAcademicYear = (props: any) => {
+  // Destructure formik and isEdit from props
   const { formik, isEdit } = props;
+  // Destructure form handling values and methods from formik
   const { values, setFieldValue, touched, errors } = formik;
+  // Fetch academic year data using custom hook, returns data and loading state
   const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
@@ -254,8 +272,11 @@ const RenderAcademicYear = (props: any) => {
 };
 
 const RenderBoard = (props: any) => {
+  // Destructure formik from props
   const { formik } = props;
+  // Destructure form handling values and methods from formik
   const { values, setFieldValue, touched, errors } = formik;
+  // Fetch board data using custom hook, returns data and loading state
   const { data: board, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
@@ -278,8 +299,11 @@ const RenderBoard = (props: any) => {
   );
 };
 const RenderMedium = (props: any) => {
+  // Destructure formik from props
   const { formik } = props;
+  // Destructure form handling values and methods from formik
   const { values, setFieldValue, touched, errors } = formik;
+  // Fetch board data using custom hook, returns data and loading state
   const { data: board, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
@@ -1931,39 +1955,47 @@ function RenderFamilyInformation(props: any) {
               Father Details
             </Typography>
             <Stack spacing={3}>
-              <TextField
-                name="fatherName"
-                label="Father Name"
-                value={formik.values.fatherName}
-                autoFocus
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('fatherName', value);
-                }}
+              <ShakingTextField
                 error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
-                helperText={formik.touched.fatherName && formik.errors.fatherName}
-                fullWidth
-                size="small"
-                disabled={!isEdit}
-              />
-              <DatePicker
-                name="fatherDob"
-                label="Father DOB"
-                value={formik.values.fatherDob}
-                onChange={(value) => {
-                  formik.setFieldValue('fatherDob', value);
-                }}
-                disableFuture
-                disabled={!isEdit}
-                slotProps={{
-                  textField: {
-                    error: formik.touched.fatherDob && Boolean(formik.errors.fatherDob),
-                    helperText: formik.touched.fatherDob && formik.errors.fatherDob,
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              >
+                <TextField
+                  name="fatherName"
+                  label="Father Name"
+                  value={formik.values.fatherName}
+                  autoFocus
+                  onChange={(e) => {
+                    const value = capitalize(e.target.value);
+                    formik.setFieldValue('fatherName', value);
+                  }}
+                  error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
+                  helperText={formik.touched.fatherName && formik.errors.fatherName}
+                  fullWidth
+                  size="small"
+                  disabled={!isEdit}
+                />
+              </ShakingTextField>
+              <ShakingTextField
+                error={formik.touched.fatherDob && Boolean(formik.errors.fatherDob)}
+              >
+                <DatePicker
+                  name="fatherDob"
+                  label="Father DOB"
+                  value={formik.values.fatherDob}
+                  onChange={(value) => {
+                    formik.setFieldValue('fatherDob', value);
+                  }}
+                  disableFuture
+                  disabled={!isEdit}
+                  slotProps={{
+                    textField: {
+                      error: formik.touched.fatherDob && Boolean(formik.errors.fatherDob),
+                      helperText: formik.touched.fatherDob && formik.errors.fatherDob,
+                      fullWidth: true,
+                      size: 'small',
+                    },
+                  }}
+                />
+              </ShakingTextField>
               <TextField
                 name="fatherOccupation"
                 label="Father Occupation"
@@ -2148,38 +2180,46 @@ function RenderFamilyInformation(props: any) {
               Mother Details
             </Typography>
             <Stack spacing={3}>
-              <TextField
-                name="motherName"
-                label="Mother Name"
-                disabled={!isEdit}
-                value={formik.values.motherName}
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('motherName', value);
-                }}
+              <ShakingTextField
                 error={formik.touched.motherName && Boolean(formik.errors.motherName)}
-                helperText={formik.touched.motherName && formik.errors.motherName}
-                fullWidth
-                size="small"
-              />
-              <DatePicker
-                name="motherDob"
-                label="Mother DOB"
-                disabled={!isEdit}
-                value={formik.values.motherDob}
-                onChange={(value) => {
-                  formik.setFieldValue('motherDob', value);
-                }}
-                disableFuture
-                slotProps={{
-                  textField: {
-                    error: formik.touched.motherDob && Boolean(formik.errors.motherDob),
-                    helperText: formik.touched.motherDob && formik.errors.motherDob,
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              >
+                <TextField
+                  name="motherName"
+                  label="Mother Name"
+                  disabled={!isEdit}
+                  value={formik.values.motherName}
+                  onChange={(e) => {
+                    const value = capitalize(e.target.value);
+                    formik.setFieldValue('motherName', value);
+                  }}
+                  error={formik.touched.motherName && Boolean(formik.errors.motherName)}
+                  helperText={formik.touched.motherName && formik.errors.motherName}
+                  fullWidth
+                  size="small"
+                />
+              </ShakingTextField>
+              <ShakingTextField
+                error={formik.touched.motherDob && Boolean(formik.errors.motherDob)}
+              >
+                <DatePicker
+                  name="motherDob"
+                  label="Mother DOB"
+                  disabled={!isEdit}
+                  value={formik.values.motherDob}
+                  onChange={(value) => {
+                    formik.setFieldValue('motherDob', value);
+                  }}
+                  disableFuture
+                  slotProps={{
+                    textField: {
+                      error: formik.touched.motherDob && Boolean(formik.errors.motherDob),
+                      helperText: formik.touched.motherDob && formik.errors.motherDob,
+                      fullWidth: true,
+                      size: 'small',
+                    },
+                  }}
+                />
+              </ShakingTextField>
               <TextField
                 name="motherOccupation"
                 label="Mother Occupation"
@@ -2364,38 +2404,46 @@ function RenderFamilyInformation(props: any) {
               Guardian Details
             </Typography>
             <Stack spacing={3}>
-              <TextField
-                name="guardianName"
-                label="Guardian Name"
-                disabled={!isEdit}
-                value={formik.values.guardianName}
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('guardianName', value);
-                }}
+              <ShakingTextField
                 error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
-                helperText={formik.touched.guardianName && formik.errors.guardianName}
-                fullWidth
-                size="small"
-              />
-              <DatePicker
-                name="guardianDob"
-                label="Guardian DOB"
-                disabled={!isEdit}
-                value={formik.values.guardianDob}
-                onChange={(value) => {
-                  formik.setFieldValue('guardianDob', value);
-                }}
-                disableFuture
-                slotProps={{
-                  textField: {
-                    error: formik.touched.guardianDob && Boolean(formik.errors.guardianDob),
-                    helperText: formik.touched.guardianDob && formik.errors.guardianDob,
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              >
+                <TextField
+                  name="guardianName"
+                  label="Guardian Name"
+                  disabled={!isEdit}
+                  value={formik.values.guardianName}
+                  onChange={(e) => {
+                    const value = capitalize(e.target.value);
+                    formik.setFieldValue('guardianName', value);
+                  }}
+                  error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
+                  helperText={formik.touched.guardianName && formik.errors.guardianName}
+                  fullWidth
+                  size="small"
+                />
+              </ShakingTextField>
+              <ShakingTextField
+                error={formik.touched.guardianDob && Boolean(formik.errors.guardianDob)}
+              >
+                <DatePicker
+                  name="guardianDob"
+                  label="Guardian DOB"
+                  disabled={!isEdit}
+                  value={formik.values.guardianDob}
+                  onChange={(value) => {
+                    formik.setFieldValue('guardianDob', value);
+                  }}
+                  disableFuture
+                  slotProps={{
+                    textField: {
+                      error: formik.touched.guardianDob && Boolean(formik.errors.guardianDob),
+                      helperText: formik.touched.guardianDob && formik.errors.guardianDob,
+                      fullWidth: true,
+                      size: 'small',
+                    },
+                  }}
+                />
+              </ShakingTextField>
               <TextField
                 name="guardianOccupation"
                 label="Guardian Occupation"
@@ -2641,6 +2689,16 @@ function RenderFamilyInformation(props: any) {
   );
 }
 
+// Array containing all form field groups for student registration
+// Each element represents a different section of the registration form:
+// - generalFormFields: Basic student information
+// - documentFields: Required document uploads
+// - familyFields: Parent/guardian information
+// - communicationFields: Contact details
+// - additionalDetailsFields: Extra student information
+// - medicalFields: Health and medical information
+// - previousSchoolFields: Prior education details
+// - bankDetailsFields: Banking information
 export const allFields = [
   generalFormFields,
   documentFields,
