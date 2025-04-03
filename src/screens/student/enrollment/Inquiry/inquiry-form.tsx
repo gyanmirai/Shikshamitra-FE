@@ -1,12 +1,7 @@
-import type { Dayjs } from 'dayjs';
 import type { FastFieldProps } from 'formik';
 import type { Board } from 'src/types/school';
-import type { ICity, IState, ICountry } from 'country-state-city';
 
-import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useDispatch } from 'react-redux';
-import { matchIsValidTel } from 'mui-tel-input';
 import { useMemo, useState, useEffect } from 'react';
 import { isEqual, cloneDeep, capitalize } from 'lodash';
 import { Form, Field, Formik, FastField } from 'formik';
@@ -51,91 +46,31 @@ import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
+import { inquiryInitialValues } from './initialvalues';
+import { inquiryValidationSchema } from './validationSchema';
 import { InquiryPreferenceForm } from '../setting/inquiryPreference';
 
 import type { IInquiryData } from '.';
+import type { IInquiryFormValues } from './type';
 
-const validationSchema = Yup.object().shape({
-  inquiryNumber: Yup.string(),
-  organization: Yup.string(),
-  academicYear: Yup.string().required('Academic Year is required'),
-  class: Yup.string().required('Class is required'),
-  lastName: Yup.string().required('Last name is required'),
-  firstName: Yup.string().required('First name is required'),
-  middleName: Yup.string(),
-  dateOfBirth: Yup.date().required('Date of birth is required'),
-  age: Yup.string().required('Age is required'),
-  dateOfInquiry: Yup.date().required('Date of inquiry is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  gender: Yup.string()
-    // .oneOf(['male', 'female', 'other'], 'Invalid gender')
-    .required('Gender is required'),
-  address: Yup.string(),
-  parentsContactNo: Yup.string()
-    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
-      matchIsValidTel((value || '') as string)
-    )
-    .required('Parents contact number is required'),
-  alternateContactDetails: Yup.string()
-    .test('Mobile NO', 'ContactNo is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
-    )
-    .test(
-      'unique',
-      'Alternate contact number cannot be same as parents contact number',
-      function (value) {
-        return !value || value !== this.parent.parentsContactNo;
-      }
-    ),
-  previousSchool: Yup.string(),
-  inquiryPreferences: Yup.string(),
-  pinCode: Yup.number()
-    .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
-    .required('Pin code is required'),
-  country: Yup.string().required('country is required'),
-  state: Yup.string().required('State is required'),
-  city: Yup.string().required('City is required'),
-
-  board: Yup.string().required('Board is required'),
-  medium: Yup.string().required('Medium is required'),
-});
-
-interface FormikValues {
-  // inquiryNumber: string;
-  // organization: string;
-  academicYear: string;
-  class: string;
-  lastName: string;
-  firstName: string;
-  middleName: string;
-  dateOfBirth: Dayjs | null;
-  age: string | number;
-  dateOfInquiry: Dayjs | null;
-  gender: GenderType;
-  address: string;
-  parentsContactNo: string;
-  alternateContactDetails: string;
-  previousSchool: string;
-  inquiryPreferences: string;
-  country?: Partial<ICountry>;
-  city?: Partial<ICity>;
-  state?: Partial<IState>;
-  pinCode: number;
-  medium: string;
-  formNo: string | undefined;
-  board: string;
-  addressLine1: string;
-  addressLine2: string;
-  addressLine3: string;
-  email: string;
-  village: string;
-}
-
+/**
+ * InquiryForm Component
+ *
+ * This component renders a form for managing student inquiries. It supports both adding new inquiries
+ * and editing existing ones. The form is built using Formik for form state management and validation.
+ *
+ * @param {Object} props - The props for the InquiryForm component.
+ * @param {(e: any, isSubmit?: boolean) => void} props.handleClose - Function to handle closing the form dialog.
+ * @param {IInquiryData | null} props.editData - Data for editing an existing inquiry. If null, the form is for adding a new inquiry.
+ *
+ * @returns {JSX.Element} The rendered InquiryForm component.
+ */
 const InquiryForm = ({
   handleClose,
   editData,
@@ -145,164 +80,162 @@ const InquiryForm = ({
 }) => {
   const dialog = useBoolean();
 
-  const initialValues: FormikValues = useMemo(
-    () => ({
-      medium: editData?.educationMediumId || '',
-      academicYear: editData?.academicYearId || '',
-      class: editData?.standardId || '',
-      lastName: editData?.lastName || '',
-      city: editData ? { name: editData?.city } : undefined,
-      state: editData
-        ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
-        : undefined,
-      pinCode: editData?.pinCode || 0,
-      firstName: editData?.firstName || '',
-      middleName: editData?.middleName || '',
-      dateOfBirth: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
-      age: editData?.dateOfBirth ? calculateAge(dayjs(editData?.dateOfBirth).format()) : '',
-
-      dateOfInquiry: editData?.dateOfInquiry ? dayjs(editData?.dateOfInquiry) : dayjs(new Date()),
-      gender: editData?.genderType || GenderType.Male,
-      address: editData?.address || '',
-      parentsContactNo: editData?.parentContactNumber || '',
-      alternateContactDetails: editData?.alternativeContactNumber || '',
-      previousSchool: editData?.previousSchoolName || '',
-      inquiryPreferences: editData?.inquiryPreferenceId || '',
-      board: editData?.educationBoardId || '',
-      formNo: editData?.formNumber || undefined,
-      country: editData
-        ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-        : undefined,
-      addressLine1: editData?.addressLine1 || '',
-      addressLine2: editData?.addressLine2 || '',
-      addressLine3: editData?.addressLine3 || '',
-      email: editData?.email || '',
-      village: editData?.village || '',
-      // organization: editData?. || '',
-    }),
+  const initialValues: IInquiryFormValues = useMemo(
+    () => inquiryInitialValues(editData),
     [editData]
   );
 
+  /**
+   * Hook to fetch inquiry preference data
+   */
   const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
   });
 
+  /**
+   * Hook to get classes by medium
+   */
   const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
+
+  /**
+   * Hook to fetch academic year data
+   */
   const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
   });
+
+  /**
+   * Hook to fetch board data
+   */
   const { data: board, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
 
+  /**
+   * Hook to add new student inquiry
+   */
   const [addInquiry, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentInquiryMutation,
   });
+
+  /**
+   * Hook to update existing student inquiry
+   */
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentInquiryMutation,
   });
 
+  /**
+   * State to store filtered boards based on academic year
+   */
   const [boards, setBoards] = useState([]);
 
   useEffect(() => {
     if (editData) {
+      // Filter boards based on academic year ID from edit data
       const findBoards = board?.items.filter(
         (item: Board) => item.academicYearId === editData.academicYearId
       );
       setBoards(findBoards);
 
+      // Fetch classes if education medium ID exists in edit data
       if (editData.educationMediumId) {
         getClassByMedium(editData.educationMediumId);
       }
     }
   }, [board?.items, editData, getClassByMedium]);
 
+  /**
+   * Handles form submission for both adding and updating student inquiries
+   * @param values - Form values containing student inquiry details
+   * @param setSubmitting - Function to set form submission state
+   * @returns Promise<void>
+   */
+  const onSubmit = async (values: IInquiryFormValues) => {
+    try {
+      if (editData) {
+        await updateInquiry({
+          id: editData.id,
+          body: {
+            firstName: values.firstName,
+            middleName: values.middleName,
+            lastName: values.lastName,
+            formNumber: values.formNo,
+            previousSchoolName: values.previousSchool,
+            dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
+            // age: values.age,
+            dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
+            genderType: values.gender,
+            parentContactNumber: values.parentsContactNo,
+            alternativeContactNumber: values.alternateContactDetails,
+            city: values?.city?.name,
+            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+            pinCode: values.pinCode,
+            addressLine1: values.addressLine1,
+            addressLine2: values.addressLine2,
+            addressLine3: values.addressLine3,
+            inquiryStatusType: 0,
+            educationMediumId: values.medium,
+            academicYearId: values.academicYear,
+            standardId: values.class,
+            inquiryPreferenceId: values.inquiryPreferences,
+            email: values.email,
+            educationBoardId: values.board,
+            village: values.village,
+          },
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Inquiry updated successfully' });
+      } else {
+        await addInquiry({
+          firstName: values.firstName,
+          middleName: values.middleName,
+          lastName: values.lastName,
+          formNumber: values.formNo,
+          previousSchoolName: values.previousSchool,
+          dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
+          // age: values.age,
+          dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
+          genderType: values.gender,
+          parentContactNumber: values.parentsContactNo,
+          alternativeContactNumber: values.alternateContactDetails,
+          city: values?.city?.name,
+          state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+          country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+          pinCode: values.pinCode,
+          addressLine1: values.addressLine1,
+          addressLine2: values.addressLine2,
+          addressLine3: values.addressLine3,
+          inquiryStatusType: FollowUpStatusType.Pending,
+          educationMediumId: values.medium,
+          academicYearId: values.academicYear,
+          standardId: values.class,
+          inquiryPreferenceId: values.inquiryPreferences,
+          educationBoardId: values.board,
+          email: values.email,
+          village: values.village,
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Inquiry added successfully' });
+      }
+      handleClose(null, true);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
   return (
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <Formik
         initialValues={initialValues}
-        validationSchema={validationSchema}
-        onSubmit={async (
-          values: FormikValues,
-          { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
-        ) => {
-          try {
-            if (editData) {
-              await updateInquiry({
-                id: editData.id,
-                body: {
-                  firstName: values.firstName,
-                  middleName: values.middleName,
-                  lastName: values.lastName,
-                  formNumber: values.formNo,
-                  previousSchoolName: values.previousSchool,
-                  dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
-                  // age: values.age,
-                  dateOfInquiry:
-                    dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
-                  genderType: values.gender,
-                  parentContactNumber: values.parentsContactNo,
-                  alternativeContactNumber: values.alternateContactDetails,
-                  city: values?.city?.name,
-                  state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                  country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                  pinCode: values.pinCode,
-                  addressLine1: values.addressLine1,
-                  addressLine2: values.addressLine2,
-                  addressLine3: values.addressLine3,
-                  inquiryStatusType: 0,
-                  educationMediumId: values.medium,
-                  academicYearId: values.academicYear,
-                  standardId: values.class,
-                  inquiryPreferenceId: values.inquiryPreferences,
-                  email: values.email,
-                  educationBoardId: values.board,
-                  village: values.village,
-                },
-              }).unwrap();
-            } else {
-              await addInquiry({
-                firstName: values.firstName,
-                middleName: values.middleName,
-                lastName: values.lastName,
-                formNumber: values.formNo,
-                previousSchoolName: values.previousSchool,
-                dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
-                // age: values.age,
-                dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
-                genderType: values.gender,
-                parentContactNumber: values.parentsContactNo,
-                alternativeContactNumber: values.alternateContactDetails,
-                city: values?.city?.name,
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                pinCode: values.pinCode,
-                addressLine1: values.addressLine1,
-                addressLine2: values.addressLine2,
-                addressLine3: values.addressLine3,
-                inquiryStatusType: FollowUpStatusType.Pending,
-                educationMediumId: values.medium,
-                academicYearId: values.academicYear,
-                standardId: values.class,
-                inquiryPreferenceId: values.inquiryPreferences,
-                educationBoardId: values.board,
-                email: values.email,
-                village: values.village,
-              }).unwrap();
-            }
-            handleClose(null, true);
-          } catch (error) {
-            console.error('Error:', error);
-          }
-        }}
+        validationSchema={inquiryValidationSchema}
+        onSubmit={onSubmit}
       >
         {({
           errors,
@@ -315,6 +248,7 @@ const InquiryForm = ({
           handleBlur,
         }) => (
           <CheckIsChanges initialValues={initialValues} currentValue={values}>
+            {console.log(errors, 'errors')}
             <Box
               component={Form}
               sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
@@ -733,21 +667,21 @@ const InquiryForm = ({
                           setFieldValue('state', null);
                           setFieldValue('country', value);
                         }}
-                        error={touched.country && Boolean(errors.country)}
-                        helperText={touched.country && errors.country}
+                        error={touched.country && Boolean(errors?.country?.name)}
+                        helperText={(touched.country && errors?.country?.name) || ''}
                       />
                     </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
-                    <ShakingTextField error={!!(touched.state && errors.state) || false}>
+                    <ShakingTextField error={!!(touched.state && errors?.state?.name) || false}>
                       <StateComponent
                         value={values.state}
                         onChange={(_e, value) => {
                           setFieldValue('city', null);
                           setFieldValue('state', value);
                         }}
-                        error={touched.state && Boolean(errors.state)}
-                        helperText={touched.state && errors.state}
+                        error={touched.state && Boolean(errors?.state?.name)}
+                        helperText={touched.state && errors?.state?.name}
                         countryValue={values.country}
                       />
                     </ShakingTextField>
@@ -757,8 +691,8 @@ const InquiryForm = ({
                       <CityComponent
                         value={values.city}
                         onChange={(_e, value) => setFieldValue('city', value)}
-                        error={touched.city && Boolean(errors.city)}
-                        helperText={touched.city && errors.city}
+                        error={touched.city && Boolean(errors?.city?.name)}
+                        helperText={touched.city && errors?.city?.name}
                         stateValue={values.state}
                       />
                     </ShakingTextField>

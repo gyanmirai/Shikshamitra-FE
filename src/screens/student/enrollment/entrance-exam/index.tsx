@@ -211,7 +211,6 @@ const EntranceExamScreen = () => {
       <CustomBreadcrumbs
         description="This is the Entrance Exam tab, where you can manage students appearing for the exam as part of the admission process."
         heading="Entrance Exam"
-        description="Entrance Exam: Schedule and manage entrance exams for student admissions."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Entrance Exam' }]}
         sx={{ px: 1, mb: 2 }}
         action={

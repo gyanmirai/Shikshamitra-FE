@@ -77,7 +77,6 @@ const FollowUpScreen: React.FC = () => {
         description="Follow up with students and parents to ensure their inquiries are addressed promptly and effectively."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Follow Up' }]}
         sx={{ px: 1, mb: 2 }}
-        description="This is the Follow-Up tab, where you can track and follow up with registered students. You can initiate a chat with them using the action button and update their status based on their response or interest."
       />
       <CustomizableTable
         tableId="followUpTable"
