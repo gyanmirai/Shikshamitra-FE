@@ -225,6 +225,7 @@ const Subject = (props: TabComponentType) => {
           { name: 'Curriculum', href: '/academic/curriculum-management' },
           { name: 'Subject' },
         ];
+
   return (
     <Box>
       {/* Custom breadcrumbs component for navigation and page header */}
