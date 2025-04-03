@@ -103,35 +103,45 @@ export const subjectData: TSubjectTable[] = [
 ];
 
 const Subject = (props: TabComponentType) => {
+  // State to manage subject table data and filtered data
   const [subjectTableData, setSubjectTableData] = useState(subjectData);
   const [filteredData, setFilteredData] = useState<TSubjectTable[]>([]);
+
+  // Query hook to fetch class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // URL search parameter state for form visibility
   const [params, setParams] = useSearchParam({ isForm: 'false' });
 
+  // Dialog control states using boolean hooks
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
   const addBulkDialog = useBoolean();
   const [classes, setClasses] = useState('');
 
+  // State for managing selected subject and edit mode
   const [selectedSubject, setSelectedSubject] = useState<TSubjectTable | null>(null);
   const [isEdit, setIsEdit] = useState(false);
 
+  // State to track pending status changes for subjects
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
   } | null>(null);
 
+  // Filter and update subject data based on selected class
   useEffect(() => {
     if (classData?.items?.length) {
+      // Set default class if none selected
       if (!classes) {
         const firstClass = classData.items[0];
         setClasses(firstClass?.id);
       }
+      // Find selected class and filter subjects
       const selectedClass = classData.items.find((c: any) => c.id === classes);
       if (selectedClass) {
         const filtered = subjectTableData.filter((item) => item.className === selectedClass?.name);
@@ -140,17 +150,21 @@ const Subject = (props: TabComponentType) => {
     }
   }, [classData, subjectTableData, classes]);
 
+  // Handle subject status toggle between Publish/Unpublish
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
     confirmPublishDialog.onTrue();
   };
 
+  // Handle form submission for creating/updating subjects
   const handleSubmit = (values: TSubjectTable) => {
     if (isEdit) {
+      // Update existing subject
       setSubjectTableData(
         subjectTableData.map((subject) => (subject.id === values.id ? values : subject))
       );
     } else {
+      // Add new subject
       setSubjectTableData([...subjectTableData, values]);
     }
     setParams({ isForm: 'false' });
@@ -158,11 +172,13 @@ const Subject = (props: TabComponentType) => {
     setSelectedSubject(null);
   };
 
+  // Open dialog to view subject details
   const handleViewSubject = (subject: TSubjectTable) => {
     setSelectedSubject(subject);
     showSubjectDialog.onTrue();
   };
 
+  // Close all dialogs and reset form state
   const handleCloseDialog = () => {
     setParams({ isForm: 'false' });
     deleteConfirmDialog.onFalse();
@@ -171,6 +187,7 @@ const Subject = (props: TabComponentType) => {
     setSelectedSubject(null);
   };
 
+  // Delete selected subject from table
   const handleDelete = () => {
     if (selectedSubject) {
       setSubjectTableData(subjectTableData.filter((subject) => subject.id !== selectedSubject.id));
@@ -179,6 +196,7 @@ const Subject = (props: TabComponentType) => {
     }
   };
 
+  // Confirm and apply status change for subject
   const confirmStatusChange = () => {
     if (pendingStatusChange) {
       const { id, newValue } = pendingStatusChange;
@@ -191,20 +209,26 @@ const Subject = (props: TabComponentType) => {
     confirmPublishDialog.onFalse();
     setPendingStatusChange(null);
   };
-
   const actions = useCallback(({ popover: pop, row }: any) => <> </>, []);
+  // Define breadcrumb navigation links based on whether form is active
   const links =
     params.isForm === 'true'
       ? [
-          { name: 'Academic and Assignment' },
+          // Links when form is open
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
           { name: 'Curriculum', href: '/academic/curriculum-management' },
           { name: 'Subject' },
           { name: 'Subject Form' },
         ]
-      : [{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Subject' }];
-
+      : [
+          // Links when viewing subject list
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Curriculum', href: '/academic/curriculum-management' },
+          { name: 'Subject' },
+        ];
   return (
     <Box>
+      {/* Custom breadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
         heading="Subject"
         description={
@@ -233,8 +257,10 @@ const Subject = (props: TabComponentType) => {
           </Button>
         }
       />
+      {/* Conditional rendering based on form state */}
       {params.isForm === 'true' ? (
         <>
+          {/* Subject form card for creating/editing subjects */}
           <Card>
             <SubjectForm
               onSubmit={handleSubmit}
@@ -243,10 +269,10 @@ const Subject = (props: TabComponentType) => {
               isEdit={isEdit}
             />{' '}
           </Card>
-          {/* </CustomDialog> */}
         </>
       ) : (
         <>
+          {/* Class selection dropdown */}
           <CustomSelect
             label="Class"
             name="class"
@@ -260,11 +286,14 @@ const Subject = (props: TabComponentType) => {
               setClasses(value as string);
             }}
           />
+          {/* Subject table displayed when class is selected */}
           {classes && (
             <CustomizableTable
               tableId="subject-table"
               columns={[
+                // Subject code column
                 { id: 'subjectCode', label: 'Subject Code', minWidth: '180px', align: 'left' },
+                // Subject name column with custom color rendering
                 {
                   id: 'subjectName',
                   label: 'Subject Name',
@@ -278,12 +307,14 @@ const Subject = (props: TabComponentType) => {
                     );
                   },
                 },
+                // Primary teacher column
                 {
                   id: 'primaryTeacher',
                   label: 'Primary Teacher',
                   minWidth: '200px',
                   align: 'left',
                 },
+                // Secondary teacher column with custom rendering for multiple teachers
                 {
                   id: 'secondaryTeacher',
                   label: 'Secondary Teacher',
@@ -292,20 +323,6 @@ const Subject = (props: TabComponentType) => {
                   render: (value) => (
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                       {value.map((audience: string, index: number) => (
-                        // <Chip key={audience} label={audience} size="small" variant="outlined" />
-                        // <Typography
-                        //   component="span"
-                        //   variant="body2"
-                        //   sx={{
-                        //     px: 1.0,
-                        //     py: 0.5,
-                        //     borderRadius: '30px',
-                        //     border: `1px solid black`,
-                        //     fontSize: '0.75rem',
-                        //   }}
-                        // >
-                        //   {audience}
-                        // </Typography>
                         <Typography variant="caption">
                           {audience}
                           {index < value.length - 1 && ' | '}
@@ -314,6 +331,7 @@ const Subject = (props: TabComponentType) => {
                     </Box>
                   ),
                 },
+                // Schedule date column with date formatting
                 {
                   id: 'scheduleDate',
                   label: 'Schedule Date',
@@ -327,8 +345,11 @@ const Subject = (props: TabComponentType) => {
                     </Typography>
                   ),
                 },
+                // Prerequisites column
                 { id: 'prerequisites', label: 'Prerequisites', minWidth: '200px', align: 'left' },
+                // Learning goal column
                 { id: 'learningGoal', label: 'Learning Goal', minWidth: '200px', align: 'left' },
+                // Publish status column with toggle switch
                 {
                   id: 'status',
                   label: 'Publish',
@@ -344,6 +365,7 @@ const Subject = (props: TabComponentType) => {
                     </Box>
                   ),
                 },
+                // Actions column with view, edit, and delete options
                 {
                   id: 'action',
                   label: 'Actions',
@@ -355,7 +377,6 @@ const Subject = (props: TabComponentType) => {
                     const subject = subjectTableData.find((s) => s.id === row.id);
                     return (
                       <ThreeDotsActions
-                        // actions={(prop) => actions({ ...props, row })}
                         placement="right-top"
                         showViewIcon
                         showEditIcon
@@ -386,6 +407,7 @@ const Subject = (props: TabComponentType) => {
         </>
       )}
 
+      {/* Delete confirmation dialog */}
       <CustomDialog
         maxWidth="sm"
         open={deleteConfirmDialog.value}
@@ -405,6 +427,7 @@ const Subject = (props: TabComponentType) => {
         </DialogActions>
       </CustomDialog>
 
+      {/* Publish confirmation dialog */}
       <CustomDialog
         title="Confirm Publication"
         open={confirmPublishDialog.value}
@@ -427,6 +450,7 @@ const Subject = (props: TabComponentType) => {
         </DialogActions>
       </CustomDialog>
 
+      {/* View subject details dialog */}
       <CustomDialog
         title="Subject Details"
         open={showSubjectDialog.value}

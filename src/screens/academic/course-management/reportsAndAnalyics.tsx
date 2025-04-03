@@ -1,5 +1,7 @@
 'use client';
 
+// Import necessary dependencies and types
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -15,6 +17,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+// Initial form values for the report generation form
 const initialValues = {
   report: '',
   className: 'All',
@@ -23,6 +26,7 @@ const initialValues = {
   endDate: null,
 };
 
+// Validation schema for form fields using Yup
 const validationSchema = Yup.object().shape({
   report: Yup.string().required('Report is required'),
   className: Yup.string().required('Class is required'),
@@ -32,11 +36,13 @@ const validationSchema = Yup.object().shape({
 });
 
 const Reports = (props: TabComponentType) => {
+  // Custom hook to fetch class data using RTK Query
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Memoized class options for the dropdown, including 'All' option
   const classOptions = React.useMemo(() => {
     const allOption = { name: 'All', value: 'all' };
     return [allOption, ...(classData?.items || [])];
@@ -46,13 +52,19 @@ const Reports = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[{ name: 'Academic and Assignment' }, { name: 'Course' }, { name: 'Reports' }]}
+        links={[
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
+          { name: 'Reports' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
+      {/* Formik form wrapper for handling form state and validation */}
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={(values, { setSubmitting }) => {
+          // Mock submit handler with timeout
           setTimeout(() => {
             alert(JSON.stringify(values, null, 2));
             setSubmitting(false);
@@ -64,6 +76,7 @@ const Reports = (props: TabComponentType) => {
             <Form>
               <Box sx={{ p: 2 }}>
                 <Grid container spacing={2}>
+                  {/* Report Type Selection */}
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                       <CustomSelect
@@ -90,6 +103,7 @@ const Reports = (props: TabComponentType) => {
                       <FormHelperText>{touched.report && errors.report}</FormHelperText>
                     </Field>
                   </Grid>
+                  {/* Class Selection */}
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.className && errors.className} fullWidth>
                       <CustomSelect
@@ -106,6 +120,7 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
+                  {/* Subject Selection */}
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                       <CustomSelect
@@ -125,6 +140,7 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
+                  {/* Start Date Selection */}
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                       <DatePicker
@@ -139,6 +155,7 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
+                  {/* End Date Selection */}
                   <Grid item xs={12} sm={6} md={4}>
                     <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                       <DatePicker
@@ -152,6 +169,7 @@ const Reports = (props: TabComponentType) => {
                       <FormHelperText>{touched.endDate && errors.endDate}</FormHelperText>
                     </Field>
                   </Grid>
+                  {/* Submit Button */}
                   <Grid item xs={12} justifyContent="flex-end" display="flex">
                     <Button type="submit" variant="contained">
                       Generate Report
