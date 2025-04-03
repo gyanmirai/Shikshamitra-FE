@@ -12,6 +12,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface FinanceReconciliationClearAndBounceChequeDialogProps {
@@ -201,47 +202,62 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                 <Grid2 container spacing={2}>
                   {/* Check Bounce Reason */}
                   <Grid2 xs={6}>
-                    <TextField
-                      size="small"
-                      label="Check Bounce Reason"
-                      name="checkBounceReason"
-                      value={formik.values.checkBounceReason}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      fullWidth
+                    <ShakingTextField
                       error={
                         formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
                       }
-                      helperText={
-                        formik.touched.checkBounceReason &&
-                        (formik.errors.checkBounceReason as string)
-                      }
-                    />
+                    >
+                      <TextField
+                        size="small"
+                        label="Check Bounce Reason"
+                        name="checkBounceReason"
+                        value={formik.values.checkBounceReason}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        fullWidth
+                        error={
+                          formik.touched.checkBounceReason &&
+                          Boolean(formik.errors.checkBounceReason)
+                        }
+                        helperText={
+                          formik.touched.checkBounceReason &&
+                          (formik.errors.checkBounceReason as string)
+                        }
+                      />
+                    </ShakingTextField>
                   </Grid2>
 
                   {/* Bounce Charges */}
                   <Grid2 xs={6}>
-                    <NumericFormatCustom
-                      size="small"
-                      name="checkBounceCharges"
-                      label="Bounce Charges"
-                      value={formik.values.checkBounceCharges}
-                      onChange={formik.handleChange}
-                      fullWidth
+                    <ShakingTextField
                       error={
                         formik.touched.checkBounceCharges &&
                         Boolean(formik.errors.checkBounceCharges)
                       }
-                      helperText={
-                        formik.touched.checkBounceCharges &&
-                        (formik.errors.checkBounceCharges as string)
-                      }
-                    />
+                    >
+                      <NumericFormatCustom
+                        size="small"
+                        name="checkBounceCharges"
+                        label="Bounce Charges"
+                        value={formik.values.checkBounceCharges}
+                        onChange={formik.handleChange}
+                        fullWidth
+                        error={
+                          formik.touched.checkBounceCharges &&
+                          Boolean(formik.errors.checkBounceCharges)
+                        }
+                        helperText={
+                          formik.touched.checkBounceCharges &&
+                          (formik.errors.checkBounceCharges as string)
+                        }
+                      />
+                    </ShakingTextField>
                   </Grid2>
                 </Grid2>
               )}
             </Box>
             <Box pt="17px" />
+
             <TextField
               multiline
               rows={3}

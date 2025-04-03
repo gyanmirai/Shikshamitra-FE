@@ -22,6 +22,7 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { UploadAvatar } from 'src/components/upload';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { allFields } from './employee-form-fields';
@@ -482,7 +483,8 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
-  console.log('formik values---', formik.values);
+  console.log('formik values hiren---', formik.values);
+  console.log('step');
 
   return (
     <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
@@ -555,24 +557,30 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                             }}
                           />
                         ) : (
-                          <TextField
-                            key={field.name}
-                            type={field.type}
-                            size="small"
-                            label={field.label}
-                            name={field.name}
-                            placeholder={field.placeholder}
-                            value={formik.values[field.name]}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                          <ShakingTextField
                             error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                            helperText={formik.touched[field.name] && formik.errors[field.name]}
-                            fullWidth
-                            sx={{ ...(field?.sx || {}) }}
-                            {...((typeof field?.otherProps === 'function'
-                              ? field?.otherProps({ formik })
-                              : field?.otherProps) || {})}
-                          />
+                          >
+                            <TextField
+                              key={field.name}
+                              type={field.type}
+                              size="small"
+                              label={field.label}
+                              name={field.name}
+                              placeholder={field.placeholder}
+                              value={formik.values[field.name]}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              error={
+                                formik.touched[field.name] && Boolean(formik.errors[field.name])
+                              }
+                              helperText={formik.touched[field.name] && formik.errors[field.name]}
+                              fullWidth
+                              sx={{ ...(field?.sx || {}) }}
+                              {...((typeof field?.otherProps === 'function'
+                                ? field?.otherProps({ formik })
+                                : field?.otherProps) || {})}
+                            />
+                          </ShakingTextField>
                         )}
                       </Grid>
                     ))}

@@ -16,6 +16,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -248,104 +249,129 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
 
         <Grid container spacing={3} py="30px">
           <Grid item xs={12} md={6}>
-            <CustomSelect
-              label="Receipt Book"
-              options={[
-                { value: 'cbse', label: 'CBSE' },
-                { value: 'gseb', label: 'GSEB' },
-              ]}
-              value={formik.values.bookRecipt}
-              onChange={(e) => formik.setFieldValue('bookRecipt', e)}
-              disabled={isFieldsDisabled}
+            <ShakingTextField
               error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-            />
+            >
+              <CustomSelect
+                label="Receipt Book"
+                options={[
+                  { value: 'cbse', label: 'CBSE' },
+                  { value: 'gseb', label: 'GSEB' },
+                ]}
+                value={formik.values.bookRecipt}
+                onChange={(e) => formik.setFieldValue('bookRecipt', e)}
+                disabled={isFieldsDisabled}
+                error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
+                helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <CustomSelect
-              label="Applicable Class"
-              options={[
-                { value: '1', label: '1' },
-                { value: '2', label: '2' },
-                { value: '3', label: '3' },
-              ]}
-              value={formik.values.applicableGrade}
-              onChange={(e) => formik.setFieldValue('applicableGrade', e)}
-              disabled={isFieldsDisabled}
+            <ShakingTextField
               error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-            />
+            >
+              <CustomSelect
+                label="Applicable Class"
+                options={[
+                  { value: '1', label: '1' },
+                  { value: '2', label: '2' },
+                  { value: '3', label: '3' },
+                ]}
+                value={formik.values.applicableGrade}
+                onChange={(e) => formik.setFieldValue('applicableGrade', e)}
+                disabled={isFieldsDisabled}
+                error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
+                helperText={
+                  formik.touched.applicableGrade ? formik.errors.applicableGrade : undefined
+                }
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <CustomSelect
-              label="Fee Type"
-              options={[
-                { value: 'tuitionFee', label: 'Tuition Fee' },
-                { value: 'sportsFee', label: 'Sports Fee' },
-                { value: 'transportFee', label: 'Transport Fee' },
-              ]}
-              value={formik.values.feeHead}
-              onChange={(e) => formik.setFieldValue('feeHead', e)}
-              error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
-            />
+            <ShakingTextField error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}>
+              <CustomSelect
+                label="Fee Type"
+                options={[
+                  { value: 'tuitionFee', label: 'Tuition Fee' },
+                  { value: 'sportsFee', label: 'Sports Fee' },
+                  { value: 'transportFee', label: 'Transport Fee' },
+                ]}
+                value={formik.values.feeHead}
+                onChange={(e) => formik.setFieldValue('feeHead', e)}
+                error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
+                helperText={formik.touched.feeHead ? formik.errors.feeHead : undefined}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <NumericFormatCustom
-              size="small"
-              fullWidth
-              label="Gross Fee"
-              name="grossFee"
-              value={formik.values.grossFee}
-              onChange={(e) => {
-                console.log(e.target.value);
-                const grossFees = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
-                const discountAmount = +(
-                  formik.values.discountAmount?.match(/\d/g)?.join('') ?? '0'
-                );
+            <ShakingTextField error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Gross Fee"
+                name="grossFee"
+                value={formik.values.grossFee}
+                onChange={(e) => {
+                  console.log(e.target.value);
+                  const grossFees = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
+                  const discountAmount = +(
+                    formik.values.discountAmount?.match(/\d/g)?.join('') ?? '0'
+                  );
 
-                // Calculate payable fee
-                const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
+                  // Calculate payable fee
+                  const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
 
-                // Set the calculated payable fee
-                formik.setFieldValue('payableFee', payableFee);
-                formik.handleChange(e);
-              }}
-              error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
-              helperText={formik.touched.grossFee && formik.errors.grossFee}
-            />
+                  // Set the calculated payable fee
+                  formik.setFieldValue('payableFee', payableFee);
+                  formik.handleChange(e);
+                }}
+                error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
+                helperText={formik.touched.grossFee && formik.errors.grossFee}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <NumericFormatCustom
-              size="small"
-              fullWidth
-              label="Discount Amount"
-              name="discountAmount"
-              value={formik.values.discountAmount}
-              onChange={(e) => {
-                const discountAmount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
-                const grossFees = +(formik.values.grossFee?.match(/\d/g)?.join('') ?? '0');
-                // Calculate payable fee
-                const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
-
-                // Set the calculated payable fee
-                formik.setFieldValue('payableFee', payableFee);
-                formik.handleChange(e);
-              }}
+            <ShakingTextField
               error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
-              helperText={formik.touched.discountAmount && formik.errors.discountAmount}
-            />
+            >
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Discount Amount"
+                name="discountAmount"
+                value={formik.values.discountAmount}
+                onChange={(e) => {
+                  const discountAmount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
+                  const grossFees = +(formik.values.grossFee?.match(/\d/g)?.join('') ?? '0');
+                  // Calculate payable fee
+                  const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
+
+                  // Set the calculated payable fee
+                  formik.setFieldValue('payableFee', payableFee);
+                  formik.handleChange(e);
+                }}
+                error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
+                helperText={formik.touched.discountAmount && formik.errors.discountAmount}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="Discount Remark"
-              name="discountRemark"
-              value={formik.values.discountRemark}
-              onChange={(e) => {
-                formik.setFieldValue('discountRemark', capitalizeWords(e.target.value));
-              }}
+            <ShakingTextField
               error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
-              helperText={formik.touched.discountRemark && formik.errors.discountRemark}
-            />
+            >
+              <TextField
+                size="small"
+                fullWidth
+                label="Discount Remark"
+                name="discountRemark"
+                value={formik.values.discountRemark}
+                onChange={(e) => {
+                  formik.setFieldValue('discountRemark', capitalizeWords(e.target.value));
+                }}
+                error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
+                helperText={formik.touched.discountRemark && formik.errors.discountRemark}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
@@ -360,49 +386,69 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <CustomSelect
-              multiple
-              label="Payment Method"
-              options={[
-                { value: 'cash', label: 'Cash' },
-                { value: 'check', label: 'Check' },
-              ]}
-              value={formik.values.paymentMethod}
-              onChange={(e) => formik.setFieldValue('paymentMethod', e)}
+            <ShakingTextField
               error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-              // helperText={formik.touched.paymentMethod && formik.errors.paymentMethod}
-            />
+            >
+              <CustomSelect
+                multiple
+                label="Payment Method"
+                options={[
+                  { value: 'cash', label: 'Cash' },
+                  { value: 'check', label: 'Check' },
+                ]}
+                value={formik.values.paymentMethod}
+                onChange={(e) => formik.setFieldValue('paymentMethod', e)}
+                error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+                // helperText={formik.touched.paymentMethod ? formik.errors.paymentMethod : undefined}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <CustomSelect
-              label="Late Fee Charges Type"
-              options={[
-                { value: 'perDay', label: 'Per Day' },
-
-                { value: 'none', label: 'None' },
-              ]}
-              value={formik.values.lateFeeChargesType}
-              onChange={(e) => formik.setFieldValue('lateFeeChargesType', e)}
+            <ShakingTextField
               error={formik.touched.lateFeeChargesType && Boolean(formik.errors.lateFeeChargesType)}
-            />
+            >
+              <CustomSelect
+                label="Late Fee Charges Type"
+                options={[
+                  { value: 'perDay', label: 'Per Day' },
+
+                  { value: 'none', label: 'None' },
+                ]}
+                value={formik.values.lateFeeChargesType}
+                onChange={(e) => formik.setFieldValue('lateFeeChargesType', e)}
+                error={
+                  formik.touched.lateFeeChargesType && Boolean(formik.errors.lateFeeChargesType)
+                }
+                helperText={
+                  formik.touched.lateFeeChargesType ? formik.errors.lateFeeChargesType : undefined
+                }
+              />{' '}
+            </ShakingTextField>
           </Grid>
 
           {formik.values.lateFeeChargesType === 'perDay' && (
             <Grid item xs={12} md={6}>
-              <NumericFormatCustom
-                size="small"
-                fullWidth
-                label="Late Fee Charges Amount"
-                name="lateFeeChargesAmount"
-                value={formik.values.lateFeeChargesAmount}
-                onChange={formik.handleChange}
+              <ShakingTextField
                 error={
                   formik.touched.lateFeeChargesAmount && Boolean(formik.errors.lateFeeChargesAmount)
                 }
-                helperText={
-                  formik.touched.lateFeeChargesAmount && formik.errors.lateFeeChargesAmount
-                }
-              />
+              >
+                <NumericFormatCustom
+                  size="small"
+                  fullWidth
+                  label="Late Fee Charges Amount"
+                  name="lateFeeChargesAmount"
+                  value={formik.values.lateFeeChargesAmount}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.lateFeeChargesAmount &&
+                    Boolean(formik.errors.lateFeeChargesAmount)
+                  }
+                  helperText={
+                    formik.touched.lateFeeChargesAmount && formik.errors.lateFeeChargesAmount
+                  }
+                />
+              </ShakingTextField>
             </Grid>
           )}
           <Grid item xs={12} md={6}>
