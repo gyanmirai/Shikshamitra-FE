@@ -132,6 +132,7 @@ const Teacher = ({
     <Box>
       <CustomBreadcrumbs
         heading="Teacher"
+        description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
         links={[{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Teacher' }]}
         sx={{ px: 1, mb: 2 }}
       />

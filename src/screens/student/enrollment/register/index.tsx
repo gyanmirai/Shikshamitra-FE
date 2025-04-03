@@ -54,8 +54,8 @@ const RegisterScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Registration"
-        description="This is the Registration tab, where you can register new students online. For students who are qualified and interested, you can move them directly to Admission. Before proceeding, if you need to schedule an exam, you can do so for the students."
         links={links}
+        description="Registration allows you to manage student enrollment, admissions, and academic records efficiently in one place"
         // sx={{ px: 1, mb: 2 }}
         action={
           <Button

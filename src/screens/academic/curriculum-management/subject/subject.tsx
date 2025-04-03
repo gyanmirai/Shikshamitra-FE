@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -102,7 +103,6 @@ export const subjectData: TSubjectTable[] = [
 ];
 
 const Subject = (props: TabComponentType) => {
-  const { searchParams, setSearchParams } = props;
   const [subjectTableData, setSubjectTableData] = useState(subjectData);
   const [filteredData, setFilteredData] = useState<TSubjectTable[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -110,7 +110,8 @@ const Subject = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  const [open, setOpen] = useState(false);
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
+
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
@@ -137,7 +138,7 @@ const Subject = (props: TabComponentType) => {
         setFilteredData(filtered);
       }
     }
-  }, [classData, subjectTableData, setSearchParams, classes]);
+  }, [classData, subjectTableData, classes]);
 
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
@@ -152,7 +153,7 @@ const Subject = (props: TabComponentType) => {
     } else {
       setSubjectTableData([...subjectTableData, values]);
     }
-    setOpen(false);
+    setParams({ isForm: 'false' });
     setIsEdit(false);
     setSelectedSubject(null);
   };
@@ -163,7 +164,7 @@ const Subject = (props: TabComponentType) => {
   };
 
   const handleCloseDialog = () => {
-    setOpen(false);
+    setParams({ isForm: 'false' });
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     setIsEdit(false);
@@ -192,31 +193,48 @@ const Subject = (props: TabComponentType) => {
   };
 
   const actions = useCallback(({ popover: pop, row }: any) => <> </>, []);
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Academic and Assignment' },
+          { name: 'Curriculum', href: '/academic/curriculum-management' },
+          { name: 'Subject' },
+          { name: 'Subject Form' },
+        ]
+      : [{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Subject' }];
 
   return (
     <Box>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="Subjects"
-            links={[
-              { name: 'Academic and Assignment' },
-              { name: 'Curriculum' },
-              { name: 'Subject' },
-              { name: 'Subject Form' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={handleCloseDialog}
-              >
-                Back
-              </Button>
+      <CustomBreadcrumbs
+        heading="Subject"
+        description={
+          params.isForm === 'true'
+            ? 'Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries.'
+            : 'Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed.'
+        }
+        links={links}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={
+              params.isForm === 'true'
+                ? handleCloseDialog
+                : () => {
+                    setParams({ isForm: 'true' });
+                    setIsEdit(false);
+                    setSelectedSubject(null);
+                  }
             }
-          />
+          >
+            {params.isForm === 'true' ? 'Back' : 'Subject'}
+          </Button>
+        }
+      />
+      {params.isForm === 'true' ? (
+        <>
           <Card>
             <SubjectForm
               onSubmit={handleSubmit}
@@ -229,30 +247,6 @@ const Subject = (props: TabComponentType) => {
         </>
       ) : (
         <>
-          {' '}
-          <CustomBreadcrumbs
-            heading="Subjects"
-            links={[
-              { name: 'Academic and Assignment' },
-              { name: 'Curriculum' },
-              { name: 'Subject' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                startIcon={<Add />}
-                size="small"
-                variant="contained"
-                onClick={() => {
-                  setOpen(true);
-                  setIsEdit(false);
-                  setSelectedSubject(null);
-                }}
-              >
-                Subject
-              </Button>
-            }
-          />
           <CustomSelect
             label="Class"
             name="class"
@@ -375,7 +369,7 @@ const Subject = (props: TabComponentType) => {
                         handleEditClick={() => {
                           setSelectedSubject(row as any);
                           setIsEdit(true);
-                          setOpen(true);
+                          setParams({ isForm: true });
                         }}
                         handleDeleteClick={() => {
                           setSelectedSubject(row as any);
