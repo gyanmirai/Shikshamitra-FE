@@ -29,6 +29,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -120,7 +121,7 @@ const Subjects = (props: TabComponentType) => {
   const [dialogData, setDialogData] = useState<any>([]);
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -294,66 +295,61 @@ const Subjects = (props: TabComponentType) => {
     []
   );
 
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Academic and Assignment' },
+          { name: 'Syllabus' },
+          { name: 'Syllabus Management' },
+          { name: 'Add Chapter' },
+        ]
+      : [
+          { name: 'Academic and Assignment' },
+          { name: 'Syllabus' },
+          { name: 'Syllabus Management' },
+        ];
+
   return (
     <Box>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="Syllabus Management"
-            links={[
-              { name: 'Academic and Assignment' },
-              { name: 'Course' },
-              { name: 'Syllabus Management' },
-              { name: 'Add Chapter' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Back
-              </Button>
+      <CustomBreadcrumbs
+        heading="Syllabus"
+        description={
+          params.isForm === 'true'
+            ? 'Create or update chapter details, including the title, content, and associated subject. Manage chapters efficiently by adding new ones or editing existing entries.'
+            : 'Manage and organize chapters for each subject efficiently. View the list of chapters, add new ones, update existing chapters, or remove them as needed.'
+        }
+        links={links}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={
+              params.isForm === 'true'
+                ? () => {
+                    setParams({ isForm: 'false' });
+                  }
+                : () => {
+                    setParams({ isForm: 'true' });
+                  }
             }
+          >
+            {params.isForm === 'true' ? 'Back' : 'Subject'}
+          </Button>
+        }
+      />
+      {params.isForm === 'true' ? (
+        <Card>
+          <AddNewChapter
+            onSubmit={handleChapterSubmit}
+            selectedSubject={selectedSubject}
+            initialValues={selectedChapter}
+            isEdit={isEditMode}
           />
-          <Card>
-            <AddNewChapter
-              onSubmit={handleChapterSubmit}
-              selectedSubject={selectedSubject}
-              initialValues={selectedChapter}
-              isEdit={isEditMode}
-            />
-          </Card>
-        </>
+        </Card>
       ) : (
         <>
-          <CustomBreadcrumbs
-            heading="Syllabus Management"
-            links={[
-              { name: 'Academic and Assignment' },
-              { name: 'Course' },
-              { name: 'Syllabus Management' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                startIcon={<Add />}
-                size="small"
-                variant="contained"
-                onClick={() => {
-                  setOpen(true);
-                  // setIsEdit(false);
-                  // setSelectedSubject(null);
-                }}
-              >
-                Chapter
-              </Button>
-            }
-          />
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <CustomSelect
               options={classData?.items || []}
