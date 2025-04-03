@@ -209,7 +209,6 @@ const Subject = (props: TabComponentType) => {
     confirmPublishDialog.onFalse();
     setPendingStatusChange(null);
   };
-
   // Define breadcrumb navigation links based on whether form is active
   const links =
     params.isForm === 'true'
@@ -226,7 +225,6 @@ const Subject = (props: TabComponentType) => {
           { name: 'Curriculum', href: '/academic/curriculum-management' },
           { name: 'Subject' },
         ];
-
   return (
     <Box>
       {/* Custom breadcrumbs component for navigation and page header */}
