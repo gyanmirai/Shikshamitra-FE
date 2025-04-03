@@ -21,28 +21,49 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const AssignTeacher = () => {
+  // Dialog state for assign teacher modal
   const assignTeacherDialog = useBoolean();
+
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  // State for selected class
   const [classes, setClasses] = useState('');
+
+  // State for selected division
   const [division, setDivision] = useState('');
+
+  // State for available division options based on selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  // State to track selected students for notifications
+  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+
+  // Dialog state for sending instant notifications
+  const sendInstantNotificationDialogValue = useBoolean(); // State to track if in edit mode
   const [isEdit, setIsEdit] = useState(false);
 
+  // Update division options and selected division when class data or selected class changes
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
+        // If a class is selected, find the corresponding class data
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+        // Set division options based on selected class
         setDivisionOptions(selectedClass?.divisions || []);
+        // Set first division as default if divisions exist
         if (selectedClass?.divisions?.length) {
           setDivision(selectedClass.divisions[0].id);
         }
       } else {
+        // If no class is selected, use the first class as default
         const firstClass = classData.items[0];
         setClasses(firstClass.id);
+        // Set division options based on first class
         setDivisionOptions(firstClass?.divisions || []);
+        // Set first division as default if divisions exist
         if (firstClass?.divisions?.length) {
           setDivision(firstClass.divisions[0].id);
         }
@@ -50,7 +71,8 @@ const AssignTeacher = () => {
     }
   }, [classData, classes]);
 
-  const [tableData, setTableData] = useState<any>([
+  // Mock data for table display
+  const [tableData, setTableData] = useState([
     {
       className: '1',
       division: 'A',
@@ -73,19 +95,21 @@ const AssignTeacher = () => {
     },
   ]);
 
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
+  // Handler function to show instant notification dialog when triggered
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Assign Teacher"
-        links={[{ name: 'Academic and Assignment' }, { name: 'Assign Teacher' }]}
+        links={[
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Assign Teacher', href: 'academic/assignTeacher' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <CustomSelect

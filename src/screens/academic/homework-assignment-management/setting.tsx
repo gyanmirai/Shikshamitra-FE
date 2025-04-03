@@ -63,18 +63,29 @@ const initialAssignmentType: TType[] = [
 ];
 
 const Setting = (props: TabComponentType) => {
+  // State for managing homework type data - stores array of homework types (Practice, Reading Material, etc.)
   const [homeworkTypeData, setHomeworkTypeData] = useState(initialHomeworkType);
+  // State for managing assignment type data - stores array of assignment types (Research-Based, Practical, etc.)
   const [assignmentTypeData, setAssignmentTypeData] = useState(initialAssignmentType);
 
+  // State for currently selected homework type - stores single homework type object or null when none selected
   const [selectedHomeworkType, setSelectedHomeworkType] = useState<TType | null>(null);
+  // State for currently selected assignment type - stores single assignment type object or null when none selected
   const [selectedAssignmentType, setSelectedAssignmentType] = useState<TType | null>(null);
 
+  // Boolean state to track whether we are in edit mode or create mode
   const [isEdit, setIsEdit] = useState(false);
 
+  // Boolean state to control the visibility of homework type dialog
   const homeworkDialog = useBoolean();
+  // Boolean state to control the visibility of assignment type dialog
   const assignmentDialog = useBoolean();
+  // Boolean state to control the visibility of delete confirmation dialog
   const deleteConfirmDialog = useBoolean();
 
+  /**
+   * Closes all dialogs and resets selected homework/assignment types
+   */
   const handleCloseDialog = () => {
     setSelectedHomeworkType(null);
     setSelectedAssignmentType(null);
@@ -83,6 +94,12 @@ const Setting = (props: TabComponentType) => {
     deleteConfirmDialog.onFalse();
   };
 
+  /**
+   * Handles submission of homework type form
+   * If in edit mode, updates existing homework type
+   * If in create mode, adds new homework type
+   * @param values Form values containing homework type name
+   */
   const handleHomeworkSubmit = (values: any) => {
     if (isEdit && selectedHomeworkType) {
       setHomeworkTypeData((prevActivities) =>
@@ -106,6 +123,12 @@ const Setting = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  /**
+   * Handles submission of assignment type form
+   * If in edit mode, updates existing assignment type
+   * If in create mode, adds new assignment type
+   * @param values Form values containing assignment type name
+   */
   const handleAssignmentSubmit = (values: any) => {
     if (isEdit && selectedAssignmentType) {
       setAssignmentTypeData((prevActivities) =>
@@ -128,14 +151,13 @@ const Setting = (props: TabComponentType) => {
     }
     handleCloseDialog();
   };
-
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Settings"
         links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Homework And Assignment' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
           { name: 'Settings' },
         ]}
         sx={{ px: 1, mb: 2 }}

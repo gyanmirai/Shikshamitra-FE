@@ -18,13 +18,18 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { StudentSubmissions } from './homeworkCreation/homework-creation';
 
 const GradingAndFeedback = (props: TabComponentType) => {
+  // Dialog state for modal/popup control
   const dialog = useBoolean();
   const { searchParams, setSearchParams } = props;
 
+  // Get classId from search params or empty string
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
+  // State for division selection and options
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
+  // States for subject and assignment filters
   const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
   const [assignmentType, setAssignmentType] = useState(
     searchParams?.assignmentType ? searchParams?.assignmentType : ''
@@ -32,14 +37,18 @@ const GradingAndFeedback = (props: TabComponentType) => {
   const [assignmentTitle, setAssignmentTitle] = useState(
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
+
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Effect to handle initial class and division setup
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
+        // If class is selected, set its divisions
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
         setDivisionOptions(selectedClass?.divisions || []);
         // Set first division if available
@@ -47,6 +56,7 @@ const GradingAndFeedback = (props: TabComponentType) => {
           setDivision(selectedClass.divisions[0].id);
         }
       } else {
+        // If no class selected, set first class and its divisions
         const firstClass = classData.items[0];
         setSearchParams?.({
           classId: firstClass.id,
@@ -59,14 +69,14 @@ const GradingAndFeedback = (props: TabComponentType) => {
       }
     }
   }, [classData?.items, classes, setSearchParams]);
-
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Grading And Feedback"
+        description="Grading and feedback allow teachers to evaluate student performance and provide constructive feedback on assignments, quizzes, and exams."
         links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Homework And Assignment' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
           { name: 'Grading And Feedback' },
         ]}
         sx={{ px: 1, mb: 2 }}

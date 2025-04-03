@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -88,109 +89,108 @@ const initialExamData = [
 ];
 
 const ScheduleExam = (props: TabComponentType) => {
+  // State to manage exam data with initial values
   const [examData, setExamData] = useState(initialExamData);
-  const [open, setOpen] = useState(false);
+  // Custom hook to manage URL search parameters - controls form visibility
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
+
+  // Boolean state for dialog control
   const dialog = useBoolean();
 
+  // Dynamic breadcrumb navigation links based on current view (form or list)
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
+          { name: 'Schedule Exam' },
+          { name: 'Exam Form' },
+        ]
+      : [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
+          { name: 'Schedule Exam' },
+        ];
   return (
     <Box>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="Schedule Exam"
-            links={[
-              { name: 'Examination and Assessment' },
-              { name: 'Examination' },
-              { name: 'Schedule Exam' },
-              { name: 'Exam Form' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Back
-              </Button>
+      <CustomBreadcrumbs
+        heading="Schedule Exam"
+        description={
+          params.isForm === 'true'
+            ? 'Create or update exam details, including the exam title, date, duration, and assigned subjects. Easily manage exam schedules and make adjustments as needed.'
+            : 'View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary.'
+        }
+        links={links}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={
+              params.isForm === 'true'
+                ? () => {
+                    setParams({ isForm: 'false' });
+                  }
+                : () => {
+                    setParams({ isForm: 'true' });
+                  }
             }
+          >
+            {params.isForm === 'true' ? 'Back' : 'Scheudle Exam'}
+          </Button>
+        }
+      />
+      {params.isForm === 'true' ? (
+        <Card>
+          <NewExamForm
+            // onSubmit={handleSubmit}
+            onClose={() => {
+              setParams({ isForm: 'false' });
+            }}
           />
-          <Card>
-            <NewExamForm
-              // onSubmit={handleSubmit}
-              onClose={() => {
-                setOpen(false);
-              }}
-            />
-          </Card>
-        </>
+        </Card>
       ) : (
-        <>
-          <CustomBreadcrumbs
-            heading="Schedule Exam"
-            links={[
-              { name: 'Examination and Assessment' },
-              { name: 'Examination' },
-              { name: 'Schedule Exam' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Add />}
-                onClick={() => {
-                  setOpen(true);
-                }}
-              >
-                Exam
-              </Button>
-            }
-          />
-          <CustomizableTable
-            tableId="schedule-exam-table"
-            columns={[
-              { id: 'class', label: 'Class' },
-              { id: 'subjectName', label: 'Subject Name', align: 'left', minWidth: '180px' },
-              { id: 'examType', label: 'Exam Type', align: 'left', minWidth: '180px' },
-              { id: 'examName', label: 'Exam Name', align: 'left', minWidth: '180px' },
-              { id: 'examDate', label: 'Exam Date', align: 'left', minWidth: '180px' },
-              { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '180px' },
-              { id: 'examDuration', label: 'Exam Duration', align: 'left', minWidth: '200px' },
-              { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: '200px' },
-              {
-                id: 'status',
-                label: 'Status',
-                render: (value) => (
-                  <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>
-                ),
+        <CustomizableTable
+          tableId="schedule-exam-table"
+          columns={[
+            { id: 'class', label: 'Class' },
+            { id: 'subjectName', label: 'Subject Name', align: 'left', minWidth: '180px' },
+            { id: 'examType', label: 'Exam Type', align: 'left', minWidth: '180px' },
+            { id: 'examName', label: 'Exam Name', align: 'left', minWidth: '180px' },
+            { id: 'examDate', label: 'Exam Date', align: 'left', minWidth: '180px' },
+            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '180px' },
+            { id: 'examDuration', label: 'Exam Duration', align: 'left', minWidth: '200px' },
+            { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: '200px' },
+            {
+              id: 'status',
+              label: 'Status',
+              render: (value) => (
+                <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Actions',
+              isSort: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    placement="right-top"
+                    showThreeDots={false}
+                    showViewIcon
+                    showDeleteIcon
+                    showEditIcon
+                    handleDeleteClick={() => {}}
+                    handleEditClick={() => {}}
+                    handleViewClick={() => {}}
+                  />
+                );
               },
-              {
-                id: 'action',
-                label: 'Actions',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      showThreeDots={false}
-                      showViewIcon
-                      showDeleteIcon
-                      showEditIcon
-                      handleDeleteClick={() => {}}
-                      handleEditClick={() => {}}
-                      handleViewClick={() => {}}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={[]}
-          />
-        </>
+            },
+          ]}
+          data={[]}
+        />
       )}
     </Box>
   );
@@ -199,12 +199,14 @@ const ScheduleExam = (props: TabComponentType) => {
 export default ScheduleExam;
 
 const SelectExam = ({ formik }: any) => {
+  // Fetch class data using custom hook and handle loading state
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
+  // State to store and manage division options for selected class
+  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={2}>
@@ -313,8 +315,8 @@ const SelectExam = ({ formik }: any) => {
 };
 
 const ExamDetails = ({ formik }: any) => {
+  // State to track exam schedules for subjects - currently not being used
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
-  console.log('examSchedules----', examSchedules);
 
   return (
     <CustomizableTable
@@ -386,6 +388,7 @@ const ExamDetails = ({ formik }: any) => {
 };
 
 const EvaluationCriteria = ({ formik }: any) => {
+  // State to track whether to use predefined or custom rubric
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
   return (
     <Box display="flex" flexDirection="column" gap={2}>
@@ -456,6 +459,7 @@ const InputEvaluationCriteria = ({ formik }: any) => (
 );
 
 const AssignTeachers = ({ formik }: any) => {
+  // State to store exam schedules based on selected subjects
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
 
   return (
@@ -504,13 +508,16 @@ const AssignTeachers = ({ formik }: any) => {
   );
 };
 
+// Mock data for scheduled exams with subject, date and time information
 const Exams = [
   { subject: 'Mathematics', date: '15-10-2024', time: '10:00' },
   { subject: 'Physics', date: '15-10-2024', time: '14:00' },
 ];
 
 const NewExamForm = ({ onClose }: any) => {
+  // Active step for stepper navigation
   const [activeStep, setActiveStep] = useState(0);
+  // List of scheduled exams with subject, date and time information
   const [scheduledExams, setScheduledExams] = useState(Exams);
 
   const allTimetableSteps = [

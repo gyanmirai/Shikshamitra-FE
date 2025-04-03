@@ -17,7 +17,11 @@ const AllConversation = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="All Conversation"
-        links={[{ name: 'Communication' }, { name: 'Messages' }, { name: 'All Conversation' }]}
+        links={[
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Messages', href: '/communication/messages' },
+          { name: 'All Conversation' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <CustomSelect

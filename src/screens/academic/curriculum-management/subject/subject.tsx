@@ -4,7 +4,7 @@ import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Add } from '@mui/icons-material';
 import {
@@ -209,7 +209,7 @@ const Subject = (props: TabComponentType) => {
     confirmPublishDialog.onFalse();
     setPendingStatusChange(null);
   };
-  const actions = useCallback(({ popover: pop, row }: any) => <> </>, []);
+
   // Define breadcrumb navigation links based on whether form is active
   const links =
     params.isForm === 'true'
@@ -226,6 +226,7 @@ const Subject = (props: TabComponentType) => {
           { name: 'Curriculum', href: '/academic/curriculum-management' },
           { name: 'Subject' },
         ];
+
   return (
     <Box>
       {/* Custom breadcrumbs component for navigation and page header */}

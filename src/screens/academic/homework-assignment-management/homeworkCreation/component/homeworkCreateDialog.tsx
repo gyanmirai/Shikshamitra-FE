@@ -1,6 +1,6 @@
 'use client';
 
-import type { Division } from 'src/types/school';
+import type { Division, Standards } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -28,39 +28,14 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 
-import type { Assignment } from '../homework-creation';
+import { assignmentInitialValues } from './assignmentInitialValues';
+
+import type { THomeworkAssignment } from '../type';
 
 interface HomeWorkCreationFormProps {
-  onsubmit: (values: Assignment, status: 'draft' | 'publish') => void;
+  onsubmit: (values: THomeworkAssignment, status: 'draft' | 'publish') => void;
   view: string;
 }
-
-const assignmentInitialValues: Assignment = {
-  title: '',
-  description: '',
-  class: '',
-  division: [],
-  subjects: [],
-  submissionType: '',
-  dueDate: null,
-  dueTime: null,
-  attachments: [],
-  createdBy: '', // Would typically be auto-populated from logged-in user
-  status: 'draft',
-  // Optional fields
-  chapters: [],
-  homeworkType: '',
-  isDailyTask: false,
-  parentAcknowledgement: false,
-  isRecurring: false,
-  recurringFrequency: '',
-  scheduleDate: null,
-  assignmentType: '',
-  evaluationCriteria: '',
-  assignedResources: '',
-  rubric: '',
-  isScheduled: false,
-};
 
 const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
   onsubmit,
@@ -68,7 +43,7 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
 }) => {
   const [assignmentType, setAssignmentType] = useState<'homework' | 'assignment'>('homework');
   const [classes, setClasses] = useState<string>('');
-  const [division, setDivision] = useState<any[]>([]);
+  const [division, setDivision] = useState<string[]>([]);
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
 
@@ -103,7 +78,7 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                 labelKey="name"
                 valueKey="id"
                 onChange={(val) => {
-                  const selectedClass = classData?.items?.find((i: any) => i.id === val);
+                  const selectedClass = classData?.items?.find((i: Standards) => i.id === val);
                   formik.setFieldValue('class', selectedClass?.name || '');
                   setClasses(val as string);
                   setDivisionOptions(selectedClass?.divisions || []);
@@ -120,12 +95,12 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
                 multiple
                 options={divisionOptions}
                 value={division}
-                onChange={(val: any[]) => {
+                onChange={(val) => {
                   const selectedDivisions = divisionOptions
-                    .filter((i) => val.includes(i.id))
+                    .filter((i) => (val as string[]).includes(i.id))
                     .map((div) => div.name);
                   formik.setFieldValue('division', selectedDivisions);
-                  setDivision(val);
+                  setDivision(val as string[]);
                 }}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
