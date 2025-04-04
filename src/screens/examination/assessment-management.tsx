@@ -29,6 +29,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -140,23 +141,37 @@ const assessments: TAssessment[] = [
 ];
 
 const AssessmentManagement = (props: TabComponentType) => {
+  // Store assessment data array
   const [assessmentData, setAssessmentData] = useState<TAssessment[]>(assessments);
+  // Search parameters from props
   const { searchParams, setSearchParams } = props;
+  // Currently selected assessment for editing/viewing
   const [selectedAssessment, setSelectedAssessment] = useState<TAssessment | null>(null);
+  // Flag to determine if in edit mode
   const [isEdit, setIsEdit] = useState(false);
-  const [open, setOpen] = useState(false);
+
+  // Selected class ID from search params
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
+  // Search params hook for form state management
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
+
+  // Dialog state for submission view
   const submissionDialog = useBoolean();
+  // Dialog state for publish confirmation
   const confirmPublishDialog = useBoolean();
 
+  // Selected division ID
   const [division, setDivision] = useState('');
+  // Available division options for selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  // Query hook for fetching class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Temporary storage for pending status changes
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     value: boolean;
@@ -185,27 +200,40 @@ const AssessmentManagement = (props: TabComponentType) => {
     }
   }, [classData?.items, classes, setSearchParams]);
 
+  // Function to handle closing of dialog/modal
+  // Resets form state, edit mode, selected assessment and closes all dialogs
   const handleCloseDialog = () => {
-    setOpen(false);
-    setIsEdit(false);
-    setSelectedAssessment(null);
-    confirmPublishDialog.onFalse();
-    submissionDialog.onFalse();
+    setParams({ isForm: 'false' }); // Reset form state parameter
+    setIsEdit(false); // Disable edit mode
+    setSelectedAssessment(null); // Clear selected assessment
+    confirmPublishDialog.onFalse(); // Close publish confirmation dialog
+    submissionDialog.onFalse(); // Close submission dialog
   };
 
+  /**
+   * Handles form submission for assessment data
+   * @param values - Assessment form values to be submitted
+   */
   const handleSubmit = (values: TAssessment) => {
     console.log('values---', values);
 
     if (isEdit) {
+      // Update existing assessment if in edit mode
       setAssessmentData(
         assessmentData.map((assessment) => (assessment.id === values.id ? values : assessment))
       );
     } else {
+      // Add new assessment if not in edit mode
       setAssessmentData([...assessmentData, values]);
     }
     handleCloseDialog();
   };
 
+  /**
+   * Confirms and applies a pending status change for an assessment
+   * Updates the assessment data by setting the publish status to the new value
+   * Closes the confirmation dialog and resets the pending change
+   */
   const confirmStatusChange = () => {
     if (pendingStatusChange) {
       const { id, value } = pendingStatusChange;
@@ -250,59 +278,56 @@ const AssessmentManagement = (props: TabComponentType) => {
     [submissionDialog]
   );
 
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
+          { name: 'Assessment' },
+          { name: 'Assessment Form' },
+        ]
+      : [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
+          { name: 'Assessment' },
+        ];
+
   return (
     <Box>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="Assessment"
-            links={[
-              { name: 'Examination and Assessment' },
-              { name: 'Examination' },
-              { name: 'Assessment' },
-              { name: 'Assessment Form' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Back
-              </Button>
+      <CustomBreadcrumbs
+        heading="Assessment"
+        description={
+          params.isForm === 'true'
+            ? 'Create or update exam details, including the exam title, date, duration, and assigned subjects. Easily manage exam schedules and make adjustments as needed.'
+            : 'View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary.'
+        }
+        links={links}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={
+              params.isForm === 'true'
+                ? () => {
+                    setParams({ isForm: 'false' });
+                  }
+                : () => {
+                    setParams({ isForm: 'true' });
+                  }
             }
-          />
-          <Card>
-            <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
-          </Card>
-        </>
+          >
+            {params.isForm === 'true' ? 'Back' : 'Assessment'}
+          </Button>
+        }
+      />
+      {params.isForm === 'true' ? (
+        <Card>
+          <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
+        </Card>
       ) : (
         <>
-          <CustomBreadcrumbs
-            heading="Assessment"
-            links={[
-              { name: 'Examination and Assessment' },
-              { name: 'Examination' },
-              { name: 'Assessment' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => {
-                  setOpen(true);
-                }}
-                startIcon={<Add />}
-              >
-                Assessment
-              </Button>
-            }
-          />
           <Box
             display="flex"
             gap={2}
@@ -409,7 +434,7 @@ const AssessmentManagement = (props: TabComponentType) => {
                       showEditIcon
                       showDeleteIcon
                       handleDeleteClick={() => {
-                        setOpen(true);
+                        setParams({ isForm: 'true' });
                         setIsEdit(true);
                       }}
                       handleEditClick={() => {}}
@@ -459,6 +484,12 @@ const AssessmentManagement = (props: TabComponentType) => {
 
 export default AssessmentManagement;
 
+/**
+ * Props interface for AddNewAssessment component
+ * @param {Function} onSubmit - Callback function to handle form submission with assessment values
+ * @param {TAssessment | null} data - Assessment data for editing or null for new assessment
+ * @param {boolean} isEdit - Flag indicating if the form is in edit mode
+ */
 interface AddNewAssessmentProps {
   onSubmit: (values: TAssessment) => void;
   data: TAssessment | null;
@@ -466,14 +497,20 @@ interface AddNewAssessmentProps {
 }
 
 const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isEdit }) => {
+  // Fetch class data using custom hook and handle loading state
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const [classes, setClasses] = useState<string>(data?.className || '');
-  const [division, setDivision] = useState<string>(data?.division || '');
-  const [divisionOptions, setDivisionOptions] = useState<any[]>([]);
 
+  // State to manage selected class
+  const [classes, setClasses] = useState<string>(data?.className || '');
+
+  // State to manage selected division
+  const [division, setDivision] = useState<string>(data?.division || '');
+
+  // State to store available division options based on selected class
+  const [divisionOptions, setDivisionOptions] = useState<any[]>([]);
   const formik = useFormik({
     initialValues: {
       className: data?.className || '',
@@ -691,6 +728,17 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
   );
 };
 
+/**
+ * Interface representing a student's grade information
+ * @property {string} id - Unique identifier for the grade record
+ * @property {string} studentName - Name of the student
+ * @property {string} assignments - Name of the assignment
+ * @property {string} subject - Subject or course name
+ * @property {string} grade - Student's grade for the assignment
+ * @property {string} feedback - Teacher's feedback on the assignment
+ * @property {string} weightedAverage - Calculated weighted average score
+ * @property {string} status - Current status of the grade (e.g., Pending, Completed)
+ */
 export interface StudentGrade {
   id: string;
   studentName: string;
@@ -701,7 +749,6 @@ export interface StudentGrade {
   weightedAverage: string;
   status: string;
 }
-
 export const dummyData = [
   {
     id: '1',
@@ -756,14 +803,19 @@ export const dummyData = [
 ];
 
 const StudentSubmissions = () => {
+  // State to store the currently selected student
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  // State to store the table data with student grades
   const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
+  // State to store array of selected student IDs for bulk operations
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
+  // Dialog control states for different modals
   const dialog = useBoolean();
   const viewSubmissionDialog = useBoolean();
   const bulkGradeDialog = useBoolean();
 
+  // Handles the selection/deselection of individual students
   const handleSelectStudent = (studentId: string) => {
     setSelectedStudents((prev) => {
       if (prev.includes(studentId)) {
@@ -773,6 +825,7 @@ const StudentSubmissions = () => {
     });
   };
 
+  // Updates grades and feedback for multiple selected students at once
   const handleBulkGradeAssignment = (values: { grade: string; feedback: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
@@ -785,6 +838,7 @@ const StudentSubmissions = () => {
     setSelectedStudents([]);
   };
 
+  // Updates grade and feedback for a single selected student
   const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
@@ -797,11 +851,11 @@ const StudentSubmissions = () => {
     setSelectedStudent(null);
   };
 
+  // Closes the view submission dialog and resets selected student
   const handleCloseDialog = () => {
     setSelectedStudent(null);
     viewSubmissionDialog.onFalse();
   };
-
   return (
     <Box sx={{ p: 1 }}>
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
@@ -908,43 +962,6 @@ const StudentSubmissions = () => {
                             Edit
                           </MenuItem>
                         )}
-                        {/* {row.grade === 'Assign Grade' ? (
-                        <MenuItem>
-                          <Iconify
-                            icon="mingcute:notification-fill"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Remind To Teacher
-                        </MenuItem>
-                      ) : (
-                        <MenuItem>
-                          <Iconify
-                            icon="material-symbols:upload"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Upload to Student
-                        </MenuItem>
-                      )} */}
-                        {/* <MenuItem
-                        onClick={() => {
-                          viewResultDialog.onTrue();
-                          setSelectedStudent(row);
-                        }}
-                      >
-                        {' '}
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Result
-                      </MenuItem> */}
-
-                        {/* <MenuItem
-                        onClick={() => {
-                          viewProfile.onTrue();
-                        }}
-                      >
-                        {' '}
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Profile
-                      </MenuItem> */}
                       </MenuList>
                     )}
                   />
@@ -980,6 +997,12 @@ const StudentSubmissions = () => {
   );
 };
 
+/**
+ * Props interface for AssignGrade component
+ * @param {boolean} isBulk - Flag to indicate if grading is for multiple students
+ * @param {any} data - Optional data containing student grade and feedback information
+ * @param {Function} onSubmit - Callback function when grade form is submitted with grade and feedback values
+ */
 interface AssignGradeProps {
   isBulk: boolean;
   data?: any;

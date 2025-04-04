@@ -63,9 +63,12 @@ const eventTableData: Event[] = [
 ];
 
 const EventsArchieves = (props: TabComponentType) => {
+  // Dialog state to control visibility of event summary dialog
   const viewEventSummaryDialog = useBoolean();
+  // State to store the currently selected event details
   const [event, setEvent] = useState<any | null>(null);
 
+  // Handler to close the dialog and reset event state
   const handleCloseDialog = () => {
     viewEventSummaryDialog.onFalse();
     setEvent(null);
@@ -75,7 +78,11 @@ const EventsArchieves = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Events Archieves"
-        links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'Events Archieves' }]}
+        links={[
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Events' },
+          { name: 'Events Archieves' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
 

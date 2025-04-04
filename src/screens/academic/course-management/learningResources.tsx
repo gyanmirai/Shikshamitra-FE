@@ -37,17 +37,19 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+// Interface defining the structure of a learning resource
 interface TResourceData {
-  id: number;
-  resourceTitle: string;
-  typeOfResource: string;
-  className: string;
-  subject: string;
-  dateUploaded: string;
-  description: string;
-  status: string;
+  id: number; // Unique identifier for the resource
+  resourceTitle: string; // Title of the learning resource
+  typeOfResource: string; // Type of resource (document, audio, video, etc.)
+  className: string; // Class/grade the resource is intended for
+  subject: string; // Subject area of the resource
+  dateUploaded: string; // Date when the resource was uploaded
+  description: string; // Detailed description of the resource
+  status: string; // Publication status (Publish/Unpublish)
 }
 
+// Initial sample data for learning resources
 const resourceInitialData: TResourceData[] = [
   {
     id: 1,
@@ -80,70 +82,85 @@ const resourceInitialData: TResourceData[] = [
     status: 'Publish',
   },
 ];
-
 const LearningResources = (props: TabComponentType) => {
+  // Get search parameters from props
   const { searchParams } = props;
+  // State for controlling view mode (list/grid)
   const [view, setView] = useState('list');
+  // Custom hook for managing URL search parameters
   const [params, setParams] = useSearchParam({ isForm: 'false' });
 
+  // Extract class and subject from URL parameters with default empty string
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
+  // State for managing selected resource entry and edit mode
   const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  // State for storing all learning resources data
   const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
   // const dialog = useBoolean();
+  // State for confirmation dialog
   const confirm_dialog = useBoolean();
 
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // State for selected class and subject filters
   const [classes, setClasses] = useState<string>(classFromUrl);
   const [subject, setSubject] = useState(subjectFromUrl);
-
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newStatus: string;
   } | null>(null);
 
+  // Function to handle saving new or edited learning resources
   const handleSave = (dataFromDialog: TResourceData) => {
+    // If editing an existing resource
     if (isEdit && selectedEntry) {
+      // Update the existing resource in the array
       setResourceData(
         resourceData.map((resource) =>
           resource.id === selectedEntry.id ? { ...resource, ...dataFromDialog } : resource
         )
       );
     } else {
+      // Add new resource to the array
       setResourceData([
         ...resourceData,
         {
           ...dataFromDialog,
-          id: Date.now(),
-          className: classes,
-          dateUploaded: new Date().toLocaleDateString(),
+          id: Date.now(), // Generate unique ID using timestamp
+          className: classes, // Set class from current filter
+          dateUploaded: new Date().toLocaleDateString(), // Set current date
         },
       ]);
     }
+    // Close the dialog after saving
     closeDialog();
   };
-
+  // Function to close the dialog and reset form state
   const closeDialog = () => {
     setIsEdit(false);
     setSelectedEntry(null);
     setParams({ isForm: 'false' });
   };
 
+  // Handle status change for publishing/unpublishing resources
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newStatus: value === 'Publish' ? 'Unpublish' : 'Publish' });
     confirm_dialog.onTrue(); // Open confirmation dialog
   };
 
+  // Filter resources based on selected class and subject
   const filteredData = resourceData.filter(
     (item) => (!classes || item.className === classes) && (!subject || item.subject === subject)
   );
 
+  // Menu actions for resource items (download and share)
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -160,6 +177,7 @@ const LearningResources = (props: TabComponentType) => {
     []
   );
 
+  // Handle view mode change between grid and list views
   const handleChangeView = useCallback(
     (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
       if (newView !== null) {
@@ -169,15 +187,20 @@ const LearningResources = (props: TabComponentType) => {
     []
   );
 
+  // Define breadcrumb navigation links based on form state
   const links =
     params.isForm === 'true'
       ? [
-          { name: 'Academic and Assignment' },
-          { name: 'Syllabus' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Learning Resources' },
           { name: 'Add Learning Resource' },
         ]
-      : [{ name: 'Academic and Assignment' }, { name: 'Syllabus' }, { name: 'Learning Resources' }];
+      : [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
+          { name: 'Learning Resources' },
+        ];
 
   return (
     <>
@@ -209,7 +232,7 @@ const LearningResources = (props: TabComponentType) => {
         }
       />
 
-      {/* Dialog for Creating/Editing Resource */}
+      {/* Conditional rendering of Create/Edit form or Resource list */}
       {params.isForm === 'true' ? (
         <Card>
           <CreateNewResource
@@ -223,7 +246,7 @@ const LearningResources = (props: TabComponentType) => {
         </Card>
       ) : (
         <>
-          {/* Filters Section */}
+          {/* Class and Subject filter controls */}
           <Box display="flex" flexDirection="row" gap={2} mb={2}>
             <CustomSelect
               options={classData?.items || []}
@@ -248,7 +271,7 @@ const LearningResources = (props: TabComponentType) => {
             />
           </Box>
 
-          {/* Table Section */}
+          {/* View toggle buttons (grid/list) */}
           <Box
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
           >
@@ -276,6 +299,7 @@ const LearningResources = (props: TabComponentType) => {
             </ToggleButtonGroup>
           </Box>
 
+          {/* Display resources in either list or grid view */}
           {classes &&
             subject &&
             (view === 'list' ? (
@@ -362,6 +386,7 @@ const LearningResources = (props: TabComponentType) => {
 
 export default LearningResources;
 
+// Interface defining the props for the LearningResourceCard component
 interface LearningResourceCardProps {
   resourceTitle: string;
   resourceType: string;
@@ -370,6 +395,7 @@ interface LearningResourceCardProps {
   dateUploaded: string;
 }
 
+// Component to display learning resource information in a card format
 const LearningResourceCard: React.FC<LearningResourceCardProps> = ({
   resourceTitle,
   resourceType,
@@ -377,12 +403,16 @@ const LearningResourceCard: React.FC<LearningResourceCardProps> = ({
   subject,
   dateUploaded,
 }) => (
+  // Main card container with styling
   <Card sx={{ maxWidth: '300px', width: '100%', p: 2, mt: 2 }}>
+    {/* Display resource details in rows with icons */}
     <DetailRow icon="mdi:format-title" label="Resource Title" value={resourceTitle} />
     <DetailRow icon="mdi:merge-type" label="Resource Type" value={resourceType} />
     <DetailRow icon="mdi:class" label="Class" value={className} />
     <DetailRow icon="mdi:text-subject" label="Subject" value={subject} />
     <DetailRow icon="mdi:upload" label="Date Uploaded" value={dateUploaded} />
+
+    {/* Action buttons for download and share functionality */}
     <CardActions sx={{ justifyContent: 'flex-end' }}>
       <Button variant="contained" size="small" startIcon={<Iconify icon="mdi:download" />}>
         Download
@@ -399,6 +429,7 @@ const LearningResourceCard: React.FC<LearningResourceCardProps> = ({
   </Card>
 );
 
+// Interface for props used in CreateLearningResources component
 interface CreateLearningResourcesProps {
   onSave: (values: TResourceData) => void;
   onClose: () => void;
@@ -408,6 +439,7 @@ interface CreateLearningResourcesProps {
   currentSubject: string;
 }
 
+// Interface for form values (currently unused - can be removed if not needed)
 interface FormikValue {
   resourceTitle: string;
   typeOfResource: string;
@@ -418,6 +450,7 @@ interface FormikValue {
   dateUploaded: string;
 }
 
+// Component for creating and editing learning resources
 const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   data,
   onClose,
@@ -426,14 +459,19 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   currentClass,
   currentSubject,
 }) => {
+  // State for managing messages and draft status
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
+
+  // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Initialize formik for form handling
   const formik = useFormik<TResourceData>({
+    // Set initial form values based on edit mode and existing data
     initialValues: {
       id: isEdit && data ? data.id : Date.now(),
       resourceTitle: isEdit && data ? data.resourceTitle : '',
@@ -444,7 +482,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
       dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
       status: isEdit && data ? data.status : 'draft',
     },
-    // validationSchema: validationSchema,  // Uncomment this if you have validation schema
+    // Handle form submission
     onSubmit: (values) => {
       const updatedValues = {
         ...values,
@@ -458,8 +496,10 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
+        {/* Scrollable container for form fields */}
         <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2} marginTop={1}>
+            {/* Class selection dropdown */}
             <Grid item xs={12} md={6}>
               <CustomSelect
                 options={classData?.items || []}
@@ -472,6 +512,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
               />
             </Grid>
+            {/* Subject selection dropdown */}
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Subject"
@@ -486,6 +527,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
               />
             </Grid>
+            {/* Resource title input */}
             <Grid item xs={12} md={6}>
               <TextField
                 disabled={isEdit}
@@ -497,6 +539,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 fullWidth
               />
             </Grid>
+            {/* Resource type selection */}
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Select Resource Type"
@@ -512,6 +555,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
+            {/* Description text area */}
             <Grid item xs={12}>
               <TextField
                 label="Description"
@@ -524,6 +568,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
                 fullWidth
               />
             </Grid>
+            {/* File upload box */}
             <Grid item xs={12}>
               <UploadBox
                 onDrop={() => {}}
@@ -551,6 +596,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
             </Grid>
           </Grid>
         </Scrollbar>
+        {/* Action buttons */}
         <DialogActions>
           <Button
             variant="contained"

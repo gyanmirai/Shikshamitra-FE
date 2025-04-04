@@ -30,7 +30,9 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const LectureSlots = () => {
+  // Dialog state for creating new slots
   const createSlotsDialog = useBoolean();
+  // Dialog state for assigning slots to other classes
   const assignSlotsDialog = useBoolean();
 
   const actions = useCallback(

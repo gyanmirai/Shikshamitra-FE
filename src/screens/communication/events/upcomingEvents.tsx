@@ -124,25 +124,35 @@ const eventsData: Event[] = [
 ];
 
 const UpcomingEvents = (props: TabComponentType) => {
+  // State to store the selected event details
   const [event, setEvent] = useState<Event>();
+  // State to store the event being edited
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  // State to store the list of events
   const [eventTableData, setEventTableData] = useState<Event[]>(eventsData);
+  // State to store the ID of event to be deleted
   const [deleteEvent, setDeleteEvent] = useState('');
+  // Custom hook for handling show dialog visibility
   const openShowDialog = useBoolean();
+  // Custom hook for handling confirmation dialog visibility
   const confirm_dialog = useBoolean();
+  // State to control add/edit event form dialog
   const [open, setOpen] = useState(false);
 
+  // Handler for viewing event details
   const handleEyeClick = (id: string) => {
     const data = eventTableData.find((eve: any) => eve.id === id);
     setEvent(data);
     openShowDialog.onTrue();
   };
 
+  // Handler for deleting an event
   const handleDelete = (id: string) => {
     setEventTableData((prevData) => prevData.filter((eve) => eve.id !== id));
     confirm_dialog.onFalse();
   };
 
+  // Handler for submitting event form (both add and edit)
   const handleSubmit = (values: any) => {
     if (editingEvent) {
       console.log('editing announcement---', editingEvent);
@@ -162,11 +172,11 @@ const UpcomingEvents = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  // Handler for closing the add/edit event dialog
   const handleCloseDialog = () => {
     setEditingEvent(null);
     setOpen(false);
   };
-
   return (
     <Box>
       {open ? (
@@ -174,7 +184,7 @@ const UpcomingEvents = (props: TabComponentType) => {
           <CustomBreadcrumbs
             heading="Upcoming Events"
             links={[
-              { name: 'Communication' },
+              { name: 'Communication', href: '/communication/dashboard' },
               { name: 'Events' },
               { name: 'Upcoming Events' },
               { name: 'Event Form' },
@@ -203,7 +213,11 @@ const UpcomingEvents = (props: TabComponentType) => {
         <>
           <CustomBreadcrumbs
             heading="Upcoming Events"
-            links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'Upcoming Events' }]}
+            links={[
+              { name: 'Communication', href: '/communication/dashboard' },
+              { name: 'Events' },
+              { name: 'Upcoming Events' },
+            ]}
             sx={{ px: 1, mb: 2 }}
             action={
               <Button
@@ -401,6 +415,20 @@ const UpcomingEvents = (props: TabComponentType) => {
 
 export default UpcomingEvents;
 
+/**
+ * Interface representing the form values for an event
+ * @property {string} eventTitle - The title of the event
+ * @property {string} eventVenue - The venue where the event will be held
+ * @property {string[]} organization - Array of organizations involved in the event
+ * @property {string[]} className - Array of class names participating in the event
+ * @property {Dayjs | null} eventStartDate - Start date and time of the event
+ * @property {Dayjs | null} eventEndDate - End date and time of the event
+ * @property {string} eventType - Type or category of the event
+ * @property {string[]} audience - Array of target audience groups for the event
+ * @property {string} description - Detailed description of the event
+ * @property {string} eventOrganizer - Name of the event organizer
+ * @property {string} eventBudget - Budget allocated for the event
+ */
 interface EventFormValues {
   eventTitle: string;
   eventVenue: string;
@@ -415,18 +443,29 @@ interface EventFormValues {
   eventBudget: string;
 }
 
+/**
+ * Props interface for the AddEvent component
+ * @property {function} onSubmit - Callback function to handle form submission
+ * @property {EventFormValues | null} initialValues - Initial values for the form fields
+ * @property {boolean} isEdit - Flag indicating if the form is in edit mode
+ */
 interface AddEventProps {
   onSubmit: (values: EventFormValues) => void;
   initialValues?: EventFormValues | null;
   isEdit?: boolean;
 }
-
 const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isEdit = false }) => {
+  /**
+   * Custom hook to fetch class data using the useGetClassQuery mutation
+   */
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  /**
+   * Array of predefined organization options with their values and labels
+   */
   const allOrganizations = [
     { value: 'Pre Primary', label: 'Pre Primary' },
     { value: 'Primary', label: 'Primary' },
@@ -434,14 +473,30 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
     { value: 'Higher Secondary', label: 'Higher Secondary' },
   ];
 
+  /**
+   * State to track if all organizations are selected
+   * Initialized based on if initial organization values length matches total organizations
+   */
   const [isAllOrganizationSelected, setIsAllOrganizationSelected] = useState(
     initialValues?.organization?.length === allOrganizations.length
   );
 
+  /**
+   * State to track if all classes are selected
+   * Initialized based on if initial class values length matches total classes
+   */
   const [isAllClassesSelected, setIsAllClassesSelected] = useState(
     initialValues?.className?.length === classData?.items?.length
   );
 
+  /**
+   * Handles changes in organization selection
+   * @param selectedValues - Array of selected organization values
+   * If 'all' or 'deselectAll' is selected:
+   * - Toggles between selecting all organizations or none
+   * For normal selection:
+   * - Updates selected organizations and checks if all are selected
+   */
   const handleOrganizationChange = (selectedValues: string[]) => {
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
       const allOrganizationValues = allOrganizations.map((org) => org.value);
@@ -457,6 +512,14 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
     }
   };
 
+  /**
+   * Handles changes in class selection
+   * @param selectedValues - Array of selected class values
+   * If 'all' or 'deselectAll' is selected:
+   * - Toggles between selecting all classes or none
+   * For normal selection:
+   * - Updates selected classes and checks if all are selected
+   */
   const handleClass = (selectedValues: string[]) => {
     const allClassesValues = classData?.items?.map((org: any) => org.name);
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {

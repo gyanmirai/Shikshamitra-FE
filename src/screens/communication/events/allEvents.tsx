@@ -14,20 +14,26 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { CalendarView } from 'src/sections/calendar/view';
 
 const AllEvents = (props: TabComponentType) => {
+  // State to track the selected event type (schoolWise, classWise, extraCurricular)
   const [selectedEvent, setSelectedEvent] = useState('');
+  // Dialog state for adding new events
   const addEventDialog = useBoolean();
   return (
     <Box>
       <CustomBreadcrumbs
         heading="All Events"
-        links={[{ name: 'Communication' }, { name: 'Events' }, { name: 'All Events' }]}
+        description="View and manage all events including school-wise, class-wise and extra-curricular activities"
+        links={[
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Events' },
+          { name: 'All Events' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
@@ -60,14 +66,6 @@ const AllEvents = (props: TabComponentType) => {
         />
       </Box>
       <CalendarView />
-      <CustomDialog
-        title="Create New Event"
-        open={addEventDialog.value}
-        handleClose={addEventDialog.onFalse}
-        maxWidth="sm"
-      >
-        <AddEvent onSubmit={() => {}} />
-      </CustomDialog>
     </Box>
   );
 };

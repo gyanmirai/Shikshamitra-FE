@@ -26,7 +26,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ViewResult from './component/viewResult';
 import AssignGrade from './component/assignGradePopup';
 
-export interface StudentGrade {
+export interface TStudentGrade {
   id: string;
   studentName: string;
   assignments: string;
@@ -143,8 +143,8 @@ const Gradebook = (props: TabComponentType) => {
   const [assignmentTitle, setAssignmentTitle] = useState(
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
+  const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>(null);
+  const [tableData, setTableData] = useState<TStudentGrade[]>(dummyData);
   const [showTable, setShowTable] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -413,7 +413,7 @@ const Gradebook = (props: TabComponentType) => {
             {
               id: 'select',
               label: 'Select',
-              render: (value, row: any) => (
+              render: (value, row) => (
                 <Checkbox
                   checked={selectedStudents.includes(row.id)}
                   onChange={() => handleSelectStudent(row.id)}
@@ -464,7 +464,7 @@ const Gradebook = (props: TabComponentType) => {
                     color={getChipColor(value)}
                     onClick={() => {
                       dialog.onTrue();
-                      setSelectedStudent(row);
+                      setSelectedStudent(row as TStudentGrade);
                     }}
                     sx={{
                       cursor: 'pointer',

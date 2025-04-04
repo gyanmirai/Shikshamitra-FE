@@ -35,15 +35,36 @@ const tableData = [
 ];
 
 const RoomDetails = () => {
+  // Dialog state to control the visibility of the dialog
   const dialog = useBoolean();
+
+  // State to store the selected entry for editing
   const [selectedEntry, setSelectedEntry] = useState<any>(tableData);
+
+  // State to track whether we are in edit mode
   const [isEdit, setIsEdit] = useState(false);
+
+  // State to store all room data entries
   const [roomData, setRoomData] = useState(tableData);
+
+  // Function to close dialog and reset edit mode
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
   };
 
+  /**
+   * Handles saving room data from the dialog form
+   * @param dataFromDialog - Object containing room details (roomNumber, buildingName, floor, capacity)
+   * @returns void
+   *
+   * This method:
+   * 1. Checks if the room already exists using room number and building name
+   * 2. Prevents duplicate entries when creating new rooms
+   * 3. Creates new room entry or updates existing room based on isEdit flag
+   * 4. Updates the roomData state with new/modified entry
+   * 5. Closes the dialog after successful operation
+   */
   const handleSave = (dataFromDialog: any) => {
     const { roomNumber, buildingName, floor, capacity } = dataFromDialog;
 
@@ -79,6 +100,7 @@ const RoomDetails = () => {
 
     closeDialog();
   };
+
   return (
     <Box>
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 1 }}>
@@ -145,6 +167,16 @@ const RoomDetails = () => {
 
 export default RoomDetails;
 
+/**
+ * Props interface for the RoomCreationForm component
+ * @property {boolean} dialogValue - Controls the visibility of the dialog
+ * @property {any} data - Data of the room to be edited
+ * @property {Function} onSave - Callback function to handle form submission
+ * @property {Function} onClose - Callback function to close the dialog
+ * @property {boolean} isEdit - Flag to determine if form is in edit mode
+ * @property {any} allData - Array of all existing room data
+ */
+
 interface RoomCreationFormProps {
   dialogValue: boolean;
   data: any;
@@ -153,13 +185,20 @@ interface RoomCreationFormProps {
   isEdit: boolean;
   allData: any;
 }
+
+/**
+ * Interface for form values used in Formik
+ * @property {string} roomNumber - Room number/name identifier
+ * @property {string} buildingName - Name of the building
+ * @property {string} floor - Floor number where room is located
+ * @property {string} capacity - Maximum capacity of the room
+ */
 interface FormikValue {
   roomNumber: string;
   buildingName: string;
   floor: string;
   capacity: string;
 }
-
 // eslint-disable-next-line @typescript-eslint/no-shadow
 const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
   dialogValue,
@@ -169,6 +208,7 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
   isEdit,
   allData,
 }) => {
+  // State to track and display message when a duplicate room entry is attempted
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
   const formik = useFormik<FormikValue>({

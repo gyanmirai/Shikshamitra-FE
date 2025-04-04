@@ -87,32 +87,49 @@ export const dummyData = [
 ];
 
 const GradeEntry = (props: TabComponentType) => {
+  // Dialog control for showing/hiding modal
   const dialog = useBoolean();
+  // Search parameters from URL and function to update them
   const { searchParams, setSearchParams } = props;
-
+  // Selected class ID from search params
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
+  // Selected division/section ID
   const [division, setDivision] = useState('');
+  // Available divisions/sections for selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  // Selected subject for grade entry
   const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
+  // Type of assignment (quiz, test, homework etc)
   const [assignmentType, setAssignmentType] = useState(
     searchParams?.assignmentType ? searchParams?.assignmentType : ''
   );
+  // Title of the selected assignment
   const [assignmentTitle, setAssignmentTitle] = useState(
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
+  // Query to fetch class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Currently selected student for grade entry
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  // Table data containing student grades and information
   const [tableData, setTableData] = useState(dummyData);
+  // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
+  // Dialog control for viewing student submission
   const viewSubmissionDialog = useBoolean();
+  // Dialog control for bulk grade assignment
   const bulkGradeDialog = useBoolean();
 
+  /**
+   * Handles selection/deselection of a student for bulk grade assignment
+   * @param studentId - The ID of the student to toggle selection
+   */
   const handleSelectStudent = (studentId: string) => {
     setSelectedStudents((prev) => {
       if (prev.includes(studentId)) {
@@ -122,6 +139,10 @@ const GradeEntry = (props: TabComponentType) => {
     });
   };
 
+  /**
+   * Assigns the same grade to multiple selected students
+   * @param values - Object containing the grade to assign
+   */
   const handleBulkGradeAssignment = (values: { grade: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
@@ -132,6 +153,10 @@ const GradeEntry = (props: TabComponentType) => {
     setSelectedStudents([]);
   };
 
+  /**
+   * Assigns grade and feedback to a single selected student
+   * @param values - Object containing grade and feedback to assign
+   */
   const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
@@ -143,6 +168,9 @@ const GradeEntry = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  /**
+   * Closes all dialogs and resets selected student state
+   */
   const handleCloseDialog = () => {
     setSelectedStudent(null);
     viewSubmissionDialog.onFalse();
@@ -150,6 +178,13 @@ const GradeEntry = (props: TabComponentType) => {
     bulkGradeDialog.onFalse();
   };
 
+  /**
+   * Effect to handle class and division selection logic
+   * When class data changes or selected class changes:
+   * - Updates division options based on selected class
+   * - Sets default division to first available division
+   * - Sets URL params for first class if no class selected
+   */
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
@@ -172,7 +207,6 @@ const GradeEntry = (props: TabComponentType) => {
       }
     }
   }, [classData?.items, classes, setSearchParams]);
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -203,51 +237,6 @@ const GradeEntry = (props: TabComponentType) => {
               Edit Grade
             </MenuItem>
           )}
-
-          {/* {(row.status === 'Pending' || row.status === 'Overdue') && (
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-                            Send Reminder
-                          </MenuItem>
-                        )} */}
-          {/* {row.grade === 'Assign Grade' ? (
-                      <MenuItem>
-                        <Iconify
-                          icon="mingcute:notification-fill"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Remind To Teacher
-                      </MenuItem>
-                    ) : (
-                      <MenuItem>
-                        <Iconify
-                          icon="material-symbols:upload"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                        Upload to Student
-                      </MenuItem>
-                    )} */}
-          {/* <MenuItem
-                      onClick={() => {
-                        viewResultDialog.onTrue();
-                        setSelectedStudent(row);
-                      }}
-                    >
-                      {' '}
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                      View Result
-                    </MenuItem> */}
-
-          {/* <MenuItem
-                      onClick={() => {
-                        viewProfile.onTrue();
-                      }}
-                    >
-                      {' '}
-                      <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                      View Profile
-                    </MenuItem> */}
         </MenuList>
       </>
     ),
@@ -259,8 +248,8 @@ const GradeEntry = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Grade Entry"
         links={[
-          { name: 'Examination and Assessment' },
-          { name: 'Examination' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
           { name: 'Grade Entry' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -472,6 +461,11 @@ const GradeEntry = (props: TabComponentType) => {
 
 export default GradeEntry;
 
+/**
+ * Props interface for AssignGrade component
+ * @param data Optional data containing initial grade and feedback values
+ * @param onSubmit Callback function to handle form submission with grade and feedback values
+ */
 interface AssignGradeProps {
   data?: any;
   onSubmit: (values: { grade: string; feedback: string }) => void;

@@ -1,5 +1,7 @@
 'use client';
 
+// Import required dependencies and types
+
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -9,15 +11,22 @@ import { Box, Card, Grid, Switch, Button, Checkbox, Typography } from '@mui/mate
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+// Settings component for managing course-related configurations
 const Settings = (props: TabComponentType) => (
   <Box>
+    {/* Breadcrumb navigation */}
     <CustomBreadcrumbs
       heading="Settings"
       description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
-      links={[{ name: 'Academic and Assignment' }, { name: 'Syllabus' }, { name: 'Settings' }]}
+      links={[
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Settings' },
+      ]}
       sx={{ px: 1, mb: 2 }}
     />
     <Grid container spacing={2}>
+      {/* Notification Settings Card */}
       <Grid item xs={12} md={6}>
         <Card
           sx={{
@@ -32,6 +41,7 @@ const Settings = (props: TabComponentType) => (
           </Typography>
 
           <Box sx={{ flex: 1 }}>
+            {/* Course Updates Toggle Switch */}
             <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
               <Switch
                 checked={false}
@@ -41,6 +51,7 @@ const Settings = (props: TabComponentType) => (
               <Typography sx={{ ml: 1 }}>Course Updates</Typography>
             </Box>
 
+            {/* Notification Frequency Dropdown */}
             <CustomSelect
               options={[]}
               value=""
@@ -56,6 +67,7 @@ const Settings = (props: TabComponentType) => (
             />
           </Box>
 
+          {/* Save Button */}
           <Box
             sx={{
               display: 'flex',
@@ -69,6 +81,7 @@ const Settings = (props: TabComponentType) => (
         </Card>
       </Grid>
 
+      {/* Course Creation Workflow Card */}
       <Grid item xs={12} md={6}>
         <Card
           sx={{
@@ -83,6 +96,7 @@ const Settings = (props: TabComponentType) => (
           </Typography>
 
           <Box sx={{ flex: 1 }}>
+            {/* Workflow Steps Checklist */}
             <Box display="flex" alignItems="center" mb={1}>
               <Checkbox size="small" checked />
               <Typography variant="body2" sx={{ ml: 1 }}>
@@ -105,6 +119,7 @@ const Settings = (props: TabComponentType) => (
             </Box>
           </Box>
 
+          {/* Save Button */}
           <Box
             sx={{
               display: 'flex',

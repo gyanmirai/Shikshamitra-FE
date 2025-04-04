@@ -3,7 +3,6 @@
 import type { Division } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import * as Yup from 'yup';
 import React, { useState } from 'react';
 import { Form, Field, Formik } from 'formik';
 
@@ -16,42 +15,37 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const initialValues = {
-  report: '',
-  teacher: '',
-  className: 'All',
-  division: 'All',
-  subject: 'All',
-  startDate: null,
-  endDate: null,
-};
-
-const validationSchema = Yup.object().shape({
-  report: Yup.string().required('Report is required'),
-  teacher: Yup.string().required('Teacher is Required'),
-  className: Yup.string().required('Class is required'),
-  division: Yup.string().required('Division is Required'),
-  subject: Yup.string().required('Subject is required'),
-  startDate: Yup.string().required('Startdate is required'),
-  endDate: Yup.string().required('EndDate Type is required'),
-});
+import { initialValues } from './initialValues';
 
 const Reports = (props: TabComponentType) => {
+  // State for managing selected class
   const [classes, setClasses] = useState<string>('');
+
+  // State for managing selected subject
   const [selectedSubject, setSelectedSubject] = useState<string>('');
+
+  // State for managing selected teacher
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+
+  // State for managing selected division
   const [division, setDivision] = useState<any>([]);
+
+  // State for storing division options
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Memoized class options with 'All' option added
   const classOptions = React.useMemo(() => {
     const allOption = { name: 'All', value: 'all' };
     return [allOption, ...(classData?.items || [])];
   }, [classData]);
 
+  // Memoized division options with 'All' option added
   const fullDivisionOptions = React.useMemo(() => {
     const allOption = { name: 'All', id: 'all' };
     return [allOption, ...divisionOptions];
@@ -61,7 +55,12 @@ const Reports = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[{ name: 'Academic and Assignment' }, { name: 'Time Table' }, { name: 'Reports' }]}
+        description="Generate reports for timetable schedules, conflicts, and statistics"
+        links={[
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Time Table', href: '/academic/timeTableDashboard' },
+          { name: 'Reports' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" flexDirection="column" justifyContent="space-between">
