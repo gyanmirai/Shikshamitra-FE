@@ -1,11 +1,7 @@
-'use client';
-
-import type { Dayjs } from 'dayjs';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
-
-import dayjs from 'dayjs';
-import * as yup from 'yup';
-import React, { useState } from 'react';
+// eslint-disable-next-line import/no-duplicates
+import React from 'react';
+// eslint-disable-next-line import/no-duplicates
+import { useState } from 'react';
 import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
@@ -44,432 +40,16 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
+import { validationSchema } from './validationSchema';
 import { DetailRow } from '../announcement/schoolWiseAnnounsement';
 
-interface Survey {
-  id: number;
-  surveyTitle: string;
-  description: string;
-  organization: string[];
-  classes: string[];
-  audience: string[];
-  startDate: Dayjs;
-  endDate: Dayjs;
-  responseRate: number;
-  status: 'Scheduled' | 'Active' | 'Closed';
-}
+import type { TResponseData } from './type';
 
-const surveyData: Survey[] = [
-  {
-    id: 1,
-    surveyTitle: 'Student Feedback Survey',
-    description: 'Student Feedback Survey description',
-    organization: ['Primary', 'Pre Primary'],
-    classes: ['1'],
-    audience: ['Students', 'Parents'],
-    startDate: dayjs('2024-10-20'),
-    endDate: dayjs('2025-10-20'),
-    responseRate: 45,
-    status: 'Active',
-  },
-  {
-    id: 2,
-    surveyTitle: 'Teacher Evaluation Survey',
-    description: 'Teacher Evaluation Survey description',
-    organization: ['Primary', 'Pre Primary'],
-    classes: ['1'],
-    audience: ['Teachers'],
-    startDate: dayjs('2024-12-25'),
-    endDate: dayjs('2026-05-10'),
-    responseRate: 78,
-    status: 'Scheduled',
-  },
-  {
-    id: 3,
-    surveyTitle: 'Parent Feedback Survey',
-    description: 'Parent Feedback Survey description',
-    organization: ['Primary', 'Pre Primary'],
-    classes: ['1'],
-    audience: ['Parents'],
-    startDate: dayjs('2023-12-23'),
-    endDate: dayjs('2024-12-12'),
-    responseRate: 92,
-    status: 'Closed',
-  },
-  {
-    id: 4,
-    surveyTitle: 'Staff Satisfaction Survey',
-    description: 'Staff Satisfaction Survey description',
-    organization: ['Primary', 'Pre Primary'],
-    classes: ['1'],
-    audience: ['Staff', 'Administrators'],
-    startDate: dayjs('2023-12-05'),
-    endDate: dayjs('2025-02-04'),
-    responseRate: 50,
-    status: 'Active',
-  },
-];
-
-const AllSurvey = (props: TabComponentType) => {
-  // Modal state for publishing survey
-  const publish_modal = useBoolean();
-  const [publishingSurvey, setPublishingSurvey] = useState<any | null>(null);
-  // Table data state for surveys
-  const [surveyTableData, setSurveyTableData] = useState(surveyData);
-  // Dialog state for viewing survey details
-  const viewDetailsDialog = useBoolean();
-  const [viewSurvey, setViewSurvey] = useState<any | null>(null);
-  // Dialog state for viewing survey responses
-  const viewResponseDialog = useBoolean();
-  const [responseSurvey, setResponseSurvey] = useState<any | null>(null);
-  // State for controlling main view
-  const [open, setOpen] = useState(false);
-
-  const handleClose = () => {
-    setOpen(false);
-    setPublishingSurvey(null);
-    publish_modal.onFalse();
-    setViewSurvey(null);
-    viewDetailsDialog.onFalse();
-    viewResponseDialog.onFalse();
-    setResponseSurvey(null);
-  };
-
-  const handlePublish = (survey: any) => {
-    setSurveyTableData((prevData) =>
-      prevData.map((item) =>
-        item.id === survey.id
-          ? {
-              ...item,
-              status: 'Active',
-              publishDate: dayjs(),
-            }
-          : item
-      )
-    );
-    publish_modal.onFalse();
-    setPublishingSurvey(null);
-  };
-
-  const handleCloseSurvey = (id: number) => {
-    setSurveyTableData((prevData) =>
-      prevData.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: 'Closed',
-              endDate: dayjs(),
-            }
-          : item
-      )
-    );
-  };
-
-  return (
-    <Box>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="Scheduled Survey"
-            links={[
-              { name: 'Communication', href: '/communication/dashboard' },
-              { name: 'Survey' },
-              { name: 'Scheduled Survey' },
-              { name: 'Survey Form' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={handleClose}
-              >
-                Back
-              </Button>
-            }
-          />
-          <AddNewSurvey />
-        </>
-      ) : (
-        <>
-          <CustomBreadcrumbs
-            heading="Scheduled Survey"
-            links={[
-              { name: 'Communication', href: '/communication/dashboard' },
-              { name: 'Survey' },
-              { name: 'Scheduled Survey' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                startIcon={<Iconify icon="mdi:plus" />}
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setOpen(true);
-                }}
-              >
-                Survey
-              </Button>
-            }
-          />
-          <CustomizableTable
-            tableId="survey-table"
-            columns={[
-              { id: 'surveyTitle', label: 'Survey Title' },
-              {
-                id: 'audience',
-                label: 'Audience',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((audience: string) => (
-                      <Chip key={audience} label={audience} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'organization',
-                label: 'Organizations',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'classes',
-                label: 'Class',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((className: string) => (
-                      <Chip
-                        key={className}
-                        label={className}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'startDate',
-                label: 'Start Date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'endDate',
-                label: 'End Date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
-              },
-              //   {
-              //     id: 'responseRate',
-              //     label: 'Response Rate',
-              //     render(value, row) {
-              //       return (
-              //         <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-              //           <CircularProgress variant="determinate" value={value} />
-              //           <Box
-              //             sx={{
-              //               top: 0,
-              //               left: 0,
-              //               bottom: 0,
-              //               right: 0,
-              //               position: 'absolute',
-              //               display: 'flex',
-              //               alignItems: 'center',
-              //               justifyContent: 'center',
-              //             }}
-              //           >
-              //             <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-              //               {value}%
-              //             </Typography>
-              //           </Box>
-              //         </Box>
-              //       );
-              //     },
-              //   },
-              //   {
-              //     id: 'viewDetails',
-              //     label: 'View Details',
-              //     render: (value, row) => (
-              //       <IconButton
-              //         onClick={() => {
-              //           viewDetailsDialog.onTrue();
-              //           setViewSurvey(row);
-              //         }}
-              //       >
-              //         <Iconify icon="mdi:eye" />
-              //       </IconButton>
-              //     ),
-              //   },
-              //   {
-              //     id: 'status',
-              //     label: 'Response Status',
-              //     render: (value, row) =>
-              //       value === 'Pending' ? (
-              //         <Label
-              //           variant="soft"
-              //           color="warning"
-              //           onClick={() => {
-              //             publish_modal.onTrue();
-              //             setPublishingSurvey(row);
-              //           }}
-              //           sx={{ cursor: 'pointer' }}
-              //         >
-              //           {value}
-              //         </Label>
-              //       ) : value === 'Active' ? (
-              //         <Label variant="soft" color="primary">
-              //           {value}
-              //         </Label>
-              //       ) : (
-              //         <Label variant="soft" color="error">
-              //           {value}
-              //         </Label>
-              //       ),
-              //   },
-              {
-                id: 'action',
-                label: 'Action',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      // actions={(prop) => actions({ ...props, row })}
-                      placement="right-top"
-                      showEditIcon
-                      showDeleteIcon
-                      showViewIcon
-                      showThreeDots={false}
-                      handleViewClick={() => {}}
-                      handleEditClick={() => {
-                        // addAnounsmentDialog.onTrue();
-                        // setEditingAnnouncement(row);
-                      }}
-                      handleDeleteClick={() => {
-                        handleCloseSurvey(row.id);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={surveyTableData}
-          />
-        </>
-      )}
-
-      {/* 
-      <CustomDialog
-        title="Do you want to Active this Survey ?"
-        open={publish_modal.value}
-        handleClose={handleClose}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          {publishingSurvey && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Typography variant="h5">Survey Details</Typography>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography variant="subtitle2">Title</Typography>
-                <Typography>{publishingSurvey.title}</Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography variant="subtitle2">Description</Typography>
-                <Typography>{publishingSurvey.description}</Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography variant="subtitle2">Audience</Typography>
-                <Typography>{publishingSurvey.audience}</Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography variant="subtitle2">Scheduled Date</Typography>
-                <Typography>
-                  {dayjs(publishingSurvey.startDate).format('DD MMM YYYY, hh:mm A')}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} variant="outlined" color="error">
-            Cancel
-          </Button>
-          <Button
-            onClick={() => handlePublish(publishingSurvey)}
-            variant="contained"
-            color="primary"
-          >
-            Publish Now
-          </Button>
-        </DialogActions>
-      </CustomDialog> */}
-
-      {/* <CustomDialog
-        title="Survey Detail View"
-        open={viewDetailsDialog.value}
-        handleClose={handleClose}
-        maxWidth="md"
-      >
-        <ViewSurveyDetail survey={viewSurvey} />
-      </CustomDialog> */}
-
-      {/* <CustomDialog
-        title="Survey Detail View"
-        open={viewResponseDialog.value}
-        handleClose={handleClose}
-        maxWidth="md"
-      >
-        <Box sx={{ p: 2 }}>
-          <Scrollbar sx={{ height: '400px' }}>
-            <ResponseComponent />
-          </Scrollbar>
-        </Box>
-      </CustomDialog> */}
-    </Box>
-  );
-};
-
-export default AllSurvey;
-
-interface questionData {
-  id: string;
-  question: string;
-  answer: string;
-}
-
-interface responseData {
-  id: string;
-  responsendedName: string;
-  role: string;
-  responsendedEmail: string;
-  response: questionData[];
-}
-
-const responseTableData: responseData[] = [
+const responseTableData: TResponseData[] = [
   {
     id: '1',
     responsendedName: 'John Doe',
@@ -564,6 +144,7 @@ const responseTableData: responseData[] = [
 ];
 
 const ResponseComponent = () => {
+  // State to store and manage response table data
   const [tableData, setTableData] = useState<any>(responseTableData);
   return (
     <CustomizableTable
@@ -692,11 +273,13 @@ export const ViewSurveyDetail = ({ survey }: any) => (
 );
 
 const SurveyDetails = ({ formik }: any) => {
+  // Fetch class data using custom hook that combines query and mutation functionality
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Array containing all available organization levels in the education system
   const allOrganizations = [
     { value: 'Pre Primary', label: 'Pre Primary' },
     { value: 'Primary', label: 'Primary' },
@@ -704,14 +287,21 @@ const SurveyDetails = ({ formik }: any) => {
     { value: 'Higher Secondary', label: 'Higher Secondary' },
   ];
 
+  // State to track if all organizations are selected by comparing current selection length with total organizations
   const [isAllOrganizationSelected, setIsAllOrganiationSelected] = useState(
     formik.values?.organization?.length === allOrganizations.length
   );
 
+  // State to track if all classes are selected by comparing current selection length with total available classes
   const [isAllClassesSelected, setIsAllClassesSelected] = useState(
     formik.values?.className?.length === classData?.items?.length
   );
-
+  /**
+   * Handles changes in organization selection
+   * If 'all' or 'deselectAll' is selected, toggles between selecting all organizations or none
+   * Otherwise updates the selected organizations and checks if all organizations are selected
+   * @param selectedValues - Array of selected organization values
+   */
   const handleOrganizationChange = (selectedValues: string[]) => {
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
       const allOrganizationValues = allOrganizations.map((org) => org.value);
@@ -727,6 +317,12 @@ const SurveyDetails = ({ formik }: any) => {
     }
   };
 
+  /**
+   * Handles changes in class selection
+   * If 'all' or 'deselectAll' is selected, toggles between selecting all classes or none
+   * Otherwise updates the selected classes and checks if all classes are selected
+   * @param selectedValues - Array of selected class values
+   */
   const handleClass = (selectedValues: string[]) => {
     const allClassesValues = classData?.items?.map((org: any) => org.name);
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
@@ -840,6 +436,20 @@ const SurveyDetails = ({ formik }: any) => {
   );
 };
 
+/**
+ * QuestionList Component
+ *
+ * A component that displays a list of survey questions in a draggable table format.
+ * Supports drag and drop reordering, question deletion, and displays question details.
+ *
+ * @component
+ * @param {Object} props
+ * @param {Array} props.questions - Array of question objects containing question details
+ * @param {Function} props.onDragEnd - Callback function called when drag and drop operation ends
+ * @param {Function} props.onDeleteQuestion - Callback function to handle question deletion
+ *
+ * @returns {JSX.Element} Returns either a table with questions or a message if no questions exist
+ */
 const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
   if (!questions?.length) {
     return (
@@ -963,16 +573,19 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
   );
 };
 
+// Component for building and managing survey questions
 const QuestionBuilder = ({ formik }: any) => {
   const addQuestionDialog = useBoolean();
 
   console.log('formik values-----', formik.values);
 
+  // Adds a new question to the survey
   const handleAddQuestion = (newQuestion: any) => {
     formik.setFieldValue('questions', [...formik.values.questions, newQuestion]);
     addQuestionDialog.onFalse();
   };
 
+  // Handles drag and drop reordering of questions
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     const items = Array.from(formik.values.questions);
@@ -981,6 +594,7 @@ const QuestionBuilder = ({ formik }: any) => {
     formik.setFieldValue('questions', items);
   };
 
+  // Removes a question from the survey
   const handleDeleteQuestion = (indexToDelete: number) => {
     formik.setFieldValue(
       'questions',
@@ -1020,7 +634,9 @@ const QuestionBuilder = ({ formik }: any) => {
   );
 };
 
+// Component for creating new survey questions with various types and options
 const AddNewQuestion = ({ onSave }: any) => {
+  // State management for question form
   const [question, setQuestion] = useState('');
   const [questionType, setQuestionType] = useState('');
   const [options, setOptions] = useState(['']);
@@ -1031,6 +647,7 @@ const AddNewQuestion = ({ onSave }: any) => {
     options: '',
   });
 
+  // Updates question type and resets options based on type
   const handleQuestionTypeChange = (value: any) => {
     setQuestionType(value);
     if (value === 'multiple-choice') {
@@ -1041,6 +658,7 @@ const AddNewQuestion = ({ onSave }: any) => {
     setErrors({ ...errors, questionType: '' });
   };
 
+  // Manages multiple choice options
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
@@ -1048,15 +666,18 @@ const AddNewQuestion = ({ onSave }: any) => {
     setErrors({ ...errors, options: '' });
   };
 
+  // Adds a new option for multiple choice questions
   const handleAddOption = () => {
     setOptions([...options, '']);
     setErrors({ ...errors, options: '' });
   };
 
+  // Removes an option from multiple choice questions
   const handleRemoveOption = (index: number) => {
     setOptions((prevOptions) => prevOptions.filter((_, i) => i !== index));
   };
 
+  // Validates all form fields before saving
   const validateFields = () => {
     let isValid = true;
     const newErrors = { question: '', questionType: '', options: '' };
@@ -1085,6 +706,7 @@ const AddNewQuestion = ({ onSave }: any) => {
     return isValid;
   };
 
+  // Saves the question if validation passes
   const handleSaveQuestion = () => {
     if (validateFields()) {
       const newQuestion = {
@@ -1147,7 +769,7 @@ const AddNewQuestion = ({ onSave }: any) => {
                     <IconButton
                       onClick={() => handleRemoveOption(index)}
                       size="small"
-                      color="error" // At least two options should remain
+                      color="error"
                     >
                       <Iconify icon="mdi:trash" />
                     </IconButton>
@@ -1158,7 +780,7 @@ const AddNewQuestion = ({ onSave }: any) => {
                 <FormHelperText
                   error
                   sx={{
-                    mb: 5, // Add margin bottom to separate from Add Option button
+                    mb: 5,
                   }}
                 >
                   {errors.options}
@@ -1200,7 +822,9 @@ const AddNewQuestion = ({ onSave }: any) => {
   );
 };
 
+// Component for previewing and publishing the survey
 const PreviewAndPublish = ({ formik }: any) => {
+  // State for managing question table data
   const [questionTableData, setQuestionTableData] = useState(formik.values.questions);
   console.log('question table data---', questionTableData);
 
@@ -1230,7 +854,7 @@ const PreviewAndPublish = ({ formik }: any) => {
             },
           }}
         />
-        &nbsp;&nbsp;
+
         <DatePicker
           label="End Date"
           name="endDate"
@@ -1249,45 +873,7 @@ const PreviewAndPublish = ({ formik }: any) => {
     </Box>
   );
 };
-
 const allSurveySteps = [SurveyDetails, QuestionBuilder, PreviewAndPublish];
-
-const validationSchema = yup.object().shape({
-  surveyTitle: yup.string().min(1, 'Survey title is required').required('Survey title is required'),
-  description: yup.string().required('Description is required'),
-  surveyType: yup.string().required('Survey type is required'),
-  audience: yup
-    .array()
-    .of(yup.string())
-    .min(1, 'Audience is required')
-    .required('Audience is required'),
-  className: yup
-    .array()
-    .of(yup.string())
-    .min(1, 'Class name is required')
-    .required('Class name is required'),
-  organization: yup
-    .array()
-    .of(yup.string())
-    .min(1, 'Organization is required')
-    .required('Organization is required'),
-  questions: yup
-    .array()
-    .of(
-      yup.object().shape({
-        question: yup.string().required('Question is required'),
-        type: yup.string().required('Question type is required'),
-        options: yup.array().of(yup.string()).min(1, 'At least one option is required'),
-      })
-    )
-    .min(1, 'At least one question is required')
-    .required('Questions are required'),
-  startDate: yup.date().required('Start date is required'),
-  endDate: yup
-    .date()
-    .min(yup.ref('startDate'), 'End date must be after start date')
-    .required('End date is required'),
-});
 
 const AddNewSurvey = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -1328,3 +914,5 @@ const AddNewSurvey = () => {
     />
   );
 };
+
+export default AddNewSurvey;
