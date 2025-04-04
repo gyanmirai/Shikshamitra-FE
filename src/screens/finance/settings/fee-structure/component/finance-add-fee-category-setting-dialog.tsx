@@ -15,7 +15,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -263,20 +262,19 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             <ShakingTextField
               error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
             >
-              <AutoFocus>
-                <CustomSelect
-                  label="Receipt Book"
-                  options={[
-                    { value: 'cbse', label: 'CBSE' },
-                    { value: 'gseb', label: 'GSEB' },
-                  ]}
-                  value={formik.values.bookRecipt}
-                  onChange={(e) => formik.setFieldValue('bookRecipt', e)}
-                  disabled={isFieldsDisabled}
-                  error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-                  helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
-                />
-              </AutoFocus>
+              <CustomSelect
+                label="Receipt Book"
+                options={[
+                  { value: 'cbse', label: 'CBSE' },
+                  { value: 'gseb', label: 'GSEB' },
+                ]}
+                autoFocus
+                value={formik.values.bookRecipt}
+                onChange={(e) => formik.setFieldValue('bookRecipt', e)}
+                disabled={isFieldsDisabled}
+                error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
+                helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
+              />
             </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>

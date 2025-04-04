@@ -9,7 +9,6 @@ import { Box, Button, Tooltip, TextField, Typography, DialogActions } from '@mui
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
-import AutoFocus from 'src/components/autofocus';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -208,25 +207,24 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                         formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
                       }
                     >
-                      <AutoFocus>
-                        <TextField
-                          size="small"
-                          label="Check Bounce Reason"
-                          name="checkBounceReason"
-                          value={formik.values.checkBounceReason}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          fullWidth
-                          error={
-                            formik.touched.checkBounceReason &&
-                            Boolean(formik.errors.checkBounceReason)
-                          }
-                          helperText={
-                            formik.touched.checkBounceReason &&
-                            (formik.errors.checkBounceReason as string)
-                          }
-                        />
-                      </AutoFocus>
+                      <TextField
+                        size="small"
+                        label="Check Bounce Reason"
+                        name="checkBounceReason"
+                        value={formik.values.checkBounceReason}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        autoFocus
+                        fullWidth
+                        error={
+                          formik.touched.checkBounceReason &&
+                          Boolean(formik.errors.checkBounceReason)
+                        }
+                        helperText={
+                          formik.touched.checkBounceReason &&
+                          (formik.errors.checkBounceReason as string)
+                        }
+                      />
                     </ShakingTextField>
                   </Grid2>
 

@@ -15,7 +15,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -192,22 +191,19 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                 <ShakingTextField
                   error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
                 >
-                  <AutoFocus>
-                    <CustomSelect
-                      label="Expense Category"
-                      options={[]}
-                      value={formik.values.expenseCategory}
-                      onChange={(value) => formik.setFieldValue('expenseCategory', value)}
-                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                      disabled={isEdit}
-                      error={
-                        formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)
-                      }
-                      helperText={
-                        formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''
-                      }
-                    />
-                  </AutoFocus>
+                  <CustomSelect
+                    label="Expense Category"
+                    options={[]}
+                    value={formik.values.expenseCategory}
+                    onChange={(value) => formik.setFieldValue('expenseCategory', value)}
+                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                    disabled={isEdit}
+                    autoFocus
+                    error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
+                    helperText={
+                      formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''
+                    }
+                  />
                 </ShakingTextField>
               </Grid>
               <Grid item xs={6}>

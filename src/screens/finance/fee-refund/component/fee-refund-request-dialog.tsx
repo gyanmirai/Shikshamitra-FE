@@ -13,7 +13,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -115,24 +114,23 @@ const FeeRefundRequestDialog: React.FC<FeeRefundRequestDialogProps> = ({ onClose
               {/* Class */}
               <Grid item lg={4} xs={6}>
                 <ShakingTextField error={formik.touched.class && Boolean(formik.errors.class)}>
-                  <AutoFocus>
-                    <CustomSelect
-                      options={[
-                        { label: '10', value: '10A' },
-                        { label: '12', value: '10B' },
+                  <CustomSelect
+                    options={[
+                      { label: '10', value: '10A' },
+                      { label: '12', value: '10B' },
 
-                        { label: '11', value: '10C' },
-                      ]}
-                      label="Class"
-                      name="class"
-                      value={formik.values.class}
-                      onChange={(e) => formik.setFieldValue('class', e)}
-                      onBlur={formik.handleBlur}
-                      fullWidth
-                      error={formik.touched.class && Boolean(formik.errors.class)}
-                      helperText={(formik.touched.class && formik.errors.class) || ''}
-                    />
-                  </AutoFocus>
+                      { label: '11', value: '10C' },
+                    ]}
+                    autoFocus
+                    label="Class"
+                    name="class"
+                    value={formik.values.class}
+                    onChange={(e) => formik.setFieldValue('class', e)}
+                    onBlur={formik.handleBlur}
+                    fullWidth
+                    error={formik.touched.class && Boolean(formik.errors.class)}
+                    helperText={(formik.touched.class && formik.errors.class) || ''}
+                  />
                 </ShakingTextField>
               </Grid>
 

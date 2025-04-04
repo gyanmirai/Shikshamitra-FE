@@ -13,7 +13,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -137,22 +136,19 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
                 <ShakingTextField
                   error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
                 >
-                  <AutoFocus>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      name="receiptBookName"
-                      label="Receipt Book Name"
-                      value={formik.values.receiptBookName}
-                      onChange={(e) =>
-                        formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value))
-                      }
-                      error={
-                        formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)
-                      }
-                      helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
-                    />
-                  </AutoFocus>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    autoFocus
+                    name="receiptBookName"
+                    label="Receipt Book Name"
+                    value={formik.values.receiptBookName}
+                    onChange={(e) =>
+                      formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value))
+                    }
+                    error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
+                    helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
+                  />
                 </ShakingTextField>
               </Grid>
 

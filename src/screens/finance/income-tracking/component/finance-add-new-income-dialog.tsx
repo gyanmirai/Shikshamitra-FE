@@ -14,7 +14,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -178,23 +177,22 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                   <ShakingTextField
                     error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
                   >
-                    <AutoFocus>
-                      <CustomSelect
-                        label="Income Category"
-                        options={[
-                          { label: 'Donation', value: 'Donation' },
-                          { label: 'Fees', value: 'Fees' },
-                        ]}
-                        value={formik.values.incomeSource}
-                        onChange={(value) => formik.setFieldValue('incomeSource', value)}
-                        formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                        disabled={isEdit}
-                        error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
-                        helperText={
-                          formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
-                        }
-                      />
-                    </AutoFocus>
+                    <CustomSelect
+                      label="Income Category"
+                      options={[
+                        { label: 'Donation', value: 'Donation' },
+                        { label: 'Fees', value: 'Fees' },
+                      ]}
+                      value={formik.values.incomeSource}
+                      autoFocus
+                      onChange={(value) => formik.setFieldValue('incomeSource', value)}
+                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                      disabled={isEdit}
+                      error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
+                      helperText={
+                        formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
+                      }
+                    />
                   </ShakingTextField>
                 </Grid>
                 <Grid item xs={6}>
