@@ -42,10 +42,14 @@ const TABS = [
 ];
 
 const Setting = (props: TabComponentType) => {
+  // Initialize tabs with 'rubricManagement' as default value using custom hook
   const tabs = useTabs('rubricManagement');
-  const currentTab = TABS.find((tab) => tab.value === tabs.value);
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
+  // Find the current tab object based on selected tab value
+  const currentTab = TABS.find((tab) => tab.value === tabs.value);
+
+  // Get the component to render based on selected tab value
+  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (
     <Box>
       <CustomBreadcrumbs

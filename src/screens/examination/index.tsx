@@ -14,9 +14,9 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
-import GradeEntry from './gradeEntry';
-import ScheduleExam from './schedule-exam';
 import QuizManagement from './quizManagement';
+import GradeEntry from './gradeEntry/gradeEntry';
+import ScheduleExam from './scheduleExam/schedule-exam';
 import GradingAndAnalytics from './gradingAndAnalytics';
 // eslint-disable-next-line import/no-named-as-default
 import AssessmentManagement from './assessment-management';
