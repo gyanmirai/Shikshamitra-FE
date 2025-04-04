@@ -14,7 +14,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import EventType from './eventType';
 import UserPreferences from './userPreferences';
 import NotificationSetting from './notificationSetting';
-import SettingAnnouncement from './announcementCategory';
+import SettingAnnouncement from './announcementSetting';
 
 const TABS = [
   {
@@ -51,8 +51,9 @@ const Setting = () => {
     <Box>
       <CustomBreadcrumbs
         heading={currentActiveComponent?.label}
+        description="Manage your communication settings, including notification preferences and event types."
         links={[
-          { name: 'Communication' },
+          { name: 'Communication', href: '/communication/dashboard' },
           { name: 'Settings' },
           { name: currentActiveComponent?.label },
         ]}

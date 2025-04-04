@@ -25,7 +25,12 @@ const UserPreferences = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
       heading="User Preferences"
-      links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'User Preferences' }]}
+      description="Manage your notification settings for various events and announcements."
+      links={[
+        { name: 'Communication', href: '/communication/dashboard' },
+        { name: 'Settings' },
+        { name: 'User Preferences' },
+      ]}
       sx={{ px: 1, mb: 2 }}
     />
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
