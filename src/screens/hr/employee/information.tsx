@@ -1,6 +1,5 @@
 // import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 
@@ -11,7 +10,9 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import ShakingTextField from 'src/components/shaking-text-field';
 
+import { validations } from './employee-form-validation';
 import {
   FamilyFields,
   PayrollFields,
@@ -39,6 +40,11 @@ const TABS = [
 ];
 
 const EmployeeInformation = ({ editData }: { editData: any }) => {
+  const tabs = useTabs('personalInformation');
+  const activeTabIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === tabs.value),
+    [tabs.value]
+  );
   const [isEdit, setIsEdit] = useState(false);
 
   const onSubmit = (_val: any) => {};
@@ -49,17 +55,11 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
     },
-    validationSchema: Yup.object().shape({}),
+    validationSchema: validations[activeTabIndex],
     onSubmit: (values) => {
       onSubmit(values);
     },
   });
-
-  const tabs = useTabs('personalInformation');
-  const activeTabIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
 
   return (
     <Box
@@ -125,6 +125,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                     xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
                     md={[1, 2].includes(activeTabIndex) ? 12 : 4}
                     key={field.name}
+                    mb="15px"
                   >
                     {field.renderComp ? (
                       field.renderComp({
@@ -133,58 +134,72 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                         disabled: !isEdit,
                       })
                     ) : field.type === 'date' ? (
-                      <DatePicker
-                        label={field.label}
-                        name={field.name}
-                        value={formik.values[field.name as keyof typeof formik.values]}
-                        format="DD/MM/YYYY"
-                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                        sx={{
-                          ...((field?.sx as any) || {}),
-                        }}
-                        disabled={!isEdit}
-                        slotProps={{
-                          textField: {
-                            placeholder: field.placeholder,
-                            fullWidth: true,
-                            size: 'small',
-                            helperText:
-                              formik.touched[field.name as keyof typeof formik.values] &&
-                              formik.errors[field.name as keyof typeof formik.values]
-                                ? String(formik.errors[field.name as keyof typeof formik.values])
-                                : undefined,
-                            error:
-                              formik.touched[field.name as keyof typeof formik.values] &&
-                              Boolean(formik.errors[field.name as keyof typeof formik.values]),
-                          },
-                        }}
-                      />
-                    ) : (
-                      <TextField
-                        key={field.name}
-                        type={field.type}
-                        size="small"
-                        label={field.label}
-                        name={field.name}
-                        disabled={!isEdit}
-                        placeholder={field.placeholder}
-                        value={formik.values[field.name as keyof typeof formik.values]}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+                      <ShakingTextField
                         error={
                           formik.touched[field.name as keyof typeof formik.values] &&
                           Boolean(formik.errors[field.name as keyof typeof formik.values])
                         }
-                        helperText={
+                      >
+                        <DatePicker
+                          label={field.label}
+                          name={field.name}
+                          value={formik.values[field.name as keyof typeof formik.values]}
+                          format="DD/MM/YYYY"
+                          onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                          sx={{
+                            ...((field?.sx as any) || {}),
+                          }}
+                          disabled={!isEdit}
+                          slotProps={{
+                            textField: {
+                              placeholder: field.placeholder,
+                              fullWidth: true,
+                              size: 'small',
+                              helperText:
+                                formik.touched[field.name as keyof typeof formik.values] &&
+                                formik.errors[field.name as keyof typeof formik.values]
+                                  ? String(formik.errors[field.name as keyof typeof formik.values])
+                                  : undefined,
+                              error:
+                                formik.touched[field.name as keyof typeof formik.values] &&
+                                Boolean(formik.errors[field.name as keyof typeof formik.values]),
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    ) : (
+                      <ShakingTextField
+                        error={
                           formik.touched[field.name as keyof typeof formik.values] &&
-                          formik.errors[field.name as keyof typeof formik.values]
-                            ? String(formik.errors[field.name as keyof typeof formik.values])
-                            : undefined
+                          Boolean(formik.errors[field.name as keyof typeof formik.values])
                         }
-                        fullWidth
-                        sx={{ ...(field?.sx || {}) }}
-                        {...(field?.otherProps || {})}
-                      />
+                      >
+                        <TextField
+                          key={field.name}
+                          type={field.type}
+                          size="small"
+                          label={field.label}
+                          name={field.name}
+                          disabled={!isEdit}
+                          placeholder={field.placeholder}
+                          value={formik.values[field.name as keyof typeof formik.values]}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={
+                            formik.touched[field.name as keyof typeof formik.values] &&
+                            Boolean(formik.errors[field.name as keyof typeof formik.values])
+                          }
+                          helperText={
+                            formik.touched[field.name as keyof typeof formik.values] &&
+                            formik.errors[field.name as keyof typeof formik.values]
+                              ? String(formik.errors[field.name as keyof typeof formik.values])
+                              : undefined
+                          }
+                          fullWidth
+                          sx={{ ...(field?.sx || {}) }}
+                          {...(field?.otherProps || {})}
+                        />
+                      </ShakingTextField>
                     )}
                   </Grid>
                 ))}{' '}
