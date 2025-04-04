@@ -12,7 +12,6 @@ import { Box, Card, Button } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -163,24 +162,23 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                 <ShakingTextField
                   error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
                 >
-                  <AutoFocus>
-                    <CustomSelect
-                      label="Category Type"
-                      options={[
-                        { value: '123', label: 'Income' },
-                        { value: '345', label: 'Expense' },
-                      ]}
-                      value={formik.values.categoryType}
-                      onChange={(value) => formik.setFieldValue('categoryType', value)}
-                      disabled={edit}
-                      error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
-                      helperText={
-                        formik.touched.categoryType && formik.errors.categoryType
-                          ? String(formik.errors.categoryType)
-                          : ''
-                      }
-                    />
-                  </AutoFocus>
+                  <CustomSelect
+                    label="Category Type"
+                    options={[
+                      { value: '123', label: 'Income' },
+                      { value: '345', label: 'Expense' },
+                    ]}
+                    value={formik.values.categoryType}
+                    onChange={(value) => formik.setFieldValue('categoryType', value)}
+                    disabled={edit}
+                    autoFocus
+                    error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
+                    helperText={
+                      formik.touched.categoryType && formik.errors.categoryType
+                        ? String(formik.errors.categoryType)
+                        : ''
+                    }
+                  />
                 </ShakingTextField>
               </Grid2>
               <Grid2 xs={6}>

@@ -8,7 +8,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -172,15 +171,14 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
               label: 'Discount Amount',
               render: (value: any, row: any) =>
                 row.feeHead === paymentHistoryData[0].feeHead ? (
-                  <AutoFocus>
-                    <NumericFormatCustom
-                      size="small"
-                      label={`${row.feeHead} Discount`}
-                      name={`${row.feeHead.toLowerCase()}Discount`}
-                      value={discountValues[row.feeHead] || ''}
-                      onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
-                    />
-                  </AutoFocus>
+                  <NumericFormatCustom
+                    autoFocus
+                    size="small"
+                    label={`${row.feeHead} Discount`}
+                    name={`${row.feeHead.toLowerCase()}Discount`}
+                    value={discountValues[row.feeHead] || ''}
+                    onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                  />
                 ) : (
                   <NumericFormatCustom
                     size="small"

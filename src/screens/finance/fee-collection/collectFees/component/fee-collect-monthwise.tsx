@@ -3,7 +3,6 @@ import { useFormik } from 'formik';
 
 import { Box, Grid, Tooltip, Typography } from '@mui/material';
 
-import AutoFocus from 'src/components/autofocus';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -115,19 +114,18 @@ const FeeCollectionMonthWise: React.FC<FeeCollectionMonthWiseProps> = ({
               </Typography>
             </Box>
             <Box flex={1}>
-              <AutoFocus>
-                <CustomSelect
-                  multiple
-                  label="Select Term"
-                  options={[]}
-                  // @ts-ignore
-                  value={formik.values.selectedTerms}
-                  onChange={(selectedValues) => {
-                    formik.setFieldValue('selectedTerms', selectedValues);
-                  }}
-                  size="small"
-                />
-              </AutoFocus>
+              <CustomSelect
+                autoFocus
+                multiple
+                label="Select Term"
+                options={[]}
+                // @ts-ignore
+                value={formik.values.selectedTerms}
+                onChange={(selectedValues) => {
+                  formik.setFieldValue('selectedTerms', selectedValues);
+                }}
+                size="small"
+              />
             </Box>
           </Box>
 

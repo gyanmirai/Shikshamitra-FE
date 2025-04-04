@@ -15,7 +15,6 @@ import {
 } from 'src/redux/paymentStatusOption/paymentStatusOptionApi';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
@@ -168,15 +167,14 @@ const ConfigurePaymentStatusComponent = () => {
     <Box py="20px" display="flex" flexDirection="column" gap={3}>
       <Grid container spacing={2}>
         <Box px="15px" display="flex" flexDirection="row" gap={1} alignItems="center">
-          <AutoFocus>
-            <TextField
-              name="Add new status"
-              label="Add New Status"
-              size="small"
-              value={paymentStatus}
-              onChange={(e) => setPaymentStatus(capitalizeWords(e.target.value))}
-            />
-          </AutoFocus>
+          <TextField
+            name="Add new status"
+            label="Add New Status"
+            size="small"
+            autoFocus
+            value={paymentStatus}
+            onChange={(e) => setPaymentStatus(capitalizeWords(e.target.value))}
+          />
 
           {isEdit ? (
             <Button
