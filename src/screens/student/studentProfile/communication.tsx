@@ -1,5 +1,4 @@
 import type { LabelColor } from 'src/components/label';
-import type { Meeting } from 'src/screens/communication/meetings/AllMeetings';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
@@ -27,7 +26,7 @@ import { CalendarView } from 'src/sections/calendar/view';
 
 import type { StudentTabsComponentType } from '.';
 
-const meetings: Meeting[] = [
+const meetings = [
   {
     id: 1,
     title: 'Monthly Staff Meeting',
