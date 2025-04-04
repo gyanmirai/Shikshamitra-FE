@@ -30,7 +30,6 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -174,7 +173,10 @@ export const getImportanceLevelColor = (level: string) => {
 
 const SchoolWiseAnnounsement = (props: TabComponentType) => {
   // Controls form visibility through URL search parameters
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
+  const [open, setOpen] = useState(false);
+
+  console.log('open----', open);
+
   // Stores the announcement being edited
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
   // Stores the announcement being viewed in detail
@@ -237,8 +239,10 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
    * Clears editing announcement, publishing announcement and closes modals
    */
   const handleCloseDialog = () => {
+    console.log('close dialog');
+
     setEditingAnnouncement(null);
-    setParams({ isForm: 'false' });
+    setOpen(false);
     publish_modal.onFalse();
     setPublishingAnnouncement(null);
   };
@@ -263,26 +267,25 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     publish_modal.onFalse();
     setPublishingAnnouncement(null);
   };
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Announcements' },
-          { name: 'School Wise Announcement' },
-          { name: 'Announcement Form' },
-        ]
-      : [
-          { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Announcements' },
-          { name: 'School Wise Announcement' },
-        ];
+  const links = open
+    ? [
+        { name: 'Communication', href: '/communication/dashboard' },
+        { name: 'Announcements' },
+        { name: 'School Wise Announcement' },
+        { name: 'Announcement Form' },
+      ]
+    : [
+        { name: 'Communication', href: '/communication/dashboard' },
+        { name: 'Announcements' },
+        { name: 'School Wise Announcement' },
+      ];
 
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Schedule Exam"
+        heading="School Wise Announcement"
         description={
-          params.isForm === 'true'
+          open
             ? 'Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
             : 'View and manage all school-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed.'
         }
@@ -291,22 +294,22 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
             onClick={
-              params.isForm === 'true'
-                ? () => handleCloseDialog
+              open
+                ? () => handleCloseDialog()
                 : () => {
-                    setParams({ isForm: 'true' });
+                    setOpen(true);
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'School Wise Announcement'}
+            {open ? 'Back' : 'School Wise Announcement'}
           </Button>
         }
       />
-      {params.isForm === 'true' ? (
-        <Card>
+      {open ? (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AnnouncementForm
             initialValues={editingAnnouncement}
             onSubmit={handleSubmit}
@@ -423,7 +426,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
                     showViewIcon
                     showThreeDots={false}
                     handleEditClick={() => {
-                      setParams({ isForm: 'true' });
+                      setOpen(true);
                       setEditingAnnouncement(row);
                     }}
                     handleDeleteClick={() => {
@@ -456,15 +459,13 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           <DialogContentText>Are you sure to delete this Announcement?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={confirm_dialog.onFalse} variant="contained" color="error">
-            Cancel
-          </Button>
+          <Button onClick={confirm_dialog.onFalse}>Cancel</Button>
           <Button
             onClick={() => {
               handleDelete(deleteAnnouncement);
             }}
             variant="contained"
-            color="success"
+            color="error"
           >
             Confirm
           </Button>
@@ -643,6 +644,8 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
 }) => {
+  console.log('AnnouncementForm----', AnnouncementForm);
+
   // List of available organizations/schools
   const allOrganizations = [
     { value: 'Pre Primary', label: 'Pre Primary' },
@@ -734,9 +737,9 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   console.log('formik error====', formik.errors);
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={2} height="100%">
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '450px' }}>
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField

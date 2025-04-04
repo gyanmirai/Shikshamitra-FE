@@ -2,12 +2,11 @@
 
 import type { CardProps } from '@mui/material';
 
+import React from 'react';
 import Link from 'next/link';
-import React, { useState, useCallback } from 'react';
 
-import { Add } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, alpha, Button, Typography } from '@mui/material';
+import { Box, Card, Grid, alpha, Typography, CardContent } from '@mui/material';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
@@ -18,25 +17,54 @@ import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { CalendarView } from 'src/sections/calendar/view';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
+import type { TDashboardCardProps } from './type';
+
 const CommunicationDashboard = () => {
-  const [view, setView] = useState('schoolwise');
+  // Initialize theme object from MUI useTheme hook
   const theme = useTheme();
 
-  const handleChangeView = useCallback(
-    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
-      if (newView !== null) {
-        setView(newView);
-      }
-    },
-    []
-  );
-
   return (
-    <Box mb={1}>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Communication Dashboard"
+        links={[{ name: 'Communication' }, { name: 'Communication Dashboard' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:announcement',
+                label: 'Add Announcement',
+                href: '/communication/announcement',
+                color: 'success',
+              },
+              {
+                icon: 'mdi:event',
+                label: 'Add Event',
+                href: '/communication/eventsAndCalendar',
+                color: 'warning',
+              },
+              {
+                icon: 'ri:survey-line',
+                label: 'Add Survey',
+                href: '/communication/feedbackAndSurvey',
+                color: 'secondary',
+              },
+              {
+                icon: 'mdi:virtual-meeting',
+                label: 'Add Meeting',
+                href: '/communication/meetings',
+              },
+            ]}
+          />
+        }
+      />
       <Grid container spacing={2} mt={1}>
         <Grid item xs={12} md={3}>
           <EmployeeDashboardCard
@@ -91,53 +119,16 @@ const CommunicationDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: -2,
-          mt: 2,
-        }}
-      >
-        <ToggleButtonGroup
-          size="small"
-          value={view}
-          exclusive
-          onChange={handleChangeView}
-          sx={{
-            '& .Mui-selected': {
-              backgroundColor: 'black',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'black',
-              },
-            },
-          }}
-        >
-          <ToggleButton value="schoolwise">
-            <Typography variant="subtitle2">School Wise</Typography>
-          </ToggleButton>
-          <ToggleButton value="classwise">
-            <Typography variant="subtitle2">Class Wise</Typography>
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+      <Grid item xs={12} mt={3}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6">Event Calendar</Typography>
+            <CalendarView />
+          </CardContent>
+        </Card>
+      </Grid>
 
-      {view === 'schoolwise' ? <SchoolWiseAnnounsement /> : <ClassWiseAnnounsement />} */}
-
-      <Box display="flex" justifyContent="space-between" alignItems="space-between" mt={2}>
-        <Typography variant="h6">Event Calendar</Typography>
-        <Button variant="contained" size="small" startIcon={<Add />}>
-          Event
-        </Button>
-      </Box>
-
-      <Box display="flex" width="1215px" height="700px" ml="-40px">
-        <CalendarView />
-      </Box>
-
-      <Grid container spacing={2}>
+      <Grid container spacing={2} mt={1}>
         <Grid item xs={12}>
           <Card sx={{ p: 1, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
@@ -168,12 +159,6 @@ const CommunicationDashboard = () => {
           </Card>
         </Grid>
       </Grid>
-
-      <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mt={2}>
-        <Button variant="contained" size="small" startIcon={<Add />}>
-          Survey
-        </Button>
-      </Box>
       <Grid container spacing={2} mt={1}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
@@ -241,16 +226,7 @@ const CommunicationDashboard = () => {
 
 export default CommunicationDashboard;
 
-interface DashboardCardProps {
-  title: string;
-  value: number | string;
-  icon: string;
-  href?: string;
-  color?: string;
-  description?: string;
-}
-
-export const CommunicationDashboardCard: React.FC<DashboardCardProps> = ({
+export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
   title,
   value,
   icon,
@@ -364,24 +340,6 @@ type Props = CardProps & {
 };
 
 export function BookingWidgetSummary({ title, percent, total, icon, sx, ...other }: Props) {
-  //   const renderTrending = (
-  //     <Box gap={0.5} display="flex" alignItems="center" sx={{ typography: 'subtitle2' }}>
-  //       <Iconify
-  //         width={24}
-  //         icon={icon}
-  //         sx={{
-  //           flexShrink: 0,
-  //           color: 'success.main',
-  //           ...(percent < 0 && { color: 'error.main' }),
-  //         }}
-  //       />
-  //       <span>
-  //         {percent > 0 && '+'}
-  //         {fNumber(percent)}
-  //       </span>
-  //     </Box>
-  //   );
-
   return (
     <Card
       sx={{

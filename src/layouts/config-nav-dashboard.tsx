@@ -846,9 +846,9 @@ const communicationModule = {
           shortcutKeyName: 'Alt+C+1',
         },
         {
-          title: 'Messages',
+          title: 'Conversation',
           path: '/communication/messages',
-          _action: 'messages',
+          _action: 'conversation',
           shortcutKey: 'Alt+C+M',
           shortcutKeyName: 'Alt+C+M',
         },
