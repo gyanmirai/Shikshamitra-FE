@@ -152,7 +152,11 @@ const Settings = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Settings"
         description="Configure curriculum settings, manage notification preferences, and define user permissions to ensure smooth and secure academic operations. Customize settings according to your institution's needs."
-        links={[{ name: 'Academic and Assignment' }, { name: 'Curriculum' }, { name: 'Settings' }]}
+        links={[
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Curriculum', href: '/academic/curriculum-management' },
+          { name: 'Settings' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
 

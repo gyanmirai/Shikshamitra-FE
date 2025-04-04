@@ -34,7 +34,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SubjectList from './component/subjectList';
 import TimeTableCell from './component/timeTableCell';
 
-export const subjects = [
+import type { TSubject, TRemainingLectures } from './type';
+
+export const subjects: TSubject[] = [
   {
     id: 1,
     name: 'Math',
@@ -62,20 +64,32 @@ export const subjects = [
 ];
 
 const TimeTableGrid = (props: TabComponentType) => {
+  // Query to fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  // State for managing classroom selection
   const [classroom, setClassroom] = useState<string>('');
+
+  // State for managing modal/dialog open state
   const [open, setOpen] = useState(false);
+
+  // Props for managing URL search parameters
   const { searchParams, setSearchParams } = props;
+
+  // State for managing selected class and division
   const [classes, setClasses] = useState<string>('');
   const [division, setDivision] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
+  // Theme object from Material-UI
   const theme = useTheme();
 
-  const [remainingLectures, setRemainingLectures] = useState<any>(() =>
+  // Initialize remaining lectures count for each subject
+  // Creates an object with subject IDs as keys and their lecture counts as values
+  const [remainingLectures, setRemainingLectures] = useState<TRemainingLectures>(() =>
     subjects.reduce(
       (acc, subject) => ({
         ...acc,
@@ -85,20 +99,29 @@ const TimeTableGrid = (props: TabComponentType) => {
     )
   );
 
+  // Effect hook to handle class and division selection logic
   useEffect(() => {
+    // Check if class data exists and has items
     if (classData?.items?.length) {
       if (classes) {
+        // If a class is selected, find the selected class from the data
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
+        // Set division options based on selected class
         setDivisionOptions(selectedClass?.divisions || []);
+        // If divisions exist, set the first division as default
         if (selectedClass?.divisions?.length) {
           setDivision(selectedClass.divisions[0].id);
         }
       } else {
+        // If no class is selected, use the first class as default
         const firstClass = classData.items[0];
+        // Update URL search params with the first class ID
         setSearchParams?.({
           classId: firstClass.id,
         });
+        // Set division options for the first class
         setDivisionOptions(firstClass?.divisions || []);
+        // If divisions exist, set the first division as default
         if (firstClass?.divisions?.length) {
           setDivision(firstClass.divisions[0].id);
         }
@@ -106,23 +129,23 @@ const TimeTableGrid = (props: TabComponentType) => {
     }
   }, [classData, classes, setSearchParams]);
 
+  // Define time slots for the timetable
   const timeSlots = [
-    '8:00 - 8:45',
-    '8:45 - 9:30',
-    '9:30 - 10:15',
-    '10:15 - 10:30', // Break
-    '10:30 - 11:15',
-    '11:15 - 12:00',
+    '8:00 - 8:45', // First period
+    '8:45 - 9:30', // Second period
+    '9:30 - 10:15', // Third period
+    '10:15 - 10:30', // Break time
+    '10:30 - 11:15', // Fourth period
+    '11:15 - 12:00', // Fifth period
   ];
-
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Initialize timetable as an array of arrays
   const [timetable, setTimetable] = useState<
     Array<
       Array<{
-        subject?: any;
-        teacher?: any;
+        subject?: TSubject;
+        teacher?: string;
         room?: string;
       } | null>
     >
@@ -132,55 +155,71 @@ const TimeTableGrid = (props: TabComponentType) => {
       .map(() => Array(weekDays.length).fill(null))
   );
 
-  const handleDragStart = (e: any, subject: any) => {
+  console.log('timetable---', timetable);
+
+  // Handle the start of a drag operation for a subject
+  const handleDragStart = (e: React.DragEvent<HTMLElement>, subject: TSubject) => {
+    // Store the subject data in the drag event
     e.dataTransfer.setData('subject', JSON.stringify(subject));
   };
 
-  const handleDrop = (e: any, timeSlot: string, day: string) => {
+  // Handle dropping a subject into a timetable slot
+  const handleDrop = (e: React.DragEvent<HTMLElement>, timeSlot: string, day: string) => {
     e.preventDefault();
+    // Get the subject data from the drag event
     const subject = JSON.parse(e.dataTransfer.getData('subject'));
+    // Get source location if moving an existing slot
     const sourceTimeSlot = e.dataTransfer.getData('sourceTimeSlot');
     const sourceDay = e.dataTransfer.getData('sourceDay');
 
+    // Convert time slot and day to array indices
     const timeSlotIndex = timeSlots.indexOf(timeSlot);
     const dayIndex = weekDays.indexOf(day);
 
-    // Check if target slot is empty
+    // Prevent dropping into an occupied slot
     if (timetable[timeSlotIndex][dayIndex] !== null) {
       return;
     }
 
-    // If it's a new drag (not moving an existing slot)
+    // Handle new subject placement (not moving existing)
     if (!sourceTimeSlot && !sourceDay) {
-      // Check if there are remaining lectures
+      // Check if there are any remaining lectures for this subject
       if (remainingLectures[subject.id] <= 0) {
         return;
       }
 
-      // Decrease remaining lectures
-      setRemainingLectures((prev: any) => ({
+      // Decrease the count of remaining lectures for this subject
+      setRemainingLectures((prev: TRemainingLectures) => ({
         ...prev,
         [subject.id]: prev[subject.id] - 1,
       }));
     }
 
+    // Update the timetable with the new subject placement
     setTimetable((prev) => {
+      // Create a deep copy of the timetable
       const newTimetable = prev.map((row) => [...row]);
 
+      // Handle moving an existing slot
       if (sourceTimeSlot && sourceDay) {
+        // Get indices for the source location
         const sourceTimeSlotIndex = timeSlots.indexOf(sourceTimeSlot);
         const sourceDayIndex = weekDays.indexOf(sourceDay);
+        // Store the source slot data before clearing it
         const sourceSlotData = newTimetable[sourceTimeSlotIndex][sourceDayIndex];
+        // Clear the source slot
         newTimetable[sourceTimeSlotIndex][sourceDayIndex] = null;
+        // Place the subject in the new slot with existing teacher and room
         newTimetable[timeSlotIndex][dayIndex] = {
           subject,
-          teacher: sourceSlotData?.teacher || null,
+          teacher: sourceSlotData?.teacher,
           room: sourceSlotData?.room || subject.room,
         };
       } else {
+        // Place new subject in the slot with default values
         newTimetable[timeSlotIndex][dayIndex] = {
           subject,
-          teacher: null,
+          teacher: '',
           room: subject.room,
         };
       }
@@ -189,7 +228,7 @@ const TimeTableGrid = (props: TabComponentType) => {
     });
   };
 
-  // Modified handleDeleteSlot to increase remaining lectures
+  // Handles deletion of a subject from a time slot and updates remaining lectures count
   const handleDeleteSlot = (timeSlot: string, day: string) => {
     const timeSlotIndex = timeSlots.indexOf(timeSlot);
     const dayIndex = weekDays.indexOf(day);
@@ -197,19 +236,21 @@ const TimeTableGrid = (props: TabComponentType) => {
     setTimetable((prev) => {
       const deletedSubject = prev[timeSlotIndex][dayIndex]?.subject;
       if (deletedSubject) {
-        // Increase remaining lectures when deleting
-        setRemainingLectures((pre: any) => ({
+        // Increment the remaining lectures count for the deleted subject
+        setRemainingLectures((pre: TRemainingLectures) => ({
           ...pre,
           [deletedSubject.id]: pre[deletedSubject.id] + 1,
         }));
       }
 
+      // Create new timetable with the slot cleared
       const newTimetable = prev.map((row) => [...row]);
       newTimetable[timeSlotIndex][dayIndex] = null;
       return newTimetable;
     });
   };
 
+  // Handles assigning a teacher to a specific time slot
   const handleTeacherSelect = (teacher: string, timeSlot: string, day: string) => {
     const timeSlotIndex = timeSlots.indexOf(timeSlot);
     const dayIndex = weekDays.indexOf(day);
@@ -217,6 +258,7 @@ const TimeTableGrid = (props: TabComponentType) => {
     setTimetable((prev) => {
       const newTimetable = prev.map((row) => [...row]);
       if (newTimetable[timeSlotIndex][dayIndex]) {
+        // Update the teacher for the selected time slot while preserving other data
         newTimetable[timeSlotIndex][dayIndex] = {
           ...newTimetable[timeSlotIndex][dayIndex]!,
           teacher,
@@ -226,6 +268,7 @@ const TimeTableGrid = (props: TabComponentType) => {
     });
   };
 
+  // Handles assigning a room to a specific time slot
   const handleRoomSelect = (room: string, timeSlot: string, day: string) => {
     const timeSlotIndex = timeSlots.indexOf(timeSlot);
     const dayIndex = weekDays.indexOf(day);
@@ -233,6 +276,7 @@ const TimeTableGrid = (props: TabComponentType) => {
     setTimetable((prev) => {
       const newTimetable = prev.map((row) => [...row]);
       if (newTimetable[timeSlotIndex][dayIndex]) {
+        // Update the room for the selected time slot while preserving other data
         newTimetable[timeSlotIndex][dayIndex] = {
           ...newTimetable[timeSlotIndex][dayIndex]!,
           room,
@@ -242,17 +286,19 @@ const TimeTableGrid = (props: TabComponentType) => {
     });
   };
 
+  // Checks if the given time slot is a break period
   const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
 
+  // Defines action menu items for different timetable statuses
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
         {' '}
         <MenuList>
+          {/* Show Add Timetable option for Pending status */}
           {row.status === 'Pending' && (
             <MenuItem
               onClick={() => {
-                // uploadPictureDialog.onTrue();
                 setOpen(true);
               }}
             >
@@ -260,12 +306,11 @@ const TimeTableGrid = (props: TabComponentType) => {
               Timetable
             </MenuItem>
           )}
+          {/* Show Update option for Draft or Published timetables */}
           {(row.status === 'Draft' || row.status === 'Publish') && (
             <MenuItem
               onClick={() => {
-                // assignStudentDialog.onTrue();
-                // setSelectedActivity(row as Activity);
-                // pop.onClose();
+                // TODO: Implement update functionality
               }}
             >
               <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
@@ -278,11 +323,27 @@ const TimeTableGrid = (props: TabComponentType) => {
     []
   );
 
+  const links = open
+    ? [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Time Table', href: '/academic/timeTableDashboard' },
+        { name: 'New Time Table', href: '/academic/newTimetable' },
+      ]
+    : [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Time Table', href: '/academic/timeTableDashboard' },
+      ];
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Timetable"
-        links={[{ name: 'Academic and Assignment' }, { name: 'Time Table' }]}
+        links={links}
+        description={
+          open
+            ? 'Create new timetable for selected class and division'
+            : 'View and manage division-wise timetables'
+        }
         sx={{ px: 1, mb: 2 }}
         action={
           open && (
@@ -330,7 +391,6 @@ const TimeTableGrid = (props: TabComponentType) => {
               options={divisionOptions}
               value={division}
               onChange={(val) => {
-                const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
                 setDivision(val as string);
               }}
               formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}

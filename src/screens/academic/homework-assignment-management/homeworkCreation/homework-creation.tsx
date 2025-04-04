@@ -31,6 +31,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -49,41 +50,10 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import HomeworkAssignmentCreationForm from './component/homeworkCreateDialog';
 import { dummyData } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
-import type { StudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
+import type { THomeworkAssignment } from './type';
+import type { TStudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
-export interface Assignment {
-  title: string;
-  description: string;
-  class: string;
-  division: string[];
-  subjects: string[];
-  submissionType: string;
-  dueDate: Dayjs | null;
-  dueTime: Dayjs | null;
-  attachments: File[];
-  createdBy: string;
-  status: string;
-  // Homework-Specific Fields
-  chapters?: string[];
-  homeworkType?: string;
-  isDailyTask?: boolean;
-  parentAcknowledgement?: boolean;
-  isRecurring?: boolean;
-  recurringFrequency?: string;
-  todaysDate?: Dayjs | null;
-  dayOfSubmission?: string;
-  endDate?: Dayjs | null;
-  scheduleDate?: Dayjs | null;
-  // Assignment-Specific Fields
-  assignmentType?: string;
-  evaluationCriteria?: string;
-  assignedResources?: string;
-  rubricRequired?: boolean;
-  rubric?: string;
-  isScheduled: boolean;
-}
-
-export const initialData: Assignment[] = [
+export const initialData: THomeworkAssignment[] = [
   {
     class: '10',
     division: ['A'],
@@ -219,27 +189,47 @@ export const initialData: Assignment[] = [
 ];
 
 const HomeworkCreation = (props: TabComponentType) => {
+  // View state for toggling between homework and assignment views
   const [view, setView] = useState('homework');
+  // State for managing dialog/modal open/close
   const [open, setOpen] = useState(false);
+  // Selected class state
   const [classes, setClasses] = useState<string>('');
+  // Selected subject state
   const [subject, setSubject] = useState<string>('');
+  // Selected division state
   const [division, setDivision] = useState<string>('');
+  // Date state for homework
   const [homeworkDate, setHomeworkDate] = useState<Dayjs | null>(null);
+  // Date state for assignment
   const [assignmentDate, setAssignmentDate] = useState<Dayjs | null>(null);
+  // Available division options for the selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  // URL search parameters for form state
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
   // const [publishStatus, setPublishStatus] = useState<{ [key: number]: boolean }>({});
   const dialog = useBoolean();
+  // Dialog state for confirmation modal
   const confirmDialog = useBoolean();
+  // Dialog state for submission modal
   const submissionDialog = useBoolean();
 
-  const [assignmentData, setAssignmentData] = useState<Assignment[]>(initialData);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  // State to store and manage assignment data with initial mock data
+  const [assignmentData, setAssignmentData] = useState<THomeworkAssignment[]>(initialData);
+  // State to track currently selected assignment for operations
+  const [selectedAssignment, setSelectedAssignment] = useState<THomeworkAssignment | null>(null);
 
-  const handleSwitchChange = (assignment: Assignment) => {
+  /**
+   * Handles the status switch change for an assignment
+   * If the assignment is in draft status, shows confirmation dialog before publishing
+   * If the assignment is published, directly changes status back to draft
+   * @param assignment - The assignment object to update
+   */
+  const handleSwitchChange = (assignment: THomeworkAssignment) => {
     if (assignment.status === 'draft') {
       setSelectedAssignment(assignment);
       confirmDialog.onTrue();
@@ -251,6 +241,11 @@ const HomeworkCreation = (props: TabComponentType) => {
     }
   };
 
+  /**
+   * Handles the confirmation of status change for an assignment
+   * Updates the status of the selected assignment to 'publish'
+   * Resets the confirmation dialog and selected assignment state
+   */
   const handleConfirmStatusChange = () => {
     if (selectedAssignment) {
       const updatedAssignments = assignmentData.map((item) =>
@@ -262,7 +257,14 @@ const HomeworkCreation = (props: TabComponentType) => {
     setSelectedAssignment(null);
   };
 
-  const handleSubmit = (values: Assignment, status: 'draft' | 'publish') => {
+  /**
+   * Handles the submission of a new assignment
+   * @param values - The assignment values from the form
+   * @param status - The status of the assignment ('draft' or 'publish')
+   * Updates the assignment data with new values including formatted dates
+   * Closes the dialog after submission
+   */
+  const handleSubmit = (values: THomeworkAssignment, status: 'draft' | 'publish') => {
     const updatedValues = {
       ...values,
       status,
@@ -273,6 +275,12 @@ const HomeworkCreation = (props: TabComponentType) => {
     dialog.onFalse();
   };
 
+  /**
+   * Handles the change of view in the UI
+   * @param event - The mouse event that triggered the change
+   * @param newView - The new view to be set
+   * Only updates the view if a new value is provided
+   */
   const handleChangeView = useCallback(
     (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
       if (newView !== null) {
@@ -281,7 +289,6 @@ const HomeworkCreation = (props: TabComponentType) => {
     },
     []
   );
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -304,6 +311,8 @@ const HomeworkCreation = (props: TabComponentType) => {
     []
   );
 
+  // Columns for Homework view
+
   const homeworkColumns: Column[] = [
     {
       id: 'title',
@@ -322,7 +331,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Creation Date',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
@@ -333,7 +342,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Date',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
@@ -344,7 +353,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Time',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('HH:MM') : '-'}
         </Typography>
@@ -361,12 +370,12 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Publish',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <Box sx={{ display: 'flex', alignItems: 'center', ml: 8 }}>
           <Switch
             size="small"
             checked={row.status === 'publish'}
-            onChange={() => handleSwitchChange(row as Assignment)}
+            onChange={() => handleSwitchChange(row as THomeworkAssignment)}
             inputProps={{ 'aria-label': 'Toggle view' }}
           />
         </Box>
@@ -380,7 +389,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       sticky: true,
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <ThreeDotsActions
           placement="right-top"
           showViewIcon
@@ -414,7 +423,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Creation Date',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
@@ -425,7 +434,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Date',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
         </Typography>
@@ -436,7 +445,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Time',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('HH:MM') : '-'}
         </Typography>
@@ -453,12 +462,12 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Publish',
       minWidth: '200px',
       align: 'left',
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <Box sx={{ display: 'flex', alignItems: 'center', ml: 8 }}>
           <Switch
             size="small"
             checked={row.status === 'publish'}
-            onChange={() => handleSwitchChange(row as Assignment)}
+            onChange={() => handleSwitchChange(row as THomeworkAssignment)}
             inputProps={{ 'aria-label': 'Toggle view' }}
           />
         </Box>
@@ -479,7 +488,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       align: 'left',
       isSort: false,
       isFilter: false,
-      render: (value: any, row: any) => (
+      render: (value, row) => (
         <ThreeDotsActions
           actions={(prop) => actions({ ...prop, row })}
           placement="right-top"
@@ -500,15 +509,38 @@ const HomeworkCreation = (props: TabComponentType) => {
       ? assignmentData.filter((assignment) => assignment.homeworkType)
       : assignmentData.filter((assignment) => assignment.assignmentType);
 
+  // Define navigation links based on form state and view type
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
+          { name: view === 'homework' ? 'Homework Form' : 'Assignment Form' },
+        ]
+      : [
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
+          { name: view === 'homework' ? 'Homework Creation' : 'Assignment Creation' },
+        ];
+
+  // Description text for homework section based on form state
+  const homeworkDesc =
+    params.isForm === 'true'
+      ? 'Create a new homework by providing details such as title, description, submission date, and attachments.'
+      : 'View all created homework assignments with complete details, including title, description, submission date, and attached files.';
+
+  // Description text for assignment section based on form state
+  const assignmentDesc =
+    params.isForm === 'true'
+      ? 'Create a new assignment by specifying the title, detailed description, deadline, and any relevant attachments.'
+      : 'View all created assignments with comprehensive details, including title, description, deadline, and attached files.';
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading={view === 'homework' ? 'Homework Creation' : 'Assignment Creation'}
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Homework And Assignment' },
-          { name: view === 'homework' ? 'Homework Creation' : 'Assignment Creation' },
-        ]}
+        description={view === 'homework' ? homeworkDesc : assignmentDesc}
+        links={links}
         sx={{ px: 1, mb: 2 }}
         action={
           open ? (
@@ -518,7 +550,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
               onClick={() => {
                 dialog.onFalse();
-                setOpen(false);
+                setParams({ isForm: 'false' });
               }}
             >
               Back
@@ -530,7 +562,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               startIcon={<Add />}
               onClick={() => {
                 dialog.onTrue();
-                setOpen(true);
+                setParams({ isForm: 'true' });
               }}
             >
               {view === 'homework' ? 'Homework' : 'Assignment'}
@@ -693,32 +725,44 @@ const HomeworkCreation = (props: TabComponentType) => {
 export default HomeworkCreation;
 
 export const StudentSubmissions = () => {
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [tableData, setTableData] = useState<StudentGrade[]>(dummyData);
+  // State to track the currently selected student for individual grading
+  const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
 
+  // State to manage the table data containing student grades
+  const [tableData, setTableData] = useState<TStudentGrade[]>(dummyData);
+
+  // State to track multiple selected students for bulk operations
+  const [selectedStudents, setSelectedStudents] = useState<TStudentGrade[]>([]);
+
+  // Dialog control for sending instant notifications
+  const sendInstantNotificationDialogValue = useBoolean();
+  // Dialog control for single student grade assignment
   const dialog = useBoolean();
+
+  // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
+
+  // Dialog control for bulk grade assignment
   const bulkGradeDialog = useBoolean();
 
-  const handleSelectStudent = (studentId: string) => {
-    setSelectedStudents((prev: any) => {
-      if (prev.includes(studentId)) {
-        return prev.filter((id: any) => id !== studentId);
-      }
-      return [...prev, studentId];
-    });
-  };
-
+  /**
+   * Handles assigning grades to multiple selected students in bulk
+   * @param values Object containing the grade to assign
+   */
   const handleBulkGradeAssignment = (values: { grade: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
-        selectedStudents.includes(student.id) ? { ...student, grade: values.grade } : student
+        selectedStudents.includes(student) ? { ...student, grade: values.grade } : student
       )
     );
     bulkGradeDialog.onFalse();
     setSelectedStudents([]);
   };
 
+  /**
+   * Handles assigning grade and feedback to a single selected student
+   * @param values Object containing the grade and feedback to assign
+   */
   const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
     setTableData((prevData) =>
       prevData.map((student) =>
@@ -731,6 +775,9 @@ export const StudentSubmissions = () => {
     setSelectedStudent(null);
   };
 
+  /**
+   * Handles closing the view submission dialog and resetting the selected student
+   */
   const handleCloseDialog = () => {
     setSelectedStudent(null);
     viewSubmissionDialog.onFalse();
@@ -765,9 +812,10 @@ export const StudentSubmissions = () => {
     [viewSubmissionDialog]
   );
 
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
+  /**
+   * Handler for sending notifications
+   * Opens the instant notification dialog if it's not already open
+   */
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -816,10 +864,10 @@ export const StudentSubmissions = () => {
             render(value, row) {
               return (
                 <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                  checked={!!selectedStudents.some((i: TStudentGrade) => i.id === row.id)}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
+                      setSelectedStudents([...selectedStudents, row as TStudentGrade]);
                     } else {
                       setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
                     }
@@ -953,12 +1001,22 @@ export const StudentSubmissions = () => {
   );
 };
 
+/**
+ * Props for the AssignGrade component
+ * @param data Optional data containing initial grade and feedback values
+ * @param onSubmit Callback function to handle form submission with grade and feedback values
+ */
 interface AssignGradeProps {
-  data?: any;
+  data?: TStudentGrade | null;
   onSubmit: (values: { grade: string; feedback: string }) => void;
 }
 
 const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
+  /**
+   * Initialize formik form with grade and feedback fields
+   * @param initialValues Object containing initial grade and feedback values from data prop
+   * @param onSubmit Handler function that gets called when form is submitted
+   */
   const formik = useFormik({
     initialValues: {
       grade: data?.grade || '',

@@ -17,6 +17,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const WeeklyLectures = () => {
+  // Dialog state to control the visibility of create lecture number dialog
   const createLectureNumberDialog = useBoolean();
 
   return (
@@ -111,12 +112,20 @@ const initialData = [
 ];
 
 const CreateNoOfLecture = () => {
+  // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  // Initialize subject list state with default data
   const [subjectList, setSubjectList] = useState(initialData);
 
+  /**
+   * Handle changes to weekly lecture input fields
+   * Updates the number of lectures for a specific subject
+   * Ensures value is non-negative and converts string to number
+   */
   const handleInputChange = (id: number, value: string) => {
     const numValue = Math.max(0, parseInt(value, 10) || 0);
 

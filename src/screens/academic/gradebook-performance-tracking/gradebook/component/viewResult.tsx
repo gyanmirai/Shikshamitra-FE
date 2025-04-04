@@ -9,10 +9,10 @@ import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnno
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
-import type { StudentGrade } from '../gradebook';
+import type { TStudentGrade } from '../gradebook';
 
 interface ViewResultProps {
-  student: StudentGrade | null;
+  student: TStudentGrade | null;
 }
 
 const ViewResult: React.FC<ViewResultProps> = ({ student }) => (

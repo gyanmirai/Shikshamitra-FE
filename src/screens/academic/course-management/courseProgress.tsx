@@ -37,21 +37,22 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AppWidget } from './courseManagement';
 
+// Interface representing details of a course chapter
 interface CourseDetail {
-  chapterName: string;
-  teacherName: string;
-  progress: number;
-  pending: number;
-  timeLine: Dayjs | null;
+  chapterName: string; // Name of the chapter
+  teacherName: string; // Name of the teacher assigned to the chapter
+  progress: number; // Progress percentage completed for the chapter
+  pending: number; // Remaining percentage to be completed
+  timeLine: Dayjs | null; // Timeline/deadline for the chapter completion
 }
 
+// Interface representing a course with its details
 interface Course {
-  id: number;
-  name: string;
-  progress: number;
-  details: CourseDetail[];
+  id: number; // Unique identifier for the course
+  name: string; // Name of the course
+  progress: number; // Overall progress percentage of the course
+  details: CourseDetail[]; // Array of chapter details for the course
 }
-
 const courses: Course[] = [
   {
     id: 1,
@@ -140,31 +141,40 @@ const courses: Course[] = [
 ];
 
 const CourseProgress = (props: TabComponentType) => {
+  // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  // Props destructuring for search parameters
   const { searchParams, setSearchParams } = props;
+  // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
+  // Handler for when a course card is selected
   const handleCardDetails = (course: Course) => {
     setSelectedCourse(course);
   };
 
+  // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // States for managing class and division selection
   const [classes, setClasses] = useState('');
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
+  // Effect to handle class and division selection logic
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
+        // If a class is selected, find the selected class and update division options
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
         setDivisionOptions(selectedClass?.divisions || []);
         if (selectedClass?.divisions?.length) {
           setDivision(selectedClass.divisions[0].id);
         }
       } else {
+        // If no class is selected, default to first class and its divisions
         const firstClass = classData.items[0];
         setClasses(firstClass.id);
         setDivisionOptions(firstClass?.divisions || []);
@@ -175,19 +185,23 @@ const CourseProgress = (props: TabComponentType) => {
     }
   }, [classData, classes]);
 
+  // Callback function to render action menu items
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
+        {/* Reminder action item */}
         <MenuItem onClick={() => {}}>
           {' '}
           <Iconify icon="mdi:bell" />
           Reminder
         </MenuItem>
+        {/* Mark as complete action item */}
         <MenuItem onClick={() => {}}>
           {' '}
           <Iconify icon="mdi:tick" />
           Mark As Complete
         </MenuItem>
+        {/* Update progress action item */}
         <MenuItem
           onClick={() => {
             console.log('updateProgressDialog ---onclick');
@@ -206,16 +220,18 @@ const CourseProgress = (props: TabComponentType) => {
 
   return (
     <Box>
+      {/* Custom breadcrumbs navigation component */}
       <CustomBreadcrumbs
         heading="Syllabus Progress"
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Syllabus' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Syllabus Progress' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
+      {/* Class and Division selection filters */}
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           label="Class"
@@ -245,6 +261,7 @@ const CourseProgress = (props: TabComponentType) => {
           }}
         />
       </Box>
+      {/* Grid of course cards showing progress */}
       <Grid container spacing={2} marginTop={2} marginBottom={4}>
         {courses.map((course) => (
           <Grid item xs={12} md={2}>
@@ -279,11 +296,13 @@ const CourseProgress = (props: TabComponentType) => {
           </Grid>
         ))}
       </Grid>
+      {/* Selected course details section */}
       {selectedCourse && (
         <Box>
           <Typography variant="h6" gutterBottom>
             {selectedCourse.name} Details
           </Typography>
+          {/* Table showing chapter-wise progress details */}
           <CustomizableTable
             tableId="course-progress-table"
             columns={[
@@ -297,6 +316,7 @@ const CourseProgress = (props: TabComponentType) => {
                 filterType: 'number',
                 render(value, row) {
                   return (
+                    // Circular progress indicator with percentage
                     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                       <CircularProgress variant="determinate" value={value} />
                       <Box
@@ -356,6 +376,7 @@ const CourseProgress = (props: TabComponentType) => {
           />
         </Box>
       )}
+      {/* Dialog for updating progress */}
       <CustomDialog
         open={updateProgressDialog.value}
         handleClose={updateProgressDialog.onFalse}

@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -29,6 +30,7 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -171,19 +173,31 @@ export const getImportanceLevelColor = (level: string) => {
 };
 
 const SchoolWiseAnnounsement = (props: TabComponentType) => {
+  // Controls form visibility through URL search parameters
+  const [params, setParams] = useSearchParam({ isForm: 'false' });
+  // Stores the announcement being edited
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
+  // Stores the announcement being viewed in detail
   const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
+  // Controls the visibility of view announcement dialog
   const view_dialog = useBoolean();
+  // Stores the ID of announcement to be deleted
   const [deleteAnnouncement, setDeleteAnnouncement] = useState('');
+  // Controls the visibility of delete confirmation dialog
   const confirm_dialog = useBoolean();
+  // Controls the visibility of publish modal
   const publish_modal = useBoolean();
+  // Stores the announcement being published
   const [publishingAnnouncement, setPublishingAnnouncement] = useState<any | null>(null);
-  const [open, setOpen] = useState(false);
 
+  // Stores the main table data for announcements
   const [announcementTableData, setAnnouncementTableData] = useState<Announcement[]>(
     SchoolWiseAnnouncementInitialData
   );
-
+  /**
+   * Deletes an announcement from the table data based on the provided ID
+   * @param id - The ID of the announcement to delete
+   */
   const handleDelete = (id: string) => {
     setAnnouncementTableData((prevData) =>
       prevData.filter((announcement) => announcement.id !== id)
@@ -191,6 +205,12 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     confirm_dialog.onFalse();
   };
 
+  /**
+   * Handles the submission of announcement form data
+   * If editing, updates the existing announcement
+   * If creating new, adds a new announcement to the table
+   * @param values - The form values to be submitted
+   */
   const handleSubmit = (values: any) => {
     if (editingAnnouncement) {
       console.log('editing announcement---', editingAnnouncement);
@@ -212,13 +232,21 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     handleCloseDialog();
   };
 
+  /**
+   * Closes all dialogs and resets form-related states
+   * Clears editing announcement, publishing announcement and closes modals
+   */
   const handleCloseDialog = () => {
     setEditingAnnouncement(null);
-    setOpen(false);
+    setParams({ isForm: 'false' });
     publish_modal.onFalse();
     setPublishingAnnouncement(null);
   };
 
+  /**
+   * Publishes an announcement by updating its status and related fields
+   * @param announcement - The announcement object to be published
+   */
   const handlePublish = (announcement: any) => {
     setAnnouncementTableData((prevData) =>
       prevData.map((item) =>
@@ -235,190 +263,184 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     publish_modal.onFalse();
     setPublishingAnnouncement(null);
   };
+  const links =
+    params.isForm === 'true'
+      ? [
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Announcements' },
+          { name: 'School Wise Announcement' },
+          { name: 'Announcement Form' },
+        ]
+      : [
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Announcements' },
+          { name: 'School Wise Announcement' },
+        ];
 
   return (
     <Box>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="School Wise Announcement"
-            links={[
-              { name: 'Communication' },
-              { name: 'Announcements' },
-              { name: 'School Wise Announcement' },
-              { name: 'Announcement Form' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={handleCloseDialog}
-              >
-                Back
-              </Button>
+      <CustomBreadcrumbs
+        heading="Schedule Exam"
+        description={
+          params.isForm === 'true'
+            ? 'Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
+            : 'View and manage all school-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed.'
+        }
+        links={links}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            size="small"
+            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            variant="contained"
+            onClick={
+              params.isForm === 'true'
+                ? () => handleCloseDialog
+                : () => {
+                    setParams({ isForm: 'true' });
+                  }
             }
+          >
+            {params.isForm === 'true' ? 'Back' : 'School Wise Announcement'}
+          </Button>
+        }
+      />
+      {params.isForm === 'true' ? (
+        <Card>
+          <AnnouncementForm
+            initialValues={editingAnnouncement}
+            onSubmit={handleSubmit}
+            isEdit={!!editingAnnouncement}
           />
-          <Card>
-            <AnnouncementForm
-              initialValues={editingAnnouncement}
-              onSubmit={handleSubmit}
-              isEdit={!!editingAnnouncement}
-            />
-          </Card>
-        </>
+        </Card>
       ) : (
-        <>
-          <CustomBreadcrumbs
-            heading="School Wise Announcement"
-            links={[
-              { name: 'Communication' },
-              { name: 'Announcements' },
-              { name: 'School Wise Announcement' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                startIcon={<Iconify icon="mdi:plus" />}
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setOpen(true);
-                }}
-              >
-                Announcement
-              </Button>
-            }
-          />
-          <CustomizableTable
-            tableId="school-wise-announcement-table"
-            columns={[
-              { id: 'title', label: 'Title' },
-              {
-                id: 'publishDate',
-                label: 'Publish Date',
-                minWidth: '180px',
-                align: 'left',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
+        <CustomizableTable
+          tableId="school-wise-announcement-table"
+          columns={[
+            { id: 'title', label: 'Title' },
+            {
+              id: 'publishDate',
+              label: 'Publish Date',
+              minWidth: '180px',
+              align: 'left',
+              render: (value, row) => (
+                <Typography fontSize="12px" gutterBottom>
+                  {dayjs(value).format('DD MMM YYYY')}
+                </Typography>
+              ),
+            },
+            {
+              id: 'expiryDate',
+              label: 'Expiry Date',
+              minWidth: '180px',
+              align: 'left',
+              render: (value, row) => (
+                <Typography fontSize="12px" gutterBottom>
+                  {dayjs(value).format('DD MMM YYYY')}
+                </Typography>
+              ),
+            },
+            {
+              id: 'organization',
+              label: 'Organizations',
+              render: (value) => (
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  {value.map((org: string) => (
+                    <Chip key={org} label={org} size="small" variant="outlined" />
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'importance_level',
+              label: 'Importance',
+              render: (value) => {
+                const colors = getImportanceLevelColor(value);
+                return (
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '16px',
+                      backgroundColor: colors.bg,
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {value}
                   </Typography>
+                );
+              },
+            },
+            {
+              id: 'audience',
+              label: 'Audience',
+              render: (value) => (
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  {value.map((audience: string) => (
+                    <Chip key={audience} label={audience} size="small" variant="outlined" />
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              render: (value, row) =>
+                value === 'Published' ? (
+                  <Label variant="soft" color="primary">
+                    {value}
+                  </Label>
+                ) : (
+                  <Label
+                    variant="soft"
+                    color="warning"
+                    onClick={() => {
+                      publish_modal.onTrue();
+                      setPublishingAnnouncement(row);
+                    }}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    {value}
+                  </Label>
                 ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    // actions={(prop) => actions({ ...props, row })}
+                    placement="right-top"
+                    showEditIcon
+                    showDeleteIcon
+                    showViewIcon
+                    showThreeDots={false}
+                    handleEditClick={() => {
+                      setParams({ isForm: 'true' });
+                      setEditingAnnouncement(row);
+                    }}
+                    handleDeleteClick={() => {
+                      confirm_dialog.onTrue();
+                      setDeleteAnnouncement(row.id);
+                    }}
+                    handleViewClick={() => {
+                      view_dialog.onTrue();
+                      setViewAnnouncement(row);
+                    }}
+                  />
+                );
               },
-              {
-                id: 'expiryDate',
-                label: 'Expiry Date',
-                minWidth: '180px',
-                align: 'left',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'organization',
-                label: 'Organizations',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'importance_level',
-                label: 'Importance',
-                render: (value) => {
-                  const colors = getImportanceLevelColor(value);
-                  return (
-                    <Typography
-                      component="span"
-                      variant="body2"
-                      sx={{
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: '16px',
-                        backgroundColor: colors.bg,
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        fontSize: '0.75rem',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {value}
-                    </Typography>
-                  );
-                },
-              },
-              {
-                id: 'audience',
-                label: 'Audience',
-                render: (value) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((audience: string) => (
-                      <Chip key={audience} label={audience} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'status',
-                label: 'Status',
-                render: (value, row) =>
-                  value === 'Published' ? (
-                    <Label variant="soft" color="primary">
-                      {value}
-                    </Label>
-                  ) : (
-                    <Label
-                      variant="soft"
-                      color="warning"
-                      onClick={() => {
-                        publish_modal.onTrue();
-                        setPublishingAnnouncement(row);
-                      }}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      {value}
-                    </Label>
-                  ),
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      // actions={(prop) => actions({ ...props, row })}
-                      placement="right-top"
-                      showEditIcon
-                      showDeleteIcon
-                      showViewIcon
-                      showThreeDots={false}
-                      handleEditClick={() => {
-                        setOpen(true);
-                        setEditingAnnouncement(row);
-                      }}
-                      handleDeleteClick={() => {
-                        confirm_dialog.onTrue();
-                        setDeleteAnnouncement(row.id);
-                      }}
-                      handleViewClick={() => {
-                        view_dialog.onTrue();
-                        setViewAnnouncement(row);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={announcementTableData}
-          />
-        </>
+            },
+          ]}
+          data={announcementTableData}
+        />
       )}
 
       <CustomDialog
@@ -529,6 +551,21 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
 
 export default SchoolWiseAnnounsement;
 
+/**
+ * Interface representing the form values for an announcement
+ * @property {string} title - The title of the announcement
+ * @property {string} description - The detailed description of the announcement
+ * @property {string} status - Current status of the announcement
+ * @property {string[]} audience - Array of selected audience groups
+ * @property {string[]} organization - Array of selected organizations
+ * @property {Dayjs | null} publishDate - Date when the announcement should be published
+ * @property {Dayjs | null} expiryDate - Date when the announcement should expire
+ * @property {string} category - Category of the announcement
+ * @property {string} importance_level - Priority level of the announcement
+ * @property {string} link - Optional URL associated with the announcement
+ * @property {string[]} notification_preferences - Selected notification methods
+ * @property {boolean} isScheduled - Whether the announcement is scheduled for later
+ */
 interface AnnouncementFormValues {
   title: string;
   description: string;
@@ -544,6 +581,12 @@ interface AnnouncementFormValues {
   isScheduled: boolean;
 }
 
+/**
+ * Props interface for the AnnouncementForm component
+ * @property {function} onSubmit - Handler function called when form is submitted
+ * @property {AnnouncementFormValues | null} initialValues - Initial values for the form, optional
+ * @property {boolean} isEdit - Flag indicating if form is in edit mode
+ */
 interface AnnouncementFormProps {
   onSubmit: (values: AnnouncementFormValues) => void;
   initialValues?: AnnouncementFormValues | null;
@@ -600,6 +643,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
 }) => {
+  // List of available organizations/schools
   const allOrganizations = [
     { value: 'Pre Primary', label: 'Pre Primary' },
     { value: 'Primary', label: 'Primary' },
@@ -607,10 +651,17 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     { value: 'Higher Secondary', label: 'Higher Secondary' },
   ];
 
+  // State to track if all organizations are selected
   const [isAllSelected, setIsAllSelected] = useState(
     initialValues?.organization?.length === allOrganizations.length
   );
 
+  /**
+   * Determines the status of the announcement based on scheduling and publish date
+   * @param isScheduled - Boolean indicating if announcement is scheduled
+   * @param selectedDate - Selected publish date
+   * @returns 'Published' if not scheduled or date is in past, 'Scheduled' if date is in future
+   */
   const determineStatus = (isScheduled: boolean, selectedDate: Dayjs | null) => {
     if (!isScheduled) return 'Published';
     if (!selectedDate) return 'Scheduled';

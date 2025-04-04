@@ -1,13 +1,18 @@
 'use client';
 
+// Client-side component declaration
+
+// Import necessary types
 import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+// Import external dependencies
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect, useCallback } from 'react';
 
+// Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -28,12 +33,15 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+// Import custom hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+// Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+// Import custom components
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -43,6 +51,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+// Import mock data
 import { subjectTempData } from './subjectsData';
 
 interface TableRow {
@@ -110,34 +119,50 @@ export const chapterData = [
 ];
 
 const Subjects = (props: TabComponentType) => {
+  // State for managing selected class
   const [classes, setClasses] = useState<string>('');
+  // State for managing selected subject
   const [subject, setSubject] = useState<string>('');
+  // State for managing dialog open/close
   const [open, setOpen] = useState(false);
+  // Custom hook for chapter dialog visibility
   const chapterDialog = useBoolean();
+  // Custom hook for add chapter dialog visibility
   const addChapterDialog = useBoolean();
+  // State for storing subject data with initial temp data
   const [subjectData, setSubjectData] = useState<any>(subjectTempData);
+  // State for tracking selected subject
   const [selectedSubject, setSelectedSubject] = useState<string>('');
+  // State for storing subject table data
   const [subjectTableData, setSubjectTableData] = useState<TableRow[]>([]);
+  // State for storing dialog data
   const [dialogData, setDialogData] = useState<any>([]);
+  // State for managing selected chapter
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
+  // State for tracking edit mode
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  // Custom hook for managing URL search parameters
   const [params, setParams] = useSearchParam({ isForm: 'false' });
+  // Query hook for fetching class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-
+  // Effect to handle initial class selection and update subject table data
   useEffect(() => {
+    // Set initial class if none selected
     if (!classes) {
       const firstClass = classData?.items[0];
       setClasses(firstClass?.name);
     }
+    // Update subject table data when class changes
     if (classes) {
       const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
       if (selectedClassData) {
         const divisionData = selectedClassData.divisions;
         const firstDivisionSubjects = divisionData[0]?.subjects || [];
 
+        // Map subjects to table format
         const subjects = firstDivisionSubjects.map((sub: any) => ({
           subjectName: sub.name,
           primaryTeacher: sub.primaryTeacher,
@@ -155,6 +180,7 @@ const Subjects = (props: TabComponentType) => {
     }
   }, [classData?.items, classes, subjectData]);
 
+  // Helper function to handle document uploads
   const handleDocumentUpload = async (files: File[]): Promise<Document[]> =>
     files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
@@ -163,6 +189,7 @@ const Subjects = (props: TabComponentType) => {
       file,
     }));
 
+  // Handler for chapter form submission (create/update)
   const handleChapterSubmit = async (values: ChapterFormValues) => {
     const updatedSubjectData = { ...subjectData };
     const selectedClass = updatedSubjectData.classes.find(
@@ -170,7 +197,7 @@ const Subjects = (props: TabComponentType) => {
     );
 
     if (selectedClass) {
-      // Handle document uploads first
+      // Process document uploads
       let newDocuments: Document[] = [];
       if (values.documents) {
         const filesToUpload = values.documents.filter((doc) => doc.file) as Document[];
@@ -204,7 +231,7 @@ const Subjects = (props: TabComponentType) => {
           }
         });
       } else {
-        // Create new chapter
+        // Create new chapter with auto-incremented ID
         const newChapter = {
           id:
             Math.max(
@@ -214,7 +241,6 @@ const Subjects = (props: TabComponentType) => {
               0
             ) + 1,
           chapterNo: values.chapterNo,
-
           chapterName: values.chapterName,
           assignedTeacher: values.assignedTeacher,
           content: values.content,
@@ -225,6 +251,7 @@ const Subjects = (props: TabComponentType) => {
           assignments: [],
         };
 
+        // Add new chapter to all divisions
         selectedClass.divisions.forEach((division: any) => {
           const subj = division.subjects.find((sub: any) => sub.name === selectedSubject);
           if (subject) {
@@ -233,6 +260,7 @@ const Subjects = (props: TabComponentType) => {
         });
       }
 
+      // Update state with new data
       setSubjectData(updatedSubjectData);
       const updatedDialogData = selectedClass.divisions.map((division: any) => ({
         divisionName: division.name,
@@ -246,16 +274,19 @@ const Subjects = (props: TabComponentType) => {
     addChapterDialog.onFalse();
   };
 
+  // Handler for editing existing chapters
   const handleEditChapter = (chapter: any) => {
     setSelectedChapter(chapter);
     setIsEditMode(true);
     addChapterDialog.onTrue();
   };
 
+  // Handler for viewing chapter details
   const handleEyeClick = (subjectName: string) => {
     const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
 
     setSelectedSubject(subjectName);
+    // Get chapters for all divisions for the selected subject
     const allDivisionChapters =
       selectedClassData?.divisions.map((division: any) => {
         const subjectDataOfClass = division.subjects.find((sub: any) => sub.name === subjectName);
@@ -263,7 +294,7 @@ const Subjects = (props: TabComponentType) => {
         return {
           divisionName: division.name,
           chapters: subjectDataOfClass?.chapters || [],
-          progress: subjectDataOfClass?.progress || 0, // Store subject progress
+          progress: subjectDataOfClass?.progress || 0,
         };
       }) || [];
 
@@ -271,6 +302,7 @@ const Subjects = (props: TabComponentType) => {
     chapterDialog.onTrue();
   };
 
+  // Menu actions for table rows
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -278,6 +310,7 @@ const Subjects = (props: TabComponentType) => {
         <MenuList>
           <MenuItem
             onClick={() => {
+              // Commented navigation code
               // setSearchParams?.({
               //   tab: 'learningResources',
               //   class: classes,
@@ -295,22 +328,25 @@ const Subjects = (props: TabComponentType) => {
     []
   );
 
+  // Define navigation breadcrumb links based on form state
   const links =
     params.isForm === 'true'
       ? [
-          { name: 'Academic and Assignment' },
-          { name: 'Syllabus' },
+          // Links for form view (adding/editing chapter)
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Syllabus Management' },
           { name: 'Add Chapter' },
         ]
       : [
-          { name: 'Academic and Assignment' },
-          { name: 'Syllabus' },
+          // Links for list view (showing chapters)
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Syllabus Management' },
         ];
-
   return (
     <Box>
+      {/* Custom breadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
         heading="Syllabus"
         description={
@@ -339,7 +375,9 @@ const Subjects = (props: TabComponentType) => {
           </Button>
         }
       />
+      {/* Conditional rendering based on form state */}
       {params.isForm === 'true' ? (
+        // Form view for adding/editing chapters
         <Card>
           <AddNewChapter
             onSubmit={handleChapterSubmit}
@@ -349,7 +387,9 @@ const Subjects = (props: TabComponentType) => {
           />
         </Card>
       ) : (
+        // Table view for displaying chapters
         <>
+          {/* Filter controls for class and subject selection */}
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <CustomSelect
               options={classData?.items || []}
@@ -375,9 +415,11 @@ const Subjects = (props: TabComponentType) => {
               formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
             />
           </Box>
+          {/* Table component for displaying chapter data */}
           <CustomizableTable
             tableId="subjectTable"
             columns={[
+              // Chapter number column
               {
                 id: 'chapterNo',
                 label: 'Chapter No',
@@ -385,6 +427,7 @@ const Subjects = (props: TabComponentType) => {
                 align: 'left',
                 filterType: 'number',
               },
+              // Chapter name column
               {
                 id: 'chapterName',
                 label: 'Chapter Name',
@@ -392,6 +435,7 @@ const Subjects = (props: TabComponentType) => {
                 align: 'left',
                 filterType: 'string',
               },
+              // Start date column
               {
                 id: 'startDate',
                 label: 'Start Date',
@@ -399,6 +443,7 @@ const Subjects = (props: TabComponentType) => {
                 align: 'left',
                 filterType: 'date',
               },
+              // End date column
               {
                 id: 'endDate',
                 label: 'End Date',
@@ -406,6 +451,7 @@ const Subjects = (props: TabComponentType) => {
                 align: 'left',
                 filterType: 'date',
               },
+              // Assigned teacher column with chip display
               {
                 id: 'assignedTeacher',
                 label: 'Secondary Teacher',
@@ -419,6 +465,7 @@ const Subjects = (props: TabComponentType) => {
                   </Box>
                 ),
               },
+              // View material column with eye icon
               {
                 id: 'viewMaterial',
                 label: 'View Material',
@@ -430,6 +477,7 @@ const Subjects = (props: TabComponentType) => {
                   return <Iconify icon="mdi:eye" sx={{ ml: 7 }} />;
                 },
               },
+              // Progress column with circular progress indicator
               {
                 id: 'progress',
                 label: 'Progress',
@@ -463,6 +511,7 @@ const Subjects = (props: TabComponentType) => {
                   );
                 },
               },
+              // Actions column with three dots menu
               {
                 id: 'actions',
                 label: 'Actions',
@@ -499,6 +548,7 @@ const Subjects = (props: TabComponentType) => {
 
 export default Subjects;
 
+// Interface for document object containing file information
 export interface Document {
   id: string;
   name: string;
@@ -506,6 +556,7 @@ export interface Document {
   file?: File;
 }
 
+// Interface for form values when submitting chapter data
 export interface ChapterFormValues {
   chapterNo: number;
   chapterName: string;
@@ -517,6 +568,7 @@ export interface ChapterFormValues {
   documents: Document[];
 }
 
+// Props interface for AddNewChapter component
 interface AddNewChapterProps {
   onSubmit: (values: ChapterFormValues) => void;
   selectedSubject: string;
@@ -536,17 +588,21 @@ interface AddNewChapterProps {
     }>;
   } | null;
 }
-
+// Component for adding or editing a chapter with form validation and file upload functionality
 export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   onSubmit,
   selectedSubject,
   isEdit = false,
   initialValues = null,
 }: AddNewChapterProps) => {
+  // State for managing uploaded documents and their metadata
   const [documents, setDocuments] = useState<Document[]>(initialValues?.documents || []);
+  // State for tracking files that have been uploaded but not yet processed
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
+  // State for managing rich text editor content
   const [editorContent, setEditorContent] = useState('');
 
+  // Validation schema for form fields
   const validationSchema = Yup.object({
     chapterNo: Yup.number().required('Chapter No is required'),
     chapterName: Yup.string().required('Chapter name is required'),
@@ -556,6 +612,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
     endTime: Yup.string().required('Select the endTime for chapter'),
   });
 
+  // Initialize formik for form handling
   const formik = useFormik({
     initialValues: {
       chapterNo: initialValues?.chapterNo || 0,
@@ -578,6 +635,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
     },
   });
 
+  // Effect to update form when initial values change
   useEffect(() => {
     if (initialValues) {
       setEditorContent(initialValues.content);
@@ -592,6 +650,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues]);
 
+  // Handler for file upload
   const handleFileUpload = (files: File[]) => {
     const newDocs: Document[] = files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
@@ -602,6 +661,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
     setDocuments((prev) => [...prev, ...newDocs]);
   };
 
+  // Handler for removing uploaded documents
   const handleRemoveDocument = (docId: string) => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
   };
@@ -611,6 +671,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: { xs: 'auto', md: '500px' } }}>
           <Grid container spacing={2}>
+            {/* Chapter Number Input */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -622,6 +683,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 size="small"
               />
             </Grid>
+            {/* Chapter Name Input */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -632,6 +694,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 size="small"
               />
             </Grid>
+            {/* Start Time DatePicker */}
             <Grid item xs={12} md={6}>
               <DatePicker
                 label="Chapter StartTime"
@@ -648,6 +711,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
               />
             </Grid>
 
+            {/* End Time DatePicker */}
             <Grid item xs={12} md={6}>
               <DatePicker
                 label="Chapter EndTime"
@@ -664,6 +728,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
               />
             </Grid>
 
+            {/* Teacher Assignment Dropdown */}
             <Grid item xs={12} md={6}>
               <CustomSelect
                 label="Assigned Teacher"
@@ -682,6 +747,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
               />
             </Grid>
 
+            {/* Rich Text Editor for Chapter Content */}
             <Grid item xs={12}>
               <Editor
                 value={editorContent}
@@ -692,6 +758,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 sx={{ width: '100%', marginTop: '10px' }}
               />
             </Grid>
+            {/* Document Upload Section */}
             <Grid item xs={12}>
               <Typography variant="subtitle2" gutterBottom>
                 Upload the chapter Material
@@ -720,6 +787,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
                 }}
               />
             </Grid>
+            {/* List of Uploaded Documents */}
             {documents.length > 0 && (
               <Grid item xs={12}>
                 <Typography variant="subtitle2" gutterBottom>
@@ -746,6 +814,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
             )}
           </Grid>
         </Scrollbar>
+        {/* Form Actions */}
         <DialogActions>
           <Button type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'}
@@ -756,6 +825,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   );
 };
 
+// Interface for viewing subject chapter details
 interface ViewSubjectChapterProps {
   onClose: () => void;
   chapterData: any;

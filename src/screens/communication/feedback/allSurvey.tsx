@@ -116,14 +116,20 @@ const surveyData: Survey[] = [
 ];
 
 const AllSurvey = (props: TabComponentType) => {
+  // Modal state for publishing survey
   const publish_modal = useBoolean();
   const [publishingSurvey, setPublishingSurvey] = useState<any | null>(null);
+  // Table data state for surveys
   const [surveyTableData, setSurveyTableData] = useState(surveyData);
+  // Dialog state for viewing survey details
   const viewDetailsDialog = useBoolean();
   const [viewSurvey, setViewSurvey] = useState<any | null>(null);
+  // Dialog state for viewing survey responses
   const viewResponseDialog = useBoolean();
   const [responseSurvey, setResponseSurvey] = useState<any | null>(null);
+  // State for controlling main view
   const [open, setOpen] = useState(false);
+
   const handleClose = () => {
     setOpen(false);
     setPublishingSurvey(null);
@@ -171,7 +177,7 @@ const AllSurvey = (props: TabComponentType) => {
           <CustomBreadcrumbs
             heading="Scheduled Survey"
             links={[
-              { name: 'Communication' },
+              { name: 'Communication', href: '/communication/dashboard' },
               { name: 'Survey' },
               { name: 'Scheduled Survey' },
               { name: 'Survey Form' },
@@ -194,7 +200,11 @@ const AllSurvey = (props: TabComponentType) => {
         <>
           <CustomBreadcrumbs
             heading="Scheduled Survey"
-            links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'Scheduled Survey' }]}
+            links={[
+              { name: 'Communication', href: '/communication/dashboard' },
+              { name: 'Survey' },
+              { name: 'Scheduled Survey' },
+            ]}
             sx={{ px: 1, mb: 2 }}
             action={
               <Button
