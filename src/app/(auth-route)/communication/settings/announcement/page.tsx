@@ -1,6 +1,6 @@
 import React from 'react';
 
-import SettingAnnouncement from 'src/screens/communication/settings/announcementCategory';
+import SettingAnnouncement from 'src/screens/communication/settings/announcementSetting';
 
 const AnnouncementScreen = () => <SettingAnnouncement />;
 

@@ -13,7 +13,12 @@ const NotificationSetting = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
       heading="Notification Settings"
-      links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'Notification Settings' }]}
+      description="Manage your notification settings for various events and announcements."
+      links={[
+        { name: 'Communication', href: '/communication/dashboard' },
+        { name: 'Settings' },
+        { name: 'Notification Settings' },
+      ]}
       sx={{ px: 1, mb: 2 }}
     />
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>

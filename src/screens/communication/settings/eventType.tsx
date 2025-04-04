@@ -29,12 +29,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-interface TEvent {
-  id: number;
-  eventType: string;
-  eventTypeDesc: string;
-  status: string;
-}
+import type { TEvent } from './type';
 
 const initialEventData: TEvent[] = [
   {
@@ -70,23 +65,41 @@ const initialEventData: TEvent[] = [
 ];
 
 const EventType = (props: TabComponentType) => {
+  // Dialog control for the main form
   const dialog = useBoolean();
+
+  // State to manage the event type data list
   const [eventTypeData, setEventTypeData] = useState<TEvent[]>(initialEventData);
+
+  // Dialog controls for publish and delete confirmations
   const confirmPublishDialog = useBoolean();
   const confirmDeleteDialog = useBoolean();
 
+  // State to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
+
+  // State to store the currently selected event for editing
   const [selectedEvent, setSelectedEvent] = useState<TEvent | null>(null);
+
+  // State to manage pending status changes before confirmation
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
   } | null>(null);
 
+  /**
+   * Handles the status change for an event type
+   * @param id - The ID of the event type to update
+   * @param value - The current status value ('Publish' or 'Unpublish')
+   */
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
     confirmPublishDialog.onTrue();
   };
 
+  /**
+   * Confirms and applies the pending status change to the event type
+   */
   const confirmStatusChange = () => {
     if (pendingStatusChange) {
       const { id, newValue } = pendingStatusChange;
@@ -98,6 +111,9 @@ const EventType = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
+  /**
+   * Closes all dialogs and resets the selected event
+   */
   const handleCloseDialog = () => {
     dialog.onFalse();
     confirmPublishDialog.onFalse();
@@ -105,11 +121,19 @@ const EventType = (props: TabComponentType) => {
     setSelectedEvent(null);
   };
 
+  /**
+   * Deletes an event type from the list
+   * @param comingEvent - The event type to be deleted
+   */
   const handleDelete = (comingEvent: any) => {
     setEventTypeData((prevData) => prevData.filter((event) => event.id !== comingEvent.id));
     handleCloseDialog();
   };
 
+  /**
+   * Handles form submission for creating or updating an event type
+   * @param values - The event type data to be saved
+   */
   const handleSubmit = (values: TEvent) => {
     if (isEdit && selectedEvent) {
       setEventTypeData(eventTypeData.map((event) => (event.id === values.id ? values : event)));
@@ -120,12 +144,15 @@ const EventType = (props: TabComponentType) => {
     setIsEdit(false);
     setSelectedEvent(null);
   };
-
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Event Type"
-        links={[{ name: 'Communication' }, { name: 'Settings' }, { name: 'Event Type' }]}
+        links={[
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Settings' },
+          { name: 'Event Type' },
+        ]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
@@ -257,30 +284,39 @@ const EventType = (props: TabComponentType) => {
   );
 };
 
+/**
+ * Props interface for the EventForm component
+ * @interface EventFormProps
+ * @property {function} onSubmit - Callback function to handle form submission with event data
+ * @property {TEvent | null} [data] - Optional existing event data for editing
+ * @property {boolean} [isEdit] - Optional flag to indicate if form is in edit mode
+ */
 interface EventFormProps {
   onSubmit: (values: TEvent) => void;
   data?: TEvent | null;
   isEdit?: boolean;
 }
-
 // eslint-disable-next-line react/prop-types
 const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
+  // State to track if the event is in draft mode (UnPublish status)
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'UnPublish'));
 
+  // Initialize formik form handling
   const formik = useFormik({
+    // Set initial form values from existing data or empty strings
     initialValues: {
       eventType: data?.eventType || '',
       eventTypeDesc: data?.eventTypeDesc || '',
     },
+    // Handle form submission
     onSubmit: (values) => {
       onSubmit({
         ...values,
-        id: data?.id || Date.now(),
-        status: isDraft ? 'UnPublish' : 'Publish',
+        id: data?.id || Date.now(), // Use existing ID or generate new timestamp-based ID
+        status: isDraft ? 'UnPublish' : 'Publish', // Set status based on draft state
       });
     },
   });
-
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
