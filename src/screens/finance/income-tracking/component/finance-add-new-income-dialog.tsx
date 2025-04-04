@@ -14,6 +14,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -64,18 +65,23 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
   isEdit,
   allData,
 }) => {
+  // State to track and show message when an entry already exists
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState<boolean>(false);
+
+  // Get changes state from redux store to track form modifications
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
 
+  // Initialize form values based on whether we're editing or creating new entry
   const initialValues = useMemo<FormikValue>(
     () => ({
       incomeSource: isEdit ? (data.incomeSource ?? '') : '',
       incomeAmount: isEdit ? (data.incomeAmount ?? '') : '',
       paymentMethod: isEdit ? (data.paymentMethod ?? '') : '',
-      date: isEdit ? dayjs(data.date) : dayjs(),
+      date: isEdit ? dayjs(data.date) : dayjs(), // Set current date as default for new entries
       paymentStatus: isEdit ? (data.paymentStatus ?? '') : '',
+      // Generate random ID for new entries or use existing ID when editing
       id: isEdit
         ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
@@ -85,16 +91,21 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
     [data, isEdit]
   );
 
+  // Initialize formik with validation and submission handling
   const formik = useFormik<FormikValue>({
     initialValues,
     validationSchema,
     onSubmit: (values) => {
+      // Normalize strings for case-insensitive comparison
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
+
+      // Check if income source already exists in data
       const existingEntryIndex = allData.findIndex(
         (val: any) => normalize(val.incomeSource) === normalize(values.incomeSource)
       );
 
       if (!isEdit) {
+        // For new entries, check for duplicates
         if (existingEntryIndex === -1) {
           setShowExistingEntryMessage(false);
           onSave(values);
@@ -102,17 +113,20 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
           setShowExistingEntryMessage(true);
         }
       } else {
+        // Allow saving when editing existing entry
         onSave(values);
       }
     },
     enableReinitialize: true,
   });
 
+  // Track form changes and update redux store
   useEffect(() => {
     const isChanged = !isEqual(formik.values, initialValues);
     dispatch(setIsChanges(isChanged));
   }, [dispatch, formik.values, initialValues]);
 
+  // Handle dialog close with unsaved changes confirmation
   const handleCloseDialog = () => {
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       onClose();
@@ -164,21 +178,23 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
                   <ShakingTextField
                     error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
                   >
-                    <CustomSelect
-                      label="Income Category"
-                      options={[
-                        { label: 'Donation', value: 'Donation' },
-                        { label: 'Fees', value: 'Fees' },
-                      ]}
-                      value={formik.values.incomeSource}
-                      onChange={(value) => formik.setFieldValue('incomeSource', value)}
-                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                      disabled={isEdit}
-                      error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
-                      helperText={
-                        formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
-                      }
-                    />
+                    <AutoFocus>
+                      <CustomSelect
+                        label="Income Category"
+                        options={[
+                          { label: 'Donation', value: 'Donation' },
+                          { label: 'Fees', value: 'Fees' },
+                        ]}
+                        value={formik.values.incomeSource}
+                        onChange={(value) => formik.setFieldValue('incomeSource', value)}
+                        formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                        disabled={isEdit}
+                        error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
+                        helperText={
+                          formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
+                        }
+                      />
+                    </AutoFocus>
                   </ShakingTextField>
                 </Grid>
                 <Grid item xs={6}>

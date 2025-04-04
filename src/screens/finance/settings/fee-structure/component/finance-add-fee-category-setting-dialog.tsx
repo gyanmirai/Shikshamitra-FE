@@ -15,6 +15,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -104,9 +105,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // State to store the list of fee structures
   const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<FeeStructure[]>([]);
-  const [isFieldsDisabled, setIsFieldsDisabled] = useState(false); // Controls disabling of receipt book & grade
+  // State to control whether receipt book & grade fields should be disabled
+  const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
 
+  // Initial form values with default/empty values
   const initialValues = useMemo<FormikValue>(
     () => ({
       id: Math.floor(Math.random() * 10000),
@@ -121,17 +125,18 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       paymentDueDate: dayjs(),
       multipleApplicableGrade: [],
       chargesType: '',
-
       lateFeeChargesType: '',
       lateFeeChargesAmount: '',
     }),
     []
   );
 
+  // Initialize formik form handling with validation and submission logic
   const formik = useFormik<FormikValue>({
     initialValues,
     validationSchema,
     onSubmit: (values) => {
+      // Check if the fee head combination already exists
       const isDuplicate = feeHeadListForFeeStructure.some(
         (item) =>
           item.feeHead === values.feeHead &&
@@ -143,6 +148,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
         return;
       }
 
+      // Add new fee structure to the list
       setFeeHeadListForFeeStructure((prev: FeeStructure[]) => [
         ...prev,
         {
@@ -152,8 +158,10 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
         } as FeeStructure,
       ]);
 
+      // Disable receipt book & grade fields after first entry
       setIsFieldsDisabled(true);
 
+      // Reset form while keeping some field values
       formik.setValues({
         ...values, // Keep existing values
         feeHead: '',
@@ -164,24 +172,25 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
         paymentMethod: [],
         lateFeeChargesAmount: '',
         lateFeeChargesType: '',
-
-        // Fields you want to keep unchanged
+        // Preserve these fields
         applicableGrade: values.applicableGrade,
         bookRecipt: values.bookRecipt,
       });
     },
   });
 
+  // Track form changes to prompt confirmation when leaving
   useEffect(() => {
     dispatch(setIsChanges(!isEqual(formik.values, initialValues)));
   }, [dispatch, formik.values, initialValues]);
 
+  // Handler to clear form and enable fields
   const handleClear = () => {
-    // setFeeHeadListForFeeStructure([]);
     formik.resetForm();
     setIsFieldsDisabled(false);
   };
 
+  // Handler for dialog close with unsaved changes check
   const handleCloseDialog = () => {
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       onClose();
@@ -191,15 +200,17 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
     }
   };
 
+  // Handler to remove fee structure from list
   const handleDelete = (index: number) => {
     const updatedFeeHeadList = [...feeHeadListForFeeStructure];
     updatedFeeHeadList.splice(index, 1);
     setFeeHeadListForFeeStructure(updatedFeeHeadList);
   };
+
+  // Handler to edit existing fee structure
   const handleEdit = (row: any) => {
     formik.setValues(row);
   };
-
   const handleSubmit = () => {};
 
   return (
@@ -252,18 +263,20 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             <ShakingTextField
               error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
             >
-              <CustomSelect
-                label="Receipt Book"
-                options={[
-                  { value: 'cbse', label: 'CBSE' },
-                  { value: 'gseb', label: 'GSEB' },
-                ]}
-                value={formik.values.bookRecipt}
-                onChange={(e) => formik.setFieldValue('bookRecipt', e)}
-                disabled={isFieldsDisabled}
-                error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-                helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
-              />
+              <AutoFocus>
+                <CustomSelect
+                  label="Receipt Book"
+                  options={[
+                    { value: 'cbse', label: 'CBSE' },
+                    { value: 'gseb', label: 'GSEB' },
+                  ]}
+                  value={formik.values.bookRecipt}
+                  onChange={(e) => formik.setFieldValue('bookRecipt', e)}
+                  disabled={isFieldsDisabled}
+                  error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
+                  helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
+                />
+              </AutoFocus>
             </ShakingTextField>
           </Grid>
           <Grid item xs={12} md={6}>

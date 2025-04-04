@@ -12,11 +12,28 @@ import { Box, Card, Button } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+
+const validationSchema = Yup.object({
+  categoryType: Yup.string()
+
+    .required('Category type is required'),
+
+  categoryName: Yup.string().required('Category name is required'),
+
+  fundAllocation: Yup.string()
+    .required('Expense amount is required')
+    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
+    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+      const numericValue = Number(value);
+      return numericValue > 0;
+    }),
+});
 
 interface FinanceNewBudgetCreateDialogProps {
   dialogValue: boolean;
@@ -47,22 +64,6 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 }) => {
   const [categoryListBasedOnType, setCategoryListBasedOnType] = useState<any>([]);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
-  const validationSchema = Yup.object({
-    categoryType: Yup.string()
-
-      .required('Category type is required'),
-
-    categoryName: Yup.string().required('Category name is required'),
-
-    fundAllocation: Yup.string()
-      .required('Expense amount is required')
-      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        const numericValue = Number(value);
-        return numericValue > 0;
-      }),
-  });
 
   const initialValues = useMemo(
     () => ({
@@ -162,22 +163,24 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                 <ShakingTextField
                   error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
                 >
-                  <CustomSelect
-                    label="Category Type"
-                    options={[
-                      { value: '123', label: 'Income' },
-                      { value: '345', label: 'Expense' },
-                    ]}
-                    value={formik.values.categoryType}
-                    onChange={(value) => formik.setFieldValue('categoryType', value)}
-                    disabled={edit}
-                    error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
-                    helperText={
-                      formik.touched.categoryType && formik.errors.categoryType
-                        ? String(formik.errors.categoryType)
-                        : ''
-                    }
-                  />
+                  <AutoFocus>
+                    <CustomSelect
+                      label="Category Type"
+                      options={[
+                        { value: '123', label: 'Income' },
+                        { value: '345', label: 'Expense' },
+                      ]}
+                      value={formik.values.categoryType}
+                      onChange={(value) => formik.setFieldValue('categoryType', value)}
+                      disabled={edit}
+                      error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
+                      helperText={
+                        formik.touched.categoryType && formik.errors.categoryType
+                          ? String(formik.errors.categoryType)
+                          : ''
+                      }
+                    />
+                  </AutoFocus>
                 </ShakingTextField>
               </Grid2>
               <Grid2 xs={6}>

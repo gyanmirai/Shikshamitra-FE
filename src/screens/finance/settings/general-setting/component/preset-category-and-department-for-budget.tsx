@@ -15,21 +15,28 @@ import {
 } from 'src/redux/budgetCategory/budgetCategoryApi';
 
 import { Iconify } from 'src/components/iconify';
+import AutoFocus from 'src/components/autofocus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 const PresetCategoryAndDepartmentForBudget = () => {
+  // State for managing edit mode
   const [isEdit, setIsEdit] = useState(false);
+  // State for storing budget category input value
   const [budgetCategory, setbudgetCategory] = useState('');
+  // State for storing selected budget category for edit/delete operations
   const [selectedbudgetCategory, setSelectedbudgetCategory] = useState<any>(null);
+  // Boolean state for controlling delete confirmation dialog
   const dialogForDeleteConfirmation = useBoolean();
 
+  // Fetch all budget categories
   const { data: budgetCategoryList, isLoading: isGetBudgetCategoryLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetbudgetCategoryQuery,
   });
 
+  // Mutation for adding new budget category
   const [addBudgetCategory, { isLoading: isAddCategoryLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddbudgetCategoryMutation,
@@ -39,6 +46,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
     },
   });
 
+  // Mutation for updating existing budget category
   const [updateBudgetCategory, { isLoading: isBudgetUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatebudgetCategoryMutation,
@@ -48,6 +56,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
     },
   });
 
+  // Mutation for deleting budget category
   const [deleteBudgetCategory, { isLoading: isdeleteBudgetCategory }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeletebudgetCategoryMutation,
@@ -57,13 +66,16 @@ const PresetCategoryAndDepartmentForBudget = () => {
     },
   });
 
+  // Handler for both adding new and updating existing budget categories
   const handlerAddBudgetCategory = async () => {
     if (isEdit) {
+      // Validation for empty input in edit mode
       if (!budgetCategory.trim()) {
         alert('Budget Category cannot be empty!');
         return;
       }
 
+      // Check for duplicate categories when updating
       const isDuplicate = budgetCategoryList?.items?.some(
         (item: any) => item.budgetCategoryName.toLowerCase() === budgetCategory.toLowerCase()
       );
@@ -73,6 +85,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
       }
 
       try {
+        // Update existing budget category
         await updateBudgetCategory({
           id: selectedbudgetCategory.id,
           body: {
@@ -85,11 +98,13 @@ const PresetCategoryAndDepartmentForBudget = () => {
         console.error('Failed to update Budget Category:', error);
       }
     } else {
+      // Validation for empty input in add mode
       if (!budgetCategory.trim()) {
         alert('Budeget Category cannot be empty!');
         return;
       }
 
+      // Check for duplicate categories when adding new
       const isDuplicate = budgetCategoryList?.items?.some(
         (item: any) => item.budgetCategoryName.toLowerCase() === budgetCategory.toLowerCase()
       );
@@ -100,6 +115,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
       }
 
       try {
+        // Add new budget category
         await addBudgetCategory({ budgetCategoryName: budgetCategory }).unwrap();
         setbudgetCategory('');
       } catch (error) {
@@ -108,6 +124,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
     }
   };
 
+  // Handler for deleting budget category
   const handleDeleteBudgetCategory = async () => {
     if (!selectedbudgetCategory) return;
 
@@ -119,6 +136,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
     }
   };
 
+  // Handler for edit button click
   const handleEditClick = (data: any) => {
     setIsEdit(true);
     setbudgetCategory(data.budgetCategoryName);
@@ -128,13 +146,16 @@ const PresetCategoryAndDepartmentForBudget = () => {
     <Box pt="20px">
       <Grid container display="flex" flexDirection="column">
         <Box px="15px" display="flex" flexDirection="row" gap={3} alignItems="center">
-          <TextField
-            value={budgetCategory}
-            onChange={(e) => setbudgetCategory(capitalizeWords(e.target.value))}
-            name="category"
-            label="Add New Category"
-            size="small"
-          />
+          <AutoFocus>
+            <TextField
+              value={budgetCategory}
+              onChange={(e) => setbudgetCategory(capitalizeWords(e.target.value))}
+              name="category"
+              label="Add New Category"
+              size="small"
+            />
+          </AutoFocus>
+
           {isEdit ? (
             <Button
               onClick={handlerAddBudgetCategory}

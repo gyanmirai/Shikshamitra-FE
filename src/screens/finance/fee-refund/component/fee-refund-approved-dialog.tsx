@@ -8,6 +8,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
+import AutoFocus from 'src/components/autofocus';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,11 +27,19 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
   dialogValue,
   onClose,
 }) => {
+  // Dialog state management using custom boolean hook
   const dialog = useBoolean();
+
+  // State to store selected entry from student payment data
   const [, setSelectedEntry] = useState<StudentPayment[]>(studentPayment);
+
+  // State to track edit mode
   const [, setIsEdit] = useState(false);
+
+  // State to manage payment history data with initial student payment data
   const [paymentHistoryData, setPaymentHistoryData] = useState<StudentPayment[]>(studentPayment);
 
+  // Handler to update refund amount for specific payment entry
   const handleRefundChange = (index: string, value: string) => {
     const newData = [...paymentHistoryData];
     const existingIndex = newData.findIndex((val) => val.paymentId === index);
@@ -38,59 +47,48 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
     setPaymentHistoryData(newData);
   };
 
+  // Calculate total refund amount from all payment history entries
   const totalRefundAmount: number = paymentHistoryData.reduce(
     (total: number, item: StudentPayment) => total + Number(item.refundAmount),
     0
   );
 
+  // Row object to display total at the bottom of the table
   const totalRow = {
     paymentId: '',
     feeHead: '',
     paidAmount: 'Total',
     refundAmount: totalRefundAmount,
-
     paidDate: '',
     status: '',
   };
 
-  const handleSave = () => {};
-
-  const closeDialog = () => {
-    dialog.onFalse();
-  };
-
-  const handleDilog = () => {
-    setIsEdit(true);
-    setSelectedEntry(paymentHistoryData);
-
-    dialog.onTrue();
-  };
-
+  // State to store tuition fee refund amount as string
   const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState<string>('');
+  // State to store library fee refund amount as string
   const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState<string>('');
+  // State to store total fee refund amount as number
   const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState<number>(0);
 
+  // Helper function to parse numeric value from formatted string (removes commas)
   const parseNumericValue = (formattedValue: string) =>
     parseFloat(formattedValue.replace(/,/g, '')) || 0;
 
+  // Calculate total refund amount whenever tuition or library fee amounts change
   useEffect(() => {
     const a = parseNumericValue(tuitionFeeRefundAmount);
     const b = parseNumericValue(libraryFeeRefundAmount);
     setTotalFeeRefundAmount(a + b);
   }, [tuitionFeeRefundAmount, libraryFeeRefundAmount]);
 
-  const handleChangeForTuition = (formattedValue: string, numericValue: number) => {
-    setTuitionFeeRefundAmount(formattedValue);
-  };
-
-  const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
-    setlibraryFeeRefundAmount(formattedValue);
-  };
-
+  // State to store discount values for different fee heads
   const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
 
+  // State to control if save button should be enabled
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
 
+  // Handler to update discount value for a specific fee head
+  // Removes any non-numeric characters except decimal point
   const handleDiscountChange = (feeHead: string, value: string) => {
     setDiscountValues((prev) => {
       const updatedValues = {
@@ -102,6 +100,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
     });
   };
 
+  // Calculate total discount by summing all discount values
   const calculateTotalDiscount = () => {
     const totalDiscount = Object.values(discountValues).reduce(
       (sum, value) => sum + (Number(value) || 0),
@@ -110,7 +109,6 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
 
     return totalDiscount;
   };
-
   const [feeRefundremark, setFeeRefundRemark] = useState('');
   // ✅ Use useEffect to correctly update isSaveEnabled when discountValues change
   useEffect(() => {
@@ -172,15 +170,26 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
             {
               id: 'refundAmount',
               label: 'Discount Amount',
-              render: (value: any, row: any) => (
-                <NumericFormatCustom
-                  size="small"
-                  label={`${row.feeHead} Discount`}
-                  name={`${row.feeHead.toLowerCase()}Discount`}
-                  value={discountValues[row.feeHead] || ''}
-                  onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
-                />
-              ),
+              render: (value: any, row: any) =>
+                row.feeHead === paymentHistoryData[0].feeHead ? (
+                  <AutoFocus>
+                    <NumericFormatCustom
+                      size="small"
+                      label={`${row.feeHead} Discount`}
+                      name={`${row.feeHead.toLowerCase()}Discount`}
+                      value={discountValues[row.feeHead] || ''}
+                      onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                    />
+                  </AutoFocus>
+                ) : (
+                  <NumericFormatCustom
+                    size="small"
+                    label={`${row.feeHead} Discount`}
+                    name={`${row.feeHead.toLowerCase()}Discount`}
+                    value={discountValues[row.feeHead] || ''}
+                    onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                  />
+                ),
             },
           ]}
           data={[...paymentHistoryData, totalRow]}

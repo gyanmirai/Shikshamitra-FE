@@ -427,6 +427,7 @@ export const InformationFields: FieldsType[] = [
             helperText={
               props.formik.touched.employeeStatusType && props.formik.errors.employeeStatusType
             }
+            disabled={!!props.disabled}
           />
         )}
       />
@@ -761,6 +762,7 @@ export const InformationFields: FieldsType[] = [
             formik.setFieldValue('country', value);
           }}
           value={formik.values.country}
+          disabled={!!props.disabled}
         />
       );
     },
@@ -780,6 +782,7 @@ export const InformationFields: FieldsType[] = [
           }}
           value={formik.values.state}
           countryValue={formik.values.country}
+          disabled={!!props.disabled}
         />
       );
     },
@@ -796,6 +799,7 @@ export const InformationFields: FieldsType[] = [
           value={formik.values.city}
           onChange={(_e: any, value: any) => formik.setFieldValue('city', value)}
           stateValue={formik.values.state}
+          disabled={!!props.disabled}
         />
       );
     },

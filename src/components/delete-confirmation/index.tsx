@@ -40,15 +40,15 @@ export function DeleteConfirmationDialog({
         <DialogContentText id="delete-dialog-description">{description}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="inherit">
+        <Button size="small" variant="outlined" onClick={onClose} color="inherit">
           {cancelText}
         </Button>
         {isDeleteLoading ? (
-          <Button color="error" variant="outlined" disabled>
+          <Button size="small" color="error" variant="contained" disabled>
             Deleting...
           </Button>
         ) : (
-          <Button onClick={onConfirm} color="error" variant="outlined" autoFocus>
+          <Button size="small" onClick={onConfirm} color="error" variant="contained" autoFocus>
             {confirmText}
           </Button>
         )}
