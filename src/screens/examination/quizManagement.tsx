@@ -35,10 +35,14 @@ const TABS = [
 ];
 
 const QuizManagement = (props: TabComponentType) => {
+  // Initialize tabs with 'activeQuiz' as default value using custom hook
   const tabs = useTabs('activeQuiz');
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
-  const currentTab = TABS.find((tab) => tab.value === tabs.value);
 
+  // Find and get the component to render based on current tab value
+  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+
+  // Find and get the current tab object containing label and description
+  const currentTab = TABS.find((tab) => tab.value === tabs.value);
   return (
     <Box>
       <CustomBreadcrumbs

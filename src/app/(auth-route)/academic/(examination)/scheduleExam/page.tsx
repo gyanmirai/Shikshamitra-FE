@@ -1,6 +1,6 @@
 import React from 'react';
 
-import ScheduleExam from 'src/screens/examination/schedule-exam';
+import ScheduleExam from 'src/screens/examination/scheduleExam/schedule-exam';
 
 const scheduleExamScreen = () => <ScheduleExam />;
 

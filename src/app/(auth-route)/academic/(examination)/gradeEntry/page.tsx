@@ -1,6 +1,6 @@
 import React from 'react';
 
-import GradeEntry from 'src/screens/examination/gradeEntry';
+import GradeEntry from 'src/screens/examination/gradeEntry/gradeEntry';
 
 const GradeEntryScreen = () => <GradeEntry />;
 
