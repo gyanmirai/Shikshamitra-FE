@@ -88,8 +88,8 @@ const familyFieldsValidation = Yup.object({
   motherRemarks: Yup.string(),
   motherAddress: Yup.string(),
 
-  guardianName: Yup.string().required('Guardian name is required'),
-  guardianDob: Yup.string().required('Guardian DOB is required'),
+  guardianName: Yup.string(),
+  guardianDob: Yup.string(),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
   guardianContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
