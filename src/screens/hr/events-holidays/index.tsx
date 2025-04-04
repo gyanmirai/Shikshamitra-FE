@@ -44,11 +44,15 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-interface IEventHoliday {
+import { eventAndHolidayInitialValues } from './initialValue';
+import { eventAndHolidayValidationSchema } from './validationSchema';
+
+export interface IEventHoliday {
   id: string;
   creationTime: string;
   creatorId: string;
@@ -61,32 +65,44 @@ interface IEventHoliday {
   isHoliday: boolean;
 }
 const HrEventsAndHolidaysScreen = () => {
+  // Dialog state for managing form visibility
   const dialog = useBoolean();
+  // State to store clicked calendar event
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
 
+  // Confirmation dialog state
   const confirm = useBoolean(false);
+  // Toggle between list and calendar view
   const [view, setView] = React.useState('list');
+  // Current selected date in date picker
   const [date, setDate] = React.useState<Dayjs | null>(dayjs);
+  // State to store event/holiday data for editing
   const [editData, setEditData] = useState<null | IEventHoliday>(null);
   const dispatch = useDispatch();
+  // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const theme = useTheme();
+
+  // Fetch events/holidays for selected date
   const [fetchEvent, { data: eventHolidayData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEventHolidayByDateQuery,
-    // params: date?.format('YYYY-MM-DD'),
   });
 
+  // Mutation for deleting events/holidays
   const [deleteEventHoliday, { isLoading: isEventHolidayDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEventHolidayMutation,
   });
+
+  // Fetch events when date changes
   useEffect(() => {
     if (date) {
       fetchEvent(date.format('YYYY-MM-DD'));
     }
   }, [date, fetchEvent]);
 
+  // Handle form close with unsaved changes check
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
@@ -98,6 +114,7 @@ const HrEventsAndHolidaysScreen = () => {
     }
   };
 
+  // Transform API data for calendar display
   const calendarData = useMemo(
     () =>
       eventHolidayData?.items.map((i: any) => ({
@@ -113,13 +130,13 @@ const HrEventsAndHolidaysScreen = () => {
     [eventHolidayData?.items, theme.palette.error.main, theme.palette.success.main]
   );
 
+  // Get selected calendar event data
   const selectCalenderData = useMemo(() => {
     if (currentDateClick) {
       return calendarData.find((i: any) => i.id === currentDateClick.event.id);
     }
     return null;
   }, [calendarData, currentDateClick]);
-
   return dialog.value ? (
     <>
       <CustomBreadcrumbs
@@ -301,6 +318,7 @@ export const HrEventsAndHolidaysForm = ({
   editData: IEventHoliday | null;
   isCalenderPreview?: boolean;
 }) => {
+  // Custom hook for adding a new holiday event with success message popup
   const [addHoliday, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEventHolidayMutation,
@@ -310,6 +328,8 @@ export const HrEventsAndHolidaysForm = ({
       successMessage: 'Event created successfully',
     },
   });
+
+  // Custom hook for updating an existing holiday event with success message popup
   const [updateHoliday, { isLoading: isUpdatePFLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEventHolidayMutation,
@@ -319,19 +339,22 @@ export const HrEventsAndHolidaysForm = ({
       successMessage: 'Event updated successfully',
     },
   });
+
+  // Initialize formik for form handling with validation
   const formik = useFormik({
-    initialValues: {
-      startDate: editData ? dayjs(editData?.startDate) : null,
-      endDate: editData ? dayjs(editData?.endDate) : null,
-      reason: editData?.reason || '',
-      isHoliday: editData?.isHoliday || false,
-    },
+    // Set initial form values based on editData (if editing existing event)
+    initialValues: eventAndHolidayInitialValues(editData),
+    // Apply validation schema for form fields
+    validationSchema: eventAndHolidayValidationSchema,
+    // Handle form submission
     onSubmit: async (value) => {
       try {
         if (editData) {
+          // If editing existing event, update it with new values
           await updateHoliday({
             id: editData.id,
             body: {
+              // Convert dates to required format using dayjs
               startDate:
                 dateConvertor(dayjs(value.startDate, 'DD-MM-YYYY').format(dateFormat)) || '',
               endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
@@ -340,6 +363,7 @@ export const HrEventsAndHolidaysForm = ({
             },
           });
         } else {
+          // If creating new event, add it with provided values
           await addHoliday({
             startDate: dateConvertor(dayjs(value.startDate, 'DD-MM-YYYY').format(dateFormat)) || '',
             endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
@@ -347,60 +371,74 @@ export const HrEventsAndHolidaysForm = ({
             isHoliday: value.isHoliday,
           });
         }
+        // Close form after successful submission
         handleClose(null, true);
       } catch (error) {
         console.log(error);
       }
     },
   });
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box component="form" onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={6}>
-              <DatePicker
-                format="DD-MM-YYYY"
-                label="Start Date"
-                value={formik.values.startDate}
-                onChange={(value) => formik.setFieldValue('startDate', value)}
-                disabled={isCalenderPreview}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              <ShakingTextField
+                error={formik.touched.startDate && Boolean(formik.errors.startDate)}
+              >
+                <DatePicker
+                  format="DD-MM-YYYY"
+                  label="Start Date"
+                  value={formik.values.startDate}
+                  onChange={(value) => formik.setFieldValue('startDate', value)}
+                  disabled={isCalenderPreview}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      helperText: formik.touched.startDate && formik.errors.startDate,
+                      error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={6}>
-              <DatePicker
-                format="DD-MM-YYYY"
-                label="End Date"
-                value={formik.values.endDate}
-                onChange={(value) => formik.setFieldValue('endDate', value)}
-                disabled={isCalenderPreview}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
+                <DatePicker
+                  format="DD-MM-YYYY"
+                  label="End Date"
+                  value={formik.values.endDate}
+                  onChange={(value) => formik.setFieldValue('endDate', value)}
+                  disabled={isCalenderPreview}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      helperText: formik.touched.endDate && formik.errors.endDate,
+                      error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                label="Reason"
-                value={formik.values.reason}
-                size="small"
-                name="reason"
-                fullWidth
-                rows={3}
-                multiline
-                disabled={isCalenderPreview}
-                onChange={formik.handleChange}
-              />
+              <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
+                <TextField
+                  label="Reason"
+                  value={formik.values.reason}
+                  size="small"
+                  name="reason"
+                  fullWidth
+                  rows={3}
+                  multiline
+                  disabled={isCalenderPreview}
+                  onChange={formik.handleChange}
+                  helperText={formik.touched.reason && formik.errors.reason}
+                  error={formik.touched.reason && Boolean(formik.errors.reason)}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
               <FormControlLabel
