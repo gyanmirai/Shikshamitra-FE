@@ -16,11 +16,11 @@ const AllConversation = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="All Conversation"
+        heading="Conversation"
         links={[
           { name: 'Communication', href: '/communication/dashboard' },
           { name: 'Messages', href: '/communication/messages' },
-          { name: 'All Conversation' },
+          { name: 'Conversation' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

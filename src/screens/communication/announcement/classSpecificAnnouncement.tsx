@@ -29,7 +29,6 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -169,9 +168,8 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   const [selectedClass, setSelectedClass] = useState<string>('All Classes');
   // Modal state for confirmation dialog
   const confirm_dialog = useBoolean();
-  // URL parameter state for form visibility
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
 
+  const [open, setOpen] = useState(false);
   // State to store the announcement being viewed
   const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
   // Modal state for view announcement dialog
@@ -221,7 +219,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
    */
   const handleCloseDialog = () => {
     setEditingAnnouncement(null);
-    setParams({ isForm: 'false' });
+    setOpen(false);
     setPublishingAnnouncement(null);
     publish_modal.onFalse();
   };
@@ -301,26 +299,25 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
     }
   };
 
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Announcements' },
-          { name: 'Class Wise Announcement' },
-          { name: 'Announcement Form' },
-        ]
-      : [
-          { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Announcements' },
-          { name: 'Class Wise Announcement' },
-        ];
+  const links = open
+    ? [
+        { name: 'Communication', href: '/communication/dashboard' },
+        { name: 'Announcements' },
+        { name: 'Class Wise Announcement' },
+        { name: 'Announcement Form' },
+      ]
+    : [
+        { name: 'Communication', href: '/communication/dashboard' },
+        { name: 'Announcements' },
+        { name: 'Class Wise Announcement' },
+      ];
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Schedule Exam"
+        heading="Class Wise Announcement"
         description={
-          params.isForm === 'true'
+          open
             ? 'Create or update class-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
             : 'View and manage all class-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed.'
         }
@@ -329,22 +326,22 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
             onClick={
-              params.isForm === 'true'
-                ? () => handleCloseDialog
+              open
+                ? () => handleCloseDialog()
                 : () => {
-                    setParams({ isForm: 'true' });
+                    setOpen(true);
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Class Wise Announcement'}
+            {open ? 'Back' : 'Class Wise Announcement'}
           </Button>
         }
       />
-      {params.isForm === 'true' ? (
-        <Card>
+      {open ? (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AnnouncementForm
             initialValues={editingAnnouncement}
             onSubmit={handleSubmit}
@@ -478,7 +475,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
                     showViewIcon
                     showThreeDots={false}
                     handleEditClick={() => {
-                      setParams({ isForm: 'true' });
+                      setOpen(true);
                       setEditingAnnouncement(row);
                     }}
                     handleDeleteClick={() => {
@@ -511,7 +508,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
           <DialogContentText>Are you sure to delete this Announcement?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={confirm_dialog.onFalse} variant="contained" color="error">
+          <Button onClick={confirm_dialog.onFalse} variant="contained">
             Cancel
           </Button>
           <Button
@@ -519,9 +516,9 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
               handleDelete(deleteAnnouncement);
             }}
             variant="contained"
-            color="success"
+            color="error"
           >
-            Confirm
+            Delete
           </Button>
         </DialogActions>
       </CustomDialog>
@@ -642,6 +639,8 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
 }) => {
+  // Determines the announcement status based on scheduling and date
+  // Returns 'Published' if not scheduled, 'Scheduled' if date is in future
   const determineStatus = (isScheduled: boolean, selectedDate: Dayjs | null) => {
     if (!isScheduled) return 'Published';
     if (!selectedDate) return 'Scheduled';
@@ -650,6 +649,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     return selectedDate.isAfter(now) ? 'Scheduled' : 'Published';
   };
 
+  // Available division options for the announcement
   const divisionOption = [
     { value: 'A', label: 'A' },
     { value: 'B', label: 'B' },
@@ -657,10 +657,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     { value: 'D', label: 'D' },
   ];
 
+  // Track if all divisions are selected by comparing initial division length with available options
   const [isAllSelected, setIsAllSelected] = useState(
     initialValues?.division?.length === divisionOption.length
   );
-
   const validationSchema = Yup.object({
     title: Yup.string().required('Title is required').min(3, 'Title must be at least 3 characters'),
     description: Yup.string()
@@ -696,11 +696,21 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     },
   });
 
+  /**
+   * Fetches class data using a custom hook that combines query and mutation functionality
+   * @returns {Object} An object containing class data and loading state
+   * @property {Array} data - The fetched class data
+   * @property {boolean} isLoading - Loading state indicator
+   */
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  /**
+   * Handles changes to the publish date and updates the announcement status accordingly
+   * @param newDate - The new date selected by the user
+   */
   const handleDateChange = (newDate: Dayjs | null) => {
     if (newDate) {
       const newStatus = determineStatus(formik.values.isScheduled, newDate);
@@ -712,6 +722,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     }
   };
 
+  /**
+   * Toggles notification preferences by adding or removing them from the selected preferences array
+   * @param preference - The notification preference to toggle
+   */
   const handleNotificationPreferenceChange = (preference: string) => {
     const currentPreferences = formik.values.notification_preferences;
     const updatedPreferences = currentPreferences.includes(preference)
@@ -721,6 +735,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     formik.setFieldValue('notification_preferences', updatedPreferences);
   };
 
+  /**
+   * Handles division selection changes including select all/deselect all functionality
+   * @param selectedValues - Array of selected division values
+   */
   const handleDivisionChange = (selectedValues: string[]) => {
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
       const allDivision = divisionOption.map((org) => org.value);
@@ -735,11 +753,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
       setIsAllSelected(selectedValues.length === divisionOption.length);
     }
   };
-
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={2} height="100%">
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '450px' }}>
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
@@ -1027,7 +1044,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
         </Scrollbar>
         <DialogActions>
           <Button type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'} Announcement
+            {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>
