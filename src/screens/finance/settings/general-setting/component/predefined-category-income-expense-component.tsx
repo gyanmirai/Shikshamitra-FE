@@ -6,7 +6,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetbudgetCategoryQuery } from 'src/redux/budgetCategory/budgetCategoryApi';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -28,26 +27,26 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
     <>
       <Box display="flex" flex={1} flexDirection="row" gap={3} alignItems="center">
         {/* Category Selection */}
-        <AutoFocus>
-          <CustomSelect
-            options={
-              budgetCategoryList?.items?.length > 0
-                ? budgetCategoryList.items.map((item: any) => ({
-                    label: item.budgetCategoryName,
-                    value: item.id,
-                  }))
-                : []
-            }
-            label="Select category"
-            value={selectedBudgetCategory || ''}
-            onChange={(e) => {
-              console.log(e);
-              setSelectedBudgetCategory(e as string);
-            }}
-            formControlProps={{ sx: { minWidth: 275 } }}
-            placeholder="No categories available"
-          />
-        </AutoFocus>
+
+        <CustomSelect
+          options={
+            budgetCategoryList?.items?.length > 0
+              ? budgetCategoryList.items.map((item: any) => ({
+                  label: item.budgetCategoryName,
+                  value: item.id,
+                }))
+              : []
+          }
+          autoFocus
+          label="Select category"
+          value={selectedBudgetCategory || ''}
+          onChange={(e) => {
+            console.log(e);
+            setSelectedBudgetCategory(e as string);
+          }}
+          formControlProps={{ sx: { minWidth: 275 } }}
+          placeholder="No categories available"
+        />
 
         {/* Sub-category Input */}
         <TextField name="Addnewsubcategory" label="Add New Sub-Category" size="small" />

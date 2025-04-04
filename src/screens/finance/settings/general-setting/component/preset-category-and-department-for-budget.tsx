@@ -15,7 +15,6 @@ import {
 } from 'src/redux/budgetCategory/budgetCategoryApi';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
@@ -146,15 +145,14 @@ const PresetCategoryAndDepartmentForBudget = () => {
     <Box pt="20px">
       <Grid container display="flex" flexDirection="column">
         <Box px="15px" display="flex" flexDirection="row" gap={3} alignItems="center">
-          <AutoFocus>
-            <TextField
-              value={budgetCategory}
-              onChange={(e) => setbudgetCategory(capitalizeWords(e.target.value))}
-              name="category"
-              label="Add New Category"
-              size="small"
-            />
-          </AutoFocus>
+          <TextField
+            autoFocus
+            value={budgetCategory}
+            onChange={(e) => setbudgetCategory(capitalizeWords(e.target.value))}
+            name="category"
+            label="Add New Category"
+            size="small"
+          />
 
           {isEdit ? (
             <Button

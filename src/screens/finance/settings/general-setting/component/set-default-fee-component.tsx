@@ -15,7 +15,6 @@ import {
 } from 'src/redux/feeHead/feeHeadApi';
 
 import { Iconify } from 'src/components/iconify';
-import AutoFocus from 'src/components/autofocus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
@@ -169,15 +168,14 @@ const SetDefaultFeeComponent = () => {
           flexDirection="row"
           gap={3}
         >
-          <AutoFocus>
-            <TextField
-              name="newFeeHead"
-              label="Add New Fee Head"
-              size="small"
-              value={newFeeHead}
-              onChange={(e) => setNewFeeHead(capitalizeWords(e.target.value))}
-            />
-          </AutoFocus>
+          <TextField
+            autoFocus
+            name="newFeeHead"
+            label="Add New Fee Head"
+            size="small"
+            value={newFeeHead}
+            onChange={(e) => setNewFeeHead(capitalizeWords(e.target.value))}
+          />
 
           {isEdit ? (
             <Button
