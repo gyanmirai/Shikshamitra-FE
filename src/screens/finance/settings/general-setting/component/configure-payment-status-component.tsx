@@ -25,17 +25,23 @@ const ConfigurePaymentStatusComponent = () => {
     [key: string]: any;
   }
 
+  // State to track if we're in edit mode
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  // State to store the payment status input value
   const [paymentStatus, setPaymentStatus] = useState<string>('');
+  // State to store the currently selected payment status for editing/deleting
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<PaymentStatus | null>(null);
 
+  // Boolean hook for controlling delete confirmation dialog
   const dialogForDeleteConfirmation = useBoolean();
 
+  // Fetch all payment status options from the API
   const { data: paymentStatusList, isLoading: ispaymentStatusLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetpaymentOptionQuery,
   });
 
+  // Mutation hook for adding new payment status
   const [addPaymentStatus] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddpaymentOptionMutation,
@@ -45,6 +51,7 @@ const ConfigurePaymentStatusComponent = () => {
     },
   });
 
+  // Mutation hook for updating existing payment status
   const [updatePaymentStatus, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatepaymentOptionMutation,
@@ -54,6 +61,7 @@ const ConfigurePaymentStatusComponent = () => {
     },
   });
 
+  // Mutation hook for deleting payment status
   const [deletePaymentStatus, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeletepaymentOptionMutation,
@@ -63,13 +71,16 @@ const ConfigurePaymentStatusComponent = () => {
     },
   });
 
+  // Handler for both adding new and updating existing payment status
   const handleAddPaymentStatus = async () => {
     if (isEdit) {
+      // Validation for empty input
       if (!paymentStatus.trim()) {
         alert('Payment status cannot be empty!');
         return;
       }
 
+      // Check for duplicate payment status
       const isDuplicate = paymentStatusList?.items?.some(
         (item: PaymentStatus) =>
           item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
@@ -81,11 +92,13 @@ const ConfigurePaymentStatusComponent = () => {
       }
 
       try {
+        // Validate selected payment status exists
         if (!selectedPaymentStatus) {
           console.error('No payment status selected');
           return;
         }
 
+        // Update the payment status
         await updatePaymentStatus({
           id: selectedPaymentStatus.id,
           body: {
@@ -105,11 +118,13 @@ const ConfigurePaymentStatusComponent = () => {
         console.error('Failed to update Payment status:', error);
       }
     } else {
+      // Validation for empty input when adding new status
       if (!paymentStatus.trim()) {
         alert('Payment status cannot be empty!');
         return;
       }
 
+      // Check for duplicate payment status
       const isDuplicate = paymentStatusList?.items?.some(
         (item: PaymentStatus) =>
           item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
@@ -121,6 +136,7 @@ const ConfigurePaymentStatusComponent = () => {
       }
 
       try {
+        // Add new payment status
         await addPaymentStatus({ paymentStatusOptionName: paymentStatus }).unwrap();
         setPaymentStatus('');
       } catch (error) {
@@ -129,12 +145,14 @@ const ConfigurePaymentStatusComponent = () => {
     }
   };
 
+  // Handler for editing payment status
   const handleEditClick = (data: PaymentStatus) => {
     setIsEdit(true);
     setPaymentStatus(data.paymentStatusOptionName);
     setSelectedPaymentStatus(data);
   };
 
+  // Handler for deleting payment status
   const handleDeletePaymentStatus = async () => {
     if (!selectedPaymentStatus) return;
 
@@ -145,7 +163,6 @@ const ConfigurePaymentStatusComponent = () => {
       console.error('Failed to delete Payment status:', error);
     }
   };
-
   return (
     <Box py="20px" display="flex" flexDirection="column" gap={3}>
       <Grid container spacing={2}>
@@ -154,9 +171,11 @@ const ConfigurePaymentStatusComponent = () => {
             name="Add new status"
             label="Add New Status"
             size="small"
+            autoFocus
             value={paymentStatus}
             onChange={(e) => setPaymentStatus(capitalizeWords(e.target.value))}
           />
+
           {isEdit ? (
             <Button
               onClick={handleAddPaymentStatus}

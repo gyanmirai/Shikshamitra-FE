@@ -20,18 +20,26 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 const SetDefaultFeeComponent = () => {
+  // State to store and manage the new fee head name input value
   const [newFeeHead, setNewFeeHead] = useState<string>('');
+  // State to track if a fee head is being added
   const [isAdding, setIsAdding] = useState<boolean>(false);
+  // State to store the ID of the selected fee head
   const [selectedFeeHeadId, setSelectedFeeHeadId] = useState<string | null>(null);
+  // State to store the name of the selected fee head
   const [selectedFeeHeadName, setSelectedFeeHeadName] = useState<string | null>(null);
+  // Boolean state to control delete confirmation dialog visibility
   const dialogForDeleteConfirmation = useBoolean();
+  // State to track if we're in edit mode
   const [isEdit, setIsEdit] = useState<boolean>(false);
 
+  // Fetch the list of fee heads from the API
   const { data: feeHeadList, isLoading: isFeeHeadLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetfeeHeadQuery,
   });
 
+  // Mutation hook for adding a new fee head
   const [addFeeHead] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddfeeHeadMutation,
@@ -41,6 +49,7 @@ const SetDefaultFeeComponent = () => {
     },
   });
 
+  // Mutation hook for deleting a fee head
   const [deleteFeeHead, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeletefeeHeadMutation,
@@ -50,6 +59,7 @@ const SetDefaultFeeComponent = () => {
     },
   });
 
+  // Mutation hook for updating a fee head
   const [updateFeeHead, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatefeeHeadMutation,
@@ -59,13 +69,16 @@ const SetDefaultFeeComponent = () => {
     },
   });
 
+  // Handler for adding or updating a fee head
   const handleAddFeeHead = async () => {
     if (isEdit) {
+      // Validation for empty fee head name
       if (!newFeeHead.trim()) {
         alert('Fee head name cannot be empty!');
         return;
       }
 
+      // Check for duplicate fee head names when updating
       const isDuplicate = feeHeadList?.items?.some(
         (item: any) =>
           item.feeHeadName.toLowerCase() === newFeeHead.toLowerCase() &&
@@ -80,6 +93,7 @@ const SetDefaultFeeComponent = () => {
       setIsAdding(true);
 
       try {
+        // Update existing fee head
         await updateFeeHead({
           id: selectedFeeHeadId,
           body: {
@@ -94,11 +108,13 @@ const SetDefaultFeeComponent = () => {
         setIsAdding(false);
       }
     } else {
+      // Validation for empty fee head name
       if (!newFeeHead.trim()) {
         alert('Fee head name cannot be empty!');
         return;
       }
 
+      // Check for duplicate fee head names when adding
       const isDuplicate = feeHeadList?.items?.some(
         (item: any) => item.feeHeadName.toLowerCase() === newFeeHead.toLowerCase()
       );
@@ -111,6 +127,7 @@ const SetDefaultFeeComponent = () => {
       setIsAdding(true);
 
       try {
+        // Add new fee head
         await addFeeHead({ feeHeadName: newFeeHead }).unwrap();
         setNewFeeHead('');
       } catch (error) {
@@ -121,6 +138,7 @@ const SetDefaultFeeComponent = () => {
     }
   };
 
+  // Handler for deleting a fee head
   const handleDeleteFeeHead = async () => {
     if (!selectedFeeHeadId) return;
 
@@ -132,6 +150,7 @@ const SetDefaultFeeComponent = () => {
     }
   };
 
+  // Handler for initiating edit mode
   const handleEditClick = (value: any) => {
     setIsEdit(true);
     setNewFeeHead(value.feeHeadName);
@@ -150,12 +169,14 @@ const SetDefaultFeeComponent = () => {
           gap={3}
         >
           <TextField
+            autoFocus
             name="newFeeHead"
             label="Add New Fee Head"
             size="small"
             value={newFeeHead}
             onChange={(e) => setNewFeeHead(capitalizeWords(e.target.value))}
           />
+
           {isEdit ? (
             <Button
               variant="contained"

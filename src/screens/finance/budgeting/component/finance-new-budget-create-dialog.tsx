@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,6 +16,8 @@ import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+
+import { validationSchemaForNewBudget } from '../budget_validation';
 
 interface FinanceNewBudgetCreateDialogProps {
   dialogValue: boolean;
@@ -48,22 +49,6 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
   const [categoryListBasedOnType, setCategoryListBasedOnType] = useState<any>([]);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  const validationSchema = Yup.object({
-    categoryType: Yup.string()
-
-      .required('Category type is required'),
-
-    categoryName: Yup.string().required('Category name is required'),
-
-    fundAllocation: Yup.string()
-      .required('Expense amount is required')
-      .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-      .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-        const numericValue = Number(value);
-        return numericValue > 0;
-      }),
-  });
-
   const initialValues = useMemo(
     () => ({
       startDate: dayjs(edit ? data.startDate : '2024-04-24', 'YYYY-MM-DD'),
@@ -83,7 +68,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 
   const formik = useFormik({
     initialValues,
-    validationSchema,
+    validationSchema: validationSchemaForNewBudget,
     onSubmit: (values: any) => {
       onSave(values);
     },
@@ -171,6 +156,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
                     value={formik.values.categoryType}
                     onChange={(value) => formik.setFieldValue('categoryType', value)}
                     disabled={edit}
+                    autoFocus
                     error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
                     helperText={
                       formik.touched.categoryType && formik.errors.categoryType

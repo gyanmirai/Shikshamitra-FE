@@ -11,10 +11,13 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const PredefinedCategoryIncomeExpenseComponent = () => {
+  // State to store the selected budget category ID
   const [selectedBudgetCategory, setSelectedBudgetCategory] = useState<string | undefined>(
     undefined
   );
 
+  // Fetch budget category list using custom hook that combines query and mutation
+  // Returns data object containing budget categories and loading state
   const { data: budgetCategoryList, isLoading: isGetBudgetCategoryLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetbudgetCategoryQuery,
@@ -24,6 +27,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
     <>
       <Box display="flex" flex={1} flexDirection="row" gap={3} alignItems="center">
         {/* Category Selection */}
+
         <CustomSelect
           options={
             budgetCategoryList?.items?.length > 0
@@ -33,6 +37,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
                 }))
               : []
           }
+          autoFocus
           label="Select category"
           value={selectedBudgetCategory || ''}
           onChange={(e) => {

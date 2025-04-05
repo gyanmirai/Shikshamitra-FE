@@ -24,12 +24,20 @@ interface FinanceStudentAdditionalDiscountDialogProps {
 const FinanceStudentAdditionalDiscountDialog: React.FC<
   FinanceStudentAdditionalDiscountDialogProps
 > = ({ dialogValue, selectedData, onClose }) => {
+  // State to store payment history data from additionalDiscountData
   const [paymentHistoryData] = useState<AdditionalDiscount[]>(additionalDiscountData);
 
+  // State to store discount values for each fee head as key-value pairs
   const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
+
+  // State to store remarks/comments for each fee head
   const [remarkValues, setRemarkValues] = useState<{ [key: string]: string }>({});
+
+  // State to control whether save button should be enabled based on discount values
   const [isSaveEnabled, setIsSaveEnabled] = useState<boolean>(false);
 
+  // Handler to update discount values when user enters amount
+  // Removes any non-numeric characters except decimal point
   const handleDiscountChange = (feeHead: string, value: string) => {
     setDiscountValues((prev) => {
       const updatedValues = {
@@ -40,7 +48,6 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
       return updatedValues;
     });
   };
-
   // ✅ Use useEffect to correctly update isSaveEnabled when discountValues change
   useEffect(() => {
     const canSave = Object.values(discountValues).some((val) => Number(val) > 0);
@@ -173,15 +180,25 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'refundAmount',
               label: 'Discount Amount',
-              render: (value: any, row: any) => (
-                <NumericFormatCustom
-                  size="small"
-                  label={`${row.feeHead} Discount`}
-                  name={`${row.feeHead.toLowerCase()}Discount`}
-                  value={discountValues[row.feeHead] || ''}
-                  onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
-                />
-              ),
+              render: (value: any, row: any) =>
+                row.feeHead === paymentHistoryData[0].feeHead ? (
+                  <NumericFormatCustom
+                    size="small"
+                    autoFocus
+                    label={`${row.feeHead} Discount`}
+                    name={`${row.feeHead.toLowerCase()}Discount`}
+                    value={discountValues[row.feeHead] || ''}
+                    onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                  />
+                ) : (
+                  <NumericFormatCustom
+                    size="small"
+                    label={`${row.feeHead} Discount`}
+                    name={`${row.feeHead.toLowerCase()}Discount`}
+                    value={discountValues[row.feeHead] || ''}
+                    onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
+                  />
+                ),
             },
             {
               id: 'remark',

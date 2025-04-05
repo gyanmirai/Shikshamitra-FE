@@ -53,10 +53,14 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
   onClose,
   allData,
 }) => {
+  // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
+  // Get isChanges state from Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // State to track and display duplicate receipt book name error
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
+  // Memoized initial values for the form based on whether editing existing or creating new
   const initialValues = useMemo<ReceiptBook>(
     () => ({
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
@@ -66,15 +70,18 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
     [data, isEdit]
   );
 
+  // Formik hook for form handling with validation and submission logic
   const formik = useFormik<ReceiptBook>({
     initialValues,
     validationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
+      // Check if receipt book name already exists in the data
       const exists = allData.some(
         (entry) => entry.receiptBookName.toLowerCase() === values.receiptBookName.toLowerCase()
       );
 
+      // Allow save if entry doesn't exist or if editing existing entry
       if (!exists || isEdit) {
         setShowErrorMessage(false);
         onSave(values);
@@ -84,10 +91,12 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
     },
   });
 
+  // Effect to track form changes and update Redux state
   useEffect(() => {
     dispatch(setIsChanges(!isEqual(formik.values, initialValues)));
   }, [formik.values, initialValues, dispatch]);
 
+  // Handler for closing the dialog with unsaved changes confirmation
   const handleClose = () => {
     if (isChanges && window.confirm('Are you sure you want to leave?')) {
       dispatch(setIsChanges(false));
@@ -130,6 +139,7 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
                   <TextField
                     size="small"
                     fullWidth
+                    autoFocus
                     name="receiptBookName"
                     label="Receipt Book Name"
                     value={formik.values.receiptBookName}

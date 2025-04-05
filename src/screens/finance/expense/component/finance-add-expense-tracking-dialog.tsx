@@ -70,11 +70,14 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
   isEdit,
   allData,
 }) => {
+  // State to track if an expense category already exists
   const [, setShowExistingEntryMessage] = useState<boolean>(false);
+  // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
 
+  // Initialize form values based on whether we're editing or creating new expense
   const initialValues = useMemo<FormikValue>(
     () => ({
       expenseCategory: isEdit ? (data.expenseCategory ?? '') : '',
@@ -82,6 +85,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
       paymentMethod: isEdit ? (data.paymentMethod ?? '') : '',
       date: isEdit ? (dayjs(data.date) ?? dayjs()) : dayjs(),
       paymentStatus: isEdit ? (data.paymentStatus ?? '') : '',
+      // Generate random ID for new entries
       id: isEdit
         ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
@@ -91,16 +95,20 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
     [data, isEdit]
   );
 
+  // Setup formik form handling with validation and submission logic
   const formik = useFormik<FormikValue>({
     initialValues,
     validationSchema,
     onSubmit: (values) => {
+      // Normalize strings for case-insensitive comparison
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
 
+      // Check if expense category already exists in data
       const existingEntryIndex = allData.findIndex(
         (val: any) => normalize(val.expenseCategory) === normalize(values.expenseCategory)
       );
       if (!isEdit) {
+        // For new entries, check for duplicates
         if (existingEntryIndex === -1) {
           setShowExistingEntryMessage(false);
           onSave(values);
@@ -108,17 +116,20 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
           setShowExistingEntryMessage(true);
         }
       } else {
+        // Allow saving if editing existing entry
         onSave(values);
       }
     },
     enableReinitialize: true,
   });
 
+  // Track form changes to prompt user before leaving
   useEffect(() => {
     const isChanged = !isEqual(formik.values, initialValues);
     dispatch(setIsChanges(isChanged));
   }, [dispatch, formik.values, initialValues]);
 
+  // Handle dialog close with unsaved changes confirmation
   const handleCloseDialog = () => {
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       onClose();
@@ -187,6 +198,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
                     onChange={(value) => formik.setFieldValue('expenseCategory', value)}
                     formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                     disabled={isEdit}
+                    autoFocus
                     error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
                     helperText={
                       formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''

@@ -75,83 +75,8 @@ const FeeCollectionMonthWise: React.FC<FeeCollectionMonthWiseProps> = ({
       selectedTerms: [],
       paymentMode: [],
     },
-    onSubmit: (values) => {
-      console.log('Final Submission:', values);
-    },
+    onSubmit: (values) => {},
   });
-
-  const monthSet: any = new Set();
-
-  students.fees.forEach((fee: any) => {
-    fee.paymentDueDateList.forEach((payment: any) => {
-      const monthName = payment.month;
-
-      if (payment.status === 'Unpaid') {
-        monthSet.add(monthName);
-      }
-    });
-  });
-
-  const uniqueMonths = [...monthSet].map((month) => ({
-    value: month,
-    label: month,
-  }));
-
-  // const [feeHeadList, setFeHeadList] = useState<any>([]);
-
-  // useEffect(() => {
-  //     const newFeeHeadList: any[] = [];
-
-  //     if (students.fees && students.fees.length > 0) {
-  //         students.fees.forEach((fee: any) => {
-
-  //             formik.values.selectedTerms.forEach((month: any) => {
-  //                 // Check if the fee has any unpaid payments for the selected month
-
-  //                 const unpaidPayments = fee.paymentDueDateList?.filter(
-  //                     (payment: PaymentDueDate) =>
-
-  //                         payment.month === month && payment.status === "Unpaid"
-  //                 );
-
-  //                 console.log("unpaidPayments: ", unpaidPayments)
-  //                 console.log("unpaidPayments: ", unpaidPayments)
-
-  //                 if (unpaidPayments && unpaidPayments.length > 0) {
-  //                     // If unpaid payments exist for the month, add them to the list
-  //                     unpaidPayments.forEach((payment: any) => {
-  //                         newFeeHeadList.push({
-  //                             month: payment.month,
-  //                             feeHead: fee.feeHead,
-  //                             feeHeadId: fee.feeHeadId,
-  //                             paymentMode: fee.acceptedpaymentMethod,
-  //                             amount: payment.amount,
-  //                             status: payment.status,
-  //                             paymentDueDate: payment.date,
-  //                             paymentHistory: payment.paymentHistory,
-  //                         });
-  //                     });
-  //                 } else {
-  //                     // If no unpaid payment exists for the month, mark it as unpaid with amount 0
-  //                     newFeeHeadList.push({
-  //                         month: "",
-  //                         feeHead: fee.feeHead,
-  //                         feeHeadId: fee.feeHeadId,
-  //                         paymentMode: fee.acceptedpaymentMethod,
-  //                         amount: 0, // No due date, so set amount to 0
-  //                         status: "Unpaid", // Mark as Unpaid for this month
-  //                         paymentDueDate: month, // Use the selected month
-  //                         paymentHistory: [], // No payment history
-  //                     });
-  //                 }
-  //             });
-  //         });
-  //     }
-
-  //     // Update the state with the new list of unpaid fees
-  //     setFeHeadList(newFeeHeadList);
-
-  // }, [formik.values.selectedTerms, students.fees]);
 
   return (
     <CustomDialog
@@ -190,9 +115,10 @@ const FeeCollectionMonthWise: React.FC<FeeCollectionMonthWiseProps> = ({
             </Box>
             <Box flex={1}>
               <CustomSelect
+                autoFocus
                 multiple
                 label="Select Term"
-                options={uniqueMonths}
+                options={[]}
                 // @ts-ignore
                 value={formik.values.selectedTerms}
                 onChange={(selectedValues) => {

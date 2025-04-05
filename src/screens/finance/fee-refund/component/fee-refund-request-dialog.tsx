@@ -121,6 +121,7 @@ const FeeRefundRequestDialog: React.FC<FeeRefundRequestDialogProps> = ({ onClose
 
                       { label: '11', value: '10C' },
                     ]}
+                    autoFocus
                     label="Class"
                     name="class"
                     value={formik.values.class}
