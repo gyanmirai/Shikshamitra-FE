@@ -15,7 +15,6 @@ const ExamOverview = (props: TabComponentType) => (
       <Switch
         onChange={(event) => {
           // Handle switch change
-          console.log(event.target.checked ? 'Calendar View' : 'List View');
         }}
       />
       <Typography sx={{ ml: 1 }}>Calendar View</Typography>

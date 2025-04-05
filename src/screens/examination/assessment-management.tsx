@@ -213,8 +213,6 @@ const AssessmentManagement = (props: TabComponentType) => {
    * @param values - Assessment form values to be submitted
    */
   const handleSubmit = (values: TAssessment) => {
-    console.log('values---', values);
-
     if (isEdit) {
       // Update existing assessment if in edit mode
       setAssessmentData(
@@ -1013,8 +1011,6 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ isBulk, data, onSubmit }: Ass
       feedback: data?.feedback || '',
     },
     onSubmit(values) {
-      console.log('values in component ---', values);
-
       onSubmit(values);
     },
   });

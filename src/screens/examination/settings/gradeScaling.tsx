@@ -64,9 +64,7 @@ const GradingScale = () => {
     }
   };
 
-  const handleSubmit = (values: any) => {
-    console.log('values----', values);
-  };
+  const handleSubmit = (values: any) => {};
 
   return (
     <Box>

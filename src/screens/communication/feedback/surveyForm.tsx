@@ -577,8 +577,6 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
 const QuestionBuilder = ({ formik }: any) => {
   const addQuestionDialog = useBoolean();
 
-  console.log('formik values-----', formik.values);
-
   // Adds a new question to the survey
   const handleAddQuestion = (newQuestion: any) => {
     formik.setFieldValue('questions', [...formik.values.questions, newQuestion]);
@@ -826,7 +824,6 @@ const AddNewQuestion = ({ onSave }: any) => {
 const PreviewAndPublish = ({ formik }: any) => {
   // State for managing question table data
   const [questionTableData, setQuestionTableData] = useState(formik.values.questions);
-  console.log('question table data---', questionTableData);
 
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>

@@ -204,7 +204,6 @@ const CourseProgress = (props: TabComponentType) => {
         {/* Update progress action item */}
         <MenuItem
           onClick={() => {
-            console.log('updateProgressDialog ---onclick');
             updateProgressDialog.onTrue();
             pop.onClose();
           }}
@@ -391,8 +390,6 @@ const CourseProgress = (props: TabComponentType) => {
 export default CourseProgress;
 
 const UpdateProgress = () => {
-  console.log('update progress called');
-
   const formik = useFormik({
     initialValues: {
       completePercentage: '', // Adjusted field name to match the input ID
@@ -404,7 +401,6 @@ const UpdateProgress = () => {
         .required('Complete Percentage is required'),
     }),
     onSubmit: (values) => {
-      console.log('Submitting:', values);
       // Add submission logic here
     },
   });

@@ -564,8 +564,6 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
     questionTime: '',
   });
 
-  console.log('errors---', errors);
-
   const isEditMode = !!initialData;
 
   const handleQuestionTypeChange = (value: any) => {
@@ -1143,7 +1141,6 @@ const AddNewQuiz = () => {
       }}
       renderItem={({ formik, activeStep: step }: any) => {
         const StepComponent = allSurveySteps[step];
-        console.log('StepComponent---', StepComponent);
         return (
           <Box p={2}>
             <StepComponent formik={formik} />

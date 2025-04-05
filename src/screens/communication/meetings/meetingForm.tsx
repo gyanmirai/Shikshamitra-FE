@@ -98,7 +98,6 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
       repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues?.repeatUntil) : null,
     },
     onSubmit: (values) => {
-      console.log('values------', values);
       onSubmit({
         ...values,
         status: 'Scheduled',

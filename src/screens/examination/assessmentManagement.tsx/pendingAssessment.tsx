@@ -572,8 +572,6 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
       feedback: data?.feedback || '',
     },
     onSubmit(values) {
-      console.log('values in component ---', values);
-
       onSubmit(values);
     },
   });

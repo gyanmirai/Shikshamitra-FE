@@ -25,9 +25,7 @@ const CompletedAssessment = () => {
       discountPercentage: '',
       libraryFees: '',
     },
-    onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
-    },
+    onSubmit: (values: any) => {},
   });
 
   return (

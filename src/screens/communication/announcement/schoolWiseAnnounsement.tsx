@@ -175,8 +175,6 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   // Controls form visibility through URL search parameters
   const [open, setOpen] = useState(false);
 
-  console.log('open----', open);
-
   // Stores the announcement being edited
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
   // Stores the announcement being viewed in detail
@@ -215,8 +213,6 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
    */
   const handleSubmit = (values: any) => {
     if (editingAnnouncement) {
-      console.log('editing announcement---', editingAnnouncement);
-
       setAnnouncementTableData((prevData) =>
         prevData.map((announcement) =>
           announcement.id === editingAnnouncement.id
@@ -239,8 +235,6 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
    * Clears editing announcement, publishing announcement and closes modals
    */
   const handleCloseDialog = () => {
-    console.log('close dialog');
-
     setEditingAnnouncement(null);
     setOpen(false);
     publish_modal.onFalse();
@@ -644,8 +638,6 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
 }) => {
-  console.log('AnnouncementForm----', AnnouncementForm);
-
   // List of available organizations/schools
   const allOrganizations = [
     { value: 'Pre Primary', label: 'Pre Primary' },
@@ -690,8 +682,6 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log('values------', values);
-
       onSubmit({
         ...values,
         publishDate: values.isScheduled ? values.publishDate : dayjs(),
@@ -734,7 +724,6 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
 
     formik.setFieldValue('notification_preferences', updatedPreferences);
   };
-  console.log('formik error====', formik.errors);
 
   return (
     <Box display="flex" flexDirection="column" gap={2} height="100%">

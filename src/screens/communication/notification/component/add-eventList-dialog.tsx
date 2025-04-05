@@ -14,8 +14,6 @@ const AddEventListDialog: React.FC<AddEventListDialogProps> = ({ onClose }) => {
       eventDescription: '',
     },
     onSubmit: (values) => {
-      console.log('Submitted values:', values);
-
       onClose(); // Close dialog after submitting
     },
   });
