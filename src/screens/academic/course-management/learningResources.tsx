@@ -2,6 +2,7 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useCallback } from 'react';
 
@@ -34,6 +35,7 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -203,7 +205,7 @@ const LearningResources = (props: TabComponentType) => {
         ];
 
   return (
-    <>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* CustomBreadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
         heading="Learning Resources"
@@ -234,7 +236,7 @@ const LearningResources = (props: TabComponentType) => {
 
       {/* Conditional rendering of Create/Edit form or Resource list */}
       {params.isForm === 'true' ? (
-        <Card>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <CreateNewResource
             onSave={handleSave}
             onClose={closeDialog}
@@ -380,7 +382,7 @@ const LearningResources = (props: TabComponentType) => {
             ))}
         </>
       )}
-    </>
+    </Box>
   );
 };
 
@@ -450,6 +452,21 @@ interface FormikValue {
   dateUploaded: string;
 }
 
+const validationSchema = Yup.object({
+  id: Yup.number().required(),
+  resourceTitle: Yup.string()
+    .required('Resource Title is required')
+    .max(100, 'Title cannot exceed 100 characters'),
+  typeOfResource: Yup.string().required('Please select a resource type'),
+  className: Yup.string().required('Class name is required'),
+  subject: Yup.string().required('Subject is required'),
+  description: Yup.string()
+    .required('Description is required')
+    .min(10, 'Description should be at least 10 characters'),
+  dateUploaded: Yup.string().required('Date uploaded is required'),
+  status: Yup.string().oneOf(['draft', 'Publish', 'Unpublish'], 'Invalid status'),
+});
+
 // Component for creating and editing learning resources
 const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   data,
@@ -482,6 +499,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
       dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
       status: isEdit && data ? data.status : 'draft',
     },
+    validationSchema,
     // Handle form submission
     onSubmit: (values) => {
       const updatedValues = {
@@ -494,79 +512,109 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
         {/* Scrollable container for form fields */}
-        <Scrollbar sx={{ p: 2, height: '450px' }}>
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2} marginTop={1}>
             {/* Class selection dropdown */}
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={classData?.items || []}
-                value={formik.values.className}
-                onChange={(val) => formik.setFieldValue('className', val as string)}
-                label="Class"
-                isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.className && formik.errors.className) || false}
+              >
+                <CustomSelect
+                  options={classData?.items || []}
+                  value={formik.values.className}
+                  onChange={(val) => formik.setFieldValue('className', val as string)}
+                  label="Class"
+                  isLoading={isLoading}
+                  labelKey="name"
+                  valueKey="name"
+                  formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
+                  error={!!(formik.touched.className && formik.errors.className) || false}
+                  helperText={(formik.touched.className && formik.errors.className) || ''}
+                />
+              </ShakingTextField>
             </Grid>
             {/* Subject selection dropdown */}
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Subject"
-                options={[
-                  { value: 'Math', label: 'Math' },
-                  { value: 'English', label: 'English' },
-                  { value: 'Science', label: 'Science' },
-                ]}
-                name="subject"
-                value={formik.values.subject}
-                onChange={(val) => formik.setFieldValue('subject', val as string)}
-                formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.subject && formik.errors.subject) || false}
+              >
+                <CustomSelect
+                  label="Subject"
+                  options={[
+                    { value: 'Math', label: 'Math' },
+                    { value: 'English', label: 'English' },
+                    { value: 'Science', label: 'Science' },
+                  ]}
+                  name="subject"
+                  value={formik.values.subject}
+                  onChange={(val) => formik.setFieldValue('subject', val as string)}
+                  formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
+                  error={!!(formik.touched.subject && formik.errors.subject) || false}
+                  helperText={(formik.touched.subject && formik.errors.subject) || ''}
+                />
+              </ShakingTextField>
             </Grid>
             {/* Resource title input */}
             <Grid item xs={12} md={6}>
-              <TextField
-                disabled={isEdit}
-                label="Resource Title"
-                size="small"
-                name="resourceTitle"
-                value={formik.values.resourceTitle}
-                onChange={formik.handleChange}
-                fullWidth
-              />
+              <ShakingTextField
+                error={!!(formik.touched.resourceTitle && formik.errors.resourceTitle) || false}
+              >
+                <TextField
+                  disabled={isEdit}
+                  label="Resource Title"
+                  size="small"
+                  name="resourceTitle"
+                  value={formik.values.resourceTitle}
+                  onChange={formik.handleChange}
+                  fullWidth
+                  error={!!(formik.touched.resourceTitle && formik.errors.resourceTitle) || false}
+                  helperText={(formik.touched.resourceTitle && formik.errors.resourceTitle) || ''}
+                />
+              </ShakingTextField>
             </Grid>
             {/* Resource type selection */}
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Resource Type"
-                options={[
-                  { value: 'video', label: 'Video' },
-                  { value: 'audio', label: 'Audio' },
-                  { value: 'document', label: 'Document' },
-                ]}
-                value={formik.values.typeOfResource}
-                onChange={(val) => {
-                  formik.setFieldValue('typeOfResource', val as string);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false}
+              >
+                <CustomSelect
+                  label="Select Resource Type"
+                  options={[
+                    { value: 'video', label: 'Video' },
+                    { value: 'audio', label: 'Audio' },
+                    { value: 'document', label: 'Document' },
+                  ]}
+                  value={formik.values.typeOfResource}
+                  onChange={(val) => {
+                    formik.setFieldValue('typeOfResource', val as string);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  error={!!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false}
+                  helperText={(formik.touched.typeOfResource && formik.errors.typeOfResource) || ''}
+                />
+              </ShakingTextField>
             </Grid>
             {/* Description text area */}
             <Grid item xs={12}>
-              <TextField
-                label="Description"
-                size="small"
-                multiline
-                rows={4}
-                name="description"
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                fullWidth
-              />
+              <ShakingTextField
+                error={!!(formik.touched.description && formik.errors.description) || false}
+              >
+                <TextField
+                  label="Description"
+                  size="small"
+                  multiline
+                  rows={4}
+                  name="description"
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  fullWidth
+                  error={!!(formik.touched.description && formik.errors.description) || false}
+                  helperText={(formik.touched.description && formik.errors.description) || ''}
+                />
+              </ShakingTextField>
             </Grid>
             {/* File upload box */}
             <Grid item xs={12}>
@@ -619,7 +667,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
             Save and Publish
           </Button>
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };

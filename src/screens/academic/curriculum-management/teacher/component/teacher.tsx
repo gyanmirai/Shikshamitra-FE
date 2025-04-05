@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Chip, Checkbox } from '@mui/material';
+import { Box, Chip } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -67,25 +67,45 @@ const Teacher = ({
   searchParams?: Record<string, string>;
   setSearchParams?: (obj: Record<string, any>) => void;
 }) => {
+  // Query hook to fetch class data from the API
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  // State to store the selected division
   const [division, setDivision] = useState<string>('');
+
+  // State to store available division options
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
+  // State to store the selected class
   const [classes, setClasses] = useState<string>('');
+
+  // Get selected subject from search params, default to 'All' if not present
   const selectedSubject = searchParams?.subject ? searchParams?.subject : 'All';
 
-  // const [selectedClass, setSelectedClass] = useState('All');
-  // const [selectedSubject, setSelectedSubject] = useState('All');
+  // State to store the selected teacher for reassignment
   const [selectedTeacher, setSelectedTeacher] = useState<any | null>([]);
 
+  // State to store and manage the teacher assignment data
   const [teacherData, setTeacherData] = useState<TTeacherData[]>(TeacherData);
+
+  // Boolean state to control dialog visibility
   const dialog = useBoolean();
 
+  // State to track which teacher entry is being edited
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const sendInstantNotificationDialogValue = useBoolean();
+
+  /**
+   * Handles the reassignment of teachers to a selected subject/class
+   * @param values Object containing array of assigned teacher names
+   * @description Updates the teacher data when teachers are reassigned to a subject.
+   * If a teacher is selected, finds and updates their assignment in the data array,
+   * then closes the dialog and resets the selection.
+   */
   const handleTeacherReassignment = (values: { assignedTeacher: string[] }) => {
     if (selectedTeacher) {
       const updatedData = teacherData.map((row) =>
@@ -96,20 +116,14 @@ const Teacher = ({
       setSelectedTeacher(null);
     }
   };
-
-  // const classOptions = useMemo(() => {
-  //   if (!classData) return [{ label: 'All', value: 'All' }];
-
-  //   return [
-  //     { label: 'All', value: 'All' },
-  //     // eslint-disable-next-line no-unsafe-optional-chaining
-  //     ...classData?.items.map((cls: any) => ({
-  //       label: cls.name, // Adjust this based on your actual API response structure
-  //       value: cls.id, // Adjust this based on your actual API response structure
-  //     })),
-  //   ];
-  // }, [classData]);
-
+  /**
+   * Filters the teacher data based on selected class and subject
+   * @returns {Array} Filtered array of teacher data
+   * @description Memoized function that filters teacher data based on:
+   * 1. Matching class name from the selected class ID
+   * 2. Matching subject (if 'All' is selected, includes all subjects)
+   * Dependencies: teacherData, classData, selectedSubject, classes
+   */
   const filteredData = useMemo(
     () =>
       teacherData.filter((item: any) => {
@@ -121,8 +135,11 @@ const Teacher = ({
     [teacherData, classData?.items, selectedSubject, classes]
   );
 
-  const sendInstantNotificationDialogValue = useBoolean();
-
+  /**
+   * Handles the opening of send notification dialog
+   * @description Toggles the notification dialog visibility state to true
+   * if it's currently not visible
+   */
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -171,48 +188,48 @@ const Teacher = ({
         />
       </Box>
       <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedTeacher.length !== 0}
+        // onSendNotification={handlerSendNotification}
+        // showCheckbox={selectedTeacher.length !== 0}
         tableId="teacher-table"
         columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={
-                    !!filteredData?.length && selectedTeacher?.length === filteredData?.length
-                  }
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedTeacher(filteredData || []);
-                    } else {
-                      setSelectedTeacher([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={selectedTeacher.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedTeacher([...selectedTeacher, row]);
-                    } else {
-                      setSelectedTeacher(selectedTeacher.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   align: 'left',
+          //   minWidth: '60px',
+          //   isSort: false,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={
+          //           !!filteredData?.length && selectedTeacher?.length === filteredData?.length
+          //         }
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedTeacher(filteredData || []);
+          //           } else {
+          //             setSelectedTeacher([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={selectedTeacher.some((i: any) => i.id === row.id)}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedTeacher([...selectedTeacher, row]);
+          //           } else {
+          //             setSelectedTeacher(selectedTeacher.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'subject',
             label: 'Subject',

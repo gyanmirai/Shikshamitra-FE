@@ -2,6 +2,7 @@
 
 import type { Division, Standards } from 'src/types/school';
 
+import * as yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -28,6 +29,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -474,11 +476,17 @@ interface AssignGradeProps {
 }
 
 const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
+  const validationSchema = yup.object().shape({
+    grade: yup.string().required('Grade is required'),
+    feedback: yup.string().max(500, 'Feedback must be less than 500 characters'),
+  });
+
   const formik = useFormik({
     initialValues: {
       grade: data?.grade || '',
       feedback: data?.feedback || '',
     },
+    validationSchema,
     onSubmit(values) {
       onSubmit(values);
     },
@@ -490,40 +498,51 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <CustomSelect
-                options={[
-                  { value: 'A+', label: 'A+' },
-                  { value: 'A', label: 'A' },
-                  { value: 'A-', label: 'A-' },
-                  { value: 'B+', label: 'B+' },
-                  { value: 'B', label: 'B' },
-                  { value: 'B-', label: 'B-' },
-                  { value: 'C+', label: 'C+' },
-                  { value: 'C', label: 'C' },
-                  { value: 'C-', label: 'C-' },
-                  { value: 'D', label: 'D' },
-                  { value: 'F', label: 'F' },
-                ]}
-                label="Grade"
-                name="grade"
-                value={formik.values.grade}
-                onChange={(val) => {
-                  formik.setFieldValue('grade', val);
-                }}
-                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                error={formik.touched.grade && Boolean(formik.errors.grade)}
-              />
+              <ShakingTextField error={!!(formik.touched?.grade && formik.errors.grade) || false}>
+                <CustomSelect
+                  options={[
+                    { value: 'A+', label: 'A+' },
+                    { value: 'A', label: 'A' },
+                    { value: 'A-', label: 'A-' },
+                    { value: 'B+', label: 'B+' },
+                    { value: 'B', label: 'B' },
+                    { value: 'B-', label: 'B-' },
+                    { value: 'C+', label: 'C+' },
+                    { value: 'C', label: 'C' },
+                    { value: 'C-', label: 'C-' },
+                    { value: 'D', label: 'D' },
+                    { value: 'F', label: 'F' },
+                  ]}
+                  label="Grade"
+                  name="grade"
+                  value={formik.values.grade}
+                  onChange={(val) => {
+                    formik.setFieldValue('grade', val);
+                  }}
+                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                  error={formik.touched.grade && Boolean(formik.errors.grade)}
+                  helperText={
+                    formik.touched.grade && formik.errors.grade ? formik.errors.grade : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                placeholder="Detailed Feedback"
-                multiline
-                rows={3}
-                fullWidth
-                name="feedback"
-                value={formik.values.feedback}
-                onChange={formik.handleChange}
-              />
+              <ShakingTextField
+                error={!!(formik.touched?.feedback && formik.errors.feedback) || false}
+              >
+                <TextField
+                  placeholder="Detailed Feedback"
+                  multiline
+                  rows={3}
+                  fullWidth
+                  name="feedback"
+                  value={formik.values.feedback}
+                  onChange={formik.handleChange}
+                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                  helperText={formik.touched.feedback && formik.errors.feedback}
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>

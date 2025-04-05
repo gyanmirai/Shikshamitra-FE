@@ -1,22 +1,29 @@
 import type { LabelColor } from 'src/components/label';
+import type { AttendanceStatusType } from 'src/enums/attendance-type';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import { Box, Card, Grid, Chip, Paper, Button, Typography, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Card,
+  Grid,
+  Chip,
+  Paper,
+  Button,
+  Divider,
+  Typography,
+  CircularProgress,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { varAlpha } from 'src/theme/styles';
 import { surveyData } from 'src/screens/communication/feedback/pastFeedback';
 import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
-import {
-  AttendanceStatusType,
-  AttendanceStatusOptions,
-  AttendanceStatusTypeColors,
-} from 'src/enums/attendance-type';
+import { AttendanceStatusOptions, AttendanceStatusTypeColors } from 'src/enums/attendance-type';
 
-import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -120,13 +127,19 @@ const meetings = [
 ];
 
 const Communication = (props: StudentTabsComponentType) => {
+  // State to manage meeting table data with initial meetings data
   const [meetingTableData, setMeetingTableData] = useState(meetings);
+  // State to manage survey table data with initial survey data
   const [surveyTableData, setSurveyTableData] = useState<any | null>(surveyData);
+  // Boolean state to control view details dialog visibility
   const viewDetailsDialog = useBoolean();
+  // Boolean state to control view summary dialog visibility
   const viewSummaryDialog = useBoolean();
 
+  // State to store currently selected survey for viewing
   const [viewSurvey, setViewSurvey] = useState<any | null>(null);
 
+  // Handler to close dialogs and reset survey view state
   const handleClose = () => {
     setViewSurvey(null);
     viewDetailsDialog.onFalse();
@@ -146,7 +159,10 @@ const Communication = (props: StudentTabsComponentType) => {
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ typography: 'subtitle2' }}>New Announcement</Box>
+              <Box display="flex" gap={2}>
+                <Iconify icon="mdi:bell" width={20} height={20} sx={{ color: 'primary.main' }} />
+                <Typography variant="subtitle1">New Announcement</Typography>
+              </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
@@ -185,7 +201,15 @@ const Communication = (props: StudentTabsComponentType) => {
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ typography: 'subtitle2' }}>Upcoming Events</Box>
+              <Box display="flex" gap={2}>
+                <Iconify
+                  icon="mdi:event"
+                  width={20}
+                  height={20}
+                  sx={{ color: 'secondary.main', mt: 0.3 }}
+                />
+                <Typography variant="subtitle1">Upcoming Events</Typography>
+              </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
@@ -221,7 +245,15 @@ const Communication = (props: StudentTabsComponentType) => {
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ typography: 'subtitle2' }}>New Messages</Box>
+              <Box display="flex" gap={2}>
+                <Iconify
+                  icon="mdi:message-text"
+                  width={20}
+                  height={20}
+                  sx={{ color: 'info.main', mt: 0.4 }}
+                />
+                <Typography variant="subtitle1">New Messages</Typography>
+              </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
@@ -257,7 +289,15 @@ const Communication = (props: StudentTabsComponentType) => {
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
-              <Box sx={{ typography: 'subtitle2' }}>Pending Survey</Box>
+              <Box display="flex" gap={2}>
+                <Iconify
+                  icon="ri:survey-line"
+                  width={20}
+                  height={20}
+                  sx={{ color: 'warning.main' }}
+                />
+                <Typography variant="subtitle1">Pending Survey</Typography>
+              </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
                 <Box
                   component="ul"
@@ -358,7 +398,7 @@ const Communication = (props: StudentTabsComponentType) => {
         ]}
         data={surveyTableData}
       />
-
+      <Divider sx={{ my: 2 }} />
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
         <Typography variant="h6">Previous Meetings</Typography>
       </Box>
@@ -436,14 +476,17 @@ const Communication = (props: StudentTabsComponentType) => {
             enumOptions: AttendanceStatusOptions,
             render(value, row) {
               const color = AttendanceStatusTypeColors[value as AttendanceStatusType] as LabelColor;
-              return (
-                <Label color={color}>{AttendanceStatusType[value as AttendanceStatusType]}</Label>
+              return value === 'Present' ? (
+                <Iconify icon="mdi:check-circle-outline" width={20} height={20} sx={{ color }} />
+              ) : (
+                <Iconify icon="mdi:cross-circle" width={20} height={20} sx={{ color }} />
               );
             },
           },
         ]}
         data={meetingTableData}
       />
+      <Divider sx={{ my: 2 }} />
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
         <Typography variant="h6">Events</Typography>
       </Box>

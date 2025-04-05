@@ -5,7 +5,7 @@ export enum AttendanceStatusType {
 
 export const AttendanceStatusOptions = [
   {
-    label: 'Pending',
+    label: 'Present',
     value: AttendanceStatusType.Present,
   },
   {
@@ -15,6 +15,6 @@ export const AttendanceStatusOptions = [
 ];
 
 export const AttendanceStatusTypeColors = {
-  [AttendanceStatusType.Present]: 'success',
-  [AttendanceStatusType.Absent]: 'error',
+  [AttendanceStatusType.Present]: 'success.main',
+  [AttendanceStatusType.Absent]: 'error.main',
 };
