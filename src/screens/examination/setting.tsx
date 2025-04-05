@@ -19,16 +19,19 @@ const TABS = [
   {
     value: 'rubricManagement',
     label: 'Rubric Management',
+    description: 'Manage rubrics for assessments and grading.',
     component: () => <RubricManagement />,
   },
   {
     value: 'gradeScaling',
     label: 'Grade Scaling',
+    description: 'Configure grade scaling for assessments.',
     component: () => <GradeScaling />,
   },
   {
     value: 'examAssessmentType',
     label: 'Exam & Assessment Type',
+    description: 'Configure exam and assessment types.',
     component: () => <ExamAssessmentType />,
   },
   //   {
@@ -39,17 +42,24 @@ const TABS = [
 ];
 
 const Setting = (props: TabComponentType) => {
+  // Initialize tabs with 'rubricManagement' as default value using custom hook
   const tabs = useTabs('rubricManagement');
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
+  // Find the current tab object based on selected tab value
+  const currentTab = TABS.find((tab) => tab.value === tabs.value);
+
+  // Get the component to render based on selected tab value
+  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Settings"
+        description={currentTab?.description}
         links={[
-          { name: 'Examination and Assessment' },
-          { name: 'Examination' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
           { name: 'Settings' },
+          { name: currentTab?.label || '' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import AllSurvey from 'src/screens/communication/feedback/allSurvey';
+import ScheduledSurvey from 'src/screens/communication/feedback/scheduledSurvey';
 
-const ScheduledSurveyScreen = () => <AllSurvey />;
+const ScheduledSurveyScreen = () => <ScheduledSurvey />;
 
 export default ScheduledSurveyScreen;

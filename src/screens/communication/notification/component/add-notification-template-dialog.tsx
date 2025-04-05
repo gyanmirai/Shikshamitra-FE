@@ -33,9 +33,7 @@ const AddNotificationTemplateDialog = () => {
       subCategory: '',
       role: '',
     },
-    onSubmit: (values) => {
-      console.log('Submitted values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   // Function to insert placeholder at cursor position

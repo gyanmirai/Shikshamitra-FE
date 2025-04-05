@@ -235,7 +235,6 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
       } else {
         onSave(values);
       }
-      console.log('Form Submitted type', values);
     },
   });
 

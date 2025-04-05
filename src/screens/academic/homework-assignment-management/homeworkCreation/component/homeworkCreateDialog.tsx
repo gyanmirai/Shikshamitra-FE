@@ -55,7 +55,6 @@ const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
   const formik = useFormik({
     initialValues: assignmentInitialValues,
     onSubmit: (values) => {
-      console.log('Form Submitted:', values);
       // Implement submission logic
     },
   });

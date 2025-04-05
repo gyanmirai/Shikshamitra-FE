@@ -21,18 +21,22 @@ import { TopPerformer } from '../student/enrollment/entrance-exam/dashboard';
 import type { TabComponentType } from '../hr/leave-request';
 
 const GradingAndAnalytics = (props: TabComponentType) => {
+  // State to store selected class ID
   const [classes, setClasses] = useState<string>('');
+  // State to store selected division ID
   const [division, setDivision] = useState<any>([]);
+  // State to store available division options for selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  // Query hook to fetch class data from API
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Student Performance And Analytics"
+        description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
           { name: 'Examination and Assessment' },
           { name: 'Examination' },

@@ -1,7 +1,6 @@
 'use client';
 
 /* eslint-disable react/no-unescaped-entities */
-import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
@@ -33,21 +32,9 @@ import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytic
 
 import { ViewSurveyDetail } from './activeSurvey';
 
-interface Survey {
-  id: number;
-  surveyTitle: string;
-  description: string;
-  organization: string[];
-  classes: string[];
-  audience: string[];
-  startDate: Dayjs;
-  endDate: Dayjs;
-  numberOfResponses: number;
-  responseRate: number;
-  status: string;
-}
+import type { TSurvey } from './type';
 
-export const surveyData: Survey[] = [
+export const surveyData: TSurvey[] = [
   {
     id: 1,
     surveyTitle: 'Student Feedback Survey',
@@ -77,12 +64,20 @@ export const surveyData: Survey[] = [
 ];
 
 const PastSurvey = (props: TabComponentType) => {
+  // State to store and manage survey table data
   const [surveyTableData, setSurveyTableData] = useState<any | null>(surveyData);
+  // Controls the visibility state of the survey details dialog/modal
   const viewDetailsDialog = useBoolean();
+  // Controls the visibility state of the survey summary statistics dialog/modal
   const viewSummaryDialog = useBoolean();
 
+  // State to store the currently selected survey for viewing
   const [viewSurvey, setViewSurvey] = useState<any | null>(null);
 
+  /**
+   * Handles closing of survey detail and summary dialogs
+   * Resets the selected survey view and closes both dialogs
+   */
   const handleClose = () => {
     setViewSurvey(null);
     viewDetailsDialog.onFalse();
@@ -112,7 +107,12 @@ const PastSurvey = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Past Survey"
-        links={[{ name: 'Communication' }, { name: 'Survey' }, { name: 'Past Survey' }]}
+        description="View and analyze past survey data"
+        links={[
+          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Survey' },
+          { name: 'Past Survey' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
@@ -169,6 +169,7 @@ const PastSurvey = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
+            sticky: true,
             isSort: false,
             render(value, row) {
               return (
@@ -210,10 +211,13 @@ const PastSurvey = (props: TabComponentType) => {
 
 export default PastSurvey;
 
+// Component to display a summary view of survey responses including metadata, analytics, and insights
 const ViewSummary = () => (
   <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column', p: 2 }}>
+    {/* Scrollable container for survey summary content */}
     <Scrollbar sx={{ height: '500px' }}>
       <Grid container spacing={2}>
+        {/* Survey metadata section */}
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Survey Metadata</Typography>
@@ -231,6 +235,7 @@ const ViewSummary = () => (
             </Button>
           </Card>
         </Grid>
+        {/* Analytics visualization section */}
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
             <AnalyticsCurrentVisits
@@ -250,6 +255,7 @@ const ViewSummary = () => (
       </Grid>
       <Box sx={{ mt: 2 }}>
         <Grid container spacing={2}>
+          {/* Qualitative responses analysis section */}
           <Grid item xs={12}>
             <Card sx={{ p: 2 }}>
               <Typography variant="h5" gutterBottom>
@@ -279,6 +285,7 @@ const ViewSummary = () => (
             </Card>
           </Grid>
 
+          {/* Overall survey insights section */}
           <Grid item xs={12}>
             <Card sx={{ p: 2 }}>
               <Typography variant="h5" gutterBottom>

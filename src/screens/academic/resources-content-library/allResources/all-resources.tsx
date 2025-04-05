@@ -116,9 +116,7 @@ const AllResources = (props: TabComponentType) => {
     setSelectedResource(null);
   };
 
-  const handleSubmit = (values: TResource) => {
-    console.log('handle submit');
-  };
+  const handleSubmit = (values: TResource) => {};
 
   const handleChangeView = useCallback(
     (event: React.MouseEvent<HTMLElement>, newView: string | null) => {

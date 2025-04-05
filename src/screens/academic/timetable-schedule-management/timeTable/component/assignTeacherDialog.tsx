@@ -13,8 +13,6 @@ interface AssignTeacherProps {
 }
 
 const AssignTeacher = ({ slotData, onTeacherSelect }: AssignTeacherProps) => {
-  console.log('slotData----', slotData);
-
   const [selectedTeacher, setSelectedTeacher] = useState(slotData?.teacher || '');
   const handleSubmit = () => {
     onTeacherSelect(selectedTeacher);

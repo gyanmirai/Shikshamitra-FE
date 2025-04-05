@@ -155,8 +155,6 @@ const UpcomingEvents = (props: TabComponentType) => {
   // Handler for submitting event form (both add and edit)
   const handleSubmit = (values: any) => {
     if (editingEvent) {
-      console.log('editing announcement---', editingEvent);
-
       setEventTableData((prevData) =>
         prevData.map((eve) =>
           eve.id === editingEvent.id ? { ...values, id: editingEvent.id } : event
@@ -550,7 +548,6 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
       eventBudget: initialValues?.eventBudget || '',
     },
     onSubmit: (values) => {
-      console.log('values------', values);
       onSubmit(values);
     },
   });

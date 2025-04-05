@@ -43,13 +43,21 @@ const TABS = [
 ];
 
 const NotificationScreen = () => {
+  // Search params for managing active tab state
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'send-notification' });
+
+  // State for managing notification category dialog visibility
   const [openForNotificationCategory, setOpenForNotificationCategory] = useState(false);
+
+  // State for managing notification templates dialog visibility
   const [openForTemplates, setOpenForTemplates] = useState(false);
+
+  // State for managing event category dialog visibility
   const [openAddEventCategory, setOpenEventCategory] = useState(false);
+
+  // State for managing auto notification configuration dialog visibility
   const [openForAutoNotificationConfiguration, setOpenForAutoNotificationConfiguration] =
     useState(false);
-
   // Find the selected tab once and reuse the result
   const selectedTab = TABS.find((tab) => tab.value === searchParams.tab) || TABS[0];
   const breadcrumbTabName = selectedTab.label;
@@ -71,6 +79,10 @@ const NotificationScreen = () => {
     [setSearchParams]
   );
 
+  /**
+   * Handles the add button click based on the current breadcrumb tab name.
+   * Opens the corresponding dialog and closes others.
+   */
   const addHandler = () => {
     if (breadcrumbTabName === 'Category') {
       setOpenForTemplates(false);
@@ -98,18 +110,27 @@ const NotificationScreen = () => {
     }
   };
 
+  /**
+   * Handles closing all dialogs by setting their states to false.
+   */
   const closeHandler = () => {
     setOpenForTemplates(false);
     setOpenForNotificationCategory(false);
     setOpenForAutoNotificationConfiguration(false);
     setOpenEventCategory(false);
   };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" flexDirection="row" alignItems="center">
         <CustomBreadcrumbs
           heading="Notification"
-          links={[{ name: 'Communication' }, { name: 'Notification' }, { name: breadcrumbTabName }]}
+          description="Create and manage notifications for various events, including sending alerts to others and customizing notification templates."
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Notification' },
+            { name: breadcrumbTabName },
+          ]}
           sx={{ px: 1, mb: 2 }}
         />
         {breadcrumbTabName !== 'Send Notification' &&

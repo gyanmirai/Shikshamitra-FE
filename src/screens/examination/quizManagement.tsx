@@ -18,11 +18,13 @@ const TABS = [
   {
     value: 'activeQuiz',
     label: 'Scheduled',
+    description: 'Manage quizzes, including scheduling, archiving, and viewing quiz results.',
     component: () => <ActiveQuiz />,
   },
   {
     value: 'archieved',
     label: 'Archieved',
+    description: 'View archived quizzes and their results.',
     component: () => <ArchievedQuiz />,
   },
   //   {
@@ -33,17 +35,24 @@ const TABS = [
 ];
 
 const QuizManagement = (props: TabComponentType) => {
+  // Initialize tabs with 'activeQuiz' as default value using custom hook
   const tabs = useTabs('activeQuiz');
+
+  // Find and get the component to render based on current tab value
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
+  // Find and get the current tab object containing label and description
+  const currentTab = TABS.find((tab) => tab.value === tabs.value);
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Quiz Management"
+        description={currentTab?.description}
         links={[
-          { name: 'Examination and Assessment' },
-          { name: 'Examination' },
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/examinationDashboard' },
           { name: 'Quiz Management' },
+          { name: currentTab?.label || '' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

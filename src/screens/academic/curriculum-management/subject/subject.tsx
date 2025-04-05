@@ -209,7 +209,6 @@ const Subject = (props: TabComponentType) => {
     confirmPublishDialog.onFalse();
     setPendingStatusChange(null);
   };
-
   // Define breadcrumb navigation links based on whether form is active
   const links =
     params.isForm === 'true'

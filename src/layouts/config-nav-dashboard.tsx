@@ -7,7 +7,6 @@ import {
   securityPath,
   academicPath,
   transportPath,
-  examinationPath,
   communicationPath,
 } from 'src/routes/paths';
 
@@ -847,9 +846,9 @@ const communicationModule = {
           shortcutKeyName: 'Alt+C+1',
         },
         {
-          title: 'Messages',
+          title: 'Conversation',
           path: '/communication/messages',
-          _action: 'messages',
+          _action: 'conversation',
           shortcutKey: 'Alt+C+M',
           shortcutKeyName: 'Alt+C+M',
         },
@@ -991,73 +990,6 @@ const communicationModule = {
               _action: 'settings-eventType',
               shortcutKey: 'Alt+C+S+4',
               shortcutKeyName: 'Alt+C+S+4',
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
-const examinationModule = {
-  [examinationPath]: [
-    {
-      subheader: '',
-      items: [
-        {
-          title: 'Examination',
-          path: '',
-          _action: 'examination',
-          shortcutKey: 'Alt+E+1',
-          shortcutKeyName: 'Alt+E+1',
-          children: [
-            {
-              title: 'Dashboard',
-              path: '/examination/examinationDashboard',
-              _action: 'examination-homeworkDashboard',
-              shortcutKey: 'Alt+E+1+1',
-              shortcutKeyName: 'Alt+E+1+1',
-            },
-            {
-              title: 'Schedule Exam',
-              path: '/examination/scheduleExam',
-              _action: 'examination-scheduleExam',
-              shortcutKey: 'Alt+E+1+2',
-              shortcutKeyName: 'Alt+E+1+2',
-            },
-            {
-              title: 'Grade Entry',
-              path: '/examination/gradeEntry',
-              _action: 'examination-gradeEntry',
-              shortcutKey: 'Alt+E+1+3',
-              shortcutKeyName: 'Alt+E+1+3',
-            },
-            {
-              title: 'Assessment',
-              path: '/examination/assessmentManagement',
-              _action: 'examination-assessmentManagement',
-              shortcutKey: 'Alt+E+1+4',
-              shortcutKeyName: 'Alt+E+1+4',
-            },
-            {
-              title: 'Quiz Management',
-              path: '/examination/quizManagement',
-              _action: 'examination-quizManagement',
-              shortcutKey: 'Alt+E+1+5',
-              shortcutKeyName: 'Alt+E+1+5',
-            },
-            {
-              title: 'Student Performance And Analytics',
-              path: '/examination/studentPerformanceAndAnalytics',
-              _action: 'examination-studentPerformanceAndAnalytics',
-              shortcutKey: 'Alt+E+1+6',
-              shortcutKeyName: 'Alt+E+1+6',
-            },
-            {
-              title: 'Settings',
-              path: '/examination/settings',
-              _action: 'examination-settings',
-              shortcutKey: 'Alt+E+1+7',
-              shortcutKeyName: 'Alt+E+1+7',
             },
           ],
         },
@@ -1389,6 +1321,7 @@ const transportModule = {
     },
   ],
 };
+
 export const navData = (isDdvs: boolean) => [
   {
     subheader: 'Management',
@@ -1418,15 +1351,6 @@ export const navData = (isDdvs: boolean) => [
         shortcutKey: 'Alt+A',
         shortcutKeyName: 'Alt+A',
         submodule: academicModule[academicPath].flatMap((list) => list.items),
-      },
-      {
-        title: 'Examination & Assessment',
-        path: '/examination/examinationDashboard',
-        icon: ICONS.examination,
-        _action: 'examination',
-        shortcutKey: 'Alt+E',
-        shortcutKeyName: 'Alt+E',
-        submodule: examinationModule[examinationPath].flatMap((list) => list.items),
       },
       {
         title: 'HR/Staff',
@@ -1504,7 +1428,7 @@ export const navSubData = (isDdvs: boolean) => ({
   ...settingModule,
   ...hrModule,
   ...academicModule,
-  ...examinationModule,
+
   ...financeModule,
   ...transportModule,
   ...communicationModule,

@@ -155,8 +155,6 @@ const TimeTableGrid = (props: TabComponentType) => {
       .map(() => Array(weekDays.length).fill(null))
   );
 
-  console.log('timetable---', timetable);
-
   // Handle the start of a drag operation for a subject
   const handleDragStart = (e: React.DragEvent<HTMLElement>, subject: TSubject) => {
     // Store the subject data in the drag event

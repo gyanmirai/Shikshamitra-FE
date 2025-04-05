@@ -1,12 +1,13 @@
 'use client';
 
+import type { FormikProps } from 'formik';
 import type { Division, Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import * as yup from 'yup';
 import React, { useState } from 'react';
 
-import { Add, CheckBox } from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -35,7 +36,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
-import type { TabComponentType } from '../hr/leave-request';
+import type { TSubjectDetail, TExamFormValues } from './type';
+import type { TabComponentType } from '../../hr/leave-request';
 
 const initialExamData = [
   {
@@ -198,7 +200,8 @@ const ScheduleExam = (props: TabComponentType) => {
 
 export default ScheduleExam;
 
-const SelectExam = ({ formik }: any) => {
+const SelectExam = (props: FormikProps<TExamFormValues>) => {
+  const formik = props;
   // Fetch class data using custom hook and handle loading state
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -286,7 +289,7 @@ const SelectExam = ({ formik }: any) => {
               { value: 'English', label: 'English' },
               { value: 'Science', label: 'Science' },
             ]}
-            value={formik.values.subjects.map((sub: any) => sub.subjectName)} // Extract names
+            value={formik.values.subjects.map((sub: TSubjectDetail) => sub.subjectName)} // Extract names
             onChange={(val) => {
               const updatedSubjects = val.map((subject) => ({
                 subjectName: subject,
@@ -305,8 +308,12 @@ const SelectExam = ({ formik }: any) => {
             isLoading={isLoading}
             formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
           />
-          {formik.touched.subject && formik.errors.subject && (
-            <FormHelperText error>{formik.errors.subject}</FormHelperText>
+          {formik.touched.subjects && formik.errors.subjects && (
+            <FormHelperText error>
+              {Array.isArray(formik.errors.subjects)
+                ? formik.errors.subjects.join(', ')
+                : formik.errors.subjects}
+            </FormHelperText>
           )}
         </Grid>
       </Grid>
@@ -314,8 +321,9 @@ const SelectExam = ({ formik }: any) => {
   );
 };
 
-const ExamDetails = ({ formik }: any) => {
+const ExamDetails = (props: FormikProps<TExamFormValues>) => {
   // State to track exam schedules for subjects - currently not being used
+  const formik = props;
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
 
   return (
@@ -387,7 +395,8 @@ const ExamDetails = ({ formik }: any) => {
   );
 };
 
-const EvaluationCriteria = ({ formik }: any) => {
+const EvaluationCriteria = (props: FormikProps<TExamFormValues>) => {
+  const formik = props;
   // State to track whether to use predefined or custom rubric
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
   return (
@@ -426,39 +435,8 @@ const EvaluationCriteria = ({ formik }: any) => {
   );
 };
 
-const InputEvaluationCriteria = ({ formik }: any) => (
-  <Box display="flex" flexDirection="column" gap={2}>
-    <Box display="flex" gap={2} flexWrap="wrap">
-      <TextField label="Organization Name" size="small" />
-      <CustomSelect
-        options={[]}
-        label="grading schema"
-        name="gradingSchema"
-        value=""
-        onChange={() => {}}
-        formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
-      />
-      <CustomSelect
-        options={[]}
-        label="Class"
-        name="class"
-        value=""
-        onChange={() => {}}
-        formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
-      />
-    </Box>
-    <FormControlLabel
-      sx={{ pl: 1 }}
-      control={<CheckBox />}
-      label="schedule this exam across multiple classes"
-    />
-    <Box display="flex" gap={2} flexWrap="wrap">
-      <TextField label="Additional Notes" size="small" multiline rows={3} />
-    </Box>
-  </Box>
-);
-
-const AssignTeachers = ({ formik }: any) => {
+const AssignTeachers = (props: FormikProps<TExamFormValues>) => {
+  const formik = props;
   // State to store exam schedules based on selected subjects
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
 
@@ -514,7 +492,7 @@ const Exams = [
   { subject: 'Physics', date: '15-10-2024', time: '14:00' },
 ];
 
-const NewExamForm = ({ onClose }: any) => {
+const NewExamForm = ({ onClose }: { onClose: () => void }) => {
   // Active step for stepper navigation
   const [activeStep, setActiveStep] = useState(0);
   // List of scheduled exams with subject, date and time information
@@ -561,11 +539,11 @@ const NewExamForm = ({ onClose }: any) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);
       }}
-      renderItem={({ formik, activeStep: step }: any) => {
+      renderItem={({ formik, activeStep: step }) => {
         const StepComponent = allTimetableSteps[step];
         return (
           <Box p={2}>
-            <StepComponent formik={formik} />
+            <StepComponent {...formik} />
           </Box>
         );
       }}

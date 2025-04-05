@@ -64,62 +64,7 @@ const GradingScale = () => {
     }
   };
 
-  const handleSubmit = (values: any) => {
-    console.log('values----', values);
-
-    // const startRange = Number(values.startRange);
-    // const endRange = Number(values.endRange);
-    // const { descriptiveScale } = values;
-
-    // if (startRange >= endRange) {
-    //   alert('Start range must be less than end range');
-    //   return;
-    // }
-
-    // const hasOverlap = grades.some((g) => {
-    //   if (isEdit && selectedGrade?.id === g.id) return false;
-    //   return (
-    //     (startRange >= g.startRange && startRange <= g.endRange) ||
-    //     (endRange >= g.startRange && endRange <= g.endRange) ||
-    //     (startRange <= g.startRange && endRange >= g.endRange)
-    //   );
-    // });
-
-    // if (hasOverlap) {
-    //   alert('Grade ranges cannot overlap');
-    //   return;
-    // }
-
-    // if (isEdit && selectedGrade) {
-    //   // Update existing grade
-    //   setGrades((prevGrades) =>
-    //     prevGrades.map((g) =>
-    //       g.id === selectedGrade.id
-    //         ? {
-    //             ...g,
-    //             grade: values.grade,
-    //             range: `${startRange}-${endRange}`,
-    //             startRange,
-    //             endRange,
-    //             descriptiveScale,
-    //           }
-    //         : g
-    //     )
-    //   );
-    // } else {
-    //   // Create new grade
-    //   const newGrade: Grade = {
-    //     id: Math.max(...grades.map((g) => g.id)) + 1,
-    //     grade: values.grade,
-    //     range: `${startRange}-${endRange}`,
-    //     startRange,
-    //     endRange,
-    //     descriptiveScale,
-    //   };
-    //   setGrades((prevGrades) => [...prevGrades, newGrade]);
-    // }
-    // handleCloseDialog();
-  };
+  const handleSubmit = (values: any) => {};
 
   return (
     <Box>

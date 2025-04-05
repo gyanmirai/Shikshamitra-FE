@@ -68,8 +68,6 @@ const Reports = (props: TabComponentType) => {
           initialValues={initialValues}
           // validationSchema={validationSchema}
           onSubmit={(values, { setSubmitting }) => {
-            console.log('values----', values);
-
             setTimeout(() => {
               alert(JSON.stringify(values, null, 2));
               setSubmitting(false);

@@ -29,7 +29,6 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -153,8 +152,7 @@ const AssessmentManagement = (props: TabComponentType) => {
   // Selected class ID from search params
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
-  // Search params hook for form state management
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
+  const [open, setOpen] = useState(false);
 
   // Dialog state for submission view
   const submissionDialog = useBoolean();
@@ -203,7 +201,7 @@ const AssessmentManagement = (props: TabComponentType) => {
   // Function to handle closing of dialog/modal
   // Resets form state, edit mode, selected assessment and closes all dialogs
   const handleCloseDialog = () => {
-    setParams({ isForm: 'false' }); // Reset form state parameter
+    setOpen(false); // Close the dialog/modal
     setIsEdit(false); // Disable edit mode
     setSelectedAssessment(null); // Clear selected assessment
     confirmPublishDialog.onFalse(); // Close publish confirmation dialog
@@ -215,8 +213,6 @@ const AssessmentManagement = (props: TabComponentType) => {
    * @param values - Assessment form values to be submitted
    */
   const handleSubmit = (values: TAssessment) => {
-    console.log('values---', values);
-
     if (isEdit) {
       // Update existing assessment if in edit mode
       setAssessmentData(
@@ -278,26 +274,25 @@ const AssessmentManagement = (props: TabComponentType) => {
     [submissionDialog]
   );
 
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/examinationDashboard' },
-          { name: 'Assessment' },
-          { name: 'Assessment Form' },
-        ]
-      : [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/examinationDashboard' },
-          { name: 'Assessment' },
-        ];
+  const links = open
+    ? [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Assessment' },
+        { name: 'Assessment Form' },
+      ]
+    : [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Assessment' },
+      ];
 
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Assessment"
         description={
-          params.isForm === 'true'
+          open
             ? 'Create or update exam details, including the exam title, date, duration, and assigned subjects. Easily manage exam schedules and make adjustments as needed.'
             : 'View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary.'
         }
@@ -306,23 +301,23 @@ const AssessmentManagement = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
             onClick={
-              params.isForm === 'true'
+              open
                 ? () => {
-                    setParams({ isForm: 'false' });
+                    setOpen(false);
                   }
                 : () => {
-                    setParams({ isForm: 'true' });
+                    setOpen(true);
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Assessment'}
+            {open ? 'Back' : 'Assessment'}
           </Button>
         }
       />
-      {params.isForm === 'true' ? (
+      {open ? (
         <Card>
           <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
         </Card>
@@ -434,7 +429,7 @@ const AssessmentManagement = (props: TabComponentType) => {
                       showEditIcon
                       showDeleteIcon
                       handleDeleteClick={() => {
-                        setParams({ isForm: 'true' });
+                        setOpen(true);
                         setIsEdit(true);
                       }}
                       handleEditClick={() => {}}
@@ -1016,8 +1011,6 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ isBulk, data, onSubmit }: Ass
       feedback: data?.feedback || '',
     },
     onSubmit(values) {
-      console.log('values in component ---', values);
-
       onSubmit(values);
     },
   });

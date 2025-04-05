@@ -31,9 +31,10 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import type { TabComponentType } from '../hr/leave-request';
+import type { TStudentExamGradeEntry } from './type';
+import type { TabComponentType } from '../../hr/leave-request';
 
-export const dummyData = [
+export const dummyData: TStudentExamGradeEntry[] = [
   {
     id: '1',
     studentName: 'John Smith',
@@ -115,9 +116,9 @@ const GradeEntry = (props: TabComponentType) => {
   });
 
   // Currently selected student for grade entry
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<TStudentExamGradeEntry | null>(null);
   // Table data containing student grades and information
-  const [tableData, setTableData] = useState(dummyData);
+  const [tableData, setTableData] = useState<TStudentExamGradeEntry[]>(dummyData);
   // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -207,8 +208,9 @@ const GradeEntry = (props: TabComponentType) => {
       }
     }
   }, [classData?.items, classes, setSearchParams]);
+
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
+    ({ popover, row }: any) => (
       <>
         {' '}
         <MenuList>
@@ -372,7 +374,7 @@ const GradeEntry = (props: TabComponentType) => {
           {
             id: 'select',
             label: 'Select',
-            render: (value, row: any) => (
+            render: (value, row) => (
               <Checkbox
                 checked={selectedStudents.includes(row.id)}
                 onChange={() => handleSelectStudent(row.id)}
@@ -467,7 +469,7 @@ export default GradeEntry;
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
 interface AssignGradeProps {
-  data?: any;
+  data?: TStudentExamGradeEntry | null;
   onSubmit: (values: { grade: string; feedback: string }) => void;
 }
 
@@ -478,8 +480,6 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
       feedback: data?.feedback || '',
     },
     onSubmit(values) {
-      console.log('values in component ---', values);
-
       onSubmit(values);
     },
   });
