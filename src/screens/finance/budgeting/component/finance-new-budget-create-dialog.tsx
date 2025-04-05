@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,21 +17,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-const validationSchema = Yup.object({
-  categoryType: Yup.string()
-
-    .required('Category type is required'),
-
-  categoryName: Yup.string().required('Category name is required'),
-
-  fundAllocation: Yup.string()
-    .required('Expense amount is required')
-    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-      const numericValue = Number(value);
-      return numericValue > 0;
-    }),
-});
+import { validationSchemaForNewBudget } from '../budget_validation';
 
 interface FinanceNewBudgetCreateDialogProps {
   dialogValue: boolean;
@@ -83,7 +68,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
 
   const formik = useFormik({
     initialValues,
-    validationSchema,
+    validationSchema: validationSchemaForNewBudget,
     onSubmit: (values: any) => {
       onSave(values);
     },
