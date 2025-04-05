@@ -65,15 +65,20 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
             color="secondary.main"
             onClick={() => tabs?.setValue('finance')}
             total={
-              <Typography
-                component="span"
-                fontSize="inherit"
-                fontWeight="inherit"
-                fontFamily="inherit"
-                color="primary.main"
-              >
-                Paid
-              </Typography>
+              <Box display="flex" flexDirection="row" gap={1} alignItems="baseline">
+                <Typography
+                  component="span"
+                  fontSize="inherit"
+                  fontWeight="inherit"
+                  fontFamily="inherit"
+                  color="primary.main"
+                >
+                  Paid
+                </Typography>
+                <Typography component="span" fontSize="14px" color="primary.main" display="inline">
+                  last Payment: ₹25,000 on 15 Dec 2023
+                </Typography>
+              </Box>
             }
           />
         </Grid>

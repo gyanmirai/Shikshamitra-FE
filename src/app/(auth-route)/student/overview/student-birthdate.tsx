@@ -14,8 +14,11 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import UserHoverProfile from 'src/components/student-popover';
 import {
   Carousel,
@@ -24,10 +27,14 @@ import {
   CarouselArrowBasicButtons,
 } from 'src/components/carousel';
 
+import ViewAllBirthday from './view-all-birthday';
+
 const StudentBirthDate = () => {
   const carousel = useCarousel({ loop: true }, [
     Autoplay({ playOnInit: true, delay: 2000, stopOnMouseEnter: true }),
   ]);
+
+  const viewAllBirthdayDialog = useBoolean();
   return (
     <Grid2 xs={12} md={6}>
       <Card
@@ -41,12 +48,47 @@ const StudentBirthDate = () => {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Iconify icon="mdi:cake-variant" width={32} height={32} sx={{ color: 'primary.main' }} />
-          <Typography variant="h5" sx={{ ml: 2, fontWeight: 'bold' }}>
-            Student Birthdays
-          </Typography>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Iconify
+                icon="mdi:cake-variant"
+                width={32}
+                height={32}
+                sx={{ color: 'primary.main' }}
+              />
+              <Typography variant="h5" sx={{ ml: 2, fontWeight: 'bold' }}>
+                Student Birthdays
+              </Typography>
+            </Box>
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 'bold', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
+              onClick={viewAllBirthdayDialog.onTrue}
+            >
+              View All
+            </Typography>
+          </Box>
         </Box>
 
+        {viewAllBirthdayDialog.value && (
+          <CustomDialog
+            maxWidth="md"
+            open={viewAllBirthdayDialog.value}
+            handleClose={() => {
+              viewAllBirthdayDialog.onFalse();
+            }}
+            title="Student Birthdays"
+          >
+            <ViewAllBirthday />
+          </CustomDialog>
+        )}
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
             Todays Birthday
