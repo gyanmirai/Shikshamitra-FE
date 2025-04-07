@@ -416,7 +416,12 @@ export function StudentProfile() {
                 </Label>
               </Box>
               <Box display="flex" gap={2} alignItems="center">
-                <Button size="small" variant="outlined" onClick={icardDialog.onTrue}>
+                <Button
+                  startIcon={<Iconify icon="lineicons:id-card" />}
+                  size="small"
+                  variant="outlined"
+                  onClick={icardDialog.onTrue}
+                >
                   View I-card
                 </Button>
                 <CustomTooltip

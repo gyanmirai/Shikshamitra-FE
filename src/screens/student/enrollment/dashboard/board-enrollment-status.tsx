@@ -9,16 +9,21 @@ import { fNumber } from 'src/utils/format-number';
 
 import { Chart, useChart } from 'src/components/chart';
 
+import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
+
 const BoardEnrollmentStatus = () => (
   <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)', height: '100%' }}>
-    <AnalyticsConversionRates
+    <AppCurrentDownload
       title="Board Enrollment Status"
-      //   subheader="(+43%) than last year"
       chart={{
-        categories: ['enrolled', 'pending', 'declined'],
-        series: [{ name: '', data: [44, 55, 41] }],
+        series: [
+          { label: 'Enrolled', value: 44 },
+          { label: 'Pending', value: 32 },
+          { label: 'Declined', value: 11 },
+        ],
+        colors: ['#34c759', '#ff9500', '#ff3b30'], // Optional: customize
       }}
-      sx={{ boxShadow: 'none', height: '100%' }}
+      sx={{ height: '100%' }}
     />
   </Card>
 );
