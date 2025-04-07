@@ -48,6 +48,7 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -345,7 +346,7 @@ const Subjects = (props: TabComponentType) => {
           { name: 'Syllabus Management' },
         ];
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
         heading="Syllabus"
@@ -371,14 +372,14 @@ const Subjects = (props: TabComponentType) => {
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Subject'}
+            {params.isForm === 'true' ? 'Back' : 'Chapter'}
           </Button>
         }
       />
       {/* Conditional rendering based on form state */}
       {params.isForm === 'true' ? (
         // Form view for adding/editing chapters
-        <Card>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewChapter
             onSubmit={handleChapterSubmit}
             selectedSubject={selectedSubject}
@@ -608,8 +609,8 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
     chapterName: Yup.string().required('Chapter name is required'),
     assignedTeacher: Yup.string().required('Assigned Teacher is Required'),
     content: Yup.string().required('Chapter description is required'),
-    startTime: Yup.string().required('Select the startTime for chapter'),
-    endTime: Yup.string().required('Select the endTime for chapter'),
+    startTime: Yup.mixed().required('Select the startTime for chapter'),
+    endTime: Yup.mixed().required('Select the endTime for chapter'),
   });
 
   // Initialize formik for form handling
@@ -667,84 +668,118 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: { xs: 'auto', md: '500px' } }}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             {/* Chapter Number Input */}
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Chapter Number"
-                name="chapterNo"
-                type="number"
-                value={formik.values.chapterNo}
-                onChange={formik.handleChange}
-                size="small"
-              />
+              <ShakingTextField
+                error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Chapter Number"
+                  name="chapterNo"
+                  type="number"
+                  value={formik.values.chapterNo}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
+                  helperText={formik.touched.chapterNo && formik.errors.chapterNo}
+                />
+              </ShakingTextField>
             </Grid>
             {/* Chapter Name Input */}
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Chapter Name"
-                name="chapterName"
-                value={formik.values.chapterName}
-                onChange={formik.handleChange}
-                size="small"
-              />
+              <ShakingTextField
+                error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Chapter Name"
+                  name="chapterName"
+                  value={formik.values.chapterName}
+                  onChange={formik.handleChange}
+                  size="small"
+                  error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
+                  helperText={formik.touched.chapterName && formik.errors.chapterName}
+                />
+              </ShakingTextField>
             </Grid>
             {/* Start Time DatePicker */}
             <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Chapter StartTime"
-                value={formik.values.startTime}
-                onChange={(newValue) => {
-                  formik.setFieldValue('startTime', newValue);
-                }}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                  },
-                }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+              >
+                <DatePicker
+                  label="Chapter StartTime"
+                  value={formik.values.startTime}
+                  onChange={(newValue) => {
+                    formik.setFieldValue('startTime', newValue);
+                  }}
+                  sx={{ minWidth: 180, width: '100%' }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      helperText: formik.touched.startTime && (formik.errors.startTime as string),
+                      error: formik.touched.startTime && Boolean(formik.errors.startTime),
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* End Time DatePicker */}
             <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Chapter EndTime"
-                value={formik.values.endTime}
-                onChange={(newValue) => {
-                  formik.setFieldValue('endTime', newValue);
-                }}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                  },
-                }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+              >
+                <DatePicker
+                  label="Chapter EndTime"
+                  value={formik.values.endTime}
+                  onChange={(newValue) => {
+                    formik.setFieldValue('endTime', newValue);
+                  }}
+                  sx={{ minWidth: 180, width: '100%' }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      error: !!(formik.touched.endTime && formik.errors.endTime) || false,
+                      helperText: formik.touched.endTime && formik.errors.endTime,
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Teacher Assignment Dropdown */}
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Assigned Teacher"
-                options={[
-                  { value: 'Jiya', label: 'Jiya' },
-                  { value: 'Riya', label: 'Riya' },
-                  { value: 'Priya', label: 'Priya' },
-                ]}
-                name="assignedTeacher"
-                value={formik.values.assignedTeacher}
-                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                onChange={(val) => {
-                  formik.setFieldValue('assignedTeacher', val);
-                }}
-                error={formik.touched.assignedTeacher}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false}
+              >
+                <CustomSelect
+                  label="Assigned Teacher"
+                  options={[
+                    { value: 'Jiya', label: 'Jiya' },
+                    { value: 'Riya', label: 'Riya' },
+                    { value: 'Priya', label: 'Priya' },
+                  ]}
+                  name="assignedTeacher"
+                  value={formik.values.assignedTeacher}
+                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                  onChange={(val) => {
+                    formik.setFieldValue('assignedTeacher', val);
+                  }}
+                  error={
+                    !!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false
+                  }
+                  helperText={
+                    (formik.touched.assignedTeacher && formik.errors.assignedTeacher) || ''
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             {/* Rich Text Editor for Chapter Content */}
@@ -820,11 +855,10 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };
-
 // Interface for viewing subject chapter details
 interface ViewSubjectChapterProps {
   onClose: () => void;

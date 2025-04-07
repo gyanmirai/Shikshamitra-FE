@@ -1,7 +1,6 @@
 'use client';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
@@ -27,6 +26,9 @@ import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
+
+import { validationSchema } from './validationSchema';
 
 import type { Document, TSubjectTable } from '../subject';
 
@@ -38,23 +40,14 @@ interface SubjectFormProps {
 }
 
 const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
-  const [subjectColor, setSubjectColor] = useState('');
+  // State to track if the form is in draft mode - determined by edit status or existing data status
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
+  // State to manage uploaded documents with initial value from existing data or empty array
   const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
+  // Flag to check if the subject is already published
   const isPublished = data?.status === 'Publish';
 
-  const validationSchema = Yup.object().shape({
-    subjectCode: Yup.string().required('Subject Code is Required'),
-    subjectName: Yup.string().required('Subject Name is required'),
-    className: Yup.string().required('Class is required'),
-    primaryTeacher: Yup.string().required('Primary teacher is required'),
-    secondaryTeacher: Yup.array().of(Yup.string()).required('Assigned Teacher is required'), // Changed to array
-    learningGoal: Yup.string().required('Learning Goal is required'),
-    prerequisites: Yup.string().required('Prerequisites are required'),
-    description: Yup.string().required('Description is required'),
-    subjectColor: Yup.string().required('Subject Color is required'),
-  });
-
+  // Initialize formik form with initial values from data prop or default values
   const formik = useFormik({
     initialValues: {
       subjectCode: data?.subjectCode || '',
@@ -70,6 +63,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
       status: data?.status || 'Unpublish',
     },
     validationSchema,
+    // Handle form submission with updated status based on draft mode
     onSubmit: (values) => {
       onSubmit({
         ...values,
@@ -80,11 +74,13 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
     },
   });
 
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Handle file upload and create document objects with unique IDs
   const handleFileUpload = (files: File[]) => {
     const newDocs: Document[] = files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
@@ -95,175 +91,218 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
     setDocuments((prev) => [...prev, ...newDocs]);
   };
 
+  // Remove document from the documents array by ID
   const handleRemoveDocument = (docId: string) => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
   };
-
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '40vh' }}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} sx={{ height: '100%' }}>
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
-              <CustomSelect
-                options={classData?.items || []}
-                label="Class"
-                isLoading={isLoading}
-                value={formik.values.className}
-                labelKey="name"
-                valueKey="name"
-                onChange={(val) => {
-                  formik.setFieldValue('className', val);
-                }}
-                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                error={formik.touched.className && Boolean(formik.errors.className)}
-                disabled={isPublished}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.className && formik.errors.className) || false}
+              >
+                <CustomSelect
+                  options={classData?.items || []}
+                  label="Class"
+                  isLoading={isLoading}
+                  value={formik.values.className}
+                  labelKey="name"
+                  valueKey="name"
+                  onChange={(val) => {
+                    formik.setFieldValue('className', val);
+                  }}
+                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                  error={formik.touched.className && Boolean(formik.errors.className)}
+                  disabled={isPublished}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Subject Code"
-                name="subjectCode"
-                size="small"
-                value={formik.values.subjectCode}
-                onChange={formik.handleChange}
-                disabled={isPublished}
-                error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.subjectCode && formik.errors.subjectCode) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Subject Code"
+                  name="subjectCode"
+                  size="small"
+                  value={formik.values.subjectCode}
+                  onChange={formik.handleChange}
+                  disabled={isPublished}
+                  error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Subject Name"
-                name="subjectName"
-                size="small"
-                disabled={isPublished}
-                value={formik.values.subjectName}
-                onChange={formik.handleChange}
-                error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Subject Name"
+                  name="subjectName"
+                  size="small"
+                  disabled={isPublished}
+                  value={formik.values.subjectName}
+                  onChange={formik.handleChange}
+                  error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Primary Teacher"
-                options={[
-                  { value: 'Jiya', label: 'Jiya' },
-                  { value: 'Riya', label: 'Riya' },
-                  { value: 'Priya', label: 'Priya' },
-                ]}
-                name="primaryTeacher"
-                value={formik.values.primaryTeacher}
-                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                onChange={(val) => {
-                  formik.setFieldValue('primaryTeacher', val);
-                }}
-                error={formik.touched.primaryTeacher}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.primaryTeacher && formik.errors.primaryTeacher) || false}
+              >
+                <CustomSelect
+                  label="Primary Teacher"
+                  options={[
+                    { value: 'Jiya', label: 'Jiya' },
+                    { value: 'Riya', label: 'Riya' },
+                    { value: 'Priya', label: 'Priya' },
+                  ]}
+                  name="primaryTeacher"
+                  value={formik.values.primaryTeacher}
+                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                  onChange={(val) => {
+                    formik.setFieldValue('primaryTeacher', val);
+                  }}
+                  error={formik.touched.primaryTeacher}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Secondary Teacher"
-                options={[
-                  { value: 'Jiya', label: 'Jiya' },
-                  { value: 'Riya', label: 'Riya' },
-                  { value: 'Priya', label: 'Priya' },
-                ]}
-                name="secondaryTeacher"
-                multiple
-                value={formik.values.secondaryTeacher}
-                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                onChange={(val) => {
-                  formik.setFieldValue('secondaryTeacher', val);
-                }}
-                error={formik.touched.secondaryTeacher}
-              />
+              <ShakingTextField
+                error={
+                  !!(formik.touched.secondaryTeacher && formik.errors.secondaryTeacher) || false
+                }
+              >
+                <CustomSelect
+                  label="Secondary Teacher"
+                  options={[
+                    { value: 'Jiya', label: 'Jiya' },
+                    { value: 'Riya', label: 'Riya' },
+                    { value: 'Priya', label: 'Priya' },
+                  ]}
+                  name="secondaryTeacher"
+                  multiple
+                  value={formik.values.secondaryTeacher}
+                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                  onChange={(val) => {
+                    formik.setFieldValue('secondaryTeacher', val);
+                  }}
+                  error={formik.touched.secondaryTeacher}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <DateTimePicker
-                label="Schedule Date"
-                value={formik.values.scheduleDate}
-                onChange={(value) => {
-                  formik.setFieldValue('scheduleDate', value);
-                }}
-                disabled={isPublished}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                  },
-                }}
-                disablePast
-              />
+              <ShakingTextField
+                error={!!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false}
+              >
+                <DateTimePicker
+                  label="Schedule Date"
+                  value={formik.values.scheduleDate}
+                  onChange={(value) => {
+                    formik.setFieldValue('scheduleDate', value);
+                  }}
+                  disabled={isPublished}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
+                      helperText: formik.touched.scheduleDate && String(formik.errors.scheduleDate),
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <MuiColorInput
-                placeholder="Subject Color"
-                size="small"
-                format="hex"
-                value={formik.values.subjectColor}
-                onChange={(e) => {
-                  formik.setFieldValue('subjectColor', e);
-                }}
-                disabled={isPublished}
-                sx={{
-                  minWidth: 180,
-                  width: '100%',
-                  '& .MuiInputBase-root': {
-                    fontSize: '0.875rem', // Smaller font size matching other inputs
-                  },
-                  '& .MuiInputBase-input::placeholder': {
-                    fontSize: '0.875rem', // Smaller font size for placeholder
-                  },
-                }}
-                error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
-                helperText={formik.touched.subjectColor && formik.errors.subjectColor}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
+              >
+                <MuiColorInput
+                  placeholder="Subject Color"
+                  size="small"
+                  format="hex"
+                  value={formik.values.subjectColor}
+                  onChange={(e) => {
+                    formik.setFieldValue('subjectColor', e);
+                  }}
+                  disabled={isPublished}
+                  sx={{
+                    minWidth: 180,
+                    width: '100%',
+                    '& .MuiInputBase-root': {
+                      fontSize: '0.875rem', // Smaller font size matching other inputs
+                    },
+                    '& .MuiInputBase-input::placeholder': {
+                      fontSize: '0.875rem', // Smaller font size for placeholder
+                    },
+                  }}
+                  error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
+                  helperText={formik.touched.subjectColor && formik.errors.subjectColor}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                disabled={isPublished}
-                label="Learning Goals"
-                name="learningGoal"
-                onChange={formik.handleChange}
-                value={formik.values.learningGoal}
-                size="small"
-                error={formik.touched.learningGoal && Boolean(formik.errors.learningGoal)}
-                helperText={formik.touched.learningGoal && formik.errors.learningGoal}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.learningGoal && formik.errors.learningGoal) || false}
+              >
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  disabled={isPublished}
+                  label="Learning Goals"
+                  name="learningGoal"
+                  onChange={formik.handleChange}
+                  value={formik.values.learningGoal}
+                  size="small"
+                  error={formik.touched.learningGoal && Boolean(formik.errors.learningGoal)}
+                  helperText={formik.touched.learningGoal && formik.errors.learningGoal}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                disabled={isPublished}
-                label="Prerequisites or Resources"
-                name="prerequisites"
-                size="small"
-                value={formik.values.prerequisites}
-                onChange={formik.handleChange}
-                error={formik.touched.prerequisites && Boolean(formik.errors.prerequisites)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.prerequisites && formik.errors.prerequisites) || false}
+              >
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  disabled={isPublished}
+                  label="Prerequisites or Resources"
+                  name="prerequisites"
+                  size="small"
+                  value={formik.values.prerequisites}
+                  onChange={formik.handleChange}
+                  error={formik.touched.prerequisites && Boolean(formik.errors.prerequisites)}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                disabled={isPublished}
-                label="Description"
-                name="description"
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.description && formik.errors.description) || false}
+              >
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  disabled={isPublished}
+                  label="Description"
+                  name="description"
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  error={formik.touched.description && Boolean(formik.errors.description)}
+                  helperText={formik.touched.description && formik.errors.description}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
@@ -317,7 +356,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
             )}
           </Grid>
         </Scrollbar>
-        <DialogActions>
+        <DialogActions sx={{ flexShrink: 0, p: 2 }}>
           {isEdit ? (
             <Button
               variant="contained"
@@ -353,8 +392,8 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
             </>
           )}
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };
 

@@ -4,7 +4,6 @@ import type { FormikProps } from 'formik';
 import type { Division, Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
-import * as yup from 'yup';
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
@@ -18,7 +17,6 @@ import {
   TextField,
   RadioGroup,
   Typography,
-  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
@@ -32,9 +30,12 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+
+import { validationSchema } from './validationSchema';
 
 import type { TSubjectDetail, TExamFormValues } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
@@ -214,107 +215,133 @@ const SelectExam = (props: FormikProps<TExamFormValues>) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            options={[
-              { value: 'Mid', label: 'Mid' },
-              { value: 'Practical', label: 'Practical' },
-              { value: 'Final', label: 'Final' },
-            ]}
-            value={formik.values.examType}
-            onChange={(val) => {
-              formik.setFieldValue('examType', val);
-            }}
-            label="Exam Type"
-            isLoading={isLoading}
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.examType && formik.errors.examType && (
-            <FormHelperText error>{formik.errors.examType}</FormHelperText>
-          )}
+          <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType) || false}>
+            <CustomSelect
+              options={[
+                { value: 'Mid', label: 'Mid' },
+                { value: 'Practical', label: 'Practical' },
+                { value: 'Final', label: 'Final' },
+              ]}
+              value={formik.values.examType}
+              onChange={(val) => {
+                formik.setFieldValue('examType', val);
+              }}
+              label="Exam Type"
+              isLoading={isLoading}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={!!(formik.touched.examType && formik.errors.examType)}
+              helperText={
+                formik.touched.examType && formik.errors.examType
+                  ? formik.errors.examType
+                  : undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Exam Name"
-            name="examName"
-            value={formik.values.examName}
-            onChange={formik.handleChange}
-            error={formik.touched.examName && Boolean(formik.errors.examName)}
-            helperText={formik.touched.examName && formik.errors.examName}
-            size="small"
-          />
+          <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName) || false}>
+            <TextField
+              fullWidth
+              label="Exam Name"
+              name="examName"
+              value={formik.values.examName}
+              onChange={formik.handleChange}
+              error={formik.touched.examName && Boolean(formik.errors.examName)}
+              helperText={formik.touched.examName && formik.errors.examName}
+              size="small"
+            />
+          </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            options={classData?.items}
-            onChange={(val) => {
-              const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              formik.setFieldValue('className', val as string);
-              setDivisionOptions(selectedClass?.divisions || []);
-            }}
-            label="Class"
-            isLoading={isLoading}
-            labelKey="name"
-            valueKey="id"
-            value={formik.values.className}
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.className && formik.errors.className && (
-            <FormHelperText error>{formik.errors.className}</FormHelperText>
-          )}
+          <ShakingTextField
+            error={!!(formik.touched.className && formik.errors.className) || false}
+          >
+            <CustomSelect
+              options={classData?.items}
+              onChange={(val) => {
+                const selectedClass: Standards = classData.items.find(
+                  (i: Standards) => i.id === val
+                );
+                formik.setFieldValue('className', val as string);
+                setDivisionOptions(selectedClass?.divisions || []);
+              }}
+              label="Class"
+              isLoading={isLoading}
+              labelKey="name"
+              valueKey="id"
+              value={formik.values.className}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={!!(formik.touched.className && formik.errors.className)}
+              helperText={
+                formik.touched.className && formik.errors.className
+                  ? formik.errors.className
+                  : undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            label="Division"
-            labelKey="name"
-            valueKey="id"
-            multiple
-            options={divisionOptions}
-            value={formik.values.divisions}
-            onChange={(val) => {
-              formik.setFieldValue('divisions', val as string[]);
-            }}
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.divisions && formik.errors.divisions && (
-            <FormHelperText error>{formik.errors.divisions}</FormHelperText>
-          )}
+          <ShakingTextField
+            error={!!(formik.touched.divisions && formik.errors.divisions) || false}
+          >
+            <CustomSelect
+              label="Division"
+              labelKey="name"
+              valueKey="id"
+              multiple
+              options={divisionOptions}
+              value={formik.values.divisions}
+              onChange={(val) => {
+                formik.setFieldValue('divisions', val as string[]);
+              }}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={!!(formik.touched.divisions && formik.errors.divisions)}
+              helperText={
+                Array.isArray(formik.errors.divisions)
+                  ? formik.errors.divisions.join(', ')
+                  : (formik.touched.divisions && formik.errors.divisions) || undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            options={[
-              { value: 'Math', label: 'Math' },
-              { value: 'English', label: 'English' },
-              { value: 'Science', label: 'Science' },
-            ]}
-            value={formik.values.subjects.map((sub: TSubjectDetail) => sub.subjectName)} // Extract names
-            onChange={(val) => {
-              const updatedSubjects = val.map((subject) => ({
-                subjectName: subject,
-                examDate: null,
-                examTime: null,
-                examDuration: 0,
-                totalMarks: 0,
-                passingMarks: 0,
-                teacher: '',
-                invigilationTeacher: '',
-              }));
-              formik.setFieldValue('subjects', updatedSubjects);
-            }}
-            multiple
-            label="Subjects"
-            isLoading={isLoading}
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.subjects && formik.errors.subjects && (
-            <FormHelperText error>
-              {Array.isArray(formik.errors.subjects)
-                ? formik.errors.subjects.join(', ')
-                : formik.errors.subjects}
-            </FormHelperText>
-          )}
+          <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects) || false}>
+            <CustomSelect
+              options={[
+                { value: 'Math', label: 'Math' },
+                { value: 'English', label: 'English' },
+                { value: 'Science', label: 'Science' },
+              ]}
+              value={formik.values.subjects.map((sub: TSubjectDetail) => sub.subjectName)} // Extract names
+              onChange={(val) => {
+                const updatedSubjects = val.map((subject) => ({
+                  subjectName: subject,
+                  examDate: null,
+                  examTime: null,
+                  examDuration: 0,
+                  totalMarks: 0,
+                  passingMarks: 0,
+                  teacher: '',
+                  invigilationTeacher: '',
+                }));
+                formik.setFieldValue('subjects', updatedSubjects);
+              }}
+              multiple
+              label="Subjects"
+              isLoading={isLoading}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={!!(formik.touched.subjects && formik.errors.subjects)}
+              helperText={
+                formik.touched.subjects && formik.errors.subjects
+                  ? Array.isArray(formik.errors.subjects)
+                    ? formik.errors.subjects.join(', ') // Join array into a single string
+                    : formik.errors.subjects // Directly use the string
+                  : undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
       </Grid>
     </Box>
@@ -325,6 +352,7 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
   // State to track exam schedules for subjects - currently not being used
   const formik = props;
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
+  console.log('formik exam error---', formik.errors);
 
   return (
     <CustomizableTable
@@ -533,8 +561,8 @@ const NewExamForm = ({ onClose }: { onClose: () => void }) => {
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
-      // validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
-      validationSchema={yup.object().shape({})}
+      validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
+      // validationSchema={yup.object().shape({})}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);

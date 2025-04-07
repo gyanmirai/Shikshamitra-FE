@@ -18,9 +18,9 @@ import QuizManagement from './quizManagement';
 import GradeEntry from './gradeEntry/gradeEntry';
 import ScheduleExam from './scheduleExam/schedule-exam';
 import GradingAndAnalytics from './gradingAndAnalytics';
-// eslint-disable-next-line import/no-named-as-default
-import AssessmentManagement from './assessment-management';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
+// eslint-disable-next-line import/no-named-as-default
+import AssessmentManagement from './assessmentManagement.tsx/assessment-management';
 
 import type { TabComponentType } from '../hr/leave-request';
 

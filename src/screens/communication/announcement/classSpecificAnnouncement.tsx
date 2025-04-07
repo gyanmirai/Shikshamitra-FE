@@ -754,8 +754,8 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     }
   };
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
-      <form onSubmit={formik.handleSubmit}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -1047,8 +1047,8 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };
 

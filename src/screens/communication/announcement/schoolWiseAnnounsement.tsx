@@ -690,6 +690,11 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     },
   });
 
+  /**
+   * Handles changes to the publish date
+   * Updates the form values with new date and recalculates announcement status
+   * @param newDate - The newly selected date
+   */
   const handleDateChange = (newDate: Dayjs | null) => {
     if (newDate) {
       const newStatus = determineStatus(formik.values.isScheduled, newDate);
@@ -701,6 +706,12 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     }
   };
 
+  /**
+   * Handles changes to organization selection
+   * Manages bulk selection/deselection of all organizations and individual selections
+   * Updates the form values and tracks if all organizations are selected
+   * @param selectedValues - Array of selected organization values
+   */
   const handleOrganizationChange = (selectedValues: string[]) => {
     if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
       const allOrganizationValues = allOrganizations.map((org) => org.value);
@@ -716,6 +727,11 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
     }
   };
 
+  /**
+   * Handles changes to notification preferences
+   * Toggles individual notification preferences on/off
+   * @param preference - The notification preference to toggle
+   */
   const handleNotificationPreferenceChange = (preference: string) => {
     const currentPreferences = formik.values.notification_preferences;
     const updatedPreferences = currentPreferences.includes(preference)
@@ -724,10 +740,9 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
 
     formik.setFieldValue('notification_preferences', updatedPreferences);
   };
-
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
-      <form onSubmit={formik.handleSubmit}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -998,8 +1013,8 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };
 

@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 import type { THomeworkAssignment } from '../type';
 
 export const assignmentInitialValues: THomeworkAssignment = {
@@ -13,6 +15,7 @@ export const assignmentInitialValues: THomeworkAssignment = {
   createdBy: '', // Would typically be auto-populated from logged-in user
   status: 'draft',
   // Optional fields
+  todaysDate: dayjs(dayjs().format('DD-MM-YYYY')),
   chapters: [],
   homeworkType: '',
   isDailyTask: false,
@@ -23,6 +26,7 @@ export const assignmentInitialValues: THomeworkAssignment = {
   assignmentType: '',
   evaluationCriteria: '',
   assignedResources: '',
+  rubricRequired: false,
   rubric: '',
   isScheduled: false,
 };

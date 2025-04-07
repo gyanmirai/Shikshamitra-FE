@@ -132,11 +132,18 @@ const TABS = [
 ];
 
 export function StudentProfile() {
+  // Dialog state for student ID card
   const icardDialog = useBoolean();
+
+  // States for managing organization/stage selection
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
+
+  // States for managing class/standard selection
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClass] = useState<string>('');
+
+  // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
   const {
@@ -145,11 +152,13 @@ export function StudentProfile() {
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
+  // Effect to update organizations when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
     setOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium]);
 
+  // Effect to update classes when organization changes
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
     setClass(
@@ -157,31 +166,32 @@ export function StudentProfile() {
     );
   }, [organization, allOrganization]);
 
+  // Effect to update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
-
   const [searchParams, setSearchParams] = useSearchParam({
     isSearch: '',
     student: '',
     searchValue: '',
   });
   const tabs = useTabs('dashboard');
-  // console.log('tabs---------', tabs);
 
+  // Find the currently active tab component based on selected tab value
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
 
-  // console.log('currentActiveComponent----', currentActiveComponent);
-
+  // Query hook for fetching filtered student data
+  // Returns getStudents function, StudentsData response and loading state
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
+  // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
@@ -192,8 +202,7 @@ export function StudentProfile() {
     }
   }, [division, classes, organization, getStudents]);
 
-  console.log(StudentsData, 'StudentsData');
-
+  // Transform students data to include full name
   const tableData = useMemo(
     () =>
       StudentsData?.items?.map((item: any) => ({
@@ -202,13 +211,19 @@ export function StudentProfile() {
       })) || [],
     [StudentsData?.items]
   );
+
+  // Find currently selected student based on search params
   const currentStudent: IInquiryData = tableData.find(
     (item: IInquiryData) => item.id === searchParams.student
   );
+
+  // State to track selected students for bulk actions
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
 
+  // Boolean state to control instant notification dialog visibility
   const sendInstantNotificationDialogValue = useBoolean();
 
+  // Handler to open instant notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -399,19 +414,19 @@ export function StudentProfile() {
                   src={convertBase64Format(currentStudent?.profilePicture as string)}
                   sx={{ width: 64, height: 64 }}
                 />
-                <Label variant="filled" color="primary" sx={{ fontSize: '12px' }}>
+                <Label color="primary" sx={{ fontSize: '12px' }}>
                   {currentStudent?.name || '-'}
                 </Label>
-                <Label variant="filled" color="info" sx={{ fontSize: '12px' }}>
+                <Label color="info" sx={{ fontSize: '12px' }}>
                   Gr No {currentStudent?.grNoRecord || '-'}
                 </Label>
-                <Label variant="filled" color="secondary" sx={{ fontSize: '12px' }}>
+                <Label color="secondary" sx={{ fontSize: '12px' }}>
                   Roll No {currentStudent?.rollNo || '-'}
                 </Label>
-                <Label variant="filled" color="warning" sx={{ fontSize: '12px' }}>
+                <Label color="warning" sx={{ fontSize: '12px' }}>
                   {currentStudent?.standard?.name}-{currentStudent?.division?.name}
                 </Label>
-                <Label variant="filled" color="error" sx={{ fontSize: '12px' }}>
+                <Label color="error" sx={{ fontSize: '12px' }}>
                   {currentStudent?.educationMedium?.name || '-'}
                 </Label>
               </Box>

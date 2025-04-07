@@ -32,6 +32,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -407,18 +408,22 @@ const UpdateProgress = () => {
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <TextField
-        fullWidth
-        id="completePercentage"
-        name="completePercentage"
-        label="Add Approax Percentage"
-        value={formik.values.completePercentage}
-        onChange={formik.handleChange}
-        error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
-        // @ts-ignore
-        helperText={formik.touched.completePercentage && formik.errors.completePercentage}
-        size="small"
-      />
+      <ShakingTextField
+        error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
+      >
+        <TextField
+          fullWidth
+          id="completePercentage"
+          name="completePercentage"
+          label="Add Approax Percentage"
+          value={formik.values.completePercentage}
+          onChange={formik.handleChange}
+          error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
+          // @ts-ignore
+          helperText={formik.touched.completePercentage && formik.errors.completePercentage}
+          size="small"
+        />
+      </ShakingTextField>
       <DialogActions>
         <Button variant="outlined" size="small" onClick={() => {}}>
           Cancel

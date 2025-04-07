@@ -288,7 +288,7 @@ const AssessmentManagement = (props: TabComponentType) => {
       ];
 
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column" gap={2}>
       <CustomBreadcrumbs
         heading="Assessment"
         description={
@@ -318,7 +318,7 @@ const AssessmentManagement = (props: TabComponentType) => {
         }
       />
       {open ? (
-        <Card>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
         </Card>
       ) : (
@@ -530,9 +530,9 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '450px' }}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <CustomSelect
@@ -718,8 +718,8 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
             </>
           )}
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };
 

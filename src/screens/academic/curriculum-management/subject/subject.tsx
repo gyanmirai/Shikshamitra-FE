@@ -227,7 +227,7 @@ const Subject = (props: TabComponentType) => {
         ];
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
         heading="Subject"
@@ -261,7 +261,7 @@ const Subject = (props: TabComponentType) => {
       {params.isForm === 'true' ? (
         <>
           {/* Subject form card for creating/editing subjects */}
-          <Card>
+          <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
             <SubjectForm
               onSubmit={handleSubmit}
               onClose={handleCloseDialog}

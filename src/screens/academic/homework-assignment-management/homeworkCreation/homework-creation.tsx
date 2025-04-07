@@ -6,6 +6,7 @@ import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { PDFViewer } from '@react-pdf/renderer';
 import React, { useState, useCallback } from 'react';
@@ -31,7 +32,6 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -43,6 +43,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -205,8 +206,6 @@ const HomeworkCreation = (props: TabComponentType) => {
   const [assignmentDate, setAssignmentDate] = useState<Dayjs | null>(null);
   // Available division options for the selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  // URL search parameters for form state
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -510,33 +509,30 @@ const HomeworkCreation = (props: TabComponentType) => {
       : assignmentData.filter((assignment) => assignment.assignmentType);
 
   // Define navigation links based on form state and view type
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
-          { name: view === 'homework' ? 'Homework Form' : 'Assignment Form' },
-        ]
-      : [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
-          { name: view === 'homework' ? 'Homework Creation' : 'Assignment Creation' },
-        ];
+  const links = open
+    ? [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
+        { name: view === 'homework' ? 'Homework Form' : 'Assignment Form' },
+      ]
+    : [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
+        { name: view === 'homework' ? 'Homework Creation' : 'Assignment Creation' },
+      ];
 
   // Description text for homework section based on form state
-  const homeworkDesc =
-    params.isForm === 'true'
-      ? 'Create a new homework by providing details such as title, description, submission date, and attachments.'
-      : 'View all created homework assignments with complete details, including title, description, submission date, and attached files.';
+  const homeworkDesc = open
+    ? 'Create a new homework by providing details such as title, description, submission date, and attachments.'
+    : 'View all created homework assignments with complete details, including title, description, submission date, and attached files.';
 
   // Description text for assignment section based on form state
-  const assignmentDesc =
-    params.isForm === 'true'
-      ? 'Create a new assignment by specifying the title, detailed description, deadline, and any relevant attachments.'
-      : 'View all created assignments with comprehensive details, including title, description, deadline, and attached files.';
+  const assignmentDesc = open
+    ? 'Create a new assignment by specifying the title, detailed description, deadline, and any relevant attachments.'
+    : 'View all created assignments with comprehensive details, including title, description, deadline, and attached files.';
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading={view === 'homework' ? 'Homework Creation' : 'Assignment Creation'}
         description={view === 'homework' ? homeworkDesc : assignmentDesc}
@@ -550,7 +546,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
               onClick={() => {
                 dialog.onFalse();
-                setParams({ isForm: 'false' });
+                setOpen(false);
               }}
             >
               Back
@@ -562,7 +558,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               startIcon={<Add />}
               onClick={() => {
                 dialog.onTrue();
-                setParams({ isForm: 'true' });
+                setOpen(true);
               }}
             >
               {view === 'homework' ? 'Homework' : 'Assignment'}
@@ -686,7 +682,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       )}
 
       {open && (
-        <Card>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <HomeworkAssignmentCreationForm onsubmit={handleSubmit} view={view} />
         </Card>
       )}
@@ -1011,6 +1007,11 @@ interface AssignGradeProps {
   onSubmit: (values: { grade: string; feedback: string }) => void;
 }
 
+const validationSchema = Yup.object({
+  grade: Yup.string().required('Grade is required'),
+  feedback: Yup.string().required('Feedback is required'),
+});
+
 const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
   /**
    * Initialize formik form with grade and feedback fields
@@ -1022,6 +1023,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
       grade: data?.grade || '',
       feedback: data?.feedback || '',
     },
+    validationSchema,
     onSubmit(values) {
       onSubmit(values);
     },
@@ -1036,40 +1038,51 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
           </PDFViewer>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={[
-                  { value: 'A+', label: 'A+' },
-                  { value: 'A', label: 'A' },
-                  { value: 'A-', label: 'A-' },
-                  { value: 'B+', label: 'B+' },
-                  { value: 'B', label: 'B' },
-                  { value: 'B-', label: 'B-' },
-                  { value: 'C+', label: 'C+' },
-                  { value: 'C', label: 'C' },
-                  { value: 'C-', label: 'C-' },
-                  { value: 'D', label: 'D' },
-                  { value: 'F', label: 'F' },
-                ]}
-                label="Grade"
-                name="grade"
-                value={formik.values.grade}
-                onChange={(val) => {
-                  formik.setFieldValue('grade', val);
-                }}
-                formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                error={formik.touched.grade && Boolean(formik.errors.grade)}
-              />
+              <ShakingTextField error={!!(formik.touched.grade && formik.errors.grade) || false}>
+                <CustomSelect
+                  options={[
+                    { value: 'A+', label: 'A+' },
+                    { value: 'A', label: 'A' },
+                    { value: 'A-', label: 'A-' },
+                    { value: 'B+', label: 'B+' },
+                    { value: 'B', label: 'B' },
+                    { value: 'B-', label: 'B-' },
+                    { value: 'C+', label: 'C+' },
+                    { value: 'C', label: 'C' },
+                    { value: 'C-', label: 'C-' },
+                    { value: 'D', label: 'D' },
+                    { value: 'F', label: 'F' },
+                  ]}
+                  label="Grade"
+                  name="grade"
+                  value={formik.values.grade}
+                  onChange={(val) => {
+                    formik.setFieldValue('grade', val);
+                  }}
+                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                  error={formik.touched.grade && Boolean(formik.errors.grade)}
+                  helperText={
+                    formik.touched.grade && formik.errors.grade ? formik.errors.grade : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                placeholder="Detailed Feedback"
-                multiline
-                rows={3}
-                fullWidth
-                name="feedback"
-                value={formik.values.feedback}
-                onChange={formik.handleChange}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+              >
+                <TextField
+                  placeholder="Detailed Feedback"
+                  multiline
+                  rows={3}
+                  fullWidth
+                  name="feedback"
+                  value={formik.values.feedback}
+                  onChange={formik.handleChange}
+                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                  helperText={formik.touched.feedback && formik.errors.feedback}
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>
