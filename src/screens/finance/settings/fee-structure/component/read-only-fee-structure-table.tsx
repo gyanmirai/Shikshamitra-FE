@@ -8,6 +8,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { FeeItem } from '../data/fee-structure-data';
 
+// import type { FeeItem } from '../data/fee-structure-data';
+
 interface ReadOnlyFeeStructureTableProps {
   data: FeeItem[];
 }

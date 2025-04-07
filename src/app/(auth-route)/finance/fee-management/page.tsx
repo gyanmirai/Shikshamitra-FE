@@ -1,7 +1,7 @@
-import React from 'react';
+// import React from 'react';
 
-import FinanceFeeManagementScreen from 'src/screens/finance/fee-management/finance-fee-management';
+// import FinanceFeeManagementScreen from 'src/screens/finance/fee-management/finance-fee-management';
 
-const FinanceFee = () => <FinanceFeeManagementScreen />;
+// const FinanceFee = () => <FinanceFeeManagementScreen />;
 
-export default FinanceFee;
+// export default FinanceFee;

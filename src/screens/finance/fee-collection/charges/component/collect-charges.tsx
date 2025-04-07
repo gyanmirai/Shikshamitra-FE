@@ -82,7 +82,7 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
 
   return (
     <CustomDialog
-      fullScreen
+      maxWidth="xl"
       title={
         <Box display="flex" flexDirection="row" gap={2} alignItems="center">
           <Typography variant="h5">Charges Collection</Typography>

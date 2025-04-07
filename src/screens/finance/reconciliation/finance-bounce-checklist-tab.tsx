@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { Add, Send } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -24,108 +24,47 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { chargesData } from './data/bounce-cheque-data';
 import FinanceChequeBounceChargeCollect from '../fee-collection/charges/component/finance-cheque-bounce-charge-collect';
 
-const FinanceBounceTab = () => {
-  const chargesData = [
-    {
-      srNo: 1,
-      chequeNumber: '123456',
-      chequeDate: '15-08-2024',
-      bounceDate: '20-08-2024',
-      reason: 'Insufficient Funds',
-      amount: '5000',
-      status: 'Pending',
-      studentName: 'Ishita Desai',
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      parentsContactNumber: 9843539133,
-    },
-    {
-      srNo: 2,
-      chequeNumber: '789012',
-      chequeDate: '10-09-2024',
-      bounceDate: '15-09-2024',
-      reason: 'Account Closed',
-      amount: '25000',
-      status: 'Pending',
-      studentName: 'Ishita Desai',
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      parentsContactNumber: 9843539133,
-    },
-    {
-      srNo: 3,
-      chequeNumber: '345678',
-      chequeDate: '01-10-2024',
-      bounceDate: '05-10-2024',
-      reason: 'Signature Mismatch',
-      amount: '12000',
-      status: 'Paid',
-      studentName: 'Ishita Desai',
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      parentsContactNumber: 9843539133,
-    },
-    {
-      srNo: 4,
-      chequeNumber: '901234',
-      chequeDate: '25-11-2024',
-      bounceDate: '28-11-2024',
-      reason: 'Funds Not Cleared',
-      amount: '8000',
-      status: 'Paid',
-      studentName: 'Ishita Desai',
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      parentsContactNumber: 9843539133,
-    },
-    {
-      srNo: 5,
-      chequeNumber: '567890',
-      chequeDate: '10-12-2024',
-      bounceDate: '15-12-2024',
-      reason: 'Stale Cheque',
-      amount: '15000',
-      status: 'Paid',
-      studentName: 'Ishita Desai',
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      parentsContactNumber: 9843539133,
-    },
-  ];
+import type { ChargeData } from './data/bounce-cheque-data';
+
+const FinanceBounceScreen = () => {
+  // Dialog state using custom hook for bounce charge collection dialog
   const dialog = useBoolean();
 
-  const [selectedEntry, setSelectedEntry] = useState<any>();
+  // State to store selected entry data for bounce charge collection
+  const [selectedEntry, setSelectedEntry] = useState<ChargeData>();
 
+  // Handler to close bounce charge collection dialog
   const closeDialog = () => {
     dialog.onFalse();
   };
 
+  // Handler for saving bounce charge collection data
   const handleSave = () => {};
 
-  useEffect(() => {}, [selectedEntry]);
-  const [, setSelectedInquiry] = useState<any>(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  // Dialog state for additional dialog functionality
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
 
+  // Handler to close additional dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setSelectedInquiry(null);
   };
   return (
     <>
-      {/* <CustomBreadcrumbs
-        heading="Bounce Check Details"
-        links={[{ name: 'Finance' }, { name: 'Bounce Check Details' }]}
+      <CustomBreadcrumbs
+        heading="Bounce Cheque"
+        description="The bounce cheque screen displays all payments made by cheque which are marked as bounced"
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Reconciliation' },
+          { name: 'Bounce Cheque' },
+        ]}
         sx={{ px: 1, mb: 2 }}
-        
-      /> */}
+      />
       <Box py="15px" display="flex" justifyContent="space-between">
         <Box display="flex" flexDirection="row" gap={3}>
           <CustomSelect
@@ -206,65 +145,6 @@ const FinanceBounceTab = () => {
               );
             },
           },
-          //  {
-          //     id: 'status',
-          //     label: 'Status',
-          //     render(value, row) {
-          //     return (
-          //       value !== "" ?   <Label
-          //           variant="soft"
-          //           color={
-          //             value === 'Overdue'
-          //               ? 'error'
-          //               : value === 'Pending'
-          //                 ? 'warning'
-          //                 : value === 'Paid'
-          //                   ? 'success'
-          //                   : 'default'
-          //           }
-          //         >
-          //           {value}
-          //         </Label> : <Box/>
-          //       );
-          //     },
-          //   },
-          // {
-          //   id: 'action',
-          //   label: 'Action',
-          //   render(value, row: any) {
-          //     return (
-          //       <ThreeDotsActions
-          //         actions={({ popover }: any) => (
-          //           <MenuList>
-          //           { row.status === "Pending" && <MenuItem
-          //               onClick={() => {
-          //                 // setIsClearCheck(false)
-          //                 setSelectedEntry(row);
-
-          //                 dialog.onTrue();
-          //               }}
-          //             >
-          //               <Iconify icon="fluent:check-24-regular" />
-          //               Collect Charges
-
-          //             </MenuItem>}
-          //            { row.status === "Paid" && <MenuItem
-          //               onClick={() => {
-          //                 // setIsClearCheck(true)
-          //                 // setSelectedEntry(row);
-
-          //                 // dialog.onTrue();
-          //               }}
-          //             >
-          //               <Iconify icon="circum:receipt"   />
-          //             Generate Receipt
-          //             </MenuItem>}
-          //           </MenuList>
-          //         )}
-          //       />
-          //     );
-          //   },
-          // },
         ]}
         data={chargesData}
       />
@@ -285,7 +165,7 @@ const FinanceBounceTab = () => {
   );
 };
 
-export default FinanceBounceTab;
+export default FinanceBounceScreen;
 
 export const CommunicationForm = ({ handleCloseDialog }: any) => (
   <Box>

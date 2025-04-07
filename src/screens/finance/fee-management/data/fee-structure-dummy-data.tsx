@@ -1,0 +1,79 @@
+interface FeeSubCategory {
+  feeHead: string;
+  grossFee: number;
+  payableFee: number;
+  generalDiscount: number;
+  paymentMethod: string[];
+  lateFeeChargesType: 'fixed' | 'perDay';
+  lateFeeChargesAmount: string;
+  isActive: boolean;
+}
+
+interface FeeStructure {
+  id: number;
+  amount: number;
+  discountAmount: number;
+  grossFee: number;
+  applicableGrade: string;
+  bookRecipt: string;
+  paymentDueDate: string;
+  payableFees: number;
+  feeSubCategoryList: FeeSubCategory[];
+  isActive: boolean;
+}
+
+export const initialDataFeeStructure: FeeStructure[] = [
+  {
+    id: 1,
+    amount: 3000,
+    discountAmount: 2000,
+    grossFee: 5000,
+    applicableGrade: '2',
+    bookRecipt: 'CBSE',
+    paymentDueDate: '20-12-2024',
+    payableFees: 40000,
+    feeSubCategoryList: [
+      {
+        feeHead: 'Admission',
+        grossFee: 1000,
+        payableFee: 1000,
+        generalDiscount: 0,
+        paymentMethod: ['cash'],
+        lateFeeChargesType: 'fixed',
+        lateFeeChargesAmount: '1000',
+        isActive: true,
+      },
+      {
+        feeHead: 'Tuition',
+        grossFee: 5000,
+        payableFee: 4500,
+        generalDiscount: 500,
+        paymentMethod: ['cash', 'online'],
+        lateFeeChargesType: 'perDay',
+        lateFeeChargesAmount: '1',
+        isActive: true,
+      },
+      {
+        feeHead: 'Sports',
+        grossFee: 5000,
+        payableFee: 4500,
+        generalDiscount: 500,
+        paymentMethod: ['cash'],
+        lateFeeChargesType: 'perDay',
+        lateFeeChargesAmount: '1',
+        isActive: false,
+      },
+      {
+        feeHead: 'Transport',
+        grossFee: 5000,
+        payableFee: 4500,
+        generalDiscount: 500,
+        paymentMethod: ['cash'],
+        lateFeeChargesType: 'fixed',
+        lateFeeChargesAmount: '1000',
+        isActive: false,
+      },
+    ],
+    isActive: true,
+  },
+];

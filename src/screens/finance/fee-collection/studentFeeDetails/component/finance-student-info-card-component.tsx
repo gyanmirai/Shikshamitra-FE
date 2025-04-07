@@ -44,25 +44,29 @@ const dummyUser: IUserCard = {
 };
 
 const FinanceStudentInfoCardComponent = ({ user }: Props) => {
+  // Dialog state management using useBoolean hook
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
   const financeStudentAdditionalDiscountDialog = useBoolean();
   const collectChargesDialog = useBoolean();
 
+  // State to track the currently selected student, initialized with first student
   const [selectedStudent, setSelectedStudent] = useState<Student>(students[0]);
 
+  // Handler to close the main fee collection dialog
   const closeDialog = () => {
     dialog.onFalse();
   };
 
+  // Handler to close the fee refund dialog
   const feeRefundCloseDialog = () => {
     feeRefundDialog.onFalse();
   };
 
+  // Handler to close the additional discount dialog
   const additionalDiscountCloseDialog = () => {
     financeStudentAdditionalDiscountDialog.onFalse();
   };
-
   return (
     <>
       <Card
@@ -127,19 +131,19 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
               { label: 'Total Charges', icon: 'arcticons:mymoney-pro', value: '₹ 0' },
               {
                 label: 'Paid Fees',
-                icon: 'arcticons:mymoney-pro',
+                icon: 'hugeicons:tick-01',
                 value: '₹ 10,000',
                 color: 'success.main',
               },
               {
                 label: 'Pending Fees',
-                icon: 'arcticons:mymoney-pro',
+                icon: 'bitcoin-icons:clock-outline',
                 value: '₹ 20,000',
                 color: 'warning.main',
               },
               {
                 label: 'Overdue Fees',
-                icon: 'arcticons:mymoney-pro',
+                icon: 'pajamas:calendar-overdue',
                 value: '₹ 30,000',
                 color: 'error.main',
               },

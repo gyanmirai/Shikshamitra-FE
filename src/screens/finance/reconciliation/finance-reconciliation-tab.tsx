@@ -12,90 +12,46 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { reconsiliationData } from './data/cheque-list-data';
 import FinanceReconciliationClearAndBounceChequeDialog from './component/finance-reconciliation-clear-cheque-dialog';
 
-const FinanceReconciliationTab = () => {
-  const reconsiliationData = [
-    {
-      srNo: 1,
-      studentName: 'Aarav Sharma',
-      class: '5th',
-      chequeNo: '784512',
-      bankName: 'State Bank of India',
-      chequeDate: '01-11-2024',
-      amount: '1500',
-      id: 1,
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      receivedChequeDate: '01-11-2024',
-    },
-    {
-      srNo: 2,
-      studentName: 'Diya Mehta',
-      class: '6th',
-      chequeNo: '234589',
-      bankName: 'HDFC Bank',
-      chequeDate: '01-11-2024',
-      amount: '2000',
-      id: 2,
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      receivedChequeDate: '01-11-2024',
-    },
-    {
-      srNo: 3,
-      studentName: 'Rohan Patel',
-      class: '7th',
-      chequeNo: '985632',
-      bankName: 'ICICI Bank',
-      chequeDate: '01-08-2024',
-      amount: '2500',
-      id: 3,
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      receivedChequeDate: '01-11-2024',
-    },
-    {
-      srNo: 4,
-      studentName: 'Ishita Desai',
-      class: '8th',
-      chequeNo: '567890',
-      bankName: 'Axis Bank',
-      chequeDate: '05-11-2024',
-      amount: '800',
-      id: 4,
-      chargesAmount: '300',
-      feeHead: 'Library',
-      grNumber: 89554,
-      receivedChequeDate: '01-11-2024',
-    },
-  ];
+import type { ReconciliationItem } from './data/cheque-list-data';
 
+const FinanceChequeTransectionScreen = () => {
+  // Dialog state to control the visibility of the dialog
   const dialog = useBoolean();
-  const [isClearCheck, setIsClearCheck] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<any>();
 
+  // State to track whether the cheque is being cleared (true) or bounced (false)
+  const [isClearCheck, setIsClearCheck] = useState<boolean>(false);
+
+  // State to store the currently selected reconciliation entry
+  const [selectedEntry, setSelectedEntry] = useState<ReconciliationItem>();
+
+  // Function to reset states and close the dialog
   const closeDialog = () => {
     setIsClearCheck(false);
     dialog.onFalse();
   };
 
+  // Function to handle save operation when clearing or bouncing a cheque
   const handleSave = () => {};
 
+  // Effect to handle changes when selected entry or clear check status changes
   useEffect(() => {}, [selectedEntry, isClearCheck]);
-
   return (
     <>
-      {/* <CustomBreadcrumbs
-        heading="Reconciliation"
-        links={[{ name: 'Finance' }, { name: 'Reconciliation' }]}
+      <CustomBreadcrumbs
+        heading="Cheque Transection"
+        description="The Cheque transection screen displays all payments made by cheque. You can also move cheques to Cleared or Bounced by clicking the action button"
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Reconciliation' },
+          { name: 'Cheque Transection' },
+        ]}
         sx={{ px: 1, mb: 2 }}
-        
-      /> */}
+      />
       <Box py="15px" display="flex" justifyContent="space-between">
         <Box display="flex" flexDirection="row" gap={3}>
           <CustomSelect
@@ -127,22 +83,14 @@ const FinanceReconciliationTab = () => {
         tableId="reconciliationTable"
         columns={[
           { id: 'grNumber', label: 'GR No' },
-          // { id: 'srNo', label: 'SR No' },
+
           { id: 'studentName', label: 'Student Name' },
           { id: 'class', label: 'Class' },
           { id: 'chequeNo', label: 'Cheque No' },
           { id: 'bankName', label: 'Bank Name' },
           { id: 'chequeDate', label: 'Date On Cheque' },
           { id: 'receivedChequeDate', label: 'Received Cheque Date' },
-          // {
-          //   id: 'chargesAmount',
-          //   label: 'Charges',
-          //   render(value, row) {
-          //     return (
-          //       <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
-          //     );
-          //   },
-          // },
+
           { id: 'feeHead', label: 'Fee Head' },
           {
             id: 'amount',
@@ -206,4 +154,4 @@ const FinanceReconciliationTab = () => {
   );
 };
 
-export default FinanceReconciliationTab;
+export default FinanceChequeTransectionScreen;

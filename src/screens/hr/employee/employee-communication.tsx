@@ -45,29 +45,26 @@ const EmployeeCommunication = ({ employee }: any) => (
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle2' }}>New Announcement</Box>
-            <Scrollbar sx={{ mt: 1.5 }}>
+            <Box display="flex" gap={2}>
+              <Iconify icon="mdi:bell" width={20} height={20} sx={{ color: 'primary.main' }} />
+              <Typography variant="subtitle1">New Announcement</Typography>
+            </Box>
+            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
               <Box
                 component="ul"
                 sx={{
                   listStyle: 'none',
                   width: '100%',
-                  paddingTop: 8,
-                  animation: 'scrollAnimation 10s linear infinite',
-                  animationDelay: '1s',
-                  '@keyframes scrollAnimation': {
-                    '0%': { transform: 'translateY(0)' },
-                    '100%': { transform: 'translateY(-100%)' },
-                  },
-                  '&:hover': {
-                    animationPlayState: 'paused',
-                  },
+                  padding: 0,
                 }}
               >
                 {[
-                  'Student record updated',
-                  'Student attendance updated',
-                  'Student record updated',
+                  'New Announcement',
+                  'New Announcement',
+                  'New Announcement',
+                  'New Announcement',
+                  'New Announcement',
+                  'New Announcement',
                 ].map((exam, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
@@ -90,30 +87,25 @@ const EmployeeCommunication = ({ employee }: any) => (
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle2' }}>Upcoming Events</Box>
-            <Scrollbar sx={{ mt: 1.5 }}>
+            <Box display="flex" gap={2}>
+              <Iconify
+                icon="mdi:event"
+                width={20}
+                height={20}
+                sx={{ color: 'secondary.main', mt: 0.3 }}
+              />
+              <Typography variant="subtitle1">Upcoming Events</Typography>
+            </Box>
+            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
               <Box
                 component="ul"
                 sx={{
                   listStyle: 'none',
                   width: '100%',
-                  paddingTop: 8,
-                  animation: 'scrollAnimation 10s linear infinite',
-                  animationDelay: '1s',
-                  '@keyframes scrollAnimation': {
-                    '0%': { transform: 'translateY(0)' },
-                    '100%': { transform: 'translateY(-100%)' },
-                  },
-                  '&:hover': {
-                    animationPlayState: 'paused',
-                  },
+                  padding: 0,
                 }}
               >
-                {[
-                  'Student record updated',
-                  'Student attendance updated',
-                  'Student record updated',
-                ].map((exam, index) => (
+                {['Upcoming Events', 'Upcoming Events'].map((exam, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                       {exam}
@@ -135,30 +127,25 @@ const EmployeeCommunication = ({ employee }: any) => (
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle2' }}>New Messages</Box>
-            <Scrollbar sx={{ mt: 1.5 }}>
+            <Box display="flex" gap={2}>
+              <Iconify
+                icon="mdi:message-text"
+                width={20}
+                height={20}
+                sx={{ color: 'info.main', mt: 0.4 }}
+              />
+              <Typography variant="subtitle1">New Messages</Typography>
+            </Box>
+            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
               <Box
                 component="ul"
                 sx={{
                   listStyle: 'none',
                   width: '100%',
-                  paddingTop: 8,
-                  animation: 'scrollAnimation 10s linear infinite',
-                  animationDelay: '1s',
-                  '@keyframes scrollAnimation': {
-                    '0%': { transform: 'translateY(0)' },
-                    '100%': { transform: 'translateY(-100%)' },
-                  },
-                  '&:hover': {
-                    animationPlayState: 'paused',
-                  },
+                  padding: 0,
                 }}
               >
-                {[
-                  'Student record updated',
-                  'Student attendance updated',
-                  'Student record updated',
-                ].map((exam, index) => (
+                {['New Messages', 'New Messages'].map((exam, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                       {exam}
@@ -180,30 +167,25 @@ const EmployeeCommunication = ({ employee }: any) => (
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ typography: 'subtitle2' }}>Scheduled Meetings</Box>
-            <Scrollbar sx={{ mt: 1.5 }}>
+            <Box display="flex" gap={2}>
+              <Iconify
+                icon="ri:survey-line"
+                width={20}
+                height={20}
+                sx={{ color: 'warning.main' }}
+              />
+              <Typography variant="subtitle1">Scheduled Meetings</Typography>
+            </Box>
+            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
               <Box
                 component="ul"
                 sx={{
                   listStyle: 'none',
                   width: '100%',
-                  paddingTop: 8,
-                  animation: 'scrollAnimation 10s linear infinite',
-                  animationDelay: '1s',
-                  '@keyframes scrollAnimation': {
-                    '0%': { transform: 'translateY(0)' },
-                    '100%': { transform: 'translateY(-100%)' },
-                  },
-                  '&:hover': {
-                    animationPlayState: 'paused',
-                  },
+                  padding: 0,
                 }}
               >
-                {[
-                  'Student record updated',
-                  'Student attendance updated',
-                  'Student record updated',
-                ].map((exam, index) => (
+                {['Scheduled Meetings', 'Scheduled Meetings'].map((exam, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
                       {exam}
@@ -217,7 +199,9 @@ const EmployeeCommunication = ({ employee }: any) => (
       </Grid>
     </Grid>
     <CalendarView />
+
     <EmployeeAnnouncement />
+
     <EmployeeEvent />
     <EmployeeMeetings />
   </Box>
@@ -252,9 +236,12 @@ const EmployeeAnnouncement = () => {
     []
   );
   return (
-    <Box>
+    <Box p={2}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={3}>
-        <Typography variant="h6">Announcement</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <Iconify icon="mdi:bell" width={20} height={20} sx={{ color: 'primary.main' }} />
+          <Typography variant="h6">Announcement</Typography>
+        </Box>
         <Button variant="contained" size="small" startIcon={<Add />}>
           Announcement
         </Button>
@@ -436,7 +423,15 @@ const EmployeeEvent = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={3}>
-        <Typography variant="h6">Events</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <Iconify
+            icon="mdi:event"
+            width={20}
+            height={20}
+            sx={{ color: 'secondary.main', mt: 0.3 }}
+          />
+          <Typography variant="h6">Events</Typography>
+        </Box>
         <Button variant="contained" size="small" startIcon={<Add />}>
           Event
         </Button>
@@ -614,7 +609,10 @@ const EmployeeMeetings = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={3}>
-        <Typography variant="h6">Meetings</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <Iconify icon="ri:survey-line" width={20} height={20} sx={{ color: 'warning.main' }} />
+          <Typography variant="h6">Meetings</Typography>
+        </Box>
         <Button variant="contained" size="small" startIcon={<Add />}>
           Meeting
         </Button>
