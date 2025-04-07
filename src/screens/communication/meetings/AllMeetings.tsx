@@ -174,7 +174,7 @@ const AllMeetings = (props: TabComponentType) => {
   );
 
   return (
-    <Box>
+    <Box display="flex" flexDirection="column" height="100%">
       {params.isForm === 'true' ? (
         <>
           <CustomBreadcrumbs
@@ -197,7 +197,7 @@ const AllMeetings = (props: TabComponentType) => {
               </Button>
             }
           />
-          <Card>
+          <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
             <AddNewMeeting
               initialValues={selectedMeeting}
               onSubmit={handleSubmit}

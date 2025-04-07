@@ -1,5 +1,6 @@
 'use client';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
@@ -22,6 +23,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { TAnnoucementCategory } from './type';
@@ -296,6 +298,19 @@ interface CategoryFormProps {
   data?: any | null;
   isEdit?: boolean;
 }
+
+const validationSchema = Yup.object().shape({
+  categoryName: Yup.string()
+    .required('Category name is required')
+    .min(3, 'Category name must be at least 3 characters')
+    .max(50, 'Category name must be at most 50 characters'),
+
+  categoryDescription: Yup.string()
+    .required('Category description is required')
+    .min(5, 'Category description must be at least 5 characters')
+    .max(200, 'Category description must be at most 200 characters'),
+});
+
 const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   /**
    * State to track if the category is in draft status
@@ -313,6 +328,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEd
       categoryName: data?.categoryName || '',
       categoryDescription: data?.categoryDescription || '',
     },
+    validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
@@ -328,31 +344,53 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEd
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Category Name"
-                name="categoryName"
-                size="small"
-                value={formik.values.categoryName}
-                onChange={formik.handleChange}
-                error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.categoryName && formik.errors.categoryName) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Category Name"
+                  name="categoryName"
+                  size="small"
+                  value={formik.values.categoryName}
+                  onChange={formik.handleChange}
+                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
+                  helperText={
+                    formik.touched.categoryName && typeof formik.errors.categoryName === 'string'
+                      ? formik.errors.categoryName
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Category Description"
-                name="categoryDescription"
-                size="small"
-                rows={4}
-                multiline
-                value={formik.values.categoryDescription}
-                onChange={formik.handleChange}
+              <ShakingTextField
                 error={
-                  formik.touched.categoryDescription && Boolean(formik.errors.categoryDescription)
+                  !!(formik.touched.categoryDescription && formik.errors.categoryDescription) ||
+                  false
                 }
-              />
+              >
+                <TextField
+                  fullWidth
+                  label="Category Description"
+                  name="categoryDescription"
+                  size="small"
+                  rows={4}
+                  multiline
+                  value={formik.values.categoryDescription}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.categoryDescription && Boolean(formik.errors.categoryDescription)
+                  }
+                  helperText={
+                    formik.touched.categoryDescription &&
+                    typeof formik.errors.categoryDescription === 'string'
+                      ? formik.errors.categoryDescription
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>

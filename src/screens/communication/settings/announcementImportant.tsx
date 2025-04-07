@@ -1,5 +1,6 @@
 'use client';
 
+import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -22,6 +23,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { TAnnouncementImportant } from './type';
@@ -294,6 +296,11 @@ interface ImportantFormProps {
   isEdit?: boolean;
 }
 
+const validationSchema = Yup.object().shape({
+  importantLevel: Yup.string().required('Importance level is required'),
+  importantLevelDesc: Yup.string().required('Description is required'),
+});
+
 const ImportantForm: React.FC<ImportantFormProps> = ({
   onSubmit,
   data = null,
@@ -309,6 +316,8 @@ const ImportantForm: React.FC<ImportantFormProps> = ({
       importantLevel: data?.importantLevel || '',
       importantLevelDesc: data?.importantLevelDesc || '',
     },
+    validationSchema,
+
     // Handle form submission
     onSubmit: (values) => {
       onSubmit({
@@ -325,31 +334,41 @@ const ImportantForm: React.FC<ImportantFormProps> = ({
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Important Level"
-                name="importantLevel"
-                size="small"
-                value={formik.values.importantLevel}
-                onChange={formik.handleChange}
-                error={formik.touched.importantLevel && Boolean(formik.errors.importantLevel)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.importantLevel && formik.errors.importantLevel) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Important Level"
+                  name="importantLevel"
+                  size="small"
+                  value={formik.values.importantLevel}
+                  onChange={formik.handleChange}
+                  error={formik.touched.importantLevel && Boolean(formik.errors.importantLevel)}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Important Level Desc"
-                name="importantLevelDesc"
-                size="small"
-                rows={4}
-                multiline
-                value={formik.values.importantLevelDesc}
-                onChange={formik.handleChange}
+              <ShakingTextField
                 error={
-                  formik.touched.importantLevelDesc && Boolean(formik.errors.importantLevelDesc)
+                  !!(formik.touched.importantLevelDesc && formik.errors.importantLevelDesc) || false
                 }
-              />
+              >
+                <TextField
+                  fullWidth
+                  label="Important Level Desc"
+                  name="importantLevelDesc"
+                  size="small"
+                  rows={4}
+                  multiline
+                  value={formik.values.importantLevelDesc}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.importantLevelDesc && Boolean(formik.errors.importantLevelDesc)
+                  }
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>
