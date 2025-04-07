@@ -1,5 +1,6 @@
 'use client';
 
+import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -296,6 +297,11 @@ interface ImportantFormProps {
   data?: any | null;
   isEdit?: boolean;
 }
+
+const validationSchema = Yup.object().shape({
+  importantLevel: Yup.string().required('Importance level is required'),
+  importantLevelDesc: Yup.string().required('Description is required'),
+});
 
 const ImportantForm: React.FC<ImportantFormProps> = ({
   onSubmit,
