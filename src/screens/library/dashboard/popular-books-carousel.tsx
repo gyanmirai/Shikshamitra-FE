@@ -16,16 +16,13 @@ import { Image } from 'src/components/image';
 import { Label, labelClasses } from 'src/components/label';
 import { Carousel, useCarousel, CarouselArrowBasicButtons } from 'src/components/carousel';
 
+import type { IPopularBook } from './dashboard_interface';
+
 // ----------------------------------------------------------------------
 
 type Props = BoxProps & {
   title: string;
-  list: {
-    bookId: string;
-    title: string;
-    borrowCount: number;
-    coverImage: string;
-  }[];
+  list: IPopularBook[];
 };
 
 export function PopularBooks({ title, list, ...other }: Props) {
