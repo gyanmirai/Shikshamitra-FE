@@ -1,6 +1,10 @@
+'use client';
+
+import type { FeeItem } from 'src/screens/finance/settings/fee-structure/data/fee-structure-data';
+
 import React, { useState } from 'react';
 
-import { Box, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -13,76 +17,31 @@ import { Iconify } from 'src/components/iconify/iconify';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import type FeeStructureOverView from '../data/FeeStructure-interface';
+import { initialDataFeeStructure } from '../../data/fee-structure-dummy-data';
 
-interface FinanceFeeStructureOverviewComponentProps {
-  data: FeeStructureOverView[];
-}
-const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverviewComponentProps> = ({
-  data,
-}) => {
+const FinanceFeeStructureOverviewComponent = () => {
+  // Boolean state to control the visibility of detailed fee structure dialog/modal
   const detaiFeeStructure = useBoolean();
 
-  const initialData = [
-    {
-      id: 1,
-      amount: 3000,
-      discountAmount: 2000,
-      grossFee: 5000,
-      applicableGrade: '2',
-      bookRecipt: 'CBSE',
-      paymentDueDate: '20-12-2024',
-      payableFees: 40000,
-      feeSubCategoryList: [
-        {
-          feeHead: 'Admission',
-          grossFee: 1000,
-          payableFee: 1000,
-          generalDiscount: 0,
-          paymentMethod: ['cash'],
-          lateFeeChargesType: 'fixed',
-          lateFeeChargesAmount: '1000',
-          isActive: true,
-        },
-        {
-          feeHead: 'Tuition',
-          grossFee: 5000,
-          payableFee: 4500,
-          generalDiscount: 500,
-          paymentMethod: ['cash', 'online'],
-          lateFeeChargesType: 'perDay',
-          lateFeeChargesAmount: '1',
-          isActive: true,
-        },
-        {
-          feeHead: 'Sports',
-          grossFee: 5000,
-          payableFee: 4500,
-          generalDiscount: 500,
-          paymentMethod: ['cash'],
-          lateFeeChargesType: 'perDay',
-          lateFeeChargesAmount: '1',
-          isActive: false,
-        },
-        {
-          feeHead: 'Transport',
-          grossFee: 5000,
-          payableFee: 4500,
-          generalDiscount: 500,
-          paymentMethod: ['cash'],
-          lateFeeChargesType: 'fixed',
-          lateFeeChargesAmount: '1000',
-          isActive: false,
-        },
-      ],
-      isActive: true,
-    },
-  ];
-  const [tableData, setTableData] = useState<any>(initialData);
-  const [selectedFeeStructure, setSelectedFeeStructure] = useState<any>(null);
+  // State to store and manage the fee structure table data, initialized with dummy data
+  const [tableData, setTableData] = useState(initialDataFeeStructure);
+
+  // State to store the selected fee structure items when a row is clicked/selected
+  const [selectedFeeStructure, setSelectedFeeStructure] = useState<FeeItem[]>();
   return (
     <>
+      <CustomBreadcrumbs
+        description="Here, you can view all active fee structures. If you wish to make any changes, go to Settings > Fee Structure Settings and update them accordingly. Note: Editing access is based on user permissions, so make sure you have the necessary rights."
+        heading="Fee Structure"
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Fee Management' },
+          { name: 'Fee Structure' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+      />
       <Box pb="10px">
         <CustomizableTable
           tableId="fee-structure-overview"
@@ -124,13 +83,6 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
             {
               id: 'paymentDueDate',
               label: 'Payment Due Date',
-            },
-            {
-              id: 'statustoggle',
-              label: 'InActive/Active',
-              render(val: boolean, row: any) {
-                return <Switch value={val} />;
-              },
             },
 
             {
@@ -174,7 +126,7 @@ const FinanceFeeStructureOverviewComponent: React.FC<FinanceFeeStructureOverview
         }}
       >
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '600px' }}>
-          <ReadOnlyFeeStructureTable data={selectedFeeStructure} />
+          <ReadOnlyFeeStructureTable data={selectedFeeStructure || []} />
         </Scrollbar>
       </CustomDialog>
     </>

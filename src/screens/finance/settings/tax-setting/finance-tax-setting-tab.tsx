@@ -41,60 +41,75 @@ let data: Data[] = [
   },
 ];
 const FinanceTaxSettingTab = () => {
+  // State management for dialog visibility
   const dialog = useBoolean();
+  // State to store selected entry data
   const [selectedEntry, setSelectedEntry] = useState(data);
+  // State to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
+  // State to store table data
   const [tableData, setTableData] = useState(data);
+  // State to control dialog open/close
   const [open, setOpen] = useState(false);
+  // State to store selected region data
   const [selectedRegion, setSelectedRegion] = useState([]);
+  // State for delete confirmation dialog
   const dialogForDeleteConfirmation = useBoolean();
+  // State for duplicate entry dialog (currently disabled)
   // const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
+  // Handler to view categories for a specific region
   const handleViewCategories = (region: any) => {
     setSelectedRegion(region);
     setOpen(true);
   };
 
+  // Handler to close the main dialog
   const handleClose = () => {
     setOpen(false);
   };
 
+  // Handler to close dialog and reset edit mode
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
   };
 
+  // Effect to monitor changes in selected entry, edit mode, and table data
   useEffect(() => {}, [selectedEntry, isEdit, tableData]);
 
+  // Handler to delete a tax entry
   const handleDelete = (item: any) => {
     data = data.filter((val) => val.id !== item.id || val.id !== item.id);
-
     setTableData([...data]);
   };
 
+  // Handler to save new or updated tax settings
   const handleSave = (dataFromDialog: any) => {
     const { id, taxName, taxPercentage, applicableRegion, applicableCategory } = dataFromDialog;
 
     if (dataFromDialog) {
+      // Check if entry with same ID exists
       const existingEntryIndex = data.findIndex((val) => id === val.id);
 
+      // Prevent duplicate entries when not in edit mode
       if (existingEntryIndex !== -1 && !isEdit) {
         // setShowDuplicateDialog(true)
         closeDialog();
         return;
       }
 
-      // Prepare the new entry
+      // Create new tax setting object
       const taxSetting = {
         id,
         taxName,
         taxPercentage,
-        applicableRegion: applicableRegion || [], // Ensure it's an array
-        applicableCategory: applicableCategory || [], // Ensure it's an array
+        applicableRegion: applicableRegion || [], // Default to empty array if undefined
+        applicableCategory: applicableCategory || [], // Default to empty array if undefined
         action: 'View',
       };
 
-      // Check for duplicate regions and categories
+      // Update existing entry or add new entry
       if (existingEntryIndex !== -1 && isEdit) {
         const existingEntry = data[existingEntryIndex];
         existingEntry.applicableRegion = applicableRegion;
@@ -108,13 +123,13 @@ const FinanceTaxSettingTab = () => {
     console.log(dataFromDialog);
   };
 
+  // Handler to close dialog and reset edit mode
   const closeHandler = () => {
     setIsEdit(false);
     setOpen(false);
   };
-
   return (
-    <>
+    <Box height="100%">
       {open ? (
         <FinanceTaxSettingDialog
           onSave={handleSave}
@@ -270,7 +285,7 @@ const FinanceTaxSettingTab = () => {
           />
         )}
       </Box>
-    </>
+    </Box>
   );
 };
 

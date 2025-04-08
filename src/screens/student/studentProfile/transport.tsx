@@ -1,8 +1,10 @@
 import React from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import TransportMap from 'src/screens/transport/routesAndSchedules/component/view-on-map-dialog';
+
+import { Iconify } from 'src/components/iconify/iconify';
 
 import type { StudentTabsComponentType } from '.';
 
@@ -55,7 +57,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
               'url("https://www.shutterstock.com/image-vector/little-kids-boy-girl-ride-600nw-2281097463.jpg")', // Background image
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: 0.6, // Adjust opacity for better contrast
+            opacity: 0.3, // Adjust opacity for better contrast
             zIndex: 0, // Image stays behind the content box
           }}
         />
@@ -69,7 +71,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             right: 0,
             bottom: 0,
             zIndex: 1, // Content stays on top of the image
-            background: 'rgba(0, 0, 0, 0.6)', // Semi-transparent black background for text visibility
+            background: 'rgba(0, 0, 0, 0.7)', // Semi-transparent black background for text visibility
             padding: 3, // Padding for spacing
             display: 'flex',
             flexDirection: 'column',
@@ -81,16 +83,25 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
               <Typography
                 variant="h6"
                 sx={{
-                  fontWeight: 'light',
+                  fontWeight: 700,
+                  fontSize: '17px',
                   color: '#f0f0f0',
                   textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
                 }}
               >
-                Stop Name
+                <Iconify icon="akar-icons:stop" /> Stop Name
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ color: '#f0f0f0', textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)' }}
+                sx={{
+                  fontSize: '17px',
+                  fontWeight: 700,
+                  color: '#f0f0f0',
+                  textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)',
+                }}
               >
                 {studentDetails.transport.stop.name}
               </Typography>
@@ -100,16 +111,25 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
               <Typography
                 variant="h6"
                 sx={{
-                  fontWeight: 'light',
+                  fontWeight: 700,
+                  fontSize: '17px',
                   color: '#f0f0f0',
                   textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
                 }}
               >
-                Pickup Time
+                <Iconify icon="mdi:clock-time-four" /> Pickup Time
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ color: '#f0f0f0', textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)' }}
+                sx={{
+                  fontSize: '17px',
+                  fontWeight: 700,
+                  color: '#f0f0f0',
+                  textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)',
+                }}
               >
                 {studentDetails.transport.stop.pickupTime}
               </Typography>
@@ -119,60 +139,121 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
               <Typography
                 variant="h6"
                 sx={{
-                  fontWeight: 'light',
+                  fontWeight: 700,
+                  fontSize: '17px',
                   color: '#f0f0f0',
                   textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
                 }}
               >
-                Drop Time
+                <Iconify icon="material-symbols:wheelchair-pickup" /> Drop Time
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ color: '#f0f0f0', textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)' }}
+                sx={{
+                  fontSize: '17px',
+                  fontWeight: 700,
+                  color: '#f0f0f0',
+                  textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)',
+                }}
               >
                 {studentDetails.transport.stop.dropTime}
               </Typography>
             </Box>
           </Box>
 
-          <Box display="flex" flexDirection="row" gap={5} mt={3} alignItems="center">
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 'light',
-                  color: '#f0f0f0',
-                  textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
-                }}
-              >
-                Vehicle Number
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: '#f0f0f0', textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)' }}
-              >
-                {studentDetails.transport.vehicleNumber}
-              </Typography>
+          <Box display="flex" flexDirection="column" gap={3} mt={3}>
+            <Box display="flex" flexDirection="row" gap={3} alignItems="center">
+              <Box flex={1}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '17px',
+                    color: '#f0f0f0',
+                    textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Iconify icon="streamline:steps-number" /> Vehicle Number
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '17px',
+                    fontWeight: 700,
+                    color: '#f0f0f0',
+                    textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)',
+                  }}
+                >
+                  {studentDetails.transport.vehicleNumber}
+                </Typography>
+              </Box>
+              <Box flex={1}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '17px',
+                    color: '#f0f0f0',
+                    textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Iconify icon="healthicons:truck-driver" /> Driver
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '17px',
+                    fontWeight: 700,
+                    color: '#f0f0f0',
+                    textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)',
+                  }}
+                >
+                  {studentDetails.transport.driver.name}
+                </Typography>
+              </Box>
+              <Box flex={1}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '17px',
+                    color: '#f0f0f0',
+                    textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Iconify icon="material-symbols-light:call" /> Contact
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '17px',
+                    fontWeight: 700,
+                    color: '#f0f0f0',
+                    textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)',
+                  }}
+                >
+                  {studentDetails.transport.driver.contact}
+                </Typography>
+              </Box>{' '}
             </Box>
+          </Box>
 
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 'light',
-                  color: '#f0f0f0',
-                  textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)',
-                }}
-              >
-                Driver
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: '#f0f0f0', textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)' }}
-              >
-                {studentDetails.transport.driver.name} ({studentDetails.transport.driver.contact})
-              </Typography>
-            </Box>
+          <Box display="flex" flexDirection="row" gap={3} mt={5} justifyContent="flex-end">
+            <Button startIcon={<Iconify icon="gis:route" />} variant="outlined">
+              Update Route
+            </Button>
           </Box>
         </Box>
       </Box>
@@ -183,7 +264,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
         sx={{
           mt: 4,
           mb: 6,
-          height: '400px',
+          height: '300px',
           width: '700px',
           overflow: 'hidden',
           borderRadius: '8px',
@@ -201,5 +282,4 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
     </Box>
   );
 };
-
 export default StudentTransportProfile;

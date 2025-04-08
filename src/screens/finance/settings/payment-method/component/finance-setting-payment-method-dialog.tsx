@@ -51,11 +51,14 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
   allData,
   isEdit,
 }) => {
+  // State to show message when payment method already exists
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  // Get isChanges state from redux store to track form modifications
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
 
+  // Initialize form values based on whether editing existing or creating new payment method
   const initialValues = useMemo(
     () => ({
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
@@ -77,14 +80,18 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
       isEdit,
     ]
   );
+
+  // Initialize formik with validation and submission handling
   const formik = useFormik<FormikValue>({
     initialValues,
     validationSchema,
     onSubmit: (values) => {
+      // Check if payment method name already exists in case of new entry
       const existingEntryIndex = allData.findIndex(
         (val: any) => val.paymentMethodName.toLowerCase() === values.paymentMethodName.toLowerCase()
       );
 
+      // Allow submission if entry doesn't exist or if editing existing entry
       if (existingEntryIndex === -1 || isEdit) {
         setShowExistingEntryMessage(false);
         onSave(values);
@@ -96,11 +103,14 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
       console.log('Form Submitted:', values);
     },
   });
+
+  // Track form changes and update redux store
   useEffect(() => {
     const isChanged = !isEqual(formik.values, initialValues);
     dispatch(setIsChanges(isChanged));
   }, [dispatch, formik.values, initialValues]);
 
+  // Handle dialog close with confirmation if form has changes
   const handleCloseDialog = () => {
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       onClose();
@@ -199,7 +209,7 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
       </Box>
 
       <DialogActions>
-        <Button type="submit" variant="outlined" size="small">
+        <Button type="submit" variant="contained" size="small">
           Save
         </Button>
       </DialogActions>
