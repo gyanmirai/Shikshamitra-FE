@@ -16,7 +16,7 @@ import Subjects from './subjects';
 import Reports from './reportsAndAnalyics';
 import Dashboard from './dashboard/dashboard';
 import CourseProgress from './courseProgress';
-import LearningResources from './learningResources';
+import LearningResources from './learningResources/learningResources';
 
 const TABS = [
   {

@@ -2,7 +2,6 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useCallback } from 'react';
 
@@ -11,13 +10,15 @@ import {
   Box,
   Grid,
   Card,
+  Stack,
   Switch,
   Button,
+  Divider,
   MenuItem,
   MenuList,
   TextField,
   Typography,
-  CardActions,
+  CardContent,
   ToggleButton,
   DialogActions,
   ToggleButtonGroup,
@@ -28,7 +29,6 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -39,17 +39,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-// Interface defining the structure of a learning resource
-interface TResourceData {
-  id: number; // Unique identifier for the resource
-  resourceTitle: string; // Title of the learning resource
-  typeOfResource: string; // Type of resource (document, audio, video, etc.)
-  className: string; // Class/grade the resource is intended for
-  subject: string; // Subject area of the resource
-  dateUploaded: string; // Date when the resource was uploaded
-  description: string; // Detailed description of the resource
-  status: string; // Publication status (Publish/Unpublish)
-}
+import { validationSchema } from './validationSchema';
+
+import type { TResourceData } from './type';
 
 // Initial sample data for learning resources
 const resourceInitialData: TResourceData[] = [
@@ -405,29 +397,77 @@ const LearningResourceCard: React.FC<LearningResourceCardProps> = ({
   subject,
   dateUploaded,
 }) => (
-  // Main card container with styling
-  <Card sx={{ maxWidth: '300px', width: '100%', p: 2, mt: 2 }}>
-    {/* Display resource details in rows with icons */}
-    <DetailRow icon="mdi:format-title" label="Resource Title" value={resourceTitle} />
-    <DetailRow icon="mdi:merge-type" label="Resource Type" value={resourceType} />
-    <DetailRow icon="mdi:class" label="Class" value={className} />
-    <DetailRow icon="mdi:text-subject" label="Subject" value={subject} />
-    <DetailRow icon="mdi:upload" label="Date Uploaded" value={dateUploaded} />
+  <Card sx={{ width: 344, height: 235, borderRadius: 4 }}>
+    <CardContent>
+      {/* Top PDF icon and title */}
+      <Box display="flex" alignItems="center" gap={2}>
+        <Iconify icon="mdi:file-pdf-box" width={40} height={40} color="#f44336" />
+        <Typography variant="h6" fontWeight="bold">
+          {resourceTitle}
+        </Typography>
+      </Box>
 
-    {/* Action buttons for download and share functionality */}
-    <CardActions sx={{ justifyContent: 'flex-end' }}>
-      <Button variant="contained" size="small" startIcon={<Iconify icon="mdi:download" />}>
-        Download
-      </Button>
-      <Button
-        variant="contained"
-        size="small"
-        color="error"
-        startIcon={<Iconify icon="mdi:share" />}
-      >
-        Share
-      </Button>
-    </CardActions>
+      <Divider sx={{ my: 1.5 }} />
+
+      {/* Resource details */}
+      <Box display="flex" gap={2} color="gray">
+        <Box display="flex" flexDirection="column" justifyContent="space-between" gap={1}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Iconify icon="mdi:chart-box-outline" />
+            <Typography variant="body2">Type : {resourceType}</Typography>
+          </Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Iconify icon="mdi:clock-outline" />
+            <Typography variant="body2">Class : {className}</Typography>
+          </Box>
+        </Box>
+
+        <Box display="flex" flexDirection="column" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={1}>
+            <Iconify icon="mdi:book-outline" />
+            <Typography variant="body2">Subject : {subject}</Typography>
+          </Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Iconify icon="mdi:calendar-account-outline" />
+            <Typography variant="body2">Date : {dateUploaded}</Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      <Divider sx={{ my: 1.5 }} />
+
+      {/* Action buttons */}
+      <Stack direction="row" spacing={2} justifyContent="right">
+        <Button
+          variant="contained"
+          size="small"
+          sx={{
+            backgroundColor: '#ff5722',
+            borderRadius: 1,
+            px: 3,
+            fontWeight: 'bold',
+            '&:hover': { backgroundColor: '#e64a19' },
+          }}
+          startIcon={<Iconify icon="mdi:download" />}
+        >
+          Download
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          sx={{
+            backgroundColor: '#212121',
+            borderRadius: 1,
+            px: 3,
+            fontWeight: 'bold',
+            '&:hover': { backgroundColor: '#000' },
+          }}
+          startIcon={<Iconify icon="mdi:share-variant" />}
+        >
+          Share
+        </Button>
+      </Stack>
+    </CardContent>
   </Card>
 );
 
@@ -441,32 +481,6 @@ interface CreateLearningResourcesProps {
   currentSubject: string;
 }
 
-// Interface for form values (currently unused - can be removed if not needed)
-interface FormikValue {
-  resourceTitle: string;
-  typeOfResource: string;
-  attachedCourse: string;
-  accessPermision: string;
-  description: string;
-  courseAndSubject: string;
-  dateUploaded: string;
-}
-
-const validationSchema = Yup.object({
-  id: Yup.number().required(),
-  resourceTitle: Yup.string()
-    .required('Resource Title is required')
-    .max(100, 'Title cannot exceed 100 characters'),
-  typeOfResource: Yup.string().required('Please select a resource type'),
-  className: Yup.string().required('Class name is required'),
-  subject: Yup.string().required('Subject is required'),
-  description: Yup.string()
-    .required('Description is required')
-    .min(10, 'Description should be at least 10 characters'),
-  dateUploaded: Yup.string().required('Date uploaded is required'),
-  status: Yup.string().oneOf(['draft', 'Publish', 'Unpublish'], 'Invalid status'),
-});
-
 // Component for creating and editing learning resources
 const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   data,
@@ -477,7 +491,6 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
   currentSubject,
 }) => {
   // State for managing messages and draft status
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
 
   // Fetch class data using custom hook
@@ -516,7 +529,7 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
       <Box display="flex" flexDirection="column" gap={2} height="100%">
         {/* Scrollable container for form fields */}
         <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container spacing={2} marginTop={1}>
+          <Grid container spacing={3}>
             {/* Class selection dropdown */}
             <Grid item xs={12} md={6}>
               <ShakingTextField
