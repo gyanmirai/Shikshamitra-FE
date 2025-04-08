@@ -2,6 +2,7 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -26,8 +27,11 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import { eventTypeValidationSchema } from './validationSchema';
 
 import type { TEvent } from './type';
 
@@ -296,6 +300,12 @@ interface EventFormProps {
   data?: TEvent | null;
   isEdit?: boolean;
 }
+
+const validationSchema = Yup.object().shape({
+  eventType: Yup.string().required('Event type is required'),
+  eventTypeDesc: Yup.string().required('Description is required'),
+});
+
 // eslint-disable-next-line react/prop-types
 const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   // State to track if the event is in draft mode (UnPublish status)
@@ -308,6 +318,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
       eventType: data?.eventType || '',
       eventTypeDesc: data?.eventTypeDesc || '',
     },
+    validationSchema: eventTypeValidationSchema,
     // Handle form submission
     onSubmit: (values) => {
       onSubmit({
@@ -323,29 +334,37 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '270px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Event Type"
-                name="eventType"
-                size="small"
-                value={formik.values.eventType}
-                onChange={formik.handleChange}
-                error={formik.touched.eventType && Boolean(formik.errors.eventType)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventType && formik.errors.eventType) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Type"
+                  name="eventType"
+                  size="small"
+                  value={formik.values.eventType}
+                  onChange={formik.handleChange}
+                  error={formik.touched.eventType && Boolean(formik.errors.eventType)}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Event Type Desc"
-                name="eventTypeDesc"
-                size="small"
-                rows={4}
-                multiline
-                value={formik.values.eventTypeDesc}
-                onChange={formik.handleChange}
-                error={formik.touched.eventTypeDesc && Boolean(formik.errors.eventTypeDesc)}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventTypeDesc && formik.errors.eventTypeDesc) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Type Desc"
+                  name="eventTypeDesc"
+                  size="small"
+                  rows={4}
+                  multiline
+                  value={formik.values.eventTypeDesc}
+                  onChange={formik.handleChange}
+                  error={formik.touched.eventTypeDesc && Boolean(formik.errors.eventTypeDesc)}
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
               <UploadBox

@@ -29,14 +29,14 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { chargesData } from './data/bounce-cheque-data';
 import FinanceChequeBounceChargeCollect from '../fee-collection/charges/component/finance-cheque-bounce-charge-collect';
 
-import type { ChargeData } from './data/bounce-cheque-data';
+import type { IChargeData } from './data/charges_data_interface';
 
 const FinanceBounceScreen = () => {
   // Dialog state using custom hook for bounce charge collection dialog
   const dialog = useBoolean();
 
   // State to store selected entry data for bounce charge collection
-  const [selectedEntry, setSelectedEntry] = useState<ChargeData>();
+  const [selectedEntry, setSelectedEntry] = useState<IChargeData>();
 
   // Handler to close bounce charge collection dialog
   const closeDialog = () => {

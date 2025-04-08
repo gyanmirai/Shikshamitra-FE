@@ -18,7 +18,6 @@ import {
   Typography,
   DialogActions,
   DialogContent,
-  FormHelperText,
   DialogContentText,
 } from '@mui/material';
 
@@ -32,8 +31,11 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import { upcomingEventvalidationSchema } from './type';
 
 interface Event {
   id: string;
@@ -176,7 +178,7 @@ const UpcomingEvents = (props: TabComponentType) => {
     setOpen(false);
   };
   return (
-    <Box>
+    <Box display="flex" flexDirection="column" height="100%">
       {open ? (
         <>
           <CustomBreadcrumbs
@@ -199,7 +201,7 @@ const UpcomingEvents = (props: TabComponentType) => {
               </Button>
             }
           />
-          <Card>
+          <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
             <AddEvent
               initialValues={editingEvent}
               onSubmit={handleSubmit}
@@ -547,199 +549,262 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
       eventOrganizer: initialValues?.eventOrganizer || '',
       eventBudget: initialValues?.eventBudget || '',
     },
+    validationSchema: upcomingEventvalidationSchema,
     onSubmit: (values) => {
       onSubmit(values);
     },
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '450px' }}>
+    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Event Title"
-                name="eventTitle"
-                value={formik.values.eventTitle}
-                onChange={formik.handleChange}
-                error={formik.touched.eventTitle && Boolean(formik.errors.eventTitle)}
-                helperText={formik.touched.eventTitle && formik.errors.eventTitle}
-                size="small"
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventTitle && formik.errors.eventTitle) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Title"
+                  name="eventTitle"
+                  value={formik.values.eventTitle}
+                  onChange={formik.handleChange}
+                  error={formik.touched.eventTitle && Boolean(formik.errors.eventTitle)}
+                  helperText={formik.touched.eventTitle && formik.errors.eventTitle}
+                  size="small"
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Event Venue"
-                name="eventVenue"
-                value={formik.values.eventVenue}
-                onChange={formik.handleChange}
-                error={formik.touched.eventVenue && Boolean(formik.errors.eventVenue)}
-                helperText={formik.touched.eventVenue && formik.errors.eventVenue}
-                size="small"
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventVenue && formik.errors.eventVenue) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Venue"
+                  name="eventVenue"
+                  value={formik.values.eventVenue}
+                  onChange={formik.handleChange}
+                  error={formik.touched.eventVenue && Boolean(formik.errors.eventVenue)}
+                  helperText={formik.touched.eventVenue && formik.errors.eventVenue}
+                  size="small"
+                />
+              </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Organizations"
-                options={[
-                  {
-                    value: isAllOrganizationSelected ? 'deselectAll' : 'all',
-                    label: isAllOrganizationSelected ? 'Deselect All' : 'All',
-                  },
-                  ...allOrganizations,
-                ]}
-                value={formik.values.organization}
-                onChange={(val) => {
-                  handleOrganizationChange(val as string[]);
-                }}
-                multiple
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.organization && formik.errors.organization && (
-                <FormHelperText error>{String(formik.errors.organization)}</FormHelperText>
-              )}
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={[
-                  {
-                    id: isAllClassesSelected ? 'deselectAll' : 'all',
-                    name: isAllClassesSelected ? 'Deselect All' : 'All',
-                  },
-                  ...(classData?.items || []),
-                ]}
-                value={formik.values.className}
-                onChange={(val) => {
-                  handleClass(val as string[]);
-                }}
-                label="Class"
-                isLoading={isLoading}
-                multiple
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.className && formik.errors.className && (
-                <FormHelperText error>{formik.errors.className}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.organization && formik.errors.organization) || false}
+              >
+                <CustomSelect
+                  label="Select Organizations"
+                  options={[
+                    {
+                      value: isAllOrganizationSelected ? 'deselectAll' : 'all',
+                      label: isAllOrganizationSelected ? 'Deselect All' : 'All',
+                    },
+                    ...allOrganizations,
+                  ]}
+                  value={formik.values.organization}
+                  onChange={(val) => {
+                    handleOrganizationChange(val as string[]);
+                  }}
+                  multiple
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.organization && Boolean(formik.errors.organization)}
+                  helperText={
+                    Array.isArray(formik.errors.organization)
+                      ? formik.errors.organization.join(', ')
+                      : (formik.touched.organization && formik.errors.organization) || undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DateTimePicker
-                label="Event Start Date"
-                name="eventStartDate"
-                value={formik.values.eventStartDate}
-                onChange={(newValue) => {
-                  formik.setFieldValue('eventStartDate', newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.className && formik.errors.className) || false}
+              >
+                <CustomSelect
+                  options={[
+                    {
+                      id: isAllClassesSelected ? 'deselectAll' : 'all',
+                      name: isAllClassesSelected ? 'Deselect All' : 'All',
+                    },
+                    ...(classData?.items || []),
+                  ]}
+                  value={formik.values.className}
+                  onChange={(val) => {
+                    handleClass(val as string[]);
+                  }}
+                  label="Class"
+                  isLoading={isLoading}
+                  multiple
+                  labelKey="name"
+                  valueKey="name"
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.className && Boolean(formik.errors.className)}
+                  helperText={
+                    Array.isArray(formik.errors.className)
+                      ? formik.errors.className.join(', ')
+                      : (formik.touched.className && formik.errors.className) || undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DateTimePicker
-                label="Event End Date"
-                name="eventEndDate"
-                value={formik.values.eventEndDate}
-                onChange={(newValue) => {
-                  formik.setFieldValue('eventEndDate', newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                  },
-                }}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventStartDate && formik.errors.eventStartDate) || false}
+              >
+                <DateTimePicker
+                  label="Event Start Date"
+                  name="eventStartDate"
+                  format="DD/MM/YYYY HH:mm"
+                  value={formik.values.eventStartDate}
+                  onChange={(newValue) => {
+                    formik.setFieldValue('eventStartDate', newValue);
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: formik.touched.eventStartDate && Boolean(formik.errors.eventStartDate),
+                      helperText: formik.touched.eventStartDate && formik.errors.eventStartDate,
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={[
-                  { value: 'academic', label: 'Academic' },
-                  { value: 'cultural', label: 'Cultural' },
-                  { value: 'sports', label: 'Sports' },
-                  { value: 'Parent Teacher Meeting', label: 'Parent Teacher Meeting' },
-                ]}
-                value={formik.values.eventType}
-                onChange={(val) => {
-                  formik.setFieldValue('eventType', val as string);
-                }}
-                label="Event Type"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.eventType && formik.errors.eventType && (
-                <FormHelperText error>{formik.errors.eventType}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.eventEndDate && formik.errors.eventEndDate) || false}
+              >
+                <DateTimePicker
+                  label="Event End Date"
+                  name="eventEndDate"
+                  format="DD/MM/YYYY HH:mm"
+                  value={formik.values.eventEndDate}
+                  onChange={(newValue) => {
+                    formik.setFieldValue('eventEndDate', newValue);
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: formik.touched.eventEndDate && Boolean(formik.errors.eventEndDate),
+                      helperText: formik.touched.eventEndDate && formik.errors.eventEndDate,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <ShakingTextField
+                error={!!(formik.touched.eventType && formik.errors.eventType) || false}
+              >
+                <CustomSelect
+                  options={[
+                    { value: 'academic', label: 'Academic' },
+                    { value: 'cultural', label: 'Cultural' },
+                    { value: 'sports', label: 'Sports' },
+                    { value: 'Parent Teacher Meeting', label: 'Parent Teacher Meeting' },
+                  ]}
+                  value={formik.values.eventType}
+                  onChange={(val) => {
+                    formik.setFieldValue('eventType', val as string);
+                  }}
+                  label="Event Type"
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.eventType && Boolean(formik.errors.eventType)}
+                  helperText={
+                    formik.touched.eventType && formik.errors.eventType
+                      ? formik.errors.eventType
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <CustomSelect
-                label="Select Audience"
-                options={[
-                  { value: 'Students', label: 'Students' },
-                  { value: 'Parents', label: 'Parents' },
-                ]}
-                multiple
-                value={formik.values.audience}
-                onChange={(val) => {
-                  formik.setFieldValue('audience', val as string[]);
-                }}
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.audience && formik.errors.audience && (
-                <FormHelperText error>{formik.errors.audience}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.audience && formik.errors.audience) || false}
+              >
+                <CustomSelect
+                  label="Select Audience"
+                  options={[
+                    { value: 'Students', label: 'Students' },
+                    { value: 'Parents', label: 'Parents' },
+                  ]}
+                  multiple
+                  value={formik.values.audience}
+                  onChange={(val) => {
+                    formik.setFieldValue('audience', val as string[]);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.audience && Boolean(formik.errors.audience)}
+                  helperText={
+                    Array.isArray(formik.errors.audience)
+                      ? formik.errors.audience.join(', ')
+                      : (formik.touched.audience && formik.errors.audience) || undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Event Description"
-                name="description"
-                multiline
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-                size="small"
-                rows={4}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.description && formik.errors.description) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Description"
+                  name="description"
+                  multiline
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  error={formik.touched.description && Boolean(formik.errors.description)}
+                  helperText={formik.touched.description && formik.errors.description}
+                  size="small"
+                  rows={4}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Event Organizer"
-                name="eventOrganizer"
-                value={formik.values.eventOrganizer}
-                onChange={formik.handleChange}
-                error={formik.touched.eventOrganizer && Boolean(formik.errors.eventOrganizer)}
-                helperText={formik.touched.eventOrganizer && formik.errors.eventOrganizer}
-                size="small"
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventOrganizer && formik.errors.eventOrganizer) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Organizer"
+                  name="eventOrganizer"
+                  value={formik.values.eventOrganizer}
+                  onChange={formik.handleChange}
+                  error={formik.touched.eventOrganizer && Boolean(formik.errors.eventOrganizer)}
+                  helperText={formik.touched.eventOrganizer && formik.errors.eventOrganizer}
+                  size="small"
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Event Budget"
-                name="eventBudget"
-                value={formik.values.eventBudget}
-                onChange={formik.handleChange}
-                error={formik.touched.eventBudget && Boolean(formik.errors.eventBudget)}
-                helperText={formik.touched.eventBudget && formik.errors.eventBudget}
-                size="small"
-              />
+              <ShakingTextField
+                error={!!(formik.touched.eventBudget && formik.errors.eventBudget) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Event Budget"
+                  name="eventBudget"
+                  value={formik.values.eventBudget}
+                  onChange={formik.handleChange}
+                  error={formik.touched.eventBudget && Boolean(formik.errors.eventBudget)}
+                  helperText={formik.touched.eventBudget && formik.errors.eventBudget}
+                  size="small"
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>
@@ -748,7 +813,7 @@ const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isE
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
-      </form>
-    </Box>
+      </Box>
+    </form>
   );
 };
