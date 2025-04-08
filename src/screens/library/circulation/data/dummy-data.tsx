@@ -1,40 +1,12 @@
-'use client';
+import type {
+  IBook,
+  IBookSummary,
+  IFineCirculation,
+  IReservationData,
+  IMemberCirculation,
+} from './dummy-data-interface';
 
-import React, { useMemo, useState } from 'react';
-
-import { Box, Tab, Card } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { Iconify } from 'src/components/iconify';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-import CommonCtaComponent from '../component/common-cta-component';
-import IssueBookDialog from '../book-management/component/issue-book-dialog';
-import ReturnBookDialog from '../book-management/component/return-book-dialog';
-import LibraryFineManagement from './fines-management/library-fines-management';
-import AddNewBookDialog from '../book-management/component/add-new-book-dialog';
-import AddNewMemberDialog from '../member-management/component/add-new-member-dialog';
-import LibraryReservationManagement from './reservation-management/library-reservation-management';
-
-const TABS = [
-  {
-    value: 'reservations-Management',
-    label: 'Reservations Management',
-    icon: <Iconify icon="stash:feed-duotone" width={20} />,
-    component: () => <LibraryReservationManagement />,
-  },
-  {
-    value: 'fines-Management',
-    label: 'Fines Management',
-    icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
-    component: () => <LibraryFineManagement />,
-  },
-];
-
-const memberData = [
+export const memberDataCirculation: IMemberCirculation[] = [
   {
     id: 'S001',
     name: 'Alice',
@@ -62,7 +34,7 @@ const memberData = [
   },
 ];
 
-const books = [
+export const booksCirculation: IBook[] = [
   {
     id: 'B001',
     title: 'Introduction to Programming',
@@ -244,7 +216,7 @@ const books = [
   },
 ];
 
-const bookData = [
+export const bookDataCirculation: IBookSummary[] = [
   {
     id: 'B001',
     title: 'Introduction to Programming',
@@ -307,141 +279,115 @@ const bookData = [
   },
 ];
 
-const LibraryCirculationScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'reservations-Management' });
+export const dummyDataForFineCirculation: IFineCirculation[] = [
+  // Grouped by memberId
+  {
+    memberId: 'B1019JH8',
+    memberName: 'John Doe',
+    totalFineAmount: 50,
+    status: 'Overdue',
+    role: 'Student',
+    fines: [
+      {
+        bookId: 'B101',
+        title: 'Introduction to Mathematics',
+        issueDate: '01-11-2024',
+        dueDate: '08-11-2024',
+        returnDate: '12-11-2024',
+        status: 'Overdue',
+        fineAmount: 50,
+        receivedAmount: 0,
+        fineReason: 'Late Return',
+      },
+    ],
+  },
+  {
+    memberId: 'B10879JH8',
+    memberName: 'Jane Smith',
+    totalFineAmount: 50,
+    status: 'Overdue',
+    role: 'Student',
+    fines: [
+      {
+        bookId: 'B102',
+        title: 'Physics Fundamentals',
+        issueDate: '05-11-2024',
+        dueDate: '12-11-2024',
+        returnDate: null,
+        status: 'Pending',
+        fineAmount: 50,
+        receivedAmount: 0,
+        fineReason: 'Late Return',
+      },
+    ],
+  },
+  {
+    memberId: 'D10879J68',
+    memberName: 'Sam Wilson',
+    totalFineAmount: 250,
+    status: 'Overdue',
+    role: 'Student',
+    fines: [
+      {
+        bookId: 'B103',
+        title: 'Chemistry Basics',
+        issueDate: '08-11-2024',
+        dueDate: '15-11-2024',
+        returnDate: '18-11-2024',
+        status: 'Paid',
+        fineAmount: 150,
+        receivedAmount: 150,
+        fineReason: 'Late Return',
+      },
+      {
+        bookId: 'B104',
+        title: 'Biology Essentials',
+        issueDate: '10-11-2024',
+        dueDate: '17-11-2024',
+        returnDate: '20-11-2024',
+        status: 'Overdue',
+        fineAmount: 100,
+        receivedAmount: 0,
+        fineReason: 'Late Return',
+      },
+    ],
+  },
+];
 
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
-
-  // Dialog state handlers
-  const addMemberDialog = useBoolean();
-  const addNewBookDialog = useBoolean();
-  const issueBookDialog = useBoolean();
-  const returnBookDialog = useBoolean();
-
-  const openDialog = (dialog: any, entry: any = null, editMode = false, renew = false) => {
-    dialog.onTrue();
-  };
-
-  const closeDialog = (dialog: any) => {
-    dialog.onFalse();
-  };
-  const saveHandler = () => {};
-
-  const [open, setOpen] = useState(false);
-
-  const closeHandler = () => {
-    // setIsEdit(false);
-    setOpen(false);
-  };
-
-  return (
-    <>
-      {open ? (
-        <AddNewBookDialog
-          dialogValue={addNewBookDialog.value}
-          data={[]}
-          onSave={saveHandler}
-          onClose={closeHandler}
-          isEdit={false}
-        />
-      ) : (
-        <>
-          <Box
-            display="flex"
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <CustomBreadcrumbs
-              heading="Circulation"
-              links={[
-                { name: 'Library' },
-                { name: 'Circulation' },
-                // Uncomment below if conditional breadcrumb is needed
-                // {
-                //   name:
-                //     searchParams.tab === 'reservations-Management'
-                //       ? 'Reservations Management'
-                //       : 'Fines Management',
-                // },
-              ]}
-              sx={{ px: 1, mb: 2 }}
-            />
-            <Box display="flex" alignItems="center">
-              <CommonCtaComponent
-                bookHandler={() => setOpen(true)}
-                issueBookHandler={() => openDialog(issueBookDialog)}
-                returnBookHandler={() => openDialog(returnBookDialog)}
-                createReservationHandler={() => openDialog(addMemberDialog)}
-              />
-            </Box>
-          </Box>
-
-          <Box pb="20px" />
-
-          <Card>
-            <CustomTabs
-              value={searchParams.tab}
-              onChange={(e, value) => setSearchParams({ tab: value })}
-              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-              role="tablist"
-            >
-              {TABS.map((tab) => (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  label={tab.label}
-                  icon={tab.icon}
-                  sx={{ fontSize: '12px' }}
-                />
-              ))}
-            </CustomTabs>
-          </Card>
-
-          <Box px={1} pt={2}>
-            {currentActiveComponent?.component && <currentActiveComponent.component />}
-          </Box>
-        </>
-      )}
-
-      {/* Add Member Dialog */}
-      {addMemberDialog && (
-        <AddNewMemberDialog
-          dialogValue={addMemberDialog.value}
-          data={[]}
-          onSave={saveHandler}
-          onClose={() => closeDialog(addMemberDialog)}
-          isEdit={false}
-          isRenewMembership={false}
-        />
-      )}
-
-      {/* Issue Book Dialog */}
-      {issueBookDialog.value && (
-        <IssueBookDialog
-          dialogValue={issueBookDialog.value}
-          bookData={bookData}
-          memberData={memberData}
-          onSave={saveHandler}
-          onClose={() => closeDialog(issueBookDialog)}
-        />
-      )}
-
-      {/* Return Book Dialog */}
-      {returnBookDialog.value && (
-        <ReturnBookDialog
-          bookData={bookData}
-          memberData={memberData}
-          dialogValue={returnBookDialog.value}
-          onSave={saveHandler}
-          onClose={() => closeDialog(returnBookDialog)}
-        />
-      )}
-    </>
-  );
-};
-
-export default LibraryCirculationScreen;
+export const dummyReservationData: IReservationData[] = [
+  {
+    bookId: 'B101',
+    title: 'Introduction to Mathematics',
+    memberName: 'John Doe',
+    requestedDate: '12-11-23',
+    status: 'Collected',
+  },
+  {
+    bookId: 'B102',
+    title: 'Physics Fundamentals',
+    memberName: 'Jane Smith',
+    requestedDate: '14-11-23',
+    status: 'Pending',
+  },
+  {
+    bookId: 'B103',
+    title: 'Chemistry Basics',
+    memberName: 'Sam Wilson',
+    requestedDate: '18-11-23',
+    status: 'Ready',
+  },
+  {
+    bookId: 'B104',
+    title: 'World History Overview',
+    memberName: 'Chris Evans',
+    requestedDate: '20-11-23',
+    status: 'Collected',
+  },
+  {
+    bookId: 'B105',
+    title: 'Programming in Python',
+    memberName: 'Natasha Romanoff',
+    requestedDate: '22-11-23',
+    status: 'Pending',
+  },
+];
