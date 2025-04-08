@@ -202,9 +202,11 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                   }}
                   error={formik.touched.secondaryTeacher}
                   helperText={
-                    Array.isArray(formik.errors.secondaryTeacher)
-                      ? formik.errors.secondaryTeacher.join(', ')
-                      : (formik.touched.secondaryTeacher && formik.errors.secondaryTeacher) || ''
+                    formik.touched.secondaryTeacher && formik.errors.secondaryTeacher
+                      ? Array.isArray(formik.errors.secondaryTeacher)
+                        ? formik.errors.secondaryTeacher.join(', ')
+                        : formik.errors.secondaryTeacher
+                      : ''
                   }
                 />
               </ShakingTextField>
