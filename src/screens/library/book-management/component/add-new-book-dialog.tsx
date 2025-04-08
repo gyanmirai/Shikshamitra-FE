@@ -53,7 +53,7 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
   });
 
   return (
-    <CustomDialog title="Issue Book" open={dialogValue} handleClose={onClose} maxWidth="md">
+    <CustomDialog title="Add New Book" open={dialogValue} handleClose={onClose} maxWidth="md">
       <Box>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
