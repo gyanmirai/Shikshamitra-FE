@@ -39,6 +39,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
@@ -342,94 +343,121 @@ const SurveyDetails = ({ formik }: any) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Survey Title"
-            name="surveyTitle"
-            value={formik.values.surveyTitle}
-            onChange={formik.handleChange}
-            error={formik.touched.surveyTitle && Boolean(formik.errors.surveyTitle)}
-            helperText={formik.touched.surveyTitle && formik.errors.surveyTitle}
-            size="small"
-          />
+          <ShakingTextField
+            error={!!(formik.touched.surveyTitle && formik.errors.surveyTitle) || false}
+          >
+            <TextField
+              fullWidth
+              label="Survey Title"
+              name="surveyTitle"
+              value={formik.values.surveyTitle}
+              onChange={formik.handleChange}
+              error={formik.touched.surveyTitle && Boolean(formik.errors.surveyTitle)}
+              helperText={formik.touched.surveyTitle && formik.errors.surveyTitle}
+              size="small"
+            />
+          </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            label="Select Organizations"
-            options={[
-              {
-                value: isAllOrganizationSelected ? 'deselectAll' : 'all',
-                label: isAllOrganizationSelected ? 'Deselect All' : 'All',
-              },
-              ...allOrganizations,
-            ]}
-            value={formik.values.organization}
-            onChange={(val: any) => {
-              handleOrganizationChange(val as string[]);
-            }}
-            multiple
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.organization && formik.errors.organization && (
-            <FormHelperText error>{String(formik.errors.organization)}</FormHelperText>
-          )}
+          <ShakingTextField
+            error={!!(formik.touched.organization && formik.errors.organization) || false}
+          >
+            <CustomSelect
+              label="Select Organizations"
+              options={[
+                {
+                  value: isAllOrganizationSelected ? 'deselectAll' : 'all',
+                  label: isAllOrganizationSelected ? 'Deselect All' : 'All',
+                },
+                ...allOrganizations,
+              ]}
+              value={formik.values.organization}
+              onChange={(val: any) => {
+                handleOrganizationChange(val as string[]);
+              }}
+              multiple
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={formik.touched.organization && Boolean(formik.errors.organization)}
+              helperText={
+                Array.isArray(formik.errors.organization)
+                  ? formik.errors.organization.join(', ')
+                  : (formik.touched.organization && formik.errors.organization) || undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            options={[
-              {
-                id: isAllClassesSelected ? 'deselectAll' : 'all',
-                name: isAllClassesSelected ? 'Deselect All' : 'All',
-              },
-              ...(classData?.items || []),
-            ]}
-            value={formik.values.className}
-            onChange={(val) => {
-              handleClass(val as string[]);
-            }}
-            label="Class"
-            isLoading={isLoading}
-            multiple
-            labelKey="name"
-            valueKey="name"
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.className && formik.errors.className && (
-            <FormHelperText error>{formik.errors.className}</FormHelperText>
-          )}
+          <ShakingTextField
+            error={!!(formik.touched.className && formik.errors.className) || false}
+          >
+            <CustomSelect
+              options={[
+                {
+                  id: isAllClassesSelected ? 'deselectAll' : 'all',
+                  name: isAllClassesSelected ? 'Deselect All' : 'All',
+                },
+                ...(classData?.items || []),
+              ]}
+              value={formik.values.className}
+              onChange={(val) => {
+                handleClass(val as string[]);
+              }}
+              label="Class"
+              isLoading={isLoading}
+              multiple
+              labelKey="name"
+              valueKey="name"
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={formik.touched.className && Boolean(formik.errors.className)}
+              helperText={
+                Array.isArray(formik.errors.className)
+                  ? formik.errors.className.join(', ')
+                  : (formik.touched.className && formik.errors.className) || undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={6}>
-          <CustomSelect
-            label="Select Audience"
-            options={[
-              { value: 'Staff', label: 'Staff' },
-              { value: 'Students', label: 'Students' },
-              { value: 'Parents', label: 'Parents' },
-            ]}
-            multiple
-            value={formik.values.audience}
-            onChange={(val) => {
-              formik.setFieldValue('audience', val);
-            }}
-            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-          />
-          {formik.touched.audience && formik.errors.audience && (
-            <FormHelperText>{formik.errors.audience}</FormHelperText>
-          )}
+          <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience) || false}>
+            <CustomSelect
+              label="Select Audience"
+              options={[
+                { value: 'Staff', label: 'Staff' },
+                { value: 'Students', label: 'Students' },
+                { value: 'Parents', label: 'Parents' },
+              ]}
+              multiple
+              value={formik.values.audience}
+              onChange={(val) => {
+                formik.setFieldValue('audience', val);
+              }}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={formik.touched.audience && Boolean(formik.errors.audience)}
+              helperText={
+                Array.isArray(formik.errors.audience)
+                  ? formik.errors.audience.join(', ')
+                  : (formik.touched.audience && formik.errors.audience) || undefined
+              }
+            />
+          </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Survey Description"
-            name="description"
-            multiline
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            error={formik.touched.description && Boolean(formik.errors.description)}
-            helperText={formik.touched.description && formik.errors.description}
-            size="small"
-            rows={4}
-          />
+          <ShakingTextField
+            error={!!(formik.touched.description && formik.errors.description) || false}
+          >
+            <TextField
+              fullWidth
+              label="Survey Description"
+              name="description"
+              multiline
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              error={formik.touched.description && Boolean(formik.errors.description)}
+              helperText={formik.touched.description && formik.errors.description}
+              size="small"
+              rows={4}
+            />
+          </ShakingTextField>
         </Grid>
       </Grid>
     </Box>
@@ -576,6 +604,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion }: any) => {
 // Component for building and managing survey questions
 const QuestionBuilder = ({ formik }: any) => {
   const addQuestionDialog = useBoolean();
+  console.log('formik erros---', formik.errors);
 
   // Adds a new question to the survey
   const handleAddQuestion = (newQuestion: any) => {
@@ -602,6 +631,12 @@ const QuestionBuilder = ({ formik }: any) => {
 
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
+      {formik.errors.questions && (
+        <Typography variant="body2" color="error">
+          {' '}
+          {formik.errors.questions}
+        </Typography>
+      )}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h6">{formik.values.surveyTitle}</Typography>{' '}
         <Button
@@ -719,51 +754,58 @@ const AddNewQuestion = ({ onSave }: any) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Scrollbar sx={{ height: '250px' }}>
+      <Scrollbar sx={{ height: '350px' }}>
         <Box sx={{ gap: 4, display: 'flex', flexDirection: 'column', p: 2 }}>
-          <TextField
-            fullWidth
-            label="Question"
-            name="question"
-            onChange={(e) => setQuestion(e.target.value)}
-            size="small"
-            required
-            error={!!errors.question}
-            helperText={errors.question}
-          />
-          <CustomSelect
-            label="Question Type"
-            options={[
-              { value: 'multiple-choice', label: 'multiple-choice' },
-              { value: 'rating', label: 'rating' },
-              { value: 'descriptive', label: 'descriptive' },
-            ]}
-            value={questionType}
-            onChange={handleQuestionTypeChange}
-            required
-            formControlProps={{
-              fullWidth: true,
-              sx: { minWidth: '200px' },
-              error: !!errors.questionType,
-            }}
-          />
-          {errors.questionType && <FormHelperText error>{errors.questionType}</FormHelperText>}
+          <ShakingTextField error={!!(errors.question && errors.question) || false}>
+            <TextField
+              fullWidth
+              label="Question"
+              name="question"
+              onChange={(e) => setQuestion(e.target.value)}
+              size="small"
+              required
+              error={!!errors.question}
+              helperText={errors.question}
+            />
+          </ShakingTextField>
+          <ShakingTextField error={!!(errors.questionType && errors.questionType) || false}>
+            <CustomSelect
+              label="Question Type"
+              options={[
+                { value: 'multiple-choice', label: 'multiple-choice' },
+                { value: 'rating', label: 'rating' },
+                { value: 'descriptive', label: 'descriptive' },
+              ]}
+              value={questionType}
+              onChange={handleQuestionTypeChange}
+              required
+              formControlProps={{
+                fullWidth: true,
+                sx: { minWidth: '200px' },
+                error: !!errors.questionType,
+              }}
+              error={!!errors.questionType}
+              helperText={errors.questionType}
+            />
+          </ShakingTextField>
 
           {questionType === 'multiple-choice' && (
             <Box>
               {options.map((option, index) => (
                 <Box key={index} sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
                   <Box sx={{ display: 'flex' }}>
-                    <TextField
-                      label={`Option ${index + 1}`}
-                      value={option}
-                      onChange={(e) => handleOptionChange(index, e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ mt: 1 }}
-                      required
-                      error={!!errors.options}
-                    />
+                    <ShakingTextField error={!!(errors.options && errors.options) || false}>
+                      <TextField
+                        label={`Option ${index + 1}`}
+                        value={option}
+                        onChange={(e) => handleOptionChange(index, e.target.value)}
+                        size="small"
+                        fullWidth
+                        sx={{ mt: 1 }}
+                        required
+                        error={!!errors.options}
+                      />
+                    </ShakingTextField>
                     <IconButton
                       onClick={() => handleRemoveOption(index)}
                       size="small"
@@ -824,6 +866,7 @@ const AddNewQuestion = ({ onSave }: any) => {
 const PreviewAndPublish = ({ formik }: any) => {
   // State for managing question table data
   const [questionTableData, setQuestionTableData] = useState(formik.values.questions);
+  console.log('formik erros===', formik.errors);
 
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
@@ -837,35 +880,39 @@ const PreviewAndPublish = ({ formik }: any) => {
         data={questionTableData}
       />
       <Box sx={{ display: 'flex', gap: 2 }}>
-        <DatePicker
-          label="Start Date"
-          name="startDate"
-          value={formik.values.startDate}
-          format="DD/MM/YYYY"
-          onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
-          slotProps={{
-            textField: {
-              size: 'small',
-              helperText: formik.touched.startDate && (formik.errors.startDate as string),
-              error: formik.touched.startDate && Boolean(formik.errors.startDate),
-            },
-          }}
-        />
+        <ShakingTextField error={formik.touched.startDate && Boolean(formik.errors.startDate)}>
+          <DatePicker
+            label="Start Date"
+            name="startDate"
+            value={formik.values.startDate}
+            format="DD/MM/YYYY"
+            onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
+            slotProps={{
+              textField: {
+                size: 'small',
+                helperText: formik.touched.startDate && (formik.errors.startDate as string),
+                error: formik.touched.startDate && Boolean(formik.errors.startDate),
+              },
+            }}
+          />
+        </ShakingTextField>
 
-        <DatePicker
-          label="End Date"
-          name="endDate"
-          value={formik.values.endDate}
-          format="DD/MM/YYYY"
-          onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
-          slotProps={{
-            textField: {
-              size: 'small',
-              helperText: formik.touched.endDate && (formik.errors.endDate as string),
-              error: formik.touched.endDate && Boolean(formik.errors.endDate),
-            },
-          }}
-        />
+        <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
+          <DatePicker
+            label="End Date"
+            name="endDate"
+            value={formik.values.endDate}
+            format="DD/MM/YYYY"
+            onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
+            slotProps={{
+              textField: {
+                size: 'small',
+                helperText: formik.touched.endDate && (formik.errors.endDate as string),
+                error: formik.touched.endDate && Boolean(formik.errors.endDate),
+              },
+            }}
+          />
+        </ShakingTextField>
       </Box>
     </Box>
   );
@@ -893,9 +940,9 @@ const AddNewSurvey = () => {
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
-      // validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
+      validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
       // validationSchema={yup.object().shape({})}
-      validationSchema={validationSchema[activeStep as unknown as keyof typeof validationSchema]}
+      // validationSchema={validationSchema[activeStep]}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);
