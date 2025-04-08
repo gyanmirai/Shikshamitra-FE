@@ -1,6 +1,5 @@
 'use client';
 
-import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -25,6 +24,8 @@ import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import { announcementImpValidationSchema } from './validationSchema';
 
 import type { TAnnouncementImportant } from './type';
 
@@ -296,11 +297,6 @@ interface ImportantFormProps {
   isEdit?: boolean;
 }
 
-const validationSchema = Yup.object().shape({
-  importantLevel: Yup.string().required('Importance level is required'),
-  importantLevelDesc: Yup.string().required('Description is required'),
-});
-
 const ImportantForm: React.FC<ImportantFormProps> = ({
   onSubmit,
   data = null,
@@ -316,7 +312,7 @@ const ImportantForm: React.FC<ImportantFormProps> = ({
       importantLevel: data?.importantLevel || '',
       importantLevelDesc: data?.importantLevelDesc || '',
     },
-    validationSchema,
+    validationSchema: announcementImpValidationSchema,
 
     // Handle form submission
     onSubmit: (values) => {

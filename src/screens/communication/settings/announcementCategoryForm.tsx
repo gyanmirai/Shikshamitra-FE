@@ -1,6 +1,5 @@
 'use client';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
@@ -25,6 +24,8 @@ import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import { announcementCatValidationSchema } from './validationSchema';
 
 import type { TAnnoucementCategory } from './type';
 
@@ -299,18 +300,6 @@ interface CategoryFormProps {
   isEdit?: boolean;
 }
 
-const validationSchema = Yup.object().shape({
-  categoryName: Yup.string()
-    .required('Category name is required')
-    .min(3, 'Category name must be at least 3 characters')
-    .max(50, 'Category name must be at most 50 characters'),
-
-  categoryDescription: Yup.string()
-    .required('Category description is required')
-    .min(5, 'Category description must be at least 5 characters')
-    .max(200, 'Category description must be at most 200 characters'),
-});
-
 const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   /**
    * State to track if the category is in draft status
@@ -328,7 +317,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEd
       categoryName: data?.categoryName || '',
       categoryDescription: data?.categoryDescription || '',
     },
-    validationSchema,
+    validationSchema: announcementCatValidationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,

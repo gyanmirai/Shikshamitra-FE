@@ -31,6 +31,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { eventTypeValidationSchema } from './validationSchema';
+
 import type { TEvent } from './type';
 
 const initialEventData: TEvent[] = [
@@ -316,7 +318,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
       eventType: data?.eventType || '',
       eventTypeDesc: data?.eventTypeDesc || '',
     },
-    validationSchema,
+    validationSchema: eventTypeValidationSchema,
     // Handle form submission
     onSubmit: (values) => {
       onSubmit({
