@@ -233,10 +233,16 @@ const Teacher = ({
           {
             id: 'subject',
             label: 'Subject',
+            filterType: 'string',
+            minWidth: 400,
+            align: 'left',
           },
           {
             id: 'assignedTeacher',
             label: 'Assigned Teacher',
+            align: 'left',
+            minWidth: 400,
+            filterType: 'string',
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((audience: string) => (
