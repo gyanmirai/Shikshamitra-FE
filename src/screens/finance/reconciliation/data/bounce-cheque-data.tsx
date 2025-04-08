@@ -1,19 +1,6 @@
-export interface ChargeData {
-  srNo: number;
-  chequeNumber: string;
-  chequeDate: string;
-  bounceDate: string;
-  reason: string;
-  amount: string;
-  status: string;
-  studentName: string;
-  chargesAmount: string;
-  feeHead: string;
-  grNumber: number;
-  parentsContactNumber: number;
-}
+import type { IChargeData } from './charges_data_interface';
 
-export const chargesData: ChargeData[] = [
+export const chargesData: IChargeData[] = [
   {
     srNo: 1,
     chequeNumber: '123456',

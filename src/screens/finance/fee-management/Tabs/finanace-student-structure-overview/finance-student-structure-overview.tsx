@@ -26,13 +26,19 @@ import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-stru
 import type { StudentForFeeStructure } from './data/student-fee-structure-data';
 
 const FinanceStudentFeeManagement = () => {
-  // Dialog state and student selection state management
   const dialog = useBoolean();
-  const [open, setOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<StudentForFeeStructure | null>(null);
-  const [selectedStudents, setSelectedStudents] = useState<StudentForFeeStructure[]>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
 
+  // Dialog state for student details
+  const [open, setOpen] = useState(false);
+
+  // State to store currently selected student for viewing details
+  const [selectedStudent, setSelectedStudent] = useState<StudentForFeeStructure | null>(null);
+
+  // State to store multiple selected students for bulk actions like notifications
+  const [selectedStudents, setSelectedStudents] = useState<StudentForFeeStructure[]>([]);
+
+  // Dialog state for sending instant notifications
+  const sendInstantNotificationDialogValue = useBoolean();
   // Handlers for opening/closing student details dialog
   const handleOpen = (student: StudentForFeeStructure) => {
     setSelectedStudent(student);

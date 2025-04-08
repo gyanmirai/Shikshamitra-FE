@@ -1,28 +1,4 @@
-interface FeeSubCategory {
-  feeHead: string;
-  grossFee: number;
-  payableFee: number;
-  generalDiscount: number;
-  paymentMethod: string[];
-  lateFeeChargesType: 'fixed' | 'perDay';
-  lateFeeChargesAmount: string;
-  isActive: boolean;
-}
-
-interface FeeStructure {
-  id: number;
-  amount: number;
-  discountAmount: number;
-  grossFee: number;
-  applicableGrade: string;
-  bookRecipt: string;
-  paymentDueDate: string;
-  payableFees: number;
-  feeSubCategoryList: FeeSubCategory[];
-  isActive: boolean;
-}
-
-export const initialDataFeeStructure: FeeStructure[] = [
+export const initialDataFeeStructure: IFeeStructure[] = [
   {
     id: 1,
     amount: 3000,
