@@ -96,7 +96,7 @@ export const memberData: IMember[] = [
   },
 ];
 
-export const books: IBook[] = [
+export const booksData: IBook[] = [
   {
     id: 'B001',
     title: 'Introduction to Programming',
