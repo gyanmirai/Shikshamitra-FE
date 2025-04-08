@@ -28,10 +28,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ViewAssignmentData from './component/assignmentData';
-import { AddNewChapter } from '../../course-management/subjects';
 import { subjectTempData } from '../../course-management/subjectsData';
+import { AddNewChapter } from '../../course-management/syllabusManagement/addChapterForm';
 
-import type { Document, ChapterFormValues } from '../../course-management/subjects';
+import type {
+  IDocument,
+  IChapterFormValues,
+} from '../../course-management/syllabusManagement/type';
 
 interface TableRow {
   subjectName: string;
@@ -135,7 +138,7 @@ const Course = (props: TabComponentType) => {
     }
   }, [classData, classes, setSearchParams, subjectData.classes]);
 
-  const handleDocumentUpload = async (files: File[]): Promise<Document[]> =>
+  const handleDocumentUpload = async (files: File[]): Promise<IDocument[]> =>
     files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
@@ -143,7 +146,7 @@ const Course = (props: TabComponentType) => {
       file,
     }));
 
-  const handleChapterSubmit = async (values: ChapterFormValues) => {
+  const handleChapterSubmit = async (values: IChapterFormValues) => {
     const updatedSubjectData = { ...subjectData };
     const selectedClass = updatedSubjectData.classes.find(
       (cls: { name: string }) => cls.name === classes
@@ -151,9 +154,9 @@ const Course = (props: TabComponentType) => {
 
     if (selectedClass) {
       // Handle document uploads first
-      let newDocuments: Document[] = [];
+      let newDocuments: IDocument[] = [];
       if (values.documents) {
-        const filesToUpload = values.documents.filter((doc: any) => doc.file) as Document[];
+        const filesToUpload = values.documents.filter((doc: any) => doc.file) as IDocument[];
         if (filesToUpload.length > 0) {
           const uploadedDocs = await handleDocumentUpload(filesToUpload.map((doc) => doc.file!));
           newDocuments = [
