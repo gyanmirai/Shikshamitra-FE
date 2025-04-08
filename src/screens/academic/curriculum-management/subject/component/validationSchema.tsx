@@ -10,10 +10,5 @@ export const validationSchema = Yup.object().shape({
   prerequisites: Yup.string().required('Prerequisites are required'),
   description: Yup.string().required('Description is required'),
   subjectColor: Yup.string().required('Subject Color is required'),
-  scheduleDate: Yup.date()
-    .nullable()
-    .when('isScheduled', {
-      is: true,
-      then: (schema) => schema.required('Schedule Date is required'),
-    }),
+  scheduleDate: Yup.date().required('Schedule Date is required'),
 });

@@ -5,6 +5,7 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { PDFViewer } from '@react-pdf/renderer';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -24,7 +25,6 @@ import {
   Typography,
   DialogActions,
   DialogContent,
-  FormHelperText,
   DialogContentText,
 } from '@mui/material';
 
@@ -40,8 +40,11 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import type { IAssesmentFormikValues } from './type';
 
 interface TAssessment {
   id: number;
@@ -506,7 +509,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
 
   // State to store available division options based on selected class
   const [divisionOptions, setDivisionOptions] = useState<any[]>([]);
-  const formik = useFormik({
+  const formik = useFormik<IAssesmentFormikValues>({
     initialValues: {
       className: data?.className || '',
       division: data?.division || '',
@@ -520,6 +523,23 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
       publish: data?.publish || false,
       status: data?.status || '',
     },
+    validationSchema: Yup.object({
+      className: Yup.string().required('Class is required'),
+      division: Yup.string().required('Division is required'),
+      subject: Yup.string().required('Subject is required'),
+      assesmentTitle: Yup.string().required('Assessment title is required'),
+      assessmentType: Yup.string().required('Assessment type is required'),
+      examName: Yup.string().required('Exam name is required'),
+
+      assignmentName: Yup.string().required('Assignment name is required'),
+
+      createDate: Yup.string().required('Create date is required'),
+      dueDate: Yup.string()
+        .nullable()
+        .min(Yup.ref('createDate'), 'Due date must be after create date'),
+      publish: Yup.boolean(),
+      status: Yup.string(),
+    }),
     onSubmit: (values) => {
       onSubmit({
         ...values,
@@ -535,155 +555,189 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <CustomSelect
-                options={classData?.items || []}
-                value={classes}
-                onChange={(val) => {
-                  const selectedClass = classData?.items?.find((i: any) => i.id === val);
-                  formik.setFieldValue('className', selectedClass?.name || '');
-                  setClasses(val as string);
-                  setDivisionOptions(selectedClass?.divisions || []);
-                }}
-                label="Class"
-                isLoading={isLoading}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.className && formik.errors.className && (
-                <FormHelperText error>{formik.errors.className}</FormHelperText>
-              )}
+              <ShakingTextField error={formik.touched.className && !!formik.errors.className}>
+                <CustomSelect
+                  options={classData?.items || []}
+                  value={classes}
+                  onChange={(val) => {
+                    const selectedClass = classData?.items?.find((i: any) => i.id === val);
+                    formik.setFieldValue('className', selectedClass?.name || '');
+                    setClasses(val as string);
+                    setDivisionOptions(selectedClass?.divisions || []);
+                  }}
+                  label="Class"
+                  isLoading={isLoading}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.className && !!formik.errors.className}
+                  helperText={(formik.touched.className && formik.errors.className) || ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Division"
-                disabled={!classes}
-                labelKey="name"
-                valueKey="name"
-                options={divisionOptions}
-                value={division}
-                onChange={(val) => {
-                  formik.setFieldValue('division', val);
-                  setDivision(val as string);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
+              <ShakingTextField error={formik.touched.division && !!formik.errors.division}>
+                <CustomSelect
+                  label="Division"
+                  disabled={!classes}
+                  labelKey="name"
+                  valueKey="name"
+                  options={divisionOptions}
+                  value={division}
+                  onChange={(val) => {
+                    formik.setFieldValue('division', val);
+                    setDivision(val as string);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  error={formik.touched.division && !!formik.errors.division}
+                  helperText={(formik.touched.division && formik.errors.division) || ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Subject"
-                options={[
-                  { value: 'math', label: 'Mathematics' },
-                  { value: 'science', label: 'Science' },
-                  { value: 'history', label: 'History' },
-                  { value: 'english', label: 'English' },
-                ]}
-                value={formik.values.subject}
-                onChange={(val) => formik.setFieldValue('subject', val)}
-                formControlProps={{ fullWidth: true }}
-              />
+              <ShakingTextField error={formik.touched.subject && !!formik.errors.subject}>
+                <CustomSelect
+                  label="Subject"
+                  options={[
+                    { value: 'math', label: 'Mathematics' },
+                    { value: 'science', label: 'Science' },
+                    { value: 'history', label: 'History' },
+                    { value: 'english', label: 'English' },
+                  ]}
+                  value={formik.values.subject}
+                  onChange={(val) => formik.setFieldValue('subject', val)}
+                  formControlProps={{ fullWidth: true }}
+                  error={formik.touched.subject && !!formik.errors.subject}
+                  helperText={(formik.touched.subject && formik.errors.subject) || ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Assesment Title"
-                name="assesmentTitle"
-                value={formik.values.assesmentTitle}
-                onChange={formik.handleChange}
+              <ShakingTextField
                 error={formik.touched.assesmentTitle && Boolean(formik.errors.assesmentTitle)}
-                helperText={formik.touched.assesmentTitle && formik.errors.assesmentTitle}
-                size="small"
-              />
+              >
+                <TextField
+                  fullWidth
+                  label="Assesment Title"
+                  name="assesmentTitle"
+                  value={formik.values.assesmentTitle}
+                  onChange={formik.handleChange}
+                  error={formik.touched.assesmentTitle && Boolean(formik.errors.assesmentTitle)}
+                  helperText={(formik.touched.assesmentTitle && formik.errors.assesmentTitle) || ''}
+                  size="small"
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Assessment Type"
-                options={[
-                  { value: 'exam', label: 'Exam' },
-                  { value: 'assignment', label: 'Assignment' },
-                ]}
-                value={formik.values.assessmentType}
-                onChange={(val) => formik.setFieldValue('assessmentType', val)}
-                formControlProps={{ fullWidth: true }}
-              />
+              <ShakingTextField
+                error={formik.touched.assessmentType && !!formik.errors.assessmentType}
+              >
+                <CustomSelect
+                  label="Assessment Type"
+                  options={[
+                    { value: 'exam', label: 'Exam' },
+                    { value: 'assignment', label: 'Assignment' },
+                  ]}
+                  value={formik.values.assessmentType}
+                  onChange={(val) => formik.setFieldValue('assessmentType', val)}
+                  formControlProps={{ fullWidth: true }}
+                  error={formik.touched.assessmentType && !!formik.errors.assessmentType}
+                  helperText={(formik.touched.assessmentType && formik.errors.assessmentType) || ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             {formik.values.assessmentType === 'exam' && (
               <Grid item xs={12} md={6}>
-                <CustomSelect
-                  label="Exam Name"
-                  options={[
-                    { value: 'Mid Exam', label: 'Mid Exam' },
-                    { value: 'Final', label: 'Final' },
-                  ]}
-                  value={formik.values.examName}
-                  onChange={(val) => formik.setFieldValue('examName', val)}
-                  formControlProps={{ fullWidth: true }}
-                />
+                <ShakingTextField error={formik.touched.examName && !!formik.errors.examName}>
+                  <CustomSelect
+                    label="Exam Name"
+                    options={[
+                      { value: 'Mid Exam', label: 'Mid Exam' },
+                      { value: 'Final', label: 'Final' },
+                    ]}
+                    value={formik.values.examName}
+                    onChange={(val) => formik.setFieldValue('examName', val)}
+                    formControlProps={{ fullWidth: true }}
+                    error={formik.touched.examName && !!formik.errors.examName}
+                    helperText={(formik.touched.examName && formik.errors.examName) || ''}
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
             {formik.values.assessmentType === 'assignment' && (
               <Grid item xs={12} md={6}>
-                <CustomSelect
-                  label="Assignment Name"
-                  options={[
-                    { value: 'Ass1', label: 'Ass1' },
-                    { value: 'Ass2', label: 'Ass2' },
-                  ]}
-                  value={formik.values.assignmentName}
-                  onChange={(val) => formik.setFieldValue('assignmentName', val)}
-                  formControlProps={{ fullWidth: true }}
-                />
+                <ShakingTextField
+                  error={formik.touched.assignmentName && !!formik.errors.assignmentName}
+                >
+                  <CustomSelect
+                    label="Assignment Name"
+                    options={[
+                      { value: 'Ass1', label: 'Ass1' },
+                      { value: 'Ass2', label: 'Ass2' },
+                    ]}
+                    value={formik.values.assignmentName}
+                    onChange={(val) => formik.setFieldValue('assignmentName', val)}
+                    formControlProps={{ fullWidth: true }}
+                    error={formik.touched.assignmentName && !!formik.errors.assignmentName}
+                    helperText={
+                      (formik.touched.assignmentName && formik.errors.assignmentName) || ''
+                    }
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
             <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Date"
-                value={formik.values.createDate}
-                onChange={(val) => {
-                  formik.setFieldValue('createDate', val);
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: formik.touched.createDate && Boolean(formik.errors.createDate),
-                  },
-                }}
-                disablePast
-              />
-              {formik.touched.createDate && formik.errors.createDate && (
-                <FormHelperText error>{String(formik.errors.createDate)}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={formik.touched.createDate && Boolean(formik.errors.createDate)}
+              >
+                <DatePicker
+                  label="Date"
+                  value={formik.values.createDate}
+                  onChange={(val) => {
+                    formik.setFieldValue('createDate', val);
+                  }}
+                  format="DD/MM/YYYY"
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: formik.touched.createDate && Boolean(formik.errors.createDate),
+                      helperText: (formik.touched.createDate && formik.errors.createDate) || '',
+                    },
+                  }}
+                  disablePast
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Due Date"
-                value={formik.values.dueDate}
-                onChange={(val) => {
-                  formik.setFieldValue('dueDate', val);
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
-                  },
-                }}
-                disablePast
-              />
-              {formik.touched.dueDate && formik.errors.dueDate && (
-                <FormHelperText error>{String(formik.errors.dueDate)}</FormHelperText>
-              )}
+              <ShakingTextField error={formik.touched.dueDate && Boolean(formik.errors.dueDate)}>
+                <DatePicker
+                  label="Due Date"
+                  value={formik.values.dueDate}
+                  onChange={(val) => {
+                    formik.setFieldValue('dueDate', val);
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
+                      helperText: (formik.touched.dueDate && formik.errors.dueDate) || '',
+                    },
+                  }}
+                  disablePast
+                />
+              </ShakingTextField>
             </Grid>
-          </Grid>
+          </Grid>{' '}
         </Scrollbar>
         <DialogActions>
           {isEdit ? (
