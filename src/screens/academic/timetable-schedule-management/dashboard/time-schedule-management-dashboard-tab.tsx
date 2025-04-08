@@ -5,7 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -133,9 +133,14 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         )}
       </Box>
-      <Box display="flex" width="1215px" height="700px" ml="-40px">
-        <CalendarView />
-      </Box>
+      <Grid item xs={12} mt={3}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6">Event Calendar</Typography>
+            <CalendarView />
+          </CardContent>
+        </Card>
+      </Grid>
       {/* <Grid2 container spacing={3}>
         <Grid2 xs={12} md={6} lg={6}>
           <ScrollableCard
