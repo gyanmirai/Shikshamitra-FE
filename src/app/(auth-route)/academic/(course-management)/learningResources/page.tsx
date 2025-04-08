@@ -1,6 +1,6 @@
 import React from 'react';
 
-import LearningResources from 'src/screens/academic/course-management/learningResources';
+import LearningResources from 'src/screens/academic/course-management/learningResources/learningResources';
 
 const LearningResourcesScreen = () => <LearningResources />;
 
