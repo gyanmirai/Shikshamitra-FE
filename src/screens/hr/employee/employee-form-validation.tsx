@@ -88,6 +88,7 @@ const familyInformationValidationSchema = Yup.object({
     .test('pincode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
     .required('pin code is required'),
 });
+
 export const validations = [
   personalInformationValidationSchema,
   familyInformationValidationSchema,

@@ -38,6 +38,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -611,13 +612,19 @@ const validationSchema = Yup.object({
 
   publishDate: Yup.date()
     .nullable()
-    .required('Publish date is required')
-    .typeError('Invalid date format'),
+    .when('isScheduled', (isScheduled, schema) =>
+      isScheduled
+        ? schema
+            .required('Schedule Date & Time is required')
+            .min(new Date(), 'Schedule date must be in the future')
+        : schema
+    ),
 
   expiryDate: Yup.date()
     .nullable()
     .min(Yup.ref('publishDate'), 'Expiry date must be after the publish date')
-    .typeError('Invalid date format'),
+    .typeError('Invalid date format')
+    .required('Expiry date is required'),
 
   category: Yup.string().required('Category is required'),
 
@@ -672,7 +679,9 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
       status: initialValues?.status || '',
       audience: initialValues?.audience || [],
       organization: initialValues?.organization || [],
-      publishDate: initialValues?.publishDate ? dayjs(initialValues?.publishDate) : dayjs(),
+      publishDate: initialValues?.publishDate
+        ? dayjs(initialValues?.publishDate)
+        : dayjs().add(1, 'hour'),
       expiryDate: initialValues?.expiryDate ? dayjs(initialValues?.expiryDate) : null,
       category: initialValues?.category || '',
       importance_level: initialValues?.importance_level || '',
@@ -746,115 +755,152 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Title"
-                name="title"
-                value={formik.values.title}
-                onChange={formik.handleChange}
-                error={formik.touched.title && Boolean(formik.errors.title)}
-                helperText={formik.touched.title && formik.errors.title}
-                size="small"
-              />
+              <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
+                <TextField
+                  fullWidth
+                  label="Title"
+                  name="title"
+                  value={formik.values.title}
+                  onChange={formik.handleChange}
+                  error={formik.touched.title && Boolean(formik.errors.title)}
+                  helperText={formik.touched.title && formik.errors.title}
+                  size="small"
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Organizations"
-                options={[
-                  {
-                    value: isAllSelected ? 'deselectAll' : 'all',
-                    label: isAllSelected ? 'Deselect All' : 'All',
-                  },
-                  ...allOrganizations,
-                ]}
-                value={formik.values.organization}
-                onChange={(val) => {
-                  handleOrganizationChange(val as string[]);
-                }}
-                multiple
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.organization && formik.errors.organization && (
-                <FormHelperText error>{String(formik.errors.organization)}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.organization && formik.errors.organization) || false}
+              >
+                <CustomSelect
+                  label="Select Organizations"
+                  options={[
+                    {
+                      value: isAllSelected ? 'deselectAll' : 'all',
+                      label: isAllSelected ? 'Deselect All' : 'All',
+                    },
+                    ...allOrganizations,
+                  ]}
+                  value={formik.values.organization}
+                  onChange={(val) => {
+                    handleOrganizationChange(val as string[]);
+                  }}
+                  multiple
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.organization && Boolean(formik.errors.organization)}
+                  helperText={
+                    Array.isArray(formik.errors.organization)
+                      ? formik.errors.organization.join(', ')
+                      : (formik.touched.organization && formik.errors.organization) || undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Audience"
-                options={[
-                  { value: 'Staff', label: 'Staff' },
-                  { value: 'Students', label: 'Students' },
-                  { value: 'Parents', label: 'Parents' },
-                ]}
-                multiple
-                value={formik.values.audience}
-                onChange={(val) => {
-                  formik.setFieldValue('audience', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.audience && formik.errors.audience && (
-                <FormHelperText>{formik.errors.audience}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.audience && formik.errors.audience) || false}
+              >
+                <CustomSelect
+                  label="Select Audience"
+                  options={[
+                    { value: 'Staff', label: 'Staff' },
+                    { value: 'Students', label: 'Students' },
+                    { value: 'Parents', label: 'Parents' },
+                  ]}
+                  multiple
+                  value={formik.values.audience}
+                  onChange={(val) => {
+                    formik.setFieldValue('audience', val);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.audience && Boolean(formik.errors.audience)}
+                  helperText={
+                    Array.isArray(formik.errors.audience)
+                      ? formik.errors.audience.join(', ')
+                      : (formik.touched.audience && formik.errors.audience) || undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DateTimePicker
-                label="Expiry Date & Time"
-                value={formik.values.expiryDate}
-                onChange={handleDateChange}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: formik.touched.expiryDate && Boolean(formik.errors.expiryDate),
-                  },
-                }}
-                disablePast
-              />
-              {formik.touched.expiryDate && formik.errors.expiryDate && (
-                <FormHelperText error>{String(formik.errors.expiryDate)}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.expiryDate && formik.errors.expiryDate) || false}
+              >
+                <DateTimePicker
+                  label="Expiry Date & Time"
+                  value={formik.values.expiryDate}
+                  onChange={(newDate) => {
+                    formik.setFieldValue('expiryDate', newDate);
+                  }}
+                  format="DD/MM/YYYY HH:mm"
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: formik.touched.expiryDate && Boolean(formik.errors.expiryDate),
+                      helperText: formik.touched.expiryDate && formik.errors.expiryDate,
+                    },
+                  }}
+                  disablePast
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Select Category"
-                options={[
-                  { value: 'academic', label: 'Academic' },
-                  { value: 'administrative', label: 'Administrative' },
-                  { value: 'extracurriculam', label: 'Extracurriculam' },
-                ]}
-                value={formik.values.category}
-                onChange={(val) => {
-                  formik.setFieldValue('category', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.category && formik.errors.category && (
-                <FormHelperText>{formik.errors.category}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={!!(formik.touched.category && formik.errors.category) || false}
+              >
+                <CustomSelect
+                  label="Select Category"
+                  options={[
+                    { value: 'academic', label: 'Academic' },
+                    { value: 'administrative', label: 'Administrative' },
+                    { value: 'extracurriculam', label: 'Extracurriculam' },
+                  ]}
+                  value={formik.values.category}
+                  onChange={(val) => {
+                    formik.setFieldValue('category', val);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.category && Boolean(formik.errors.category)}
+                  helperText={
+                    formik.touched.category && formik.errors.category
+                      ? formik.errors.category
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Importance Level"
-                options={[
-                  { value: 'urgent', label: 'Urgent' },
-                  { value: 'critical', label: 'Critical' },
-                ]}
-                placeholder="Announcement Importance level"
-                value={formik.values.importance_level}
-                onChange={(val) => {
-                  formik.setFieldValue('importance_level', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {formik.touched.importance_level && formik.errors.importance_level && (
-                <FormHelperText>{formik.errors.importance_level}</FormHelperText>
-              )}
+              <ShakingTextField
+                error={
+                  !!(formik.touched.importance_level && formik.errors.importance_level) || false
+                }
+              >
+                <CustomSelect
+                  label="Importance Level"
+                  options={[
+                    { value: 'urgent', label: 'Urgent' },
+                    { value: 'critical', label: 'Critical' },
+                  ]}
+                  placeholder="Announcement Importance level"
+                  value={formik.values.importance_level}
+                  onChange={(val) => {
+                    formik.setFieldValue('importance_level', val);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.importance_level && Boolean(formik.errors.importance_level)}
+                  helperText={
+                    formik.touched.importance_level && formik.errors.importance_level
+                      ? formik.errors.importance_level
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -872,38 +918,44 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
             </Grid>
             {formik.values.isScheduled && (
               <Grid item xs={12} md={6}>
-                <DateTimePicker
-                  label="Schedule Date & Time"
-                  value={formik.values.publishDate}
-                  onChange={handleDateChange}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      error: formik.touched.publishDate && Boolean(formik.errors.publishDate),
-                    },
-                  }}
-                  disablePast
-                />
-                {formik.touched.publishDate && formik.errors.publishDate && (
-                  <FormHelperText error>{String(formik.errors.publishDate)}</FormHelperText>
-                )}
+                <ShakingTextField
+                  error={!!(formik.touched.publishDate && formik.errors.publishDate) || false}
+                >
+                  <DateTimePicker
+                    label="Schedule Date & Time"
+                    value={formik.values.publishDate}
+                    format="DD/MM/YYYY HH:mm"
+                    onChange={handleDateChange}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error: formik.touched.publishDate && Boolean(formik.errors.publishDate),
+                      },
+                    }}
+                    disablePast
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Announcement Description"
-                name="description"
-                multiline
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-                size="small"
-                rows={4}
-              />
+              <ShakingTextField
+                error={!!(formik.touched.description && formik.errors.description) || false}
+              >
+                <TextField
+                  fullWidth
+                  label="Announcement Description"
+                  name="description"
+                  multiline
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  error={formik.touched.description && Boolean(formik.errors.description)}
+                  helperText={formik.touched.description && formik.errors.description}
+                  size="small"
+                  rows={4}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
@@ -932,23 +984,25 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Link"
-                name="link"
-                value={formik.values.link}
-                onChange={formik.handleChange}
-                error={formik.touched.link && Boolean(formik.errors.link)}
-                helperText={formik.touched.link && formik.errors.link}
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Iconify icon="typcn:attachment" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <ShakingTextField error={!!(formik.touched.link && formik.errors.link) || false}>
+                <TextField
+                  fullWidth
+                  label="Link"
+                  name="link"
+                  value={formik.values.link}
+                  onChange={formik.handleChange}
+                  error={formik.touched.link && Boolean(formik.errors.link)}
+                  helperText={formik.touched.link && formik.errors.link}
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Iconify icon="typcn:attachment" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
