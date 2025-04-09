@@ -1291,9 +1291,9 @@ const transportModule = {
           shortcutKeyName: 'Alt+T+3',
         },
         {
-          title: 'Student Allocation',
-          path: '/transport/student-allocation',
-          _action: 'student-allocation',
+          title: 'Route Allocation',
+          path: '/transport/member-transport',
+          _action: 'member-transport',
           shortcutKey: 'Alt+T+4',
           shortcutKeyName: 'Alt+T+4',
         },
