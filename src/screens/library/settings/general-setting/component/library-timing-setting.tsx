@@ -2,21 +2,19 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, TextField } from '@mui/material';
+import { Box, TextField } from '@mui/material';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const LibraryTimingSetting: React.FC = () => {
-  const [globalStartTime, setGlobalStartTime] = useState<string>('');
-  const [globalEndTime, setGlobalEndTime] = useState<string>('');
-  const [schedule, setSchedule] = useState([
-    { id: 1, day: 'Monday', startTime: '', endTime: '', isHoliday: false },
-    { id: 2, day: 'Tuesday', startTime: '', endTime: '', isHoliday: false },
-    { id: 3, day: 'Wednesday', startTime: '', endTime: '', isHoliday: false },
-    { id: 4, day: 'Thursday', startTime: '', endTime: '', isHoliday: false },
-    { id: 5, day: 'Friday', startTime: '', endTime: '', isHoliday: false },
-  ]);
+import { libraryTimingDataDummy } from '../data/general-setting-data';
 
+const LibraryTimingSetting: React.FC = () => {
+  // Global start time state for all library timings
+  const [globalStartTime, setGlobalStartTime] = useState<string>('');
+  // Global end time state for all library timings
+  const [globalEndTime, setGlobalEndTime] = useState<string>('');
+  // Schedule state containing array of library timing data with day, start time, end time and holiday status
+  const [schedule, setSchedule] = useState(libraryTimingDataDummy);
   // Update global start time for all rows
   const handleGlobalStartTimeChange = (value: string) => {
     setGlobalStartTime(value);
@@ -53,9 +51,6 @@ const LibraryTimingSetting: React.FC = () => {
 
   return (
     <Box sx={{ padding: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button variant="outlined">Save</Button>
-      </Box>
       <CustomizableTable
         isFilter={false}
         isPagination={false}

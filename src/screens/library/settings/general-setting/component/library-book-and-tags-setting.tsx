@@ -1,96 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { libararyCategoryDummyData } from '../data/general-setting-data';
+
 const LibraryBookAndTagsSetting = () => {
-  const [formData, setFormData] = useState({ categoryName: '', description: '' });
-  const [data, setData] = useState([
-    {
-      categoryName: 'Science-Fiction',
-      description: 'Books about futuristic science and technology',
-    },
-    { categoryName: 'Education', description: 'Books for learning and academics' },
-  ]);
+  // Define table columns with category name and description fields
+  const tableColumns = [
+    { id: 'categoryName', label: 'Category Name' },
+    { id: 'description', label: 'Description' },
+  ];
 
-  const addCategoryDialog = useBoolean();
+  // Configuration object for the CustomizableTable component
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleAddCategory = () => {
-    setData((prev) => [...prev, formData]);
-    setFormData({ categoryName: '', description: '' });
-    addCategoryDialog.onFalse();
+  const tableConfig = {
+    tableId: 'library-book-and-tags-setting',
+    isFilter: false,
+    isShowedDense: false,
+    isSearch: false,
+    columns: tableColumns,
+    data: libararyCategoryDummyData,
   };
 
   return (
     <Box sx={{ padding: 3 }}>
-      <Box display="flex" justifyContent="flex-end" mb={2}>
-        <Button onClick={addCategoryDialog.onTrue} size="small" variant="contained">
-          Add Category
-        </Button>
-      </Box>
-
-      <CustomizableTable
-        tableId="library-book-and-tags-setting"
-        isFilter={false}
-        isShowedDense={false}
-        isSearch={false}
-        columns={[
-          { id: 'categoryName', label: 'Category Name' },
-          { id: 'description', label: 'Description' },
-        ]}
-        data={data}
-      />
-
-      {addCategoryDialog.value && (
-        <CustomDialog
-          title="Add Category"
-          open={addCategoryDialog.value}
-          handleClose={() => {
-            addCategoryDialog.onFalse();
-          }}
-          //   actions={[
-          //     <Button key="cancel" onClick={addCategoryDialog.onFalse} variant="outlined">
-          //       Cancel
-          //     </Button>,
-          //     <Button key="add" onClick={handleAddCategory} variant="contained">
-          //       Add
-          //     </Button>,
-          //   ]}
-        >
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
-              <TextField
-                label="Category Name"
-                value={formData.categoryName}
-                onChange={(e) => handleChange('categoryName', e.target.value)}
-                fullWidth
-              />
-              <TextField
-                label="Description"
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                multiline
-                rows={3}
-                fullWidth
-              />
-            </Box>
-          </Scrollbar>
-          <DialogActions>
-            <Button type="submit" variant="contained" size="small">
-              Save
-            </Button>
-          </DialogActions>
-        </CustomDialog>
-      )}
+      <CustomizableTable {...tableConfig} />
     </Box>
   );
 };
