@@ -25,273 +25,274 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const classDummyData = [
   {
     name: '1',
-    percentage: '85%',
+    percentage: 35,
     divisions: [
       {
         name: 'A',
-        percentage: '90%',
+        percentage: 90,
       },
       {
         name: 'B',
-        percentage: '60%',
+        percentage: 60,
       },
       {
         name: 'C',
-        percentage: '80%',
+        percentage: 30,
       },
       {
         name: 'D',
-        percentage: '40%',
+        percentage: 40,
       },
     ],
   },
   {
     name: '2',
-    percentage: '85%',
+    percentage: 45,
     divisions: [
       {
         name: 'A',
-        percentage: '90%',
+        percentage: 10,
       },
       {
         name: 'B',
-        percentage: '60%',
+        percentage: 60,
       },
       {
         name: 'C',
-        percentage: '80%',
+        percentage: 20,
       },
       {
         name: 'D',
-        percentage: '40%',
+        percentage: 40,
       },
     ],
   },
 
   {
     name: '3',
-    percentage: '78%',
+    percentage: 78,
     divisions: [
       {
         name: 'A',
-        percentage: '85%',
+        percentage: 85,
       },
       {
         name: 'B',
-        percentage: '70%',
+        percentage: 70,
       },
       {
         name: 'C',
-        percentage: '75%',
+        percentage: 75,
       },
       {
         name: 'D',
-        percentage: '82%',
+        percentage: 82,
       },
     ],
   },
   {
     name: '4',
-    percentage: '82%',
+    percentage: 82,
     divisions: [
       {
         name: 'A',
-        percentage: '88%',
+        percentage: 88,
       },
       {
         name: 'B',
-        percentage: '79%',
+        percentage: 79,
       },
       {
         name: 'C',
-        percentage: '81%',
+        percentage: 81,
       },
       {
         name: 'D',
-        percentage: '80%',
+        percentage: 80,
       },
     ],
   },
   {
     name: '5',
-    percentage: '76%',
+    percentage: 76,
     divisions: [
       {
         name: 'A',
-        percentage: '80%',
+        percentage: 80,
       },
       {
         name: 'B',
-        percentage: '75%',
+        percentage: 75,
       },
       {
         name: 'C',
-        percentage: '72%',
+        percentage: 72,
       },
       {
         name: 'D',
-        percentage: '77%',
+        percentage: 77,
       },
     ],
   },
   {
     name: '6',
-    percentage: '79%',
+    percentage: 79,
     divisions: [
       {
         name: 'A',
-        percentage: '82%',
+        percentage: 82,
       },
       {
         name: 'B',
-        percentage: '78%',
+        percentage: 78,
       },
       {
         name: 'C',
-        percentage: '76%',
+        percentage: 76,
       },
       {
         name: 'D',
-        percentage: '80%',
+        percentage: 80,
       },
     ],
   },
   {
     name: '7',
-    percentage: '81%',
+    percentage: 81,
     divisions: [
       {
         name: 'A',
-        percentage: '84%',
+        percentage: 84,
       },
       {
         name: 'B',
-        percentage: '80%',
+        percentage: 80,
       },
       {
         name: 'C',
-        percentage: '79%',
+        percentage: 79,
       },
       {
         name: 'D',
-        percentage: '81%',
+        percentage: 81,
       },
     ],
   },
   {
     name: '8',
-    percentage: '77%',
+    percentage: 77,
     divisions: [
       {
         name: 'A',
-        percentage: '80%',
+        percentage: 80,
       },
       {
         name: 'B',
-        percentage: '75%',
+        percentage: 75,
       },
       {
         name: 'C',
-        percentage: '76%',
+        percentage: 76,
       },
       {
         name: 'D',
-        percentage: '77%',
+        percentage: 77,
       },
     ],
   },
   {
     name: '9',
-    percentage: '83%',
+    percentage: 83,
     divisions: [
       {
         name: 'A',
-        percentage: '86%',
+        percentage: 86,
       },
       {
         name: 'B',
-        percentage: '82%',
+        percentage: 82,
       },
       {
         name: 'C',
-        percentage: '81%',
+        percentage: 81,
       },
       {
         name: 'D',
-        percentage: '83%',
+        percentage: 83,
       },
     ],
   },
   {
     name: '10',
-    percentage: '80%',
+    percentage: 80,
     divisions: [
       {
         name: 'A',
-        percentage: '83%',
+        percentage: 83,
       },
       {
         name: 'B',
-        percentage: '79%',
+        percentage: 79,
       },
       {
         name: 'C',
-        percentage: '78%',
+        percentage: 78,
       },
       {
         name: 'D',
-        percentage: '80%',
+        percentage: 80,
       },
     ],
   },
   {
     name: '11',
-    percentage: '75%',
+    percentage: 75,
     divisions: [
       {
         name: 'A',
-        percentage: '78%',
+        percentage: 78,
       },
       {
         name: 'B',
-        percentage: '74%',
+        percentage: 74,
       },
       {
         name: 'C',
-        percentage: '73%',
+        percentage: 73,
       },
       {
         name: 'D',
-        percentage: '75%',
+        percentage: 75,
       },
     ],
   },
   {
     name: '12',
-    percentage: '78%',
+    percentage: 78,
     divisions: [
       {
         name: 'A',
-        percentage: '81%',
+        percentage: 81,
       },
       {
         name: 'B',
-        percentage: '77%',
+        percentage: 77,
       },
       {
         name: 'C',
-        percentage: '76%',
+        percentage: 76,
       },
       {
         name: 'D',
-        percentage: '78%',
+        percentage: 78,
       },
     ],
   },
 ];
-
 const StudentAttendanceDashboardScreen = () => {
+  const [schoolAttendance, setschoolAttendance] = useState(40);
   const [selectedDivision, setSelectedDivision] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
   return (
     <Box height="100%">
       {!selectedDivision ? (
@@ -301,7 +302,30 @@ const StudentAttendanceDashboardScreen = () => {
             links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
             sx={{ px: 1, mb: 2 }}
           />
-          <Box display="flex" gap={2} flexWrap="wrap">
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <DatePicker
+              views={['month']}
+              label="Select Month"
+              value={selectedMonth}
+              maxDate={dayjs()} // This disables future months
+              onChange={(newValue) => setSelectedMonth(newValue)}
+              format="MMM"
+              slotProps={{
+                textField: {
+                  size: 'small',
+                },
+              }}
+            />
+            <Label
+              sx={{ cursor: 'pointer' }}
+              color={
+                schoolAttendance > 75 ? 'success' : schoolAttendance > 40 ? 'warning' : 'error'
+              }
+            >
+              School Attendance : {schoolAttendance}%
+            </Label>
+          </Box>{' '}
+          <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
             {classDummyData.map((classData) => (
               <ClassCard classItem={classData} setSelectedDivision={setSelectedDivision} />
             ))}
@@ -342,7 +366,13 @@ const ClassCard = ({ classItem, setSelectedDivision }: any) => {
     <Paper sx={{ p: 2 }} elevation={3}>
       <Box display="flex" justifyContent="space-between">
         <Typography variant="h6">Class {classItem.name}</Typography>
-        <Label color="success">{classItem.percentage}</Label>
+        <Label
+          color={
+            classItem.percentage > 75 ? 'success' : classItem.percentage > 40 ? 'warning' : 'error'
+          }
+        >
+          {classItem.percentage}%
+        </Label>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
         {classItem.divisions.map((item: any) => (
@@ -378,8 +408,11 @@ const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => {
       onClick={() => setSelectedDivision({ ...item, class: classDetails })}
     >
       {item.name}
-      <Label sx={{ cursor: 'pointer' }} color="info">
-        {item.percentage}
+      <Label
+        sx={{ cursor: 'pointer' }}
+        color={item.percentage > 75 ? 'success' : item.percentage > 40 ? 'warning' : 'error'}
+      >
+        {item.percentage}%
       </Label>
     </Paper>
   );
@@ -404,7 +437,17 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               Class : <Label color="info">{selectedDivision?.class.name}</Label>
             </Typography>
             <Typography component="span">
-              <Label color="success">{selectedDivision?.percentage}</Label>
+              <Label
+                color={
+                  selectedDivision?.percentage > '75'
+                    ? 'success'
+                    : selectedDivision?.percentage > '40'
+                      ? 'warning'
+                      : 'error'
+                }
+              >
+                {selectedDivision?.percentage}
+              </Label>
             </Typography>
             <Typography component="span">
               Division : <Label color="info"> {selectedDivision?.name} </Label>
@@ -485,11 +528,9 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                       filterType: 'enum',
                       enumOptions: AttendanceStatusOptions,
                       render(value, row) {
-                        const color = AttendanceStatusTypeColors[
-                          value as AttendanceStatusType
-                        ] as LabelColor;
+                        const color = AttendanceStatusTypeColors[value as AttendanceStatusType];
                         return (
-                          <Label color={color}>
+                          <Label color={color as LabelColor}>
                             {AttendanceStatusType[value as AttendanceStatusType]}
                           </Label>
                         );
