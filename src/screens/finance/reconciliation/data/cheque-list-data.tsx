@@ -1,0 +1,73 @@
+export interface ReconciliationItem {
+  srNo: number;
+  studentName: string;
+  class: string;
+  chequeNo: string;
+  bankName: string;
+  chequeDate: string;
+  amount: string;
+  id: number;
+  chargesAmount: string;
+  feeHead: string;
+  grNumber: number;
+  receivedChequeDate: string;
+}
+
+export const reconsiliationData: ReconciliationItem[] = [
+  {
+    srNo: 1,
+    studentName: 'Aarav Sharma',
+    class: '5th',
+    chequeNo: '784512',
+    bankName: 'State Bank of India',
+    chequeDate: '01-11-2024',
+    amount: '1500',
+    id: 1,
+    chargesAmount: '300',
+    feeHead: 'Library',
+    grNumber: 89554,
+    receivedChequeDate: '01-11-2024',
+  },
+  {
+    srNo: 2,
+    studentName: 'Diya Mehta',
+    class: '6th',
+    chequeNo: '234589',
+    bankName: 'HDFC Bank',
+    chequeDate: '01-11-2024',
+    amount: '2000',
+    id: 2,
+    chargesAmount: '300',
+    feeHead: 'Library',
+    grNumber: 89554,
+    receivedChequeDate: '01-11-2024',
+  },
+  {
+    srNo: 3,
+    studentName: 'Rohan Patel',
+    class: '7th',
+    chequeNo: '985632',
+    bankName: 'ICICI Bank',
+    chequeDate: '01-08-2024',
+    amount: '2500',
+    id: 3,
+    chargesAmount: '300',
+    feeHead: 'Library',
+    grNumber: 89554,
+    receivedChequeDate: '01-11-2024',
+  },
+  {
+    srNo: 4,
+    studentName: 'Ishita Desai',
+    class: '8th',
+    chequeNo: '567890',
+    bankName: 'Axis Bank',
+    chequeDate: '05-11-2024',
+    amount: '800',
+    id: 4,
+    chargesAmount: '300',
+    feeHead: 'Library',
+    grNumber: 89554,
+    receivedChequeDate: '01-11-2024',
+  },
+];

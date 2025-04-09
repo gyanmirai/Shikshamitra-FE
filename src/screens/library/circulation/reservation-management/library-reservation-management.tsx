@@ -1,161 +1,178 @@
+'use client';
+
+import type { Column } from 'src/components/customizabaleTable';
+
 import React, { useState } from 'react';
 
-import { Checkbox, MenuItem, MenuList } from '@mui/material';
+import { Box, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import CommonCtaComponent from '../../component/common-cta-component';
+import IssueBookDialog from '../../book-management/component/issue-book-dialog';
+import ReturnBookDialog from '../../book-management/component/return-book-dialog';
+import AddNewBookDialog from '../../book-management/component/add-new-book-dialog';
+import {
+  bookDataCirculation,
+  dummyReservationData,
+  memberDataCirculation,
+} from '../data/dummy-data';
+
+import type { IReservationData } from '../data/dummy-data-interface';
+
 const LibraryReservationManagement = () => {
-  const dummyData = [
+  // State to keep track of selected students in the table
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+
+  // Object containing boolean states for different dialogs using custom useBoolean hook
+  const dialogStates = {
+    sendNotification: useBoolean(),
+    addMember: useBoolean(),
+    addNewBook: useBoolean(),
+    issueBook: useBoolean(),
+    returnBook: useBoolean(),
+  };
+
+  // Helper function to open a specific dialog
+  const handleDialogOpen = (dialog: keyof typeof dialogStates) => {
+    dialogStates[dialog].onTrue();
+  };
+
+  // Helper function to close a specific dialog
+  const handleDialogClose = (dialog: keyof typeof dialogStates) => {
+    dialogStates[dialog].onFalse();
+  };
+  const tableColumns = [
     {
-      bookId: 'B101',
-      title: 'Introduction to Mathematics',
-      memberName: 'John Doe',
-      requestedDate: '12-11-23',
-      status: 'Collected',
+      id: 'checkBox',
+      align: 'left',
+      minWidth: '60px',
+      isSort: false,
+      isFilter: false,
+      label: '',
+      renderColumn: () => (
+        <Checkbox
+          checked={
+            !!dummyReservationData?.length &&
+            selectedStudents?.length === dummyReservationData?.length
+          }
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedStudents((dummyReservationData as IReservationData[]) || []);
+            } else {
+              setSelectedStudents([]);
+            }
+          }}
+        />
+      ),
+      render: (value: any, row: any) => (
+        <Checkbox
+          checked={
+            Array.isArray(selectedStudents) && selectedStudents.some((i) => i.bookId === row.bookId)
+          }
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedStudents([...selectedStudents, row]);
+            } else {
+              setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            }
+          }}
+        />
+      ),
     },
+    { id: 'bookId', label: 'Book Id' },
+    { id: 'title', label: 'Title' },
+    { id: 'memberName', label: 'Member Name' },
+    { id: 'requestedDate', label: 'Requested Date' },
     {
-      bookId: 'B102',
-      title: 'Physics Fundamentals',
-      memberName: 'Jane Smith',
-      requestedDate: '14-11-23',
-      status: 'Pending',
-    },
-    {
-      bookId: 'B103',
-      title: 'Chemistry Basics',
-      memberName: 'Sam Wilson',
-      requestedDate: '18-11-23',
-      status: 'Ready',
-    },
-    {
-      bookId: 'B104',
-      title: 'World History Overview',
-      memberName: 'Chris Evans',
-      requestedDate: '20-11-23',
-      status: 'Collected',
-    },
-    {
-      bookId: 'B105',
-      title: 'Programming in Python',
-      memberName: 'Natasha Romanoff',
-      requestedDate: '22-11-23',
-      status: 'Pending',
+      id: 'status',
+      label: 'Status',
+      render: (value: string) => (
+        <Label
+          variant="soft"
+          color={value === 'Collected' ? 'success' : value === 'Ready' ? 'secondary' : 'warning'}
+        >
+          {value}
+        </Label>
+      ),
     },
   ];
 
-  const renderTableActions = (row: any) =>
-    row.status === 'Ready' && (
-      <ThreeDotsActions
-        placement="right-top"
-        actions={({ popover }: any) => (
-          <MenuList>
-            {/* <MenuItem
-                        onClick={() => {
-                            //   openDialog(addNewBookDialog, row, true);
-                        }}
-                    >
-                        <Iconify icon="mdi-light:check" />
-                        Mark as Ready
-                    </MenuItem> */}
-            <MenuItem
-              onClick={() => {
-                //   openDialog(issueBookDialog, row);
-              }}
-            >
-              <Iconify icon="line-md:bell" />
-              Notify Member
-            </MenuItem>
-          </MenuList>
-        )}
-      />
-    );
-
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
   return (
     <>
+      <Box
+        display="flex"
+        flexDirection="row"
+        gap={2}
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <CustomBreadcrumbs
+          heading="Reservation Management"
+          links={[
+            { name: 'Library', href: '/library/dashboard' },
+            { name: 'Circulation' },
+            { name: 'Reservation Management' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <CommonCtaComponent
+          bookHandler={() => handleDialogOpen('addNewBook')}
+          issueBookHandler={() => handleDialogOpen('issueBook')}
+          returnBookHandler={() => handleDialogOpen('returnBook')}
+          createReservationHandler={() => handleDialogOpen('addMember')}
+        />
+      </Box>
+
       <CustomizableTable
-        onSendNotification={handlerSendNotification}
+        onSendNotification={() => handleDialogOpen('sendNotification')}
         showCheckbox={selectedStudents.length !== 0}
         tableId="library-reservation-management"
-        columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={!!dummyData?.length && selectedStudents?.length === dummyData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(dummyData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
-          { id: 'bookId', label: 'Book Id' },
-          { id: 'title', label: 'Title' },
-          { id: 'memberName', label: 'Member Name' },
-          { id: 'requestedDate', label: 'Requested Date' },
-          {
-            id: 'status',
-            label: 'Status',
-            render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Collected' ? 'success' : value === 'Ready' ? 'secondary' : 'warning'
-                  }
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-        ]}
-        data={dummyData}
+        columns={tableColumns as Column[]}
+        data={dummyReservationData}
       />
-      {sendInstantNotificationDialogValue.value && (
+
+      {dialogStates.sendNotification.value && (
         <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
+          open={dialogStates.sendNotification.value}
+          onClose={() => handleDialogClose('sendNotification')}
           data={[]}
           userList={selectedStudents}
+        />
+      )}
+
+      {dialogStates.issueBook.value && (
+        <IssueBookDialog
+          dialogValue={dialogStates.issueBook.value}
+          bookData={bookDataCirculation}
+          memberData={memberDataCirculation}
+          onSave={() => {}}
+          onClose={() => handleDialogClose('issueBook')}
+        />
+      )}
+
+      {dialogStates.returnBook.value && (
+        <ReturnBookDialog
+          dialogValue={dialogStates.returnBook.value}
+          onSave={() => {}}
+          bookData={bookDataCirculation}
+          memberData={memberDataCirculation}
+          onClose={() => handleDialogClose('returnBook')}
+        />
+      )}
+
+      {dialogStates.addNewBook.value && (
+        <AddNewBookDialog
+          dialogValue={dialogStates.addNewBook.value}
+          data={[]}
+          onSave={() => {}}
+          onClose={() => handleDialogClose('addNewBook')}
+          isEdit={false}
         />
       )}
     </>

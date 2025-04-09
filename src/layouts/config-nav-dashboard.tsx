@@ -1012,10 +1012,26 @@ const financeModule = {
         },
         {
           title: 'Fee Management',
-          path: '/finance/fee-management',
+          path: '',
           _action: 'fee-management',
           shortcutKey: 'Alt+F+2',
           shortcutKeyName: 'Alt+F+2',
+          children: [
+            {
+              title: 'Fee Structure Overview',
+              path: '/finance/fee-management/fee-structure-overview',
+              _action: 'fee-structure-overview',
+              shortcutKey: 'Alt+F+3',
+              shortcutKeyName: 'Alt+F+3',
+            },
+            {
+              title: 'Student Fee Management',
+              path: '/finance/fee-management/student-fee-management',
+              _action: 'student-fee-management',
+              shortcutKey: 'Alt+F+4',
+              shortcutKeyName: 'Alt+F+4',
+            },
+          ],
         },
         {
           title: 'Fee Collection',
@@ -1033,10 +1049,26 @@ const financeModule = {
         },
         {
           title: 'Reconciliation',
-          path: '/finance/reconciliation',
+          path: '',
           _action: 'reconciliation',
           shortcutKey: 'Alt+F+5',
           shortcutKeyName: 'Alt+F+5',
+          children: [
+            {
+              title: 'Cheque Transactions',
+              path: '/finance/reconciliation/payment-by-cheque',
+              _action: 'payment-by-cheque',
+              shortcutKey: 'Alt+F+6',
+              shortcutKeyName: 'Alt+F+6',
+            },
+            {
+              title: 'Bounce Cheque',
+              path: '/finance/reconciliation/bounce-cheque',
+              _action: 'bounce-cheque',
+              shortcutKey: 'Alt+F+6',
+              shortcutKeyName: 'Alt+F+6',
+            },
+          ],
         },
         {
           title: 'Income Tracking',
@@ -1170,10 +1202,26 @@ const libraryModule = {
         },
         {
           title: 'Circulation',
-          path: '/library/circulation',
+          path: '',
           _action: 'circulation',
           shortcutKey: 'Alt+L+4',
           shortcutKeyName: 'Alt+L+4',
+          children: [
+            {
+              title: 'Reservations Management',
+              path: '/library/circulation/reservation-management',
+              _action: 'reservation-management',
+              shortcutKey: 'Alt+L+5',
+              shortcutKeyName: 'Alt+L+5',
+            },
+            {
+              title: 'Fines Management',
+              path: '/library/circulation/fine-management',
+              _action: 'reservation-management',
+              shortcutKey: 'Alt+L+5',
+              shortcutKeyName: 'Alt+L+5',
+            },
+          ],
         },
         {
           title: 'Reports',
