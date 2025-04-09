@@ -13,9 +13,11 @@ import {
   Card,
   Button,
   Switch,
+  Tooltip,
   Checkbox,
   TextField,
   Typography,
+  IconButton,
   DialogActions,
 } from '@mui/material';
 
@@ -27,10 +29,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-interface TType {
-  id: number;
-  name: string;
-}
+import type { TType } from './type';
 
 const initialHomeworkType: TType[] = [
   {
@@ -166,7 +165,14 @@ const Setting = (props: TabComponentType) => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
             <Card sx={{ p: 2, height: '100%' }}>
-              <Box sx={{ typography: 'subtitle1' }}>Homework Types</Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box sx={{ typography: 'h6' }}>Homework Types</Box>
+                <Tooltip title="Manage Homework Type using Add, Edit or Delete">
+                  <IconButton size="small">
+                    <Iconify icon="mdi:information" fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
               <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
                 <Box
                   component="ul"
@@ -191,9 +197,7 @@ const Setting = (props: TabComponentType) => {
                       }}
                     >
                       <Box>
-                        <Typography variant="body2" fontWeight="bold">
-                          {category.name}
-                        </Typography>
+                        <Typography variant="body2">{category.name}</Typography>
                       </Box>
                       <Box>
                         <Iconify
@@ -236,7 +240,14 @@ const Setting = (props: TabComponentType) => {
           </Grid>
           <Grid item xs={12} md={6}>
             <Card sx={{ p: 2, height: '100%' }}>
-              <Box sx={{ typography: 'subtitle1' }}>Assignment Types</Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box sx={{ typography: 'h6' }}>Assignment Types</Box>
+                <Tooltip title="Manage Assignment Type using Add, Edit or Delete">
+                  <IconButton size="small">
+                    <Iconify icon="mdi:information" fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>{' '}
               <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
                 <Box
                   component="ul"
@@ -261,9 +272,7 @@ const Setting = (props: TabComponentType) => {
                       }}
                     >
                       <Box>
-                        <Typography variant="body2" fontWeight="bold">
-                          {category.name}
-                        </Typography>
+                        <Typography variant="body2">{category.name}</Typography>
                       </Box>
                       <Box>
                         <Iconify
@@ -338,9 +347,14 @@ const Setting = (props: TabComponentType) => {
                 flexDirection: 'column',
               }}
             >
-              <Typography variant="h6" gutterBottom>
-                Assignment Preferences
-              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box sx={{ typography: 'h6' }}>Assignment Preferences</Box>
+                <Tooltip title="Manage Homework Type using Add, Edit or Delete">
+                  <IconButton size="small">
+                    <Iconify icon="mdi:information" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
 
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ mb: 5 }}>
@@ -394,9 +408,14 @@ const Setting = (props: TabComponentType) => {
                 flexDirection: 'column',
               }}
             >
-              <Typography variant="h6" gutterBottom>
-                Custom Notifications
-              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box sx={{ typography: 'h6' }}>Custom Notification</Box>
+                <Tooltip title="Configure notification preferences, frequency, and reminder schedules for your assignments">
+                  <IconButton size="small">
+                    <Iconify icon="mdi:information" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
 
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ mb: 3 }}>
