@@ -6,23 +6,18 @@ import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { PDFViewer } from '@react-pdf/renderer';
 import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Grid,
   Card,
   Button,
   Switch,
   MenuList,
   MenuItem,
   Checkbox,
-  TextField,
   Typography,
   ToggleButton,
   DialogActions,
@@ -35,23 +30,20 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import AssignGrade from './component/assignGradeForm';
 import HomeworkAssignmentCreationForm from './component/homeworkCreateDialog';
-import { dummyData } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
-import type { THomeworkAssignment } from './type';
+import type { THomeworkAssignment, TStudentSubmissionsProps } from './type';
 import type { TStudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
 export const initialData: THomeworkAssignment[] = [
@@ -720,15 +712,14 @@ const HomeworkCreation = (props: TabComponentType) => {
 
 export default HomeworkCreation;
 
-export const StudentSubmissions = () => {
+export const StudentSubmissions: React.FC<TStudentSubmissionsProps> = ({
+  selectedStudents,
+  handleBulkUpdate,
+  tableData,
+  setTableData,
+}) => {
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
-
-  // State to manage the table data containing student grades
-  const [tableData, setTableData] = useState<TStudentGrade[]>(dummyData);
-
-  // State to track multiple selected students for bulk operations
-  const [selectedStudents, setSelectedStudents] = useState<TStudentGrade[]>([]);
 
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -738,29 +729,12 @@ export const StudentSubmissions = () => {
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
 
-  // Dialog control for bulk grade assignment
-  const bulkGradeDialog = useBoolean();
-
-  /**
-   * Handles assigning grades to multiple selected students in bulk
-   * @param values Object containing the grade to assign
-   */
-  const handleBulkGradeAssignment = (values: { grade: string }) => {
-    setTableData((prevData) =>
-      prevData.map((student) =>
-        selectedStudents.includes(student) ? { ...student, grade: values.grade } : student
-      )
-    );
-    bulkGradeDialog.onFalse();
-    setSelectedStudents([]);
-  };
-
   /**
    * Handles assigning grade and feedback to a single selected student
    * @param values Object containing the grade and feedback to assign
    */
   const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
-    setTableData((prevData) =>
+    setTableData?.((prevData) =>
       prevData.map((student) =>
         student.id === selectedStudent?.id
           ? { ...student, grade: values.grade, feedback: values.feedback }
@@ -820,20 +794,9 @@ export const StudentSubmissions = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon="mdi:pencil" />}
-          disabled={selectedStudents.length === 0}
-          onClick={bulkGradeDialog.onTrue}
-        >
-          Bulk Grade ({selectedStudents.length} selected)
-        </Button>
-      </Box>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
+        showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
         columns={[
           {
@@ -849,9 +812,9 @@ export const StudentSubmissions = () => {
                   checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
+                      handleBulkUpdate?.(tableData || []);
                     } else {
-                      setSelectedStudents([]);
+                      handleBulkUpdate?.([]);
                     }
                   }}
                 />
@@ -860,12 +823,14 @@ export const StudentSubmissions = () => {
             render(value, row) {
               return (
                 <Checkbox
-                  checked={!!selectedStudents.some((i: TStudentGrade) => i.id === row.id)}
+                  checked={!!selectedStudents?.some((i: TStudentGrade) => i.id === row.id)}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row as TStudentGrade]);
+                      handleBulkUpdate?.([...(selectedStudents || []), row as TStudentGrade]);
                     } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                      handleBulkUpdate?.(
+                        (selectedStudents || []).filter((i: any) => i.id !== row.id)
+                      );
                     }
                   }}
                 />
@@ -965,7 +930,7 @@ export const StudentSubmissions = () => {
             },
           },
         ]}
-        data={tableData}
+        data={tableData || []}
       />
 
       {sendInstantNotificationDialogValue.value && (
@@ -984,114 +949,6 @@ export const StudentSubmissions = () => {
       >
         <AssignGrade data={selectedStudent} onSubmit={handleSingleGradeAssignment} />
       </CustomDialog>
-
-      <CustomDialog
-        open={bulkGradeDialog.value}
-        handleClose={bulkGradeDialog.onFalse}
-        title={`Assign Grade to ${selectedStudents.length} Students`}
-        maxWidth="md"
-      >
-        <AssignGrade onSubmit={handleBulkGradeAssignment} />
-      </CustomDialog>
-    </Box>
-  );
-};
-
-/**
- * Props for the AssignGrade component
- * @param data Optional data containing initial grade and feedback values
- * @param onSubmit Callback function to handle form submission with grade and feedback values
- */
-interface AssignGradeProps {
-  data?: TStudentGrade | null;
-  onSubmit: (values: { grade: string; feedback: string }) => void;
-}
-
-const validationSchema = Yup.object({
-  grade: Yup.string().required('Grade is required'),
-  feedback: Yup.string().required('Feedback is required'),
-});
-
-const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
-  /**
-   * Initialize formik form with grade and feedback fields
-   * @param initialValues Object containing initial grade and feedback values from data prop
-   * @param onSubmit Handler function that gets called when form is submitted
-   */
-  const formik = useFormik({
-    initialValues: {
-      grade: data?.grade || '',
-      feedback: data?.feedback || '',
-    },
-    validationSchema,
-    onSubmit(values) {
-      onSubmit(values);
-    },
-  });
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '70vh' }}>
-          <PDFViewer width="100%" height="600">
-            <CertificateDocument />
-          </PDFViewer>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField error={!!(formik.touched.grade && formik.errors.grade) || false}>
-                <CustomSelect
-                  options={[
-                    { value: 'A+', label: 'A+' },
-                    { value: 'A', label: 'A' },
-                    { value: 'A-', label: 'A-' },
-                    { value: 'B+', label: 'B+' },
-                    { value: 'B', label: 'B' },
-                    { value: 'B-', label: 'B-' },
-                    { value: 'C+', label: 'C+' },
-                    { value: 'C', label: 'C' },
-                    { value: 'C-', label: 'C-' },
-                    { value: 'D', label: 'D' },
-                    { value: 'F', label: 'F' },
-                  ]}
-                  label="Grade"
-                  name="grade"
-                  value={formik.values.grade}
-                  onChange={(val) => {
-                    formik.setFieldValue('grade', val);
-                  }}
-                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                  error={formik.touched.grade && Boolean(formik.errors.grade)}
-                  helperText={
-                    formik.touched.grade && formik.errors.grade ? formik.errors.grade : undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
-              >
-                <TextField
-                  placeholder="Detailed Feedback"
-                  multiline
-                  rows={3}
-                  fullWidth
-                  name="feedback"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button type="submit" variant="contained">
-            Submit
-          </Button>
-        </DialogActions>
-      </form>
     </Box>
   );
 };

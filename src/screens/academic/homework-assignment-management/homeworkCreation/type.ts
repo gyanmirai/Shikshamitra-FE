@@ -1,5 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
+import type { TStudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
+
 export interface THomeworkAssignment {
   title: string;
   description: string;
@@ -30,4 +32,16 @@ export interface THomeworkAssignment {
   rubricRequired?: boolean;
   rubric?: string;
   isScheduled: boolean;
+}
+
+export interface TStudentSubmissionsProps {
+  selectedStudents?: TStudentGrade[];
+  handleBulkUpdate?: (data: TStudentGrade[]) => void;
+  tableData?: TStudentGrade[];
+  setTableData?: React.Dispatch<React.SetStateAction<TStudentGrade[]>>;
+}
+
+export interface IAssignGradeProps {
+  data?: TStudentGrade | null;
+  onSubmit: (values: { grade: string; feedback: string }) => void;
 }
