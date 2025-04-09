@@ -21,6 +21,7 @@ import {
   Switch,
   Button,
   Divider,
+  Tooltip,
   Checkbox,
   TextField,
   Typography,
@@ -201,22 +202,44 @@ const TakeAttendanceScreen = () => {
 
       <Divider sx={{ my: 2 }} />
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
-        <ButtonGroup>
-          <Button
-            variant={view === 'list' ? 'outlined' : 'contained'}
-            color="inherit"
-            onClick={() => setView('calender')}
-          >
-            <Iconify icon="material-symbols:grid-view" />
-          </Button>
-          <Button
-            color="inherit"
-            variant={view === 'list' ? 'contained' : 'outlined'}
-            onClick={() => setView('list')}
-          >
-            <Iconify icon="lucide:layout-list" />
-          </Button>
-        </ButtonGroup>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <ButtonGroup>
+            <Button
+              variant={view === 'list' ? 'outlined' : 'contained'}
+              color="inherit"
+              onClick={() => setView('calender')}
+            >
+              <Iconify icon="material-symbols:grid-view" />
+            </Button>
+            <Button
+              color="inherit"
+              variant={view === 'list' ? 'contained' : 'outlined'}
+              onClick={() => setView('list')}
+            >
+              <Iconify icon="lucide:layout-list" />
+            </Button>
+          </ButtonGroup>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="contained"
+              onClick={() => {}}
+              size="small"
+              color="success"
+              startIcon={<CheckCircleOutlined />}
+            >
+              All Present
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {}}
+              size="small"
+              color="error"
+              startIcon={<CancelOutlined />}
+            >
+              All Absent
+            </Button>
+          </Box>
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button
             size="small"
@@ -247,7 +270,6 @@ const TakeAttendanceScreen = () => {
           </Button>
         </Box>
       </Box>
-
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <TextField
           placeholder="Search by name, roll no, gr no"
@@ -266,7 +288,7 @@ const TakeAttendanceScreen = () => {
       <Box
         sx={{
           display: 'flex',
-          gap: 2,
+          gap: 1,
           flexWrap: 'wrap',
           border: (theme) => `1px dashed gray`,
           p: 1,
@@ -275,7 +297,7 @@ const TakeAttendanceScreen = () => {
         }}
       >
         <Typography variant="body1" fontWeight={500} color="error">
-          Total Absent : {absentStudents.length}
+          Total Absent : <b>{absentStudents.length}</b>
         </Typography>
         {absentStudents.map((item: any) => (
           <Chip
@@ -339,19 +361,24 @@ const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any)
             sx={{
               width: '100px',
               height: '100px',
-              borderRadius: 2,
+
               '& img': { width: '100%', height: '100%', objectFit: 'cover' },
             }}
           >
             <img
               src={convertBase64Format(studentAttendanceData?.student?.profilePicture)}
               alt="Student"
+              style={{
+                borderRadius: '50%',
+              }}
             />
           </Box>
-          <Box flexGrow={1}>
+          <Box flexGrow={1} ml={1} gap={0.5}>
             <Typography variant="h6">{studentAttendanceData?.name}</Typography>
             <Typography variant="body2">
-              <Label color="info">Roll No :-{studentAttendanceData?.student?.rollNo}</Label>
+              <Label color="info" sx={{ fontSize: 15 }}>
+                Roll No :- {studentAttendanceData?.student?.rollNo}
+              </Label>
             </Typography>
             <Typography variant="body2">
               Class: {studentAttendanceData?.student?.standard?.name}
@@ -361,32 +388,36 @@ const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any)
             </Typography>
           </Box>
           {/* <Box> */}
-          <IconButton
-            color="success"
-            aria-label="mark present"
-            onClick={() => {
-              setStudentData((studentData: any) =>
-                studentData.map((item: any) =>
-                  item.id === studentAttendanceData.id ? { ...item, isPresent: true } : item
-                )
-              );
-            }}
-          >
-            <CheckCircleOutlined />
-          </IconButton>
-          <IconButton
-            color="error"
-            aria-label="mark absent"
-            onClick={() => {
-              setStudentData((studentData: any) =>
-                studentData.map((item: any) =>
-                  item.id === studentAttendanceData.id ? { ...item, isPresent: false } : item
-                )
-              );
-            }}
-          >
-            <CancelOutlined />
-          </IconButton>
+          <Tooltip title="Present">
+            <IconButton
+              color="success"
+              aria-label="mark present"
+              onClick={() => {
+                setStudentData((studentData: any) =>
+                  studentData.map((item: any) =>
+                    item.id === studentAttendanceData.id ? { ...item, isPresent: true } : item
+                  )
+                );
+              }}
+            >
+              <CheckCircleOutlined />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Absent">
+            <IconButton
+              color="error"
+              aria-label="mark absent"
+              onClick={() => {
+                setStudentData((studentData: any) =>
+                  studentData.map((item: any) =>
+                    item.id === studentAttendanceData.id ? { ...item, isPresent: false } : item
+                  )
+                );
+              }}
+            >
+              <CancelOutlined />
+            </IconButton>
+          </Tooltip>{' '}
           {/* </Box> */}
         </Box>
         <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
