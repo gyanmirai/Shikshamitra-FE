@@ -290,8 +290,11 @@ const classDummyData = [
   },
 ];
 const StudentAttendanceDashboardScreen = () => {
+  // State to track overall school attendance percentage
   const [schoolAttendance, setschoolAttendance] = useState(40);
+  // State to track selected division for detailed view
   const [selectedDivision, setSelectedDivision] = useState(null);
+  // State to track selected month for attendance data
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
   return (
     <Box height="100%">
@@ -419,10 +422,14 @@ const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => {
 };
 
 const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
+  // State to track the selected student
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  // State to track the start date of attendance period, defaults to start of current month
   const [startDate, setStartDate] = useState<null | Dayjs>(dayjs().startOf('month'));
+  // State to track the end date of attendance period, defaults to end of current month
   const [endDate, setEndDate] = useState<null | Dayjs>(dayjs().endOf('month'));
 
+  // Get the current theme instance
   const theme = useTheme();
   return (
     <Grid container spacing={1} height="calc(100vh - 225px)">
