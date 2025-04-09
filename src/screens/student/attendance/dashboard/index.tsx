@@ -290,8 +290,11 @@ const classDummyData = [
   },
 ];
 const StudentAttendanceDashboardScreen = () => {
+  // State to track overall school attendance percentage
   const [schoolAttendance, setschoolAttendance] = useState(40);
+  // State to track selected division for detailed view
   const [selectedDivision, setSelectedDivision] = useState(null);
+  // State to track selected month for attendance data
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
   return (
     <Box height="100%">
