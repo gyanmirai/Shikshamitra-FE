@@ -13,17 +13,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import AssignRoom from './assignRoomDialog';
 import AssignTeacher from './assignTeacherDialog';
 
-interface TimeTableCellProps {
-  timeSlot: string;
-  day: string;
-  slotData: any;
-  isBreak: boolean;
-  selectedRoom: string;
-  onDrop: (e: any, timeSlot: string, day: string) => void;
-  onTeacherSelect: (teacher: string, timeSlot: string, day: string) => void;
-  onRoomSelect: (room: string, timeSlot: string, day: string) => void;
-  onDeleteSlot: (timeSlot: string, day: string) => void;
-}
+import type { ITimeTableCellProps } from './type';
 
 const TimeTableCell = ({
   timeSlot,
@@ -35,36 +25,61 @@ const TimeTableCell = ({
   onTeacherSelect,
   onRoomSelect,
   onDeleteSlot,
-}: TimeTableCellProps) => {
+}: ITimeTableCellProps) => {
+  /**
+   * Dialog state hooks for managing teacher and room assignment dialogs
+   */
   const teacherDialog = useBoolean();
   const roomDialog = useBoolean();
 
+  /**
+   * Unique key for identifying the time slot based on time and day
+   * @type {string}
+   */
   const slotKey = `${timeSlot}-${day}`;
-
+  /**
+   * Handles the drag over event for the timetable cell
+   * Prevents default behavior to allow dropping only if the cell is empty and not a break slot
+   * @param e - The drag over event object
+   */
   const handleDragOver = (e: any) => {
-    // Only allow drag over if the slot is empty and not a break
     if (!isBreak && !slotData) {
       e.preventDefault();
     }
   };
 
+  /**
+   * Handles the drop event for the timetable cell
+   * Processes the drop action only if the cell is empty and not a break slot
+   * Calls the onDrop callback with the event and cell location data
+   * @param e - The drop event object
+   */
   const handleDrop = (e: any) => {
-    // Only allow drop if the slot is empty and not a break
     if (!isBreak && !slotData) {
       e.preventDefault();
       onDrop(e, timeSlot, day);
     }
   };
 
+  /**
+   * Handles the drag start event for the timetable cell
+   * Sets the drag data including subject details and source location
+   * Only allows dragging if the cell has data and is not a break slot
+   * @param e - The drag start event object
+   */
   const handleDragStart = (e: any) => {
     if (!isBreak && slotData) {
       e.dataTransfer.setData('subject', JSON.stringify(slotData.subject));
-      // Store the source location
       e.dataTransfer.setData('sourceTimeSlot', timeSlot);
       e.dataTransfer.setData('sourceDay', day);
     }
   };
 
+  /**
+   * Renders a special break cell in the timetable
+   * Displays a non-interactive cell with "Break" text and grey background
+   * @returns {JSX.Element} Break cell component
+   */
   if (isBreak) {
     return (
       <TableCell
@@ -177,7 +192,7 @@ const TimeTableCell = ({
                           sx={{ height: '18px', width: '18px' }}
                           color="red"
                         />
-                        Slot
+                        Delete
                       </MenuItem>
                     </MenuList>
                   )}

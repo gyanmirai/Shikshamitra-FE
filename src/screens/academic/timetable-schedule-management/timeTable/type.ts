@@ -9,6 +9,6 @@ export interface TSubject {
   name: string;
   color: string;
   teachers: string[];
-  room: string;
+  room?: string;
   noOfLeacture: number;
 }
