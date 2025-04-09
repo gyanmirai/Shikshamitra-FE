@@ -1,6 +1,7 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
+import { Box } from '@mui/material';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
@@ -8,11 +9,13 @@ import CardHeader from '@mui/material/CardHeader';
 
 import { fNumber } from 'src/utils/format-number';
 
+import { Iconify } from 'src/components/iconify';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
 
 type Props = CardProps & {
+  icon?: string;
   title?: string;
   subheader?: string;
   chart: {
@@ -25,7 +28,7 @@ type Props = CardProps & {
   };
 };
 
-export function AppCurrentDownload({ title, subheader, chart, ...other }: Props) {
+export function AppCurrentDownload({ title, icon, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
@@ -73,7 +76,10 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
 
   return (
     <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
+        {icon && <Iconify icon={icon} width={32} height={32} sx={{ color: 'primary.main' }} />}
+        <CardHeader title={title} subheader={subheader} sx={{ mb: 3 }} />
+      </Box>
 
       <Chart
         type="donut"
