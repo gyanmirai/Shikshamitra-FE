@@ -1202,10 +1202,26 @@ const libraryModule = {
         },
         {
           title: 'Circulation',
-          path: '/library/circulation',
+          path: '',
           _action: 'circulation',
           shortcutKey: 'Alt+L+4',
           shortcutKeyName: 'Alt+L+4',
+          children: [
+            {
+              title: 'Reservations Management',
+              path: '/library/circulation/reservation-management',
+              _action: 'reservation-management',
+              shortcutKey: 'Alt+L+5',
+              shortcutKeyName: 'Alt+L+5',
+            },
+            {
+              title: 'Fines Management',
+              path: '/library/circulation/fine-management',
+              _action: 'reservation-management',
+              shortcutKey: 'Alt+L+5',
+              shortcutKeyName: 'Alt+L+5',
+            },
+          ],
         },
         {
           title: 'Reports',

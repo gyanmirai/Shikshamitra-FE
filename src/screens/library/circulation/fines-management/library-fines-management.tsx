@@ -1,6 +1,10 @@
+'use client';
+
+import type { Column } from 'src/components/customizabaleTable';
+
 import React, { useState } from 'react';
 
-import { Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,209 +14,230 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import CollectFinesDialog from './component/collect-fines-dialog';
+import CommonCtaComponent from '../../component/common-cta-component';
+import IssueBookDialog from '../../book-management/component/issue-book-dialog';
+import ReturnBookDialog from '../../book-management/component/return-book-dialog';
+import AddNewBookDialog from '../../book-management/component/add-new-book-dialog';
+import {
+  bookDataCirculation,
+  memberDataCirculation,
+  dummyDataForFineCirculation,
+} from '../data/dummy-data';
+
+import type { IFineCirculation } from '../data/dummy-data-interface';
 
 const LibraryFineManagement = () => {
-  const dummyData = [
-    // Grouped by memberId
+  // State to store selected member details
+  const [selectedMember, setSelectedMember] = useState(null);
+  // State to store array of selected students for fine collection
+  const [selectedStudents, setSelectedStudents] = useState<IFineCirculation[]>([]);
+
+  // Boolean hook to control collect fine dialog visibility
+  const {
+    value: collectFineDialogOpen,
+    onTrue: openCollectFineDialog,
+    onFalse: closeCollectFineDialog,
+  } = useBoolean();
+
+  // Boolean hook to control notification dialog visibility
+  const {
+    value: notificationDialogOpen,
+    onTrue: openNotificationDialog,
+    onFalse: closeNotificationDialog,
+  } = useBoolean();
+
+  // Boolean hook to control add new book dialog visibility
+  const {
+    value: addBookDialogOpen,
+    onTrue: openAddBookDialog,
+    onFalse: closeAddBookDialog,
+  } = useBoolean();
+
+  // Boolean hook to control issue book dialog visibility
+  const {
+    value: issueBookDialogOpen,
+    onTrue: openIssueBookDialog,
+    onFalse: closeIssueBookDialog,
+  } = useBoolean();
+
+  // Boolean hook to control return book dialog visibility
+  const {
+    value: returnBookDialogOpen,
+    onTrue: openReturnBookDialog,
+    onFalse: closeReturnBookDialog,
+  } = useBoolean();
+
+  // Handler function to process fine collection
+  const handleCollectFine = (values: any) => {
+    console.log('Collected Fine Data:', values);
+    closeCollectFineDialog();
+  };
+
+  const tableColumns = [
     {
-      memberId: 'B1019JH8',
-      memberName: 'John Doe',
-      totalFineAmount: 50,
-      status: 'Overdue',
-      role: 'Student',
-      fines: [
-        {
-          bookId: 'B101',
-          title: 'Introduction to Mathematics',
-          issueDate: '01-11-2024',
-          dueDate: '08-11-2024',
-          returnDate: '12-11-2024',
-          status: 'Overdue',
-          fineAmount: 50,
-          receivedAmount: 0,
-          fineReason: 'Late Return',
-        },
-      ],
+      id: 'checkBox',
+      align: 'left',
+      minWidth: '60px',
+      isSort: false,
+      isFilter: false,
+      label: '',
+      renderColumn: () => (
+        <Checkbox
+          checked={
+            !!dummyDataForFineCirculation?.length &&
+            selectedStudents?.length === dummyDataForFineCirculation?.length
+          }
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedStudents((dummyDataForFineCirculation as IFineCirculation[]) || []);
+            } else {
+              setSelectedStudents([]);
+            }
+          }}
+        />
+      ),
+      render: (value: any, row: any) => (
+        <Checkbox
+          checked={
+            Array.isArray(selectedStudents) &&
+            selectedStudents.some((i) => i.memberId === row.memberId)
+          }
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedStudents([...selectedStudents, row]);
+            } else {
+              setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            }
+          }}
+        />
+      ),
+    },
+    { id: 'memberId', label: 'Gr No' },
+    { id: 'memberName', label: 'Name' },
+    { id: 'role', label: 'Role' },
+    {
+      id: 'totalFineAmount',
+      label: 'Total Fine Amount',
+      render: (value: any) => <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>,
     },
     {
-      memberId: 'B10879JH8',
-      memberName: 'Jane Smith',
-      totalFineAmount: 50,
-      status: 'Overdue',
-      role: 'Student',
-      fines: [
-        {
-          bookId: 'B102',
-          title: 'Physics Fundamentals',
-          issueDate: '05-11-2024',
-          dueDate: '12-11-2024',
-          returnDate: null,
-          status: 'Pending',
-          fineAmount: 50,
-          receivedAmount: 0,
-          fineReason: 'Late Return',
-        },
-      ],
+      id: 'status',
+      label: 'Status',
+      render: (value: any) => (
+        <Label
+          variant="soft"
+          color={value === 'Paid' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
+        >
+          {value}
+        </Label>
+      ),
     },
     {
-      memberId: 'D10879J68',
-      memberName: 'Sam Wilson',
-      totalFineAmount: 250,
-      status: 'Overdue',
-      role: 'Student',
-      fines: [
-        {
-          bookId: 'B103',
-          title: 'Chemistry Basics',
-          issueDate: '08-11-2024',
-          dueDate: '15-11-2024',
-          returnDate: '18-11-2024',
-          status: 'Paid',
-          fineAmount: 150,
-          receivedAmount: 150,
-          fineReason: 'Late Return',
-        },
-        {
-          bookId: 'B104',
-          title: 'Biology Essentials',
-          issueDate: '10-11-2024',
-          dueDate: '17-11-2024',
-          returnDate: '20-11-2024',
-          status: 'Overdue',
-          fineAmount: 100,
-          receivedAmount: 0,
-          fineReason: 'Late Return',
-        },
-      ],
+      id: 'action',
+      label: 'Action',
+      render: (_: any, row: any) => (
+        <ThreeDotsActions
+          placement="right-top"
+          actions={({ popover }) => (
+            <MenuList>
+              <MenuItem
+                onClick={() => {
+                  setSelectedMember(row);
+                  openCollectFineDialog();
+                }}
+              >
+                <Iconify icon="mingcute:pig-money-line" />
+                Collect Fine
+              </MenuItem>
+            </MenuList>
+          )}
+        />
+      ),
     },
   ];
-
-  const collectFineDialog = useBoolean();
-  const [selectedMember, setSelectedMember] = useState<any>(null);
-
-  const renderTableActions = (row: any) => (
-    <ThreeDotsActions
-      placement="right-top"
-      actions={({ popover }: any) => (
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              setSelectedMember(row); // Set selected student data
-              collectFineDialog.onTrue(); // Open dialog
-            }}
-          >
-            <Iconify icon="mingcute:pig-money-line" />
-            Collect Fine
-          </MenuItem>
-        </MenuList>
-      )}
-    />
-  );
-
-  const collectFineHandler = (values: any) => {
-    console.log('Collected Fine Data:', values);
-    collectFineDialog.onFalse(); // Close dialog
-  };
-
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
-
   return (
     <>
+      <Box
+        display="flex"
+        flexDirection="row"
+        gap={2}
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <CustomBreadcrumbs
+          heading="Fine Management"
+          links={[
+            { name: 'Library', href: '/library/dashboard' },
+            { name: 'Circulation' },
+            { name: 'Fine Management' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+        <CommonCtaComponent
+          bookHandler={openAddBookDialog}
+          issueBookHandler={openIssueBookDialog}
+          returnBookHandler={openReturnBookDialog}
+          createReservationHandler={() => {}}
+        />
+      </Box>
+
       <CustomizableTable
-        onSendNotification={handlerSendNotification}
+        onSendNotification={openNotificationDialog}
         showCheckbox={selectedStudents.length !== 0}
         tableId="library-fine-management"
-        columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={!!dummyData?.length && selectedStudents?.length === dummyData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(dummyData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
-          { id: 'memberId', label: 'Gr No' },
-          { id: 'memberName', label: 'Name' },
-          { id: 'role', label: 'Role' },
-          {
-            id: 'totalFineAmount',
-            label: 'Total Fine Amount',
-            render(value) {
-              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
-            },
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={value === 'Paid' ? 'success' : value === 'Pending' ? 'warning' : 'error'}
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-        ]}
-        data={dummyData}
+        columns={tableColumns as Column[]}
+        data={dummyDataForFineCirculation}
       />
 
-      {sendInstantNotificationDialogValue.value && (
+      {notificationDialogOpen && (
         <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
+          open={notificationDialogOpen}
+          onClose={closeNotificationDialog}
           data={[]}
           userList={selectedStudents}
         />
       )}
 
-      {collectFineDialog.value && (
+      {collectFineDialogOpen && (
         <CollectFinesDialog
-          dialogValue={collectFineDialog.value}
+          dialogValue={collectFineDialogOpen}
           data={selectedMember}
-          onSave={collectFineHandler}
-          onClose={collectFineDialog.onFalse}
+          onSave={handleCollectFine}
+          onClose={closeCollectFineDialog}
+        />
+      )}
+
+      {issueBookDialogOpen && (
+        <IssueBookDialog
+          dialogValue={issueBookDialogOpen}
+          bookData={bookDataCirculation}
+          memberData={memberDataCirculation}
+          onSave={() => {}}
+          onClose={closeIssueBookDialog}
+        />
+      )}
+
+      {returnBookDialogOpen && (
+        <ReturnBookDialog
+          dialogValue={returnBookDialogOpen}
+          onSave={() => {}}
+          bookData={bookDataCirculation}
+          memberData={memberDataCirculation}
+          onClose={closeReturnBookDialog}
+        />
+      )}
+
+      {addBookDialogOpen && (
+        <AddNewBookDialog
+          dialogValue={addBookDialogOpen}
+          data={[]}
+          onSave={() => {}}
+          onClose={closeAddBookDialog}
+          isEdit={false}
         />
       )}
     </>
@@ -220,136 +245,3 @@ const LibraryFineManagement = () => {
 };
 
 export default LibraryFineManagement;
-
-// import React, { useState } from 'react';
-
-// import { MenuItem, MenuList, Typography } from '@mui/material';
-
-// import { useBoolean } from 'src/hooks/use-boolean';
-
-// import { formatNumber } from 'src/utils/formate_number';
-
-// import { Label } from 'src/components/label';
-// import { Iconify } from 'src/components/iconify';
-// import ThreeDotsActions from 'src/components/three-dots-actions';
-// import CustomizableTable from 'src/components/customizabaleTable';
-
-// import CollectFinesDialog from './component/collect-fines-dialog';
-
-// const LibraryFineManagement = () => {
-//     const dummyData = [
-//         {
-//             bookId: 'B101',
-//             memberId: 'B1019JH8',
-//             title: 'Introduction to Mathematics',
-//             memberName: 'John Doe',
-//             requestedDate: '12-11-2024',
-//             status: 'Overdue',
-//             fineAmount: 50,
-
-//         },
-//         {
-//             bookId: 'B102',
-//             memberId: 'B10879JH8',
-//             title: 'Physics Fundamentals',
-//             memberName: 'Jane Smith',
-//             requestedDate: '14-11-2024',
-//             status: 'Pending',
-//             fineAmount: 50,
-//         },
-//         {
-//             bookId: 'B103',
-//             memberId: 'D10879J68',
-//             title: 'Chemistry Basics',
-//             memberName: 'Sam Wilson',
-//             requestedDate: '18-11-2024',
-//             status: 'Paid',
-//             fineAmount: 150,
-//         },
-//     ];
-
-//     const collectFineDialog = useBoolean();
-//     const [selectedEntry, setSelectedEntry] = useState<any>(null);
-
-//     const renderTableActions = (row: any) => (
-//         <ThreeDotsActions
-//             placement="right-top"
-//             actions={({ popover }: any) => (
-//                 <MenuList>
-//                     <MenuItem
-//                         onClick={() => {
-//                             setSelectedEntry(row); // Set selected row data
-//                             collectFineDialog.onTrue(); // Open dialog
-//                             popover.close(); // Close popover
-//                         }}
-//                     >
-//                         <Iconify icon="mingcute:pig-money-line" />
-//                         Collect Fine
-//                     </MenuItem>
-//                 </MenuList>
-//             )}
-//         />
-//     );
-
-//     const collectFineHandler = (values: any) => {
-//         console.log('Collected Fine Data:', values);
-//         // Add logic for fine collection
-//         collectFineDialog.onFalse(); // Close dialog after save
-//     };
-
-//     return (
-//         <>
-//             <CustomizableTable
-//                 columns={[
-//                     { id: 'bookId', label: 'Book Id' },
-//                     { id: 'memberName', label: 'Member Name' },
-//                     { id: 'requestedDate', label: 'Due Date' },
-//                     {
-//                         id: 'fineAmount',
-//                         label: 'Fine Amount',
-//                         render(value, row) {
-//                             return (
-//                                 <Typography fontSize="12px">
-//                                     {formatNumber(value, "INR")}
-//                                 </Typography>
-//                             );
-//                         },
-//                     },
-//                     {
-//                         id: 'status',
-//                         label: 'Status',
-//                         render(value, row) {
-//                             return (
-//                                 <Label
-//                                     variant="soft"
-//                                     color={
-//                                         value === "Paid"
-//                                             ? 'success'
-//                                             : value === "Pending"
-//                                                 ? 'warning'
-//                                                 : 'error'
-//                                     }
-//                                 >
-//                                     {value}
-//                                 </Label>
-//                             );
-//                         },
-//                     },
-//                     { id: 'action', label: 'Action', render: (_, row) => renderTableActions(row) },
-//                 ]}
-//                 data={dummyData}
-//             />
-
-//             {collectFineDialog.value && (
-//                 <CollectFinesDialog
-//                     dialogValue={collectFineDialog.value}
-//                     data={selectedEntry}
-//                     onSave={collectFineHandler}
-//                     onClose={collectFineDialog.onFalse}
-//                 />
-//             )}
-//         </>
-//     );
-// };
-
-// export default LibraryFineManagement;
