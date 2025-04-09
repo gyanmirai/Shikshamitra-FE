@@ -1317,11 +1317,6 @@ const transportModule = {
           _action: 'transport-notification',
         },
         {
-          title: 'Notification',
-          path: '/transport/transport-notification',
-          _action: 'transport-notification',
-        },
-        {
           title: 'Settings',
           path: '',
           _action: 'transport-settings',
