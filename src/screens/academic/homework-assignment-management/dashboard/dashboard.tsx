@@ -5,7 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
+import { Box, Grid, Card } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -14,10 +14,7 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
-import { CalendarView } from 'src/sections/calendar/view';
-
 import DashboardCards from './component/dashboardCards';
-import HomeworkPendingCards from './component/homeworkPendingCards';
 import HomeworkAssignmentCards from './component/homeworkAssignmentCards';
 
 const Dashboard = (props: TabComponentType) => {
@@ -151,7 +148,7 @@ const Dashboard = (props: TabComponentType) => {
         <DashboardCards />
         <HomeworkAssignmentCards />
       </Grid>
-      <Typography variant="h6" gutterBottom color="text.primary" sx={{ mt: 2 }}>
+      {/* <Typography variant="h6" gutterBottom color="text.primary" sx={{ mt: 2 }}>
         Welcome, [John Doe]
       </Typography>
       <HomeworkPendingCards />
@@ -160,7 +157,7 @@ const Dashboard = (props: TabComponentType) => {
           <Typography variant="h6">Assignments & Homeworks</Typography>
           <CalendarView />
         </CardContent>
-      </Card>
+      </Card> */}
     </Box>
   );
 };
