@@ -12,11 +12,11 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Settings from './settings';
-import Subjects from './subjects';
 import Reports from './reportsAndAnalyics';
 import Dashboard from './dashboard/dashboard';
 import CourseProgress from './courseProgress';
-import LearningResources from './learningResources';
+import Subjects from './syllabusManagement/subjects';
+import LearningResources from './learningResources/learningResources';
 
 const TABS = [
   {

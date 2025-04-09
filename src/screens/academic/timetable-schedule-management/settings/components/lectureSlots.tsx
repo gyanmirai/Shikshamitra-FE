@@ -55,7 +55,7 @@ const LectureSlots = () => {
   );
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 1 }}>
+      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
