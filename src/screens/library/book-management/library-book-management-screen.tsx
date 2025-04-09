@@ -1,199 +1,232 @@
+// Improved version of LibraryBookManagementScreen
+
 'use client';
 
 import React, { useState } from 'react';
 
-import { Box, MenuItem, MenuList, useTheme, TextField, InputAdornment } from '@mui/material';
+import { Box, TextField, InputAdornment } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { bookData, memberData } from './data/data';
 import IssueBookDialog from './component/issue-book-dialog';
 import ReturnBookDialog from './component/return-book-dialog';
+import { bookData, booksData, memberData } from './data/data';
 import AddNewBookDialog from './component/add-new-book-dialog';
 import CommonCtaComponent from '../component/common-cta-component';
 import AddNewMemberDialog from '../member-management/component/add-new-member-dialog';
 
+interface Book {
+  bookId: string;
+  title: string;
+  author: string;
+  isbn: string;
+  category: string;
+  year: string;
+  availability: string;
+}
+
+interface DialogProps {
+  onTrue: () => void;
+  onFalse: () => void;
+}
+
 const LibraryBookManagementScreen = () => {
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  // State to store and manage the search query input value
+  const [searchQuery, setSearchQuery] = useState('');
+  // State to store the currently selected entry (book) for editing or other operations
+  const [selectedEntry, setSelectedEntry] = useState<Book | null>(null);
+  // State to store the book selected for viewing details
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  // Boolean state to track whether we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
 
-  const [selectedBook, setSelectedBook] = useState<any>(null);
-
-  const handleViewDetails = (book: any) => {
-    setSelectedBook(book);
+  // Dialog states to manage visibility of different dialogs/modals
+  // using useBoolean hook which provides toggle functionality
+  const dialogStates = {
+    addMember: useBoolean(), // Controls Add Member dialog visibility
+    addNewBook: useBoolean(), // Controls Add New Book dialog visibility
+    issueBook: useBoolean(), // Controls Issue Book dialog visibility
+    returnBook: useBoolean(), // Controls Return Book dialog visibility
   };
 
-  const handleCloseDialog = () => {
-    setSelectedBook(null);
+  // Handlers
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
   };
 
-  // Dialog state handlers
-  const addMemberDialog = useBoolean();
-  const addNewBookDialog = useBoolean();
-  const issueBookDialog = useBoolean();
-  const returnBookDialog = useBoolean();
+  const handleViewDetails = (book: Book) => setSelectedBook(book);
 
-  const data = [
-    {
-      bookId: 'A9i878',
-      title: 'Maths',
-      author: 'Vikas',
-      isbn: '-',
-      category: 'Education',
-      year: '2024',
-      availability: 'Not Available',
-    },
-  ];
-
-  // Handlers for dialogs
-  const openDialog = (dialog: any, entry: any = null, editMode = false) => {
+  const openDialog = (dialog: DialogProps, entry: Book | null = null, editMode = false) => {
     setSelectedEntry(entry);
     setIsEdit(editMode);
     dialog.onTrue();
   };
 
-  const closeDialog = (dialog: any) => {
+  const closeDialog = (dialog: DialogProps) => {
     setSelectedEntry(null);
     setIsEdit(false);
     dialog.onFalse();
   };
 
-  const saveHandler = () => {
-    console.log('Saved data:', data);
+  const handleSave = () => {
+    // Implement actual save logic here
   };
 
-  // Actions for the table rows
-  const renderTableActions = (row: any) => (
-    <ThreeDotsActions
-      placement="right-top"
-      actions={({ popover }: any) => (
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              openDialog(addNewBookDialog, row, true);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="mdi:eye" />
-            Edit
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              openDialog(issueBookDialog, row);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:pen-bold" />
-            Issue Book
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              // Add delete logic here
-              console.log('Delete:', row);
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
-        </MenuList>
-      )}
-    />
-  );
+  // Process raw book data to calculate and format book statistics
+  // Takes an array of books and returns transformed data with counts of borrowed, reserved, and overdue books
+  const processBookData = (books: typeof booksData) => {
+    // Get current date for overdue calculations
+    const currentDate = new Date();
 
-  const theme = useTheme();
-  const [open, setOpen] = useState(false);
+    return books.map((book) => {
+      // Get all editions of the book, default to empty array if none exist
+      const allEditions = book.editions || [];
 
-  const closeHandler = () => {
-    setIsEdit(false);
-    setOpen(false);
+      // Reduce all editions to get aggregate counts
+      // For each edition, count:
+      // - number of current borrowers
+      // - number of reservations
+      // - number of overdue books (where due date is less than current date)
+      const counts = allEditions.reduce(
+        (acc, edition) => ({
+          borrowed: acc.borrowed + (edition.currentIssuers?.length || 0),
+          reserved: acc.reserved + (edition.reservedList?.length || 0),
+          overdue:
+            acc.overdue +
+            (edition.currentIssuers?.filter((issuer) => new Date(issuer.dueDate) < currentDate)
+              .length || 0),
+        }),
+        { borrowed: 0, reserved: 0, overdue: 0 }
+      );
+
+      // Return transformed book data with counts
+      return {
+        name: book.title,
+        isbn: book.id,
+        ...counts,
+      };
+    });
   };
-  return (
+
+  const tableColumns = [
+    { id: 'isbn', label: 'ISBN' },
+    { id: 'name', label: 'Name' },
+    { id: 'borrowed', label: 'Borrowed' },
+    { id: 'overdue', label: 'Overdue' },
+    { id: 'reserved', label: 'Reserved' },
+    {
+      id: 'action',
+      label: 'Action',
+      render: (value: any, row: any) => (
+        <ThreeDotsActions
+          showThreeDots={false}
+          showViewIcon
+          showDeleteIcon
+          handleViewClick={() => handleViewDetails(row as Book)}
+        />
+      ),
+    },
+  ];
+
+  const renderDialogs = () => (
     <>
-      {open ? (
-        <AddNewBookDialog
-          dialogValue={addNewBookDialog.value}
+      {dialogStates.issueBook.value && (
+        <IssueBookDialog
+          dialogValue={dialogStates.issueBook.value}
+          bookData={bookData}
+          memberData={memberData}
+          onSave={handleSave}
+          onClose={() => closeDialog(dialogStates.issueBook)}
+        />
+      )}
+      {dialogStates.returnBook.value && (
+        <ReturnBookDialog
+          dialogValue={dialogStates.returnBook.value}
+          onSave={handleSave}
+          bookData={bookData}
+          memberData={memberData}
+          onClose={() => closeDialog(dialogStates.returnBook)}
+        />
+      )}
+      {dialogStates.addMember.value && (
+        <AddNewMemberDialog
+          dialogValue={dialogStates.addMember.value}
           data={selectedEntry}
-          onSave={saveHandler}
-          onClose={closeHandler}
+          onSave={handleSave}
+          onClose={() => closeDialog(dialogStates.addMember)}
+          isEdit={isEdit}
+          isRenewMembership={false}
+        />
+      )}
+
+      {dialogStates.addNewBook.value && (
+        <AddNewBookDialog
+          dialogValue={dialogStates.addNewBook.value}
+          data={selectedEntry}
+          onSave={handleSave}
+          onClose={() => closeDialog(dialogStates.addNewBook)}
           isEdit={isEdit}
         />
-      ) : (
-        <>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      <>
+        <Box
+          pb="20px"
+          display="flex"
+          flexDirection="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <CustomBreadcrumbs
             heading="Book Management"
             links={[{ name: 'Library' }, { name: 'Book Management' }]}
             sx={{ px: 1, mb: 2 }}
           />
-          <Box
-            pb="20px"
-            display="flex"
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <TextField
-              // fullWidth
-              placeholder="Search by book name , category , status"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Iconify
-                      icon="eva:search-fill"
-                      sx={{ color: 'text.disabled', width: 20, height: 20 }}
-                    />
-                  </InputAdornment>
-                ),
-              }}
-              size="small"
-              value=""
-              onChange={() => {}}
-              sx={{ '& input': { fontSize: '12px' }, width: '400px' }}
-            />
-            <CommonCtaComponent
-              bookHandler={() => setOpen(true)}
-              issueBookHandler={() => openDialog(issueBookDialog)}
-              returnBookHandler={() => openDialog(returnBookDialog)}
-              createReservationHandler={() => openDialog(addMemberDialog)}
-            />
-          </Box>
-        </>
-      )}
+          <CommonCtaComponent
+            bookHandler={() => openDialog(dialogStates.addNewBook)}
+            issueBookHandler={() => openDialog(dialogStates.issueBook)}
+            returnBookHandler={() => openDialog(dialogStates.returnBook)}
+            createReservationHandler={() => openDialog(dialogStates.addMember)}
+          />
+        </Box>
 
-      {/* Issue Book Dialog */}
-      {issueBookDialog.value && (
-        <IssueBookDialog
-          dialogValue={issueBookDialog.value}
-          bookData={bookData}
-          memberData={memberData}
-          onSave={saveHandler}
-          onClose={() => closeDialog(issueBookDialog)}
-        />
-      )}
+        <Box pb="20px">
+          <TextField
+            placeholder="Search by book name, category, status"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify
+                    icon="eva:search-fill"
+                    sx={{ color: 'text.disabled', width: 20, height: 20 }}
+                  />
+                </InputAdornment>
+              ),
+            }}
+            size="small"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            sx={{ '& input': { fontSize: '12px' }, width: '400px' }}
+          />
+        </Box>
 
-      {/* Return Book Dialog */}
-      {returnBookDialog.value && (
-        <ReturnBookDialog
-          dialogValue={returnBookDialog.value}
-          onSave={saveHandler}
-          bookData={bookData}
-          memberData={memberData}
-          onClose={() => closeDialog(returnBookDialog)}
+        <CustomizableTable
+          tableId="book-management-table"
+          columns={tableColumns}
+          data={processBookData(booksData)}
         />
-      )}
-      {addMemberDialog && (
-        <AddNewMemberDialog
-          dialogValue={addMemberDialog.value}
-          data={selectedEntry}
-          onSave={saveHandler}
-          onClose={() => closeDialog(addMemberDialog)}
-          isEdit={isEdit}
-          isRenewMembership={false}
-        />
-      )}
+      </>
+
+      {renderDialogs()}
     </>
   );
 };
