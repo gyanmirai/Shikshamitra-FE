@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { ChartOptions } from 'src/components/chart';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -14,9 +15,11 @@ import {
   Box,
   Card,
   Grid,
+  alpha,
   Button,
   MenuList,
   MenuItem,
+  useTheme,
   TextField,
   Typography,
   DialogActions,
@@ -29,14 +32,14 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
+import { SvgColor } from 'src/components/svg-color';
 import CustomDialog from 'src/components/customDialog';
+import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-import { AppWidget } from './courseManagement';
 
 // Interface representing details of a course chapter
 interface CourseDetail {
@@ -53,12 +56,19 @@ interface Course {
   name: string; // Name of the course
   progress: number; // Overall progress percentage of the course
   details: CourseDetail[]; // Array of chapter details for the course
+  completedChapter: number; // Number of chapters completed
+  totalChapter: number; // Number of chapters pending
+  color: string; // Color of the course
 }
+
 const courses: Course[] = [
   {
     id: 1,
     name: 'Math Course',
     progress: 75,
+    completedChapter: 6,
+    totalChapter: 10,
+    color: '#007F63', // green
     details: [
       {
         chapterName: 'Algebra Basics',
@@ -80,6 +90,9 @@ const courses: Course[] = [
     id: 2,
     name: 'Science Course',
     progress: 86.6,
+    completedChapter: 10,
+    totalChapter: 20,
+    color: '#006BA6', // blue
     details: [
       {
         chapterName: 'Physics Introduction',
@@ -101,6 +114,9 @@ const courses: Course[] = [
     id: 3,
     name: 'English Course',
     progress: 75,
+    completedChapter: 10,
+    totalChapter: 20,
+    color: '#8E44AD', // purple
     details: [
       {
         chapterName: 'Grammar Essentials',
@@ -122,6 +138,9 @@ const courses: Course[] = [
     id: 4,
     name: 'Gujarati Course',
     progress: 86.6,
+    completedChapter: 10,
+    totalChapter: 20,
+    color: '#D35400', // orange
     details: [
       {
         chapterName: 'Alphabet and Basics',
@@ -264,22 +283,18 @@ const CourseProgress = (props: TabComponentType) => {
       {/* Grid of course cards showing progress */}
       <Grid container spacing={2} marginTop={2} marginBottom={4}>
         {courses.map((course) => (
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} md={3}>
             <Card
               sx={{
-                p: 2,
                 height: '100%',
                 display: 'flex',
                 justifyContent: 'center',
-                border:
-                  selectedCourse?.id === course.id
-                    ? '2px solid #1a1a1a' // Darker border when selected
-                    : '1px solid #e0e0e0', // Initial light border
-                transition: 'all 0.2s ease',
-                boxShadow:
-                  selectedCourse?.id === course.id ? '0 0 0 2px rgba(0, 0, 0, 0.1)' : 'none',
+                transition: 'all 0.3s ease',
+                transform: 'scale(1)',
                 '&:hover': {
-                  borderColor: '#757575', // Medium gray for hover state
+                  transform: 'scale(1.05)', // zoom in
+                  zIndex: 2,
+                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)', // subtle elevation
                 },
                 cursor: 'pointer',
               }}
@@ -289,8 +304,11 @@ const CourseProgress = (props: TabComponentType) => {
             >
               <AppWidget
                 title={course.name}
+                color={course.color}
                 icon="solar:user-rounded-bold"
                 chart={{ series: course.progress }}
+                completedChapter={course.completedChapter}
+                totalChapter={course.totalChapter}
               />
             </Card>
           </Grid>
@@ -437,6 +455,126 @@ const UpdateProgress = () => {
           Submit
         </LoadingButton>
       </DialogActions>
+    </Box>
+  );
+};
+
+interface AppWidgetProps {
+  title: string;
+  total?: number;
+  color: string;
+  icon: string;
+  totalChapter: number;
+  completedChapter: number;
+  chart: {
+    colors?: string[];
+    series: number;
+    options?: ChartOptions;
+  };
+}
+
+export const AppWidget: React.FC<AppWidgetProps> = ({
+  title,
+  total,
+  color,
+  icon,
+  chart,
+  totalChapter,
+  completedChapter,
+}) => {
+  const theme = useTheme();
+
+  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
+
+  const chartOptions = useChart({
+    chart: { sparkline: { enabled: true } },
+    stroke: { width: 0 },
+    fill: {
+      type: 'solid',
+      colors: chartColors,
+    },
+    plotOptions: {
+      radialBar: {
+        dataLabels: {
+          name: { show: false },
+          value: {
+            offsetY: 6,
+            color: 'white',
+            fontSize: theme.typography.subtitle2.fontSize as string,
+          },
+        },
+      },
+    },
+    ...chart.options,
+  });
+
+  return (
+    <Box
+      sx={{
+        p: 2,
+        borderRadius: 3,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        bgcolor: color, // rich green background
+        color: 'common.white',
+        width: '100%',
+        minHeight: 120,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Circular Progress Chart */}
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 80,
+          height: 80,
+          color: 'white',
+        }}
+      >
+        <Chart
+          type="radialBar"
+          series={[chart.series]}
+          options={chartOptions}
+          width={80}
+          height={80}
+        />
+      </Box>
+
+      {/* Background SVG */}
+      <SvgColor
+        src="/assets/background/shape-circle-3.svg"
+        sx={{
+          width: 180,
+          height: 180,
+          position: 'absolute',
+          opacity: 0.06,
+          right: 0,
+          top: 0,
+          zIndex: 0,
+        }}
+      />
+
+      {/* Textual Content */}
+      <Box sx={{ ml: 2, zIndex: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'common.white' }}>
+          {completedChapter}/{totalChapter}
+        </Typography>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            mt: 0.5,
+            color: alpha('#ffffff', 0.8),
+            fontWeight: 500,
+          }}
+        >
+          {title}
+        </Typography>
+      </Box>
     </Box>
   );
 };

@@ -14,8 +14,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import IssueBookDialog from './component/issue-book-dialog';
-import { bookData, booksData, memberData } from './data/data';
 import ReturnBookDialog from './component/return-book-dialog';
+import { bookData, booksData, memberData } from './data/data';
 import AddNewBookDialog from './component/add-new-book-dialog';
 import CommonCtaComponent from '../component/common-cta-component';
 import AddNewMemberDialog from '../member-management/component/add-new-member-dialog';

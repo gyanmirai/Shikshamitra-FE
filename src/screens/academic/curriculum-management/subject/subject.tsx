@@ -370,6 +370,7 @@ const Subject = (props: TabComponentType) => {
                   id: 'action',
                   label: 'Actions',
                   align: 'left',
+                  minWidth: '150px',
                   sticky: true,
                   isFilter: false,
                   isSort: false,

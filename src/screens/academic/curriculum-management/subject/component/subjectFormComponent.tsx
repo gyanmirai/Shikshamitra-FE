@@ -30,6 +30,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './validationSchema';
 
+import type { ISubjectFormValues } from './type';
 import type { Document, TSubjectTable } from '../subject';
 
 interface SubjectFormProps {
@@ -48,7 +49,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
   const isPublished = data?.status === 'Publish';
 
   // Initialize formik form with initial values from data prop or default values
-  const formik = useFormik({
+  const formik = useFormik<ISubjectFormValues>({
     initialValues: {
       subjectCode: data?.subjectCode || '',
       subjectName: data?.subjectName || '',
@@ -97,9 +98,9 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
   };
   return (
     <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-      <Box display="flex" flexDirection="column" gap={2} sx={{ height: '100%' }}>
+      <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
         <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <ShakingTextField
                 error={!!(formik.touched.className && formik.errors.className) || false}
@@ -116,6 +117,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                   }}
                   formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                   error={formik.touched.className && Boolean(formik.errors.className)}
+                  helperText={(formik.touched.className && formik.errors.className) || ''}
                   disabled={isPublished}
                 />
               </ShakingTextField>
@@ -133,6 +135,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                   onChange={formik.handleChange}
                   disabled={isPublished}
                   error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
+                  helperText={formik.touched.subjectCode && formik.errors.subjectCode}
                 />
               </ShakingTextField>
             </Grid>
@@ -149,6 +152,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                   value={formik.values.subjectName}
                   onChange={formik.handleChange}
                   error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
+                  helperText={formik.touched.subjectName && formik.errors.subjectName}
                 />
               </ShakingTextField>
             </Grid>
@@ -171,6 +175,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                     formik.setFieldValue('primaryTeacher', val);
                   }}
                   error={formik.touched.primaryTeacher}
+                  helperText={(formik.touched.primaryTeacher && formik.errors.primaryTeacher) || ''}
                 />
               </ShakingTextField>
             </Grid>
@@ -196,6 +201,13 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                     formik.setFieldValue('secondaryTeacher', val);
                   }}
                   error={formik.touched.secondaryTeacher}
+                  helperText={
+                    formik.touched.secondaryTeacher && formik.errors.secondaryTeacher
+                      ? Array.isArray(formik.errors.secondaryTeacher)
+                        ? formik.errors.secondaryTeacher.join(', ')
+                        : formik.errors.secondaryTeacher
+                      : ''
+                  }
                 />
               </ShakingTextField>
             </Grid>
@@ -215,7 +227,10 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                       size: 'small',
                       fullWidth: true,
                       error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
-                      helperText: formik.touched.scheduleDate && String(formik.errors.scheduleDate),
+                      helperText:
+                        formik.touched.scheduleDate && formik.errors.scheduleDate
+                          ? formik.errors.scheduleDate
+                          : '',
                     },
                   }}
                 />
@@ -238,10 +253,10 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                     minWidth: 180,
                     width: '100%',
                     '& .MuiInputBase-root': {
-                      fontSize: '0.875rem', // Smaller font size matching other inputs
+                      fontSize: '0.875rem',
                     },
                     '& .MuiInputBase-input::placeholder': {
-                      fontSize: '0.875rem', // Smaller font size for placeholder
+                      fontSize: '0.875rem',
                     },
                   }}
                   error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
@@ -283,6 +298,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
                   value={formik.values.prerequisites}
                   onChange={formik.handleChange}
                   error={formik.touched.prerequisites && Boolean(formik.errors.prerequisites)}
+                  helperText={formik.touched.prerequisites && formik.errors.prerequisites}
                 />
               </ShakingTextField>
             </Grid>
