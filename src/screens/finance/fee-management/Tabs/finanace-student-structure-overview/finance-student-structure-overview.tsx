@@ -26,6 +26,7 @@ import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-stru
 import type { StudentForFeeStructure } from './data/student-fee-structure-data';
 
 const FinanceStudentFeeManagement = () => {
+  // Dialog state and student selection state management
   const dialog = useBoolean();
 
   // Dialog state for student details
