@@ -8,180 +8,129 @@ import { Grid, Card, Stack, Avatar, Divider, Typography, CardContent } from '@mu
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface ViewVehicleDetailsDialogProps {
-  vehicle: any;
-}
+import type { IViewVehicleDetailsDialogProps } from '../interface/vehicle-interface';
 
-const ViewVehicleDetailsDialog: React.FC<ViewVehicleDetailsDialogProps> = ({ vehicle }) => {
+const ViewVehicleDetailsDialog: React.FC<IViewVehicleDetailsDialogProps> = ({ vehicle }) => {
   if (!vehicle) {
     return null;
   }
-
-  const stops = [
-    {
-      id: 'stop1',
-      name: 'Navjeevan Circle',
-      details: 'Near the central park.',
-      students: [
-        { id: 's1', name: 'John Doe' },
-        { id: 's2', name: 'Jane Smith' },
-      ],
-    },
-    {
-      id: 'stop2',
-      name: 'Madhuvan Circle',
-      details: 'Next to the supermarket.',
-      students: [
-        { id: 's3', name: 'Alice Brown' },
-        { id: 's4', name: 'Charlie Johnson' },
-      ],
-    },
-    // {
-    //     id: "stop3",
-    //     name: "Stop C",
-    //     details: "Near the school entrance.",
-    //     students: [],
-    // },
-    // {
-    //     id: "stop4",
-    //     name: "Stop D",
-    //     details: "Near the school entrance.",
-    //     students: [],
-    // },
-    // {
-    //     id: "stop5",
-    //     name: "Stop E",
-    //     details: "Near the school entrance.",
-    //     students: [],
-    // },
-    // {
-    //     id: "stop6",
-    //     name: "Stop F",
-    //     details: "Near the school entrance.",
-    //     students: [],
-    // },
-  ];
   return (
-    <Grid container spacing={3} alignItems="stretch">
+    <Grid container spacing={3}>
       {/* General Information */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
+        <Card elevation={3} sx={{ bgcolor: '#E5F6FD', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar style={{ backgroundColor: '#54182d' }}>
-                <DirectionsBusIcon style={{ color: '#fff' }} />
+              <Avatar sx={{ bgcolor: '#0C53B7' }}>
+                <DirectionsBusIcon sx={{ color: 'white' }} />
               </Avatar>
-              <Typography color="#5e3241" variant="h6" style={{ fontWeight: 'bold' }}>
+              <Typography color="#0B4F9C" variant="h6" fontWeight="bold">
                 General Information
               </Typography>
             </Stack>
-            <Divider sx={{ my: 1, borderColor: '#ddd' }} />
-            <Typography color="#5e3241" variant="body1">
-              <strong>Name:</strong> {vehicle.name}
-            </Typography>
-            <Typography color="#5e3241" variant="body1">
-              <strong>Type:</strong> {vehicle.type}
-            </Typography>
-            <Typography color="#5e3241" variant="body1">
-              <strong>Capacity:</strong> {vehicle.capacity}
-            </Typography>
-            <Typography color="#5e3241" variant="body1">
-              <strong>Occupied Seats:</strong> {vehicle.occupied}
-            </Typography>
-            <Typography color="#5e3241" variant="body1">
-              <strong>Fuel Type:</strong> {vehicle.fuelType}
-            </Typography>
+            <Divider sx={{ my: 1, borderColor: 'divider' }} />
+            {[
+              { label: 'Name', value: vehicle.name },
+              { label: 'Type', value: vehicle.type },
+              { label: 'Capacity', value: vehicle.capacity },
+              { label: 'Occupied Seats', value: vehicle.occupied },
+              { label: 'Fuel Type', value: vehicle.fuelType },
+            ].map(({ label, value }) => (
+              <Typography key={label} color="#0B4F9C" variant="body1">
+                <strong>{label}:</strong> {value}
+              </Typography>
+            ))}
           </CardContent>
         </Card>
       </Grid>
 
       {/* Insurance Details */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
+        <Card elevation={3} sx={{ bgcolor: '#E8F5E9', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar style={{ backgroundColor: '#54182d' }}>
+              <Avatar sx={{ bgcolor: '#2E7D32' }}>
                 <InfoIcon />
               </Avatar>
-              <Typography color="#5e3241" variant="h6">
+              <Typography color="#1B5E20" variant="h6">
                 Insurance Details
               </Typography>
             </Stack>
             <Divider sx={{ my: 1 }} />
-            <Typography color="#5e3241">
-              <strong>Policy Number:</strong> {vehicle.insurance.policyNumber}
-            </Typography>
-            <Typography color="#5e3241">
-              <strong>Provider:</strong> {vehicle.insurance.provider}
-            </Typography>
-            <Typography color="#5e3241">
-              <strong>Expiry Date:</strong> {vehicle.insurance.expiryDate}
-            </Typography>
-            <Typography color="#5e3241">
-              <strong>Coverage:</strong> {vehicle.insurance.coverageDetails}
-            </Typography>
+            {[
+              { label: 'Policy Number', value: vehicle.insurance.policyNumber },
+              { label: 'Provider', value: vehicle.insurance.provider },
+              { label: 'Expiry Date', value: vehicle.insurance.expiryDate },
+              { label: 'Coverage', value: vehicle.insurance.coverageDetails },
+            ].map(({ label, value }) => (
+              <Typography key={label} color="#1B5E20">
+                <strong>{label}:</strong> {value}
+              </Typography>
+            ))}
           </CardContent>
         </Card>
       </Grid>
 
       {/* Registration Details */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
+        <Card elevation={3} sx={{ bgcolor: '#FFF3E0', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar style={{ backgroundColor: '#54182d' }}>
+              <Avatar sx={{ bgcolor: '#E65100' }}>
                 <InfoIcon />
               </Avatar>
-              <Typography color="#5e3241" variant="h6">
+              <Typography color="#FF7043" variant="h6">
                 Registration Details
               </Typography>
             </Stack>
             <Divider sx={{ my: 1 }} />
-            <Typography color="#5e3241">
-              <strong>Number:</strong> {vehicle.registrationNumber}
-            </Typography>
-            <Typography color="#5e3241">
-              <strong>Registration Date:</strong> {vehicle.registrationDate}
-            </Typography>
-            <Typography color="#5e3241">
-              <strong>Expiry Date:</strong> {vehicle.registrationExpiryDate}
-            </Typography>
+            {[
+              { label: 'Number', value: vehicle.registrationNumber },
+              { label: 'Registration Date', value: vehicle.registrationDate },
+              { label: 'Expiry Date', value: vehicle.registrationExpiryDate },
+            ].map(({ label, value }) => (
+              <Typography key={label} color="#FF7043">
+                <strong>{label}:</strong> {value}
+              </Typography>
+            ))}
           </CardContent>
         </Card>
       </Grid>
 
       {/* Assigned Details */}
       <Grid item xs={12} md={6}>
-        <Card elevation={3} style={{ backgroundColor: '#f8f4f6', height: '100%' }}>
+        <Card elevation={3} sx={{ bgcolor: '#EDE7F6', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar style={{ backgroundColor: '#54182d' }}>
+              <Avatar sx={{ bgcolor: '#4A148C' }}>
                 <PersonIcon />
               </Avatar>
-              <Typography color="#5e3241" variant="h6">
+              <Typography color="#4A148C" variant="h6">
                 Assigned Details
               </Typography>
             </Stack>
             <Divider sx={{ my: 1 }} />
-            <Typography color="#5e3241">
-              <strong>Driver:</strong> {vehicle.assignedDriver?.name || 'N/A'}
-            </Typography>
-            <Typography color="#5e3241">
-              <strong>Route:</strong> {vehicle.assignedRoute?.name || 'N/A'}
-            </Typography>
+            {[
+              { label: 'Driver', value: vehicle.assignedDriver?.name || 'N/A' },
+              { label: 'Route', value: vehicle.assignedRoute?.name || 'N/A' },
+            ].map(({ label, value }) => (
+              <Typography key={label} color="#673AB7">
+                <strong>{label}:</strong> {value}
+              </Typography>
+            ))}
           </CardContent>
         </Card>
       </Grid>
 
       {/* Assigned Students */}
       <Grid item xs={12}>
-        <Card elevation={3} style={{ backgroundColor: '#f8f4f6' }}>
+        <Card elevation={3} sx={{ bgcolor: '#F5F5F5' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar style={{ backgroundColor: '#54182d' }}>
+              <Avatar sx={{ bgcolor: '#424242' }}>
                 <RouteIcon />
               </Avatar>
-              <Typography variant="h6" color="#5e3241">
+              <Typography variant="h6" color="#616161">
                 Assigned Students
               </Typography>
             </Stack>

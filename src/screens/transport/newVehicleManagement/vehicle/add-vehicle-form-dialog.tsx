@@ -1,14 +1,13 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import React, { useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Card, Button, TextField, Typography } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
@@ -20,39 +19,25 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
-interface VehicleFormDialogProps {
-  vehicle: any;
-  dialogValue: boolean;
-  onClose: () => void;
-  isEdit: boolean;
-}
+import { vehicleValidationSchema } from '../validationSchema';
 
-const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
+import type { IVehicleFormDialogProps } from '../interface/vehicle-interface';
+
+const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
   vehicle,
   onClose,
   isEdit,
   dialogValue,
 }) => {
   // Form validation schema
-  const validationSchema = Yup.object({
-    vehicleName: Yup.string().required('Vehicle name is required'),
-    registrationNumber: Yup.string().required('Registration number is required'),
-    vehicleType: Yup.string().required('Vehicle type is required'),
-    manufacturer: Yup.string().required('Manufacturer is required'),
-    seatingCapacity: Yup.number()
-      .required('Seating capacity is required')
-      .min(1, 'Must be at least 1'),
-    insurancePolicyNumber: Yup.string().required('Insurance policy number is required'),
-    insuranceExpiryDate: Yup.date().required('Insurance expiry date is required'),
-    dailyInspectionChecklist: Yup.string().required('Inspection checklist is required'),
-    assignedRoute: Yup.string().required('Assigned route is required'),
-    assignedDriver: Yup.string().required('Assigned driver is required'),
-  });
 
+  // Get the isChanges state from Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // Initialize dispatch function from Redux
   const dispatch = useDispatch();
 
+  // Define initial form values using useMemo to optimize performance
   const initialValues = useMemo(
     () => ({
       vehicleName: '',
@@ -69,20 +54,23 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
     []
   );
 
+  // Initialize formik for form handling with validation and submission logic
   const formik = useFormik<any>({
     initialValues,
-    validationSchema,
+    validationSchema: vehicleValidationSchema,
     onSubmit: (values: any) => {
       console.log('Form Submitted:', values);
       // onSave(values);
     },
   });
 
+  // Track form changes and update Redux state when values differ from initial state
   useEffect(() => {
     const isChanged = !isEqual(formik.values, initialValues);
     dispatch(setIsChanges(isChanged));
   }, [dispatch, formik.values, initialValues]);
 
+  // Handle dialog close with confirmation if there are unsaved changes
   const handleCloseDialog = () => {
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       onClose();
@@ -92,7 +80,7 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
     }
   };
   return (
-    <>
+    <Box display="flex" flexDirection="column" gap={2} height="100%">
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <CustomBreadcrumbs
           heading="Vehicle Management"
@@ -110,8 +98,17 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
           </Button>
         </Box>
       </Box>
-      <Box>
-        <form onSubmit={formik.handleSubmit}>
+
+      <form onSubmit={formik.handleSubmit}>
+        <Card
+          sx={{
+            height: '100%',
+            boxShadow: 'var(--shadows-4)',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '20px',
+          }}
+        >
           <Grid container spacing={2}>
             {/* Vehicle Name */}
             <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
@@ -422,14 +419,14 @@ const VehicleFormDialog: React.FC<VehicleFormDialogProps> = ({
             </Grid>
           </Grid>
 
-          <DialogActions>
-            <Button variant="outlined" type="submit">
+          <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+            <Button size="small" type="submit" variant="contained">
               {isEdit ? 'Update' : 'Save'}
             </Button>
-          </DialogActions>
-        </form>
-      </Box>
-    </>
+          </Box>
+        </Card>
+      </form>
+    </Box>
   );
 };
 
