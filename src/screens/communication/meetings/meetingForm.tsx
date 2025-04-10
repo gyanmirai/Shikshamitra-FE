@@ -26,19 +26,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './type';
 
-/**
- * Props interface for AddNewMeeting component
- * @interface AddNewMeetingProps
- * @property {function} onSubmit - Callback function to handle form submission
- * @property {any} [initialValues] - Optional initial values for the form
- * @property {boolean} [isEdit] - Optional flag to indicate if form is in edit mode
- */
-interface AddNewMeetingProps {
-  onSubmit: (values: any) => void;
-  initialValues?: any | null;
-  isEdit?: boolean;
-}
+import type { AddNewMeetingProps } from './type';
+
 const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
+  onClose,
   onSubmit,
   initialValues,
   isEdit,
@@ -739,6 +730,9 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
           </Grid>
         </Scrollbar>
         <DialogActions>
+          <Button onClick={onClose} variant="outlined">
+            Cancel
+          </Button>
           <Button type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'}
           </Button>
