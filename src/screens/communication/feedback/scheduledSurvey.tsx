@@ -25,6 +25,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddNewSurvey from './surveyForm';
+import SurveyDetailsView from './surveyDetails';
 
 import type { TSurvey } from './type';
 
@@ -94,9 +95,12 @@ const ScheduledSurvey = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
   // Dialog state for viewing survey responses
   const viewResponseDialog = useBoolean();
+  // Dialog state for viewing survey details
+  const viewDialog = useBoolean();
+  // Dialog state for confirming survey deletion
   const confirm_delete = useBoolean();
+  // State for storing the survey whose responses are being viewed
   const [responseSurvey, setResponseSurvey] = useState<TSurvey | null>(null);
-  // State for controlling main view
 
   /**
    * Handles closing the survey form and resetting all related states
@@ -250,7 +254,10 @@ const ScheduledSurvey = (props: TabComponentType) => {
                       showDeleteIcon
                       showViewIcon
                       showThreeDots={false}
-                      handleViewClick={() => {}}
+                      handleViewClick={() => {
+                        viewDialog.onTrue();
+                        setSelectedSurvey(row as TSurvey);
+                      }}
                       handleEditClick={() => {
                         setIsEdit(true);
                         setOpen(true);
@@ -297,6 +304,25 @@ const ScheduledSurvey = (props: TabComponentType) => {
             color="error"
           >
             Delete
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        title="Survey Details"
+        open={viewDialog.value}
+        handleClose={() => {
+          setSelectedSurvey(null);
+          viewDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <DialogContent>
+          <SurveyDetailsView survey={selectedSurvey} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={viewDialog.onFalse} variant="outlined">
+            Close
           </Button>
         </DialogActions>
       </CustomDialog>
