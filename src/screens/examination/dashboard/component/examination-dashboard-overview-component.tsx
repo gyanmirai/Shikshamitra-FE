@@ -1,6 +1,5 @@
 'use client';
 
-import type { ChartOptions } from 'src/components/chart';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -8,13 +7,10 @@ import React, { useState, useEffect } from 'react';
 
 import { Box, Card, Grid, alpha, useTheme, Typography } from '@mui/material';
 
-import { CONFIG } from 'src/config-global';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 
-import { SvgColor } from 'src/components/svg-color';
-import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
@@ -54,21 +50,6 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
       }
     }
   }, [classData, classes, setSearchParams]);
-  const pendingExams = [
-    '08 Subject Managed',
-    '05 Subject Pending',
-    // '03 Subject in Progress',
-    // '08 Subject Managed',
-    // '05 Subject Pending',
-    // '03 Subject in Progress',
-    // '08 Subject Managed',
-    // '05 Subject Pending',
-    // '03 Subject in Progress',
-    // '08 Subject Managed',
-    // '05 Subject Pending',
-    // '03 Subject in Progress',
-    // Add more items as needed
-  ];
 
   // const totalExams = ["6"]
 
@@ -243,13 +224,11 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
             />
           </Card>
         </Grid>
-      </Grid>
-
-      <Grid container spacing={2} mt={1}>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <Typography variant="subtitle1">Average Score of Quiz</Typography>
-            <Box display="flex" justifyContent="flex-end" alignItems="flex-end" gap={1}>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography variant="subtitle1">Average Score of Quiz</Typography>
+
               <CustomSelect
                 label="Subject"
                 options={[
@@ -344,89 +323,3 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
 };
 
 export default ExaminationDashboardOverviewComponent;
-
-interface AppWidgetProps {
-  title: string;
-  total?: number;
-  icon: string;
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
-}
-
-const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart }) => {
-  const theme = useTheme();
-  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
-  const chartOptions = useChart({
-    chart: { sparkline: { enabled: true } },
-    stroke: { width: 0 },
-    fill: {
-      type: 'solid',
-      colors: chartColors,
-    },
-    plotOptions: {
-      radialBar: {
-        dataLabels: {
-          name: { show: false },
-          value: {
-            offsetY: 6,
-            color: 'black',
-            fontSize: theme.typography.subtitle2.fontSize as string,
-          },
-        },
-      },
-    },
-    ...chart.options,
-  });
-
-  return (
-    <Box
-      sx={{
-        p: 3,
-        gap: 3,
-        borderRadius: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        position: 'relative',
-        alignItems: 'center',
-        bgcolor: 'common.white',
-        color: 'common.black',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          position: 'relative',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Chart
-          type="radialBar"
-          series={[chart.series]}
-          options={chartOptions}
-          width={80}
-          height={80}
-          sx={{ zIndex: 1 }}
-          mt={2}
-        />
-        <SvgColor
-          src={`${CONFIG.site.basePath}/assets/background/shape-circle-3.svg`}
-          sx={{
-            width: 200,
-            height: 200,
-            opacity: 0.08,
-            position: 'absolute',
-            color: 'primary.light',
-          }}
-        />
-      </Box>
-      <div>
-        <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
-      </div>
-    </Box>
-  );
-};
