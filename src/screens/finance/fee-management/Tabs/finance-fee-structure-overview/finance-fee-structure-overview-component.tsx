@@ -1,6 +1,6 @@
 'use client';
 
-import type { FeeItem } from 'src/screens/finance/settings/fee-structure/data/fee-structure-data';
+import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-structure-interface';
 
 import React, { useState } from 'react';
 
@@ -29,7 +29,7 @@ const FinanceFeeStructureOverviewComponent = () => {
   const [tableData, setTableData] = useState(initialDataFeeStructure);
 
   // State to store the selected fee structure items when a row is clicked/selected
-  const [selectedFeeStructure, setSelectedFeeStructure] = useState<FeeItem[]>();
+  const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();
   return (
     <>
       <CustomBreadcrumbs
