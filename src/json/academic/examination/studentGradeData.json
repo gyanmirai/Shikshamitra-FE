@@ -1,0 +1,53 @@
+[
+    {
+      "id": "1",
+      "studentName": "John Smith",
+      "assignments": "Math Quiz 1",
+      "subject": "Mathematics",
+      "grade": "",
+      "feedback": "",
+      "weightedAverage": "85%",
+      "status": "Pending"
+    },
+    {
+      "id": "2",
+      "studentName": "Emma Wilson",
+      "assignments": "Science Project",
+      "subject": "Science",
+      "grade": "",
+      "feedback": "",
+      "weightedAverage": "92%",
+      "status": "Pending"
+    },
+    {
+      "id": "3",
+      "studentName": "Michael Brown",
+      "assignments": "English Essay",
+      "subject": "English",
+      "grade": "",
+      "feedback": "",
+      "weightedAverage": "75%",
+      "status": "Pending"
+    },
+    {
+      "id": "4",
+      "studentName": "Sarah Davis",
+      "assignments": "Math Homework",
+      "subject": "Mathematics",
+      "grade": "",
+      "feedback": "",
+      "weightedAverage": "88%",
+      "status": "Pending"
+    },
+    {
+      "id": "5",
+      "studentName": "James Johnson",
+      "assignments": "Science Quiz",
+      "subject": "Science",
+      "grade": "",
+      "feedback": "",
+      "weightedAverage": "87%",
+      "status": "Pending"
+    }
+  ]
+  
