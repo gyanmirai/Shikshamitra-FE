@@ -7,9 +7,11 @@ import {
   Grid,
   Avatar,
   Divider,
+  Tooltip,
   ListItem,
   Typography,
   ListItemText,
+  ListItemIcon,
   ListItemAvatar,
 } from '@mui/material';
 
@@ -24,6 +26,10 @@ import {
 } from 'src/components/carousel';
 
 const EmployeeBirthDay = () => {
+  // Initialize carousel with autoplay functionality
+  // - loop: true enables continuous looping of carousel items
+  // - autoplay with 2 second delay between slides
+  // - stops autoplay when mouse hovers over carousel
   const carousel = useCarousel({ loop: true }, [
     Autoplay({ playOnInit: true, delay: 2000, stopOnMouseEnter: true }),
   ]);
@@ -166,64 +172,86 @@ const EmployeeBirthDay = () => {
           <Scrollbar sx={{ height: 300 }}>
             <List>
               {[
-                { name: 'Jane Smith', date: 'May 15', age: 19 },
-                { name: 'Mike Johnson', date: 'May 18', age: 21 },
-                { name: 'Sarah Brown', date: 'May 20', age: 20 },
+                { name: 'Jane Smith', date: 'May 15', age: 19, type: 'Birthday' },
+                { name: 'Mike Johnson', date: 'May 18', age: 21, type: 'Anniversary' },
+                { name: 'Sarah Brown', date: 'May 20', age: 20, type: 'New Join' },
               ].map((student, index) => (
-                <ListItem
-                  key={index}
-                  disablePadding
-                  sx={{
-                    backgroundColor: 'background.paper',
-                    borderRadius: '8px',
-                    p: 2,
-                    boxShadow: 2,
-                    my: 1,
-                  }}
-                >
-                  <ListItemAvatar>
-                    <UserHoverProfile
-                      avatarComp={
-                        <Avatar
-                          sx={{
-                            bgcolor: 'secondary.main',
-                            width: 48,
-                            height: 48,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {student.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                        </Avatar>
+                <Tooltip title={student.type} key={index}>
+                  <ListItem
+                    disablePadding
+                    sx={{
+                      backgroundColor: 'background.paper',
+                      borderRadius: '8px',
+                      p: 2,
+                      boxShadow: 2,
+                      my: 1,
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <UserHoverProfile
+                        avatarComp={
+                          <Avatar
+                            sx={{
+                              bgcolor: 'secondary.main',
+                              width: 48,
+                              height: 48,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {student.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </Avatar>
+                        }
+                        user={{
+                          name: student.name,
+                          avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                          role: 'Student',
+                          email: 'john.doe@example.com',
+                          class: '10th',
+                          division: 'A',
+                          board: 'CBSE',
+                          medium: 'English',
+                          organization: 'Higher Secondary',
+                        }}
+                      />
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                          {student.name}
+                        </Typography>
                       }
-                      user={{
-                        name: student.name,
-                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
-                        role: 'Student',
-                        email: 'john.doe@example.com',
-                        class: '10th',
-                        division: 'A',
-                        board: 'CBSE',
-                        medium: 'English',
-                        organization: 'Higher Secondary',
-                      }}
+                      secondary={
+                        <Typography variant="body2">{`${student.date} (Turning ${student.age})`}</Typography>
+                      }
                     />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                        {student.name}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography variant="body2">{`${student.date} (Turning ${student.age})`}</Typography>
-                    }
-                  />
-                </ListItem>
+                    <ListItemIcon sx={{ minWidth: 'auto' }}>
+                      {student.type === 'Birthday' && (
+                        <Iconify icon="mdi:cake" color="secondary.main" height={25} width={25} />
+                      )}
+                      {student.type === 'Anniversary' && (
+                        <Iconify
+                          icon="mingcute:anniversary-fill"
+                          color="error.main"
+                          height={25}
+                          width={25}
+                        />
+                      )}
+                      {student.type === 'New Join' && (
+                        <Iconify
+                          icon="mdi:celebration"
+                          color="success.main"
+                          height={25}
+                          width={25}
+                        />
+                      )}
+                    </ListItemIcon>{' '}
+                  </ListItem>
+                </Tooltip>
               ))}
-            </List>
+            </List>{' '}
           </Scrollbar>
         </Box>
       </Card>

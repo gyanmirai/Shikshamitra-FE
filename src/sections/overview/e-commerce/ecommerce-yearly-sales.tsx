@@ -3,18 +3,21 @@ import type { ChartOptions } from 'src/components/chart';
 
 import { useState, useCallback } from 'react';
 
+import { Box } from '@mui/material';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
+import { Iconify } from 'src/components/iconify';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
 
 type Props = CardProps & {
   title?: string;
+  icon?: string;
   subheader?: string;
   chart: {
     colors?: string[];
@@ -38,38 +41,46 @@ export function EcommerceYearlySales({
   isShowChartLegend = true,
   ...other
 }: Props) {
+  // Get the current theme
   const theme = useTheme();
 
+  // State to track the currently selected data series
   const [selectedSeries, setSelectedSeries] = useState(chart.series[0].name);
 
+  // Define chart colors - use provided colors or fallback to theme defaults
   const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
 
+  // Configure chart options with colors, categories and any additional options
   const chartOptions = useChart({
     colors: chartColors,
     xaxis: { categories: chart.categories },
     ...chart.options,
   });
 
+  // Handler for series selection change
   const handleChangeSeries = useCallback((newValue: string) => {
     setSelectedSeries(newValue);
   }, []);
 
+  // Find the currently selected series data
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
-
   return (
     <Card {...other}>
-      <CardHeader
-        title={title}
-        subheader={subheader}
-        action={
-          <ChartSelect
-            options={chart.series.map((item) => item.name)}
-            value={selectedSeries}
-            onChange={handleChangeSeries}
-          />
-        }
-        sx={{ mb: 3 }}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
+        <Iconify icon="mdi:trending-up" width={32} height={32} sx={{ color: 'primary.main' }} />
+        <CardHeader
+          title={title}
+          subheader={subheader}
+          action={
+            <ChartSelect
+              options={chart.series.map((item) => item.name)}
+              value={selectedSeries}
+              onChange={handleChangeSeries}
+            />
+          }
+          sx={{ mb: 3 }}
+        />
+      </Box>
 
       {isShowChartLegend ? (
         <ChartLegends

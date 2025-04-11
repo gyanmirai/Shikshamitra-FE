@@ -19,6 +19,7 @@ const DashboardChart = () => {
     <>
       <Grid item xs={12} md={6}>
         <AppCurrentDownload
+          icon="mdi:account-group"
           title="Employee Count by Group"
           subheader=""
           chart={{

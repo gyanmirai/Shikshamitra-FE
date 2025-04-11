@@ -60,7 +60,7 @@ const Overview = () => (
     <Grid item xs={12} sm={12} md={6} lg={6} xl={3}>
       <EmployeeDashboardCard
         title="Payroll Summary"
-        icon="mdi:wallet"
+        icon="streamline:bag-dollar-solid"
         value={formatCurrency(50000)}
         labels={[{ name: `Pending: ${formatCurrency(10000)}`, color: 'warning' }]}
         color="info.main"
