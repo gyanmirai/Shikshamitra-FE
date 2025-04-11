@@ -15,6 +15,6 @@ export const AttendanceStatusOptions = [
 ];
 
 export const AttendanceStatusTypeColors = {
-  [AttendanceStatusType.Present]: 'success.main',
-  [AttendanceStatusType.Absent]: 'error.main',
+  [AttendanceStatusType.Present]: 'success',
+  [AttendanceStatusType.Absent]: 'error',
 };
