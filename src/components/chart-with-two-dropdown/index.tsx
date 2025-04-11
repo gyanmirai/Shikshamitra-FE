@@ -3,14 +3,16 @@ import type { ChartOptions } from 'src/components/chart';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Box } from '@mui/material';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
+import { Box, Menu, MenuItem, IconButton } from '@mui/material';
 
 import { fCurrency } from 'src/utils/format-number';
 
 import { Chart, ChartSelect, ChartLegends } from 'src/components/chart';
+
+import { Iconify } from '../iconify';
 
 // ----------------------------------------------------------------------
 
@@ -234,66 +236,6 @@ export function ChartWithTwoDropDown({
               }),
       },
 
-      // annotations: {
-      //   points: currentSeries?.name === 'Daily' ? annotationPoint.map((item: any, index: any) => {
-      //     if (currentSeries?.name !== 'Daily') {
-      //       return {}; // If it's not daily, return an empty object to prevent adding annotations.
-      //     }
-
-      //     const annotation = {
-      //       x: (index + 1).toString(), // Category or x-axis value
-      //       y: (((currentSeries?.series[0]?.data[index]) ?? 0) + 5),
-      //       marker: {
-      //         size: 4,
-      //         fillColor: item === "late" ? '#FF0000' : '#90EE90',
-      //         shape: 'circle',
-      //         offsetX: -6,
-      //         offsetY: 0,
-      //         strokeColor: 'transparent'
-      //       },
-      //       label: {
-
-      //       }
-      //     };
-
-      //     if (item === "late" && !lateShown) {
-      //       lateShown = true;
-      //       annotation.label = {
-      //         text: 'Late',
-      //         offsetY: -5,
-      //       };
-      //     }
-
-      //     if (item === "onTime" && !onTimeShown) {
-      //       onTimeShown = true;
-      //       annotation.label = {
-      //         text: 'On Time',
-      //         offsetY: -5,
-      //       };
-      //     }
-
-      //     return annotation;
-      //   }) : annotationPointForMonth.map((item: any, index: any) => {
-      //     const annotation = {
-      //       x: (index + 1).toString(), // Category or x-axis value
-      //       y: (((currentSeries?.series[0]?.data[index]) ?? 0) + 5),
-      //       marker: {
-      //         size: 4,
-      //         fillColor: item === "late" ? '#FF0000' : '#90EE90',
-      //         shape: 'circle',
-      //         offsetX: -6,
-      //         offsetY: 0,
-      //         strokeColor: 'transparent'
-      //       },
-      //       label: {
-
-      //       }
-
-      //     };
-      //     return annotation;
-      //   }),
-      // },
-
       ...chart.options,
     };
   }, [
@@ -352,6 +294,40 @@ export function ChartWithTwoDropDown({
     setListOfDataOption(dataOptions);
   }, [chart.series, selectedData]);
 
+  // Handles export action for the chart as PNG
+  const handleSelect = async (type: 'png') => {
+    handleClose();
+    const charts = ApexCharts.getChartByID('my-export-chart') as any;
+    if (type === 'png') {
+      if (charts) {
+        const data = await charts.dataURI();
+        console.log('data', data);
+        const { imgURI } = data as { imgURI: string };
+
+        // trigger download
+        const link = document.createElement('a');
+        link.href = imgURI;
+
+        link.download = 'chart.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  };
+
+  // State to manage dropdown anchor element
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Set the anchor element to open dropdown
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  // Close the dropdown menu
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
   return (
     <Card {...other}>
       <CardHeader
@@ -378,6 +354,12 @@ export function ChartWithTwoDropDown({
               value={selectedSeries}
               onChange={handleChangeSeries}
             />
+            <IconButton onClick={handleClick} sx={{ fontSize: 24 }}>
+              <Iconify icon="eva:download-fill" sx={{ fontWeight: 'bold' }} />
+            </IconButton>
+            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+              <MenuItem onClick={() => handleSelect('png')}>Download PNG</MenuItem>
+            </Menu>
           </Box>
         }
         sx={{ mb: 3 }}
@@ -393,7 +375,16 @@ export function ChartWithTwoDropDown({
         <Chart
           type="bar"
           series={currentSeries?.series || []}
-          options={memoizedChartOptions}
+          options={{
+            ...memoizedChartOptions,
+            chart: {
+              ...memoizedChartOptions.chart,
+              id: 'my-export-chart', // 🔑 this is important
+              toolbar: {
+                show: false,
+              },
+            },
+          }}
           height={320}
           loadingProps={{ sx: { p: 2.5 } }}
           sx={{ py: 2.5, pl: 1, pr: 2.5 }}
