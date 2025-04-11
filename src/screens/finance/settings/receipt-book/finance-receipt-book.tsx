@@ -14,9 +14,9 @@ import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
 
-import type { ReceiptBook } from './component/finance-setting-receiptbook-dialog';
+import type { IReceiptBook } from './receipt-book-interface';
 
-let initialData: ReceiptBook[] = [
+let initialData: IReceiptBook[] = [
   {
     id: 1,
     receiptBookName: 'GSEB',
@@ -36,7 +36,7 @@ let initialData: ReceiptBook[] = [
 
 const FinanceReceiptBookSetting = () => {
   const dialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState<ReceiptBook>(initialData[0]);
+  const [selectedEntry, setSelectedEntry] = useState<IReceiptBook>(initialData[0]);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(initialData);
   const dialogForDeleteConfirmation = useBoolean();
