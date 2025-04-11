@@ -17,6 +17,8 @@ import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import { CalendarView } from 'src/sections/calendar/view';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -37,6 +39,41 @@ const AcademicDashboardScreen = () => {
   const router = useRouter();
   return (
     <Box>
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[{ name: 'Academic and Assignment' }, { name: 'Dashboard' }]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <DashBoardQuickAction
+            actions={[
+              {
+                icon: 'mdi:plus',
+                label: 'Add New Subject',
+                href: '/academic/curriculumSubjects',
+                color: 'primary',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Add TimeTable',
+                href: '/academic/newTimetable',
+                color: 'warning',
+              },
+              {
+                icon: 'mdi:plus',
+                label: 'Add TimeTable',
+                href: '/academic/homeworkCreation',
+                color: 'warning',
+              },
+              {
+                icon: 'simple-icons:googledocs',
+                label: 'General Reports',
+                href: '/academic/curriculum-management/reports',
+                color: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
       <Grid2 container spacing={3}>
         <Grid2 xs={12} md={6}>
           <Card
