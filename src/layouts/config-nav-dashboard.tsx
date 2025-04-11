@@ -1299,8 +1299,8 @@ const transportModule = {
         // },
         {
           title: 'Reports',
-          path: '/transport/reports',
-          _action: 'transport-reports',
+          path: '/transport/reports-analytics',
+          _action: 'reports-analytics',
           shortcutKey: 'Alt+T+6',
           shortcutKeyName: 'Alt+T+6',
         },
