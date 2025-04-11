@@ -1290,13 +1290,13 @@ const transportModule = {
           shortcutKey: 'Alt+T+4',
           shortcutKeyName: 'Alt+T+4',
         },
-        {
-          title: 'Driver Management',
-          path: '/transport/driver-management',
-          _action: 'driver-management',
-          shortcutKey: 'Alt+T+5',
-          shortcutKeyName: 'Alt+T+5',
-        },
+        // {
+        //   title: 'Driver Management',
+        //   path: '/transport/driver-management',
+        //   _action: 'driver-management',
+        //   shortcutKey: 'Alt+T+5',
+        //   shortcutKeyName: 'Alt+T+5',
+        // },
         {
           title: 'Reports',
           path: '/transport/reports',
