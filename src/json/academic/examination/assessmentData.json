@@ -1,0 +1,81 @@
+[
+    {
+      "id": 1,
+      "className": "10th Grade",
+      "division": "A",
+      "subject": "Mathematics",
+      "assessmentType": "Exam",
+      "assessmentTitle": "Mid-Term Exam",
+      "examName": "Mid-Term Exam",
+      "createDate": "2024-01-01T00:00:00.000Z",
+      "dueDate": "2024-01-15T00:00:00.000Z",
+      "publish": true,
+      "status": "Completed"
+    },
+    {
+      "id": 2,
+      "className": "11th Grade",
+      "division": "B",
+      "subject": "Physics",
+      "assessmentType": "Exam",
+      "assessmentTitle": "Final Exam",
+      "examName": "Final Exam",
+      "createDate": "2024-02-01T00:00:00.000Z",
+      "dueDate": "2024-02-20T00:00:00.000Z",
+      "publish": true,
+      "status": "Completed"
+    },
+    {
+      "id": 3,
+      "className": "9th Grade",
+      "division": "C",
+      "subject": "English",
+      "assessmentType": "Assignment",
+      "assessmentTitle": "Weekly Assignment",
+      "assignmentName": "Essay Writing",
+      "createDate": "2024-01-10T00:00:00.000Z",
+      "dueDate": "2024-01-17T00:00:00.000Z",
+      "publish": true,
+      "status": "Under Review"
+    },
+    {
+      "id": 4,
+      "className": "12th Grade",
+      "division": "D",
+      "subject": "Chemistry",
+      "assessmentType": "Exam",
+      "assessmentTitle": "Lab Assessment",
+      "examName": "Lab Practical",
+      "createDate": "2024-03-05T00:00:00.000Z",
+      "dueDate": "2024-03-10T00:00:00.000Z",
+      "publish": true,
+      "status": "Completed"
+    },
+    {
+      "id": 5,
+      "className": "10th Grade",
+      "division": "E",
+      "subject": "History",
+      "assessmentType": "Assignment",
+      "assessmentTitle": "Project Submission",
+      "assignmentName": "Historical Timeline",
+      "createDate": "2024-04-01T00:00:00.000Z",
+      "dueDate": "2024-04-15T00:00:00.000Z",
+      "publish": true,
+      "status": "Pending"
+    },
+    {
+      "id": 6,
+      "className": "8th Grade",
+      "division": "F",
+      "subject": "Biology",
+      "assessmentType": "Exam",
+      "assessmentTitle": "Unit Test 1",
+      "examName": "Unit Test 1",
+      "createDate": "2024-01-20T00:00:00.000Z",
+      "dueDate": "2024-01-30T00:00:00.000Z",
+      "publish": true,
+      "status": "Completed"
+    }
+  ]
+  
