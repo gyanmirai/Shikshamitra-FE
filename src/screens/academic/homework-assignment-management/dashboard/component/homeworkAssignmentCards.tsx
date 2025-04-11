@@ -79,19 +79,36 @@ const HomeworkAssignmentCards = () => {
           <CustomizableTable
             tableId="pendingHomework-table"
             columns={[
-              { id: 'homeworkTitle', label: 'Homework Title', minWidth: '180px', align: 'left' },
-              { id: 'publishedDate', label: 'Published Date', minWidth: '180px', align: 'left' },
+              {
+                id: 'homeworkTitle',
+                label: 'Homework Title',
+                align: 'left',
+                filterType: 'string',
+              },
+              {
+                id: 'publishedDate',
+                label: 'Published Date',
+                align: 'left',
+                filterType: 'date',
+              },
               {
                 id: 'pendingStudents',
                 label: 'Pending Students',
-                minWidth: '180px',
+                filterType: 'number',
                 align: 'left',
               },
-              { id: 'dueDate', label: 'Due Date', minWidth: '150px', align: 'left' },
+              {
+                id: 'dueDate',
+                label: 'Due Date',
+                align: 'left',
+                filterType: 'date',
+              },
               {
                 id: 'actions',
                 label: 'Actions',
                 isSort: false,
+                sticky: true,
+                isFilter: false,
                 render(value, row) {
                   return (
                     <ThreeDotsActions
@@ -145,21 +162,33 @@ const HomeworkAssignmentCards = () => {
               {
                 id: 'assignmentTitle',
                 label: 'Assignment Title',
-                minWidth: '180px',
                 align: 'left',
+                filterType: 'string',
               },
-              { id: 'publishedDate', label: 'Published Date', minWidth: '180px', align: 'left' },
+              {
+                id: 'publishedDate',
+                label: 'Published Date',
+                align: 'left',
+                filterType: 'date',
+              },
               {
                 id: 'pendingStudents',
                 label: 'Pending Students',
-                minWidth: '180px',
+                filterType: 'number',
                 align: 'left',
               },
-              { id: 'dueDate', label: 'Due Date', minWidth: '150px', align: 'left' },
+              {
+                id: 'dueDate',
+                label: 'Due Date',
+                align: 'left',
+                filterType: 'date',
+              },
               {
                 id: 'actions',
                 label: 'Actions',
                 isSort: false,
+                sticky: true,
+                isFilter: false,
                 render(value, row) {
                   return (
                     <ThreeDotsActions
