@@ -1251,13 +1251,6 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+2',
               shortcutKeyName: 'Alt+L+S+2',
             },
-            {
-              title: 'Fine Setting',
-              path: '/library/settings/fine-setting',
-              _action: 'fine-setting',
-              shortcutKey: 'Alt+L+S+3',
-              shortcutKeyName: 'Alt+L+S+3',
-            },
           ],
         },
       ],
