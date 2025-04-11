@@ -66,3 +66,8 @@ export const getValidationSchema = (view: string) =>
         then: (schema) => schema.required('Schedule Date is required'),
       }),
   });
+
+export const assignGradeValidationSchema = Yup.object({
+  grade: Yup.string().required('Grade is required'),
+  feedback: Yup.string().required('Feedback is required'),
+});

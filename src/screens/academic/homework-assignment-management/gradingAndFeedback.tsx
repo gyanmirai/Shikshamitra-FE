@@ -5,22 +5,29 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import AssignGrade from './homeworkCreation/component/assignGradeForm';
 import { StudentSubmissions } from './homeworkCreation/homework-creation';
+import { dummyData } from '../gradebook-performance-tracking/gradebook/gradebook';
+
+import type { TStudentGrade } from '../gradebook-performance-tracking/gradebook/gradebook';
 
 const GradingAndFeedback = (props: TabComponentType) => {
   // Dialog state for modal/popup control
   const dialog = useBoolean();
   const { searchParams, setSearchParams } = props;
+  const [selectedStudents, setSelectedStudents] = useState<TStudentGrade[]>([]);
 
   // Get classId from search params or empty string
   const classes = searchParams?.classId ? searchParams?.classId : '';
@@ -37,6 +44,11 @@ const GradingAndFeedback = (props: TabComponentType) => {
   const [assignmentTitle, setAssignmentTitle] = useState(
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
+
+  const [tableData, setTableData] = useState<TStudentGrade[]>(dummyData); // move this here
+
+  // Dialog control for bulk grade assignment
+  const bulkGradeDialog = useBoolean();
 
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -69,6 +81,29 @@ const GradingAndFeedback = (props: TabComponentType) => {
       }
     }
   }, [classData?.items, classes, setSearchParams]);
+
+  /**
+   * Updates the selected students array with the provided student grade data
+   * @param data Array of student grade objects to be set as selected
+   */
+  const handleBulkUpdate = (data: TStudentGrade[]) => {
+    setSelectedStudents(data);
+  };
+
+  /**
+   * Handles assigning grades to multiple selected students in bulk
+   * @param values Object containing the grade to assign
+   */
+  const handleBulkGradeAssignment = (values: { grade: string }) => {
+    setTableData((prevData) =>
+      prevData.map((student) =>
+        selectedStudents?.includes(student) ? { ...student, grade: values.grade } : student
+      )
+    );
+    bulkGradeDialog.onFalse();
+    handleBulkUpdate?.([]);
+  };
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -169,8 +204,32 @@ const GradingAndFeedback = (props: TabComponentType) => {
             sx: { width: '100%', maxWidth: '200px' },
           }}
         />
+        <Box ml="auto">
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon="mdi:pencil" />}
+            disabled={selectedStudents?.length === 0}
+            onClick={bulkGradeDialog.onTrue}
+          >
+            Bulk Grade ({selectedStudents?.length} selected)
+          </Button>
+        </Box>
       </Box>
-      <StudentSubmissions />
+      <StudentSubmissions
+        selectedStudents={selectedStudents}
+        handleBulkUpdate={handleBulkUpdate}
+        tableData={tableData}
+        setTableData={setTableData}
+      />
+      <CustomDialog
+        open={bulkGradeDialog.value}
+        handleClose={bulkGradeDialog.onFalse}
+        title={`Assign Grade to ${selectedStudents?.length} Students`}
+        maxWidth="md"
+      >
+        <AssignGrade onSubmit={handleBulkGradeAssignment} />
+      </CustomDialog>
     </Box>
   );
 };
