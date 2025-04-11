@@ -42,7 +42,6 @@ export const subjects: TSubject[] = [
     name: 'Math',
     color: '#FFE0E0',
     teachers: ['Mr. Smith', 'Mrs. Johnson'],
-    room: '101',
     noOfLeacture: 5,
   },
   {
@@ -50,7 +49,6 @@ export const subjects: TSubject[] = [
     name: 'Science',
     color: '#E0FFE0',
     teachers: ['Mrs. Johnson', 'Mr. Davis'],
-    room: '102',
     noOfLeacture: 7,
   },
   {
@@ -58,7 +56,6 @@ export const subjects: TSubject[] = [
     name: 'English',
     color: '#E0E0FF',
     teachers: ['Ms. Wilson', 'Mr. Brown'],
-    room: '103',
     noOfLeacture: 6,
   },
 ];
@@ -218,7 +215,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         newTimetable[timeSlotIndex][dayIndex] = {
           subject,
           teacher: '',
-          room: subject.room,
+          room: subject.room || classroom,
         };
       }
 
@@ -555,7 +552,7 @@ const TimeTableGrid = (props: TabComponentType) => {
                           slotData={timetable[timeSlotIndex][dayIndex]}
                           isBreak={isBreak(timeSlot)}
                           onDrop={handleDrop}
-                          selectedRoom={classroom}
+                          selectedRoom={timetable[timeSlotIndex][dayIndex]?.room || classroom}
                           onTeacherSelect={handleTeacherSelect}
                           onRoomSelect={handleRoomSelect}
                           onDeleteSlot={handleDeleteSlot}

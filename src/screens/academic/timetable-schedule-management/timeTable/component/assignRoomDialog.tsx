@@ -15,14 +15,16 @@ interface AssignRoomProps {
 
 const AssignRoom: React.FC<AssignRoomProps> = ({ selectedRoom, slotData, onRoomSelect }) => {
   const [room, setRoom] = useState<string>(selectedRoom || '');
+  console.log('selectedRoom', room);
+
   const handleSubmit = () => {
-    onRoomSelect(selectedRoom);
+    onRoomSelect(room);
   };
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <CustomSelect
