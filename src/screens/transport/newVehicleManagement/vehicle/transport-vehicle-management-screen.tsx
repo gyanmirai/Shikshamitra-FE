@@ -18,21 +18,25 @@ import VehicleFormDialog from './add-vehicle-form-dialog';
 import { Vehicledata } from '../data/transport-vehicle-management-screen-data';
 import TransportVehicleDetailView from '../../vehicleManagement/component/transport-vehicle-detail-view';
 
-import type { Vehicle } from '../data/transport-vehicle-management-screen-data';
+import type { IVehicle } from '../interface/vehicle-interface';
 
 const TransportVehicleSettingScreen = () => {
+  // Dialog state for vehicle details view
   const vehicleDetailsDilog = useBoolean(false);
+  // Dialog state for vehicle form (add/edit)
   const vehicleFormDilog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState<Vehicle>();
+  // State to store selected vehicle data
+  const [selectedEntry, setSelectedEntry] = useState<IVehicle>();
+  // State to track if form is in edit mode
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  // State to control dialog visibility
   const [open, setOpen] = useState<boolean>(false);
-
   const closeHandler = () => {
     // setIsEdit(false);
     setOpen(false);
   };
 
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handlerSendNotification = () => {
@@ -42,7 +46,7 @@ const TransportVehicleSettingScreen = () => {
   };
 
   return (
-    <>
+    <Box height="100%">
       {open ? (
         <VehicleFormDialog
           onClose={closeHandler}
@@ -64,23 +68,14 @@ const TransportVehicleSettingScreen = () => {
               sx={{ px: 1, mb: 2 }}
             />
 
-            <Box display="flex" justifyContent="flex-end">
-              <Button
-                startIcon={<Add />}
-                onClick={() => {
-                  setOpen(true);
-                  // vehicleFormDilog.onTrue();
-                }}
-                variant="contained"
-              >
-                Add Vehicle
-              </Button>
-            </Box>
+            <Button startIcon={<Add />} onClick={() => setOpen(true)} variant="contained">
+              Add Vehicle
+            </Button>
           </Box>
 
           <CustomizableTable
             onSendNotification={handlerSendNotification}
-            showCheckbox={selectedStudents.length !== 0}
+            showCheckbox={selectedVehicle.length > 0}
             tableId="vehicle-management-table"
             data={Vehicledata}
             columns={[
@@ -91,42 +86,30 @@ const TransportVehicleSettingScreen = () => {
                 isSort: false,
                 isFilter: false,
                 label: '',
-                renderColumn() {
-                  return (
-                    <Checkbox
-                      checked={
-                        !!Vehicledata?.length && selectedStudents?.length === Vehicledata?.length
-                      }
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStudents(Vehicledata || []);
-                        } else {
-                          setSelectedStudents([]);
-                        }
-                      }}
-                    />
-                  );
-                },
-                render(value: any, row: any) {
-                  return (
-                    <Checkbox
-                      checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStudents([...selectedStudents, row]);
-                        } else {
-                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                        }
-                      }}
-                    />
-                  );
-                },
+                renderColumn: () => (
+                  <Checkbox
+                    checked={
+                      Vehicledata?.length > 0 && selectedVehicle?.length === Vehicledata?.length
+                    }
+                    onChange={(e) => setSelectedVehicle(e.target.checked ? Vehicledata : [])}
+                  />
+                ),
+                render: (value, row) => (
+                  <Checkbox
+                    checked={selectedVehicle.some((item: any) => item.id === row.id)}
+                    onChange={(e) => {
+                      const updatedSelection = e.target.checked
+                        ? [...selectedVehicle, row]
+                        : selectedVehicle.filter((item: any) => item.id !== row.id);
+                      setSelectedVehicle(updatedSelection);
+                    }}
+                  />
+                ),
               },
               {
                 id: 'name',
                 label: 'Name',
               },
-
               {
                 id: 'capacity',
                 label: 'Capacity',
@@ -137,47 +120,44 @@ const TransportVehicleSettingScreen = () => {
               },
               {
                 id: 'fuelType',
-                label: 'Fule Type',
+                label: 'Fuel Type',
               },
               {
                 id: 'registrationNumber',
                 label: 'Registration Number',
               },
-
               {
                 id: 'assignedRoute',
                 label: 'Assigned Route',
-                render(value, row) {
-                  return <Typography fontSize="12px">{row.assignedRoute.name}</Typography>;
-                },
+                render: (value, row) => (
+                  <Typography variant="body2">{row.assignedRoute.name}</Typography>
+                ),
               },
               {
                 id: 'assignedDriver',
                 label: 'Assigned Driver',
-                render(value, row) {
-                  return <Typography fontSize="12px">{row.assignedDriver.name}</Typography>;
-                },
+                render: (value, row) => (
+                  <Typography variant="body2">{row.assignedDriver.name}</Typography>
+                ),
               },
               {
                 id: 'action',
                 label: 'Action',
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      showThreeDots={false}
-                      showEditIcon
-                      showViewIcon
-                      handleEditClick={() => {}}
-                      handleViewClick={() => {
-                        setSelectedEntry(row as Vehicle);
-
-                        console.log('row', row);
-
-                        vehicleDetailsDilog.onTrue();
-                      }}
-                    />
-                  );
-                },
+                isFilter: false,
+                isSort: false,
+                sticky: true,
+                render: (value, row) => (
+                  <ThreeDotsActions
+                    showThreeDots={false}
+                    showEditIcon
+                    showViewIcon
+                    handleEditClick={() => {}}
+                    handleViewClick={() => {
+                      setSelectedEntry(row as IVehicle);
+                      vehicleDetailsDilog.onTrue();
+                    }}
+                  />
+                ),
               },
             ]}
           />
@@ -187,7 +167,7 @@ const TransportVehicleSettingScreen = () => {
               open={sendInstantNotificationDialogValue.value}
               onClose={sendInstantNotificationDialogValue.onFalse}
               data={[]}
-              userList={selectedStudents}
+              userList={selectedVehicle}
             />
           )}
 
@@ -212,7 +192,7 @@ const TransportVehicleSettingScreen = () => {
           </CustomDialog>
         </>
       )}
-    </>
+    </Box>
   );
 };
 

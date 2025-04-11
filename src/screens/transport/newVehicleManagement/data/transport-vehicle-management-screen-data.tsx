@@ -1,62 +1,7 @@
-interface Insurance {
-  policyNumber: string;
-  provider: string;
-  expiryDate: string;
-  coverageDetails: string;
-}
-
-interface Maintenance {
-  lastMaintenanceDate: string;
-  nextScheduledMaintenance: string;
-  notes: string;
-}
-
-interface Driver {
-  id: string;
-  name: string;
-}
-
-interface Route {
-  id: string;
-  name: string;
-}
-
-interface DailyInspection {
-  date: string;
-  inspector: string;
-  remarks: string;
-  issuesFound: string[];
-  actionTaken: string;
-}
-
-interface Student {
-  name: string;
-  id: string;
-}
-
-export interface Vehicle {
-  id: string;
-  name: string;
-  type: string;
-  capacity: number;
-  occupied: number;
-  registrationNumber: string;
-  registrationDate: string;
-  registrationExpiryDate: string;
-  insurance: Insurance;
-  maintenance: Maintenance;
-  fuelType: string;
-  currentStatus: string;
-  trackingEnabled: boolean;
-  trackerId: string | null;
-  assignedDriver: Driver;
-  assignedRoute: Route;
-  dailyInspection: DailyInspection[];
-  studentList: Student[];
-}
+import type { IVehicle } from '../interface/vehicle-interface';
 
 // Define the vehicle data array
-export const Vehicledata: Vehicle[] = [
+export const Vehicledata: IVehicle[] = [
   {
     id: 'bus1',
     name: 'School Bus 1',
