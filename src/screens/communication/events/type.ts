@@ -1,37 +1,56 @@
-import * as Yup from 'yup';
+import type { Dayjs } from 'dayjs';
 
-export const upcomingEventvalidationSchema = Yup.object().shape({
-  eventTitle: Yup.string().required('Event title is required'),
-  eventVenue: Yup.string().required('Event venue is required'),
-  audience: Yup.array()
-    .min(1, 'Please select at least one audience')
-    .required('Audience is required'),
-  organization: Yup.array()
-    .min(1, 'Please select at least one organization')
-    .required('Organization is required'),
-  className: Yup.array()
-    .min(1, 'Please select at least one class')
-    .required('Class name is required'),
+export interface IEvent {
+  id: string;
+  eventTitle: string;
+  eventVenue: string;
+  organization: string[];
+  className: string[];
+  eventStartDate: Dayjs;
+  eventEndDate: Dayjs;
+  eventType: string;
+  audience: string[];
+  description: string;
+  eventOrganizer: string;
+  eventBudget: string;
+}
 
-  eventStartDate: Yup.date().nullable().required('Event start date is required'),
+/**
+ * Interface representing the form values for an event
+ * @property {string} eventTitle - The title of the event
+ * @property {string} eventVenue - The venue where the event will be held
+ * @property {string[]} organization - Array of organizations involved in the event
+ * @property {string[]} className - Array of class names participating in the event
+ * @property {Dayjs | null} eventStartDate - Start date and time of the event
+ * @property {Dayjs | null} eventEndDate - End date and time of the event
+ * @property {string} eventType - Type or category of the event
+ * @property {string[]} audience - Array of target audience groups for the event
+ * @property {string} description - Detailed description of the event
+ * @property {string} eventOrganizer - Name of the event organizer
+ * @property {string} eventBudget - Budget allocated for the event
+ */
+export interface EventFormValues {
+  eventTitle: string;
+  eventVenue: string;
+  organization: string[];
+  className: string[];
+  eventStartDate: Dayjs | null;
+  eventEndDate: Dayjs | null;
+  eventType: string;
+  audience: string[];
+  description: string;
+  eventOrganizer: string;
+  eventBudget: string;
+}
 
-  //   eventEndDate: Yup.date()
-  //     .nullable()
-  //     .required('Event end date is required')
-  //     .when('eventStartDate', (eventStartDate, schema) =>
-  //       eventStartDate ? schema.min(eventStartDate, 'End date must be after start date') : schema
-  //     ),
-  eventEndDate: Yup.date()
-    .nullable()
-    .required('Event date is required')
-    .min(Yup.ref('eventStartDate'), 'Event End date must be after start date'),
-
-  eventType: Yup.string().required('Event type is required'),
-  description: Yup.string().required('Description is required'),
-  eventOrganizer: Yup.string().required('Event organizer is required'),
-
-  eventBudget: Yup.number()
-    .typeError('Budget must be a number')
-    .positive('Budget must be a positive number')
-    .required('Event budget is required'),
-});
+/**
+ * Props interface for the AddEvent component
+ * @property {function} onSubmit - Callback function to handle form submission
+ * @property {EventFormValues | null} initialValues - Initial values for the form fields
+ * @property {boolean} isEdit - Flag indicating if the form is in edit mode
+ */
+export interface AddEventProps {
+  onSubmit: (values: EventFormValues) => void;
+  initialValues?: EventFormValues | null;
+  isEdit?: boolean;
+}
