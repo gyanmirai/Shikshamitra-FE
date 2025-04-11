@@ -12,6 +12,7 @@ import { Box, Card, Button } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -19,13 +20,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { validationSchemaForNewBudget } from '../budget_validation';
 
-interface FinanceNewBudgetCreateDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  edit: boolean;
-}
+import type { IFinanceNewBudgetCreateDialogProps } from '../finance-budget-screen-interface';
 
 const incomeCategories = [
   { value: 'income_01', label: 'Tuition Fees' },
@@ -39,7 +34,7 @@ const expenseCategories = [
   { value: 'expense_03', label: 'Educational Supplies' },
 ];
 
-const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> = ({
+const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps> = ({
   dialogValue,
   data,
   onClose,
@@ -211,9 +206,7 @@ const FinanceNewBudgetCreateDialog: React.FC<FinanceNewBudgetCreateDialogProps> 
             </Grid2>
           </Box>
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            <Button type="submit" variant="outlined" size="small">
-              Save
-            </Button>
+            <SubmitButton />
           </Box>
         </Card>
       </form>

@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Add } from '@mui/icons-material';
+import { Add, Create } from '@mui/icons-material';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -299,6 +299,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
         </Scrollbar>
         <DialogActions>
           <Button
+            startIcon={<Create />}
             variant="contained"
             onClick={() => {
               formik.handleSubmit();

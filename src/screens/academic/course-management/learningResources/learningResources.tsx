@@ -27,6 +27,8 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -660,16 +662,17 @@ const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
         {/* Action buttons */}
         <DialogActions>
           <Button
-            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+            variant="outlined"
             onClick={() => {
               setIsDraft(true);
               formik.handleSubmit();
             }}
-            color="warning"
           >
             Save as Draft
           </Button>
           <Button
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
             type="submit"
             variant="contained"
             onClick={() => {

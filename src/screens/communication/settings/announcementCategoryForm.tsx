@@ -18,6 +18,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -273,11 +275,7 @@ const AnnouncementCategory = () => {
             onClick={() => {
               handleDelete(selectedCategory);
             }}
-            variant="contained"
-            color="success"
-          >
-            Confirm
-          </Button>
+          />
         </DialogActions>
       </CustomDialog>
     </Box>
@@ -397,6 +395,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEd
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   setIsDraft(true);
                   formik.handleSubmit();
@@ -404,7 +404,9 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEd
               >
                 Save Draft
               </Button>
+
               <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {

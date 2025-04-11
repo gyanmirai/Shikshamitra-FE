@@ -7,9 +7,12 @@ import { Box, Grid, Switch, Button, TextField, DialogActions } from '@mui/materi
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -284,7 +287,9 @@ const RubricCreationForm = () => {
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button variant="contained">Generate Rubric</Button>
+          <Button startIcon={<Iconify icon={GlobalIcons.rubricFile} />} variant="contained">
+            Generate Rubric
+          </Button>
         </DialogActions>
       </form>
     </Box>

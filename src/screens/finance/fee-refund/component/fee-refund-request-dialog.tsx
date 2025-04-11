@@ -1,4 +1,3 @@
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import React, { useMemo, useEffect } from 'react'; // Import isEqual
@@ -14,30 +13,16 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-const validationSchema = Yup.object({
-  class: Yup.string().required('Class is required'),
-  division: Yup.string().required('Division is required'),
-  studentName: Yup.string().required('Student Name is required'),
-  grNo: Yup.string().required('GR No is required'),
-  feeType: Yup.array().min(1, 'Select at least one Fee Type'),
-  paidTerms: Yup.array().min(1, 'Select at least one Paid Term'),
-  amountApplicableForRefund: Yup.string().required('Refund Amount is required'),
-  askForRefund: Yup.number()
-    .typeError('Must be a valid number')
-    .required('This field is required')
-    .moreThan(0, 'Must be greater than 0'),
-  reason: Yup.string().required('Reason is required'),
-});
+import { feeRefundValidationSchema } from './validationSchema';
 
-interface FeeRefundRequestDialogProps {
-  onClose: () => void;
-}
+import type { IFeeRefundRequestDialogProps } from './fee-refund-request-dialog-interface';
 
-const FeeRefundRequestDialog: React.FC<FeeRefundRequestDialogProps> = ({ onClose }) => {
+const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClose }) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const initialValues = useMemo(
@@ -58,7 +43,7 @@ const FeeRefundRequestDialog: React.FC<FeeRefundRequestDialogProps> = ({ onClose
   // Formik setup
   const formik = useFormik({
     initialValues,
-    validationSchema,
+    validationSchema: feeRefundValidationSchema,
     onSubmit: (values) => {},
   });
 
@@ -340,9 +325,7 @@ const FeeRefundRequestDialog: React.FC<FeeRefundRequestDialogProps> = ({ onClose
           </Box>
           <Box display="flex" justifyContent="flex-end" gap={2} p={2} mt="auto">
             {/* <Button variant='outlined' onClick={handleCloseDialog}>Cancel</Button> */}
-            <Button variant="outlined" type="submit" onClick={() => {}}>
-              Save
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </Box>
         </Card>
       </form>

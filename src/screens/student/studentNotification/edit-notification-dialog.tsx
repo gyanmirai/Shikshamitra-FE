@@ -4,7 +4,6 @@ import {
   Box,
   Grid,
   Card,
-  Button,
   Switch,
   Typography,
   DialogActions,
@@ -12,33 +11,16 @@ import {
 } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 
 import CustomPlaceholderInput from './textfiled-for-message-with-placeholder';
 
-interface Recipient {
-  name: string;
-  message: string;
-  communicationChannel: string[];
-  placeHolder: string[];
-  division?: string;
-  standard?: string;
-  placeHolderOptions?: any;
-  isEnable: boolean;
-}
-
-interface NotificationData {
-  id: string;
-  event: string;
-  triggerCondition: string;
-  recipient: Recipient[];
-  communicationChannel: string[];
-}
-
-interface EditNotificationDialogProps {
-  onClose: () => void;
-  data: NotificationData;
-  isFromView?: boolean;
-}
+import type {
+  IRecipient,
+  INotificationData,
+  IEditNotificationDialogProps,
+} from './edit-notification-dialog-interface';
 
 const CHANNEL_OPTIONS = [
   { value: 'WhatsApp', label: 'WhatsApp' },
@@ -46,44 +28,18 @@ const CHANNEL_OPTIONS = [
   { value: 'Message', label: 'Message' },
 ];
 
-const ALL_RECIPIENT_OPTIONS = [
-  { value: 'parent', label: 'Parent' },
-  { value: 'counselor', label: 'Counselor' },
-  { value: 'student', label: 'Student' },
-];
-
-const DIVISION_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'A', label: 'A' },
-  { value: 'B', label: 'B' },
-  { value: 'C', label: 'C' },
-];
-
-const STANDARD_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: '1', label: '1' },
-  { value: '2', label: '2' },
-  { value: '3', label: '3' },
-];
-
-const STUDENT_OPTIONS = [
-  { value: 'student1', label: 'Student 1' },
-  { value: 'student2', label: 'Student 2' },
-  { value: 'student3', label: 'Student 3' },
-];
-
-const EditNotificationDialog: React.FC<EditNotificationDialogProps> = ({
+const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   onClose,
   data,
   isFromView,
 }) => {
-  const [notification, setNotification] = useState<NotificationData>(data);
+  const [notification, setNotification] = useState<INotificationData>(data);
 
   useEffect(() => {
     setNotification(data);
   }, [data]);
 
-  const updateRecipient = (name: string, key: keyof Recipient, value: any) => {
+  const updateRecipient = (name: string, key: keyof IRecipient, value: any) => {
     if (!isFromView) {
       console.log('updateRecipient called with:', name, key, value);
       setNotification((prev) => ({
@@ -113,34 +69,6 @@ const EditNotificationDialog: React.FC<EditNotificationDialogProps> = ({
             <Typography>{notification.triggerCondition}</Typography>
           </Box>
         </Box>
-
-        {/* <Box display="flex" gap={2} mb={2} mt={2}>
-
-                    <CustomSelect
-                        label="Select Standard"
-                        options={STANDARD_OPTIONS}
-                        onChange={(val) => console.log(val)}
-                        value=''
-                        formControlProps={{ sx: { width: '50%' } }}
-                        disabled={isFromView}
-                    />
-                    <CustomSelect
-                        label="Select Division"
-                        options={DIVISION_OPTIONS}
-                        onChange={(val) => console.log(val)}
-                        value=''
-                        formControlProps={{ sx: { width: '50%' } }}
-                        disabled={isFromView}
-                    />
-                    <CustomSelect
-                        label="Select Student"
-                        options={STUDENT_OPTIONS}
-                        onChange={(val) => console.log(val)}
-                        value=''
-                        formControlProps={{ sx: { width: '50%' } }}
-                        disabled={isFromView}
-                    />
-                </Box> */}
 
         <Box display="flex" flexWrap="wrap" gap={4}>
           {notification.recipient.map((recipient) => {
@@ -213,12 +141,12 @@ const EditNotificationDialog: React.FC<EditNotificationDialogProps> = ({
             alignItems: 'end',
           }}
         >
-          <Button size="small" variant="outlined" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button size="small" disabled={isFromView} variant="contained">
-            Save
-          </Button>
+          <CancelButton
+            onClick={() => {
+              onClose();
+            }}
+          />
+          {!isFromView && <SubmitButton onClick={() => {}} />}
         </DialogActions>
       </Box>
     </Card>

@@ -4,21 +4,17 @@ import { useFormik } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 
-interface AddNewMemberDialogProps {
-  dialogValue: boolean;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  data?: any;
-  isEdit: boolean;
-  isRenewMembership: boolean;
-}
+import type { IAddNewMemberDialogProps } from '../member-dialog-interface';
 
-const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({
+const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
   isRenewMembership,
   isEdit,
   dialogValue,
@@ -149,7 +145,12 @@ const AddNewMemberDialog: React.FC<AddNewMemberDialogProps> = ({
             </Grid>
           </Scrollbar>
           <DialogActions>
-            <Button type="submit" variant="contained" size="small">
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.reservation} />}
+              type="submit"
+              variant="contained"
+              size="small"
+            >
               Make Reservation
             </Button>
             {/* {isRenewMembership && data !== null && data.memberStatus === "Expired" && <Button type="submit" variant="contained" size="small">

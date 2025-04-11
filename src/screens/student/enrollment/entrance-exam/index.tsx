@@ -32,6 +32,7 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -687,7 +688,7 @@ export const ExamForm = ({
           loading={isAddLoading}
           type="submit"
           variant="contained"
-          color="primary"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           style={{ marginTop: '1rem' }}
         >
           Submit

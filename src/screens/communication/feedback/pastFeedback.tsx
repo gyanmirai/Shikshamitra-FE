@@ -228,6 +228,7 @@ const ViewSummary = () => (
               <TextField size="small" label="Response Rate" />
             </Box>
             <Button
+              startIcon={<Iconify icon="eva:download-fill" />}
               variant="contained"
               sx={{ justifySelf: 'flex-end', alignSelf: 'flex-end', mt: 1 }}
             >

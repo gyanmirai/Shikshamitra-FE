@@ -11,71 +11,13 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-// Placeholder options for dynamic message formatting
-const placeholderOptions = [
-  { label: 'Student Name', value: '[Student Name]' },
-  { label: 'Due Date', value: '[Due Date]' },
-  { label: 'Fee Amount', value: '[Amount]' },
-];
-
-// Sample templates for different categories
-const templates = {
-  overdueFee:
-    'Dear [Student Name], your fee of [Amount] is overdue. Please pay before [Due Date]. check check check check check check',
-  feeReminder: 'Hello [Student Name], kindly pay your fee amount [Amount] before [Due Date].',
-};
-
-// Sample student data
-const allStudents = [
-  {
-    id: 1,
-    name: 'Alice Johnson',
-    class: 'Class 1',
-    division: 'A',
-    organization: 'Org 1',
-    contactNumber: '9187654576',
-    email: 'abc@gmail.com',
-  },
-  {
-    id: 2,
-    name: 'Bob Smith',
-    class: 'Class 2',
-    division: 'B',
-    organization: 'Org 2',
-    contactNumber: '9187654576',
-    email: 'abc@gmail.com',
-  },
-  {
-    id: 3,
-    name: 'Charlie Brown',
-    class: 'Class 1',
-    division: 'A',
-    organization: 'Org 1',
-    contactNumber: '9187654576',
-    email: 'abc@gmail.com',
-  },
-  {
-    id: 4,
-    name: 'David Williams',
-    class: 'Class 3',
-    division: 'C',
-    organization: 'Org 3',
-    contactNumber: '9187654576',
-    email: 'abc@gmail.com',
-  },
-  {
-    id: 5,
-    name: 'Emma Davis',
-    class: 'Class 2',
-    division: 'B',
-    organization: 'Org 2',
-    contactNumber: '9187654576',
-    email: 'abc@gmail.com',
-  },
-];
+import { templates, allStudents } from '../notification-data';
 
 const SendNotificationScreen = () => {
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
@@ -236,13 +178,25 @@ const SendNotificationScreen = () => {
               </Box>
             </Box>
             <Box display="flex" flexDirection="row" gap={2}>
-              <Button type="submit" variant="outlined" color="primary" size="small">
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.resetFilter} />}
+                type="submit"
+                variant="outlined"
+              >
                 Reset Filter
               </Button>
-              <Button type="submit" variant="outlined" color="primary" size="small">
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.resetFilter} />}
+                type="submit"
+                variant="outlined"
+              >
                 Apply Filter
               </Button>
-              <Button type="submit" variant="outlined" color="primary" size="small">
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.sendNotification} />}
+                type="submit"
+                variant="outlined"
+              >
                 Send Notification
               </Button>
             </Box>

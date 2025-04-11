@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useState, useEffect } from 'react';
 
+import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -305,7 +306,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
         </Scrollbar>
         {/* Form Actions */}
         <DialogActions>
-          <Button type="submit" variant="contained">
+          <Button startIcon={<Create />} type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>

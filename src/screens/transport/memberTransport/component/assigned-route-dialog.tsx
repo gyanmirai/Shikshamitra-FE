@@ -5,7 +5,6 @@ import {
   Box,
   Grid,
   Radio,
-  Button,
   Switch,
   TextField,
   Typography,
@@ -21,6 +20,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 
 import {
   availableGrades,
@@ -28,33 +28,15 @@ import {
   assignedRoutesList,
 } from '../data/assigned-route-dialog-data';
 
-// Props Interface
-interface TransportRouteAssignedDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-  isStaff: boolean;
-  clickFromTable: boolean;
-}
+import type {
+  IFormikValue,
+  ITransportRouteAssignedDialogProps,
+} from '../member-transport-interface';
 
-// Formik Values Interface
-interface FormikValue {
-  id: number;
-  name: string;
-  grade: string;
-  assignedRoute: string;
-  pickupPoint: string;
-  dropoffPoint: string;
-  differentDropOffPoint: boolean;
-  others: string;
-  messageSentToStudent: string;
-}
+// Props Interface
 
 // Main Component
-const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> = ({
+const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps> = ({
   dialogValue,
   data,
   onSave,
@@ -69,7 +51,7 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
   const [dropoffPoint, setDifferentDropOffPoint] = useState<boolean>(false);
 
   // Formik Setup
-  const formik = useFormik<FormikValue>({
+  const formik = useFormik<IFormikValue>({
     initialValues: {
       id: isEdit ? data.id : Math.random(),
       name: isEdit ? (data.name ?? '') : '',
@@ -369,9 +351,7 @@ const TransportRouteAssignedDialog: React.FC<TransportRouteAssignedDialogProps> 
         </form>
       </Scrollbar>
       <DialogActions>
-        <Button type="submit" variant="contained" size="small">
-          Assigned / Declined
-        </Button>
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </CustomDialog>
   );

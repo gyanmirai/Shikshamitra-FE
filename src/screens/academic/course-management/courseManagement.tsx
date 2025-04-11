@@ -4,7 +4,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Add } from '@mui/icons-material';
+import { Add, Create } from '@mui/icons-material';
 import {
   Box,
   Tab,
@@ -885,7 +885,7 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
 
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
+          <Button startIcon={<Create />} type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'} Course
           </Button>
         </DialogActions>

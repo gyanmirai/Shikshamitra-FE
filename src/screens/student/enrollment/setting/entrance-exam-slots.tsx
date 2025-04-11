@@ -10,6 +10,7 @@ import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } fro
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -22,6 +23,7 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -308,10 +310,14 @@ export const SlotsForm = ({
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <LoadingButton loading={isLoading || isUpdateSlotLoading} type="submit" variant="contained">
-          Save
-        </LoadingButton>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <SubmitButton loading={isLoading || isUpdateSlotLoading} />
       </DialogActions>
     </Box>
   );

@@ -19,6 +19,8 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -386,16 +388,17 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   setIsDraft(true);
                   formik.handleSubmit();
                 }}
-                variant="contained"
-                color="warning"
               >
                 Save Draft
               </Button>
               <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {

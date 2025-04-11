@@ -1,6 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import {
   Grid,
   Radio,
@@ -19,11 +20,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 
-interface TransportAddNewRequestDialogProps {
-  dialogValue: boolean;
-  onClose: () => void;
-  selectedEntry: any;
-}
+import type { ITransportAddNewRequestDialogProps } from '../member-transport-interface';
 
 const availableGrades = [
   { grade: '1', availableStudents: ['Aarav Patel'] },
@@ -35,7 +32,7 @@ const availableGrades = [
   { grade: '12', availableStudents: ['Neha Sharma', 'Kavita Desai'] },
 ];
 
-const TransportAddNewRequestDialog: React.FC<TransportAddNewRequestDialogProps> = ({
+const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps> = ({
   dialogValue,
   onClose,
   selectedEntry,
@@ -179,7 +176,7 @@ const TransportAddNewRequestDialog: React.FC<TransportAddNewRequestDialogProps> 
         </form>
       </Scrollbar>
       <DialogActions>
-        <Button size="small" variant="contained" type="submit">
+        <Button startIcon={<Add />} size="small" variant="contained" type="submit">
           Add To New Request
         </Button>
       </DialogActions>

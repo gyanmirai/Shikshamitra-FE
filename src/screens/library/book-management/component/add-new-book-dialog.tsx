@@ -1,23 +1,18 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 
-interface AddNewBookDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-}
+import type { IAddNewBookDialogProps } from '../book-management-interface';
 
-const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
+const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
   dialogValue,
   data,
   onSave,
@@ -184,9 +179,7 @@ const AddNewBookDialog: React.FC<AddNewBookDialogProps> = ({
             </Grid>
           </Scrollbar>
           <DialogActions>
-            <Button type="submit" variant="outlined" size="small">
-              Save
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </DialogActions>
         </form>
       </Box>

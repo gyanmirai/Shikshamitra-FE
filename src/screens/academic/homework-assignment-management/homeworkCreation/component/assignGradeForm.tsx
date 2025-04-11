@@ -3,12 +3,13 @@
 import { useFormik } from 'formik';
 import { PDFViewer } from '@react-pdf/renderer';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, TextField, DialogActions } from '@mui/material';
 
 import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { assignGradeValidationSchema } from './validationSchema';
@@ -95,9 +96,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGra
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" variant="contained">
-            Submit
-          </Button>
+          <SubmitButton onClick={() => {}} />
         </DialogActions>
       </form>
     </Box>

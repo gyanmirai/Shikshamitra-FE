@@ -1,13 +1,13 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Button, TextField, DialogContent, DialogActions } from '@mui/material';
+import { TextField, DialogContent, DialogActions } from '@mui/material';
 
-interface AddNotificationCategoryDialogProps {
-  onClose: () => void;
-}
+import SubmitButton from 'src/components/submit-button';
 
-const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps> = ({
+import type { IAddNotificationCategoryDialogProps } from '../notification-interface';
+
+const AddNotificationCategoryDialog: React.FC<IAddNotificationCategoryDialogProps> = ({
   onClose,
 }) => {
   const formik = useFormik({
@@ -72,9 +72,7 @@ const AddNotificationCategoryDialog: React.FC<AddNotificationCategoryDialogProps
 
       {/* Dialog Actions */}
       <DialogActions>
-        <Button onClick={onClose} type="submit" variant="outlined" color="primary">
-          Save
-        </Button>
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </form>
   );

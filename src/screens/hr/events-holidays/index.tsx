@@ -27,6 +27,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -457,14 +458,20 @@ export const HrEventsAndHolidaysForm = ({
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button onClick={handleClose} variant="outlined">
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
             Cancel
           </Button>
+
           <LoadingButton
             disabled={isCalenderPreview}
             loading={isUpdatePFLoading || isLoading}
             variant="contained"
             type="submit"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
           >
             Submit
           </LoadingButton>

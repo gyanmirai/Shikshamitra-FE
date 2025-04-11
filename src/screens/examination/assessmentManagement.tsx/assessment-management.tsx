@@ -10,8 +10,8 @@ import { useFormik } from 'formik';
 import { PDFViewer } from '@react-pdf/renderer';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Add, Create } from '@mui/icons-material';
 import {
   Box,
   Grid,
@@ -29,6 +29,8 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -742,6 +744,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
         <DialogActions>
           {isEdit ? (
             <Button
+              startIcon={<Create />}
               variant="contained"
               onClick={() => {
                 formik.handleSubmit();
@@ -752,6 +755,8 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   formik.setFieldValue('publish', false);
                   formik.handleSubmit();
@@ -760,6 +765,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 Save Draft
               </Button>
               <Button
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {

@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,48 +14,20 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
-const validationSchema = Yup.object().shape({
-  incomeSource: Yup.string().required('Income source is required'),
-  incomeAmount: Yup.string()
-    .required('Income amount is required')
-    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-      const numericValue = Number(value);
-      return numericValue > 0;
-    }),
-  paymentMethod: Yup.string().required('Payment method is required'),
-  date: Yup.date().required('Date is required').typeError('Invalid date'),
-  paymentStatus: Yup.string().required('Payment status is required'),
-  incomeName: Yup.string().required('Income name is required'),
-  notes: Yup.string().optional(), // Optional field
-});
+import { addIncomeValidationSchema } from '../validationSchema';
 
-interface FinanceAddNewIncomeDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-}
+import type {
+  IFormikValue,
+  IFinanceAddNewIncomeDialogProps,
+} from '../add-new-income-dialog-interface';
 
-interface FormikValue {
-  incomeSource: string;
-  incomeAmount: string;
-  paymentMethod: string;
-  date: any;
-  paymentStatus: string;
-  id: number;
-  incomeName: string;
-  notes?: string;
-}
-
-const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
+const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
   dialogValue,
   data,
   onSave,
@@ -73,7 +44,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
   const dispatch = useDispatch();
 
   // Initialize form values based on whether we're editing or creating new entry
-  const initialValues = useMemo<FormikValue>(
+  const initialValues = useMemo<IFormikValue>(
     () => ({
       incomeSource: isEdit ? (data.incomeSource ?? '') : '',
       incomeAmount: isEdit ? (data.incomeAmount ?? '') : '',
@@ -91,9 +62,9 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
   );
 
   // Initialize formik with validation and submission handling
-  const formik = useFormik<FormikValue>({
+  const formik = useFormik<IFormikValue>({
     initialValues,
-    validationSchema,
+    validationSchema: addIncomeValidationSchema,
     onSubmit: (values) => {
       // Normalize strings for case-insensitive comparison
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
@@ -298,10 +269,7 @@ const FinanceAddNewIncomeDialog: React.FC<FinanceAddNewIncomeDialogProps> = ({
             {/* CTA Section */}
           </Box>
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            {/* <Button size="small" variant="outlined" onClick={handleCloseDialog}>Cancel</Button> */}
-            <Button size="small" type="submit" variant="outlined">
-              Save
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </Box>
         </Card>
       </form>

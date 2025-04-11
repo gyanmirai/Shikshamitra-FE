@@ -10,6 +10,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify/iconify';
 import { UploadBox } from 'src/components/upload/upload-box';
 
@@ -114,7 +116,7 @@ const SendAlertToOthers = () => {
         </Box>
 
         <Box>
-          <Button variant="outlined" color="primary" fullWidth>
+          <Button variant="outlined" startIcon={<Iconify icon={GlobalIcons.alertIcon} />} fullWidth>
             Send Alert
           </Button>
         </Box>

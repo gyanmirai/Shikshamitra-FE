@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -14,15 +15,10 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { additionalDiscountData } from '../student-fee-data/student-additional-discount-data';
 
 import type { AdditionalDiscount } from '../student-fee-data/student-additional-discount-data';
-
-interface FinanceStudentAdditionalDiscountDialogProps {
-  dialogValue: boolean;
-  selectedData: any;
-  onClose: () => void;
-}
+import type { IFinanceStudentAdditionalDiscountDialogProps } from './student-additional-discount-interface';
 
 const FinanceStudentAdditionalDiscountDialog: React.FC<
-  FinanceStudentAdditionalDiscountDialogProps
+  IFinanceStudentAdditionalDiscountDialogProps
 > = ({ dialogValue, selectedData, onClose }) => {
   // State to store payment history data from additionalDiscountData
   const [paymentHistoryData] = useState<AdditionalDiscount[]>(additionalDiscountData);
@@ -223,7 +219,8 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
         />
       </Scrollbar>
       <DialogActions>
-        <Button
+        <SubmitButton onClick={() => {}} />
+        {/* <Button
           disabled={!isSaveEnabled}
           onClick={() => {}}
           type="submit"
@@ -231,7 +228,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
           size="small"
         >
           Save
-        </Button>
+        </Button> */}
       </DialogActions>
     </CustomDialog>
   );

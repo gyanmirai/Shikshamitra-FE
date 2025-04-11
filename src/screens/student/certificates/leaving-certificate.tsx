@@ -334,7 +334,7 @@ const LeavingForm = () => {
         </Grid>
       </Scrollbar>
       <DialogActions>
-        <Button variant="contained" type="submit">
+        <Button startIcon={<Create />} variant="contained" type="submit">
           Create
         </Button>
       </DialogActions>

@@ -17,12 +17,14 @@ import {
   FormHelperText,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentEnrollmentReportTypeOptions } from 'src/enums/report-type';
 import { useGenerateReportMutation } from 'src/redux/student/student-enrollment-report/student-enrollemt-report';
 
+import { Iconify } from 'src/components/iconify/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const validationSchema = Yup.object().shape({
@@ -318,7 +320,12 @@ const StudentReportsScreen = () => {
                     </Field>
                   </Grid>
                   <Grid item xs={12} justifyContent="flex-end" display="flex">
-                    <LoadingButton loading={isLoading} type="submit" variant="contained">
+                    <LoadingButton
+                      startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                      loading={isLoading}
+                      type="submit"
+                      variant="contained"
+                    >
                       Generate Report
                     </LoadingButton>
                   </Grid>

@@ -1,6 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import Add from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
@@ -318,7 +319,13 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
                 <strong>Grade:</strong> {selectedStudent.grade}
               </Typography>
             </Box>
-            <Button variant="contained" size="small" onClick={handleAddFee} sx={{ mt: 2 }}>
+            <Button
+              startIcon={<Add />}
+              variant="contained"
+              size="small"
+              onClick={handleAddFee}
+              sx={{ mt: 2 }}
+            >
               Add
             </Button>
           </Box>

@@ -18,6 +18,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import {
@@ -31,6 +33,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -243,12 +246,15 @@ const DocumentForm = ({
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton loading={isUpdateLoading || isLoading} variant="contained" type="submit">
-          Submit
-        </LoadingButton>
+
+        <SubmitButton loading={isUpdateLoading || isLoading} />
       </DialogActions>
     </form>
   );

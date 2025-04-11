@@ -3,20 +3,18 @@ import { useFormik } from 'formik';
 
 import { Box, Button, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiled-for-message-with-placeholder';
 
 import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
 import CustomSelect from '../custom-select';
+import { Iconify } from '../iconify/iconify';
 
-interface SendInstantNotificationDialogProps {
-  open: boolean;
-  onClose: () => void;
-  data: any;
-  userList: any;
-}
+import type { ISendInstantNotificationDialogProps } from './send-instant-notification-interface';
 
-const SendInstantNotificationDialog: React.FC<SendInstantNotificationDialogProps> = ({
+const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProps> = ({
   open,
   onClose,
   data,
@@ -89,6 +87,7 @@ const SendInstantNotificationDialog: React.FC<SendInstantNotificationDialogProps
       </Scrollbar>
       <DialogActions>
         <Button
+          startIcon={<Iconify icon={GlobalIcons.sendNotification} />}
           size="small"
           variant="contained"
           onClick={() => {

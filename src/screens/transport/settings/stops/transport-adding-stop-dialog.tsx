@@ -23,16 +23,13 @@ import { CONFIG } from 'src/config-global';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
+
+import type { ITransportAddingStopDialogProps } from '../settings-interface';
 
 const nominatimBaseUrl = 'https://nominatim.openstreetmap.org/search?';
 
-interface TransportAddingStopDialogProps {
-  dialogValue: boolean;
-  onClose: () => void;
-  sendToParent?: (data: any) => void;
-}
-
-const TransportAddingStopDialog: React.FC<TransportAddingStopDialogProps> = ({
+const TransportAddingStopDialog: React.FC<ITransportAddingStopDialogProps> = ({
   dialogValue,
   onClose,
   sendToParent,
@@ -328,9 +325,7 @@ const TransportAddingStopDialog: React.FC<TransportAddingStopDialogProps> = ({
       </Scrollbar>
 
       <DialogActions>
-        <Button variant="contained" onClick={() => console.log(markers)}>
-          Save
-        </Button>
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </CustomDialog>
   );

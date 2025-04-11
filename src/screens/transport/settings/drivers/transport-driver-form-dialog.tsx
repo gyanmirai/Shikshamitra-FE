@@ -1,40 +1,25 @@
 import React from 'react';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 
-interface DriverFormDialogProps {
-  driver: any;
-  dialogValue: boolean;
-  onClose: () => void;
-  isEdit: boolean;
-}
+import { settingsValidationSchema } from '../validationSchema';
 
-const DriverFormDialog: React.FC<DriverFormDialogProps> = ({
+import type { IDriverFormDialogProps } from '../settings-interface';
+
+const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
   driver,
   onClose,
   isEdit,
   dialogValue,
 }) => {
   // Form validation schema
-  const validationSchema = Yup.object({
-    name: Yup.string().required('Name is required'),
-    emergencyContact: Yup.string()
-      .matches(/^\d{10}$/, 'Must be a valid 10-digit number')
-      .required('Emergency contact is required'),
-    bloodGroup: Yup.string().required('Blood group is required'),
-    address: Yup.string().required('Address is required'),
-    aadharCard: Yup.string().matches(/^\d{4}-\d{4}-\d{4}$/, 'Format: XXXX-XXXX-XXXX'),
-    licenseNumber: Yup.string().required('License number is required'),
-    route: Yup.string(),
-    vehicle: Yup.string(),
-  });
 
   // Formik setup
   const formik = useFormik({
@@ -48,7 +33,7 @@ const DriverFormDialog: React.FC<DriverFormDialogProps> = ({
       route: '',
       vehicle: '',
     },
-    validationSchema,
+    validationSchema: settingsValidationSchema,
     onSubmit: (values) => {},
   });
 
@@ -340,7 +325,7 @@ const DriverFormDialog: React.FC<DriverFormDialogProps> = ({
             </Grid>
           </Scrollbar>
           <DialogActions>
-            <Button variant="contained">Save</Button>
+            <SubmitButton onClick={() => {}} />
           </DialogActions>
         </form>
       </Box>

@@ -1,6 +1,5 @@
 import type { RootState } from 'src/redux/store';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,40 +12,15 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-export interface ReceiptBook {
-  id: number;
-  receiptBookName: string;
-  receiptBookCode: string;
-  toggle?: boolean;
-  action?: string;
-}
+import { receiptBookValidationSchema } from '../validationSchema';
 
-interface Props {
-  data: ReceiptBook;
-  onSave: (values: ReceiptBook) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: ReceiptBook[];
-}
+import type { IProps, IReceiptBook } from '../receipt-book-interface';
 
-const validationSchema = Yup.object().shape({
-  receiptBookName: Yup.string()
-    .trim()
-    .required('Receipt Book Name is required')
-    .min(2, 'Must be at least 2 characters')
-    .max(50, 'Cannot exceed 50 characters'),
-
-  receiptBookCode: Yup.string()
-    .trim()
-    .required('Receipt Book Code is required')
-    .matches(/^[A-Za-z0-9_-]+$/, 'Invalid format')
-    .max(20, 'Cannot exceed 20 characters'),
-});
-
-const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
+const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   isEdit,
   data,
   onSave,
@@ -61,7 +35,7 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   // Memoized initial values for the form based on whether editing existing or creating new
-  const initialValues = useMemo<ReceiptBook>(
+  const initialValues = useMemo<IReceiptBook>(
     () => ({
       id: isEdit ? data.id : Math.floor(Math.random() * 10000),
       receiptBookName: isEdit ? (data.receiptBookName ?? '') : '',
@@ -71,9 +45,9 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
   );
 
   // Formik hook for form handling with validation and submission logic
-  const formik = useFormik<ReceiptBook>({
+  const formik = useFormik<IReceiptBook>({
     initialValues,
-    validationSchema,
+    validationSchema: receiptBookValidationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
       // Check if receipt book name already exists in the data
@@ -172,9 +146,7 @@ const FinanceSettingReceiptbookDialog: React.FC<Props> = ({
           </Box>
 
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            <Button type="submit" variant="outlined" size="small">
-              Save
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </Box>
         </Card>
       </form>

@@ -6,8 +6,11 @@ import { useFormik } from 'formik';
 
 import { Box, Grid, Button, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import type { TTeacherData } from './teacher';
@@ -71,7 +74,11 @@ const TeacherReassign: React.FC<TeacherReassignProps> = ({ selectedTeacher, onSu
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" variant="contained">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.resignIcon} />}
+            type="submit"
+            variant="contained"
+          >
             Reassign
           </Button>
         </DialogActions>

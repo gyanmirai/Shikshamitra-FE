@@ -10,13 +10,11 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Card,
   Grid,
   alpha,
-  Button,
   MenuList,
   MenuItem,
   useTheme,
@@ -36,6 +34,8 @@ import { SvgColor } from 'src/components/svg-color';
 import CustomDialog from 'src/components/customDialog';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -443,17 +443,8 @@ const UpdateProgress = () => {
         />
       </ShakingTextField>
       <DialogActions>
-        <Button variant="outlined" size="small" onClick={() => {}}>
-          Cancel
-        </Button>
-        <LoadingButton
-          // loading={isLoading || isUpdateLoading}
-          type="submit"
-          variant="contained"
-          size="small"
-        >
-          Submit
-        </LoadingButton>
+        <CancelButton onClick={() => {}} />
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </Box>
   );

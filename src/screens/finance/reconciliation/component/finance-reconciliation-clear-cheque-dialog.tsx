@@ -1,35 +1,26 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-interface FinanceReconciliationClearAndBounceChequeDialogProps {
-  fromClearCheck: boolean;
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-}
+import { reconciliationDialogValidationSchema } from '../validationSchema';
 
-const validationSchema = Yup.object({
-  checkBounceCharges: Yup.string().required('Bounce Charges is required'),
-  checkBounceReason: Yup.string().required('Reason is required'),
-});
+import type { IFinanceReconciliationClearAndBounceChequeDialogProps } from '../reconciliation-dialog-interface';
 
 const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
-  FinanceReconciliationClearAndBounceChequeDialogProps
+  IFinanceReconciliationClearAndBounceChequeDialogProps
 > = ({ fromClearCheck, dialogValue, data, onSave, onClose }) => {
   const formik = useFormik({
     initialValues: {
@@ -47,7 +38,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
       remarks: '',
       chequeClearDate: dayjs(),
     },
-    validationSchema,
+    validationSchema: reconciliationDialogValidationSchema,
     onSubmit: (values: any) => {
       onSave(values);
     },
@@ -274,17 +265,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
             />
           </Scrollbar>
           <DialogActions>
-            {/* <Button onClick={onClose} variant="contained" size="small">
-            Cancel
-          </Button> */}
-            <Button
-              disabled={!fromClearCheck && !formik.isValid}
-              type="submit"
-              variant="contained"
-              size="small"
-            >
-              Save
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </DialogActions>
         </form>
       </Box>

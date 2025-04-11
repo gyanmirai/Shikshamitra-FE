@@ -22,6 +22,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -686,7 +688,9 @@ export const ViewSurveyDetail = ({ survey }: any) => (
     </Scrollbar>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
       <Button variant="contained">Close Survey</Button>
-      <Button variant="contained">Download Responses</Button>
+      <Button startIcon={<Iconify icon={GlobalIcons.download} />} variant="contained">
+        Download Responses
+      </Button>
     </Box>
   </Box>
 );

@@ -9,9 +9,12 @@ import React, { useState, useEffect } from 'react';
 
 import { Box, Grid, Card, Select, Button, MenuItem, InputLabel, FormControl } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -226,7 +229,11 @@ const StudentReportsScreen = () => {
                 </FormControl>
               </Grid>
               <Grid item xs={12} justifyContent="flex-end" display="flex">
-                <Button type="submit" variant="contained">
+                <Button
+                  startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                  type="submit"
+                  variant="contained"
+                >
                   Generate Report
                 </Button>
               </Grid>

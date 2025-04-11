@@ -18,6 +18,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -382,6 +384,8 @@ const ImportantForm: React.FC<ImportantFormProps> = ({
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   setIsDraft(true);
                   formik.handleSubmit();
@@ -390,6 +394,7 @@ const ImportantForm: React.FC<ImportantFormProps> = ({
                 Save Draft
               </Button>
               <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {

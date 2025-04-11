@@ -3,30 +3,20 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 
-interface TransportAddNewMaintenanceDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-}
+import type {
+  IFormikValue,
+  ITransportAddNewMaintenanceDialogProps,
+} from '../../newVehicleManagement/vehicle-management-interface';
 
-interface FormikValue {
-  dateOfMaintenance: any;
-  serviceDetails: string;
-  nextScheduleMaintenance: any;
-  id: number;
-}
-
-const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps> = ({
+const TransportMaintenanceDialog: React.FC<ITransportAddNewMaintenanceDialogProps> = ({
   data,
   allData,
   dialogValue,
@@ -37,7 +27,7 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
-  const formik = useFormik<FormikValue>({
+  const formik = useFormik<IFormikValue>({
     initialValues: {
       dateOfMaintenance: isEdit ? (dayjs(data.maintenanceDate, 'DD-MM-YYYY') ?? null) : null,
       nextScheduleMaintenance: isEdit
@@ -140,9 +130,7 @@ const TransportMaintenanceDialog: React.FC<TransportAddNewMaintenanceDialogProps
         {/* <Button onClick={onClose} variant="contained" size="small">
               Cancel
             </Button> */}
-        <Button type="submit" variant="contained" size="small">
-          Save
-        </Button>
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </CustomDialog>
   );

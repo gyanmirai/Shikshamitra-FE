@@ -8,6 +8,8 @@ import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -307,7 +309,12 @@ const MemberTransportScreen = () => {
           {/* <Button onClick={dialogForBulkEdit.onTrue} variant="contained" size="small">
                         Bulk Assign
                     </Button> */}
-          <Button onClick={dialog.onTrue} variant="contained" size="small">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.assignedRoute} />}
+            onClick={dialog.onTrue}
+            variant="contained"
+            size="small"
+          >
             Assign Route
           </Button>
         </Box>

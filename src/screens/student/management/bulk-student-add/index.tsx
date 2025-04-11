@@ -5,13 +5,16 @@ import React from 'react';
 import { Box, Button } from '@mui/material';
 import { FileDownload } from '@mui/icons-material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const BulkStudentAddScreen = () => (
   // const dialog = useBoolean();
   <Box>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-      <Button size="small" variant="outlined">
+      <Button startIcon={<Iconify icon={GlobalIcons.download} />} size="small" variant="outlined">
         Download Template
       </Button>
       <Button size="small" startIcon={<FileDownload />} variant="contained">

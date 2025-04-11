@@ -8,8 +8,12 @@ import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
+import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -188,12 +192,15 @@ export const ExamTypeForm = ({
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton variant="contained" type="submit">
-          Submit
-        </LoadingButton>
+
+        <SubmitButton />
       </DialogActions>
     </form>
   );
