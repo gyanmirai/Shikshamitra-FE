@@ -2,7 +2,6 @@
 
 import type { Division, Standards } from 'src/types/school';
 
-import * as yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -22,6 +21,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import studentExamGrades from 'src/json/academic/examination/studentExamGrade.json';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -33,61 +33,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import type { TStudentExamGradeEntry } from './type';
-import type { TabComponentType } from '../../hr/leave-request';
+import { validationSchema } from './validationSchema';
 
-export const dummyData: TStudentExamGradeEntry[] = [
-  {
-    id: '1',
-    studentName: 'John Smith',
-    assignments: 'Math Quiz 1',
-    subject: 'Mathematics',
-    grade: 'A',
-    feedback: 'Excellent',
-    weightedAverage: '85%',
-    status: 'Assigned',
-  },
-  {
-    id: '2',
-    studentName: 'Emma Wilson',
-    assignments: 'Science Project',
-    subject: 'Science',
-    grade: '',
-    feedback: '',
-    weightedAverage: '92%',
-    status: 'Pending',
-  },
-  {
-    id: '3',
-    studentName: 'Michael Brown',
-    assignments: 'English Essay',
-    subject: 'English',
-    grade: 'C',
-    feedback: 'Need Improvement',
-    weightedAverage: '75%',
-    status: 'Assigned',
-  },
-  {
-    id: '4',
-    studentName: 'Sarah Davis',
-    assignments: 'Math Homework',
-    subject: 'Mathematics',
-    grade: '',
-    feedback: '',
-    weightedAverage: '88%',
-    status: 'Pending',
-  },
-  {
-    id: '5',
-    studentName: 'James Johnson',
-    assignments: 'Science Quiz',
-    subject: 'Science',
-    grade: 'B',
-    feedback: 'Good',
-    weightedAverage: '87%',
-    status: 'Assigned',
-  },
-];
+import type { TabComponentType } from '../../hr/leave-request';
+import type { AssignGradeProps, TStudentExamGradeEntry } from './type';
 
 const GradeEntry = (props: TabComponentType) => {
   // Dialog control for showing/hiding modal
@@ -120,7 +69,7 @@ const GradeEntry = (props: TabComponentType) => {
   // Currently selected student for grade entry
   const [selectedStudent, setSelectedStudent] = useState<TStudentExamGradeEntry | null>(null);
   // Table data containing student grades and information
-  const [tableData, setTableData] = useState<TStudentExamGradeEntry[]>(dummyData);
+  const [tableData, setTableData] = useState<TStudentExamGradeEntry[]>(studentExamGrades);
   // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -221,6 +170,7 @@ const GradeEntry = (props: TabComponentType) => {
               onClick={() => {
                 viewSubmissionDialog.onTrue();
                 setSelectedStudent(row);
+                popover.onClose();
               }}
             >
               {' '}
@@ -308,8 +258,6 @@ const GradeEntry = (props: TabComponentType) => {
           options={divisionOptions}
           value={division}
           onChange={(val) => {
-            // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-            // formik.setFieldValue('division', selectedDivision?.name || '');
             setDivision(val as string);
           }}
           formControlProps={{
@@ -447,7 +395,7 @@ const GradeEntry = (props: TabComponentType) => {
       <CustomDialog
         open={viewSubmissionDialog.value}
         handleClose={handleCloseDialog}
-        title="Assign Grade"
+        title={`Assign Grade To ${selectedStudent?.studentName}`}
       >
         <AssignGrade data={selectedStudent} onSubmit={handleSingleGradeAssignment} />
       </CustomDialog>
@@ -465,22 +413,7 @@ const GradeEntry = (props: TabComponentType) => {
 
 export default GradeEntry;
 
-/**
- * Props interface for AssignGrade component
- * @param data Optional data containing initial grade and feedback values
- * @param onSubmit Callback function to handle form submission with grade and feedback values
- */
-interface AssignGradeProps {
-  data?: TStudentExamGradeEntry | null;
-  onSubmit: (values: { grade: string; feedback: string }) => void;
-}
-
 const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
-  const validationSchema = yup.object().shape({
-    grade: yup.string().required('Grade is required'),
-    feedback: yup.string().max(500, 'Feedback must be less than 500 characters'),
-  });
-
   const formik = useFormik({
     initialValues: {
       grade: data?.grade || '',
@@ -495,7 +428,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
   return (
     <Box display="flex" flexDirection="column" gap={2} p={1}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <ShakingTextField error={!!(formik.touched?.grade && formik.errors.grade) || false}>

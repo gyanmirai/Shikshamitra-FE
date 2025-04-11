@@ -6,5 +6,15 @@ export interface TStudentExamGradeEntry {
   grade: string;
   feedback: string;
   weightedAverage: string;
-  status: 'Assigned' | 'Pending'; // You can also use `string` if these values are dynamic
+  status: string; // You can also use `string` if these values are dynamic
+}
+
+/**
+ * Props interface for AssignGrade component
+ * @param data Optional data containing initial grade and feedback values
+ * @param onSubmit Callback function to handle form submission with grade and feedback values
+ */
+export interface AssignGradeProps {
+  data?: TStudentExamGradeEntry | null;
+  onSubmit: (values: { grade: string; feedback: string }) => void;
 }
