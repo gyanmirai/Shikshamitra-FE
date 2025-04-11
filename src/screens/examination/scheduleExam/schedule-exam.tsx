@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormikProps } from 'formik';
-import type { Division, Standards } from 'src/types/school';
+import type { Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
@@ -21,7 +21,6 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -95,31 +94,30 @@ const ScheduleExam = (props: TabComponentType) => {
   // State to manage exam data with initial values
   const [examData, setExamData] = useState(initialExamData);
   // Custom hook to manage URL search parameters - controls form visibility
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
-
+  // const [params, setParams] = useSearchParam({ isForm: 'false' });
+  const [open, setOpen] = useState(false);
   // Boolean state for dialog control
   const dialog = useBoolean();
 
   // Dynamic breadcrumb navigation links based on current view (form or list)
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/examinationDashboard' },
-          { name: 'Schedule Exam' },
-          { name: 'Exam Form' },
-        ]
-      : [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/examinationDashboard' },
-          { name: 'Schedule Exam' },
-        ];
+  const links = open
+    ? [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Schedule Exam' },
+        { name: 'Exam Form' },
+      ]
+    : [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Schedule Exam' },
+      ];
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Schedule Exam"
         description={
-          params.isForm === 'true'
+          open
             ? 'Create or update exam details, including the exam title, date, duration, and assigned subjects. Easily manage exam schedules and make adjustments as needed.'
             : 'View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary.'
         }
@@ -128,28 +126,28 @@ const ScheduleExam = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
             onClick={
-              params.isForm === 'true'
+              open
                 ? () => {
-                    setParams({ isForm: 'false' });
+                    setOpen(false);
                   }
                 : () => {
-                    setParams({ isForm: 'true' });
+                    setOpen(true);
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Scheudle Exam'}
+            {open ? 'Back' : 'Scheudle Exam'}
           </Button>
         }
       />
-      {params.isForm === 'true' ? (
+      {open ? (
         <Card>
           <NewExamForm
             // onSubmit={handleSubmit}
             onClose={() => {
-              setParams({ isForm: 'false' });
+              setOpen(false);
             }}
           />
         </Card>
@@ -157,17 +155,19 @@ const ScheduleExam = (props: TabComponentType) => {
         <CustomizableTable
           tableId="schedule-exam-table"
           columns={[
-            { id: 'class', label: 'Class' },
-            { id: 'subjectName', label: 'Subject Name', align: 'left', minWidth: '180px' },
-            { id: 'examType', label: 'Exam Type', align: 'left', minWidth: '180px' },
-            { id: 'examName', label: 'Exam Name', align: 'left', minWidth: '180px' },
-            { id: 'examDate', label: 'Exam Date', align: 'left', minWidth: '180px' },
-            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '180px' },
-            { id: 'examDuration', label: 'Exam Duration', align: 'left', minWidth: '200px' },
-            { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: '200px' },
+            { id: 'class', label: 'Class', align: 'left', minWidth: 250 },
+            { id: 'subjectName', label: 'Subject Name', align: 'left', minWidth: 250 },
+            { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 250 },
+            { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 250 },
+            { id: 'examDate', label: 'Exam Date', align: 'left', minWidth: 250 },
+            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: 250 },
+            { id: 'examDuration', label: 'Exam Duration', align: 'left', minWidth: 250 },
+            { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: 250 },
             {
               id: 'status',
               label: 'Status',
+              align: 'left',
+              minWidth: 250,
               render: (value) => (
                 <Label color={value === 'Pending' ? 'warning' : 'success'}>{value}</Label>
               ),
@@ -176,6 +176,8 @@ const ScheduleExam = (props: TabComponentType) => {
               id: 'action',
               label: 'Actions',
               isSort: false,
+              sticky: true,
+              isFilter: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions
@@ -208,12 +210,11 @@ const SelectExam = (props: FormikProps<TExamFormValues>) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  console.log('formik vakue----', formik.values);
 
-  // State to store and manage division options for selected class
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType) || false}>
             <CustomSelect
@@ -260,11 +261,7 @@ const SelectExam = (props: FormikProps<TExamFormValues>) => {
             <CustomSelect
               options={classData?.items}
               onChange={(val) => {
-                const selectedClass: Standards = classData.items.find(
-                  (i: Standards) => i.id === val
-                );
                 formik.setFieldValue('className', val as string);
-                setDivisionOptions(selectedClass?.divisions || []);
               }}
               label="Class"
               isLoading={isLoading}
@@ -290,7 +287,10 @@ const SelectExam = (props: FormikProps<TExamFormValues>) => {
               labelKey="name"
               valueKey="id"
               multiple
-              options={divisionOptions}
+              options={
+                classData?.items.find((i: Standards) => i.id === formik.values.className)
+                  ?.divisions || []
+              }
               value={formik.values.divisions}
               onChange={(val) => {
                 formik.setFieldValue('divisions', val as string[]);
@@ -316,7 +316,8 @@ const SelectExam = (props: FormikProps<TExamFormValues>) => {
               ]}
               value={formik.values.subjects.map((sub: TSubjectDetail) => sub.subjectName)} // Extract names
               onChange={(val) => {
-                const updatedSubjects = val.map((subject) => ({
+                const updatedSubjects = val.map((subject, index) => ({
+                  id: index,
                   subjectName: subject,
                   examDate: null,
                   examTime: null,
@@ -352,8 +353,7 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
   // State to track exam schedules for subjects - currently not being used
   const formik = props;
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
-  console.log('formik exam error---', formik.errors);
-
+  console.log('formik exam error---', formik.values);
   return (
     <CustomizableTable
       isFilter={false}
@@ -371,8 +371,12 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
             return (
               <DatePicker
                 value={value ? dayjs(value) : null}
-                onChange={(newTime) => {}}
-                slotProps={{ textField: { size: 'small' } }}
+                format="DD-MM-YYYY"
+                onChange={(newTime) => {
+                  const updatedSchedules = [...examSchedules];
+                  updatedSchedules[row.id].examDate = newTime;
+                  setExamSchedules(updatedSchedules);
+                }}
               />
             );
           },
@@ -383,8 +387,13 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
           render(value, row) {
             return (
               <TimePicker
+                format="HH:mm"
                 value={value ? dayjs(value) : null}
-                onChange={(newTime) => {}}
+                onChange={(newTime) => {
+                  const updatedSchedules = [...examSchedules];
+                  updatedSchedules[row.id].examTime = newTime;
+                  setExamSchedules(updatedSchedules);
+                }}
                 slotProps={{ textField: { size: 'small' } }}
               />
             );
@@ -397,7 +406,12 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
             return (
               <TimePicker
                 value={value ? dayjs(value) : null}
-                onChange={(newTime) => {}}
+                format="HH:mm"
+                onChange={(newTime) => {
+                  const updatedSchedules = [...examSchedules];
+                  updatedSchedules[row.id].examDuration = newTime;
+                  setExamSchedules(updatedSchedules);
+                }}
                 slotProps={{ textField: { size: 'small' } }}
               />
             );
@@ -407,14 +421,36 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
           id: 'totalMarks',
           label: 'Total Marks',
           render(value, row) {
-            return <TextField value={value} onChange={(newTime) => {}} size="small" />;
+            return (
+              <TextField
+                value={value}
+                type="number"
+                onChange={(e) => {
+                  const updatedSchedules = [...examSchedules];
+                  updatedSchedules[row.id].totalMarks = Number(e.target.value);
+                  setExamSchedules(updatedSchedules);
+                }}
+                size="small"
+              />
+            );
           },
         },
         {
           id: 'passingMarks',
           label: 'Passing Marks',
           render(value, row) {
-            return <TextField value={value} onChange={(newTime) => {}} size="small" />;
+            return (
+              <TextField
+                value={value}
+                type="number"
+                onChange={(e) => {
+                  const updatedSchedules = [...examSchedules];
+                  updatedSchedules[row.id].passingMarks = Number(e.target.value);
+                  setExamSchedules(updatedSchedules);
+                }}
+                size="small"
+              />
+            );
           },
         },
       ]}
@@ -422,7 +458,6 @@ const ExamDetails = (props: FormikProps<TExamFormValues>) => {
     />
   );
 };
-
 const EvaluationCriteria = (props: FormikProps<TExamFormValues>) => {
   const formik = props;
   // State to track whether to use predefined or custom rubric
@@ -542,18 +577,7 @@ const NewExamForm = ({ onClose }: { onClose: () => void }) => {
         examName: '',
         className: '',
         divisions: [],
-        subjects: [
-          {
-            subjectName: '',
-            examDate: null,
-            examTime: null,
-            examDuration: null,
-            totalMarks: 0,
-            passingMarks: 0,
-            invigilationTeacher: '',
-            teacher: '',
-          },
-        ],
+        subjects: [],
         description: '',
       }}
       steps={['Select Exam Type', 'Exam Details', 'Evaluation Criteria', 'Assign Teacher & Review']}

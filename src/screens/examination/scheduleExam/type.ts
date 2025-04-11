@@ -1,8 +1,11 @@
+import type { Dayjs } from 'dayjs';
+
 export interface TSubjectDetail {
+  id: number;
   subjectName: string;
-  examDate: Date | null;
-  examTime: string | null;
-  examDuration: string | null;
+  examDate: Dayjs | null;
+  examTime: Dayjs | null;
+  examDuration: Dayjs | null;
   totalMarks: number;
   passingMarks: number;
   invigilationTeacher: string;
