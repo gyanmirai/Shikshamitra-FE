@@ -9,6 +9,7 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import StepsForPayroll from './component/stepsCompo';
 import VerifyPayrollComponent from './component/verifyPayrollComponent';
 
 const RunPayroll = () => {
@@ -51,6 +52,8 @@ const RunPayroll = () => {
             sx={{ px: 1, mb: 2 }}
             description="In this tab, you can run payroll by selecting the date and organization. You can also verify the payroll details by viewing them before processing."
           />
+          <StepsForPayroll />
+
           <Card sx={{ p: 2 }}>
             <Typography variant="h6">Process Payroll For</Typography>
             <Box sx={{ display: 'flex', gap: 2, mt: 2, mb: 2, alignItems: 'center' }}>

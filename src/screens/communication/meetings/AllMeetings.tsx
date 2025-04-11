@@ -5,17 +5,30 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import React, { useState, useCallback } from 'react';
 
-import { Box, Chip, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Card,
+  Button,
+  MenuItem,
+  MenuList,
+  Typography,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+} from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddNewMeeting from './meetingForm';
+import ViewMeetingDialog from './viewDialog';
 
 import type { TMeeting } from './type';
 
@@ -24,8 +37,8 @@ const meetings: TMeeting[] = [
     id: 1,
     title: 'Monthly Staff Meeting',
     status: 'Scheduled',
-    audience: ['Teacher'],
-    organization: ['ABC School'],
+    audience: ['Teachers'],
+    organization: ['Secondary'],
     className: [],
     division: [],
     students: [],
@@ -43,11 +56,11 @@ const meetings: TMeeting[] = [
     id: 2,
     title: 'Parent-Teacher Interaction',
     status: 'Completed',
-    audience: ['Parent'],
-    organization: [],
-    className: ['10'],
+    audience: ['Parents'],
+    organization: ['Secondary'],
+    className: ['2'],
     division: ['A'],
-    students: ['Student1', 'Student2'],
+    students: ['student1', 'student2'],
     meetingDate: dayjs('2024-12-18'),
     meetingTime: dayjs('2024-12-18T09:30'),
     meetingAgenda: 'Discuss individual student progress.',
@@ -60,11 +73,11 @@ const meetings: TMeeting[] = [
     id: 3,
     title: 'Class Orientation',
     status: 'Completed',
-    audience: ['Student'],
-    organization: [],
-    className: ['8'],
+    audience: ['Students'],
+    organization: ['Primary'],
+    className: ['1'],
     division: ['B'],
-    students: ['Student3', 'Student4'],
+    students: ['student3', 'student4'],
     meetingDate: dayjs('2024-12-10'),
     meetingTime: dayjs('2024-12-10T12:00'),
     meetingAgenda: 'Orientation for new students.',
@@ -77,8 +90,8 @@ const meetings: TMeeting[] = [
     id: 4,
     title: 'School Board Meeting',
     status: 'Scheduled',
-    audience: ['Teacher'],
-    organization: ['XYZ Education Trust'],
+    audience: ['Teachers'],
+    organization: ['Higher Secondary'],
     className: [],
     division: [],
     students: [],
@@ -94,11 +107,11 @@ const meetings: TMeeting[] = [
     id: 5,
     title: 'Weekly Parent Discussion',
     status: 'Scheduled',
-    audience: ['Parent'],
-    organization: [],
-    className: ['9'],
+    audience: ['Parents'],
+    organization: ['Primary'],
+    className: ['1'],
     division: ['C'],
-    students: ['Student5', 'Student6'],
+    students: ['student1', 'student4'],
     meetingDate: dayjs('2024-12-14'),
     meetingTime: dayjs('2024-12-14T16:00'),
     meetingAgenda: "Discuss weekly updates on students' performance.",
@@ -117,19 +130,24 @@ const AllMeetings = (props: TabComponentType) => {
   const [meetingTableData, setMeetingTableData] = useState(meetings);
   // State to store the currently selected meeting for editing or viewing
   const [selectedMeeting, setSelectedMeeting] = useState<any | null>(null);
-  // State to track whether we are in edit mode or create mode
+  // State to track whether the form is in edit mode (true) or create mode (false)
   const [isEdit, setIsEdit] = useState(false);
-  // State to control the visibility of the meeting dialog/modal
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
-
+  // State to control the visibility of the confirmation dialog
+  const confirmDialog = useBoolean();
+  const viewDialog = useBoolean();
+  // // State to control the visibility of the meeting dialog/modal
+  // const [params, setParams] = useSearchParam({ isForm: 'false' });
+  const [open, setOpen] = useState(false);
   /**
    * Handles closing the meeting dialog/form
    * Resets form state, selected meeting and edit mode
    */
   const handleCloseDialog = () => {
-    setParams({ isForm: 'false' });
+    setOpen(false);
     setSelectedMeeting(null);
     setIsEdit(false);
+    viewDialog.onFalse();
+    confirmDialog.onFalse();
   };
 
   /**
@@ -173,9 +191,18 @@ const AllMeetings = (props: TabComponentType) => {
     []
   );
 
+  /**
+   * Handles deletion of a meeting
+   * Removes meeting with specified ID from the meeting table data
+   * @param id - The ID of the meeting to delete
+   */
+  const handleDelete = (id: number) => {
+    setMeetingTableData((prevData) => prevData.filter((meeting) => meeting.id !== id));
+  };
+
   return (
     <Box display="flex" flexDirection="column" height="100%">
-      {params.isForm === 'true' ? (
+      {open ? (
         <>
           <CustomBreadcrumbs
             heading="Meetings"
@@ -202,6 +229,7 @@ const AllMeetings = (props: TabComponentType) => {
               initialValues={selectedMeeting}
               onSubmit={handleSubmit}
               isEdit={isEdit}
+              onClose={handleCloseDialog}
             />
           </Card>
         </>
@@ -221,7 +249,8 @@ const AllMeetings = (props: TabComponentType) => {
                 variant="contained"
                 size="small"
                 onClick={() => {
-                  setParams({ isForm: 'true' });
+                  setOpen(true);
+                  setIsEdit(false);
                 }}
               >
                 Meeting
@@ -346,15 +375,17 @@ const AllMeetings = (props: TabComponentType) => {
                       showDeleteIcon
                       showViewIcon
                       handleEditClick={() => {
-                        // setOpen(true);
-                        // setEditingEvent(row);
+                        setOpen(true);
+                        setSelectedMeeting(row);
+                        setIsEdit(true);
                       }}
                       handleDeleteClick={() => {
-                        // confirm_dialog.onTrue();
-                        // setDeleteEvent(row.id);
+                        confirmDialog.onTrue();
+                        setSelectedMeeting(row);
                       }}
                       handleViewClick={() => {
-                        // handleEyeClick(row.id);
+                        setSelectedMeeting(row);
+                        viewDialog.onTrue();
                       }}
                     />
                   );
@@ -365,6 +396,39 @@ const AllMeetings = (props: TabComponentType) => {
           />
         </>
       )}
+
+      <ViewMeetingDialog
+        open={viewDialog.value}
+        onClose={handleCloseDialog}
+        meeting={selectedMeeting}
+      />
+
+      <CustomDialog
+        title="Confirm Delete"
+        open={confirmDialog.value}
+        handleClose={() => {
+          handleCloseDialog();
+        }}
+        maxWidth="sm"
+      >
+        <DialogContent>
+          <DialogContentText>Are you sure to delete this Announcement?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={confirmDialog.onFalse} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleDelete(selectedMeeting.id);
+            }}
+            variant="contained"
+            color="error"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };
