@@ -1271,8 +1271,8 @@ const transportModule = {
         },
         {
           title: 'Route Management',
-          path: '/transport/route-management',
-          _action: 'route-management',
+          path: '/transport/routes-schedules',
+          _action: 'routes-schedules',
           shortcutKey: 'Alt+T+2',
           shortcutKeyName: 'Alt+T+2',
         },
