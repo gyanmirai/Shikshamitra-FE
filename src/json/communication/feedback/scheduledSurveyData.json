@@ -1,0 +1,51 @@
+[
+    {
+      "id": 1,
+      "surveyTitle": "Student Feedback Survey",
+      "description": "Student Feedback Survey description",
+      "organization": ["Primary", "Pre Primary"],
+      "classes": ["1"],
+      "audience": ["Students", "Parents"],
+      "startDate": "2024-10-20",
+      "endDate": "2025-10-20",
+      "responseRate": 45,
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "surveyTitle": "Teacher Evaluation Survey",
+      "description": "Teacher Evaluation Survey description",
+      "organization": ["Primary", "Pre Primary"],
+      "classes": ["1"],
+      "audience": ["Teachers"],
+      "startDate": "2024-12-25",
+      "endDate": "2026-05-10",
+      "responseRate": 78,
+      "status": "Scheduled"
+    },
+    {
+      "id": 3,
+      "surveyTitle": "Parent Feedback Survey",
+      "description": "Parent Feedback Survey description",
+      "organization": ["Primary", "Pre Primary"],
+      "classes": ["1"],
+      "audience": ["Parents"],
+      "startDate": "2023-12-23",
+      "endDate": "2024-12-12",
+      "responseRate": 92,
+      "status": "Closed"
+    },
+    {
+      "id": 4,
+      "surveyTitle": "Staff Satisfaction Survey",
+      "description": "Staff Satisfaction Survey description",
+      "organization": ["Primary", "Pre Primary"],
+      "classes": ["1"],
+      "audience": ["Staff", "Administrators"],
+      "startDate": "2023-12-05",
+      "endDate": "2025-02-04",
+      "responseRate": 50,
+      "status": "Active"
+    }
+  ]
+  

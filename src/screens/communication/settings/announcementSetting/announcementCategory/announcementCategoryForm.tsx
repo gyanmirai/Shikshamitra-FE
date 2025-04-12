@@ -1,16 +1,13 @@
 'use client';
 
-import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import {
   Box,
-  Grid,
   Button,
   Switch,
   MenuList,
   MenuItem,
-  TextField,
   DialogActions,
   DialogContent,
   DialogContentText,
@@ -19,17 +16,15 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import { announcementCatValidationSchema } from './validationSchema';
+import { CategoryForm } from './categoryForm';
 
-import type { TAnnoucementCategory } from './type';
+import type { IAnnoucementCategory } from '../../type';
 
-const announcementCategories: TAnnoucementCategory[] = [
+const announcementCategories: IAnnoucementCategory[] = [
   {
     id: 1,
     categoryName: 'School Events',
@@ -67,7 +62,7 @@ const AnnouncementCategory = () => {
 
   // State for managing the list of announcement categories
   const [announcementCategoryTable, setAnnouncementCategoryTable] =
-    useState<TAnnoucementCategory[]>(announcementCategories);
+    useState<IAnnoucementCategory[]>(announcementCategories);
 
   // Dialog state for managing the publish/unpublish confirmation dialog
   const confirmPublishDialog = useBoolean();
@@ -285,139 +280,3 @@ const AnnouncementCategory = () => {
 };
 
 export default AnnouncementCategory;
-
-/**
- * Props interface for the CategoryForm component
- * @interface CategoryFormProps
- * @property {function} onSubmit - Callback function to handle form submission with form values
- * @property {any} [data] - Optional data object containing existing category information for editing
- * @property {boolean} [isEdit] - Optional flag indicating if the form is in edit mode
- */
-
-interface CategoryFormProps {
-  onSubmit: (values: any) => void;
-  data?: any | null;
-  isEdit?: boolean;
-}
-
-const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
-  /**
-   * State to track if the category is in draft status
-   * Initialized as true for new categories or if existing category status is 'Unpublish'
-   */
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
-
-  /**
-   * Formik instance for handling form state and submission
-   * @property {object} initialValues - Initial form values, populated from data prop if available
-   * @property {function} onSubmit - Handles form submission, combines form values with additional data
-   */
-  const formik = useFormik({
-    initialValues: {
-      categoryName: data?.categoryName || '',
-      categoryDescription: data?.categoryDescription || '',
-    },
-    validationSchema: announcementCatValidationSchema,
-    onSubmit: (values) => {
-      onSubmit({
-        ...values,
-        id: data?.id || Date.now(),
-        status: isDraft ? 'Unpublish' : 'Publish',
-      });
-    },
-  });
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.categoryName && formik.errors.categoryName) || false}
-              >
-                <TextField
-                  fullWidth
-                  label="Category Name"
-                  name="categoryName"
-                  size="small"
-                  value={formik.values.categoryName}
-                  onChange={formik.handleChange}
-                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
-                  helperText={
-                    formik.touched.categoryName && typeof formik.errors.categoryName === 'string'
-                      ? formik.errors.categoryName
-                      : undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={
-                  !!(formik.touched.categoryDescription && formik.errors.categoryDescription) ||
-                  false
-                }
-              >
-                <TextField
-                  fullWidth
-                  label="Category Description"
-                  name="categoryDescription"
-                  size="small"
-                  rows={4}
-                  multiline
-                  value={formik.values.categoryDescription}
-                  onChange={formik.handleChange}
-                  error={
-                    formik.touched.categoryDescription && Boolean(formik.errors.categoryDescription)
-                  }
-                  helperText={
-                    formik.touched.categoryDescription &&
-                    typeof formik.errors.categoryDescription === 'string'
-                      ? formik.errors.categoryDescription
-                      : undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          {isEdit ? (
-            <Button
-              variant="contained"
-              onClick={() => {
-                setIsDraft(true);
-                formik.handleSubmit();
-              }}
-            >
-              Update
-            </Button>
-          ) : (
-            <>
-              <Button
-                onClick={() => {
-                  setIsDraft(true);
-                  formik.handleSubmit();
-                }}
-              >
-                Save Draft
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                onClick={() => {
-                  setIsDraft(false);
-                  formik.handleSubmit();
-                }}
-              >
-                Publish
-              </Button>
-            </>
-          )}
-        </DialogActions>
-      </form>
-    </Box>
-  );
-};

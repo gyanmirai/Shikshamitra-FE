@@ -1,0 +1,38 @@
+[
+    {
+      "id": "1",
+      "eventTitle": "Annual Sports Day",
+      "eventDate": "2024-11-10",
+      "eventTime": "10:00",
+      "eventSummary": "A day filled with sports activities and competitions among students."
+    },
+    {
+      "id": "2",
+      "eventTitle": "Science Exhibition",
+      "eventDate": "2024-11-15",
+      "eventTime": "09:00",
+      "eventSummary": "Exhibition showcasing science projects and models prepared by students."
+    },
+    {
+      "id": "3",
+      "eventTitle": "Art Competition",
+      "eventDate": "2024-11-20",
+      "eventTime": "14:00",
+      "eventSummary": "An art competition encouraging creativity among students."
+    },
+    {
+      "id": "4",
+      "eventTitle": "Parent-Teacher Meeting",
+      "eventDate": "2024-12-05",
+      "eventTime": "11:00",
+      "eventSummary": "A meeting for parents and teachers to discuss student progress."
+    },
+    {
+      "id": "5",
+      "eventTitle": "Music Concert",
+      "eventDate": "2024-12-15",
+      "eventTime": "12:30",
+      "eventSummary": "A concert featuring performances by students in the school band and choir."
+    }
+  ]
+  

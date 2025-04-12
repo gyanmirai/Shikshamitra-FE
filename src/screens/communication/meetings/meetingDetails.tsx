@@ -6,7 +6,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
-import { DetailRow } from '../announcement/schoolWiseAnnounsement';
+import { DetailRow } from '../announcement/components/detailRow';
 
 import type { IMeetingDetailsProps } from './type';
 

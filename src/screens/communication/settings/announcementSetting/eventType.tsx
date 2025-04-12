@@ -2,7 +2,6 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -31,11 +30,11 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { eventTypeValidationSchema } from './validationSchema';
+import { eventTypeValidationSchema } from '../validationSchema';
 
-import type { TEvent } from './type';
+import type { ISettingEvent, IEventFormProps } from '../type';
 
-const initialEventData: TEvent[] = [
+const initialEventData: ISettingEvent[] = [
   {
     id: 1,
     eventType: 'High',
@@ -73,7 +72,7 @@ const EventType = (props: TabComponentType) => {
   const dialog = useBoolean();
 
   // State to manage the event type data list
-  const [eventTypeData, setEventTypeData] = useState<TEvent[]>(initialEventData);
+  const [eventTypeData, setEventTypeData] = useState<ISettingEvent[]>(initialEventData);
 
   // Dialog controls for publish and delete confirmations
   const confirmPublishDialog = useBoolean();
@@ -83,7 +82,7 @@ const EventType = (props: TabComponentType) => {
   const [isEdit, setIsEdit] = useState(false);
 
   // State to store the currently selected event for editing
-  const [selectedEvent, setSelectedEvent] = useState<TEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<ISettingEvent | null>(null);
 
   // State to manage pending status changes before confirmation
   const [pendingStatusChange, setPendingStatusChange] = useState<{
@@ -138,7 +137,7 @@ const EventType = (props: TabComponentType) => {
    * Handles form submission for creating or updating an event type
    * @param values - The event type data to be saved
    */
-  const handleSubmit = (values: TEvent) => {
+  const handleSubmit = (values: ISettingEvent) => {
     if (isEdit && selectedEvent) {
       setEventTypeData(eventTypeData.map((event) => (event.id === values.id ? values : event)));
     } else {
@@ -201,7 +200,7 @@ const EventType = (props: TabComponentType) => {
                       <MenuItem
                         onClick={() => {
                           dialog.onTrue();
-                          setSelectedEvent(row as TEvent);
+                          setSelectedEvent(row as ISettingEvent);
                           setIsEdit(true);
                           popover.onClose();
                         }}
@@ -214,7 +213,7 @@ const EventType = (props: TabComponentType) => {
                     <MenuItem
                       onClick={() => {
                         confirmDeleteDialog.onTrue();
-                        setSelectedEvent(row as TEvent);
+                        setSelectedEvent(row as ISettingEvent);
                         popover.onClose();
                       }}
                     >
@@ -288,26 +287,8 @@ const EventType = (props: TabComponentType) => {
   );
 };
 
-/**
- * Props interface for the EventForm component
- * @interface EventFormProps
- * @property {function} onSubmit - Callback function to handle form submission with event data
- * @property {TEvent | null} [data] - Optional existing event data for editing
- * @property {boolean} [isEdit] - Optional flag to indicate if form is in edit mode
- */
-interface EventFormProps {
-  onSubmit: (values: TEvent) => void;
-  data?: TEvent | null;
-  isEdit?: boolean;
-}
-
-const validationSchema = Yup.object().shape({
-  eventType: Yup.string().required('Event type is required'),
-  eventTypeDesc: Yup.string().required('Description is required'),
-});
-
 // eslint-disable-next-line react/prop-types
-const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
+const EventForm: React.FC<IEventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   // State to track if the event is in draft mode (UnPublish status)
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'UnPublish'));
 

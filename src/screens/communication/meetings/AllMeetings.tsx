@@ -5,24 +5,15 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import React, { useState, useCallback } from 'react';
 
-import {
-  Box,
-  Chip,
-  Card,
-  Button,
-  MenuItem,
-  MenuList,
-  Typography,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
-} from '@mui/material';
+import { Box, Chip, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import meetingData from 'src/json/communication/meetings/meetingData.json';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -30,106 +21,13 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import AddNewMeeting from './meetingForm';
 import ViewMeetingDialog from './viewDialog';
 
-import type { TMeeting } from './type';
-
-const meetings: TMeeting[] = [
-  {
-    id: 1,
-    title: 'Monthly Staff Meeting',
-    status: 'Scheduled',
-    audience: ['Teachers'],
-    organization: ['Secondary'],
-    className: [],
-    division: [],
-    students: [],
-    meetingDate: dayjs('2024-12-15'),
-    meetingTime: dayjs('2024-12-15T10:00'),
-    meetingAgenda: 'Discuss curriculum updates and training schedules.',
-    link: '',
-    meetingType: 'Offline',
-    classRoom: 'Conference Room 1',
-    isRecurring: true,
-    repeatFrequency: 'Monthly',
-    repeatUntil: dayjs('2025-06-15'),
-  },
-  {
-    id: 2,
-    title: 'Parent-Teacher Interaction',
-    status: 'Completed',
-    audience: ['Parents'],
-    organization: ['Secondary'],
-    className: ['2'],
-    division: ['A'],
-    students: ['student1', 'student2'],
-    meetingDate: dayjs('2024-12-18'),
-    meetingTime: dayjs('2024-12-18T09:30'),
-    meetingAgenda: 'Discuss individual student progress.',
-    link: 'https://example.com/meeting-link',
-    meetingType: 'Virtual',
-    classRoom: '',
-    isRecurring: false,
-  },
-  {
-    id: 3,
-    title: 'Class Orientation',
-    status: 'Completed',
-    audience: ['Students'],
-    organization: ['Primary'],
-    className: ['1'],
-    division: ['B'],
-    students: ['student3', 'student4'],
-    meetingDate: dayjs('2024-12-10'),
-    meetingTime: dayjs('2024-12-10T12:00'),
-    meetingAgenda: 'Orientation for new students.',
-    link: '',
-    meetingType: 'Offline',
-    classRoom: 'Auditorium',
-    isRecurring: false,
-  },
-  {
-    id: 4,
-    title: 'School Board Meeting',
-    status: 'Scheduled',
-    audience: ['Teachers'],
-    organization: ['Higher Secondary'],
-    className: [],
-    division: [],
-    students: [],
-    meetingDate: dayjs('2024-12-20'),
-    meetingTime: dayjs('2024-12-20T14:00'),
-    meetingAgenda: 'Discuss budget and infrastructure plans.',
-    link: 'https://example.com/board-meeting',
-    meetingType: 'Virtual',
-    classRoom: '',
-    isRecurring: false,
-  },
-  {
-    id: 5,
-    title: 'Weekly Parent Discussion',
-    status: 'Scheduled',
-    audience: ['Parents'],
-    organization: ['Primary'],
-    className: ['1'],
-    division: ['C'],
-    students: ['student1', 'student4'],
-    meetingDate: dayjs('2024-12-14'),
-    meetingTime: dayjs('2024-12-14T16:00'),
-    meetingAgenda: "Discuss weekly updates on students' performance.",
-    link: '',
-    meetingType: 'Offline',
-    classRoom: 'Room 202',
-    isRecurring: true,
-    repeatFrequency: 'Weekly',
-    day: 'Tuesday',
-    repeatUntil: dayjs('2025-03-14'),
-  },
-];
+import type { IMeeting } from './type';
 
 const AllMeetings = (props: TabComponentType) => {
   // State to store and manage the meetings data table
-  const [meetingTableData, setMeetingTableData] = useState(meetings);
+  const [meetingTableData, setMeetingTableData] = useState<IMeeting[]>(meetingData);
   // State to store the currently selected meeting for editing or viewing
-  const [selectedMeeting, setSelectedMeeting] = useState<any | null>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<IMeeting | null>(null);
   // State to track whether the form is in edit mode (true) or create mode (false)
   const [isEdit, setIsEdit] = useState(false);
   // State to control the visibility of the confirmation dialog
@@ -159,8 +57,8 @@ const AllMeetings = (props: TabComponentType) => {
     if (isEdit) {
       setMeetingTableData((prevData) =>
         prevData.map((meeting) =>
-          meeting.id === selectedMeeting.id
-            ? { ...values, id: selectedMeeting.id }
+          meeting.id === selectedMeeting?.id
+            ? { ...values, id: selectedMeeting?.id }
             : selectedMeeting
         )
       );
@@ -196,7 +94,7 @@ const AllMeetings = (props: TabComponentType) => {
    * Removes meeting with specified ID from the meeting table data
    * @param id - The ID of the meeting to delete
    */
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: number | undefined) => {
     setMeetingTableData((prevData) => prevData.filter((meeting) => meeting.id !== id));
   };
 
@@ -376,15 +274,15 @@ const AllMeetings = (props: TabComponentType) => {
                       showViewIcon
                       handleEditClick={() => {
                         setOpen(true);
-                        setSelectedMeeting(row);
+                        setSelectedMeeting(row as IMeeting);
                         setIsEdit(true);
                       }}
                       handleDeleteClick={() => {
                         confirmDialog.onTrue();
-                        setSelectedMeeting(row);
+                        setSelectedMeeting(row as IMeeting);
                       }}
                       handleViewClick={() => {
-                        setSelectedMeeting(row);
+                        setSelectedMeeting(row as IMeeting);
                         viewDialog.onTrue();
                       }}
                     />
@@ -402,33 +300,25 @@ const AllMeetings = (props: TabComponentType) => {
         onClose={handleCloseDialog}
         meeting={selectedMeeting}
       />
-
-      <CustomDialog
-        title="Confirm Delete"
+      <ConfirmDialog
         open={confirmDialog.value}
-        handleClose={() => {
+        onClose={() => {
           handleCloseDialog();
         }}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>Are you sure to delete this Announcement?</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={confirmDialog.onFalse} variant="outlined">
-            Cancel
-          </Button>
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
           <Button
-            onClick={() => {
-              handleDelete(selectedMeeting.id);
-            }}
             variant="contained"
             color="error"
+            onClick={() => {
+              handleDelete(selectedMeeting?.id);
+            }}
           >
             Delete
           </Button>
-        </DialogActions>
-      </CustomDialog>
+        }
+      />
     </Box>
   );
 };
