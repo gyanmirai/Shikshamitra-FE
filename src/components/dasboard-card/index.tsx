@@ -24,8 +24,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
       borderRadius: '12px',
       boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
       transition: 'all 0.3s ease',
-      '&:hover': { transform: 'scale(1.05)' },
-      p: 2,
+      '&:hover': {
+        boxShadow: 'var(--shadows-8)',
+        scale: 1.03,
+      },
     }}
   >
     <CardContent>
