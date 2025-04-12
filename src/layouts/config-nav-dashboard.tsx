@@ -963,13 +963,13 @@ const communicationModule = {
           shortcutKey: 'Alt+C+S',
           shortcutKeyName: 'Alt+C+S',
           children: [
-            {
-              title: 'Notification Setting',
-              path: '/communication/settings/notificationSetting',
-              _action: 'settings-notificationSetting',
-              shortcutKey: 'Alt+C+S+1',
-              shortcutKeyName: 'Alt+C+S+1',
-            },
+            // {
+            //   title: 'Notification Setting',
+            //   path: '/communication/settings/notificationSetting',
+            //   _action: 'settings-notificationSetting',
+            //   shortcutKey: 'Alt+C+S+1',
+            //   shortcutKeyName: 'Alt+C+S+1',
+            // },
             {
               title: 'User Preferences',
               path: '/communication/settings/userPreferences',

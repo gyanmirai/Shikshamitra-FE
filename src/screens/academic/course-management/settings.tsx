@@ -6,9 +6,8 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 
-import { Box, Card, Grid, Switch, Button, Checkbox, Typography } from '@mui/material';
+import { Box, Card, Grid, Button, Checkbox, Typography } from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Settings component for managing course-related configurations
@@ -26,61 +25,6 @@ const Settings = (props: TabComponentType) => (
       sx={{ px: 1, mb: 2 }}
     />
     <Grid container spacing={2}>
-      {/* Notification Settings Card */}
-      <Grid item xs={12} md={6}>
-        <Card
-          sx={{
-            p: 2,
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <Typography variant="h6" marginBottom={2}>
-            Notification Setting
-          </Typography>
-
-          <Box sx={{ flex: 1 }}>
-            {/* Course Updates Toggle Switch */}
-            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
-              <Switch
-                checked={false}
-                onChange={() => {}}
-                inputProps={{ 'aria-label': 'controlled' }}
-              />
-              <Typography sx={{ ml: 1 }}>Course Updates</Typography>
-            </Box>
-
-            {/* Notification Frequency Dropdown */}
-            <CustomSelect
-              options={[]}
-              value=""
-              onChange={(val) => {}}
-              defaultChecked
-              label="Notification Frequency"
-              formControlProps={{
-                sx: {
-                  minWidth: 300,
-                  mb: 2,
-                },
-              }}
-            />
-          </Box>
-
-          {/* Save Button */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              mt: 'auto',
-              pt: 2,
-            }}
-          >
-            <Button variant="contained">Save</Button>
-          </Box>
-        </Card>
-      </Grid>
-
       {/* Course Creation Workflow Card */}
       <Grid item xs={12} md={6}>
         <Card

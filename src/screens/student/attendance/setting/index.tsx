@@ -11,24 +11,23 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Notification from './notification';
 import AttendanceRule from './attendance-rule';
 import AttendanceType from './attendance-type';
-import NotificationMethod from './notification-method';
 
 const TABS = [
-  {
-    value: 'notification',
-    label: 'Notification',
-    icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
-    component: () => <Notification />,
-  },
-  {
-    value: 'method',
-    label: 'Notification Method',
-    icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
-    component: () => <NotificationMethod />,
-  },
+  // comment this two tab temporary because we don't need notification setting in menu
+  // {
+  //   value: 'notification',
+  //   label: 'Notification',
+  //   icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
+  //   component: () => <Notification />,
+  // },
+  // {
+  //   value: 'method',
+  //   label: 'Notification Method',
+  //   icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
+  //   component: () => <NotificationMethod />,
+  // },
   {
     value: 'rule',
     label: 'Attendance Rule',
@@ -45,7 +44,7 @@ const TABS = [
 ];
 
 const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),

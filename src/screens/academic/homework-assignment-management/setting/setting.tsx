@@ -6,15 +6,12 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
   Card,
   Button,
-  Switch,
   Tooltip,
-  Checkbox,
   TextField,
   Typography,
   IconButton,
@@ -26,7 +23,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import type { TType } from './type';
@@ -337,7 +333,9 @@ const Setting = (props: TabComponentType) => {
             isEdit={isEdit}
           />
         </CustomDialog>
-        <Grid container spacing={2} alignItems="stretch">
+
+        {/* notification setting  */}
+        {/* <Grid container spacing={2} alignItems="stretch">
           <Grid item xs={12} md={6}>
             <Card
               sx={{
@@ -470,7 +468,7 @@ const Setting = (props: TabComponentType) => {
               </Box>
             </Card>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Box>
     </Box>
   );
