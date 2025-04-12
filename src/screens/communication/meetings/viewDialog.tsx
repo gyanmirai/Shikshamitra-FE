@@ -6,13 +6,13 @@ import CustomDialog from 'src/components/customDialog';
 
 import MeetingDetails from './meetingDetails';
 
-import type { ViewMeetingDialogProps } from './type';
+import type { IViewMeetingDialogProps } from './type';
 
-const ViewMeetingDialog: React.FC<ViewMeetingDialogProps> = ({
+const ViewMeetingDialog: React.FC<IViewMeetingDialogProps> = ({
   open,
   onClose,
   meeting,
-}: ViewMeetingDialogProps) => (
+}: IViewMeetingDialogProps) => (
   <CustomDialog title="Meeting Details" open={open} handleClose={onClose} maxWidth="md">
     <DialogContent>
       <MeetingDetails meeting={meeting} onClose={onClose} />

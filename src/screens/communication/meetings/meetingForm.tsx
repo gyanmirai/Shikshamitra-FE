@@ -28,7 +28,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { validationSchema } from './type';
+import { validationSchema } from './validationSchema';
 
 import type { AddNewMeetingProps } from './type';
 

@@ -6,8 +6,8 @@ export interface IEvent {
   eventVenue: string;
   organization: string[];
   className: string[];
-  eventStartDate: Dayjs;
-  eventEndDate: Dayjs;
+  eventStartDate: Dayjs | string | null;
+  eventEndDate: Dayjs | string | null;
   eventType: string;
   audience: string[];
   description: string;
@@ -29,13 +29,13 @@ export interface IEvent {
  * @property {string} eventOrganizer - Name of the event organizer
  * @property {string} eventBudget - Budget allocated for the event
  */
-export interface EventFormValues {
+export interface IEventFormValues {
   eventTitle: string;
   eventVenue: string;
   organization: string[];
   className: string[];
-  eventStartDate: Dayjs | null;
-  eventEndDate: Dayjs | null;
+  eventStartDate: Dayjs | null | string;
+  eventEndDate: Dayjs | null | string;
   eventType: string;
   audience: string[];
   description: string;
@@ -49,8 +49,19 @@ export interface EventFormValues {
  * @property {EventFormValues | null} initialValues - Initial values for the form fields
  * @property {boolean} isEdit - Flag indicating if the form is in edit mode
  */
-export interface AddEventProps {
-  onSubmit: (values: EventFormValues) => void;
-  initialValues?: EventFormValues | null;
+export interface IAddEventProps {
+  onSubmit: (values: IEventFormValues) => void;
+  initialValues?: IEventFormValues | null;
   isEdit?: boolean;
+}
+
+export interface IEventDetailsCardProps {
+  event: IEvent;
+}
+
+export interface IUpcomingEventsTableProps {
+  data: IEvent[];
+  onEdit: (event: IEvent) => void;
+  onDelete: (id: string) => void;
+  onView: (id: string) => void;
 }

@@ -11,9 +11,9 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import PastSurvey from './pastFeedback';
-import AllSurvey from './scheduledSurvey';
-import ActiveSurvey from './activeSurvey';
+import PastSurvey from './pastFeedback/pastFeedback';
+import ActiveSurvey from './activeSurvey/activeSurvey';
+import AllSurvey from './scheduledSurvey/scheduledSurvey';
 
 const TABS = [
   {

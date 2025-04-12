@@ -1,0 +1,63 @@
+[
+    {
+      "id": "1",
+      "title": "Midterm Exam Schedule Released",
+      "description": "The schedule for the midterm exams is now available. Please review the dates and times for each subject.",
+      "audience": ["All Students", "Parents", "Teachers"],
+      "organization": ["Primary", "Pre Primary"],
+      "publishDate": "2024-10-25",
+      "expiryDate": "2024-11-10",
+      "status": "Published",
+      "category": "Academic",
+      "importance_level": "High",
+      "link": "https://schoolportal.edu/exam-schedule",
+      "notification_preferences": ["Email"],
+      "isScheduled": false
+    },
+    {
+      "id": "2",
+      "title": "Annual School Picnic",
+      "description": "Join us for the annual school picnic at Riverside Park. Enjoy games, activities, and a fun day out with friends!",
+      "audience": ["All Students", "Teachers", "Staff"],
+      "organization": ["Primary", "Pre Primary"],
+      "publishDate": "2024-11-05",
+      "expiryDate": "2024-11-07",
+      "status": "Scheduled",
+      "category": "Extracurricular",
+      "importance_level": "Medium",
+      "link": "https://schoolportal.edu/picnic-info",
+      "notification_preferences": ["App Notification"],
+      "isScheduled": true
+    },
+    {
+      "id": "3",
+      "title": "Staff Meeting",
+      "description": "All staff are required to attend the upcoming staff meeting to discuss the new curriculum and school policies.",
+      "audience": ["Staff"],
+      "organization": ["Primary", "Pre Primary"],
+      "publishDate": "2024-10-28",
+      "expiryDate": "2024-10-28",
+      "status": "Published",
+      "category": "Administrative",
+      "importance_level": "High",
+      "link": "",
+      "notification_preferences": ["SMS"],
+      "isScheduled": false
+    },
+    {
+      "id": "4",
+      "title": "Science Fair Participation",
+      "description": "Students interested in participating in the annual Science Fair should submit their entries by the end of this month.",
+      "audience": ["Students", "Teachers"],
+      "organization": ["Primary", "Pre Primary"],
+      "publishDate": "2024-10-30",
+      "expiryDate": "2024-11-30",
+      "status": "Scheduled",
+      "category": "Extracurricular",
+      "importance_level": "Medium",
+      "link": "https://schoolportal.edu/science-fair",
+      "notification_preferences": ["Email"],
+      "isScheduled": false
+    }
+  ]
+  

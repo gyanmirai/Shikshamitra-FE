@@ -16,9 +16,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 
 import { upcomingEventvalidationSchema } from './validationSchema';
 
-import type { AddEventProps } from './type';
+import type { IAddEventProps } from './type';
 
-const AddEvent: React.FC<AddEventProps> = ({ onSubmit, initialValues = null, isEdit = false }) => {
+const AddEvent: React.FC<IAddEventProps> = ({ onSubmit, initialValues = null, isEdit = false }) => {
   /**
    * Custom hook to fetch class data using the useGetClassQuery mutation
    */
