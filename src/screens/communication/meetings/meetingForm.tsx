@@ -24,7 +24,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { validationSchema } from './type';
+import { validationSchema } from './validationSchema';
 
 import type { AddNewMeetingProps } from './type';
 

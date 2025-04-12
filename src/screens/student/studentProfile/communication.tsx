@@ -19,8 +19,8 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { varAlpha } from 'src/theme/styles';
-import { surveyData } from 'src/screens/communication/feedback/pastFeedback';
-import { DetailRow } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
+import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
+import scheduledSurveyData from 'src/json/communication/feedback/scheduledSurveyData.json';
 import { AttendanceStatusOptions, AttendanceStatusTypeColors } from 'src/enums/attendance-type';
 
 import { Iconify } from 'src/components/iconify';
@@ -130,7 +130,7 @@ const Communication = (props: StudentTabsComponentType) => {
   // State to manage meeting table data with initial meetings data
   const [meetingTableData, setMeetingTableData] = useState(meetings);
   // State to manage survey table data with initial survey data
-  const [surveyTableData, setSurveyTableData] = useState<any | null>(surveyData);
+  const [surveyTableData, setSurveyTableData] = useState<any | null>(scheduledSurveyData);
   // Boolean state to control view details dialog visibility
   const viewDetailsDialog = useBoolean();
   // Boolean state to control view summary dialog visibility

@@ -8,8 +8,8 @@ import { Box } from '@mui/material';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import AnnouncementImportant from './announcementImportant';
-import AnnouncementCategory from './announcementCategoryForm';
+import AnnouncementImportant from './announcementImportant/announcementImportant';
+import AnnouncementCategory from './announcementCategory/announcementCategoryForm';
 
 const SettingAnnouncement = (props: TabComponentType) => (
   <Box>

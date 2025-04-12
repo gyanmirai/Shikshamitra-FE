@@ -1,0 +1,118 @@
+[
+    {
+      "id": "1",
+      "responsendedName": "John Doe",
+      "role": "Student",
+      "responsendedEmail": "john.doe@student.edu",
+      "response": [
+        {
+          "id": "q1",
+          "question": "How do you rate the quality of the teaching?",
+          "answer": "Excellent"
+        },
+        {
+          "id": "q2",
+          "question": "Are you satisfied with the course materials provided?",
+          "answer": "Yes, very satisfied"
+        },
+        {
+          "id": "q3",
+          "question": "How much time do you spend on homework daily?",
+          "answer": "2 hours"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "responsendedName": "Mary Smith",
+      "role": "Parent",
+      "responsendedEmail": "mary.smith@parent.edu",
+      "response": [
+        {
+          "id": "q1",
+          "question": "How do you feel about the school’s communication with parents?",
+          "answer": "Good, but can improve"
+        },
+        {
+          "id": "q2",
+          "question": "Are you satisfied with the academic progress of your child?",
+          "answer": "Yes"
+        },
+        {
+          "id": "q3",
+          "question": "How involved are you in your child’s studies?",
+          "answer": "I help with homework regularly"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "responsendedName": "Alice Brown",
+      "role": "Student",
+      "responsendedEmail": "alice.brown@student.edu",
+      "response": [
+        {
+          "id": "q1",
+          "question": "How do you rate the quality of the teaching?",
+          "answer": "Good"
+        },
+        {
+          "id": "q2",
+          "question": "Are you satisfied with the course materials provided?",
+          "answer": "Mostly, but some materials need updating"
+        },
+        {
+          "id": "q3",
+          "question": "How much time do you spend on homework daily?",
+          "answer": "1 hour"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "responsendedName": "Robert Johnson",
+      "role": "Parent",
+      "responsendedEmail": "robert.johnson@parent.edu",
+      "response": [
+        {
+          "id": "q1",
+          "question": "How do you feel about the school’s communication with parents?",
+          "answer": "Excellent"
+        },
+        {
+          "id": "q2",
+          "question": "Are you satisfied with the academic progress of your child?",
+          "answer": "Very satisfied"
+        },
+        {
+          "id": "q3",
+          "question": "How involved are you in your child’s studies?",
+          "answer": "I monitor assignments and grades"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "responsendedName": "Linda White",
+      "role": "Student",
+      "responsendedEmail": "linda.white@student.edu",
+      "response": [
+        {
+          "id": "q1",
+          "question": "How do you rate the quality of the teaching?",
+          "answer": "Fair"
+        },
+        {
+          "id": "q2",
+          "question": "Are you satisfied with the course materials provided?",
+          "answer": "No, some materials are outdated"
+        },
+        {
+          "id": "q3",
+          "question": "How much time do you spend on homework daily?",
+          "answer": "3 hours"
+        }
+      ]
+    }
+  ]
+  

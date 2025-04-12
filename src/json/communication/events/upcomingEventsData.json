@@ -1,0 +1,73 @@
+[
+    {
+      "id": "1",
+      "eventTitle": "Science Exhibition",
+      "eventVenue": "Main Hall",
+      "organization": ["Secondary", "Higher Secondary"],
+      "className": ["9"],
+      "eventStartDate": "2024-11-10T10:00:00",
+      "eventEndDate": "2024-11-10T14:00:00",
+      "eventType": "Academic",
+      "audience": ["Students", "Parents"],
+      "description": "A science exhibition showcasing various projects from students.",
+      "eventOrganizer": "Science Department",
+      "eventBudget": "5000"
+    },
+    {
+      "id": "2",
+      "eventTitle": "Annual Sports Day",
+      "eventVenue": "Sports Ground",
+      "organization": ["Primary", "Secondary"],
+      "className": ["5"],
+      "eventStartDate": "2024-11-15T09:00:00",
+      "eventEndDate": "2024-11-15T17:00:00",
+      "eventType": "Sports",
+      "audience": ["Students", "Parents", "Staff"],
+      "description": "A day of various sports competitions among classes.",
+      "eventOrganizer": "Sports Department",
+      "eventBudget": "8000"
+    },
+    {
+      "id": "3",
+      "eventTitle": "Parent-Teacher Meeting",
+      "eventVenue": "Classroom A1",
+      "organization": ["Primary"],
+      "className": ["3"],
+      "eventStartDate": "2024-11-20T14:00:00",
+      "eventEndDate": "2024-11-20T16:00:00",
+      "eventType": "Parent Teacher Meeting",
+      "audience": ["Parents"],
+      "description": "Discussion on student performance and upcoming plans for the academic year.",
+      "eventOrganizer": "Class Teacher",
+      "eventBudget": "1000"
+    },
+    {
+      "id": "4",
+      "eventTitle": "Cultural Fest",
+      "eventVenue": "Auditorium",
+      "organization": ["Secondary", "Higher Secondary"],
+      "className": ["10"],
+      "eventStartDate": "2024-12-05T11:00:00",
+      "eventEndDate": "2024-12-05T18:00:00",
+      "eventType": "Cultural",
+      "audience": ["Students", "Parents"],
+      "description": "A festival celebrating diverse cultures with performances and exhibitions.",
+      "eventOrganizer": "Cultural Committee",
+      "eventBudget": "7000"
+    },
+    {
+      "id": "5",
+      "eventTitle": "Workshop on Digital Learning",
+      "eventVenue": "Library Hall",
+      "organization": ["Higher Secondary"],
+      "className": ["12"],
+      "eventStartDate": "2024-12-15T12:30:00",
+      "eventEndDate": "2024-12-15T16:30:00",
+      "eventType": "Academic",
+      "audience": ["Students", "Staff"],
+      "description": "A workshop to enhance digital learning skills among students and teachers.",
+      "eventOrganizer": "Cultural Committee",
+      "eventBudget": "7000"
+    }
+  ]
+  

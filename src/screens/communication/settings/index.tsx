@@ -11,10 +11,10 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import EventType from './eventType';
-import UserPreferences from './userPreferences';
-import NotificationSetting from './notificationSetting';
-import SettingAnnouncement from './announcementSetting';
+import EventType from './announcementSetting/eventType';
+import UserPreferences from './notificationSetting/userPreferences';
+import NotificationSetting from './notificationSetting/notificationSetting';
+import SettingAnnouncement from './announcementSetting/announcementSetting';
 
 const TABS = [
   {
