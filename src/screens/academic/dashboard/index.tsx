@@ -178,7 +178,7 @@ const AcademicDashboardScreen = () => {
                 </Box>
               </Scrollbar>
             </Box>
-            <Box display="flex" alignItems="center" justifyContent="flex-end" sx={{ mt: 2 }}>
+            {/* <Box display="flex" alignItems="center" justifyContent="flex-end" sx={{ mt: 2 }}>
               <Button
                 variant="contained"
                 size="small"
@@ -186,7 +186,7 @@ const AcademicDashboardScreen = () => {
               >
                 View Full Assignment
               </Button>
-            </Box>
+            </Box> */}
           </Card>
         </Grid2>
 
