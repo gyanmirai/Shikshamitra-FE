@@ -1,0 +1,67 @@
+[
+    {
+      "class": "10",
+      "division": ["A", "B"],
+      "subject": "Mathematics",
+      "quizTitle": "Algebra Basics",
+      "createdAt": "2024-12-01",
+      "quizDate": "2024-12-15",
+      "quizTime": "10:00 AM",
+      "marksEntry": "Completed",
+      "attemptsAllow": 3,
+      "totalMarks": 100,
+      "passingMarks": 40,
+      "grade": "A",
+      "status": true,
+      "id": "1"
+    },
+    {
+      "class": "9",
+      "division": ["B", "C"],
+      "subject": "Science",
+      "quizTitle": "Physics Quiz",
+      "createdAt": "2024-12-05",
+      "quizDate": "2024-12-20",
+      "quizTime": "11:00 AM",
+      "marksEntry": "Pending",
+      "attemptsAllow": 2,
+      "totalMarks": 50,
+      "passingMarks": 20,
+      "grade": "B",
+      "status": false,
+      "id": "2"
+    },
+    {
+      "class": "8",
+      "division": ["C", "D", "E"],
+      "subject": "English",
+      "quizTitle": "Grammar Test",
+      "createdAt": "2024-12-08",
+      "quizDate": "2024-12-25",
+      "quizTime": "12:00 PM",
+      "marksEntry": "Completed",
+      "attemptsAllow": 1,
+      "totalMarks": 30,
+      "passingMarks": 15,
+      "grade": "C",
+      "status": true,
+      "id": "3"
+    },
+    {
+      "class": "7",
+      "division": ["D", "E"],
+      "subject": "History",
+      "quizTitle": "World Wars",
+      "createdAt": "2024-12-10",
+      "quizDate": "2024-12-30",
+      "quizTime": "09:00 AM",
+      "marksEntry": "Pending",
+      "attemptsAllow": 4,
+      "totalMarks": 70,
+      "passingMarks": 35,
+      "grade": "B",
+      "status": false,
+      "id": "4"
+    }
+  ]
+  

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
@@ -13,8 +13,6 @@ import {
   Switch,
   Button,
   TableRow,
-  MenuList,
-  MenuItem,
   TextField,
   TableHead,
   TableCell,
@@ -39,159 +37,12 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
-import QuizPortal from './quizPortal';
-import { stepValidationSchemas } from './quizValidationSchema';
-
-const ActiveQuiz = () => {
-  // State to store and manage quiz table data
-  const [tableData, setTableData] = useState(quizData);
-  // Dialog state for adding new quiz
-  const addQuizDialog = useBoolean();
-  // Dialog state for attempting quiz
-  const attemptQuizDialog = useBoolean();
-  // State to control quiz portal visibility
-  const [open, setOpen] = useState(false);
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {!row.status && (
-            <MenuItem
-              onClick={() => {
-                setOpen(true);
-              }}
-            >
-              <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
-              Attempt Quiz
-            </MenuItem>
-          )}
-        </MenuList>
-      </>
-    ),
-    []
-  );
-
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        {open ? (
-          <Button
-            startIcon={<Iconify icon="mdi:arrow-back" />}
-            variant="contained"
-            size="small"
-            onClick={() => {
-              setOpen(false);
-            }}
-          >
-            Back
-          </Button>
-        ) : (
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            size="small"
-            onClick={() => {
-              addQuizDialog.onTrue();
-            }}
-          >
-            Quiz
-          </Button>
-        )}
-      </Box>
-
-      {open ? (
-        <QuizPortal quizData={quizPortalData} />
-      ) : (
-        <CustomizableTable
-          tableId="quiz-table"
-          columns={[
-            { id: 'class', label: 'Class' },
-            {
-              id: 'division',
-              label: 'Division',
-              render(value, row) {
-                return (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.length
-                      ? value.map((audience: string) => (
-                          <Chip key={audience} label={audience} size="small" variant="outlined" />
-                        ))
-                      : '-'}
-                  </Box>
-                );
-              },
-            },
-            { id: 'subject', label: 'Subject' },
-            { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
-            { id: 'createdAt', label: 'Created At', minWidth: '150px', align: 'left' },
-            { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
-            { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
-            { id: 'quizEndDate', label: 'Quiz End Date', minWidth: '200px', align: 'left' },
-            { id: 'quizEndTime', label: 'Quiz End Time', minWidth: '200px', align: 'left' },
-            { id: 'quizDuration', label: 'Quiz Duration', minWidth: '200px', align: 'left' },
-            { id: 'attemptsAllow', label: 'Attempts Allow', minWidth: '200px', align: 'left' },
-            { id: 'totalMakrs', label: 'Total Marks', minWidth: '200px', align: 'left' },
-            { id: 'passingMarks', label: 'Passing Marks', minWidth: '200px', align: 'left' },
-            {
-              id: 'status',
-              label: 'Publish',
-              render: (value: boolean, row: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Switch
-                    size="small"
-                    checked={value}
-                    onChange={() => {
-                      // setPendingStatusChange({
-                      //   id: row.id, // Use row.id instead of undefined 'id'
-                      //   value: !value,
-                      // });
-                      // confirmPublishDialog.onTrue();
-                    }}
-                  />
-                </Box>
-              ),
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    placement="right-top"
-                    showEditIcon
-                    showDeleteIcon
-                    handleEditClick={() => {}}
-                    handleDeleteClick={() => {}}
-                  />
-                );
-              },
-            },
-          ]}
-          data={tableData}
-        />
-      )}
-
-      <CustomDialog
-        maxWidth="lg"
-        open={addQuizDialog.value}
-        handleClose={addQuizDialog.onFalse}
-        title="New Quiz"
-      >
-        <AddNewQuiz />
-      </CustomDialog>
-    </Box>
-  );
-};
-
-export default ActiveQuiz;
+import { getInitialValues } from './initialValues';
+import { stepValidationSchemas } from './validationSchema';
 
 const QuizInformation = ({ formik }: any) => {
   // Fetch class data using custom hook for API query
@@ -836,16 +687,16 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
             />
             {errors.question && <FormHelperText error>{errors.question}</FormHelperText>}
             {/* <TextField
-              fullWidth
-              label="Question"
-              name="question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              size="small"
-              required
-              error={!!errors.question}
-              helperText={errors.question}
-            /> */}
+                fullWidth
+                label="Question"
+                name="question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                size="small"
+                required
+                error={!!errors.question}
+                helperText={errors.question}
+              /> */}
           </Grid>
 
           {questionType === 'multiple-choice' && (
@@ -1155,31 +1006,13 @@ const AddNewQuiz = () => {
 
   return (
     <CustomStepperWithFormik
-      initialValues={{
-        quizTitle: '',
-        className: '',
-        division: [],
-        subject: '',
-        quizDuration: 0,
-        chapter: [],
-        totalMarks: 0,
-        questions: [],
-        attemptsAllowed: 1,
-        passingMarks: 0,
-        quizStartDateTime: null,
-        quizEndDateTime: null,
-        randomOrder: false,
-      }}
+      initialValues={getInitialValues()}
       steps={['Quiz Information', 'Quiz Builder', 'Quiz Setting']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
       validationSchema={stepValidationSchemas[activeStep as keyof typeof stepValidationSchemas]}
-      // validationSchema={yup.object().shape({})}
-      //   validationSchema={
-      //     stepValidationSchemas[activeStep as unknown as keyof typeof stepValidationSchemas]
-      //   }
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);
@@ -1195,3 +1028,5 @@ const AddNewQuiz = () => {
     />
   );
 };
+
+export default AddNewQuiz;

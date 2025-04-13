@@ -1,0 +1,16 @@
+[
+    {
+      "id": 1,
+      "totalMarks": 80,
+      "gradingScale": [
+        { "minMarks": 72, "maxMarks": 80, "grade": "A+" },
+        { "minMarks": 64, "maxMarks": 71, "grade": "A" },
+        { "minMarks": 56, "maxMarks": 63, "grade": "B+" },
+        { "minMarks": 48, "maxMarks": 55, "grade": "B" },
+        { "minMarks": 40, "maxMarks": 47, "grade": "C+" },
+        { "minMarks": 32, "maxMarks": 39, "grade": "C" },
+        { "minMarks": 0, "maxMarks": 31, "grade": "F" }
+      ]
+    }
+  ]
+  
