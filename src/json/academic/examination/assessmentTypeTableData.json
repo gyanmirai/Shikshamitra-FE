@@ -1,0 +1,33 @@
+[
+    {
+      "id": 1,
+      "assessmentType": "Formative",
+      "description": "Ongoing assessments to monitor student learning and provide feedback.",
+      "status": "Publish"
+    },
+    {
+      "id": 2,
+      "assessmentType": "Summative",
+      "description": "End-of-unit assessments to evaluate student learning outcomes.",
+      "status": "Publish"
+    },
+    {
+      "id": 3,
+      "assessmentType": "Diagnostic",
+      "description": "Initial assessment to identify students' strengths and learning needs.",
+      "status": "UnPublish"
+    },
+    {
+      "id": 4,
+      "assessmentType": "Benchmark",
+      "description": "Standardized tests to compare student performance against specific standards.",
+      "status": "Publish"
+    },
+    {
+      "id": 5,
+      "assessmentType": "Performance-Based",
+      "description": "Assessments that evaluate students' ability to apply skills in real-world contexts.",
+      "status": "UnPublish"
+    }
+  ]
+  

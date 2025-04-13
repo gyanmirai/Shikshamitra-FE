@@ -11,8 +11,8 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ActiveQuiz from './quizManagement/activeQuiz';
 import ArchievedQuiz from './quizManagement/archievedQuiz';
+import ActiveQuiz from './quizManagement/activeQuiz/activeQuiz';
 
 const TABS = [
   {

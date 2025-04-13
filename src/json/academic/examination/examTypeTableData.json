@@ -1,0 +1,33 @@
+[
+    {
+      "id": 1,
+      "examType": "Midterm",
+      "description": "Comprehensive mid-semester examination covering first half of course material.",
+      "status": "Publish"
+    },
+    {
+      "id": 2,
+      "examType": "Final",
+      "description": "Comprehensive end-of-semester examination covering entire course material.",
+      "status": "UnPublish"
+    },
+    {
+      "id": 3,
+      "examType": "Diagnostic",
+      "description": "Assessment to identify student strengths and areas for improvement.",
+      "status": "Publish"
+    },
+    {
+      "id": 4,
+      "examType": "Quarterly",
+      "description": "Periodic assessment to track student progress throughout the year.",
+      "status": "UnPublish"
+    },
+    {
+      "id": 5,
+      "examType": "Entrance",
+      "description": "Examination for admission or placement purposes.",
+      "status": "Publish"
+    }
+  ]
+  

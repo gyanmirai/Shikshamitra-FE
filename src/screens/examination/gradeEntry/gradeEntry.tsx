@@ -2,41 +2,27 @@
 
 import type { Division, Standards } from 'src/types/school';
 
-import * as yup from 'yup';
-import { useFormik } from 'formik';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import {
-  Box,
-  Grid,
-  Button,
-  Checkbox,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Button, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import type { TStudentExamGradeEntry } from './type';
+import AssignGrade from './components/assignGradeForm';
+import GradeEntryTable from './components/GradeEntryTable';
+
+import type { IStudentExamGradeEntry } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
 
-export const dummyData: TStudentExamGradeEntry[] = [
+export const dummyData: IStudentExamGradeEntry[] = [
   {
     id: '1',
     studentName: 'John Smith',
@@ -118,9 +104,9 @@ const GradeEntry = (props: TabComponentType) => {
   });
 
   // Currently selected student for grade entry
-  const [selectedStudent, setSelectedStudent] = useState<TStudentExamGradeEntry | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<IStudentExamGradeEntry | null>(null);
   // Table data containing student grades and information
-  const [tableData, setTableData] = useState<TStudentExamGradeEntry[]>(dummyData);
+  const [tableData, setTableData] = useState<IStudentExamGradeEntry[]>(dummyData);
   // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -369,79 +355,11 @@ const GradeEntry = (props: TabComponentType) => {
           }}
         />
       </Box>
-
-      <CustomizableTable
-        tableId="grade-entry-table"
-        columns={[
-          {
-            id: 'select',
-            label: 'Select',
-            render: (value, row) => (
-              <Checkbox
-                checked={selectedStudents.includes(row.id)}
-                onChange={() => handleSelectStudent(row.id)}
-              />
-            ),
-          },
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'assignments', label: 'Assignments' },
-          { id: 'subject', label: 'Subject' },
-          {
-            id: 'grade',
-            label: 'Grade',
-            render: (value, row) =>
-              value === '' ? (
-                <Typography variant="subtitle2" color="textSecondary">
-                  -
-                </Typography>
-              ) : (
-                <Typography variant="caption" gutterBottom>
-                  {value}
-                </Typography>
-              ),
-          },
-          {
-            id: 'feedback',
-            label: 'Feedback',
-            render: (value, row) =>
-              value === '' ? (
-                <Typography variant="subtitle2" color="textSecondary">
-                  -
-                </Typography>
-              ) : (
-                <Typography variant="caption" gutterBottom>
-                  {value}
-                </Typography>
-              ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            render: (value, row) => (
-              <Label
-                color={
-                  value === 'Assigned' ? 'primary' : value === 'Pending' ? 'warning' : 'default'
-                }
-              >
-                {value}
-              </Label>
-            ),
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
+      <GradeEntryTable
         data={tableData}
+        selectedStudents={selectedStudents}
+        handleSelectStudent={handleSelectStudent}
+        actions={actions}
       />
 
       <CustomDialog
@@ -464,94 +382,3 @@ const GradeEntry = (props: TabComponentType) => {
 };
 
 export default GradeEntry;
-
-/**
- * Props interface for AssignGrade component
- * @param data Optional data containing initial grade and feedback values
- * @param onSubmit Callback function to handle form submission with grade and feedback values
- */
-interface AssignGradeProps {
-  data?: TStudentExamGradeEntry | null;
-  onSubmit: (values: { grade: string; feedback: string }) => void;
-}
-
-const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGradeProps) => {
-  const validationSchema = yup.object().shape({
-    grade: yup.string().required('Grade is required'),
-    feedback: yup.string().max(500, 'Feedback must be less than 500 characters'),
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      grade: data?.grade || '',
-      feedback: data?.feedback || '',
-    },
-    validationSchema,
-    onSubmit(values) {
-      onSubmit(values);
-    },
-  });
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <ShakingTextField error={!!(formik.touched?.grade && formik.errors.grade) || false}>
-                <CustomSelect
-                  options={[
-                    { value: 'A+', label: 'A+' },
-                    { value: 'A', label: 'A' },
-                    { value: 'A-', label: 'A-' },
-                    { value: 'B+', label: 'B+' },
-                    { value: 'B', label: 'B' },
-                    { value: 'B-', label: 'B-' },
-                    { value: 'C+', label: 'C+' },
-                    { value: 'C', label: 'C' },
-                    { value: 'C-', label: 'C-' },
-                    { value: 'D', label: 'D' },
-                    { value: 'F', label: 'F' },
-                  ]}
-                  label="Grade"
-                  name="grade"
-                  value={formik.values.grade}
-                  onChange={(val) => {
-                    formik.setFieldValue('grade', val);
-                  }}
-                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                  error={formik.touched.grade && Boolean(formik.errors.grade)}
-                  helperText={
-                    formik.touched.grade && formik.errors.grade ? formik.errors.grade : undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched?.feedback && formik.errors.feedback) || false}
-              >
-                <TextField
-                  placeholder="Detailed Feedback"
-                  multiline
-                  rows={3}
-                  fullWidth
-                  name="feedback"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button size="small" type="submit" variant="contained">
-            Submit
-          </Button>
-        </DialogActions>
-      </form>
-    </Box>
-  );
-};

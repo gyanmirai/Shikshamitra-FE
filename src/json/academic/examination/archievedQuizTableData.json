@@ -1,0 +1,59 @@
+[
+    {
+      "class": "10",
+      "division": ["A", "B"],
+      "subject": "Mathematics",
+      "quizTitle": "Algebra Basics",
+      "createdAt": "2024-12-01",
+      "quizDate": "2024-12-15",
+      "quizTime": "10:00 AM",
+      "totalMarks": 100,
+      "passingMarks": 40,
+      "grade": "A",
+      "id": "1",
+      "status": "Pending"
+    },
+    {
+      "class": "9",
+      "division": ["B", "C"],
+      "subject": "Science",
+      "quizTitle": "Physics Quiz",
+      "createdAt": "2024-12-05",
+      "quizDate": "2024-12-20",
+      "quizTime": "11:00 AM",
+      "totalMarks": 50,
+      "passingMarks": 20,
+      "grade": "B",
+      "id": "2",
+      "status": "Completed"
+    },
+    {
+      "class": "8",
+      "division": ["C", "D", "E"],
+      "subject": "English",
+      "quizTitle": "Grammar Test",
+      "createdAt": "2024-12-08",
+      "quizDate": "2024-12-25",
+      "quizTime": "12:00 PM",
+      "totalMarks": 30,
+      "passingMarks": 15,
+      "grade": "C",
+      "id": "3",
+      "status": "Pending"
+    },
+    {
+      "class": "7",
+      "division": ["D", "E"],
+      "subject": "History",
+      "quizTitle": "World Wars",
+      "createdAt": "2024-12-10",
+      "quizDate": "2024-12-30",
+      "quizTime": "09:00 AM",
+      "totalMarks": 70,
+      "passingMarks": 35,
+      "grade": "B",
+      "id": "4",
+      "status": "Pending"
+    }
+  ]
+  
