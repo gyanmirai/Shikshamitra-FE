@@ -6,17 +6,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  Button,
-  Switch,
-  MenuList,
-  MenuItem,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-} from '@mui/material';
+import { Box, Card, Button, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -24,16 +14,15 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import assessmnentData from 'src/json/academic/examination/assessmentData.json';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddNewAssessment from './assignmentForm';
 import StudentSubmissions from './studentSubmission';
+import AssessmentManagementTable from './assessmentManagementTable';
 
 import type { IAssessment } from './type';
 
@@ -70,7 +59,7 @@ const AssessmentManagement = (props: TabComponentType) => {
 
   // Temporary storage for pending status changes
   const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: number;
+    id: string;
     value: boolean;
   } | null>(null);
 
@@ -143,42 +132,11 @@ const AssessmentManagement = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
 
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {(row.status === 'Pending' || row.status === 'Under Review') && (
-            <MenuItem
-              onClick={() => {
-                submissionDialog.onTrue();
-              }}
-            >
-              <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-              Enter Marks
-            </MenuItem>
-          )}
-          {row.status === 'Completed' && (
-            <MenuItem
-              onClick={() => {
-                //   submissionDialog.onTrue();
-              }}
-            >
-              <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
-              Publish Result
-            </MenuItem>
-          )}
-        </MenuList>
-      </>
-    ),
-    [submissionDialog]
-  );
-
   /**
    * Deletes an assessment from the assessment data by filtering out the item with matching id
    * @param id - The unique identifier of the assessment to delete
    */
-  const handleDelete = (id: number | undefined) => {
+  const handleDelete = (id: string | undefined) => {
     setAssessmentData((prevData) => prevData.filter((item) => item.id !== id));
     handleCloseDialog();
   };
@@ -195,6 +153,26 @@ const AssessmentManagement = (props: TabComponentType) => {
         { name: 'Examination', href: '/academic/examinationDashboard' },
         { name: 'Assessment' },
       ];
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <MenuList>
+        {(row.status === 'Pending' || row.status === 'Under Review') && (
+          <MenuItem onClick={() => submissionDialog.onTrue()}>
+            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+            Enter Marks
+          </MenuItem>
+        )}
+        {row.status === 'Completed' && (
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
+            Publish Result
+          </MenuItem>
+        )}
+      </MenuList>
+    ),
+    [submissionDialog]
+  );
 
   return (
     <Box height="100%" display="flex" flexDirection="column" gap={2}>
@@ -276,82 +254,22 @@ const AssessmentManagement = (props: TabComponentType) => {
               />
             </Box>
           </Box>
-          <CustomizableTable
-            tableId="assessment-management-table"
-            columns={[
-              { id: 'className', label: 'Class' },
-              { id: 'division', label: 'Division' },
-              { id: 'subject', label: 'Subject Name', minWidth: '150px', align: 'left' },
-              { id: 'assesmentTitle', label: 'Assessment Title', minWidth: '200px', align: 'left' },
-              { id: 'examName', label: 'Exam Name', minWidth: '150px', align: 'left' },
-              { id: 'assessmentType', label: 'Assessment Type', minWidth: '200px', align: 'left' },
-              { id: 'assignmentName', label: 'Assignment Name', minWidth: '200px', align: 'left' },
-              {
-                id: 'publish',
-                label: 'Publish',
-                render: (value: boolean, row: any) => (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Switch
-                      size="small"
-                      checked={value}
-                      onChange={() => {
-                        setPendingStatusChange({
-                          id: row.id, // Use row.id instead of undefined 'id'
-                          value: !value,
-                        });
-                        confirmPublishDialog.onTrue();
-                      }}
-                    />
-                  </Box>
-                ),
-              },
-              {
-                id: 'status',
-                label: 'Status',
-                render(value: any, row: any) {
-                  return (
-                    <Label
-                      color={
-                        value === 'Completed'
-                          ? 'primary'
-                          : value === 'Pending'
-                            ? 'error'
-                            : value === 'Under Review'
-                              ? 'secondary'
-                              : 'default'
-                      }
-                    >
-                      {value}
-                    </Label>
-                  );
-                },
-              },
-              {
-                id: 'actions',
-                label: 'Actions',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                      showEditIcon
-                      showDeleteIcon
-                      handleDeleteClick={() => {
-                        deleteDialog.onTrue();
-                        setSelectedAssessment(row as IAssessment);
-                      }}
-                      handleEditClick={() => {
-                        setOpen(true);
-                        setIsEdit(true);
-                        setSelectedAssessment(row as IAssessment);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
+          <AssessmentManagementTable
+            actions={(prop) => actions({ ...prop, row: prop.row }) as any}
             data={assessmentData}
+            onEdit={(assessment) => {
+              setOpen(true);
+              setIsEdit(true);
+              setSelectedAssessment(assessment);
+            }}
+            onDelete={(assessment) => {
+              deleteDialog.onTrue();
+              setSelectedAssessment(assessment);
+            }}
+            onTogglePublish={(id, value) => {
+              setPendingStatusChange({ id, value });
+              confirmPublishDialog.onTrue();
+            }}
           />
         </>
       )}
@@ -365,58 +283,45 @@ const AssessmentManagement = (props: TabComponentType) => {
         <StudentSubmissions />
       </CustomDialog>
 
-      <CustomDialog
-        title="Confirm Publication"
-        open={confirmPublishDialog.value}
-        handleClose={confirmPublishDialog.onFalse}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>
-            Are you sure to {pendingStatusChange?.value === true ? 'Publish' : 'Unpublish'} this
-            Assessment?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} variant="contained" color="error">
-            Cancel
-          </Button>
-          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
-            Confirm
-          </Button>
-        </DialogActions>
-      </CustomDialog>
-
-      <CustomDialog
-        title="Confirm Delete"
+      <ConfirmDialog
         open={deleteDialog.value}
-        handleClose={() => {
+        onClose={() => {
           handleCloseDialog();
         }}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>Are you sure to delete this Assessment ?</DialogContentText>
-        </DialogContent>
-        <DialogActions>
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
           <Button
-            onClick={() => {
-              handleCloseDialog();
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
+            variant="contained"
+            color="error"
             onClick={() => {
               handleDelete(selectedAssessment?.id);
             }}
+          >
+            Delete
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={confirmPublishDialog.value}
+        onClose={() => {
+          handleCloseDialog();
+        }}
+        title="Delete"
+        content="Are you sure want to publish?"
+        action={
+          <Button
             variant="contained"
             color="error"
+            onClick={() => {
+              confirmStatusChange();
+            }}
           >
-            Confirm
+            Publish
           </Button>
-        </DialogActions>
-      </CustomDialog>
+        }
+      />
     </Box>
   );
 };

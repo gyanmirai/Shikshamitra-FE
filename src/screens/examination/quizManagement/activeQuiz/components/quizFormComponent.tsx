@@ -1,5 +1,4 @@
-import * as yup from 'yup';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
@@ -14,8 +13,6 @@ import {
   Switch,
   Button,
   TableRow,
-  MenuList,
-  MenuItem,
   TextField,
   TableHead,
   TableCell,
@@ -38,224 +35,12 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
-import QuizPortal from './quizPortal';
-import { quizData } from './quizOptions';
-
-const dummyData = [
-  {
-    class: '10',
-    division: ['A', 'B'],
-    subject: 'Mathematics',
-    quizTitle: 'Algebra Basics',
-    createdAt: '2024-12-01',
-    quizDate: '2024-12-15',
-    quizTime: '10:00 AM',
-    marksEntry: 'Completed',
-    attemptsAllow: 3,
-    totalMarks: 100,
-    passingMarks: 40,
-    grade: 'A',
-    status: true,
-    id: '1', // Unique identifier for the row
-  },
-  {
-    class: '9',
-    division: ['B', 'C'],
-    subject: 'Science',
-    quizTitle: 'Physics Quiz',
-    createdAt: '2024-12-05',
-    quizDate: '2024-12-20',
-    quizTime: '11:00 AM',
-    marksEntry: 'Pending',
-    attemptsAllow: 2,
-    totalMarks: 50,
-    passingMarks: 20,
-    grade: 'B',
-    status: false,
-    id: '2',
-  },
-  {
-    class: '8',
-    division: ['C', 'D', 'E'],
-    subject: 'English',
-    quizTitle: 'Grammar Test',
-    createdAt: '2024-12-08',
-    quizDate: '2024-12-25',
-    quizTime: '12:00 PM',
-    marksEntry: 'Completed',
-    attemptsAllow: 1,
-    totalMarks: 30,
-    passingMarks: 15,
-    grade: 'C',
-    status: true,
-    id: '3',
-  },
-  {
-    class: '7',
-    division: ['D', 'E'],
-    subject: 'History',
-    quizTitle: 'World Wars',
-    createdAt: '2024-12-10',
-    quizDate: '2024-12-30',
-    quizTime: '09:00 AM',
-    marksEntry: 'Pending',
-    attemptsAllow: 4,
-    totalMarks: 70,
-    passingMarks: 35,
-    grade: 'B',
-    status: false,
-    id: '4',
-  },
-];
-
-const ActiveQuiz = () => {
-  // State to store and manage quiz table data
-  const [tableData, setTableData] = useState(dummyData);
-  // Dialog state for adding new quiz
-  const addQuizDialog = useBoolean();
-  // Dialog state for attempting quiz
-  const attemptQuizDialog = useBoolean();
-  // State to control quiz portal visibility
-  const [open, setOpen] = useState(false);
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
-            Attempt Quiz
-          </MenuItem>
-        </MenuList>
-      </>
-    ),
-    []
-  );
-
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        {open ? (
-          <Button
-            startIcon={<Iconify icon="mdi:arrow-back" />}
-            variant="contained"
-            size="small"
-            onClick={() => {
-              setOpen(false);
-            }}
-          >
-            Back
-          </Button>
-        ) : (
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            size="small"
-            onClick={() => {
-              addQuizDialog.onTrue();
-            }}
-          >
-            Quiz
-          </Button>
-        )}
-      </Box>
-
-      {open ? (
-        <QuizPortal quizData={quizData} />
-      ) : (
-        <CustomizableTable
-          tableId="quiz-table"
-          columns={[
-            { id: 'class', label: 'Class' },
-            {
-              id: 'division',
-              label: 'Division',
-              render(value, row) {
-                return (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.length
-                      ? value.map((audience: string) => (
-                          <Chip key={audience} label={audience} size="small" variant="outlined" />
-                        ))
-                      : '-'}
-                  </Box>
-                );
-              },
-            },
-            { id: 'subject', label: 'Subject' },
-            { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
-            { id: 'createdAt', label: 'Created At', minWidth: '150px', align: 'left' },
-            { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
-            { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
-            { id: 'quizEndDate', label: 'Quiz End Date', minWidth: '200px', align: 'left' },
-            { id: 'quizEndTime', label: 'Quiz End Time', minWidth: '200px', align: 'left' },
-            { id: 'quizDuration', label: 'Quiz Duration', minWidth: '200px', align: 'left' },
-            { id: 'attemptsAllow', label: 'Attempts Allow', minWidth: '200px', align: 'left' },
-            { id: 'totalMakrs', label: 'Total Marks', minWidth: '200px', align: 'left' },
-            { id: 'passingMarks', label: 'Passing Marks', minWidth: '200px', align: 'left' },
-            {
-              id: 'status',
-              label: 'Publish',
-              render: (value: boolean, row: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Switch
-                    size="small"
-                    checked={value}
-                    onChange={() => {
-                      // setPendingStatusChange({
-                      //   id: row.id, // Use row.id instead of undefined 'id'
-                      //   value: !value,
-                      // });
-                      // confirmPublishDialog.onTrue();
-                    }}
-                  />
-                </Box>
-              ),
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              isSort: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    placement="right-top"
-                    showEditIcon
-                    showDeleteIcon
-                    handleEditClick={() => {}}
-                    handleDeleteClick={() => {}}
-                  />
-                );
-              },
-            },
-          ]}
-          data={tableData}
-        />
-      )}
-
-      <CustomDialog
-        maxWidth="lg"
-        open={addQuizDialog.value}
-        handleClose={addQuizDialog.onFalse}
-        title="New Quiz"
-      >
-        <AddNewQuiz />
-      </CustomDialog>
-    </Box>
-  );
-};
-
-export default ActiveQuiz;
+import { getInitialValues } from './initialValues';
+import { stepValidationSchemas } from './validationSchema';
 
 const QuizInformation = ({ formik }: any) => {
   // Fetch class data using custom hook for API query
@@ -899,16 +684,16 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
             />
             {errors.question && <FormHelperText error>{errors.question}</FormHelperText>}
             {/* <TextField
-              fullWidth
-              label="Question"
-              name="question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              size="small"
-              required
-              error={!!errors.question}
-              helperText={errors.question}
-            /> */}
+                fullWidth
+                label="Question"
+                name="question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                size="small"
+                required
+                error={!!errors.question}
+                helperText={errors.question}
+              /> */}
           </Grid>
 
           {questionType === 'multiple-choice' && (
@@ -1210,63 +995,19 @@ const QuizSetting = ({ formik }: any) => {
 
 const allSurveySteps = [QuizInformation, QuizBuilder, QuizSetting];
 
-const stepValidationSchemas = [
-  yup.object().shape({
-    quizTitle: yup.string().required('Quiz title is required'),
-    className: yup.string().required('Class name is required'),
-    division: yup.array().of(yup.string()).min(1, 'At least one division is required'),
-    subject: yup.string().required('Subject is required'),
-    chapter: yup.array().of(yup.string()).min(1, 'At least one chapter is required'),
-  }),
-  yup.object().shape({
-    questions: yup.array().min(1, 'At least one question is required'),
-  }),
-  yup.object().shape({
-    attemptsAllowed: yup
-      .number()
-      .min(1, 'At least one attempt is required')
-      .required('Attempts allowed is required'),
-    passingMarks: yup
-      .number()
-      .min(0, 'Passing score must be at least 0')
-      .max(100, 'Passing score must not exceed 100')
-      .required('Passing score is required'),
-    quizStartDateTime: yup.date().required('Quiz Start date is required'),
-    quizEndtDateTime: yup.date().required('Quiz Start date is required'),
-  }),
-];
-
 const AddNewQuiz = () => {
   // State to track the current active step in the quiz creation stepper
   const [activeStep, setActiveStep] = useState(0);
 
   return (
     <CustomStepperWithFormik
-      initialValues={{
-        quizTitle: '',
-        className: '',
-        division: [],
-        subject: '',
-        quizDuration: 0,
-        chapter: [],
-        totalMarks: 0,
-        questions: [],
-        attemptsAllowed: 1,
-        passingMarks: 0,
-        quizStartDateTime: null,
-        quizEndDateTime: null,
-        randomOrder: false,
-      }}
+      initialValues={getInitialValues()}
       steps={['Quiz Information', 'Quiz Builder', 'Quiz Setting']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
       validationSchema={stepValidationSchemas[activeStep as keyof typeof stepValidationSchemas]}
-      // validationSchema={yup.object().shape({})}
-      //   validationSchema={
-      //     stepValidationSchemas[activeStep as unknown as keyof typeof stepValidationSchemas]
-      //   }
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);
@@ -1282,3 +1023,5 @@ const AddNewQuiz = () => {
     />
   );
 };
+
+export default AddNewQuiz;

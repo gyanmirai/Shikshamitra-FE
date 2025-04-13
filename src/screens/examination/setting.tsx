@@ -11,9 +11,9 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import GradeScaling from './settings/gradeScaling';
-import ExamAssessmentType from './settings/examType';
-import RubricManagement from './settings/rubricManagement';
+import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
+import RubricManagement from './settings/rubricManagement/rubricManagement';
+import ExamAssessmentType from './settings/examAssessmentTypeSetting.tsx/examType';
 
 const TABS = [
   {

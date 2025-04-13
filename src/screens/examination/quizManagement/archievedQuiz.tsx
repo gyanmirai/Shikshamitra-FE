@@ -25,6 +25,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
 import { TopPerformer } from 'src/screens/student/enrollment/entrance-exam/dashboard';
+import archievedQuizTableData from 'src/json/academic/examination/archievedQuizTableData.json';
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { Label } from 'src/components/label';
@@ -39,67 +40,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
-const tableInitialData = [
-  {
-    class: '10',
-    division: ['A', 'B'],
-    subject: 'Mathematics',
-    quizTitle: 'Algebra Basics',
-    createdAt: '2024-12-01',
-    quizDate: '2024-12-15',
-    quizTime: '10:00 AM',
-    totalMarks: 100,
-    passingMarks: 40,
-    grade: 'A',
-    id: '1', // Unique identifier for the row
-    status: 'Pending', // Status of the quiz
-  },
-  {
-    class: '9',
-    division: ['B', 'C'],
-    subject: 'Science',
-    quizTitle: 'Physics Quiz',
-    createdAt: '2024-12-05',
-    quizDate: '2024-12-20',
-    quizTime: '11:00 AM',
-    totalMarks: 50,
-    passingMarks: 20,
-    grade: 'B',
-    id: '2',
-    status: 'Completed',
-  },
-  {
-    class: '8',
-    division: ['C', 'D', 'E'],
-    subject: 'English',
-    quizTitle: 'Grammar Test',
-    createdAt: '2024-12-08',
-    quizDate: '2024-12-25',
-    quizTime: '12:00 PM',
-    totalMarks: 30,
-    passingMarks: 15,
-    grade: 'C',
-    id: '3',
-    status: 'Pending',
-  },
-  {
-    class: '7',
-    division: ['D', 'E'],
-    subject: 'History',
-    quizTitle: 'World Wars',
-    createdAt: '2024-12-10',
-    quizDate: '2024-12-30',
-    quizTime: '09:00 AM',
-    totalMarks: 70,
-    passingMarks: 35,
-    grade: 'B',
-    id: '4',
-    status: 'Pending',
-  },
-];
-
 const ArchievedQuiz = () => {
-  const [archivedTableData, setArchivedTableData] = useState(tableInitialData);
+  const [archivedTableData, setArchivedTableData] = useState(archievedQuizTableData);
   const viewSubmissionDialog = useBoolean();
   const viewAnalyticsDialog = useBoolean();
 
