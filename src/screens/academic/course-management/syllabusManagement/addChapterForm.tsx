@@ -1,7 +1,5 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
-
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useState, useEffect } from 'react';
@@ -28,36 +26,17 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './validationSchema';
+import { getChapterInitialValues } from './initialValues';
 
-import type { IDocument, IChapterFormValues } from './type';
+import type { IDocument, IChapterFormValues, IAddNewChapterProps } from './type';
 
-// Props interface for AddNewChapter component
-interface AddNewChapterProps {
-  onSubmit: (values: IChapterFormValues) => void;
-  selectedSubject: string;
-  isEdit?: boolean;
-  initialValues?: {
-    chapterNo: number;
-    chapterName: string;
-    assignedTeacher: string;
-    content: string;
-    startTime: Dayjs | null;
-    endTime: Dayjs | null;
-    timeLine: Dayjs | null;
-    documents?: Array<{
-      id: string;
-      name: string;
-      url: string;
-    }>;
-  } | null;
-}
 // Component for adding or editing a chapter with form validation and file upload functionality
-export const AddNewChapter: React.FC<AddNewChapterProps> = ({
+export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   onSubmit,
   selectedSubject,
   isEdit = false,
   initialValues = null,
-}: AddNewChapterProps) => {
+}: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
   const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
@@ -67,15 +46,7 @@ export const AddNewChapter: React.FC<AddNewChapterProps> = ({
 
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
-    initialValues: {
-      chapterNo: initialValues?.chapterNo || 0,
-      chapterName: initialValues?.chapterName || '',
-      assignedTeacher: initialValues?.assignedTeacher || '',
-      content: initialValues?.content || '',
-      startTime: initialValues?.startTime ? dayjs(initialValues.startTime) : null,
-      endTime: initialValues?.endTime ? dayjs(initialValues.endTime) : null,
-      timeLine: initialValues?.timeLine ? dayjs(initialValues.timeLine) : null,
-    },
+    initialValues: getChapterInitialValues(initialValues),
     validationSchema,
     onSubmit: (values) => {
       onSubmit({

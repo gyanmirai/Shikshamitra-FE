@@ -10,19 +10,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import type { TTeacherData } from './teacher';
+import type { ITeacherReassignProps } from './type';
 
-/**
- * Props interface for TeacherReassign component
- * @param selectedTeacher - The currently selected teacher data or null
- * @param onSubmit - Callback function to handle form submission
- */
-interface TeacherReassignProps {
-  selectedTeacher: TTeacherData | null;
-  onSubmit: (values: any) => void;
-}
-
-const TeacherReassign: React.FC<TeacherReassignProps> = ({ selectedTeacher, onSubmit }) => {
+const TeacherReassign: React.FC<ITeacherReassignProps> = ({ selectedTeacher, onSubmit }) => {
   // Initialize formik form with validation schema and submit handler
   const formik = useFormik({
     // Set initial form values from selected teacher data or empty array

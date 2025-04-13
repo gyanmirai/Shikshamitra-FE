@@ -2,7 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 import type { TStudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
-export interface THomeworkAssignment {
+export interface IHomeworkAssignment {
   title: string;
   description: string;
   class: string;
@@ -34,7 +34,7 @@ export interface THomeworkAssignment {
   isScheduled: boolean;
 }
 
-export interface TStudentSubmissionsProps {
+export interface IStudentSubmissionsProps {
   selectedStudents?: TStudentGrade[];
   handleBulkUpdate?: (data: TStudentGrade[]) => void;
   tableData?: TStudentGrade[];
@@ -44,4 +44,15 @@ export interface TStudentSubmissionsProps {
 export interface IAssignGradeProps {
   data?: TStudentGrade | null;
   onSubmit: (values: { grade: string; feedback: string }) => void;
+}
+
+/**
+ * Props interface for the HomeworkCreationForm component
+ * @interface HomeWorkCreationFormProps
+ * @property {function} onsubmit - Callback function to handle form submission with homework values and status
+ * @property {string} view - View mode of the form
+ */
+export interface IHomeWorkCreationFormProps {
+  onsubmit: (values: IHomeworkAssignment, status: 'draft' | 'publish') => void;
+  view: string;
 }

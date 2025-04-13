@@ -1,0 +1,33 @@
+[
+    {
+      "id": 1,
+      "subject": "Math",
+      "className": "1",
+      "assignedTeacher": ["John Doe"]
+    },
+    {
+      "id": 2,
+      "subject": "Science",
+      "className": "1",
+      "assignedTeacher": ["Jane Smith"]
+    },
+    {
+      "id": 3,
+      "subject": "English",
+      "className": "2",
+      "assignedTeacher": ["Robert Johnson"]
+    },
+    {
+      "id": 4,
+      "subject": "History",
+      "className": "3",
+      "assignedTeacher": ["Emily Brown"]
+    },
+    {
+      "id": 5,
+      "subject": "Physical Education",
+      "className": "1",
+      "assignedTeacher": ["Michael Wilson"]
+    }
+  ]
+  

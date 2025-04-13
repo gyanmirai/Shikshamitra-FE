@@ -1,7 +1,5 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
-import type { ChartOptions } from 'src/components/chart';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -13,13 +11,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LoadingButton } from '@mui/lab';
 import {
   Box,
-  Card,
-  Grid,
-  alpha,
   Button,
   MenuList,
   MenuItem,
-  useTheme,
   TextField,
   Typography,
   DialogActions,
@@ -30,145 +24,30 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 
 import { Iconify } from 'src/components/iconify';
-import { SvgColor } from 'src/components/svg-color';
 import CustomDialog from 'src/components/customDialog';
-import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-// Interface representing details of a course chapter
-interface CourseDetail {
-  chapterName: string; // Name of the chapter
-  teacherName: string; // Name of the teacher assigned to the chapter
-  progress: number; // Progress percentage completed for the chapter
-  pending: number; // Remaining percentage to be completed
-  timeLine: Dayjs | null; // Timeline/deadline for the chapter completion
-}
+import CourseCardsGrid from './components/courseCardsGrid';
 
-// Interface representing a course with its details
-interface Course {
-  id: number; // Unique identifier for the course
-  name: string; // Name of the course
-  progress: number; // Overall progress percentage of the course
-  details: CourseDetail[]; // Array of chapter details for the course
-  completedChapter: number; // Number of chapters completed
-  totalChapter: number; // Number of chapters pending
-  color: string; // Color of the course
-}
-
-const courses: Course[] = [
-  {
-    id: 1,
-    name: 'Math Course',
-    progress: 75,
-    completedChapter: 6,
-    totalChapter: 10,
-    color: '#007F63', // green
-    details: [
-      {
-        chapterName: 'Algebra Basics',
-        teacherName: 'John Doe',
-        progress: 60,
-        pending: 40,
-        timeLine: dayjs('2024-10-28'),
-      },
-      {
-        chapterName: 'Geometry Foundations',
-        teacherName: 'Jane Smith',
-        progress: 80,
-        pending: 20,
-        timeLine: dayjs('2024-11-05'),
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Science Course',
-    progress: 86.6,
-    completedChapter: 10,
-    totalChapter: 20,
-    color: '#006BA6', // blue
-    details: [
-      {
-        chapterName: 'Physics Introduction',
-        teacherName: 'Emily Brown',
-        progress: 70,
-        pending: 30,
-        timeLine: dayjs('2024-11-10'),
-      },
-      {
-        chapterName: 'Chemistry Basics',
-        teacherName: 'David Lee',
-        progress: 90,
-        pending: 10,
-        timeLine: dayjs('2024-11-15'),
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: 'English Course',
-    progress: 75,
-    completedChapter: 10,
-    totalChapter: 20,
-    color: '#8E44AD', // purple
-    details: [
-      {
-        chapterName: 'Grammar Essentials',
-        teacherName: 'Tom Harris',
-        progress: 55,
-        pending: 45,
-        timeLine: dayjs('2024-10-20'),
-      },
-      {
-        chapterName: 'Writing Skills',
-        teacherName: 'Lisa Chen',
-        progress: 75,
-        pending: 25,
-        timeLine: dayjs('2024-10-30'),
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Gujarati Course',
-    progress: 86.6,
-    completedChapter: 10,
-    totalChapter: 20,
-    color: '#D35400', // orange
-    details: [
-      {
-        chapterName: 'Alphabet and Basics',
-        teacherName: 'Raj Patel',
-        progress: 88,
-        pending: 12,
-        timeLine: dayjs('2024-11-01'),
-      },
-      {
-        chapterName: 'Reading Comprehension',
-        teacherName: 'Priya Shah',
-        progress: 85,
-        pending: 15,
-        timeLine: dayjs('2024-11-10'),
-      },
-    ],
-  },
-];
+import type { ICourse } from './type';
 
 const CourseProgress = (props: TabComponentType) => {
+  const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
   // State to store the selected course details
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
   // Props destructuring for search parameters
   const { searchParams, setSearchParams } = props;
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
   // Handler for when a course card is selected
-  const handleCardDetails = (course: Course) => {
+  const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
   };
 
@@ -281,39 +160,8 @@ const CourseProgress = (props: TabComponentType) => {
         />
       </Box>
       {/* Grid of course cards showing progress */}
-      <Grid container spacing={2} marginTop={2} marginBottom={4}>
-        {courses.map((course) => (
-          <Grid item xs={12} md={3}>
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
-                transform: 'scale(1)',
-                '&:hover': {
-                  transform: 'scale(1.05)', // zoom in
-                  zIndex: 2,
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)', // subtle elevation
-                },
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                handleCardDetails(course);
-              }}
-            >
-              <AppWidget
-                title={course.name}
-                color={course.color}
-                icon="solar:user-rounded-bold"
-                chart={{ series: course.progress }}
-                completedChapter={course.completedChapter}
-                totalChapter={course.totalChapter}
-              />
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
+
       {/* Selected course details section */}
       {selectedCourse && (
         <Box>
@@ -455,126 +303,6 @@ const UpdateProgress = () => {
           Submit
         </LoadingButton>
       </DialogActions>
-    </Box>
-  );
-};
-
-interface AppWidgetProps {
-  title: string;
-  total?: number;
-  color: string;
-  icon: string;
-  totalChapter: number;
-  completedChapter: number;
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
-}
-
-export const AppWidget: React.FC<AppWidgetProps> = ({
-  title,
-  total,
-  color,
-  icon,
-  chart,
-  totalChapter,
-  completedChapter,
-}) => {
-  const theme = useTheme();
-
-  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
-
-  const chartOptions = useChart({
-    chart: { sparkline: { enabled: true } },
-    stroke: { width: 0 },
-    fill: {
-      type: 'solid',
-      colors: chartColors,
-    },
-    plotOptions: {
-      radialBar: {
-        dataLabels: {
-          name: { show: false },
-          value: {
-            offsetY: 6,
-            color: 'white',
-            fontSize: theme.typography.subtitle2.fontSize as string,
-          },
-        },
-      },
-    },
-    ...chart.options,
-  });
-
-  return (
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: 3,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        bgcolor: color, // rich green background
-        color: 'common.white',
-        width: '100%',
-        minHeight: 120,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Circular Progress Chart */}
-      <Box
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 80,
-          height: 80,
-          color: 'white',
-        }}
-      >
-        <Chart
-          type="radialBar"
-          series={[chart.series]}
-          options={chartOptions}
-          width={80}
-          height={80}
-        />
-      </Box>
-
-      {/* Background SVG */}
-      <SvgColor
-        src="/assets/background/shape-circle-3.svg"
-        sx={{
-          width: 180,
-          height: 180,
-          position: 'absolute',
-          opacity: 0.06,
-          right: 0,
-          top: 0,
-          zIndex: 0,
-        }}
-      />
-
-      {/* Textual Content */}
-      <Box sx={{ ml: 2, zIndex: 1 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'common.white' }}>
-          {completedChapter}/{totalChapter}
-        </Typography>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mt: 0.5,
-            color: alpha('#ffffff', 0.8),
-            fontWeight: 500,
-          }}
-        >
-          {title}
-        </Typography>
-      </Box>
     </Box>
   );
 };
