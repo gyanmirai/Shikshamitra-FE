@@ -1,0 +1,44 @@
+[
+    {
+      "id": 1,
+      "totalPayableFee": 75000,
+      "totaldiscountAmount": 2000,
+      "grossFee": 77000,
+      "applicableGrade": "1",
+      "bookRecipt": "CBSE",
+      "feeSubCategoryList": [
+        {
+          "id": 1,
+          "receiptBook": "CBSE",
+          "feeHead": "Tuition",
+          "grossFee": 5000,
+          "payableFee": 4500,
+          "generalDiscount": 500,
+          "discountAmount": 0,
+          "discountRemark": "",
+          "paymentMethod": ["cash", "online"],
+          "lateFeeChargesType": "perDay",
+          "lateFeeChargesAmount": "1",
+          "isActive": true,
+          "paymentDueDate": "20-05-2025",
+          "applicableClass": ["1", "2", "3"]
+        },
+        {
+          "receiptBook": "CBSE",
+          "feeHead": "Admission",
+          "grossFee": 1000,
+          "payableFee": 1000,
+          "discountAmount": 0,
+          "discountRemark": "",
+          "paymentMethod": ["cash"],
+          "lateFeeChargesType": "fixed",
+          "lateFeeChargesAmount": "1000",
+          "isActive": true,
+          "paymentDueDate": "20-04-2024",
+          "applicableClass": ["1"]
+        }
+      ],
+      "isActive": true
+    }
+  ]
+  

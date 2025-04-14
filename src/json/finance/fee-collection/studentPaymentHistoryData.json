@@ -1,0 +1,35 @@
+[
+    {
+      "paymentId": "john233",
+      "date": "12-06-2024",
+      "dueDate": "15 June",
+      "amountPaid": 25000,
+      "amountPending": 5000,
+      "status": "Paid",
+      "paymentHistory": [
+        {
+          "paymentMode": "Cash",
+          "amount": "20000",
+          "paymentId": "54j8",
+          "paymentStatus": "Success",
+          "isRefunded": false,
+          "refundAmount": "",
+          "refundDate": "",
+          "refundReason": "",
+          "feeHead": "Library"
+        },
+        {
+          "paymentMode": "Cheque",
+          "amount": "5000",
+          "paymentId": "54j8",
+          "paymentStatus": "Success",
+          "isRefunded": false,
+          "refundAmount": "",
+          "refundDate": "",
+          "refundReason": "",
+          "feeHead": "Tuition"
+        }
+      ]
+    }
+  ]
+  

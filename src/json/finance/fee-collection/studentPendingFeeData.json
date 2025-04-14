@@ -1,0 +1,19 @@
+[
+    {
+      "id": 1,
+      "feeName": "Tuition Fee",
+      "amountDue": "5000",
+      "dueDate": "23-12-2024",
+      "action": "mark as paid",
+      "status": "Overdue"
+    },
+    {
+      "id": 2,
+      "feeName": "Sports Fee",
+      "amountDue": "2500",
+      "dueDate": "23-01-2025",
+      "action": "mark as paid",
+      "status": "Upcoming"
+    }
+  ]
+  
