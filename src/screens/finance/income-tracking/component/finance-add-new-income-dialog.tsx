@@ -25,7 +25,7 @@ import { addIncomeValidationSchema } from '../validationSchema';
 import type {
   IFormikValue,
   IFinanceAddNewIncomeDialogProps,
-} from '../add-new-income-dialog-interface';
+} from '../interface/income-screen-interface';
 
 const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
   dialogValue,

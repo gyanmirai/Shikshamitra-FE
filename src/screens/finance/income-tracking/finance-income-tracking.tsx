@@ -8,25 +8,26 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import incomeTrackingData from 'src/json/finance/income/incomeTrackingData.json';
+
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
-import { incomeData } from './data/income-screen-data';
 import FinanceAddNewIncomeDialog from './component/finance-add-new-income-dialog';
 import FinanceIncomeDetailsDialog from './component/finance-income-details-dialog';
 
-import type { IncomeData } from './data/income-screen-data';
+import type { IncomeData } from './interface/income-screen-interface';
 
 const FinanceIncomeTrackingScreen = () => {
   const dialog = useBoolean();
   const dialogForDetailsInSource = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState<IncomeData>(incomeData[0]);
+  const [selectedEntry, setSelectedEntry] = useState<IncomeData>(incomeTrackingData[0]);
   const [isEdit, setIsEdit] = useState<boolean>(false);
-  const [tableData] = useState<IncomeData[]>(incomeData);
+  const [tableData] = useState<IncomeData[]>(incomeTrackingData);
   const [open, setOpen] = useState<boolean>(false);
 
   const closeDialogForDetailsInSource = () => {
@@ -34,40 +35,6 @@ const FinanceIncomeTrackingScreen = () => {
   };
 
   useEffect(() => {}, [selectedEntry, isEdit]);
-
-  // const handleSave = (dataFromDialog: Data) => {
-  //   const { incomeSource, incomeAmount, paymentMethod, date, paymentStatus, id } = dataFromDialog;
-
-  //   if (dataFromDialog) {
-  //     const existingEntryIndex = data.findIndex((val) => id === val.id);
-
-  //     const newIncomeEntry = {
-  //       incomeSource,
-  //       incomeAmount,
-  //       paymentMethod,
-  //       date,
-  //       paymentStatus,
-  //       id,
-  //       action: isEdit ? 'edit' : 'add',
-  //     };
-
-  //     const updatedData = [...data];
-
-  //     if (isEdit && existingEntryIndex !== -1) {
-  //       updatedData[existingEntryIndex] = newIncomeEntry;
-  //     } else {
-  //       updatedData.push(newIncomeEntry);
-  //     }
-
-  //     setTableData(updatedData);
-  //   }
-
-  // };
-
-  const handleDelete = (item: any) => {
-    // data = data.filter((val) => val.id !== item.id || val.id !== item.id);
-    // setTableData([...data]);
-  };
 
   const handleClose = () => {
     setOpen(false);
@@ -119,6 +86,27 @@ const FinanceIncomeTrackingScreen = () => {
           </Box>
 
           <CustomizableTable
+            noDataText={
+              <>
+                No Income Found{' '}
+                <Box
+                  onClick={() => {
+                    setOpen(true);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Income
+                </Box>
+              </>
+            }
             tableId="income-tracking-table"
             isScrollbar={false}
             columns={[

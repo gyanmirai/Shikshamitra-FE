@@ -10,6 +10,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import studentFeeStructureData from 'src/json/finance/student-fee-management/studentFeeStructureData.json';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -20,10 +22,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import FeeDetailsComponent from './component/fee-details-component';
-import { studentsDataForFeeStructure } from './data/student-fee-structure-data';
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';
 
-import type { StudentForFeeStructure } from './data/student-fee-structure-data';
+import type { StudentForFeeStructure } from './data/student-fee-structure-interface';
 
 const FinanceStudentFeeManagement = () => {
   // Dialog state and student selection state management
@@ -68,7 +69,7 @@ const FinanceStudentFeeManagement = () => {
   };
 
   const handleSelectAllStudents = (checked: boolean) => {
-    setSelectedStudents(checked ? studentsDataForFeeStructure : []);
+    setSelectedStudents(checked ? studentFeeStructureData : []);
   };
 
   // Table column configuration with rendering logic for each column
@@ -84,8 +85,8 @@ const FinanceStudentFeeManagement = () => {
       renderColumn: () => (
         <Checkbox
           checked={
-            !!studentsDataForFeeStructure?.length &&
-            selectedStudents?.length === studentsDataForFeeStructure?.length
+            !!studentFeeStructureData?.length &&
+            selectedStudents?.length === studentFeeStructureData?.length
           }
           onChange={(e) => handleSelectAllStudents(e.target.checked)}
         />
@@ -256,14 +257,15 @@ const FinanceStudentFeeManagement = () => {
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-fee-management"
         columns={tableColumns as Column[]}
-        data={studentsDataForFeeStructure}
+        data={[]}
+        noDataText={<>No Student found. Please select class and division to view the details.</>}
       />
 
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}
           onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
+          data={studentFeeStructureData}
           userList={selectedStudents}
         />
       )}

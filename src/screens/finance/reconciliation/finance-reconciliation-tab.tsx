@@ -8,13 +8,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import chequeTransectionData from 'src/json/finance/reconicilation/chequeTransectionData.json';
+
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { reconsiliationData } from './data/cheque-list-data';
 import FinanceReconciliationClearAndBounceChequeDialog from './component/finance-reconciliation-clear-cheque-dialog';
 
 import type { ReconciliationItem } from './data/cheque-list-data';
@@ -80,6 +81,11 @@ const FinanceChequeTransectionScreen = () => {
         </Box>
       </Box>{' '}
       <CustomizableTable
+        noDataText={
+          <>
+            There are no cheque payments recorded for the selected class and division at this time.
+          </>
+        }
         tableId="reconciliationTable"
         columns={[
           { id: 'grNumber', label: 'GR No' },
@@ -139,7 +145,7 @@ const FinanceChequeTransectionScreen = () => {
             },
           },
         ]}
-        data={reconsiliationData}
+        data={chequeTransectionData}
       />
       {dialog.value && selectedEntry && (
         <FinanceReconciliationClearAndBounceChequeDialog
