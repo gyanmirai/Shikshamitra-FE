@@ -304,6 +304,7 @@ const StudentAttendanceDashboardScreen = () => {
             heading="Dashboard"
             links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
             sx={{ px: 1, mb: 2 }}
+            description="This dashboard shows daily attendance stats, overall attendance rates"
           />
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <DatePicker
@@ -337,6 +338,7 @@ const StudentAttendanceDashboardScreen = () => {
       ) : (
         <>
           <CustomBreadcrumbs
+            description="This dashboard shows daily attendance stats, overall attendance rates."
             heading="Dashboard"
             links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
             sx={{ px: 1, mb: 2 }}

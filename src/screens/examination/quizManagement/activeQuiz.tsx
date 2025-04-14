@@ -1,4 +1,3 @@
-import * as yup from 'yup';
 import React, { useState, useCallback } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
@@ -31,7 +30,9 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import quizData from 'src/json/academic/examination/quizData.json';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -44,78 +45,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import QuizPortal from './quizPortal';
-import { quizData } from './quizOptions';
-
-const dummyData = [
-  {
-    class: '10',
-    division: ['A', 'B'],
-    subject: 'Mathematics',
-    quizTitle: 'Algebra Basics',
-    createdAt: '2024-12-01',
-    quizDate: '2024-12-15',
-    quizTime: '10:00 AM',
-    marksEntry: 'Completed',
-    attemptsAllow: 3,
-    totalMarks: 100,
-    passingMarks: 40,
-    grade: 'A',
-    status: true,
-    id: '1', // Unique identifier for the row
-  },
-  {
-    class: '9',
-    division: ['B', 'C'],
-    subject: 'Science',
-    quizTitle: 'Physics Quiz',
-    createdAt: '2024-12-05',
-    quizDate: '2024-12-20',
-    quizTime: '11:00 AM',
-    marksEntry: 'Pending',
-    attemptsAllow: 2,
-    totalMarks: 50,
-    passingMarks: 20,
-    grade: 'B',
-    status: false,
-    id: '2',
-  },
-  {
-    class: '8',
-    division: ['C', 'D', 'E'],
-    subject: 'English',
-    quizTitle: 'Grammar Test',
-    createdAt: '2024-12-08',
-    quizDate: '2024-12-25',
-    quizTime: '12:00 PM',
-    marksEntry: 'Completed',
-    attemptsAllow: 1,
-    totalMarks: 30,
-    passingMarks: 15,
-    grade: 'C',
-    status: true,
-    id: '3',
-  },
-  {
-    class: '7',
-    division: ['D', 'E'],
-    subject: 'History',
-    quizTitle: 'World Wars',
-    createdAt: '2024-12-10',
-    quizDate: '2024-12-30',
-    quizTime: '09:00 AM',
-    marksEntry: 'Pending',
-    attemptsAllow: 4,
-    totalMarks: 70,
-    passingMarks: 35,
-    grade: 'B',
-    status: false,
-    id: '4',
-  },
-];
+import { stepValidationSchemas } from './quizValidationSchema';
 
 const ActiveQuiz = () => {
   // State to store and manage quiz table data
-  const [tableData, setTableData] = useState(dummyData);
+  const [tableData, setTableData] = useState(quizData);
   // Dialog state for adding new quiz
   const addQuizDialog = useBoolean();
   // Dialog state for attempting quiz
@@ -127,14 +61,16 @@ const ActiveQuiz = () => {
       <>
         {' '}
         <MenuList>
-          <MenuItem
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
-            Attempt Quiz
-          </MenuItem>
+          {!row.status && (
+            <MenuItem
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
+              Attempt Quiz
+            </MenuItem>
+          )}
         </MenuList>
       </>
     ),
@@ -170,7 +106,7 @@ const ActiveQuiz = () => {
       </Box>
 
       {open ? (
-        <QuizPortal quizData={quizData} />
+        <QuizPortal quizData={quizPortalData} />
       ) : (
         <CustomizableTable
           tableId="quiz-table"
@@ -301,8 +237,8 @@ const QuizInformation = ({ formik }: any) => {
   };
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField
             error={!!(formik.touched.quizTitle && formik.errors.quizTitle) || false}
           >
@@ -318,7 +254,7 @@ const QuizInformation = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField
             error={!!(formik.touched.className && formik.errors.className) || false}
           >
@@ -332,14 +268,14 @@ const QuizInformation = ({ formik }: any) => {
               isLoading={isLoading}
               labelKey="name"
               valueKey="name"
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.className && formik.errors.className) || false}
               helperText={formik.touched.className && formik.errors.className}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField error={!!(formik.touched.division && formik.errors.division) || false}>
             <CustomSelect
               label="Select Divisions"
@@ -362,12 +298,13 @@ const QuizInformation = ({ formik }: any) => {
                   ? formik.errors.division.join(', ')
                   : (formik.touched.division && formik.errors.division) || undefined
               }
+
               // helperText={formik.touched.division && formik.errors.division}
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject) || false}>
             <CustomSelect
               label="Subject"
@@ -379,14 +316,14 @@ const QuizInformation = ({ formik }: any) => {
               name="subject"
               value={formik.values.subject}
               onChange={(val) => formik.setFieldValue('subject', val as string)}
-              formControlProps={{ sx: { minWidth: 275 } }}
               error={!!(formik.touched.subject && formik.errors.subject) || false}
               helperText={formik.touched.subject && formik.errors.subject}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter) || false}>
             <CustomSelect
               label="Chapter"
@@ -399,18 +336,18 @@ const QuizInformation = ({ formik }: any) => {
               multiple
               value={formik.values.chapter}
               onChange={(val) => formik.setFieldValue('chapter', val)}
-              formControlProps={{ sx: { minWidth: 275 } }}
               error={!!(formik.touched.chapter && formik.errors.chapter) || false}
               helperText={
                 Array.isArray(formik.errors.chapter)
                   ? formik.errors.chapter.join(', ')
                   : (formik.touched.chapter && formik.errors.chapter) || undefined
               }
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField
             error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
           >
@@ -427,7 +364,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField
             error={!!(formik.touched.passingMarks && formik.errors.passingMarks) || false}
           >
@@ -444,7 +381,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={6}>
           <ShakingTextField
             error={!!(formik.touched.quizDuration && formik.errors.quizDuration) || false}
           >
@@ -827,7 +764,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Scrollbar sx={{ p: 2, height: '350px', bgcolor: 'background.neutral' }}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <ShakingTextField error={!!(errors.questionType && errors.questionType) || false}>
@@ -950,6 +887,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
                 onClick={handleAddOption}
                 size="small"
                 sx={{ mt: 2 }}
+                disabled={options.length >= 5}
               >
                 Add Option
               </Button>
@@ -1032,6 +970,7 @@ const QuizBuilder = ({ formik }: any) => {
       formik.values.questions.filter((_: any, index: number) => index !== indexToDelete)
     );
   };
+
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       {formik.errors.questions && (
@@ -1209,32 +1148,6 @@ const QuizSetting = ({ formik }: any) => {
 };
 
 const allSurveySteps = [QuizInformation, QuizBuilder, QuizSetting];
-
-const stepValidationSchemas = [
-  yup.object().shape({
-    quizTitle: yup.string().required('Quiz title is required'),
-    className: yup.string().required('Class name is required'),
-    division: yup.array().of(yup.string()).min(1, 'At least one division is required'),
-    subject: yup.string().required('Subject is required'),
-    chapter: yup.array().of(yup.string()).min(1, 'At least one chapter is required'),
-  }),
-  yup.object().shape({
-    questions: yup.array().min(1, 'At least one question is required'),
-  }),
-  yup.object().shape({
-    attemptsAllowed: yup
-      .number()
-      .min(1, 'At least one attempt is required')
-      .required('Attempts allowed is required'),
-    passingMarks: yup
-      .number()
-      .min(0, 'Passing score must be at least 0')
-      .max(100, 'Passing score must not exceed 100')
-      .required('Passing score is required'),
-    quizStartDateTime: yup.date().required('Quiz Start date is required'),
-    quizEndtDateTime: yup.date().required('Quiz Start date is required'),
-  }),
-];
 
 const AddNewQuiz = () => {
   // State to track the current active step in the quiz creation stepper

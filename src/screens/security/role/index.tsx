@@ -54,13 +54,21 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssignModule from './modules';
 
+import type { IPermission, IRowComponentProps } from './type';
+
+// Main component for managing roles and permissions in the system
 const RoleScreen = () => {
+  // State for managing confirmation dialog
   const confirm = useBoolean();
 
+  // State for managing dialog open/close
   const [open, setOpen] = useState(false);
+  // State for storing role data being edited
   const [editData, setEditData] = useState<any>(null);
+  // State for storing role data being deleted
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
 
+  // Query hook for fetching all roles
   const { data: roles, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
@@ -69,6 +77,7 @@ const RoleScreen = () => {
     },
   });
 
+  // Mutation hook for deleting a role
   const [deleteRole] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteRoleMutation,
@@ -78,6 +87,7 @@ const RoleScreen = () => {
     },
   });
 
+  // Handler for closing the dialog and resetting edit data
   const handleClose = () => {
     setEditData(null);
     setOpen(false);
@@ -172,13 +182,16 @@ const RoleScreen = () => {
     </Box>
   );
 };
-
 export default RoleScreen;
 
+// Component for handling role creation and editing form
 const RoleForm = ({ handleClose, editData }: any) => {
-  const [modulePermissionData, setModulePermissionData] = useState([]);
+  // State to store module permission data
+  // const [modulePermissionData, setModulePermissionData] = useState([]);
+  // State to store all permissions data
   const [allPermissions, setAllPermissions] = useState([]);
 
+  // Query hook to fetch permission data based on role name
   const { data: permissionData } = useQueryAndMutation({
     type: 'query',
     options: {
@@ -188,11 +201,13 @@ const RoleForm = ({ handleClose, editData }: any) => {
     params: editData ? editData.name : 'abc-xyz',
   });
 
+  // Mutation hook to update permissions
   const [updatePermission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatePermissionMutation,
   });
 
+  // Mutation hook to add new role with success message
   const [addRole, { isSuccess }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddRoleMutation,
@@ -202,6 +217,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
     },
   });
 
+  // Mutation hook to update existing role with success message
   const [updateRole] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateRoleMutation,
@@ -210,23 +226,8 @@ const RoleForm = ({ handleClose, editData }: any) => {
       success: true,
     },
   });
-  // useEffect(() => {
-  //   if (permissionData?.groups) {
-  //     setModulePermissionData(permissionData?.groups);
-  //     const allPer: any = [];
-  //     const recurFunction = (data: any) => {
-  //       data.forEach((item: any) => {
-  //         if (item?.permissions) {
-  //           allPer.splice(allPer.length, 0, ...item.permissions);
-  //           recurFunction(item?.permissions);
-  //         }
-  //       });
-  //     };
-  //     recurFunction(permissionData?.groups);
-  //     setAllPermissions(allPer);
-  //   }
-  // }, [permissionData]);
 
+  // Formik instance for form handling and validation
   const formik = useFormik({
     initialValues: {
       role: editData ? editData.name : null,
@@ -272,7 +273,6 @@ const RoleForm = ({ handleClose, editData }: any) => {
         <Scrollbar
           sx={{
             p: 3,
-            // bgcolor: 'background.neutral',
             height: 'calc(100vh - 150px)',
           }}
         >
@@ -291,32 +291,6 @@ const RoleForm = ({ handleClose, editData }: any) => {
               onBlur={formik.handleBlur}
             />
           </Box>
-          {/* <Divider sx={{ mt: 1 }} /> */}
-          {/* <FormControlLabel
-            control={
-              <Checkbox
-                checked={allPermissions.every((item: any) => item.isGranted)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setAllPermissions((pre: any) =>
-                      pre.map((item: any) => ({ ...item, isGranted: true }))
-                    );
-                  } else {
-                    setAllPermissions((pre: any) =>
-                      pre.map((item: any) => ({ ...item, isGranted: false }))
-                    );
-                  }
-                }}
-              />
-            }
-            label="Give All Permission"
-          /> */}
-
-          {/* <ModuleTable
-            data={organizePermissions(modulePermissionData)}
-            allPermissions={allPermissions}
-            setAllPermissions={setAllPermissions}
-          /> */}
           <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
         </Scrollbar>
         <DialogActions sx={{ flexShrink: 0 }}>
@@ -367,10 +341,25 @@ const ModuleTable = ({ data, allPermissions, setAllPermissions }: any) => {
   );
 };
 
-const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermissions }: any) => {
+// Component for rendering a row in the permissions table
+// Props:
+// - item: permission item data
+// - handlePermissionClick: callback for permission click events
+// - allPermissions: array of all available permissions
+// - setAllPermissions: function to update permissions state
+
+const RowComponent = ({
+  item,
+  handlePermissionClick,
+  allPermissions,
+  setAllPermissions,
+}: IRowComponentProps) => {
+  // State to control collapse/expand of row
   const collapse = useBoolean();
+
+  // Callback to render secondary content (nested permissions) for each row
   const renderSecondary = useCallback(
-    (data: any, allPer: any) => (
+    (data: IPermission[], allPer: IPermission[]) => (
       <TableRow>
         <Collapse
           in={collapse.value}
@@ -381,7 +370,7 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermi
           // @ts-ignore
           colSpan={3}
         >
-          {data.map((ite: any) => (
+          {data.map((ite: IPermission) => (
             <Paper
               sx={{
                 m: 1,
@@ -393,21 +382,24 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermi
               }}
             >
               <Box display="flex" alignItems="center">
+                {/* Checkbox to toggle all child permissions */}
                 <Checkbox
                   checked={ite.children.every(
-                    (el: any) => !!allPermissions.find((i: any) => i.name === el.name).isGranted
+                    (el) => !!allPermissions.find((i) => i.name === el.name)?.isGranted
                   )}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      const newData = ite.children.map((el: any) => ({
+                      // Enable all child permissions
+                      const newData = ite.children.map((el) => ({
                         ...el,
                         isGranted: true,
                       }));
                       const uniqData = _.unionBy([...newData, ...allPermissions], 'name');
                       setAllPermissions(uniqData);
                     } else {
-                      const removeItem = allPermissions.map((el: any) =>
-                        ite.children.some((i: any) => i.name === el.name)
+                      // Disable all child permissions
+                      const removeItem = allPermissions.map((el) =>
+                        ite.children.some((i) => i.name === el.name)
                           ? { ...el, isGranted: false }
                           : el
                       );
@@ -418,6 +410,7 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermi
                 {ite?.displayName}
               </Box>
               <Box flexGrow={1}>
+                {/* Container for permission labels */}
                 <Stack
                   direction="row"
                   spacing={1}
@@ -425,8 +418,9 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermi
                   flexWrap="wrap"
                   justifyContent="flex-end"
                 >
-                  {ite.children.map((el: any) => {
-                    const isGranted = allPer.find((i: any) => i.name === el.name)?.isGranted;
+                  {ite.children.map((el) => {
+                    // Check if permission is granted
+                    const isGranted = allPer.find((i) => i.name === el.name)?.isGranted;
                     return (
                       <Label
                         color={isGranted ? 'success' : 'error'}
@@ -446,8 +440,10 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermi
     ),
     [allPermissions, collapse.value, handlePermissionClick, setAllPermissions]
   );
+
   return (
     <>
+      {/* Main row with collapse toggle */}
       <TableRow onClick={collapse.onToggle}>
         <TableCell>
           {/* <FormControlLabel
@@ -462,6 +458,7 @@ const RowComponent = ({ item, handlePermissionClick, allPermissions, setAllPermi
           {item?.displayName}
         </TableCell>
         <TableCell>
+          {/* Collapse toggle button */}
           <IconButton
             color={collapse.value ? 'inherit' : 'default'}
             onClick={(e) => {

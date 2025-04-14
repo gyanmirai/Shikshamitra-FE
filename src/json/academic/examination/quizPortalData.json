@@ -1,0 +1,68 @@
+[
+    {
+      "id": "1",
+      "question": "What is the capital of France?",
+      "questionType": "multiple-choice",
+      "options": [
+        { "value": "paris", "label": "Paris" },
+        { "value": "london", "label": "London" },
+        { "value": "berlin", "label": "Berlin" }
+      ],
+      "isRequired": true,
+      "correctAnswer": "paris",
+      "marks": 5
+    },
+    {
+      "id": "2",
+      "question": "The Earth is flat.",
+      "questionType": "trueFalse",
+      "options": [
+        { "value": "true", "label": "True" },
+        { "value": "false", "label": "False" }
+      ],
+      "isRequired": true,
+      "correctAnswer": "false",
+      "marks": 2
+    },
+    {
+      "id": "3",
+      "question": "Explain the concept of gravity in your own words.",
+      "questionType": "shortAns",
+      "isRequired": false,
+      "correctAnswer": null,
+      "marks": 8
+    },
+    {
+      "id": "4",
+      "question": "Match the following: Apple - Fruit, Carrot - Vegetable, Rose - Flower",
+      "questionType": "matchTheFollowing",
+      "pairs": [
+        {
+          "left": "Apple",
+          "rightOptions": ["Fruit", "Vegetable", "Flower"],
+          "correct": "Fruit"
+        },
+        {
+          "left": "Carrot",
+          "rightOptions": ["Fruit", "Vegetable", "Flower"],
+          "correct": "Vegetable"
+        },
+        {
+          "left": "Rose",
+          "rightOptions": ["Fruit", "Vegetable", "Flower"],
+          "correct": "Flower"
+        }
+      ],
+      "isRequired": true,
+      "marks": 6
+    },
+    {
+      "id": "5",
+      "question": "Upload a diagram of the water cycle.",
+      "questionType": "fileUpload",
+      "isRequired": false,
+      "fileType": ["image/png", "image/jpeg", "application/pdf"],
+      "marks": 4
+    }
+  ]
+  

@@ -8,8 +8,6 @@ import {
   Grid,
   Button,
   Switch,
-  MenuList,
-  MenuItem,
   TextField,
   DialogActions,
   DialogContent,
@@ -20,6 +18,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -29,7 +29,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { announcementImpValidationSchema } from './validationSchema';
 
-import type { TAnnouncementImportant } from './type';
+import type { ImportantFormProps, TAnnouncementImportant } from './type';
 
 const initialImportantData: TAnnouncementImportant[] = [
   {
@@ -48,7 +48,7 @@ const initialImportantData: TAnnouncementImportant[] = [
     id: 3,
     importantLevel: 'Low',
     importantLevelDesc: 'General updates that are informative but not time-sensitive.',
-    status: 'UnPublish',
+    status: 'Draft',
   },
   {
     id: 4,
@@ -60,7 +60,7 @@ const initialImportantData: TAnnouncementImportant[] = [
     id: 5,
     importantLevel: 'Informational',
     importantLevelDesc: 'Updates for awareness without immediate action required.',
-    status: 'UnPublish',
+    status: 'Draft',
   },
 ];
 
@@ -175,12 +175,14 @@ const AnnouncementImportant = () => {
           {
             id: 'status',
             label: 'Publish',
+            filterType: 'enum',
+            enumOptions: PublishUnpublishStatusOptions,
             render: (value: string, row: any) => (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
                   size="small"
                   checked={value === 'Publish'}
-                  onChange={() => handleStatusChange(row.id, value as string)}
+                  onChange={() => handleStatusChange(row.id, value)}
                 />
               </Box>
             ),
@@ -188,37 +190,26 @@ const AnnouncementImportant = () => {
           {
             id: 'action',
             label: 'Action',
+            minWidth: 100,
+            isSort: false,
+            align: 'left',
+            isFilter: false,
+            sticky: true,
             render: (_, row) => (
               <ThreeDotsActions
                 placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {row.status === 'UnPublish' && (
-                      <MenuItem
-                        onClick={() => {
-                          dialog.onTrue();
-                          setSelectedImportant(row);
-                          setIsEdit(true);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-
-                    <MenuItem
-                      onClick={() => {
-                        confirmDeleteDialog.onTrue();
-                        setSelectedImportant(row);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
+                showEditIcon
+                showDeleteIcon
+                handleEditClick={() => {
+                  dialog.onTrue();
+                  setSelectedImportant(row);
+                  setIsEdit(true);
+                }}
+                handleDeleteClick={() => {
+                  confirmDeleteDialog.onTrue();
+                  setSelectedImportant(row);
+                }}
+                showThreeDots={false}
               />
             ),
           },
@@ -285,19 +276,6 @@ const AnnouncementImportant = () => {
 };
 
 export default AnnouncementImportant;
-
-/**
- * Props interface for the ImportantForm component
- * @interface ImportantFormProps
- * @property {function} onSubmit - Callback function to handle form submission with form values
- * @property {any | null} [data] - Optional data object containing existing form values for editing
- * @property {boolean} [isEdit] - Optional flag indicating if the form is in edit mode
- */
-interface ImportantFormProps {
-  onSubmit: (values: any) => void;
-  data?: any | null;
-  isEdit?: boolean;
-}
 
 const ImportantForm: React.FC<ImportantFormProps> = ({
   onSubmit,
