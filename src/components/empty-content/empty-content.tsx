@@ -1,6 +1,8 @@
 import type { StackProps } from '@mui/material/Stack';
 import type { Theme, SxProps } from '@mui/material/styles';
 
+import React from 'react';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -10,8 +12,8 @@ import { varAlpha } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------
 
-export type EmptyContentProps = StackProps & {
-  title?: string;
+export type EmptyContentProps = Omit<StackProps, 'title'> & {
+  title?: React.ReactNode;
   imgUrl?: string;
   filled?: boolean;
   description?: string;
@@ -30,7 +32,7 @@ export function EmptyContent({
   filled,
   slotProps,
   description,
-  title = 'No data',
+  title = <>No data</>,
   ...other
 }: EmptyContentProps) {
   return (
@@ -61,7 +63,13 @@ export function EmptyContent({
         <Typography
           variant="h6"
           component="span"
-          sx={{ mt: 1, textAlign: 'center', ...slotProps?.title, color: 'text.disabled' }}
+          sx={{
+            mt: 1,
+            textAlign: 'center',
+            ...slotProps?.title,
+            color: 'text.disabled',
+            fontSize: '16px !important',
+          }}
         >
           {title}
         </Typography>
