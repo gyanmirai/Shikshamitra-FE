@@ -29,6 +29,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -52,7 +54,7 @@ const LeaveAndAbsentScreen = () => {
       division: 'A',
       student: 'John Doe',
       leaveType: 'Sick Leave',
-
+      id: '1',
       startDate: '01-05-2023',
       endDate: '03-05-2023',
       description: 'Fever and cold',
@@ -65,7 +67,7 @@ const LeaveAndAbsentScreen = () => {
       division: 'B',
       student: 'Jane Smith',
       leaveType: 'Personal Leave',
-
+      id: '2',
       startDate: '10-05-2023',
       endDate: '12-05-2023',
       description: 'Family event',
@@ -78,7 +80,7 @@ const LeaveAndAbsentScreen = () => {
       division: 'C',
       student: 'Alice Johnson',
       leaveType: 'Vacation',
-
+      id: '3',
       startDate: '01-06-2023',
       endDate: '07-06-2023',
       description: 'Summer vacation',
@@ -462,7 +464,13 @@ const LeaveRequestForm = () => {
                   />
                 </Grid>
                 <Grid item xs={12} display="flex" justifyContent="flex-end">
-                  <Button type="submit" variant="contained" size="small" color="primary">
+                  <Button
+                    startIcon={<Iconify icon={GlobalIcons.submit} />}
+                    type="submit"
+                    variant="contained"
+                    size="small"
+                    color="primary"
+                  >
                     RequestSubmit Leave
                   </Button>
                 </Grid>
