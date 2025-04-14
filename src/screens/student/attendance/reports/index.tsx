@@ -30,6 +30,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
 
@@ -205,10 +207,16 @@ const AbsentStudentReport = () => {
           </Box>
         </CardContent>
         <CardActions sx={{ justifyContent: 'flex-end' }}>
-          <Button variant="contained" color="primary" onClick={dialog.onTrue}>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.scheduledReport} />}
+            variant="outlined"
+            onClick={dialog.onTrue}
+          >
             Schedule Report
           </Button>
-          <Button variant="contained">Generate Report</Button>
+          <Button startIcon={<Iconify icon={GlobalIcons.generateReport} />} variant="contained">
+            Generate Report
+          </Button>
         </CardActions>
       </Card>
 

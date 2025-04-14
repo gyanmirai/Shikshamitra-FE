@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
+import { Create } from '@mui/icons-material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -17,11 +18,14 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './type';
@@ -730,10 +734,15 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button onClick={onClose} variant="outlined">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={onClose}
+            variant="outlined"
+          >
             Cancel
           </Button>
-          <Button type="submit" variant="contained">
+
+          <Button startIcon={<Create />} type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>

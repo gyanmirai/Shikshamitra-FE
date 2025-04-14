@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,53 +15,19 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-interface FinanceAddExpenseTrackingDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-}
+import { addExpenseDialogValidationSchema } from '../validationSchema';
 
-interface FormikValue {
-  expenseCategory: string;
-  expenseAmount: string;
-  paymentMethod: string;
-  date: any;
-  paymentStatus: string;
-  id: number;
-  expenseName: string;
-  notes?: string;
-}
+import type {
+  IFormikValue,
+  IFinanceAddExpenseTrackingDialogProps,
+} from '../add-expense-dialog-interface';
 
-const validationSchema = Yup.object().shape({
-  expenseCategory: Yup.string().required('Expense category is required'),
-
-  expenseAmount: Yup.string()
-    .required('Expense amount is required')
-    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-      const numericValue = Number(value);
-      return numericValue > 0;
-    }),
-
-  paymentMethod: Yup.string().required('Payment method is required'),
-
-  date: Yup.date().required('Date is required').typeError('Invalid date'),
-
-  paymentStatus: Yup.string().required('Payment status is required'),
-
-  expenseName: Yup.string().required('Expense name is required'),
-
-  notes: Yup.string().nullable(),
-});
-
-const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogProps> = ({
+const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialogProps> = ({
   dialogValue,
   data,
   onSave,
@@ -78,7 +43,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
   const dispatch = useDispatch();
 
   // Initialize form values based on whether we're editing or creating new expense
-  const initialValues = useMemo<FormikValue>(
+  const initialValues = useMemo<IFormikValue>(
     () => ({
       expenseCategory: isEdit ? (data.expenseCategory ?? '') : '',
       expenseAmount: isEdit ? (data.expenseAmount ?? '') : '',
@@ -96,9 +61,9 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
   );
 
   // Setup formik form handling with validation and submission logic
-  const formik = useFormik<FormikValue>({
+  const formik = useFormik<IFormikValue>({
     initialValues,
-    validationSchema,
+    validationSchema: addExpenseDialogValidationSchema,
     onSubmit: (values) => {
       // Normalize strings for case-insensitive comparison
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
@@ -303,9 +268,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<FinanceAddExpenseTrackingDialogP
           </Box>
 
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            <Button size="small" type="submit" variant="outlined">
-              Save
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </Box>
         </Card>
       </form>

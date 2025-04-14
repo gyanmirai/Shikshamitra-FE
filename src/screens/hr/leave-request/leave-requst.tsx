@@ -30,6 +30,7 @@ import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -426,21 +427,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </Grid>
             </Scrollbar>
             <DialogActions>
-              {!editData && (
-                <LoadingButton loading={isLoading} type="submit" variant="contained">
-                  Submit
-                </LoadingButton>
-              )}
+              {!editData && <SubmitButton loading={isLoading} />}
 
               {values.status === EmployeeLeaveStatusType.Rejected && (
-                <LoadingButton
-                  loading={isChangeStatusLoading}
-                  variant="contained"
-                  type="submit"
-                  sx={{ mt: 2 }}
-                >
-                  Submit
-                </LoadingButton>
+                <SubmitButton loading={isChangeStatusLoading} />
               )}
             </DialogActions>
           </BackPopUpChecked>

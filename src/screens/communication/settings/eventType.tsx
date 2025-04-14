@@ -21,6 +21,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -388,6 +390,8 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   setIsDraft(true);
                   formik.handleSubmit();
@@ -396,6 +400,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
                 Save Draft
               </Button>
               <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {

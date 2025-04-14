@@ -6,12 +6,12 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { FeeItem } from '../data/fee-structure-data';
+import type { IFeeItem } from '../fee-structure-interface';
 
 // import type { FeeItem } from '../data/fee-structure-data';
 
 interface ReadOnlyFeeStructureTableProps {
-  data: FeeItem[];
+  data: IFeeItem[];
 }
 
 const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ data }) => {

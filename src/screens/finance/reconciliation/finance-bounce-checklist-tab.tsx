@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { Add, Send } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -16,6 +17,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { varAlpha } from 'src/theme/styles';
@@ -23,6 +25,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -226,12 +229,20 @@ export const CommunicationForm = ({ handleCloseDialog }: any) => (
       </Box>
     </Scrollbar>
     <DialogActions>
-      <Button onClick={handleCloseDialog} variant="outlined" color="error">
+      <Button
+        startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        onClick={handleCloseDialog}
+        variant="outlined"
+      >
         Close
       </Button>
-      <Button onClick={handleCloseDialog} variant="contained">
+      <LoadingButton
+        startIcon={<Iconify icon={GlobalIcons.submit} />}
+        type="submit"
+        variant="contained"
+      >
         Submit
-      </Button>
+      </LoadingButton>
     </DialogActions>
   </Box>
 );

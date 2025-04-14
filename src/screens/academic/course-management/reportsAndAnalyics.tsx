@@ -11,9 +11,12 @@ import { Form, Field, Formik } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -171,7 +174,11 @@ const Reports = (props: TabComponentType) => {
                   </Grid>
                   {/* Submit Button */}
                   <Grid item xs={12} justifyContent="flex-end" display="flex">
-                    <Button type="submit" variant="contained">
+                    <Button
+                      startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                      type="submit"
+                      variant="contained"
+                    >
                       Generate Report
                     </Button>
                   </Grid>

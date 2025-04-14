@@ -9,6 +9,8 @@ import { Box, Stack, Button, TextField, DialogActions, createFilterOptions } fro
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import {
@@ -18,6 +20,7 @@ import {
   useUpdateDocumentMutation,
 } from 'src/redux/document/documentApi';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -185,10 +188,19 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton loading={isLoading || isUpdateLoading} variant="contained" type="submit">
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          loading={isLoading || isUpdateLoading}
+          variant="contained"
+          type="submit"
+        >
           Submit
         </LoadingButton>
       </DialogActions>

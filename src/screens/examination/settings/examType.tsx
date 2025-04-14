@@ -3,6 +3,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Create } from '@mui/icons-material';
 import {
   Box,
   Grid,
@@ -16,6 +17,8 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -308,6 +311,7 @@ const ExamTypeForm: React.FC<ExamTypeFormProps> = ({ onSubmit, data = null, isEd
         <DialogActions>
           {isEdit ? (
             <Button
+              startIcon={<Create />}
               variant="contained"
               onClick={() => {
                 setIsDraft(true);
@@ -319,6 +323,8 @@ const ExamTypeForm: React.FC<ExamTypeFormProps> = ({ onSubmit, data = null, isEd
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   setIsDraft(true);
                   formik.handleSubmit();
@@ -327,6 +333,7 @@ const ExamTypeForm: React.FC<ExamTypeFormProps> = ({ onSubmit, data = null, isEd
                 Save Draft
               </Button>
               <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {
@@ -636,6 +643,7 @@ const AssessmentTypeForm: React.FC<AssessmentTypeFormProps> = ({
         <DialogActions>
           {isEdit ? (
             <Button
+              startIcon={<Create />}
               variant="contained"
               onClick={() => {
                 setIsDraft(true);
@@ -647,6 +655,8 @@ const AssessmentTypeForm: React.FC<AssessmentTypeFormProps> = ({
           ) : (
             <>
               <Button
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 onClick={() => {
                   setIsDraft(true);
                   formik.handleSubmit();
@@ -655,6 +665,7 @@ const AssessmentTypeForm: React.FC<AssessmentTypeFormProps> = ({
                 Save Draft
               </Button>
               <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
                 type="submit"
                 variant="contained"
                 onClick={() => {

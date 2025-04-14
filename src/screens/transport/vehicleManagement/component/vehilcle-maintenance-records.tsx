@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { Box, Button, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -157,6 +158,7 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
     <>
       <Box py="20px" display="flex" flexDirection="row" justifyContent="flex-end">
         <Button
+          startIcon={<Add />}
           variant="contained"
           size="small"
           onClick={() => {

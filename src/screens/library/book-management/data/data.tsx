@@ -277,3 +277,19 @@ export const booksData: IBook[] = [
     ],
   },
 ];
+
+// Dummy data for reservation list
+export const reservationData = [
+  { memberName: 'Tom Brown', status: 'Notified', dueDate: '5-11-2024' },
+  { memberName: 'John Doe', status: 'Notified', dueDate: '11-11-2024' },
+  { memberName: 'Michael Johnson', status: 'Notified', dueDate: '12-11-2024' },
+
+  { memberName: 'Jane Smith', status: 'Waiting', dueDate: '' },
+
+  { memberName: 'Lucy Green', status: 'Waiting', dueDate: '' },
+];
+export const paymentModes = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'online', label: 'Online Payment' },
+  { value: 'bank', label: 'Bank Transfer' },
+];

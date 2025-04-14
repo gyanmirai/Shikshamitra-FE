@@ -30,6 +30,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -586,7 +588,11 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
           <AnnouncementDetails announcement={viewAnnouncement} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={view_dialog.onFalse} variant="outlined">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={view_dialog.onFalse}
+            variant="outlined"
+          >
             Close
           </Button>
         </DialogActions>

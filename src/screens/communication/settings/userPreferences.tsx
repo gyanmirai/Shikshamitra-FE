@@ -18,7 +18,11 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
+import { Iconify } from 'src/components/iconify/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const UserPreferences = (props: TabComponentType) => (
@@ -221,8 +225,10 @@ const UserPreferences = (props: TabComponentType) => (
       </Grid>
     </Box>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
-      <Button variant="contained">Reset to Default</Button>
-      <Button variant="contained">Apply Changes</Button>
+      <Button startIcon={<Iconify icon={GlobalIcons.resetIcon} />} variant="outlined">
+        Reset to Default
+      </Button>
+      <SubmitButton onClick={() => {}} />
     </Box>
   </Box>
 );

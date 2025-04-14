@@ -32,6 +32,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -261,7 +262,7 @@ const TakeAttendanceScreen = () => {
           <Button
             size="small"
             variant="contained"
-            startIcon={<Stack />}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
             onClick={() => {
               handleSave();
             }}

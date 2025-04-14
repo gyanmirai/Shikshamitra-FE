@@ -1,15 +1,6 @@
-export interface FeeItem {
-  feeHead: string;
-  grossFee: number;
-  payableFee: number;
-  generalDiscount: number;
-  paymentMethod: string[];
-  lateFeeChargesType: 'fixed' | 'perDay';
-  lateFeeChargesAmount: string;
-  isActive: boolean;
-}
+import type { IFeeItem } from '../fee-structure-interface';
 
-export const feestructureDummyData: FeeItem[] = [
+export const feestructureDummyData: IFeeItem[] = [
   {
     feeHead: 'Admission',
     grossFee: 1000,

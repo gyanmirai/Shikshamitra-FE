@@ -22,6 +22,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { varAlpha } from 'src/theme/styles';
@@ -39,6 +40,7 @@ import {
 } from 'src/redux/student/follow-up/follow-up-api';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -304,10 +306,19 @@ export const CommunicationForm = ({
         />
       </Box>
       <DialogActions>
-        <Button onClick={handleCloseDialog} variant="outlined" color="error">
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={handleCloseDialog}
+          variant="outlined"
+        >
           Close
         </Button>
-        <LoadingButton loading={isAddLoading} type="submit" variant="contained">
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          loading={isAddLoading}
+          type="submit"
+          variant="contained"
+        >
           Submit
         </LoadingButton>
       </DialogActions>

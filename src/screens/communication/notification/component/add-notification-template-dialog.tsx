@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 
 const placeholderOptions = [
   { label: 'Fee Type', value: '[Fee Type]' },
@@ -161,9 +162,7 @@ const AddNotificationTemplateDialog = () => {
 
       {/* Dialog Actions */}
       <DialogActions>
-        <Button type="submit" variant="outlined" color="primary">
-          Save
-        </Button>
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </form>
   );

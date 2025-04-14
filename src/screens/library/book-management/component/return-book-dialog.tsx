@@ -13,6 +13,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
@@ -25,21 +26,17 @@ import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface ReturnBookDialogProps {
-  dialogValue: boolean;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  data?: any; // Data for selected book and member
-  bookData: any[]; // List of books
-  memberData: any[]; // List of members
-}
+import { paymentModes, reservationData } from '../data/data';
 
-const ReturnBookDialog: React.FC<ReturnBookDialogProps> = ({
+import type { IReturnBookDialogProps } from '../book-management-interface';
+
+const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
   dialogValue,
   onSave,
   onClose,
   data,
   bookData,
+
   memberData,
 }) => {
   const formik = useFormik<any>({
@@ -100,22 +97,6 @@ const ReturnBookDialog: React.FC<ReturnBookDialogProps> = ({
       formik.setFieldValue('accountHolder', '');
     }
   };
-
-  // Dummy data for reservation list
-  const reservationData = [
-    { memberName: 'Tom Brown', status: 'Notified', dueDate: '5-11-2024' },
-    { memberName: 'John Doe', status: 'Notified', dueDate: '11-11-2024' },
-    { memberName: 'Michael Johnson', status: 'Notified', dueDate: '12-11-2024' },
-
-    { memberName: 'Jane Smith', status: 'Waiting', dueDate: '' },
-
-    { memberName: 'Lucy Green', status: 'Waiting', dueDate: '' },
-  ];
-  const paymentModes = [
-    { value: 'cash', label: 'Cash' },
-    { value: 'online', label: 'Online Payment' },
-    { value: 'bank', label: 'Bank Transfer' },
-  ];
 
   return (
     <CustomDialog title="Return Book" open={dialogValue} handleClose={onClose} maxWidth="md">
@@ -389,7 +370,12 @@ const ReturnBookDialog: React.FC<ReturnBookDialogProps> = ({
           </Scrollbar>
 
           <DialogActions>
-            <Button type="submit" variant="contained" size="small">
+            <Button
+              type="submit"
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
+            >
               Mark As Returned
             </Button>
           </DialogActions>

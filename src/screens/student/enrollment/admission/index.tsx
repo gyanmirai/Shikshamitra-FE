@@ -38,6 +38,7 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import calculateAge from 'src/utils/calculate-age';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
@@ -70,6 +71,8 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -1352,8 +1355,13 @@ const AssignDivisionForm = ({
         />
       </Box>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <LoadingButton loading={isLoading} type="submit" variant="contained">
+        <CancelButton onClick={handleClose} />
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.assigned} />}
+          loading={isLoading}
+          type="submit"
+          variant="contained"
+        >
           Assign
         </LoadingButton>
       </DialogActions>
@@ -1436,10 +1444,8 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
         />
       </Box>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <LoadingButton loading={isLoading} type="submit" variant="contained">
-          Submit
-        </LoadingButton>
+        <CancelButton onClick={handleClose} />
+        <SubmitButton loading={isLoading} />
       </DialogActions>
     </Box>
   );

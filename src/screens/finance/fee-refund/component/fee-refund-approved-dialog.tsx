@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,6 +10,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -222,12 +223,17 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
         </Grid>
       </Scrollbar>
       <DialogActions>
-        <Button disabled={!isSaveEnabled} type="submit" variant="contained" size="small">
-          Approved
-        </Button>
-        <Button disabled={!isSaveEnabled} type="submit" variant="contained" size="small">
-          Reject
-        </Button>
+        <SubmitButton
+          onClick={() => {}}
+          buttonText="Reject"
+          variant="outlined"
+          startIcon={<Iconify icon="material-symbols:cancel-outline-rounded" />}
+        />
+        <SubmitButton
+          onClick={() => {}}
+          buttonText="Approved"
+          startIcon={<Iconify icon="material-symbols:check-circle-outline-rounded" />}
+        />
       </DialogActions>
     </CustomDialog>
   );

@@ -12,11 +12,14 @@ import {
   DialogContent,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { UploadBox } from 'src/components/upload/upload-box';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { allStudents } from '../notification-data';
 import CommunicationChannel from './communication-channel-component';
 
 const SendCustomAlert = () => {
@@ -108,62 +111,6 @@ const SendCustomAlert = () => {
     );
   };
 
-  const [role, setRole] = useState('student');
-  const [classFilter, setClassFilter] = useState('');
-  const [divisionFilter, setDivisionFilter] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
-
-  const allStudents = [
-    {
-      id: 1,
-      name: 'Alice Johnson',
-      class: 'Class 1',
-      division: 'A',
-      organization: 'Org 1',
-      contactNumber: '9187654576',
-      email: 'abc@gmail.com',
-    },
-    {
-      id: 2,
-      name: 'Bob Smith',
-      class: 'Class 2',
-      division: 'B',
-      organization: 'Org 2',
-      contactNumber: '9187654576',
-      email: 'abc@gmail.com',
-    },
-    {
-      id: 3,
-      name: 'Charlie Brown',
-      class: 'Class 1',
-      division: 'A',
-      organization: 'Org 1',
-      contactNumber: '9187654576',
-      email: 'abc@gmail.com',
-    },
-    {
-      id: 4,
-      name: 'David Williams',
-      class: 'Class 3',
-      division: 'C',
-      organization: 'Org 3',
-      contactNumber: '9187654576',
-      email: 'abc@gmail.com',
-    },
-    {
-      id: 5,
-      name: 'Emma Davis',
-      class: 'Class 2',
-      division: 'B',
-      organization: 'Org 2',
-      contactNumber: '9187654576',
-      email: 'abc@gmail.com',
-    },
-  ];
-
-  const handleSendAlert = () => {
-    console.log('Sending alert to:', selectedStudents, 'Message:', alertMessage);
-  };
   return (
     <form onSubmit={formik.handleSubmit}>
       <DialogContent>
@@ -216,10 +163,18 @@ const SendCustomAlert = () => {
             </Grid>
 
             <Grid item xs={12} display="flex" justifyContent="flex-end" gap={2}>
-              <Button type="button" variant="outlined" color="primary" size="small">
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.resetFilter} />}
+                type="button"
+                variant="outlined"
+              >
                 Reset Filter
               </Button>
-              <Button type="button" variant="outlined" color="primary" size="small">
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.applyFilter} />}
+                type="button"
+                variant="outlined"
+              >
                 Apply Filter
               </Button>
             </Grid>

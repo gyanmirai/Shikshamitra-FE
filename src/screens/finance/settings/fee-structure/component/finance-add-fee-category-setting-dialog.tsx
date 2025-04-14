@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,67 +19,16 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import { feeStructurevalidationSchema } from '../validationSchema';
 import FinanceAddedFeeHeadForFeeStructure from './finance-added-fee-head-for-fee-structure';
 
-const validationSchema = Yup.object({
-  bookRecipt: Yup.string().required('Receipt Book is required'),
-  applicableGrade: Yup.string().required('Applicable Grade is required'),
-  feeHead: Yup.string().required('Fee Category is required'),
-  grossFee: Yup.string().required('Gross Fee is required'),
-  discountAmount: Yup.string()
-    .transform((value) => value.replace(/[^0-9.]/g, ''))
-    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-      if (!value) return true; // Allow empty values (optional)
-      const numericValue = Number(value);
-      return numericValue > 0;
-    }),
+import type {
+  IFormikValue,
+  IFeeStructure,
+  IFinanceAddFeeCategorySettingDialogProps,
+} from '../fee-structure-interface';
 
-  // discountRemark: Yup.string().required('Discount Remark is required'),
-  // payableFee: Yup.string().required('Payable Fee is required'),
-  paymentMethod: Yup.array().min(1, 'At least one Payment Method is required'),
-  paymentDueDate: Yup.date().required('Payment Due Date is required'),
-
-  // lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
-  lateFeeChargesAmount: Yup.string()
-    .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-    .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-      if (!value) return true; // Allow empty values when not required
-      return Number(value) > 0;
-    })
-    .when('lateFeeChargesType', {
-      is: 'perDay',
-      then: (schema) => schema.required('Late Fee Charges Amount is required when type is per day'),
-    }),
-});
-
-interface FinanceAddFeeCategorySettingDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-}
-
-interface FormikValue {
-  id: number;
-  bookRecipt: string;
-  applicableGrade: string;
-  feeHead: string;
-  grossFee: string;
-  discountAmount: string;
-  discountRemark: string;
-  payableFee: string;
-  paymentMethod: string[];
-  paymentDueDate: any;
-  multipleApplicableGrade: string[];
-  chargesType: string;
-
-  lateFeeChargesType: string;
-  lateFeeChargesAmount: string;
-}
-
-const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingDialogProps> = ({
+const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySettingDialogProps> = ({
   dialogValue,
   data,
   onClose,
@@ -88,29 +36,16 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   isEdit,
   allData,
 }) => {
-  interface FeeStructure {
-    feeHead: string;
-    grossFee: string;
-    discountAmount: string;
-    discountRemark: string;
-    payableFee: string;
-    paymentMethod: string[];
-    lateFeeChargesAmount: string;
-    lateFeeChargesType: string;
-    applicableGrade: string;
-    bookRecipt: string;
-  }
-
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State to store the list of fee structures
-  const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<FeeStructure[]>([]);
+  const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<IFeeStructure[]>([]);
   // State to control whether receipt book & grade fields should be disabled
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
 
   // Initial form values with default/empty values
-  const initialValues = useMemo<FormikValue>(
+  const initialValues = useMemo<IFormikValue>(
     () => ({
       id: Math.floor(Math.random() * 10000),
       bookRecipt: '',
@@ -131,9 +66,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
   );
 
   // Initialize formik form handling with validation and submission logic
-  const formik = useFormik<FormikValue>({
+  const formik = useFormik<IFormikValue>({
     initialValues,
-    validationSchema,
+    validationSchema: feeStructurevalidationSchema,
     onSubmit: (values) => {
       // Check if the fee head combination already exists
       const isDuplicate = feeHeadListForFeeStructure.some(
@@ -148,13 +83,13 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
       }
 
       // Add new fee structure to the list
-      setFeeHeadListForFeeStructure((prev: FeeStructure[]) => [
+      setFeeHeadListForFeeStructure((prev: IFeeStructure[]) => [
         ...prev,
         {
           ...values,
           lateFeeChargesAmount:
             values.lateFeeChargesType === 'none' ? 0 : values.lateFeeChargesAmount,
-        } as FeeStructure,
+        } as IFeeStructure,
       ]);
 
       // Disable receipt book & grade fields after first entry
@@ -251,7 +186,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<FinanceAddFeeCategorySettingD
             >
               Add For Other Class
             </Button>
-            <Button variant="contained" size="small" onClick={handleSubmit}>
+            <Button
+              startIcon={<Iconify icon="material-symbols-light:save" />}
+              variant="contained"
+              size="small"
+              onClick={handleSubmit}
+            >
               Submit
             </Button>
           </Box>

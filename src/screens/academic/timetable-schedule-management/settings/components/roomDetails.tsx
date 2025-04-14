@@ -3,6 +3,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { Create } from '@mui/icons-material';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -292,7 +293,7 @@ const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" variant="contained">
+          <Button startIcon={<Create />} type="submit" variant="contained">
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>

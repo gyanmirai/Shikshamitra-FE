@@ -31,6 +31,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -536,7 +538,11 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           <AnnouncementDetails announcement={viewAnnouncement} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={view_dialog.onFalse} variant="outlined">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={view_dialog.onFalse}
+            variant="outlined"
+          >
             Close
           </Button>
         </DialogActions>

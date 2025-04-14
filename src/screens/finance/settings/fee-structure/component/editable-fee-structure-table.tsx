@@ -1,63 +1,20 @@
 import React from 'react';
-import * as Yup from 'yup';
 import { useFormik, FieldArray, FormikProvider } from 'formik';
 
-import {
-  Box,
-  Button,
-  Switch,
-  TextField,
-  Typography,
-  FormControl,
-  FormHelperText,
-} from '@mui/material';
+import { Box, Switch, TextField, Typography, FormControl, FormHelperText } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-import type { FeeItem } from '../data/fee-structure-data';
+import { editFeeStructureValidationSchema } from '../validationSchema';
 
-const validationSchema = Yup.object({
-  fees: Yup.array().of(
-    Yup.object().shape({
-      feeHead: Yup.string().required('Fee Head is required'),
-      grossFee: Yup.string()
-        .required('Income amount is required')
-        .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-          const numericValue = Number(value);
-          return numericValue > 0;
-        }),
-      generalDiscount: Yup.string()
-        .required('Income amount is required')
-        .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-          const numericValue = Number(value);
-          return numericValue > -1;
-        }),
-      payableFee: Yup.number().required('Payable Fee is required'),
-      paymentMethod: Yup.array().min(1, 'At least one payment method is required'),
-      lateFeeChargesType: Yup.string().required('Late Fee Charges Type is required'),
-      lateFeeChargesAmount: Yup.string()
-        .required('Income amount is required')
-        .transform((value) => value.replace(/[^0-9.]/g, '')) // Remove non-numeric characters
-        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
-          const numericValue = Number(value);
-          return numericValue > 0;
-        }),
-      active: Yup.boolean().required('Status is required'),
-    })
-  ),
-});
+import type { IEditableFeeStructureTableProps } from '../fee-structure-interface';
 
-interface EditableFeeStructureTableProps {
-  data: FeeItem[];
-}
-
-const EditableFeeStructureTable: React.FC<EditableFeeStructureTableProps> = ({ data }) => {
+const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ data }) => {
   const chargesTypeList = [
     { value: 'none', label: 'None' },
     { value: 'fixed', label: 'Fixed' },
@@ -78,7 +35,7 @@ const EditableFeeStructureTable: React.FC<EditableFeeStructureTableProps> = ({ d
         payableFee: fee.grossFee - fee.generalDiscount, // Auto calculate on load
       })),
     },
-    validationSchema,
+    validationSchema: editFeeStructureValidationSchema,
     onSubmit: (values) => {
       console.log('Updated Values:', values);
     },
@@ -357,9 +314,7 @@ const EditableFeeStructureTable: React.FC<EditableFeeStructureTableProps> = ({ d
           </Box>
 
           <Box display="flex" justifyContent="flex-end" sx={{ mt: '50px' }}>
-            <Button size="small" type="submit" variant="outlined">
-              Submit
-            </Button>
+            <SubmitButton onClick={() => {}} />
           </Box>
         </Box>
       </form>

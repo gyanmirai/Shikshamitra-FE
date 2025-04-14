@@ -6,8 +6,9 @@ import isEqual from 'lodash/isEqual';
 import React, { useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, TextField, Typography } from '@mui/material';
+import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
@@ -16,12 +17,13 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
-import { vehicleValidationSchema } from '../validationSchema';
+import { vehicleManagementValidationSchema } from '../validationSchema';
 
-import type { IVehicleFormDialogProps } from '../interface/vehicle-interface';
+import type { IVehicleFormDialogProps } from '../vehicle-management-interface';
 
 const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
   vehicle,
@@ -57,7 +59,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
   // Initialize formik for form handling with validation and submission logic
   const formik = useFormik<any>({
     initialValues,
-    validationSchema: vehicleValidationSchema,
+    validationSchema: vehicleManagementValidationSchema,
     onSubmit: (values: any) => {
       console.log('Form Submitted:', values);
       // onSave(values);
@@ -419,11 +421,14 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
           </Grid>
 
-          <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            <Button size="small" type="submit" variant="contained">
-              {isEdit ? 'Update' : 'Save'}
-            </Button>
-          </Box>
+          <DialogActions>
+            {isEdit && (
+              <Button startIcon={<Create />} variant="outlined" type="submit">
+                Update
+              </Button>
+            )}
+            {!isEdit && <SubmitButton onClick={() => {}} />}
+          </DialogActions>
         </Card>
       </form>
     </Box>

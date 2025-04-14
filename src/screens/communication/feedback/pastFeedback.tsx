@@ -230,6 +230,13 @@ const ViewSummary = () => (
                 Download Report
               </Button>
             </Box>
+            <Button
+              startIcon={<Iconify icon="eva:download-fill" />}
+              variant="contained"
+              sx={{ justifySelf: 'flex-end', alignSelf: 'flex-end', mt: 1 }}
+            >
+              Download Report
+            </Button>
           </Card>
         </Grid>
         {/* Analytics visualization section */}

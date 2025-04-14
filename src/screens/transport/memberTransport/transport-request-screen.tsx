@@ -2,6 +2,7 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo, useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -283,6 +284,7 @@ const TransportRequestScreen = () => {
 
         <Box>
           <Button
+            startIcon={<Add />}
             onClick={() => {
               addNewRequestDialog.onTrue();
             }}

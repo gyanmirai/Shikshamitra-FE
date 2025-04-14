@@ -1,13 +1,13 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Button, TextField, DialogContent, DialogActions } from '@mui/material';
+import { TextField, DialogContent, DialogActions } from '@mui/material';
 
-interface AddEventListDialogProps {
-  onClose: () => void;
-}
+import SubmitButton from 'src/components/submit-button';
 
-const AddEventListDialog: React.FC<AddEventListDialogProps> = ({ onClose }) => {
+import type { IAddEventListDialogProps } from '../notification-interface';
+
+const AddEventListDialog: React.FC<IAddEventListDialogProps> = ({ onClose }) => {
   const formik = useFormik({
     initialValues: {
       eventName: '',
@@ -48,9 +48,7 @@ const AddEventListDialog: React.FC<AddEventListDialogProps> = ({ onClose }) => {
 
       {/* Dialog Actions */}
       <DialogActions>
-        <Button onClick={onClose} type="submit" variant="outlined" color="primary">
-          Save
-        </Button>
+        <SubmitButton onClick={onClose} />
       </DialogActions>
     </form>
   );

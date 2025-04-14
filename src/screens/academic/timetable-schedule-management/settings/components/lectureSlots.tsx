@@ -19,6 +19,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -26,6 +28,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -173,7 +176,11 @@ const AssignSlots = () => {
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" variant="contained">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            type="submit"
+            variant="contained"
+          >
             Save
           </Button>
         </DialogActions>
@@ -424,12 +431,10 @@ const CreateSlotsForm = () => {
           )}
         </Scrollbar>
         <DialogActions>
-          <Button type="submit" startIcon={<Iconify icon="" />} variant="outlined">
+          <Button type="submit" startIcon={<Iconify icon={GlobalIcons.eye} />} variant="outlined">
             Preview
           </Button>
-          <Button type="submit" variant="contained">
-            Save
-          </Button>
+          <SubmitButton />
         </DialogActions>
       </form>
     </Box>

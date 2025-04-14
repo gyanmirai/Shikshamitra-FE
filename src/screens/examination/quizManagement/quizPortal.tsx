@@ -16,6 +16,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify';
 
 // Styled components
@@ -184,10 +186,14 @@ const NavigationButtons = ({ currentQuestion, totalQuestions, onNext, onBack, on
       )}
     </Box>
     <Stack direction="row" spacing={2}>
-      <Button variant="outlined" onClick={onSkip}>
+      <Button
+        startIcon={<Iconify icon={GlobalIcons.skipIcon} />}
+        variant="outlined"
+        onClick={onSkip}
+      >
         Skip
       </Button>
-      <Button variant="contained" color="primary" onClick={onNext}>
+      <Button variant="contained" onClick={onNext}>
         Next
       </Button>
     </Stack>

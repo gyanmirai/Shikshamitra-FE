@@ -9,62 +9,11 @@ import { Iconify } from 'src/components/iconify/iconify';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import type { IFeeCollectionMonthWiseProps } from './fee-collection-monthwise-interface';
+
 // Define TypeScript interfaces for data structure
-interface PaymentHistory {
-  paymentMode: string;
-  amount: string;
-  paymentId?: string;
-  paymentStatus: string;
-}
 
-interface PaymentDueDate {
-  month: string;
-  date: string;
-  status: string;
-  amount: number;
-  paymentHistory: PaymentHistory[];
-}
-
-interface Fee {
-  feeHeadId: string;
-  feeHead: string;
-  grossFees: number;
-  payableFee: number;
-  generalDiscount: number;
-  acceptedpaymentMethod: string[];
-  lateFeeChargesType: string;
-  lateFeeChargesAmount: string;
-  isActive: boolean;
-  status: string;
-  paymentDueDate: string;
-  paymentDueDateList: PaymentDueDate[];
-}
-
-interface Student {
-  studentId: number;
-  name: string;
-  grade: number;
-  feestructureId: string;
-  paymentTerm: string;
-  totalPending: number;
-  totalPaid: number;
-  discountAmount: number;
-  fixedReduction: number;
-  overAllDueDate: string;
-  totalFees: number;
-  totalDueAfterDiscount: number;
-  previousCharges: number;
-  chargesDetails: string;
-  fees: Fee[];
-}
-
-interface FeeCollectionMonthWiseProps {
-  students: Student;
-  dialogValue: boolean;
-  onClose: () => void;
-}
-
-const FeeCollectionMonthWise: React.FC<FeeCollectionMonthWiseProps> = ({
+const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
   students,
   dialogValue,
   onClose,
@@ -83,7 +32,7 @@ const FeeCollectionMonthWise: React.FC<FeeCollectionMonthWiseProps> = ({
       maxWidth="lg"
       title={
         <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-          <Typography variant="h5">Yor Are Collecting Fees For Vishal</Typography>
+          <Typography variant="h5">You Are Collecting Fees For Vishal</Typography>
           <Tooltip
             arrow
             placement="right"
