@@ -1,0 +1,33 @@
+[
+    {
+      "id": 1,
+      "resourceTitle": "Math Resource 1",
+      "typeOfResource": "document",
+      "className": "1",
+      "subject": "Math",
+      "dateUploaded": "01-12-20",
+      "description": "Math resource description",
+      "status": "Publish"
+    },
+    {
+      "id": 2,
+      "resourceTitle": "Science Presentation",
+      "typeOfResource": "Audio",
+      "className": "1",
+      "subject": "Science",
+      "dateUploaded": "01-12-20",
+      "description": "Science resource description",
+      "status": "Unpublish"
+    },
+    {
+      "id": 3,
+      "resourceTitle": "Physics Video",
+      "typeOfResource": "Video",
+      "className": "1",
+      "subject": "Physics",
+      "dateUploaded": "01-12-20",
+      "description": "Physics video description",
+      "status": "Publish"
+    }
+  ]
+  

@@ -4,13 +4,13 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 import activeQuizTableData from 'src/json/academic/examination/activeQuizTableData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 
 import QuizPortal from '../quizPortal';
-import { quizData } from '../quizOptions';
 import QuizTable from './components/activeQuizTable';
 import AddNewQuiz from './components/quizFormComponent';
 
@@ -61,7 +61,7 @@ const ActiveQuiz = () => {
       </Box>
 
       {open ? (
-        <QuizPortal quizData={quizData} />
+        <QuizPortal quizData={quizPortalData} />
       ) : (
         <QuizTable
           data={tableData}

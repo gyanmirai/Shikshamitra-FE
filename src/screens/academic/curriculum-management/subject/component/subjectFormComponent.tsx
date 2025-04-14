@@ -31,40 +31,21 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './validationSchema';
+import { getSubjectInitialValues } from './initialValues';
 
-import type { ISubjectFormValues } from './type';
-import type { Document, TSubjectTable } from '../subject';
+import type { IDocument, ISubjectFormProps, ISubjectFormValues } from './type';
 
-interface SubjectFormProps {
-  onSubmit: (values: TSubjectTable) => void;
-  onClose: () => void;
-  data: TSubjectTable | null;
-  isEdit: boolean;
-}
-
-const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
+const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => {
   // State to track if the form is in draft mode - determined by edit status or existing data status
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
   // State to manage uploaded documents with initial value from existing data or empty array
-  const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
+  const [documents, setDocuments] = useState<IDocument[]>(data?.documents || []);
   // Flag to check if the subject is already published
   const isPublished = data?.status === 'Publish';
 
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: {
-      subjectCode: data?.subjectCode || '',
-      subjectName: data?.subjectName || '',
-      scheduleDate: data?.scheduleDate || dayjs(),
-      className: data?.className || '',
-      primaryTeacher: data?.primaryTeacher || '',
-      secondaryTeacher: data?.secondaryTeacher || [],
-      learningGoal: data?.learningGoal || '',
-      prerequisites: data?.prerequisites || '',
-      description: data?.description || '',
-      subjectColor: data?.subjectColor || '',
-      status: data?.status || 'Unpublish',
-    },
+    initialValues: getSubjectInitialValues(data),
     validationSchema,
     // Handle form submission with updated status based on draft mode
     onSubmit: (values) => {
@@ -85,7 +66,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
 
   // Handle file upload and create document objects with unique IDs
   const handleFileUpload = (files: File[]) => {
-    const newDocs: Document[] = files.map((file) => ({
+    const newDocs: IDocument[] = files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       url: URL.createObjectURL(file),
@@ -219,7 +200,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: SubjectFormProps) => {
               >
                 <DateTimePicker
                   label="Schedule Date"
-                  value={formik.values.scheduleDate}
+                  value={formik.values.scheduleDate ? dayjs(formik.values.scheduleDate) : null}
                   onChange={(value) => {
                     formik.setFieldValue('scheduleDate', value);
                   }}

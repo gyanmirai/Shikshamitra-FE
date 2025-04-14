@@ -2,25 +2,17 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useFormik } from 'formik';
 import React, { useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
 import {
   Box,
-  Grid,
   Card,
-  Stack,
   Switch,
   Button,
-  Divider,
   MenuItem,
   MenuList,
-  TextField,
-  Typography,
-  CardContent,
   ToggleButton,
-  DialogActions,
   ToggleButtonGroup,
 } from '@mui/material';
 
@@ -31,53 +23,21 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import learningResourceTableData from 'src/json/academic/syllabus/learningResourceTableData.json';
 
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { validationSchema } from './validationSchema';
+import CreateNewResource from './components/addResourceForm';
+import LearningResourceCard from './components/learningResourceCard';
 
-import type { TResourceData } from './type';
+import type { IResourceData } from './type';
 
 // Initial sample data for learning resources
-const resourceInitialData: TResourceData[] = [
-  {
-    id: 1,
-    resourceTitle: 'Math Resource 1',
-    typeOfResource: 'document',
-    className: '1',
-    subject: 'Math',
-    dateUploaded: '01-12-20',
-    description: 'Math resource description',
-    status: 'Publish',
-  },
-  {
-    id: 2,
-    resourceTitle: 'Science Presentation',
-    typeOfResource: 'Audio',
-    className: '1',
-    subject: 'Science',
-    dateUploaded: '01-12-20',
-    description: 'Science resource description',
-    status: 'Unpublish',
-  },
-  {
-    id: 3,
-    resourceTitle: 'Physics Video',
-    typeOfResource: 'Video',
-    className: '1',
-    subject: 'Physics',
-    dateUploaded: '01-12-20',
-    description: 'Physics video description',
-    status: 'Publish',
-  },
-];
+
 const LearningResources = (props: TabComponentType) => {
   // Get search parameters from props
   const { searchParams } = props;
@@ -91,10 +51,10 @@ const LearningResources = (props: TabComponentType) => {
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
   // State for managing selected resource entry and edit mode
-  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<IResourceData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   // State for storing all learning resources data
-  const [resourceData, setResourceData] = useState<TResourceData[]>(resourceInitialData);
+  const [resourceData, setResourceData] = useState<IResourceData[]>(learningResourceTableData);
   // const dialog = useBoolean();
   // State for confirmation dialog
   const confirm_dialog = useBoolean();
@@ -114,7 +74,7 @@ const LearningResources = (props: TabComponentType) => {
   } | null>(null);
 
   // Function to handle saving new or edited learning resources
-  const handleSave = (dataFromDialog: TResourceData) => {
+  const handleSave = (dataFromDialog: IResourceData) => {
     // If editing an existing resource
     if (isEdit && selectedEntry) {
       // Update the existing resource in the array
@@ -356,7 +316,7 @@ const LearningResources = (props: TabComponentType) => {
                         handleDeleteClick={() => {}}
                         handleEditClick={() => {
                           setIsEdit(true);
-                          setSelectedEntry(row);
+                          setSelectedEntry(row as IResourceData);
                           setParams({ isForm: true });
                         }}
                       />
@@ -381,309 +341,3 @@ const LearningResources = (props: TabComponentType) => {
 };
 
 export default LearningResources;
-
-// Interface defining the props for the LearningResourceCard component
-interface LearningResourceCardProps {
-  resourceTitle: string;
-  resourceType: string;
-  className: string;
-  subject: string;
-  dateUploaded: string;
-}
-
-// Component to display learning resource information in a card format
-const LearningResourceCard: React.FC<LearningResourceCardProps> = ({
-  resourceTitle,
-  resourceType,
-  className,
-  subject,
-  dateUploaded,
-}) => (
-  <Card sx={{ width: 344, height: 235, borderRadius: 4 }}>
-    <CardContent>
-      {/* Top PDF icon and title */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Iconify icon="mdi:file-pdf-box" width={40} height={40} color="#f44336" />
-        <Typography variant="h6" fontWeight="bold">
-          {resourceTitle}
-        </Typography>
-      </Box>
-
-      <Divider sx={{ my: 1.5 }} />
-
-      {/* Resource details */}
-      <Box display="flex" gap={2} color="gray">
-        <Box display="flex" flexDirection="column" justifyContent="space-between" gap={1}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Iconify icon="mdi:chart-box-outline" />
-            <Typography variant="body2">Type : {resourceType}</Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Iconify icon="mdi:clock-outline" />
-            <Typography variant="body2">Class : {className}</Typography>
-          </Box>
-        </Box>
-
-        <Box display="flex" flexDirection="column" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1}>
-            <Iconify icon="mdi:book-outline" />
-            <Typography variant="body2">Subject : {subject}</Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Iconify icon="mdi:calendar-account-outline" />
-            <Typography variant="body2">Date : {dateUploaded}</Typography>
-          </Box>
-        </Box>
-      </Box>
-
-      <Divider sx={{ my: 1.5 }} />
-
-      {/* Action buttons */}
-      <Stack direction="row" spacing={2} justifyContent="right">
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            backgroundColor: '#ff5722',
-            borderRadius: 1,
-            px: 3,
-            fontWeight: 'bold',
-            '&:hover': { backgroundColor: '#e64a19' },
-          }}
-          startIcon={<Iconify icon="mdi:download" />}
-        >
-          Download
-        </Button>
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            backgroundColor: '#212121',
-            borderRadius: 1,
-            px: 3,
-            fontWeight: 'bold',
-            '&:hover': { backgroundColor: '#000' },
-          }}
-          startIcon={<Iconify icon="mdi:share-variant" />}
-        >
-          Share
-        </Button>
-      </Stack>
-    </CardContent>
-  </Card>
-);
-
-// Interface for props used in CreateLearningResources component
-interface CreateLearningResourcesProps {
-  onSave: (values: TResourceData) => void;
-  onClose: () => void;
-  data: TResourceData | null;
-  isEdit: boolean;
-  currentClass: string;
-  currentSubject: string;
-}
-
-// Component for creating and editing learning resources
-const CreateNewResource: React.FC<CreateLearningResourcesProps> = ({
-  data,
-  onClose,
-  onSave,
-  isEdit,
-  currentClass,
-  currentSubject,
-}) => {
-  // State for managing messages and draft status
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
-
-  // Fetch class data using custom hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-
-  // Initialize formik for form handling
-  const formik = useFormik<TResourceData>({
-    // Set initial form values based on edit mode and existing data
-    initialValues: {
-      id: isEdit && data ? data.id : Date.now(),
-      resourceTitle: isEdit && data ? data.resourceTitle : '',
-      typeOfResource: isEdit && data ? data.typeOfResource : '',
-      className: currentClass,
-      subject: isEdit && data ? data.subject : currentSubject,
-      description: isEdit && data ? data.description : '',
-      dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
-      status: isEdit && data ? data.status : 'draft',
-    },
-    validationSchema,
-    // Handle form submission
-    onSubmit: (values) => {
-      const updatedValues = {
-        ...values,
-        status: isDraft ? 'Unpublish' : 'Publish',
-        dateUploaded: isEdit ? values.dateUploaded : new Date().toLocaleDateString(), // Only update if not in edit mode
-      };
-      onSave(updatedValues);
-    },
-  });
-
-  return (
-    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-      <Box display="flex" flexDirection="column" gap={2} height="100%">
-        {/* Scrollable container for form fields */}
-        <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container spacing={3}>
-            {/* Class selection dropdown */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.className && formik.errors.className) || false}
-              >
-                <CustomSelect
-                  options={classData?.items || []}
-                  value={formik.values.className}
-                  onChange={(val) => formik.setFieldValue('className', val as string)}
-                  label="Class"
-                  isLoading={isLoading}
-                  labelKey="name"
-                  valueKey="name"
-                  formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
-                  error={!!(formik.touched.className && formik.errors.className) || false}
-                  helperText={(formik.touched.className && formik.errors.className) || ''}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* Subject selection dropdown */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.subject && formik.errors.subject) || false}
-              >
-                <CustomSelect
-                  label="Subject"
-                  options={[
-                    { value: 'Math', label: 'Math' },
-                    { value: 'English', label: 'English' },
-                    { value: 'Science', label: 'Science' },
-                  ]}
-                  name="subject"
-                  value={formik.values.subject}
-                  onChange={(val) => formik.setFieldValue('subject', val as string)}
-                  formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
-                  error={!!(formik.touched.subject && formik.errors.subject) || false}
-                  helperText={(formik.touched.subject && formik.errors.subject) || ''}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* Resource title input */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.resourceTitle && formik.errors.resourceTitle) || false}
-              >
-                <TextField
-                  disabled={isEdit}
-                  label="Resource Title"
-                  size="small"
-                  name="resourceTitle"
-                  value={formik.values.resourceTitle}
-                  onChange={formik.handleChange}
-                  fullWidth
-                  error={!!(formik.touched.resourceTitle && formik.errors.resourceTitle) || false}
-                  helperText={(formik.touched.resourceTitle && formik.errors.resourceTitle) || ''}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* Resource type selection */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false}
-              >
-                <CustomSelect
-                  label="Select Resource Type"
-                  options={[
-                    { value: 'video', label: 'Video' },
-                    { value: 'audio', label: 'Audio' },
-                    { value: 'document', label: 'Document' },
-                  ]}
-                  value={formik.values.typeOfResource}
-                  onChange={(val) => {
-                    formik.setFieldValue('typeOfResource', val as string);
-                  }}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                  error={!!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false}
-                  helperText={(formik.touched.typeOfResource && formik.errors.typeOfResource) || ''}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* Description text area */}
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.description && formik.errors.description) || false}
-              >
-                <TextField
-                  label="Description"
-                  size="small"
-                  multiline
-                  rows={4}
-                  name="description"
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  fullWidth
-                  error={!!(formik.touched.description && formik.errors.description) || false}
-                  helperText={(formik.touched.description && formik.errors.description) || ''}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* File upload box */}
-            <Grid item xs={12}>
-              <UploadBox
-                onDrop={() => {}}
-                placeholder={
-                  <Box
-                    sx={{
-                      gap: 0.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Drag Your Document</Typography>
-                  </Box>
-                }
-                sx={{
-                  py: 2.5,
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        {/* Action buttons */}
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-            variant="outlined"
-            onClick={() => {
-              setIsDraft(true);
-              formik.handleSubmit();
-            }}
-          >
-            Save as Draft
-          </Button>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            type="submit"
-            variant="contained"
-            onClick={() => {
-              setIsDraft(false);
-              formik.handleSubmit();
-            }}
-          >
-            Save and Publish
-          </Button>
-        </DialogActions>
-      </Box>
-    </form>
-  );
-};

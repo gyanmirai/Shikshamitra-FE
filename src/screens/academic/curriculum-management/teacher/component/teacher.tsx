@@ -10,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import teacherTableData from 'src/json/academic/curriculum/teacherTableData.json';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -20,45 +21,7 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 
 import TeacherReassign from './teacherReassignForm';
 
-export interface TTeacherData {
-  id: number;
-  subject: string;
-  className: string;
-  assignedTeacher: string[];
-}
-
-const TeacherData: TTeacherData[] = [
-  {
-    id: 1,
-    subject: 'Math',
-    className: '1',
-    assignedTeacher: ['John Doe'],
-  },
-  {
-    id: 2,
-    subject: 'Science',
-    className: '1',
-    assignedTeacher: ['Jane Smith'],
-  },
-  {
-    id: 3,
-    subject: 'English',
-    className: '2',
-    assignedTeacher: ['Robert Johnson'],
-  },
-  {
-    id: 4,
-    subject: 'History',
-    className: '3',
-    assignedTeacher: ['Emily Brown'],
-  },
-  {
-    id: 5,
-    subject: 'Physical Education',
-    className: '1',
-    assignedTeacher: ['Michael Wilson'],
-  },
-];
+import type { ITeacher } from './type';
 
 const Teacher = ({
   searchParams,
@@ -89,7 +52,7 @@ const Teacher = ({
   const [selectedTeacher, setSelectedTeacher] = useState<any | null>([]);
 
   // State to store and manage the teacher assignment data
-  const [teacherData, setTeacherData] = useState<TTeacherData[]>(TeacherData);
+  const [teacherData, setTeacherData] = useState<ITeacher[]>(teacherTableData);
 
   // Boolean state to control dialog visibility
   const dialog = useBoolean();
@@ -192,44 +155,6 @@ const Teacher = ({
         // showCheckbox={selectedTeacher.length !== 0}
         tableId="teacher-table"
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '60px',
-          //   isSort: false,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={
-          //           !!filteredData?.length && selectedTeacher?.length === filteredData?.length
-          //         }
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedTeacher(filteredData || []);
-          //           } else {
-          //             setSelectedTeacher([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={selectedTeacher.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedTeacher([...selectedTeacher, row]);
-          //           } else {
-          //             setSelectedTeacher(selectedTeacher.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
           {
             id: 'subject',
             label: 'Subject',

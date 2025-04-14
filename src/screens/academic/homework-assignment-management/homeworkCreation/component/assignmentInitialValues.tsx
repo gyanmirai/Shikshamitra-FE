@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 
-import type { THomeworkAssignment } from '../type';
+import type { IHomeworkAssignment } from '../type';
 
-export const assignmentInitialValues: THomeworkAssignment = {
+export const assignmentInitialValues: IHomeworkAssignment = {
   title: '',
   description: '',
   class: '',

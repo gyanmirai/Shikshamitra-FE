@@ -5,13 +5,9 @@ import { DetailRow } from 'src/screens/communication/announcement/components/det
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
-import type { TSubjectTable } from '../subject';
+import type { IViewSubjectProps } from './type';
 
-interface ViewSubjectProps {
-  subject: TSubjectTable | null;
-}
-
-export const ViewSubject = ({ subject }: ViewSubjectProps) => (
+export const ViewSubject = ({ subject }: IViewSubjectProps) => (
   <Scrollbar>
     <Box sx={{ p: 3 }}>
       <DetailRow label="Subject Name" value={subject?.subjectName} />
