@@ -96,6 +96,7 @@ const ChapterTable = ({
         label: 'Progress',
         minWidth: '150px',
         align: 'left',
+        filterType: 'number',
         render(value) {
           return (
             <Box sx={{ position: 'relative', display: 'inline-flex', ml: 7 }}>

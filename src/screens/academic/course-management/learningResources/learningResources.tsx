@@ -21,6 +21,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import learningResourceTableData from 'src/json/academic/syllabus/learningResourceTableData.json';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+} from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -307,11 +311,13 @@ const LearningResources = (props: TabComponentType) => {
                     label: 'Publish',
                     minWidth: '200px',
                     align: 'left',
-                    render: (value, row) => (
-                      <Box sx={{ display: 'flex', alignItems: 'center', ml: 7 }}>
+                    filterType: 'enum',
+                    enumOptions: PublishUnpublishStatusOptions,
+                    render: (value: PublishUnpublishStatusType, row: any) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Switch
                           size="small"
-                          checked={value === 'Publish'}
+                          checked={value === PublishUnpublishStatusType.Publish}
                           onChange={() => handleStatusChange(row.id, value)}
                         />
                       </Box>
