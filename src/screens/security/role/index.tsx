@@ -47,6 +47,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -131,6 +133,27 @@ const RoleScreen = () => {
         }
       />
       <CustomizableTable
+        noDataText={
+          <>
+            No Role have been added yet{' '}
+            <Box
+              onClick={() => {
+                setOpen(true);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Role
+            </Box>
+          </>
+        }
         tableId="role-table"
         columns={[
           { id: 'name', label: 'Role' },
@@ -294,10 +317,8 @@ const RoleForm = ({ handleClose, editData }: any) => {
           <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
         </Scrollbar>
         <DialogActions sx={{ flexShrink: 0 }}>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Submit
-          </Button>
+          <CancelButton onClick={handleClose} />
+          <SubmitButton />
         </DialogActions>
       </form>
     </Box>

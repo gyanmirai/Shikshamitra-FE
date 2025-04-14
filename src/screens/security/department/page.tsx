@@ -53,6 +53,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -428,12 +430,9 @@ const OrganizationUnitFrom = ({
         />
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" color="inherit" onClick={handleClose}>
-          Cancel
-        </Button>
-        <LoadingButton loading={isAddLoading || isUpdateLoading} type="submit" variant="contained">
-          Save
-        </LoadingButton>
+        <CancelButton onClick={handleClose} />
+
+        <SubmitButton loading={isAddLoading || isUpdateLoading} />
       </DialogActions>
     </Box>
   );
@@ -491,12 +490,9 @@ const AssignUserForm = () => {
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" color="inherit">
-          cancel
-        </Button>
-        <Button type="submit" variant="contained">
-          Save
-        </Button>
+        <CancelButton onClick={() => {}} />
+
+        <SubmitButton onClick={() => {}} />
       </DialogActions>
     </Box>
   );
