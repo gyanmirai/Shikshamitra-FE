@@ -55,6 +55,27 @@ const GradingScale = () => {
       </Box>
       <CustomizableTable
         tableId="gradesTable"
+        noDataText={
+          <>
+            No Grade Scaling Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Grade Scale
+            </Box>
+          </>
+        }
         columns={[
           { id: 'totalMarks', label: 'Total Marks' },
           {

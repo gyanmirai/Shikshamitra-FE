@@ -378,7 +378,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       isSort: false,
       isFilter: false,
       sticky: true,
-      minWidth: '200px',
+      minWidth: 100,
       align: 'left',
       render: (value, row) => (
         <ThreeDotsActions
@@ -474,7 +474,7 @@ const HomeworkCreation = (props: TabComponentType) => {
     {
       id: 'action',
       label: 'Action',
-      minWidth: '200px',
+      minWidth: 100,
       sticky: true,
       align: 'left',
       isSort: false,
@@ -667,6 +667,28 @@ const HomeworkCreation = (props: TabComponentType) => {
           </Box>
           <CustomizableTable
             tableId="homework-assignment-management"
+            noDataText={
+              <>
+                {view === 'homework' ? 'No Homework Created' : 'No Assignment Created'}
+                <Box
+                  onClick={() => {
+                    dialog.onTrue();
+                    setOpen(true);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {view === 'homework' ? 'Create Homework' : 'Create Assignment'}
+                </Box>
+              </>
+            }
             columns={view === 'homework' ? homeworkColumns : assignmentColumns}
             data={filteredData}
           />
@@ -798,6 +820,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
+        noDataText={<>No Submission Data Found Select Above Dropdown Data </>}
         columns={[
           {
             id: 'checkBox',
@@ -912,6 +935,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'actions',
             label: 'Actions',
+            minWidth: 100,
             isSort: false,
             isFilter: false,
             sticky: true,

@@ -255,6 +255,10 @@ const AssessmentManagement = (props: TabComponentType) => {
             </Box>
           </Box>
           <AssessmentManagementTable
+            openDialog={open}
+            setOpenDialog={setOpen}
+            editData={selectedAssessment}
+            setEditData={setSelectedAssessment}
             actions={(prop) => actions({ ...prop, row: prop.row }) as any}
             data={assessmentData}
             onEdit={(assessment) => {

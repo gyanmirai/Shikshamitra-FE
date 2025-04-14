@@ -93,6 +93,7 @@ const ArchievedQuiz = () => {
     <Box>
       <CustomizableTable
         tableId="archivedQuiz"
+        noDataText={<>No Archieved Quiz Data Found </>}
         columns={[
           { id: 'class', label: 'Class' },
           {
@@ -136,6 +137,9 @@ const ArchievedQuiz = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            sticky: true,
+            isFilter: false,
+            minWidth: 100,
             render(value, row) {
               return (
                 <ThreeDotsActions
