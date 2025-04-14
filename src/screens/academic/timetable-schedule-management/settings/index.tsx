@@ -11,9 +11,9 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import RoomDetails from './components/roomDetails';
-import LectureSlots from './components/lectureSlots';
-import WeeklyLectures from './components/weeklyLectures';
+import RoomDetails from './components/roomSetting/roomDetails';
+import LectureSlots from './components/lectureSlots/lectureSlots';
+import WeeklyLectures from './components/weeklyLectures/weeklyLectures';
 
 const TABS = [
   {

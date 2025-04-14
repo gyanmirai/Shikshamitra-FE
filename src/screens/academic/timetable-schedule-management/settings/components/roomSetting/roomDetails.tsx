@@ -1,18 +1,17 @@
 'use client';
 
-import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Create } from '@mui/icons-material';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import RoomCreationForm from './addRoomForm';
 
 const tableData = [
   {
@@ -116,6 +115,27 @@ const RoomDetails = () => {
       </Box>
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
+        noDataText={
+          <>
+            No Rooms Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Room
+            </Box>
+          </>
+        }
         columns={[
           { id: 'roomNumber', label: 'Room Number', filterType: 'number' },
           { id: 'buildingName', label: 'Building Name', filterType: 'number' },
@@ -168,136 +188,4 @@ const RoomDetails = () => {
 
 export default RoomDetails;
 
-/**
- * Props interface for the RoomCreationForm component
- * @property {boolean} dialogValue - Controls the visibility of the dialog
- * @property {any} data - Data of the room to be edited
- * @property {Function} onSave - Callback function to handle form submission
- * @property {Function} onClose - Callback function to close the dialog
- * @property {boolean} isEdit - Flag to determine if form is in edit mode
- * @property {any} allData - Array of all existing room data
- */
-
-interface RoomCreationFormProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-}
-
-/**
- * Interface for form values used in Formik
- * @property {string} roomNumber - Room number/name identifier
- * @property {string} buildingName - Name of the building
- * @property {string} floor - Floor number where room is located
- * @property {string} capacity - Maximum capacity of the room
- */
-interface FormikValue {
-  roomNumber: string;
-  buildingName: string;
-  floor: string;
-  capacity: string;
-}
 // eslint-disable-next-line @typescript-eslint/no-shadow
-const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
-  dialogValue,
-  data,
-  onClose,
-  onSave,
-  isEdit,
-  allData,
-}) => {
-  // State to track and display message when a duplicate room entry is attempted
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
-
-  const formik = useFormik<FormikValue>({
-    initialValues: {
-      roomNumber: isEdit ? (data.roomNumber ?? 0) : 0,
-      buildingName: isEdit ? (data.buildingName ?? '') : '',
-      floor: isEdit ? (data.floor ?? 0) : 0,
-      capacity: isEdit ? (data.capacity ?? 0) : 0,
-    },
-    // validationSchema: validationSchema,  // Uncomment this if you have validation schema
-    onSubmit: (values) => {
-      const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
-
-      const existingEntryIndex = allData.findIndex(
-        (val: any) => normalize(val.roomNumber) === normalize(values.roomNumber)
-      );
-      if (!isEdit) {
-        if (existingEntryIndex === -1) {
-          setShowExistingEntryMessage(false);
-          onSave(values);
-        } else {
-          setShowExistingEntryMessage(true);
-        }
-      } else {
-        onSave(values);
-      }
-    },
-  });
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                disabled={isEdit}
-                label="Room Name"
-                size="small"
-                name="roomNumber"
-                type="number"
-                value={formik.values.roomNumber}
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                disabled={isEdit}
-                label="Building Name"
-                size="small"
-                value={formik.values.buildingName}
-                name="buildingName"
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="floor"
-                disabled={isEdit}
-                type="number"
-                value={formik.values.floor}
-                onChange={formik.handleChange}
-                label="Floors"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="capacity"
-                value={formik.values.capacity}
-                onChange={formik.handleChange}
-                label="Room Capacity"
-                type="number"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button startIcon={<Create />} type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </form>
-    </Box>
-  );
-};

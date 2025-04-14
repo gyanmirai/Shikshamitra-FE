@@ -2,22 +2,11 @@
 
 import type { Dayjs } from 'dayjs';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -26,176 +15,11 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const LectureSlots = () => {
-  // Dialog state for creating new slots
-  const createSlotsDialog = useBoolean();
-  // Dialog state for assigning slots to other classes
-  const assignSlotsDialog = useBoolean();
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              assignSlotsDialog.onTrue();
-            }}
-          >
-            <Iconify icon="mdi:arrow-right-bold" />
-            Assign to other class
-          </MenuItem>
-        </MenuList>
-      </>
-    ),
-    [assignSlotsDialog]
-  );
-  return (
-    <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          size="small"
-          onClick={createSlotsDialog.onTrue}
-        >
-          Create Slots
-        </Button>
-      </Box>
-      <CustomizableTable
-        tableId="time-schedule-management-setting-table"
-        columns={[
-          { id: 'className', label: 'Class', filterType: 'number' },
-          { id: 'periodSlots', label: 'Period Slots', filterType: 'number' },
-          { id: 'breakSlots', label: 'Break Slots', filterType: 'number' },
-          {
-            id: 'actions',
-            label: 'Actions',
-            sticky: true,
-            isSort: false,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  showEditIcon
-                  showViewIcon
-                  handleViewClick={() => {}}
-                  handleEditClick={() => {}}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
-        data={[
-          {
-            id: 1,
-            className: 1,
-            periodSlots: 6, // Number of periods
-            breakSlots: 2, // Number of breaks
-          },
-          {
-            id: 2,
-            className: 2,
-            periodSlots: 5,
-            breakSlots: 1,
-          },
-          {
-            id: 3,
-            className: 3,
-            periodSlots: 7,
-            breakSlots: 2,
-          },
-        ]}
-      />
-
-      <CustomDialog
-        title="Create Slots"
-        open={createSlotsDialog.value}
-        handleClose={createSlotsDialog.onFalse}
-        maxWidth="md"
-      >
-        <CreateSlotsForm
-        // onSave={handleSave}
-        // dialogValue={dialog.value}
-        // onClose={closeDialog}
-        // data={selectedEntry}
-        // isEdit={isEdit}
-        // allData={roomData}
-        />
-      </CustomDialog>
-
-      <CustomDialog
-        title="Assign this slot to another classes"
-        open={assignSlotsDialog.value}
-        handleClose={assignSlotsDialog.onFalse}
-      >
-        <AssignSlots />
-      </CustomDialog>
-    </Box>
-  );
-};
-
-export default LectureSlots;
-
-const AssignSlots = () => {
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-  return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={() => {}}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <CustomSelect
-                options={classData?.items || []}
-                value={[]}
-                onChange={(val) => {
-                  //   formik.setFieldValue('className', val as string);
-                }}
-                label="Class"
-                // isLoading={isLoading}
-                multiple
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {/* {formik.touched.className && formik.errors.className && (
-                <FormHelperText error>{formik.errors.className}</FormHelperText>
-              )} */}
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            type="submit"
-            variant="contained"
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </form>
-    </Box>
-  );
-};
-
-interface TimeSlot {
-  id: number;
-  startTime: Dayjs | null;
-  endTime: Dayjs | null;
-  slotType: string;
-  breakType?: string; // Optional field for break type
-}
+import type { ITimeSlot } from './type';
 
 const CreateSlotsForm = () => {
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -204,7 +28,7 @@ const CreateSlotsForm = () => {
   });
   const [totalSlots, setTotalSlots] = useState('');
   const [showTable, setShowTable] = useState(false);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [timeSlots, setTimeSlots] = useState<ITimeSlot[]>([]);
 
   const handleCreateSlots = () => {
     const slotsCount = parseInt(totalSlots, 10);
@@ -440,3 +264,4 @@ const CreateSlotsForm = () => {
     </Box>
   );
 };
+export default CreateSlotsForm;

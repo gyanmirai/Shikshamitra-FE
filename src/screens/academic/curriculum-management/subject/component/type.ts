@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface ISubject {
   id: number;
@@ -31,6 +32,9 @@ export interface ISubjectFormValues {
 }
 
 export interface ISubjectTableProps {
+  addSubjectDialog: UseBooleanReturn;
+  editData: ISubject | null;
+  setEditData: React.Dispatch<React.SetStateAction<ISubject | null>>;
   data: ISubject[];
   subjectTableData: ISubject[];
   onView: (subject: ISubject) => void;
