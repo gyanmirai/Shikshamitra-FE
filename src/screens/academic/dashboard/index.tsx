@@ -81,6 +81,11 @@ const AcademicDashboardScreen = () => {
               p: 3,
               height: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -139,6 +144,11 @@ const AcademicDashboardScreen = () => {
               p: 3,
               height: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -178,7 +188,7 @@ const AcademicDashboardScreen = () => {
                 </Box>
               </Scrollbar>
             </Box>
-            <Box display="flex" alignItems="center" justifyContent="flex-end" sx={{ mt: 2 }}>
+            {/* <Box display="flex" alignItems="center" justifyContent="flex-end" sx={{ mt: 2 }}>
               <Button
                 variant="contained"
                 size="small"
@@ -186,7 +196,7 @@ const AcademicDashboardScreen = () => {
               >
                 View Full Assignment
               </Button>
-            </Box>
+            </Box> */}
           </Card>
         </Grid2>
 
@@ -275,6 +285,11 @@ const AcademicDashboardScreen = () => {
               display: 'flex',
               p: 3,
               height: '100%',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
@@ -504,6 +519,11 @@ const AcademicDashboardScreen = () => {
               p: 3,
               height: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -576,6 +596,11 @@ const AcademicDashboardScreen = () => {
               p: 3,
               height: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -639,6 +664,11 @@ const AcademicDashboardScreen = () => {
               p: 3,
               height: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: 'var(--shadows-8)',
+                scale: 1.03,
+              },
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between">

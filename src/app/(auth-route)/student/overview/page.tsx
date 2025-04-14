@@ -55,6 +55,7 @@ const Overview = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Dashboard"
+        description="Quick access to each students profile enrollment details grades and more  all in one place."
         links={[{ name: 'Student Record' }, { name: 'Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={
