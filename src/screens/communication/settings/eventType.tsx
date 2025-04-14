@@ -2,7 +2,6 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -33,7 +32,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { eventTypeValidationSchema } from './validationSchema';
 
-import type { TEvent } from './type';
+import type { TEvent, EventFormProps } from './type';
 
 const initialEventData: TEvent[] = [
   {
@@ -288,24 +287,6 @@ const EventType = (props: TabComponentType) => {
   );
 };
 
-/**
- * Props interface for the EventForm component
- * @interface EventFormProps
- * @property {function} onSubmit - Callback function to handle form submission with event data
- * @property {TEvent | null} [data] - Optional existing event data for editing
- * @property {boolean} [isEdit] - Optional flag to indicate if form is in edit mode
- */
-interface EventFormProps {
-  onSubmit: (values: TEvent) => void;
-  data?: TEvent | null;
-  isEdit?: boolean;
-}
-
-const validationSchema = Yup.object().shape({
-  eventType: Yup.string().required('Event type is required'),
-  eventTypeDesc: Yup.string().required('Description is required'),
-});
-
 // eslint-disable-next-line react/prop-types
 const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   // State to track if the event is in draft mode (UnPublish status)
@@ -331,7 +312,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, data = null, isEdit = f
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '270px' }}>
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '330px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <ShakingTextField
