@@ -230,6 +230,7 @@ const TakeAttendanceScreen = () => {
       {division && (
         <CustomizableTable
           tableId="student-attendance-table"
+          noDataText={<>No Attendance Data Found </>}
           columns={[
             { id: 'rollNo', label: 'Roll No', align: 'left', minWidth: '180px' },
             { id: 'grNo', label: 'Gr No', align: 'left', minWidth: '180px' },

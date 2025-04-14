@@ -24,37 +24,34 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IAttendanceRule {
-  id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  tenantId: string;
-  type: string;
-  color: string;
-}
+import type { IAttendanceRule } from './type';
+
 const AttendanceType = () => {
+  // Dialog state for add/edit form
   const dialog = useBoolean();
+  // Dialog state for delete confirmation
   const confirm = useBoolean();
 
+  // State to store attendance type data being edited
   const [editData, setEditData] = useState<IAttendanceRule | null>(null);
 
+  // Fetch all attendance types
   const { data: attendanceTypes, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
   });
 
+  // Mutation hook for deleting attendance type
   const [deleteAttendanceType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteStudentAttendanceTypeMutation,
   });
 
+  // Reset dialog state and edited data
   const handleClose = () => {
     dialog.onFalse();
     setEditData(null);
   };
-
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end" alignItems="center" mb={2}>

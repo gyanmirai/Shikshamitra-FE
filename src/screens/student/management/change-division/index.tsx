@@ -19,6 +19,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import type { TableDivisionDropDownProps } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const initialData = [
@@ -194,13 +195,6 @@ const ChangeDivisionScreen = ({
 };
 
 export default ChangeDivisionScreen;
-
-interface TableDivisionDropDownProps {
-  allDivision: Division[];
-  division: string;
-  currentDivision: string;
-  onChange: (val: string | string[] | number | number[]) => void;
-}
 
 const TableDivisionDropDown = ({
   allDivision,
