@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 
 import { Box, Grid, useTheme } from '@mui/material';
 
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
+
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
 
@@ -16,6 +18,12 @@ const FinanceDashboardScreen = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Top Section: Key Metrics */}
+      <CustomBreadcrumbs
+        heading="Dashboard"
+        links={[{ name: 'Finance' }, { name: 'Dashboard' }]}
+        sx={{ mb: 2 }}
+        description="Easily manage and analyze key financial metrics like collections, refunds, and expense breakdowns."
+      />
       <FinanceFeeTrackingComponent />
 
       {/* Middle Section: Charts */}

@@ -2,7 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { DatePickerProps } from '@mui/lab';
-import type { TableRowProps } from '@mui/material';
+import type { TableRowProps, TextFieldProps } from '@mui/material';
 
 import jsPDF from 'jspdf';
 import dayjs from 'dayjs';
@@ -115,6 +115,8 @@ interface CustomizableTableProps {
   tableId: string;
   showCheckbox?: boolean;
   onSendNotification?: (data: any) => void;
+  searchFieldProps?: TextFieldProps;
+  noDataText?: React.ReactNode;
 }
 
 type IParams = {
@@ -152,6 +154,8 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   tableId,
   showCheckbox = false,
   onSendNotification = () => {},
+  searchFieldProps = {},
+  noDataText = <>No data available</>,
 }) => {
   columns = useMemo(
     () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
@@ -161,80 +165,6 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   const totalRows = data.length; // Get total number of rows
 
   const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
-
-  // columns = useMemo(() => {
-  //   let updatedColumns = columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true }));
-
-  //   if (showCheckbox) {
-  //     updatedColumns = [
-  //       {
-  //         id: 'selectAll',
-  //         label: '', // Empty header
-  //         isFilter: false,
-  //         renderColumn: () => (
-  //           <Checkbox
-  //             checked={selectedRows.size > 0 && selectedRows.size === totalRows}
-  //             indeterminate={selectedRows.size > 0 && selectedRows.size < totalRows}
-  //             onChange={(e) => {
-  //               if (e.target.checked) {
-  //                 // Select all rows
-  //                 const allRowIds = new Set(data.map((row) => row.id));
-  //                 setSelectedRows(allRowIds);
-  //               } else {
-  //                 // Deselect all
-  //                 setSelectedRows(new Set());
-  //               }
-  //             }}
-  //           />
-  //         ),
-  //         render: (value, row) => (
-  //           <Checkbox
-  //             checked={selectedRows.has(row.id)}
-  //             onChange={() => {
-  //               setSelectedRows((prev) => {
-  //                 const newSelection = new Set(prev);
-  //                 if (newSelection.has(row.id)) {
-  //                   newSelection.delete(row.id);
-  //                 } else {
-  //                   newSelection.add(row.id);
-  //                 }
-  //                 return newSelection;
-  //               });
-  //             }}
-  //           />
-  //         ),
-  //       },
-  //       ...updatedColumns,
-  //     ];
-  //   }
-
-  //   return updatedColumns;
-  // }, [columns, showCheckbox, selectedRows, totalRows, data]);
-
-  //               }
-  //             }}
-  //           />
-  //         ),
-  //         render: (value, row) => (
-  //           <Checkbox
-  //             checked={selectedRows.has(row.id)}
-  //             onChange={() => {
-  //               setSelectedRows((prev) => {
-  //                 const newSelection = new Set(prev);
-  //                 if (newSelection.has(row.id)) {
-  //                   newSelection.delete(row.id);
-  //                 } else {
-  //                   newSelection.add(row.id);
-  //                 }
-  //                 return newSelection;
-  //               });
-  //             }}
-  //           />
-  //         ),
-  //       },
-  //       ...updatedColumns,
-  //     ];
-  //   }
 
   const handleSendNotification = () => {
     // sendInstantNotificationDialogValue.onTrue();
@@ -608,6 +538,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
                 </>
               ),
             }}
+            {...searchFieldProps}
           />
         )}
 
@@ -962,7 +893,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
               ) : (
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <EmptyContent />
+                    <EmptyContent title={noDataText} />
                   </TableCell>
                 </TableRow>
               )}

@@ -685,7 +685,6 @@ export const ViewSurveyDetail = ({ survey }: any) => (
       />
     </Scrollbar>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-      <Button variant="contained">Close Survey</Button>
       <Button variant="contained">Download Responses</Button>
     </Box>
   </Box>

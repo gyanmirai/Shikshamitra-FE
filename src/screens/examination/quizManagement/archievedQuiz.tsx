@@ -210,7 +210,7 @@ const ArchievedQuiz = () => {
         title="View Student Submission"
         open={viewSubmissionDialog.value}
         handleClose={viewSubmissionDialog.onFalse}
-        maxWidth="md"
+        maxWidth="lg"
       >
         <StudentSubmissions />
       </CustomDialog>
@@ -360,7 +360,7 @@ export const StudentSubmissions = () => {
         </Button>
       </Box> */}
 
-      <Scrollbar sx={{ p: 2, height: '500px' }}>
+      <Scrollbar sx={{ p: 2 }}>
         <CustomizableTable
           tableId="student-table"
           columns={[

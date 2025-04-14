@@ -6,7 +6,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 
-import { MenuItem, MenuList } from '@mui/material';
+import { Box, MenuItem, MenuList } from '@mui/material';
 
 import calculateAge from 'src/utils/calculate-age';
 
@@ -27,13 +27,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { IInquiryData } from '.';
 
 const InquiryTable = ({
-  setParams,
   followUpDialog,
   issueRegistrationFormDialog,
   editData,
   setEditData,
+  inquiryDialog,
 }: {
-  setParams: (obj: Record<string, any>) => void;
+  inquiryDialog: UseBooleanReturn;
   issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   editData: null | IInquiryData;
@@ -61,11 +61,35 @@ const InquiryTable = ({
       showCheckbox
       isLoading={isLoading}
       tableId="inquiry-table"
-      startDateProps={{
-        label: 'Start Date Of Inquiry',
-      }}
-      endDateProps={{
-        label: 'End Date Of Inquiry',
+      noDataText={
+        <>
+          No Inquiry Found{' '}
+          <Box
+            onClick={() => {
+              inquiryDialog.onTrue();
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Inquiry
+          </Box>
+        </>
+      }
+      searchFieldProps={{
+        placeholder: 'Search by Inquiry number, Student name, Class..',
+        label: 'Search by Inquiry number, Student name, Class...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
       }}
       columns={[
         // {
@@ -164,7 +188,7 @@ const InquiryTable = ({
                 placement="right-top"
                 showEditIcon
                 handleEditClick={() => {
-                  setParams({ isForm: 'true' });
+                  inquiryDialog.onTrue();
                   setEditData(row as IInquiryData);
                 }}
                 actions={({ popover }) => (

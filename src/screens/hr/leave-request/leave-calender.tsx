@@ -99,19 +99,21 @@ const LeaveRequestForm = ({ editData }: any) => (
       <Typography variant="body2"> Leave Type</Typography>
     </Grid>
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography
-        variant="body2"
-        component="span"
-        color={editData?.leavePolicy?.color}
-        sx={{
-          backgroundColor: `${editData?.leavePolicy?.color}20`,
-          p: 0.8,
-          borderRadius: 1,
-          fontSize: 12,
-        }}
-      >
-        {editData?.leavePolicy?.leaveType}
-      </Typography>
+      {editData?.leavePolicy?.leaveType && (
+        <Typography
+          variant="body2"
+          component="span"
+          color={editData?.leavePolicy?.color}
+          sx={{
+            backgroundColor: `${editData?.leavePolicy?.color}20`,
+            p: 0.8,
+            borderRadius: 1,
+            fontSize: 12,
+          }}
+        >
+          {editData?.leavePolicy?.leaveType}
+        </Typography>
+      )}
     </Grid>
     <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2"> Half Day</Typography>
@@ -142,6 +144,16 @@ const LeaveRequestForm = ({ editData }: any) => (
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Box dangerouslySetInnerHTML={{ __html: editData?.description }} />
     </Grid>
+    {editData?.rejectionReason && (
+      <>
+        <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+          <Typography variant="body2"> Rejection Reason</Typography>
+        </Grid>
+        <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+          <Typography variant="body2"> {editData.rejectionReason}</Typography>
+        </Grid>
+      </>
+    )}
     <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2"> Status</Typography>
     </Grid>

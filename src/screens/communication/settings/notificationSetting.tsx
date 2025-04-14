@@ -25,6 +25,9 @@ const NotificationSetting = (props: TabComponentType) => (
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Message Notifications
+            </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
                 <Switch defaultChecked />
@@ -58,10 +61,13 @@ const NotificationSetting = (props: TabComponentType) => (
             >
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>
+          </Card>{' '}
         </Grid>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Announcement Notifications
+            </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
                 <Switch defaultChecked />
@@ -96,7 +102,7 @@ const NotificationSetting = (props: TabComponentType) => (
             >
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>
+          </Card>{' '}
         </Grid>
       </Grid>
     </Box>
@@ -104,6 +110,9 @@ const NotificationSetting = (props: TabComponentType) => (
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Event Notifications
+            </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
                 <Switch defaultChecked />
@@ -133,10 +142,13 @@ const NotificationSetting = (props: TabComponentType) => (
             >
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>
+          </Card>{' '}
         </Grid>
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Survey & Feedback Notifications
+            </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
                 <Switch defaultChecked />
@@ -163,7 +175,7 @@ const NotificationSetting = (props: TabComponentType) => (
             >
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>
+          </Card>{' '}
         </Grid>
       </Grid>
     </Box>
