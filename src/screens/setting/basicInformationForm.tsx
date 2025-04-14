@@ -453,6 +453,36 @@ const BasicInformation = () => {
       ) : (
         <CustomizableTable
           tableId="institute-setup"
+          searchFieldProps={{
+            placeholder: 'Search Institute',
+            label: 'Search Institute',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
+          noDataText={
+            <>
+              No Institute Found{' '}
+              <Box
+                onClick={() => {
+                  form.onTrue();
+                  setEditData(null);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Institute
+              </Box>
+            </>
+          }
           columns={[
             { label: 'Institute Name', id: 'name' },
             {
