@@ -43,10 +43,10 @@ const UserManagementScreen = () => {
       />
 
       <CustomizableTable
-        noDataText={<>No User Found. </>}
+        noDataText={<>No User Found </>}
         tableId="user-management-table"
         isLoading={isLoading}
-        data={[]}
+        data={tableData || []}
         columns={[
           {
             id: 'userName',
