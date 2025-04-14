@@ -13,10 +13,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NewExamForm from './components/examFormComponent';
 import ScheduledExamTable from './components/scheduleExamTable';
 
+import type { IScheduledExam } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
 
 const ScheduleExam = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
+  const [selectedExam, setSelectedExam] = useState<IScheduledExam | null>(null);
   const [examData, setExamData] = useState(examTableData);
   // Dynamic breadcrumb navigation links based on current view (form or list)
   const links = open
@@ -32,7 +34,7 @@ const ScheduleExam = (props: TabComponentType) => {
         { name: 'Schedule Exam' },
       ];
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Schedule Exam"
         description={
@@ -62,7 +64,7 @@ const ScheduleExam = (props: TabComponentType) => {
         }
       />
       {open ? (
-        <Card>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <NewExamForm
             // onSubmit={handleSubmit}
             onClose={() => {
@@ -71,16 +73,16 @@ const ScheduleExam = (props: TabComponentType) => {
           />
         </Card>
       ) : (
-        <ScheduledExamTable data={examData} />
+        <ScheduledExamTable
+          openDialog={open}
+          setOpenDialog={setOpen}
+          editData={selectedExam}
+          setEditData={setSelectedExam}
+          data={examData}
+        />
       )}
     </Box>
   );
 };
 
 export default ScheduleExam;
-
-// Mock data for scheduled exams with subject, date and time information
-const Exams = [
-  { subject: 'Mathematics', date: '15-10-2024', time: '10:00' },
-  { subject: 'Physics', date: '15-10-2024', time: '14:00' },
-];

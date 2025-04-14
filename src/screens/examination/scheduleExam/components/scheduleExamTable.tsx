@@ -1,14 +1,44 @@
 import React from 'react';
 
+import { Box } from '@mui/material';
+
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IScheduledExamTableProps } from '../type';
 
-const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({ data }) => (
+const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
+  openDialog,
+  setOpenDialog,
+  editData,
+  setEditData,
+  data,
+}) => (
   <CustomizableTable
     tableId="schedule-exam-table"
+    noDataText={
+      <>
+        No Exam Data Found{' '}
+        <Box
+          onClick={() => {
+            setOpenDialog(true);
+            setEditData(null);
+          }}
+          color="primary.main"
+          fontWeight={600}
+          sx={{
+            '&:hover': {
+              cursor: 'pointer',
+              color: 'primary.main',
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Create Exam
+        </Box>
+      </>
+    }
     columns={[
       { id: 'class', label: 'Class', align: 'left', minWidth: 250 },
       { id: 'subjectName', label: 'Subject Name', align: 'left', minWidth: 250 },
@@ -30,6 +60,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({ data }) => (
       {
         id: 'action',
         label: 'Actions',
+        minWidth: 100,
         isSort: false,
         sticky: true,
         isFilter: false,

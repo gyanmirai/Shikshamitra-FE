@@ -6,7 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const QuizTable = ({ data, onTogglePublish, onAttemptClick }: any) => {
+const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick }: any) => {
   const actions = ({ row, popover }: any) => (
     <Box>
       <MenuList>
@@ -21,6 +21,27 @@ const QuizTable = ({ data, onTogglePublish, onAttemptClick }: any) => {
   return (
     <CustomizableTable
       tableId="quiz-table"
+      noDataText={
+        <>
+          No Quiz Data Found{' '}
+          <Box
+            onClick={() => {
+              addQuizDialog.onTrue();
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Create Slots
+          </Box>
+        </>
+      }
       columns={[
         { id: 'class', label: 'Class' },
         {
@@ -64,6 +85,9 @@ const QuizTable = ({ data, onTogglePublish, onAttemptClick }: any) => {
           id: 'actions',
           label: 'Actions',
           isSort: false,
+          sticky: true,
+          isFilter: false,
+          minWidth: 100,
           render(value, row) {
             return (
               <ThreeDotsActions
