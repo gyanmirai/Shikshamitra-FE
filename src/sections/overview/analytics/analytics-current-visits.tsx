@@ -1,15 +1,12 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import { Box } from '@mui/material';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
-import CardHeader from '@mui/material/CardHeader';
 
 import { fNumber } from 'src/utils/format-number';
 
-import { Iconify } from 'src/components/iconify';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -69,10 +66,10 @@ export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Pr
   });
   return (
     <Card {...other}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
+      {/* <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
         <Iconify icon="pepicons-pop:leave" width={32} height={32} sx={{ color: 'primary.main' }} />
         <CardHeader title={title} subheader={subheader} mb={3} />
-      </Box>
+      </Box> */}
 
       <Chart
         type="pie"

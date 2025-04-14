@@ -1,5 +1,3 @@
-import type { LabelColor } from 'src/components/label';
-
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -8,35 +6,9 @@ import { Box, Card, Typography } from '@mui/material';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableView from 'src/components/customizable-view';
+
+import type { ICardItem, IStudentEnrollmentCardProps } from '../entrollment-interface';
 // Assuming this is the correct path
-
-interface ILabel {
-  name: string;
-  color: LabelColor;
-}
-
-interface IStudentEnrollmentCardProps {
-  icon: string;
-  title: string;
-  count: number | string;
-  color: string;
-  bgColor: string;
-  href?: string;
-  labels?: ILabel[];
-  index?: number;
-}
-
-interface CardItem {
-  id: string;
-  icon: string;
-  title: string;
-  count: number | string;
-  color: string;
-  bgColor: string;
-  href: string;
-  labels: ILabel[];
-  width: number;
-}
 
 export const StudentEnrollmentCard = ({
   icon,
@@ -58,6 +30,11 @@ export const StudentEnrollmentCard = ({
         flexGrow: 1,
         cursor: 'pointer',
         height: '100%',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: 'var(--shadows-8)',
+          scale: 1.03,
+        },
       }}
     >
       <Iconify
@@ -88,7 +65,7 @@ export const StudentEnrollmentCard = ({
 
 const Overview = () => {
   // Define the initial state for the cards
-  const [cards, setCards] = useState<CardItem[]>([
+  const [cards, setCards] = useState<ICardItem[]>([
     {
       id: '0',
       icon: 'wpf:inspection',

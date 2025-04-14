@@ -5,17 +5,27 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import { Box, Card, Chip, Button, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  Chip,
+  Button,
+  Typography,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddNewSurvey from './surveyForm';
+import SurveyDetailsView from './surveyDetails';
 
 import type { TSurvey } from './type';
 
@@ -73,24 +83,31 @@ const surveyData: TSurvey[] = [
 const ScheduledSurvey = (props: TabComponentType) => {
   // Modal state for publishing survey
   const publish_modal = useBoolean();
-  const [publishingSurvey, setPublishingSurvey] = useState<any | null>(null);
+  const [publishingSurvey, setPublishingSurvey] = useState<TSurvey | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
+
+  const [selectedSurvey, setSelectedSurvey] = useState<TSurvey | null>(null);
   // Table data state for surveys
-  const [surveyTableData, setSurveyTableData] = useState(surveyData);
+  const [surveyTableData, setSurveyTableData] = useState<TSurvey[] | null>(surveyData);
   // Dialog state for viewing survey details
   const viewDetailsDialog = useBoolean();
-  const [viewSurvey, setViewSurvey] = useState<any | null>(null);
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
-
+  const [viewSurvey, setViewSurvey] = useState<TSurvey | null>(null);
+  const [open, setOpen] = useState(false);
   // Dialog state for viewing survey responses
   const viewResponseDialog = useBoolean();
-  const [responseSurvey, setResponseSurvey] = useState<any | null>(null);
-  // State for controlling main view
+  // Dialog state for viewing survey details
+  const viewDialog = useBoolean();
+  // Dialog state for confirming survey deletion
+  const confirm_delete = useBoolean();
+  // State for storing the survey whose responses are being viewed
+  const [responseSurvey, setResponseSurvey] = useState<TSurvey | null>(null);
 
   /**
    * Handles closing the survey form and resetting all related states
    */
   const handleClose = () => {
-    setParams({ isForm: 'false' });
+    confirm_delete.onFalse();
+    setOpen(false);
     setPublishingSurvey(null);
     publish_modal.onFalse();
     setViewSurvey(null);
@@ -103,23 +120,14 @@ const ScheduledSurvey = (props: TabComponentType) => {
    * Handles closing a specific survey by updating its status and end date
    * @param id - The ID of the survey to close
    */
-  const handleCloseSurvey = (id: number) => {
-    setSurveyTableData((prevData) =>
-      prevData.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: 'Closed',
-              endDate: dayjs(),
-            }
-          : item
-      )
-    );
+  const handleDelete = (id: number | undefined) => {
+    setSurveyTableData((surveyTableData || []).filter((survey: TSurvey) => survey.id !== id));
+    handleClose();
   };
 
   return (
     <Box>
-      {params.isForm === 'true' ? (
+      {open ? (
         <>
           <CustomBreadcrumbs
             heading="Scheduled Survey"
@@ -163,7 +171,7 @@ const ScheduledSurvey = (props: TabComponentType) => {
                 variant="contained"
                 size="small"
                 onClick={() => {
-                  setParams({ isForm: 'true' });
+                  setOpen(true);
                 }}
               >
                 Survey
@@ -246,23 +254,78 @@ const ScheduledSurvey = (props: TabComponentType) => {
                       showDeleteIcon
                       showViewIcon
                       showThreeDots={false}
-                      handleViewClick={() => {}}
+                      handleViewClick={() => {
+                        viewDialog.onTrue();
+                        setSelectedSurvey(row as TSurvey);
+                      }}
                       handleEditClick={() => {
-                        // addAnounsmentDialog.onTrue();
-                        // setEditingAnnouncement(row);
+                        setIsEdit(true);
+                        setOpen(true);
                       }}
                       handleDeleteClick={() => {
-                        handleCloseSurvey(row.id);
+                        confirm_delete.onTrue();
+                        setSelectedSurvey(row as TSurvey);
                       }}
                     />
                   );
                 },
               },
             ]}
-            data={surveyTableData}
+            data={surveyTableData || []}
           />
         </>
       )}
+
+      <CustomDialog
+        title="Confirm Delete"
+        open={confirm_delete.value}
+        handleClose={() => {
+          handleClose();
+        }}
+        maxWidth="sm"
+      >
+        <DialogContent>
+          <DialogContentText>Are you sure to delete this Survey?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              handleClose();
+            }}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleDelete(selectedSurvey?.id);
+            }}
+            variant="contained"
+            color="error"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        title="Survey Details"
+        open={viewDialog.value}
+        handleClose={() => {
+          setSelectedSurvey(null);
+          viewDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <DialogContent>
+          <SurveyDetailsView survey={selectedSurvey} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={viewDialog.onFalse} variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };

@@ -15,7 +15,6 @@ import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -210,30 +209,31 @@ export interface StudentAdditionalDetails {
   sponsorName?: string; // Add any additional fields as required
 }
 const InquiryScreen = () => {
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
+  const inquiryDialog = useBoolean();
   const [editData, setEditData] = useState<null | IInquiryData>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const followUpDialog = useBoolean();
   const issueRegistrationFormDialog = useBoolean();
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Student' },
-          { name: 'Student Enrollment' },
-          { name: 'Inquiry' },
-          { name: 'Inquiry Form' },
-        ]
-      : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
+  const links = inquiryDialog.value
+    ? [
+        { name: 'Student' },
+        { name: 'Student Enrollment' },
+        { name: 'Inquiry' },
+        { name: 'Inquiry Form' },
+      ]
+    : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
-      setParams({ isForm: 'false' });
+
+      inquiryDialog.onFalse();
 
       setEditData(null);
     } else if (!isChanges) {
-      setParams({ isForm: 'false' });
+      inquiryDialog.onFalse();
+
       setEditData(null);
     }
   };
@@ -247,20 +247,20 @@ const InquiryScreen = () => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={inquiryDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
-            onClick={params.isForm === 'true' ? handleClose : () => setParams({ isForm: 'true' })}
+            onClick={inquiryDialog.value ? handleClose : inquiryDialog.onTrue}
           >
-            {params.isForm === 'true' ? 'Back' : 'Inquiry'}
+            {inquiryDialog.value ? 'Back' : 'Inquiry'}
           </Button>
         }
       />
 
-      {params.isForm === 'true' ? (
+      {inquiryDialog.value ? (
         <InquiryForm handleClose={handleClose} editData={editData} />
       ) : (
         <InquiryTable
-          setParams={setParams}
+          inquiryDialog={inquiryDialog}
           followUpDialog={followUpDialog}
           issueRegistrationFormDialog={issueRegistrationFormDialog}
           editData={editData}

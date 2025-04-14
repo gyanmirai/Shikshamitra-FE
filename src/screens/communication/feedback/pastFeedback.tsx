@@ -226,6 +226,9 @@ const ViewSummary = () => (
               <TextField size="small" label="Audience" value="" />
               <TextField size="small" label="Term" value="" />
               <TextField size="small" label="Response Rate" />
+              <Button variant="contained" sx={{ justifySelf: 'flex-end', alignSelf: 'flex-end' }}>
+                Download Report
+              </Button>
             </Box>
             <Button
               startIcon={<Iconify icon="eva:download-fill" />}
@@ -243,10 +246,10 @@ const ViewSummary = () => (
               title="Multiple Choice Question"
               chart={{
                 series: [
-                  { label: '', value: 35 },
-                  { label: '', value: 25 },
-                  { label: '', value: 15 },
-                  { label: '', value: 50 },
+                  { label: 'q1', value: 35 },
+                  { label: 'q2', value: 25 },
+                  { label: 'q3', value: 15 },
+                  { label: 'q4', value: 50 },
                 ],
               }}
               sx={{ boxShadow: 'none' }}

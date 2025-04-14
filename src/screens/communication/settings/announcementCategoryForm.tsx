@@ -8,8 +8,6 @@ import {
   Grid,
   Button,
   Switch,
-  MenuList,
-  MenuItem,
   TextField,
   DialogActions,
   DialogContent,
@@ -20,6 +18,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -29,7 +29,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { announcementCatValidationSchema } from './validationSchema';
 
-import type { TAnnoucementCategory } from './type';
+import type { CategoryFormProps, TAnnoucementCategory } from './type';
 
 const announcementCategories: TAnnoucementCategory[] = [
   {
@@ -172,17 +172,19 @@ const AnnouncementCategory = () => {
       <CustomizableTable
         tableId="announcement-category-table"
         columns={[
-          { id: 'categoryName', label: 'Category Name' },
+          { id: 'categoryName', label: 'Category Name', align: 'left' },
           { id: 'categoryDescription', label: 'Category Description' },
           {
             id: 'status',
             label: 'Publish',
+            filterType: 'enum',
+            enumOptions: PublishUnpublishStatusOptions,
             render: (value: string, row: any) => (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
                   size="small"
                   checked={value === 'Publish'}
-                  onChange={() => handleStatusChange(row.id, value as string)}
+                  onChange={() => handleStatusChange(row.id, value)}
                 />
               </Box>
             ),
@@ -190,37 +192,26 @@ const AnnouncementCategory = () => {
           {
             id: 'action',
             label: 'Action',
+            isFilter: false,
+            sticky: true,
+            isSort: false,
+            align: 'left',
+            minWidth: 100,
             render: (_, row) => (
               <ThreeDotsActions
                 placement="right-top"
-                actions={({ popover }) => (
-                  <MenuList>
-                    {row.status === 'UnPublish' && (
-                      <MenuItem
-                        onClick={() => {
-                          dialog.onTrue();
-                          setSelectedCategory(row);
-                          setIsEdit(true);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:pencil" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-
-                    <MenuItem
-                      onClick={() => {
-                        confirmDeleteDialog.onTrue();
-                        setSelectedCategory(row);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="mdi:delete" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                )}
+                showDeleteIcon
+                showEditIcon
+                handleEditClick={() => {
+                  dialog.onTrue();
+                  setSelectedCategory(row);
+                  setIsEdit(true);
+                }}
+                handleDeleteClick={() => {
+                  confirmDeleteDialog.onTrue();
+                  setSelectedCategory(row);
+                }}
+                showThreeDots={false}
               />
             ),
           },
@@ -283,20 +274,6 @@ const AnnouncementCategory = () => {
 };
 
 export default AnnouncementCategory;
-
-/**
- * Props interface for the CategoryForm component
- * @interface CategoryFormProps
- * @property {function} onSubmit - Callback function to handle form submission with form values
- * @property {any} [data] - Optional data object containing existing category information for editing
- * @property {boolean} [isEdit] - Optional flag indicating if the form is in edit mode
- */
-
-interface CategoryFormProps {
-  onSubmit: (values: any) => void;
-  data?: any | null;
-  isEdit?: boolean;
-}
 
 const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
   /**

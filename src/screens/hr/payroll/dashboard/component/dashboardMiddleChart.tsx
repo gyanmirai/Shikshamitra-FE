@@ -7,7 +7,17 @@ import { EcommerceWidgetSummary } from 'src/sections/overview/e-commerce/ecommer
 const DashboardMiddleChart = () => (
   <Grid container spacing={2} mt={2}>
     <Grid item xs={12} md={4}>
-      <Card sx={{ p: 2, height: '100%' }}>
+      <Card
+        sx={{
+          p: 2,
+          height: '100%',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: 'var(--shadows-8)',
+            scale: 1.03,
+          },
+        }}
+      >
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography variant="subtitle2" sx={{ pt: 2 }}>
             Next Payroll
@@ -35,6 +45,13 @@ const DashboardMiddleChart = () => (
           categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
           series: [22, 8, 35, 50, 82, 84, 77, 12],
         }}
+        sx={{
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: 'var(--shadows-8)',
+            scale: 1.03,
+          },
+        }}
       />
     </Grid>
     <Grid item xs={12} md={4}>
@@ -45,6 +62,13 @@ const DashboardMiddleChart = () => (
         chart={{
           categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
           series: [22, 8, 35, 50, 82, 84, 77, 12],
+        }}
+        sx={{
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: 'var(--shadows-8)',
+            scale: 1.03,
+          },
         }}
       />
     </Grid>
