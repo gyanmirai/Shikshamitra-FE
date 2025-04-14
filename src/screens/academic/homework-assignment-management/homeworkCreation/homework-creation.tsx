@@ -43,10 +43,10 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import AssignGrade from './component/assignGradeForm';
 import HomeworkAssignmentCreationForm from './component/homeworkCreateDialog';
 
-import type { THomeworkAssignment, TStudentSubmissionsProps } from './type';
+import type { IHomeworkAssignment, IStudentSubmissionsProps } from './type';
 import type { TStudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
-export const initialData: THomeworkAssignment[] = [
+export const initialData: IHomeworkAssignment[] = [
   {
     class: '10',
     division: ['A'],
@@ -210,9 +210,9 @@ const HomeworkCreation = (props: TabComponentType) => {
   const submissionDialog = useBoolean();
 
   // State to store and manage assignment data with initial mock data
-  const [assignmentData, setAssignmentData] = useState<THomeworkAssignment[]>(initialData);
+  const [assignmentData, setAssignmentData] = useState<IHomeworkAssignment[]>(initialData);
   // State to track currently selected assignment for operations
-  const [selectedAssignment, setSelectedAssignment] = useState<THomeworkAssignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<IHomeworkAssignment | null>(null);
 
   /**
    * Handles the status switch change for an assignment
@@ -220,7 +220,7 @@ const HomeworkCreation = (props: TabComponentType) => {
    * If the assignment is published, directly changes status back to draft
    * @param assignment - The assignment object to update
    */
-  const handleSwitchChange = (assignment: THomeworkAssignment) => {
+  const handleSwitchChange = (assignment: IHomeworkAssignment) => {
     if (assignment.status === 'draft') {
       setSelectedAssignment(assignment);
       confirmDialog.onTrue();
@@ -255,7 +255,7 @@ const HomeworkCreation = (props: TabComponentType) => {
    * Updates the assignment data with new values including formatted dates
    * Closes the dialog after submission
    */
-  const handleSubmit = (values: THomeworkAssignment, status: 'draft' | 'publish') => {
+  const handleSubmit = (values: IHomeworkAssignment, status: 'draft' | 'publish') => {
     const updatedValues = {
       ...values,
       status,
@@ -366,7 +366,7 @@ const HomeworkCreation = (props: TabComponentType) => {
           <Switch
             size="small"
             checked={row.status === 'publish'}
-            onChange={() => handleSwitchChange(row as THomeworkAssignment)}
+            onChange={() => handleSwitchChange(row as IHomeworkAssignment)}
             inputProps={{ 'aria-label': 'Toggle view' }}
           />
         </Box>
@@ -458,7 +458,7 @@ const HomeworkCreation = (props: TabComponentType) => {
           <Switch
             size="small"
             checked={row.status === 'publish'}
-            onChange={() => handleSwitchChange(row as THomeworkAssignment)}
+            onChange={() => handleSwitchChange(row as IHomeworkAssignment)}
             inputProps={{ 'aria-label': 'Toggle view' }}
           />
         </Box>
@@ -712,7 +712,7 @@ const HomeworkCreation = (props: TabComponentType) => {
 
 export default HomeworkCreation;
 
-export const StudentSubmissions: React.FC<TStudentSubmissionsProps> = ({
+export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   selectedStudents,
   handleBulkUpdate,
   tableData,

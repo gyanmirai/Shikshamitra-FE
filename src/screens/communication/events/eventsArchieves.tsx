@@ -1,6 +1,5 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
@@ -10,63 +9,22 @@ import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import eventsArchivesData from 'src/json/communication/events/eventsArchivesData.json';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-interface Event {
-  id: string;
-  eventTitle: string;
-  eventDate: Dayjs;
-  eventTime: Dayjs;
-  eventSummary: string;
-}
-
-const eventTableData: Event[] = [
-  {
-    id: '1',
-    eventTitle: 'Annual Sports Day',
-    eventDate: dayjs('2024-11-10'),
-    eventTime: dayjs('10:00'),
-    eventSummary: 'A day filled with sports activities and competitions among students.',
-  },
-  {
-    id: '2',
-    eventTitle: 'Science Exhibition',
-    eventDate: dayjs('2024-11-15'),
-    eventTime: dayjs('09:00'),
-    eventSummary: 'Exhibition showcasing science projects and models prepared by students.',
-  },
-  {
-    id: '3',
-    eventTitle: 'Art Competition',
-    eventDate: dayjs('2024-11-20'),
-    eventTime: dayjs('14:00'),
-    eventSummary: 'An art competition encouraging creativity among students.',
-  },
-  {
-    id: '4',
-    eventTitle: 'Parent-Teacher Meeting',
-    eventDate: dayjs('2024-12-05'),
-    eventTime: dayjs('11:00'),
-    eventSummary: 'A meeting for parents and teachers to discuss student progress.',
-  },
-  {
-    id: '5',
-    eventTitle: 'Music Concert',
-    eventDate: dayjs('2024-12-15'),
-    eventTime: dayjs('12:30'),
-    eventSummary: 'A concert featuring performances by students in the school band and choir.',
-  },
-];
+import type { IEvent } from './type';
 
 const EventsArchieves = (props: TabComponentType) => {
   // Dialog state to control visibility of event summary dialog
   const viewEventSummaryDialog = useBoolean();
+  const [eventTableData, setEventTableData] = useState(eventsArchivesData);
   // State to store the currently selected event details
-  const [event, setEvent] = useState<any | null>(null);
+  const [event, setEvent] = useState<IEvent | null>(null);
 
   // Handler to close the dialog and reset event state
   const handleCloseDialog = () => {
@@ -121,7 +79,7 @@ const EventsArchieves = (props: TabComponentType) => {
                   showThreeDots={false}
                   handleViewClick={() => {
                     viewEventSummaryDialog.onTrue();
-                    setEvent(row);
+                    setEvent(row as IEvent);
                   }}
                 />
               );
@@ -140,7 +98,7 @@ const EventsArchieves = (props: TabComponentType) => {
           <Box sx={{ p: 2 }}>
             <Scrollbar sx={{ height: '100px' }}>
               <Box display="flex" flexDirection="column">
-                <Typography variant="body1">{event.eventSummary}</Typography>
+                <Typography variant="body1">{event.description}</Typography>
               </Box>
             </Scrollbar>
           </Box>

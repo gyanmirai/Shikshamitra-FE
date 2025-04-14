@@ -1,6 +1,5 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
@@ -14,6 +13,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
+import { getInitialValues } from './initialValues';
 import { validationSchema } from './validationSchema';
 
 import type { AddNewAssessmentProps, IAssesmentFormikValues } from './type';
@@ -34,24 +34,12 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
   // State to store available division options based on selected class
   const [divisionOptions, setDivisionOptions] = useState<any[]>([]);
   const formik = useFormik<IAssesmentFormikValues>({
-    initialValues: {
-      className: data?.className || '',
-      division: data?.division || '',
-      subject: data?.subject || '',
-      assessmentTitle: data?.assessmentTitle || '',
-      assessmentType: data?.assessmentType || '',
-      examName: data?.examName || '',
-      assignmentName: data?.assignmentName || '',
-      createDate: data?.createDate ? dayjs(data?.createDate.toString()) : dayjs(),
-      dueDate: data?.dueDate ? dayjs(data?.dueDate.toString()) : null,
-      publish: data?.publish || false,
-      status: data?.status || '',
-    },
+    initialValues: getInitialValues(data),
     validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
-        id: data?.id || Date.now(),
+        id: data?.id || Date.now().toString(),
         status: data?.status || 'Pending',
       });
     },

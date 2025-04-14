@@ -1,0 +1,15 @@
+export const getInitialValues = () => ({
+  quizTitle: '',
+  className: '',
+  division: [],
+  subject: '',
+  quizDuration: 0,
+  chapter: [],
+  totalMarks: 0,
+  questions: [],
+  attemptsAllowed: 1,
+  passingMarks: 0,
+  quizStartDateTime: null,
+  quizEndDateTime: null,
+  randomOrder: false,
+});

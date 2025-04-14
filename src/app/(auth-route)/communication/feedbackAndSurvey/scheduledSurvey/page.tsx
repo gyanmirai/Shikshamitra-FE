@@ -1,6 +1,6 @@
 import React from 'react';
 
-import ScheduledSurvey from 'src/screens/communication/feedback/scheduledSurvey';
+import ScheduledSurvey from 'src/screens/communication/feedback/scheduledSurvey/scheduledSurvey';
 
 const ScheduledSurveyScreen = () => <ScheduledSurvey />;
 

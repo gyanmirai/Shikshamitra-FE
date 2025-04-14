@@ -1,0 +1,45 @@
+[
+    {
+      "id": 1,
+      "subjectCode": "MTH101",
+      "subjectName": "Mathematics",
+      "subjectColor": "blue",
+      "primaryTeacher": "Mr. Rajesh Sharma",
+      "secondaryTeacher": ["Ms. Neha Verma", "Mr. Suresh Kumar"],
+      "scheduleDate": "2025-03-10T00:00:00.000Z",
+      "prerequisites": "Basic Arithmetic",
+      "learningGoal": "Understand algebra and geometry concepts",
+      "status": "Publish",
+      "className": "1",
+      "description": ""
+    },
+    {
+      "id": 2,
+      "subjectCode": "SCI202",
+      "subjectName": "Science",
+      "subjectColor": "green",
+      "primaryTeacher": "Ms. Priya Mehta",
+      "secondaryTeacher": ["Mr. Rohan Patel"],
+      "scheduleDate": "2025-04-15T00:00:00.000Z",
+      "prerequisites": "Introduction to Biology",
+      "learningGoal": "Develop understanding of ecosystems and physics fundamentals",
+      "status": "Unpublish",
+      "className": "1",
+      "description": ""
+    },
+    {
+      "id": 3,
+      "subjectCode": "ENG301",
+      "subjectName": "English Literature",
+      "subjectColor": "purple",
+      "primaryTeacher": "Mrs. Kavita Shah",
+      "secondaryTeacher": ["Ms. Pooja Iyer", "Mr. Ankit Tiwari"],
+      "scheduleDate": "2025-02-28T00:00:00.000Z",
+      "prerequisites": "Basic Grammar",
+      "learningGoal": "Improve writing and reading skills",
+      "status": "Publish",
+      "className": "1",
+      "description": ""
+    }
+  ]
+  

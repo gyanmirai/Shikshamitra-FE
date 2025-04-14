@@ -15,7 +15,7 @@ export interface IAssesmentFormikValues {
 }
 
 export interface IAssessment {
-  id: number;
+  id: string;
   className: string;
   division: string;
   subject: string;
@@ -73,4 +73,12 @@ export interface IStudentGrade {
   feedback: string;
   weightedAverage: string;
   status: string;
+}
+
+export interface IAssessmentManagementTableProps {
+  actions: (props: any) => React.ReactNode;
+  data: IAssessment[];
+  onEdit: (assessment: IAssessment) => void;
+  onDelete: (assessment: IAssessment) => void;
+  onTogglePublish: (id: string, value: boolean) => void;
 }

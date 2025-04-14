@@ -1,0 +1,63 @@
+[
+    {
+      "id": 1,
+      "class": "10",
+      "subjectName": "Mathematics",
+      "examType": "Unit Test",
+      "examName": "Maths Unit Test - Chapter 1",
+      "examDate": "2024-12-20",
+      "examTime": "10:00 AM",
+      "examDuration": "2 Hours",
+      "totalMarks": 50,
+      "status": "Pending"
+    },
+    {
+      "id": 2,
+      "class": "9",
+      "subjectName": "English",
+      "examType": "Mid-term Exam",
+      "examName": "English Literature Mid-Term",
+      "examDate": "2024-12-22",
+      "examTime": "11:30 AM",
+      "examDuration": "3 Hours",
+      "totalMarks": 100,
+      "status": "Completed"
+    },
+    {
+      "id": 3,
+      "class": "8",
+      "subjectName": "Science",
+      "examType": "Final Exam",
+      "examName": "Science Final - Part B",
+      "examDate": "2024-12-25",
+      "examTime": "09:00 AM",
+      "examDuration": "2.5 Hours",
+      "totalMarks": 80,
+      "status": "Pending"
+    },
+    {
+      "id": 4,
+      "class": "11",
+      "subjectName": "Chemistry",
+      "examType": "Practical Exam",
+      "examName": "Chemistry Lab - Semester 1",
+      "examDate": "2024-12-18",
+      "examTime": "01:00 PM",
+      "examDuration": "1.5 Hours",
+      "totalMarks": 30,
+      "status": "Completed"
+    },
+    {
+      "id": 5,
+      "class": "12",
+      "subjectName": "Biology",
+      "examType": "Quarterly Exam",
+      "examName": "Biology Quarterly Test",
+      "examDate": "2024-12-30",
+      "examTime": "08:30 AM",
+      "examDuration": "2 Hours",
+      "totalMarks": 70,
+      "status": "Pending"
+    }
+  ]
+  

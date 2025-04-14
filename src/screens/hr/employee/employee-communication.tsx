@@ -22,7 +22,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { varAlpha } from 'src/theme/styles';
 import { EventStatus, AnnouncementStatus } from 'src/enums/announcement-status';
-import { getImportanceLevelColor } from 'src/screens/communication/announcement/schoolWiseAnnounsement';
+import { getImportanceLevelColor } from 'src/screens/communication/announcement/components/getImportantColor';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';

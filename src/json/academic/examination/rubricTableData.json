@@ -1,0 +1,53 @@
+[
+    {
+      "id": 1,
+      "class": "10",
+      "subjectName": "Mathematics",
+      "pointScale": 5,
+      "objective": "Assess problem-solving skills.",
+      "rubricDescription": "Evaluate students on accuracy, clarity, and methodology.",
+      "date": "2024-12-15",
+      "status": true
+    },
+    {
+      "id": 2,
+      "class": "9",
+      "subjectName": "Science",
+      "pointScale": 3,
+      "objective": "Test understanding of basic scientific concepts.",
+      "rubricDescription": "Focus on explanation, logic, and application.",
+      "date": "2024-12-16",
+      "status": false
+    },
+    {
+      "id": 3,
+      "class": "11",
+      "subjectName": "History",
+      "pointScale": 4,
+      "objective": "Evaluate analytical and critical thinking skills.",
+      "rubricDescription": "Assess argument quality, use of evidence, and historical accuracy.",
+      "date": "2024-12-18",
+      "status": true
+    },
+    {
+      "id": 4,
+      "class": "8",
+      "subjectName": "English",
+      "pointScale": 6,
+      "objective": "Assess comprehension and writing skills.",
+      "rubricDescription": "Evaluate grammar, coherence, and creativity in essays.",
+      "date": "2024-12-19",
+      "status": false
+    },
+    {
+      "id": 5,
+      "class": "12",
+      "subjectName": "Physics",
+      "pointScale": 10,
+      "objective": "Measure understanding of core physics concepts.",
+      "rubricDescription": "Evaluate derivations, calculations, and practical examples.",
+      "date": "2024-12-20",
+      "status": true
+    }
+  ]
+  

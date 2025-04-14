@@ -14,8 +14,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Settings from './settings';
 import Reports from './reportsAndAnalyics';
 import Dashboard from './dashboard/dashboard';
-import CourseProgress from './courseProgress';
 import Subjects from './syllabusManagement/subjects';
+import CourseProgress from './courseProgress/courseProgress';
 import LearningResources from './learningResources/learningResources';
 
 const TABS = [
