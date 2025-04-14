@@ -8,6 +8,20 @@ export interface IDocument {
   file?: File;
 }
 
+export interface IChapter {
+  id: number;
+  chapterNo: number;
+  chapterName: string;
+  startDate: string; // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
+  assignedTeacher: string[];
+  viewMaterial: {
+    videos: number;
+    pdfs: number;
+  };
+  progress: number; // Percentage from 0 to 100
+}
+
 export interface IChapterFormValues {
   chapterNo: number;
   chapterName: string;
@@ -17,4 +31,31 @@ export interface IChapterFormValues {
   endTime: Dayjs | null;
   timeLine: Dayjs | null;
   documents?: IDocument[];
+}
+
+// Props interface for AddNewChapter component
+export interface IAddNewChapterProps {
+  onSubmit: (values: IChapterFormValues) => void;
+  selectedSubject: string;
+  isEdit?: boolean;
+  initialValues?: {
+    chapterNo: number;
+    chapterName: string;
+    assignedTeacher: string;
+    content: string;
+    startTime: Dayjs | null;
+    endTime: Dayjs | null;
+    timeLine: Dayjs | null;
+    documents?: Array<{
+      id: string;
+      name: string;
+      url: string;
+    }>;
+  } | null;
+}
+
+export interface IChapterTableProps {
+  data: IChapter[];
+  actions: (params: { popover: any; row: IChapter }) => JSX.Element;
+  handleEyeClick: (subjectName: string) => void;
 }

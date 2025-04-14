@@ -1,0 +1,99 @@
+[
+    {
+      "id": 1,
+      "name": "Math Course",
+      "progress": 75,
+      "completedChapter": 6,
+      "totalChapter": 10,
+      "color": "#007F63",
+      "details": [
+        {
+          "chapterName": "Algebra Basics",
+          "teacherName": "John Doe",
+          "progress": 60,
+          "pending": 40,
+          "timeLine": "2024-10-28"
+        },
+        {
+          "chapterName": "Geometry Foundations",
+          "teacherName": "Jane Smith",
+          "progress": 80,
+          "pending": 20,
+          "timeLine": "2024-11-05"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Science Course",
+      "progress": 86.6,
+      "completedChapter": 10,
+      "totalChapter": 20,
+      "color": "#006BA6",
+      "details": [
+        {
+          "chapterName": "Physics Introduction",
+          "teacherName": "Emily Brown",
+          "progress": 70,
+          "pending": 30,
+          "timeLine": "2024-11-10"
+        },
+        {
+          "chapterName": "Chemistry Basics",
+          "teacherName": "David Lee",
+          "progress": 90,
+          "pending": 10,
+          "timeLine": "2024-11-15"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "English Course",
+      "progress": 75,
+      "completedChapter": 10,
+      "totalChapter": 20,
+      "color": "#8E44AD",
+      "details": [
+        {
+          "chapterName": "Grammar Essentials",
+          "teacherName": "Tom Harris",
+          "progress": 55,
+          "pending": 45,
+          "timeLine": "2024-10-20"
+        },
+        {
+          "chapterName": "Writing Skills",
+          "teacherName": "Lisa Chen",
+          "progress": 75,
+          "pending": 25,
+          "timeLine": "2024-10-30"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Gujarati Course",
+      "progress": 86.6,
+      "completedChapter": 10,
+      "totalChapter": 20,
+      "color": "#D35400",
+      "details": [
+        {
+          "chapterName": "Alphabet and Basics",
+          "teacherName": "Raj Patel",
+          "progress": 88,
+          "pending": 12,
+          "timeLine": "2024-11-01"
+        },
+        {
+          "chapterName": "Reading Comprehension",
+          "teacherName": "Priya Shah",
+          "progress": 85,
+          "pending": 15,
+          "timeLine": "2024-11-10"
+        }
+      ]
+    }
+  ]
+  

@@ -33,20 +33,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { getValidationSchema } from './validationSchema';
 import { assignmentInitialValues } from './assignmentInitialValues';
 
-import type { THomeworkAssignment } from '../type';
+import type { IHomeWorkCreationFormProps } from '../type';
 
-/**
- * Props interface for the HomeworkCreationForm component
- * @interface HomeWorkCreationFormProps
- * @property {function} onsubmit - Callback function to handle form submission with homework values and status
- * @property {string} view - View mode of the form
- */
-interface HomeWorkCreationFormProps {
-  onsubmit: (values: THomeworkAssignment, status: 'draft' | 'publish') => void;
-  view: string;
-}
-
-const HomeworkAssignmentCreationForm: React.FC<HomeWorkCreationFormProps> = ({
+const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
   onsubmit,
   view,
 }) => {
