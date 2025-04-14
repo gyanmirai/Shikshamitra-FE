@@ -4,13 +4,10 @@
 
 import type { ICity, IState, ICountry } from 'country-state-city';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
-import { matchIsValidTel } from 'mui-tel-input';
 
-import { LoadingButton } from '@mui/lab';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import {
@@ -43,6 +40,7 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { EmptyContent } from 'src/components/empty-content';
 import { RemoveButton } from 'src/components/file-thumbnail';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -52,6 +50,8 @@ import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import { fileThumbnailClasses } from 'src/components/file-thumbnail/classes';
 import CountryComponent from 'src/components/stardard-address/country-component';
+
+import { basicInformationvalidationSchema } from './validationSchema';
 
 interface FormValues {
   instituteName: string;
@@ -69,43 +69,6 @@ interface FormValues {
   password: string;
   principleSign: string[];
 }
-
-const validationSchema = Yup.object().shape({
-  instituteName: Yup.string()
-    .required('Institute Name is required')
-    .min(2, 'Institute Name must be at least 2 characters')
-    .max(100, 'Institute Name must not exceed 100 characters'),
-  instituteLogo: Yup.array()
-    .of(Yup.string())
-    .min(1, 'At least one Institute Logo is required')
-    .required('Institute Logo is required'),
-  instituteBanner: Yup.array()
-    .of(Yup.string())
-    .min(1, 'At least one Institute Banner is required')
-    .required('Institute Banner is required'),
-  addressLine1: Yup.string().required('Address Line 1 is required'),
-  addressLine2: Yup.string().required('Address Line 2 is required'),
-  addressLine3: Yup.string().required('Address Line 3 is required'),
-  city: Yup.object()
-    .shape({ name: Yup.string().required('City is required') })
-    .required('City is required'),
-  stateProvince: Yup.object()
-    .shape({ name: Yup.string().required('State is required') })
-    .required('State is required'),
-  // zipPostalCode: Yup.string()
-  //   .required('ZIP/Postal Code is required')
-  //   .matches(/^[0-9]{5}(-[0-9]{4})?$/, 'Invalid ZIP/Postal Code format'),
-  country: Yup.object()
-    .shape({ name: Yup.string().required('Country is required') })
-    .required('Country is required'),
-  contactNumber: Yup.string()
-    .required('Contact Number is required')
-    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
-      matchIsValidTel((value || '') as string)
-    ),
-  emailAddress: Yup.string().required('Email Address is required').email('Invalid email format'),
-  principleSign: Yup.array().of(Yup.string()).min(1, 'At least one Principle Sign is required'),
-});
 
 const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
@@ -151,7 +114,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       password: '',
       principleSign: editData?.extraProperties?.PrincipleSign || [],
     },
-    validationSchema,
+    validationSchema: basicInformationvalidationSchema,
     onSubmit: async (formValues: FormValues) => {
       try {
         if (editData) {
@@ -551,9 +514,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
             textAlign: 'right',
           }}
         >
-          <LoadingButton type="submit" variant="contained" loading={isLoading || isUpdateLoading}>
-            Save changes
-          </LoadingButton>
+          <SubmitButton loading={isLoading || isUpdateLoading} />
         </Stack>
       </DialogActions>
     </Box>
@@ -595,6 +556,27 @@ const BasicInformation = () => {
         <BasicInformationForm handleClose={handleClose} editData={editData} />
       ) : (
         <CustomizableTable
+          noDataText={
+            <>
+              No Institute have been added yet.{' '}
+              <Box
+                onClick={() => {
+                  form.onTrue();
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Institute
+              </Box>
+            </>
+          }
           tableId="institute-setup"
           columns={[
             { label: 'Institute Name', id: 'name' },
