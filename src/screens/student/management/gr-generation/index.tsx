@@ -30,10 +30,14 @@ const GrNoGenerationScreen = ({
   isLoading: boolean;
   tableData: IInquiryData[];
 }) => {
+  // Controls whether manual GR number entry is enabled
   const [isManual, setIsManual] = useState<boolean>(false);
+  // Stores the starting GR number for auto-generation
   const [startGrNo, setStartGrNo] = useState<number | null>(null);
+  // Maintains the current state of student data with GR numbers
   const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
 
+  // Updates table data when student data prop changes
   useEffect(() => {
     setTableData(studentData);
   }, [studentData]);
@@ -41,14 +45,17 @@ const GrNoGenerationScreen = ({
   const dispatch = useDispatch();
   const { currentBoard, currentMedium } = useSelector((state: RootState) => state.globalState);
 
+  // Extract education related IDs from current selections
   const educationBoardId = currentBoard?.id || null;
   const educationMediumId = currentMedium?.id || null;
   const educationMediumStageId = currentMedium?.educationMediumStages[0]?.id || null;
 
+  // API hooks for fetching and updating student GR numbers
   const [fetchStudents, { isLoading: isStudentGrNumberLoading }] =
     useLazyGetStudentForGrNumberQuery();
   const [updateStudentGrNumbers, { isLoading: isSaving }] = useUpdateStudentGrNumberMutation();
 
+  // Handles automatic generation of GR numbers
   const handleAutoGenerate = async () => {
     if (!educationBoardId || !educationMediumId || !educationMediumStageId) {
       console.error('Missing required parameters for API call.');
@@ -79,16 +86,19 @@ const GrNoGenerationScreen = ({
     }
   };
 
+  // Enables manual GR number entry mode
   const handleManualToggle = () => {
     setIsManual(true);
   };
 
+  // Updates individual student GR number in manual mode
   const handleGrNumberChange = (id: string, newValue: number) => {
     setTableData((prevData) =>
       prevData.map((item) => (item.id === id ? { ...item, grNoRecord: newValue } : item))
     );
   };
 
+  // Saves the updated GR numbers to the backend
   const handleSave = async () => {
     const requestBody = {
       studentNumbers: tableData.map((item) => ({
@@ -108,9 +118,12 @@ const GrNoGenerationScreen = ({
     }
   };
 
+  // Stores the currently selected students for bulk operations
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  // Controls the visibility of notification dialog
   const sendInstantNotificationDialogValue = useBoolean();
 
+  // Handles opening the notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -140,6 +153,7 @@ const GrNoGenerationScreen = ({
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}
           tableId="gr-no-generation-table"
+          noDataText={<>No GR No Data Found </>}
           columns={[
             // { id: 'srNo', label: 'Sr. No.' },
             {
