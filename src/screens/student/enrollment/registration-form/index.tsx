@@ -78,6 +78,7 @@ const RegistrationFormScreen = () => {
 
       <CustomizableTable
         isLoading={isLoading}
+        noDataText={<>No Issued Registration Form Data Found </>}
         tableId="student-registration-form-table"
         columns={[
           { id: 'formNumber', label: 'Form No', minWidth: '110px' },

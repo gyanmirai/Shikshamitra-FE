@@ -434,6 +434,7 @@ const TimeTableGrid = (props: TabComponentType) => {
           />
           <CustomizableTable
             tableId="timetable-table"
+            noDataText={<>No Time Table Data Found</>}
             columns={[
               { id: 'division', label: 'Division' },
               {
@@ -457,7 +458,8 @@ const TimeTableGrid = (props: TabComponentType) => {
               },
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
+                minWidth: 100,
                 sticky: true,
                 isSort: false,
                 isFilter: false,

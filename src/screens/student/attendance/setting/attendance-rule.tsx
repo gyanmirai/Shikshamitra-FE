@@ -39,10 +39,15 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const AttendanceRule = () => {
+  // Boolean hooks for managing dialog and confirmation states
   const confirm = useBoolean();
   const dialog = useBoolean(false);
+
+  // State for managing edit and delete data
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
+
+  // Callback function for menu actions (edit and delete)
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -72,20 +77,26 @@ const AttendanceRule = () => {
     ),
     [confirm, dialog]
   );
+
+  // Fetch attendance rules data
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAttendanceRuleQuery,
   });
 
+  // Mutation hook for deleting rules
   const [deleteRule, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteStudentAttendanceRuleMutation,
   });
+
+  // Handler for closing the dialog and resetting edit data
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
   };
 
+  // Transform API data for table display
   const tableData = useMemo(
     () =>
       data?.items?.map((item: any) => ({
@@ -107,6 +118,28 @@ const AttendanceRule = () => {
 
       <CustomizableTable
         tableId="attendance-rule-table"
+        noDataText={
+          <>
+            No Attendance Rule Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Rule
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         columns={[
           { label: 'Name', id: 'name' },

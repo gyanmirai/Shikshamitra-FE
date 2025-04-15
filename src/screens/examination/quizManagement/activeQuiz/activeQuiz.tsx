@@ -64,6 +64,7 @@ const ActiveQuiz = () => {
         <QuizPortal quizData={quizPortalData} />
       ) : (
         <QuizTable
+          addQuizDialog={addQuizDialog}
           data={tableData}
           onTogglePublish={handleTogglePublish}
           onAttemptClick={handleAttemptClick}

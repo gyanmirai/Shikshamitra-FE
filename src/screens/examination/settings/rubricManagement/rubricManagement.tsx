@@ -32,6 +32,27 @@ const RubricManagement = () => {
       </Box>
       <CustomizableTable
         tableId="rubricTable"
+        noDataText={
+          <>
+            No Rubric Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create Rubric
+            </Box>
+          </>
+        }
         columns={[
           { id: 'class', label: 'Class' },
           { id: 'subjectName', label: 'Subject Name', minWidth: '150px', align: 'left' },

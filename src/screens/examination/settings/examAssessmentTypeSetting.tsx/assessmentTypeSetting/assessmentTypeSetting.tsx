@@ -109,6 +109,27 @@ const AssessmentTypeSettings = () => {
       </Box>
       <CustomizableTable
         tableId="assessment-type"
+        noDataText={
+          <>
+            No Assessment Type Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create Assessment Type
+            </Box>
+          </>
+        }
         columns={[
           { id: 'assessmentType', label: 'Assessment Type' },
           { id: 'description', label: 'Description' },

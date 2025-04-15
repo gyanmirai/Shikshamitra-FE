@@ -154,6 +154,7 @@ const Teacher = ({
         // onSendNotification={handlerSendNotification}
         // showCheckbox={selectedTeacher.length !== 0}
         tableId="teacher-table"
+        noDataText={<>No Teachers Data Found Select Class and Division</>}
         columns={[
           {
             id: 'subject',
@@ -179,6 +180,7 @@ const Teacher = ({
           {
             id: 'action',
             label: 'Actions',
+            minWidth: 100,
             isFilter: false,
             isSort: false,
             sticky: true,

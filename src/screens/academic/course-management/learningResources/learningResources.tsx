@@ -17,13 +17,14 @@ import {
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import learningResourceTableData from 'src/json/academic/syllabus/learningResourceTableData.json';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+} from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -43,9 +44,7 @@ const LearningResources = (props: TabComponentType) => {
   const { searchParams } = props;
   // State for controlling view mode (list/grid)
   const [view, setView] = useState('list');
-  // Custom hook for managing URL search parameters
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
-
+  const addLearningResourceDialog = useBoolean();
   // Extract class and subject from URL parameters with default empty string
   const classFromUrl = searchParams?.class || ''; // Use optional chaining
   const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
@@ -102,7 +101,7 @@ const LearningResources = (props: TabComponentType) => {
   const closeDialog = () => {
     setIsEdit(false);
     setSelectedEntry(null);
-    setParams({ isForm: 'false' });
+    addLearningResourceDialog.onFalse();
   };
 
   // Handle status change for publishing/unpublishing resources
@@ -144,19 +143,18 @@ const LearningResources = (props: TabComponentType) => {
   );
 
   // Define breadcrumb navigation links based on form state
-  const links =
-    params.isForm === 'true'
-      ? [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Syllabus', href: '/academic/courseSubjects' },
-          { name: 'Learning Resources' },
-          { name: 'Add Learning Resource' },
-        ]
-      : [
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Syllabus', href: '/academic/courseSubjects' },
-          { name: 'Learning Resources' },
-        ];
+  const links = addLearningResourceDialog.value
+    ? [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Learning Resources' },
+        { name: 'Add Learning Resource' },
+      ]
+    : [
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Learning Resources' },
+      ];
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -164,7 +162,7 @@ const LearningResources = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Learning Resources"
         description={
-          params.isForm === 'true'
+          addLearningResourceDialog.value
             ? 'Create or update learning resource details, including the title, content, and associated subject. Manage resources efficiently by adding new ones or editing existing entries.'
             : 'Manage and organize learning resources for each subject efficiently. View the list of resources, add new ones, update existing resources, or remove them as needed.'
         }
@@ -173,23 +171,25 @@ const LearningResources = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={
+              addLearningResourceDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />
+            }
             variant="contained"
             onClick={
-              params.isForm === 'true'
+              addLearningResourceDialog.value
                 ? closeDialog
                 : () => {
-                    setParams({ isForm: 'true' });
+                    addLearningResourceDialog.onTrue();
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Learning Resources'}
+            {addLearningResourceDialog.value ? 'Back' : 'Learning Resources'}
           </Button>
         }
       />
 
       {/* Conditional rendering of Create/Edit form or Resource list */}
-      {params.isForm === 'true' ? (
+      {addLearningResourceDialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <CreateNewResource
             onSave={handleSave}
@@ -261,6 +261,28 @@ const LearningResources = (props: TabComponentType) => {
             (view === 'list' ? (
               <CustomizableTable
                 tableId="learning-resources"
+                noDataText={
+                  <>
+                    No Learning Resource Found{' '}
+                    <Box
+                      onClick={() => {
+                        addLearningResourceDialog.onTrue();
+                        setSelectedEntry(null);
+                      }}
+                      color="primary.main"
+                      fontWeight={600}
+                      sx={{
+                        '&:hover': {
+                          cursor: 'pointer',
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      Add Learning Resource
+                    </Box>
+                  </>
+                }
                 columns={[
                   {
                     id: 'resourceTitle',
@@ -289,11 +311,13 @@ const LearningResources = (props: TabComponentType) => {
                     label: 'Publish',
                     minWidth: '200px',
                     align: 'left',
-                    render: (value, row) => (
-                      <Box sx={{ display: 'flex', alignItems: 'center', ml: 7 }}>
+                    filterType: 'enum',
+                    enumOptions: PublishUnpublishStatusOptions,
+                    render: (value: PublishUnpublishStatusType, row: any) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Switch
                           size="small"
-                          checked={value === 'Publish'}
+                          checked={value === PublishUnpublishStatusType.Publish}
                           onChange={() => handleStatusChange(row.id, value)}
                         />
                       </Box>
@@ -302,7 +326,7 @@ const LearningResources = (props: TabComponentType) => {
                   {
                     id: 'action',
                     label: 'Actions',
-                    minWidth: '180px',
+                    minWidth: 100,
                     isSort: false,
                     sticky: true,
                     isFilter: false,
@@ -317,7 +341,7 @@ const LearningResources = (props: TabComponentType) => {
                         handleEditClick={() => {
                           setIsEdit(true);
                           setSelectedEntry(row as IResourceData);
-                          setParams({ isForm: true });
+                          addLearningResourceDialog.onTrue();
                         }}
                       />
                     ),

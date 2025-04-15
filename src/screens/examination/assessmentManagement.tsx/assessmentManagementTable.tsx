@@ -8,6 +8,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { IAssessment, IAssessmentManagementTableProps } from './type';
 
 const AssessmentManagementTable = ({
+  openDialog,
+  setOpenDialog,
+  editData,
+  setEditData,
   actions,
   data,
   onEdit,
@@ -16,6 +20,27 @@ const AssessmentManagementTable = ({
 }: IAssessmentManagementTableProps) => (
   <CustomizableTable
     tableId="assessment-management-table"
+    noDataText={
+      <>
+        No Lecture Slots Found{' '}
+        <Box
+          onClick={() => {
+            setOpenDialog(true);
+          }}
+          color="primary.main"
+          fontWeight={600}
+          sx={{
+            '&:hover': {
+              cursor: 'pointer',
+              color: 'primary.main',
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Create Slots
+        </Box>
+      </>
+    }
     columns={[
       { id: 'className', label: 'Class' },
       { id: 'division', label: 'Division' },

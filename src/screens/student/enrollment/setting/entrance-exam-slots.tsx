@@ -87,6 +87,27 @@ const EntranceExamSlots = () => {
       <CustomizableTable
         isLoading={isLoading}
         tableId="entrance-exam-slots"
+        noDataText={
+          <>
+            No Entrance Exam Slots Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Slot
+            </Box>
+          </>
+        }
         columns={[
           { label: 'Slot Name', id: 'slotName' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },

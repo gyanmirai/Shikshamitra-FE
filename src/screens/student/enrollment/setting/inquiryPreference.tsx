@@ -84,6 +84,27 @@ const InquiryPreference = () => {
       </Box>
       <CustomizableTable
         tableId="inquiry-preference"
+        noDataText={
+          <>
+            No Inquiry Preference Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Inquiry Preference
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         columns={[
           { id: 'preferenceName', label: 'Name' },

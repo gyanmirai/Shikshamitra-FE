@@ -35,6 +35,8 @@ import {
   useDeleteShiftMutation,
 } from 'src/redux/shiftManagement/shift-management-api';
 
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -106,6 +108,27 @@ const ShiftManageMentScreen = () => {
         />
       ) : (
         <CustomizableTable
+          noDataText={
+            <>
+              No shifts have been added yet.{' '}
+              <Box
+                onClick={() => {
+                  open.onTrue();
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Shift
+              </Box>
+            </>
+          }
           tableId="shift-management"
           isLoading={isLoading}
           columns={[
@@ -375,14 +398,8 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
         </Grid> */}
         </Box>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <LoadingButton
-            type="submit"
-            variant="contained"
-            loading={isAddLoading || isUpdateLoading}
-          >
-            Save
-          </LoadingButton>
+          <CancelButton onClick={handleClose} />
+          <SubmitButton onClick={() => {}} />
         </DialogActions>
       </Box>
     </Card>

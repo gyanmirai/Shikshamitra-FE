@@ -14,7 +14,6 @@ import { Box, Card, Button, MenuItem, MenuList } from '@mui/material';
 
 // Import custom hooks
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 // Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -56,8 +55,6 @@ const Subjects = (props: TabComponentType) => {
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   // State for tracking edit mode
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  // Custom hook for managing URL search parameters
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
   // Query hook for fetching class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -213,28 +210,27 @@ const Subjects = (props: TabComponentType) => {
   );
 
   // Define navigation breadcrumb links based on form state
-  const links =
-    params.isForm === 'true'
-      ? [
-          // Links for form view (adding/editing chapter)
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Syllabus', href: '/academic/courseSubjects' },
-          { name: 'Syllabus Management' },
-          { name: 'Add Chapter' },
-        ]
-      : [
-          // Links for list view (showing chapters)
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Syllabus', href: '/academic/courseSubjects' },
-          { name: 'Syllabus Management' },
-        ];
+  const links = addChapterDialog.value
+    ? [
+        // Links for form view (adding/editing chapter)
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Syllabus Management' },
+        { name: 'Add Chapter' },
+      ]
+    : [
+        // Links for list view (showing chapters)
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Syllabus Management' },
+      ];
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
         heading="Syllabus"
         description={
-          params.isForm === 'true'
+          addChapterDialog.value
             ? 'Create or update chapter details, including the title, content, and associated subject. Manage chapters efficiently by adding new ones or editing existing entries.'
             : 'Manage and organize chapters for each subject efficiently. View the list of chapters, add new ones, update existing chapters, or remove them as needed.'
         }
@@ -243,24 +239,24 @@ const Subjects = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={addChapterDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
             onClick={
-              params.isForm === 'true'
+              addChapterDialog.value
                 ? () => {
-                    setParams({ isForm: 'false' });
+                    addChapterDialog.onFalse();
                   }
                 : () => {
-                    setParams({ isForm: 'true' });
+                    addChapterDialog.onTrue();
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Chapter'}
+            {addChapterDialog.value ? 'Back' : 'Chapter'}
           </Button>
         }
       />
       {/* Conditional rendering based on form state */}
-      {params.isForm === 'true' ? (
+      {addChapterDialog.value ? (
         // Form view for adding/editing chapters
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewChapter
@@ -300,7 +296,14 @@ const Subjects = (props: TabComponentType) => {
             />
           </Box>
           {/* Table component for displaying chapter data */}
-          <ChapterTable data={chapterData} actions={actions} handleEyeClick={handleEyeClick} />
+          <ChapterTable
+            ediData={selectedChapter}
+            setEditData={setSelectedChapter}
+            addChapterDialog={addChapterDialog}
+            data={chapterData}
+            actions={actions}
+            handleEyeClick={handleEyeClick}
+          />
         </>
       )}
     </Box>

@@ -76,6 +76,27 @@ const ExamType = () => {
       </Box>
       <CustomizableTable
         tableId="exam-type"
+        noDataText={
+          <>
+            No Entrance Exam Type Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Entrance Exam Type
+            </Box>
+          </>
+        }
         // isLoading={isLoading}
         columns={[
           { id: 'examType', label: 'Exam Type' },

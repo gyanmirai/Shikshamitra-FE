@@ -2,15 +2,10 @@
 
 // @ts-nocheck
 
-import type { ICity, IState, ICountry } from 'country-state-city';
-
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
-import { matchIsValidTel } from 'mui-tel-input';
 
-import { LoadingButton } from '@mui/lab';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import {
@@ -43,6 +38,7 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { EmptyContent } from 'src/components/empty-content';
 import { RemoveButton } from 'src/components/file-thumbnail';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -53,59 +49,9 @@ import StateComponent from 'src/components/stardard-address/state-component';
 import { fileThumbnailClasses } from 'src/components/file-thumbnail/classes';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
-interface FormValues {
-  instituteName: string;
-  instituteLogo: string[];
-  instituteBanner: string[];
-  addressLine1: string;
-  addressLine2: string;
-  addressLine3: string;
-  city?: Partial<ICity>;
-  stateProvince?: Partial<IState>;
-  zipPostalCode: string;
-  country?: Partial<ICountry>;
-  contactNumber: string;
-  emailAddress: string;
-  password: string;
-  principleSign: string[];
-}
+import { basicInformationvalidationSchema } from './validationSchema';
 
-const validationSchema = Yup.object().shape({
-  instituteName: Yup.string()
-    .required('Institute Name is required')
-    .min(2, 'Institute Name must be at least 2 characters')
-    .max(100, 'Institute Name must not exceed 100 characters'),
-  instituteLogo: Yup.array()
-    .of(Yup.string())
-    .min(1, 'At least one Institute Logo is required')
-    .required('Institute Logo is required'),
-  instituteBanner: Yup.array()
-    .of(Yup.string())
-    .min(1, 'At least one Institute Banner is required')
-    .required('Institute Banner is required'),
-  addressLine1: Yup.string().required('Address Line 1 is required'),
-  addressLine2: Yup.string().required('Address Line 2 is required'),
-  addressLine3: Yup.string().required('Address Line 3 is required'),
-  city: Yup.object()
-    .shape({ name: Yup.string().required('City is required') })
-    .required('City is required'),
-  stateProvince: Yup.object()
-    .shape({ name: Yup.string().required('State is required') })
-    .required('State is required'),
-  // zipPostalCode: Yup.string()
-  //   .required('ZIP/Postal Code is required')
-  //   .matches(/^[0-9]{5}(-[0-9]{4})?$/, 'Invalid ZIP/Postal Code format'),
-  country: Yup.object()
-    .shape({ name: Yup.string().required('Country is required') })
-    .required('Country is required'),
-  contactNumber: Yup.string()
-    .required('Contact Number is required')
-    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
-      matchIsValidTel((value || '') as string)
-    ),
-  emailAddress: Yup.string().required('Email Address is required').email('Invalid email format'),
-  principleSign: Yup.array().of(Yup.string()).min(1, 'At least one Principle Sign is required'),
-});
+import type { IFormValues, IImageSliderProps } from './type';
 
 const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
@@ -116,6 +62,11 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       successMessage: 'Tenant Added Successfully',
     },
   });
+
+  /**
+   * Mutation hook for updating existing tenant
+   * Includes success popup configuration
+   */
   const [updateTenant, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateTenantMutation,
@@ -124,7 +75,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       successMessage: 'Tenant Updated Successfully',
     },
   });
-  const formik = useFormik<FormValues>({
+  const formik = useFormik<IFormValues>({
     initialValues: {
       instituteName: editData?.name || '',
       instituteLogo: editData?.extraProperties?.Logo || [],
@@ -151,8 +102,8 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       password: '',
       principleSign: editData?.extraProperties?.PrincipleSign || [],
     },
-    validationSchema,
-    onSubmit: async (formValues: FormValues) => {
+    validationSchema: basicInformationvalidationSchema,
+    onSubmit: async (formValues: IFormValues) => {
       try {
         if (editData) {
           await updateTenant({
@@ -217,8 +168,11 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       }
     },
   });
+
+  /**
+   * Destructured formik properties for easier access
+   */
   const { values, errors, touched, handleChange, handleSubmit, setFieldValue } = formik;
-  console.log('🚀 ~ values:', values);
 
   return (
     <Box
@@ -233,113 +187,6 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
         }}
       >
         <Grid container spacing={3}>
-          {/* <Grid xs={12} sm={6} md={4}>
-          <Card sx={{ p: 1, height: '100%' }}>
-            <CardHeader title="Upload Institute Logo" sx={{ textAlign: 'center' }} />
-            <Upload
-              multiple
-              accept={{ 'image/*': [] }}
-              thumbnail
-              value={values.instituteLogo}
-              onDrop={(acceptedFiles) => {
-                const files = acceptedFiles;
-                const promises = files.map(
-                  (file) =>
-                    new Promise((resolve) => {
-                      const reader = new FileReader();
-                      reader.readAsDataURL(file);
-                      reader.onload = () => resolve(reader.result);
-                    })
-                );
-                Promise.all(promises).then((base64Strings) => {
-                  setFieldValue('instituteLogo', base64Strings);
-                });
-              }}
-              onRemove={(file) => {
-                setFieldValue(
-                  'instituteLogo',
-                  values.instituteLogo.filter((uploadFile) => file !== uploadFile)
-                );
-              }}
-              onRemoveAll={() => {
-                setFieldValue('instituteLogo', []);
-              }}
-              sx={{
-                '&>div': {
-                  bgcolor: 'unset',
-                  border: 'none',
-                  boxShadow: 'none',
-                },
-              }}
-            />
-          </Card>
-        </Grid>
-
-        <Grid xs={12} sm={6} md={4}>
-          <Card sx={{ p: 1, height: '100%' }}>
-            <CardHeader title="Upload Institute Banner" sx={{ textAlign: 'center' }} />
-            <CardContent>
-              <UploadAvatar
-                // name="avatarUrl"
-                title="Upload Institute Banner"
-                maxSize={3145728}
-                onDrop={(acceptedFiles: File[]) => {
-                  const value = acceptedFiles[0];
-                  setFieldValue('instituteBanner', value);
-                }}
-                value={values.instituteBanner}
-                error={touched.instituteBanner && Boolean(errors.instituteBanner)}
-                helperText={
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      mt: 3,
-                      mx: 'auto',
-                      display: 'block',
-                      textAlign: 'center',
-                      color: 'text.disabled',
-                    }}
-                  >
-                    Allowed *.jpeg, *.jpg, *.png, *.gif
-                    <br /> max size of {fData(3145728)}
-                  </Typography>
-                }
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid xs={12} sm={6} md={4}>
-          <Card sx={{ p: 1, height: '100%' }}>
-            <CardHeader title="Principle sign" sx={{ textAlign: 'center' }} />
-            <UploadAvatar
-              // name="avatarUrl"
-              title="Principle sign"
-              maxSize={3145728}
-              onDrop={(acceptedFiles: File[]) => {
-                const value = acceptedFiles[0];
-                setFieldValue('instituteBanner', value);
-              }}
-              value={values.instituteBanner}
-              error={touched.instituteBanner && Boolean(errors.instituteBanner)}
-              helperText={
-                <Typography
-                  variant="caption"
-                  sx={{
-                    mt: 3,
-                    mx: 'auto',
-                    display: 'block',
-                    textAlign: 'center',
-                    color: 'text.disabled',
-                  }}
-                >
-                  Allowed *.jpeg, *.jpg, *.png, *.gif
-                  <br /> max size of {fData(3145728)}
-                </Typography>
-              }
-            />
-          </Card>
-        </Grid> */}
-
           <Grid xs={12}>
             <Box>
               <Grid container spacing={3}>
@@ -551,28 +398,43 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
             textAlign: 'right',
           }}
         >
-          <LoadingButton type="submit" variant="contained" loading={isLoading || isUpdateLoading}>
-            Save changes
-          </LoadingButton>
+          <SubmitButton loading={isLoading || isUpdateLoading} />
         </Stack>
       </DialogActions>
     </Box>
   );
 };
 
+/**
+ * BasicInformation component for managing institute information
+ * Displays a table of institutes and allows creating/editing institute details
+ */
 const BasicInformation = () => {
+  // Toggle form visibility
   const form = useBoolean();
+  // Toggle view dialog for assets
   const viewDialog = useBoolean();
+  // State to store currently viewed asset (logo/banner/sign)
   const [currentAsset, setCurrentAsset] = useState<null | string[]>(null);
+  // State to store data for editing an institute
   const [editData, setEditData] = useState<any>(null);
+
+  /**
+   * Handles closing the form and resetting edit data
+   */
   const handleClose = () => {
     form.onFalse();
     setEditData(null);
   };
+
+  /**
+   * Query hook to fetch all tenants data
+   */
   const { data: tenants } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllTenantsQuery,
   });
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
@@ -595,7 +457,36 @@ const BasicInformation = () => {
         <BasicInformationForm handleClose={handleClose} editData={editData} />
       ) : (
         <CustomizableTable
+          noDataText={
+            <>
+              No Institute have been added yet.{' '}
+              <Box
+                onClick={() => {
+                  form.onTrue();
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Institute
+              </Box>
+            </>
+          }
           tableId="institute-setup"
+          searchFieldProps={{
+            placeholder: 'Search Institute',
+            label: 'Search Institute',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             { label: 'Institute Name', id: 'name' },
             {
@@ -668,6 +559,8 @@ const BasicInformation = () => {
               label: 'Action',
               id: 'action',
               sticky: true,
+              isSort: false,
+              isFilter: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions
@@ -700,9 +593,19 @@ const BasicInformation = () => {
 };
 export default BasicInformation;
 
+/**
+ * Component for handling basic information assets with image upload and preview functionality
+ * @param {Object} formik - Formik instance for form handling
+ * @param {string} name - Field name for the form values
+ * @param {string} title - Title to display above the upload section
+ */
 const BasicInformationAssets = ({ formik, name, title }: any) => {
+  // Dialog state for image preview
   const priviewDialog = useBoolean();
+
+  // State to store the currently previewed image
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   return (
     <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 1 }}>
       <Box>
@@ -812,19 +715,17 @@ const BasicInformationAssets = ({ formik, name, title }: any) => {
   );
 };
 
-interface ImageSliderProps {
-  images: string[];
-  open: boolean;
-  onClose: () => void;
-}
-
-const ImageSlider: React.FC<ImageSliderProps> = ({ images, open, onClose }) => {
+// ImageSlider component displays a modal dialog with image carousel functionality
+const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => {
+  // State to track the current image index in the carousel
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Handler for navigating to the next image in the carousel
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
   };
 
+  // Handler for navigating to the previous image in the carousel
   const handlePrev = () => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
   };

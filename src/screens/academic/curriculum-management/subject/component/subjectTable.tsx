@@ -4,13 +4,22 @@ import dayjs from 'dayjs';
 
 import { Box, Switch, Typography } from '@mui/material';
 
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
+
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { ISubject, ISubjectTableProps } from './type';
 
 const SubjectTable = ({
+  addSubjectDialog,
   data,
+  editData,
+  setEditData,
   subjectTableData,
   onView,
   onEdit,
@@ -19,6 +28,28 @@ const SubjectTable = ({
 }: ISubjectTableProps) => (
   <CustomizableTable
     tableId="subject-table"
+    noDataText={
+      <>
+        No Subject Found{' '}
+        <Box
+          onClick={() => {
+            addSubjectDialog.onTrue();
+            setEditData(null);
+          }}
+          color="primary.main"
+          fontWeight={600}
+          sx={{
+            '&:hover': {
+              cursor: 'pointer',
+              color: 'primary.main',
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Add Subject
+        </Box>
+      </>
+    }
     columns={[
       { id: 'subjectCode', label: 'Subject Code', minWidth: '180px', align: 'left' },
       {
@@ -76,13 +107,22 @@ const SubjectTable = ({
         label: 'Publish',
         minWidth: '200px',
         align: 'left',
-        render: (value: string, row: any) => (
+        filterType: 'enum',
+        enumOptions: PublishUnpublishStatusOptions,
+        render: (value: PublishUnpublishStatusType, row: any) => (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Switch
               size="small"
-              checked={value === 'Publish'}
+              checked={value === PublishUnpublishStatusType.Publish}
               onChange={() => onToggleStatus(row.id, value)}
             />
+            <Typography
+              variant="caption"
+              color={PublishUnpublishStatusTypeColors[value]}
+              sx={{ ml: 1 }}
+            >
+              {value}
+            </Typography>
           </Box>
         ),
       },
@@ -90,7 +130,7 @@ const SubjectTable = ({
         id: 'action',
         label: 'Actions',
         align: 'left',
-        minWidth: '150px',
+        minWidth: 100,
         sticky: true,
         isFilter: false,
         isSort: false,

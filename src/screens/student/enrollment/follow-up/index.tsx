@@ -82,6 +82,7 @@ const FollowUpScreen: React.FC = () => {
       />
       <CustomizableTable
         tableId="followUpTable"
+        noDataText={<>No Follow Up Data Found </>}
         isLoading={isLoading}
         columns={[
           { id: 'name', label: 'Name' },

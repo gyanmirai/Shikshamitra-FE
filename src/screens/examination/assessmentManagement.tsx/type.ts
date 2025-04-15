@@ -76,6 +76,10 @@ export interface IStudentGrade {
 }
 
 export interface IAssessmentManagementTableProps {
+  openDialog: boolean;
+  setOpenDialog: (value: boolean) => void;
+  editData?: IAssessment | null;
+  setEditData: (value: IAssessment | null) => void;
   actions: (props: any) => React.ReactNode;
   data: IAssessment[];
   onEdit: (assessment: IAssessment) => void;

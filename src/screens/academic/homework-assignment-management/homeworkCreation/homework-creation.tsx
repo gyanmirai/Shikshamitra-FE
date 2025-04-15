@@ -30,6 +30,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+} from 'src/enums/publishUnpublish-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -310,18 +314,21 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Homework Title',
       minWidth: '200px',
       align: 'left',
+      filterType: 'string',
     },
     {
       id: 'homeworkType',
       label: 'Homework Type',
       minWidth: '200px',
       align: 'left',
+      filterType: 'string',
     },
     {
       id: 'todaysDate',
       label: 'Creation Date',
       minWidth: '200px',
       align: 'left',
+      filterType: 'date',
       render: (value) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -333,6 +340,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Date',
       minWidth: '200px',
       align: 'left',
+      filterType: 'date',
       render: (value) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -344,6 +352,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Time',
       minWidth: '200px',
       align: 'left',
+      filterType: 'date',
       render: (value) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('HH:MM') : '-'}
@@ -355,19 +364,21 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Submission Type',
       minWidth: '200px',
       align: 'left',
+      filterType: 'string',
     },
     {
       id: 'status',
       label: 'Publish',
       minWidth: '200px',
       align: 'left',
-      render: (value, row) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 8 }}>
+      filterType: 'enum',
+      enumOptions: PublishUnpublishStatusOptions,
+      render: (value: PublishUnpublishStatusType, row: any) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
             size="small"
-            checked={row.status === 'publish'}
+            checked={value === PublishUnpublishStatusType.Publish}
             onChange={() => handleSwitchChange(row as IHomeworkAssignment)}
-            inputProps={{ 'aria-label': 'Toggle view' }}
           />
         </Box>
       ),
@@ -378,7 +389,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       isSort: false,
       isFilter: false,
       sticky: true,
-      minWidth: '200px',
+      minWidth: 100,
       align: 'left',
       render: (value, row) => (
         <ThreeDotsActions
@@ -394,7 +405,6 @@ const HomeworkCreation = (props: TabComponentType) => {
       ),
     },
   ];
-
   // Columns for Assignment view
   const assignmentColumns: Column[] = [
     {
@@ -402,18 +412,21 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Assignment Title',
       minWidth: '200px',
       align: 'left',
+      filterType: 'string',
     },
     {
       id: 'assignmentType',
       label: 'Assignment Type',
       minWidth: '200px',
       align: 'left',
+      filterType: 'string',
     },
     {
       id: 'todaysDate',
       label: 'Creation Date',
       minWidth: '200px',
       align: 'left',
+      filterType: 'date',
       render: (value, row) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -425,6 +438,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Date',
       minWidth: '200px',
       align: 'left',
+      filterType: 'date',
       render: (value, row) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('DD MMM YYYY') : '-'}
@@ -436,6 +450,7 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Due Time',
       minWidth: '200px',
       align: 'left',
+      filterType: 'date',
       render: (value, row) => (
         <Typography fontSize="12px" gutterBottom>
           {value ? dayjs(value).format('HH:MM') : '-'}
@@ -447,19 +462,21 @@ const HomeworkCreation = (props: TabComponentType) => {
       label: 'Submission Type',
       minWidth: '200px',
       align: 'left',
+      filterType: 'string',
     },
     {
       id: 'status',
       label: 'Publish',
       minWidth: '200px',
       align: 'left',
-      render: (value, row) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 8 }}>
+      filterType: 'enum',
+      enumOptions: PublishUnpublishStatusOptions,
+      render: (value: PublishUnpublishStatusType, row: any) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
             size="small"
-            checked={row.status === 'publish'}
+            checked={value === PublishUnpublishStatusType.Publish}
             onChange={() => handleSwitchChange(row as IHomeworkAssignment)}
-            inputProps={{ 'aria-label': 'Toggle view' }}
           />
         </Box>
       ),
@@ -474,7 +491,7 @@ const HomeworkCreation = (props: TabComponentType) => {
     {
       id: 'action',
       label: 'Action',
-      minWidth: '200px',
+      minWidth: 100,
       sticky: true,
       align: 'left',
       isSort: false,
@@ -667,6 +684,28 @@ const HomeworkCreation = (props: TabComponentType) => {
           </Box>
           <CustomizableTable
             tableId="homework-assignment-management"
+            noDataText={
+              <>
+                {view === 'homework' ? 'No Homework Created' : 'No Assignment Created'}
+                <Box
+                  onClick={() => {
+                    dialog.onTrue();
+                    setOpen(true);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {view === 'homework' ? 'Create Homework' : 'Create Assignment'}
+                </Box>
+              </>
+            }
             columns={view === 'homework' ? homeworkColumns : assignmentColumns}
             data={filteredData}
           />
@@ -798,6 +837,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
+        noDataText={<>No Submission Data Found Select Above Dropdown Data </>}
         columns={[
           {
             id: 'checkBox',
@@ -912,6 +952,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'actions',
             label: 'Actions',
+            minWidth: 100,
             isSort: false,
             isFilter: false,
             sticky: true,

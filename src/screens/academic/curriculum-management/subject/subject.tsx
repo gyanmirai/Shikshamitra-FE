@@ -8,7 +8,6 @@ import { Add } from '@mui/icons-material';
 import { Box, Card, Button, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -38,8 +37,7 @@ const Subject = (props: TabComponentType) => {
   });
 
   // URL search parameter state for form visibility
-  const [params, setParams] = useSearchParam({ isForm: 'false' });
-
+  const addSubjectDialog = useBoolean();
   // Dialog control states using boolean hooks
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
@@ -91,7 +89,7 @@ const Subject = (props: TabComponentType) => {
       // Add new subject
       setSubjectTableData([...subjectTableData, values]);
     }
-    setParams({ isForm: 'false' });
+    addSubjectDialog.onFalse();
     setIsEdit(false);
     setSelectedSubject(null);
   };
@@ -104,7 +102,7 @@ const Subject = (props: TabComponentType) => {
 
   // Close all dialogs and reset form state
   const handleCloseDialog = () => {
-    setParams({ isForm: 'false' });
+    addSubjectDialog.onFalse();
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     setIsEdit(false);
@@ -134,21 +132,20 @@ const Subject = (props: TabComponentType) => {
     setPendingStatusChange(null);
   };
   // Define breadcrumb navigation links based on whether form is active
-  const links =
-    params.isForm === 'true'
-      ? [
-          // Links when form is open
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculum-management' },
-          { name: 'Subject' },
-          { name: 'Subject Form' },
-        ]
-      : [
-          // Links when viewing subject list
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculum-management' },
-          { name: 'Subject' },
-        ];
+  const links = addSubjectDialog.value
+    ? [
+        // Links when form is open
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Curriculum', href: '/academic/curriculum-management' },
+        { name: 'Subject' },
+        { name: 'Subject Form' },
+      ]
+    : [
+        // Links when viewing subject list
+        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Curriculum', href: '/academic/curriculum-management' },
+        { name: 'Subject' },
+      ];
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -156,7 +153,7 @@ const Subject = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Subject"
         description={
-          params.isForm === 'true'
+          addSubjectDialog.value
             ? 'Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries.'
             : 'Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed.'
         }
@@ -165,24 +162,24 @@ const Subject = (props: TabComponentType) => {
         action={
           <Button
             size="small"
-            startIcon={params.isForm === 'true' ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+            startIcon={addSubjectDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
             variant="contained"
             onClick={
-              params.isForm === 'true'
+              addSubjectDialog.value
                 ? handleCloseDialog
                 : () => {
-                    setParams({ isForm: 'true' });
+                    addSubjectDialog.onTrue();
                     setIsEdit(false);
                     setSelectedSubject(null);
                   }
             }
           >
-            {params.isForm === 'true' ? 'Back' : 'Subject'}
+            {addSubjectDialog.value ? 'Back' : 'Subject'}
           </Button>
         }
       />
       {/* Conditional rendering based on form state */}
-      {params.isForm === 'true' ? (
+      {addSubjectDialog.value ? (
         <>
           {/* Subject form card for creating/editing subjects */}
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
@@ -213,13 +210,16 @@ const Subject = (props: TabComponentType) => {
           {/* Subject table displayed when class is selected */}
           {classes && (
             <SubjectTable
+              addSubjectDialog={addSubjectDialog}
               data={filteredData}
+              editData={selectedSubject}
+              setEditData={setSelectedSubject}
               subjectTableData={subjectTableData}
               onView={handleViewSubject}
               onEdit={(row: ISubject) => {
                 setSelectedSubject(row);
                 setIsEdit(true);
-                setParams({ isForm: 'true' });
+                addSubjectDialog.onTrue();
               }}
               onDelete={(row: ISubject) => {
                 setSelectedSubject(row);

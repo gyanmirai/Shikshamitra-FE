@@ -35,6 +35,10 @@ export interface IExamFormValues {
 }
 
 export interface IScheduledExamTableProps {
+  openDialog: boolean;
+  setOpenDialog: (value: boolean) => void;
+  editData?: IScheduledExam | null;
+  setEditData: (value: IScheduledExam | null) => void;
   data: IScheduledExam[];
 }
 
