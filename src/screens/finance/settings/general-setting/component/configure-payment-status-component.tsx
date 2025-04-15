@@ -199,6 +199,7 @@ const ConfigurePaymentStatusComponent = () => {
         </Box>
         <Grid item xs={12} md={12}>
           <CustomizableTable
+            noDataText={<>No Payment Status Found </>}
             isLoading={ispaymentStatusLoading}
             tableId="payment-status"
             isShowedDense={false}

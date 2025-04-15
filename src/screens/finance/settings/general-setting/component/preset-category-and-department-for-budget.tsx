@@ -181,6 +181,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
         </Box>
         <Grid item xs={12} md={12}>
           <CustomizableTable
+            noDataText={<>No Budget Category Found </>}
             tableId="existing-categories-departments"
             isShowedDense={false}
             isPagination={false}

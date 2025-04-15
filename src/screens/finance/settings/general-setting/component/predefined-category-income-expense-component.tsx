@@ -62,6 +62,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
       <Box display="flex" gap={3}>
         <Box flex={1}>
           <CustomizableTable
+            noDataText={<>No Budget Sub-Category Found </>}
             tableId="predefined-category-income-expense"
             isShowedDense={false}
             isPagination={false}

@@ -19,7 +19,7 @@ import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { StudentForFeeStructure } from '../data/student-fee-structure-data';
+import type { StudentForFeeStructure } from '../data/student-fee-structure-interface';
 
 interface FeeDetailsComponentProps {
   students: StudentForFeeStructure;

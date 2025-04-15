@@ -1,0 +1,24 @@
+[
+    {
+      "id": 1,
+      "receiptBookName": "GSEB",
+      "receiptBookCode": "GSE55B",
+      "toggle": true,
+      "action": "view"
+    },
+    {
+      "id": 2,
+      "receiptBookName": "CBSE",
+      "receiptBookCode": "CBS12E",
+      "toggle": true,
+      "action": "view"
+    },
+    {
+      "id": 3,
+      "receiptBookName": "OTHER",
+      "receiptBookCode": "OTH12a",
+      "toggle": true,
+      "action": "view"
+    }
+  ]
+  
