@@ -27,18 +27,28 @@ interface IGroup {
 }
 
 const GroupManagement = () => {
+  // Dialog state for add/edit form
   const dialog = useBoolean();
+
+  // Dialog state for delete confirmation
   const confirm = useBoolean();
+
+  // State to store group data being edited
   const [editData, setEditData] = useState<null | IGroup>(null);
+
+  // Fetch all student groups
   const { data: groupData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentGroupQuery,
   });
+
+  // Close dialog and reset edit data
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
   };
 
+  // Delete group mutation hook
   const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteStudentGroupMutation,
@@ -78,6 +88,7 @@ const GroupManagement = () => {
       />
       <CustomizableTable
         tableId="group-management-table"
+        noDataText={<>No Group Management Data Found </>}
         isLoading={isLoading}
         columns={[
           { label: 'Name', id: 'name' },
@@ -127,6 +138,7 @@ const GroupManagementForm = ({
   editData: IGroup | null;
   handleClose: () => void;
 }) => {
+  // Hooks for adding and updating student groups using custom query and mutation hook
   const [addGroup, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentGroupMutation,
@@ -136,14 +148,18 @@ const GroupManagementForm = ({
     currentQueryAndMutation: useUpdateStudentGroupMutation,
   });
 
+  // Initialize formik form with initial values and submit handler
   const formik = useFormik({
+    // Set initial name value from editData if exists, otherwise empty string
     initialValues: {
       name: editData?.name || '',
     },
+    // Handle form submission for both add and update operations
     onSubmit: async (values) => {
       console.log('formik');
       try {
         if (editData) {
+          // Update existing group if editData exists
           await updateGroup({
             id: editData.id,
             body: {
@@ -151,8 +167,10 @@ const GroupManagementForm = ({
             },
           }).unwrap();
         } else {
+          // Add new group if no editData
           await addGroup({ name: values.name }).unwrap();
         }
+        // Close dialog after successful operation
         handleClose();
       } catch (error) {
         console.log(error);

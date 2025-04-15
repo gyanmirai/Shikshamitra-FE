@@ -53,26 +53,33 @@ const initialData = [
 ];
 
 const BulkDataUpdateScreen = () => {
+  // State for managing selected category
   const [category, setCategory] = useState<string>('');
+
+  // State for managing selected sub-category
   const [subCategory, setSubCategory] = useState<string>('');
+
+  // State for storing all sub-categories with their properties
   const [allSubCategory, setAllSubCategory] = useState<
     { name: string; id: string; type: string }[]
   >([]);
 
+  // State for managing table data initialized with initial student data
   const [tableData, setTableData] = useState(initialData);
 
+  // Find the currently selected sub-category object from allSubCategory array
   const selectedSubCategory = allSubCategory.find((cat: any) => cat.id === subCategory) || {
     name: '',
     id: '',
     type: '',
   };
 
+  // Handler function to update table data when field values change
   const handleFieldChange = (rowId: any, value: any) => {
     setTableData((prevData) =>
       prevData.map((row) => (row.id === rowId ? { ...row, [selectedSubCategory.id]: value } : row))
     );
   };
-
   console.log('tableData---', tableData);
 
   return (
@@ -125,6 +132,7 @@ const BulkDataUpdateScreen = () => {
         {subCategory && (
           <CustomizableTable
             tableId="bulk-data-update-table"
+            noDataText={<>No Bulk Update Data Found </>}
             columns={[
               { id: 'srNo', label: 'Sr. No.', minWidth: '150px', align: 'left' },
               { id: 'grNo', label: 'GR No.', minWidth: '200px', align: 'left' },

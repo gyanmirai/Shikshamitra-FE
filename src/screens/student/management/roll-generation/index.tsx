@@ -27,6 +27,7 @@ const RollNoGenerationScreen = ({
   isLoading: boolean;
   tableData: IInquiryData[];
 }) => {
+  // State variables for managing roll number generation
   const [arrangementType, setArrangementType] = useState('');
   const [isManual, setIsManual] = useState(false);
   const [arrangeBy, setArrangeBy] = useState('');
@@ -35,18 +36,23 @@ const RollNoGenerationScreen = ({
 
   const dispatch = useDispatch();
 
+  // Mutation hook for updating student roll numbers
   const [updateStudentRollNumbers, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
+
+  /**
+   * Automatically generates roll numbers based on selected arrangement type and criteria
+   */
   const handleAutoGenerate = () => {
     let filteredData = [...tableData];
 
-    // Step 1: Filter based on Arrangement Type
+    // Filter students based on gender arrangement preference
     if (arrangementType === 'boysFirst') {
       filteredData = filteredData.filter((item) => item.genderType === GenderType.Male);
     } else if (arrangementType === 'girlsFirst') {
       filteredData = filteredData.filter((item) => item.genderType === GenderType.Female);
     }
 
-    // Step 2: Sort based on Arrangement By
+    // Sort students based on selected criteria (name, lastName, or GR number)
     if (arrangeBy === 'name') {
       filteredData.sort((a, b) => a.name.localeCompare(b.name));
     } else if (arrangeBy === 'lastName') {
@@ -55,30 +61,39 @@ const RollNoGenerationScreen = ({
       filteredData.sort((a, b) => a.grNoRecord.toString().localeCompare(b.grNoRecord.toString()));
     }
 
-    // Step 3: Assign Roll Numbers from 1
+    // Assign sequential roll numbers starting from 1
     filteredData = filteredData.map((item, index) => ({
       ...item,
-      rollNo: index + 1, // Assign roll numbers sequentially
+      rollNo: index + 1,
     }));
 
     setTableData(filteredData);
   };
 
+  // Update table data when student data changes
   useEffect(() => {
     if (studentData) {
       setTableData(studentData);
     }
   }, [studentData]);
+
+  /**
+   * Handles manual roll number changes and validates for duplicates
+   * @param id - Student ID
+   * @param newValue - New roll number value
+   */
   const handleRollNoChange = (id: string, newValue: number) => {
     const updatedData = tableData.map((item) =>
       item.id === id ? { ...item, rollNo: newValue } : item
     );
 
+    // Check for duplicate roll numbers
     const rollNumbers = updatedData.map((item) => item.rollNo);
     const duplicateRolls = rollNumbers.filter(
       (num, idx) => num && rollNumbers.indexOf(num) !== idx
     );
 
+    // Set error message if duplicate roll number is found
     setError((prevError) => ({
       ...prevError,
       [id]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
@@ -87,6 +102,9 @@ const RollNoGenerationScreen = ({
     setTableData(updatedData);
   };
 
+  /**
+   * Saves the updated roll numbers to the backend
+   */
   const handleSave = async () => {
     const requestBody = {
       studentNumbers: tableData.map((item) => ({
@@ -107,15 +125,19 @@ const RollNoGenerationScreen = ({
     }
   };
 
+  // State and handlers for instant notification feature
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
+  /**
+   * Opens the instant notification dialog when triggered
+   * Used to send notifications to selected students
+   */
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
-
   return (
     <Box>
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
@@ -179,6 +201,7 @@ const RollNoGenerationScreen = ({
           <CustomizableTable
             onSendNotification={handlerSendNotification}
             showCheckbox={selectedStudents.length !== 0}
+            noDataText={<>No Roll Genaration Data Found </>}
             tableId="roll-no-generation-table"
             columns={[
               // { id: 'srNo', label: 'Sr. No.' },
