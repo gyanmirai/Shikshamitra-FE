@@ -14,6 +14,7 @@ const GradeEntryTable = ({
 }: IGradeEntryTableProps) => (
   <CustomizableTable
     tableId="grade-entry-table"
+    noDataText={<>No Student Found For Grading</>}
     columns={[
       {
         id: 'select',
@@ -70,6 +71,7 @@ const GradeEntryTable = ({
       {
         id: 'actions',
         label: 'Actions',
+        minWidth: 100,
         isSort: false,
         render(value, row) {
           return (

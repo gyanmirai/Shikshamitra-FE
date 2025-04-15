@@ -127,6 +127,7 @@ const AssignTeacher = () => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="assignTeacherTable"
+        noDataText={<>No Division Data Found Search By Organization and Class</>}
         columns={[
           {
             id: 'checkBox',

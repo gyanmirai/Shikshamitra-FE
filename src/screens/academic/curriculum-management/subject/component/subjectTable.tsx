@@ -4,6 +4,12 @@ import dayjs from 'dayjs';
 
 import { Box, Switch, Typography } from '@mui/material';
 
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
+
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -101,13 +107,22 @@ const SubjectTable = ({
         label: 'Publish',
         minWidth: '200px',
         align: 'left',
-        render: (value: string, row: any) => (
+        filterType: 'enum',
+        enumOptions: PublishUnpublishStatusOptions,
+        render: (value: PublishUnpublishStatusType, row: any) => (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Switch
               size="small"
-              checked={value === 'Publish'}
+              checked={value === PublishUnpublishStatusType.Publish}
               onChange={() => onToggleStatus(row.id, value)}
             />
+            <Typography
+              variant="caption"
+              color={PublishUnpublishStatusTypeColors[value]}
+              sx={{ ml: 1 }}
+            >
+              {value}
+            </Typography>
           </Box>
         ),
       },
