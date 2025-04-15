@@ -43,9 +43,12 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility
+  // Dialog control for add/edit form
   const dialog = useBoolean();
+  // Dialog control for reject confirmation
   const confirmRejectDialog = useBoolean();
 
+  // Mock data for leave requests table
   const [tableData, setTableData] = useState([
     {
       medium: 'English',
@@ -88,9 +91,12 @@ const LeaveAndAbsentScreen = () => {
     },
   ]);
 
+  // State to store selected students for bulk actions
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
+  // Dialog control for instant notification
   const sendInstantNotificationDialogValue = useBoolean();
 
+  // Handler to open instant notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -114,6 +120,27 @@ const LeaveAndAbsentScreen = () => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudent.length !== 0}
         tableId="leave-absent-table"
+        noDataText={
+          <>
+            No Leave And Absent Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Leave Request
+            </Box>
+          </>
+        }
         columns={[
           {
             id: 'checkBox',
