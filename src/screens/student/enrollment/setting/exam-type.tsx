@@ -18,15 +18,15 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IExamType {
-  id: string;
-  examType: string;
-}
+import type { IExamType } from './type';
 
 const ExamType = () => {
+  // Dialog state for opening/closing modal
   const dialog = useBoolean();
+  // Dialog state for confirmation modal
   const confirm = useBoolean();
 
+  // State to store exam type data being edited
   const [editData, setEditData] = useState<null | IExamType>(null);
 
   //   const { data: inquiryPreference, isLoading } = useQueryAndMutation({
@@ -39,11 +39,11 @@ const ExamType = () => {
   //     currentQueryAndMutation: useDeleteInquiryPreferenceMutation,
   //   });
 
+  // Handler to close dialog and reset edit data
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
   };
-
   return (
     <Box>
       <ConfirmDialog
@@ -97,6 +97,14 @@ const ExamType = () => {
             </Box>
           </>
         }
+        searchFieldProps={{
+          placeholder: 'Search by exam type',
+          label: 'Search by exam type',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         // isLoading={isLoading}
         columns={[
           { id: 'examType', label: 'Exam Type' },
@@ -151,7 +159,7 @@ const ExamType = () => {
             class: '11th Grade',
           },
         ]}
-      />
+      />{' '}
       <CustomDialog open={dialog.value} handleClose={handleClose} title="Exam Type">
         <ExamTypeForm handleClose={handleClose} editData={editData} />
       </CustomDialog>

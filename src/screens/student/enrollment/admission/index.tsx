@@ -621,6 +621,14 @@ const AdmissionScreen = () => {
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-enrollment-admission-table"
         noDataText={<>No Admission Data Found</>}
+        searchFieldProps={{
+          placeholder: 'Search by Form No, Inquiry number, Student name, Class..',
+          label: 'Search by  Form No, Inquiry number, Student name, Class..',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading}
         columns={[
           {

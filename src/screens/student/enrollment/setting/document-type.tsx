@@ -38,27 +38,29 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IStudentDocument {
-  id: string;
-  documentName: string;
-  isRequired: boolean;
-  documentTypes: DocumentType[];
-}
+import type { IStudentDocument } from './type';
+
 const StudentDocumentType = () => {
+  // Dialog state for add/edit form
   const dialog = useBoolean();
+  // Dialog state for delete confirmation
   const confirm = useBoolean();
+  // State to store document being edited
   const [editData, setEditData] = useState<null | IStudentDocument>(null);
 
+  // Fetch all student document types
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
   });
 
+  // Delete document mutation
   const [deleteDocument, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteStudentDocumentTypeMutation,
   });
 
+  // Reset form and close dialog
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
@@ -116,6 +118,14 @@ const StudentDocumentType = () => {
             </Box>
           </>
         }
+        searchFieldProps={{
+          placeholder: 'Search by document name, type...',
+          label: 'Search by document name, type...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading}
         columns={[
           { id: 'documentName', label: 'Document' },
@@ -151,7 +161,7 @@ const StudentDocumentType = () => {
           },
         ]}
         data={documents?.items || []}
-      />
+      />{' '}
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}
