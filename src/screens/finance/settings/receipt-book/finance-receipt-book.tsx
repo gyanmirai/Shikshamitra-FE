@@ -6,6 +6,8 @@ import { Box, Button, Switch } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
+
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -15,24 +17,6 @@ import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
 
 import type { IReceiptBook } from './receipt-book-interface';
-
-let initialData: IReceiptBook[] = [
-  {
-    id: 1,
-    receiptBookName: 'GSEB',
-    receiptBookCode: 'GSE55B',
-    toggle: true,
-    action: 'view',
-  },
-  {
-    id: 2,
-    receiptBookName: 'CBSE',
-    receiptBookCode: 'CBS12E',
-    toggle: true,
-    action: 'view',
-  },
-  { id: 3, receiptBookName: 'OTHER', receiptBookCode: 'OTH12a', toggle: true, action: 'view' },
-];
 
 const FinanceReceiptBookSetting = () => {
   const dialog = useBoolean();
@@ -47,40 +31,7 @@ const FinanceReceiptBookSetting = () => {
     dialog.onFalse();
   };
 
-  const handleDelete = (item: any) => {
-    initialData = tableData.filter((val) => val.id !== item.id);
-    setTableData([...initialData]);
-  };
   useEffect(() => {}, [selectedEntry, isEdit]);
-
-  const handleSave = (dataFromDialog: any) => {
-    const { id, receiptBookName, receiptBookCode } = dataFromDialog;
-
-    const existingEntryIndex = tableData.findIndex((e) => e.id === id);
-
-    if (isEdit && existingEntryIndex !== -1) {
-      const updatedEntry = { ...tableData[existingEntryIndex] };
-      updatedEntry.receiptBookName = receiptBookName;
-      updatedEntry.receiptBookCode = receiptBookCode;
-
-      const updatedData = [...tableData];
-      updatedData[existingEntryIndex] = updatedEntry;
-
-      setTableData(updatedData);
-    } else {
-      const newReceiptBookName = {
-        id,
-        receiptBookName,
-        receiptBookCode,
-      };
-
-      const updatedData = [...tableData, newReceiptBookName];
-
-      setTableData(updatedData);
-    }
-
-    closeDialog();
-  };
 
   const [open, setOpen] = useState(false);
 
@@ -93,7 +44,7 @@ const FinanceReceiptBookSetting = () => {
     <>
       {open ? (
         <FinanceSettingReceiptbookDialog
-          onSave={handleSave}
+          onSave={() => {}}
           // dialogValue={dialog.value}
           onClose={closeHandler}
           data={selectedEntry}
@@ -134,6 +85,28 @@ const FinanceReceiptBookSetting = () => {
           </Box>
 
           <CustomizableTable
+            noDataText={
+              <>
+                No Receipt Book Found{' '}
+                <Box
+                  onClick={() => {
+                    setIsEdit(false);
+                    setOpen(true);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Receipt Book
+                </Box>
+              </>
+            }
             tableId="finance-receipt-book-setting-table"
             isShowedDense={false}
             isPagination={false}

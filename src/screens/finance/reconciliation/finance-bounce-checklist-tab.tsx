@@ -21,6 +21,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { varAlpha } from 'src/theme/styles';
+import bounceChequeData from 'src/json/finance/reconicilation/bounceChequeData.json';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -29,7 +30,6 @@ import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { chargesData } from './data/bounce-cheque-data';
 import FinanceChequeBounceChargeCollect from '../fee-collection/charges/component/finance-cheque-bounce-charge-collect';
 
 import type { IChargeData } from './data/charges_data_interface';
@@ -96,6 +96,9 @@ const FinanceBounceScreen = () => {
         </Box>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>There are no Bounce cheque recorded for the selected class and division at this time.</>
+        }
         tableId="finance-bounce-checklist-tab"
         columns={[
           //  {id:"srNo", label:"SR No"},
@@ -149,7 +152,7 @@ const FinanceBounceScreen = () => {
             },
           },
         ]}
-        data={chargesData}
+        data={bounceChequeData}
       />
 
       <CustomDialog open={openDialog} handleClose={handleCloseDialog} title="Communication History">

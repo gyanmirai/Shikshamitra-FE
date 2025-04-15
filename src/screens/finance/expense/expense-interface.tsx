@@ -17,3 +17,14 @@ export interface IFormikValue {
   expenseName: string;
   notes?: string;
 }
+
+export interface IExpenseData {
+  expenseCategory: string;
+  expenseAmount: string;
+  paymentMethod: string;
+  date: string;
+  id: number;
+  paymentStatus: string;
+  action?: string;
+  expenseList?: any;
+}

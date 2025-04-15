@@ -10,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import feeStructureData from 'src/json/finance/fee-management/feeStructureData.json';
 import ReadOnlyFeeStructureTable from 'src/screens/finance/settings/fee-structure/component/read-only-fee-structure-table';
 
 import CustomDialog from 'src/components/customDialog';
@@ -19,14 +20,12 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { initialDataFeeStructure } from '../../data/fee-structure-dummy-data';
-
 const FinanceFeeStructureOverviewComponent = () => {
   // Boolean state to control the visibility of detailed fee structure dialog/modal
   const detaiFeeStructure = useBoolean();
 
   // State to store and manage the fee structure table data, initialized with dummy data
-  const [tableData, setTableData] = useState(initialDataFeeStructure);
+  const [tableData, setTableData] = useState<IFeeStructure[]>(feeStructureData);
 
   // State to store the selected fee structure items when a row is clicked/selected
   const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();
@@ -44,6 +43,28 @@ const FinanceFeeStructureOverviewComponent = () => {
       />
       <Box pb="10px">
         <CustomizableTable
+          noDataText={
+            <>
+              No Fee Structure Available.
+              <Box
+                component="a"
+                display="flex"
+                href="/finance/settings/fee-structure"
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  textDecoration: 'none',
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Fee Structure
+              </Box>
+            </>
+          }
           tableId="fee-structure-overview"
           columns={[
             {

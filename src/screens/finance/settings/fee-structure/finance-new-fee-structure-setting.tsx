@@ -8,6 +8,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import initialData from 'src/json/finance/settings/fee-structure/feeStructureData.json';
+
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -16,50 +18,6 @@ import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
 import FinanceEditFeeStructureSettingDialog from './component/finance-edit-fee-structure-setting-dialog';
-
-const initialData: any = [
-  {
-    id: 1,
-    totalPayableFee: 75000,
-    totaldiscountAmount: 2000,
-    grossFee: 77000,
-    applicableGrade: '1',
-    bookRecipt: 'CBSE',
-    feeSubCategoryList: [
-      {
-        id: 1,
-        receiptBook: 'CBSE',
-        feeHead: 'Tuition',
-        grossFee: 5000,
-        payableFee: 4500,
-        generalDiscount: 500,
-        discountAmount: 0,
-        discountRemark: '',
-        paymentMethod: ['cash', 'online'],
-        lateFeeChargesType: 'perDay',
-        lateFeeChargesAmount: '1',
-        isActive: true,
-        paymentDueDate: '20-05-2025',
-        applicableClass: ['1', '2', '3'],
-      },
-      {
-        receiptBook: 'CBSE',
-        feeHead: 'Admission',
-        grossFee: 1000,
-        payableFee: 1000,
-        discountAmount: 0,
-        discountRemark: '',
-        paymentMethod: ['cash'],
-        lateFeeChargesType: 'fixed',
-        lateFeeChargesAmount: '1000',
-        isActive: true,
-        paymentDueDate: '20-04-2024',
-        applicableClass: ['1'],
-      },
-    ],
-    isActive: true,
-  },
-];
 
 const FinanceNewFeeStructureSetting = () => {
   const dialog = useBoolean();
@@ -125,6 +83,28 @@ const FinanceNewFeeStructureSetting = () => {
           </Box>
 
           <CustomizableTable
+            noDataText={
+              <>
+                No Fee Structure Found.{' '}
+                <Box
+                  onClick={() => {
+                    setIsEdit(false);
+                    setOpen(true);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  New Fee Structure
+                </Box>
+              </>
+            }
             tableId="finance-fee-structure-setting-tab"
             columns={[
               {

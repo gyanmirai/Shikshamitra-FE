@@ -1,0 +1,35 @@
+[
+    {
+      "id": "income_01",
+      "name": "Tuition Fees",
+      "totalAmountExpected": 150000000,
+      "collectedAmount": 0,
+      "outstandingAmount": 150000000,
+      "receivedPercantage": "0 %"
+    },
+    {
+      "id": "income_02",
+      "name": "Donations",
+      "totalAmountExpected": 50000,
+      "collectedAmount": 0,
+      "outstandingAmount": 50000,
+      "receivedPercantage": "0 %"
+    },
+    {
+      "id": "income_03",
+      "name": "Government Grants",
+      "totalAmountExpected": 30000,
+      "collectedAmount": 0,
+      "outstandingAmount": 30000,
+      "receivedPercantage": "0 %"
+    },
+    {
+      "id": "income_04",
+      "name": "Total",
+      "totalAmountExpected": 80000,
+      "collectedAmount": 0,
+      "outstandingAmount": 80000,
+      "receivedPercantage": "0 %"
+    }
+  ]
+  

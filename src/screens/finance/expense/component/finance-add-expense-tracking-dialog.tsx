@@ -22,10 +22,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { addExpenseDialogValidationSchema } from '../validationSchema';
 
-import type {
-  IFormikValue,
-  IFinanceAddExpenseTrackingDialogProps,
-} from '../add-expense-dialog-interface';
+import type { IFormikValue, IFinanceAddExpenseTrackingDialogProps } from '../expense-interface';
 
 const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialogProps> = ({
   dialogValue,
