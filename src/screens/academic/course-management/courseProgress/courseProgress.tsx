@@ -10,7 +10,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Box,
-  Button,
   MenuList,
   MenuItem,
   TextField,
@@ -172,6 +171,7 @@ const CourseProgress = (props: TabComponentType) => {
           {/* Table showing chapter-wise progress details */}
           <CustomizableTable
             tableId="course-progress-table"
+            noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
               { id: 'chapterName', label: 'Chapter Name', minWidth: '200px', align: 'left' },
               { id: 'teacherName', label: 'Teacher Name', minWidth: '200px', align: 'left' },
@@ -225,7 +225,7 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'actions',
                 label: 'Actions',
-                minWidth: '200px',
+                minWidth: 100,
                 align: 'left',
                 sticky: true,
                 isFilter: false,

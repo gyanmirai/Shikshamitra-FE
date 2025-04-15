@@ -7,9 +7,38 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IChapter, IChapterTableProps } from '../type';
 
-const ChapterTable = ({ data, actions, handleEyeClick }: IChapterTableProps) => (
+const ChapterTable = ({
+  addChapterDialog,
+  ediData,
+  setEditData,
+  data,
+  actions,
+  handleEyeClick,
+}: IChapterTableProps) => (
   <CustomizableTable
-    tableId="subjectTable"
+    tableId="chapterTable"
+    noDataText={
+      <>
+        No Inquiry Found{' '}
+        <Box
+          onClick={() => {
+            addChapterDialog.onTrue();
+            setEditData(null);
+          }}
+          color="primary.main"
+          fontWeight={600}
+          sx={{
+            '&:hover': {
+              cursor: 'pointer',
+              color: 'primary.main',
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Add Chapter
+        </Box>
+      </>
+    }
     columns={[
       {
         id: 'chapterNo',
@@ -94,7 +123,7 @@ const ChapterTable = ({ data, actions, handleEyeClick }: IChapterTableProps) => 
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: '200px',
+        minWidth: 100,
         isSort: false,
         isFilter: false,
         align: 'left',

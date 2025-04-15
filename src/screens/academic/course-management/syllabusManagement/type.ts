@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 // Interface for document object containing file information
 export interface IDocument {
@@ -55,6 +56,9 @@ export interface IAddNewChapterProps {
 }
 
 export interface IChapterTableProps {
+  ediData: IChapter;
+  setEditData: React.Dispatch<React.SetStateAction<IChapter | null>>;
+  addChapterDialog: UseBooleanReturn;
   data: IChapter[];
   actions: (params: { popover: any; row: IChapter }) => JSX.Element;
   handleEyeClick: (subjectName: string) => void;

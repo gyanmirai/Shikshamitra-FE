@@ -1,0 +1,8 @@
+[
+    { "id": 1, "subjects": "Mathematics", "weeklyLectures": 0 },
+    { "id": 2, "subjects": "Science", "weeklyLectures": 0 },
+    { "id": 3, "subjects": "English", "weeklyLectures": 0 },
+    { "id": 4, "subjects": "History", "weeklyLectures": 0 },
+    { "id": 5, "subjects": "Geography", "weeklyLectures": 0 }
+  ]
+  

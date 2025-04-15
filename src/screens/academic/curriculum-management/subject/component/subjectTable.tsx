@@ -10,7 +10,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { ISubject, ISubjectTableProps } from './type';
 
 const SubjectTable = ({
+  addSubjectDialog,
   data,
+  editData,
+  setEditData,
   subjectTableData,
   onView,
   onEdit,
@@ -19,6 +22,28 @@ const SubjectTable = ({
 }: ISubjectTableProps) => (
   <CustomizableTable
     tableId="subject-table"
+    noDataText={
+      <>
+        No Subject Found{' '}
+        <Box
+          onClick={() => {
+            addSubjectDialog.onTrue();
+            setEditData(null);
+          }}
+          color="primary.main"
+          fontWeight={600}
+          sx={{
+            '&:hover': {
+              cursor: 'pointer',
+              color: 'primary.main',
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Add Subject
+        </Box>
+      </>
+    }
     columns={[
       { id: 'subjectCode', label: 'Subject Code', minWidth: '180px', align: 'left' },
       {
@@ -90,7 +115,7 @@ const SubjectTable = ({
         id: 'action',
         label: 'Actions',
         align: 'left',
-        minWidth: '150px',
+        minWidth: 100,
         sticky: true,
         isFilter: false,
         isSort: false,
