@@ -6,7 +6,6 @@ import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 
-import { LoadingButton } from '@mui/lab';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import {
@@ -39,6 +38,7 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { EmptyContent } from 'src/components/empty-content';
 import { RemoveButton } from 'src/components/file-thumbnail';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -49,24 +49,11 @@ import StateComponent from 'src/components/stardard-address/state-component';
 import { fileThumbnailClasses } from 'src/components/file-thumbnail/classes';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
-import { basicInformationInitialValues } from './initialvalues';
-import { basicInformationValidationSchema } from './validatinSchema';
+import { basicInformationvalidationSchema } from './validationSchema';
 
 import type { IFormValues, IImageSliderProps } from './type';
 
-/**
- * BasicInformationForm Component - Handles the form for creating and editing tenant/institute information
- * @param {Object} editData - Data for editing existing tenant information
- * @param {Function} handleClose - Function to handle form closure
- */
-const BasicInformationForm: React.FC<{ editData: any; handleClose: () => void }> = ({
-  editData,
-  handleClose,
-}) => {
-  /**
-   * Mutation hook for adding new tenant
-   * Includes success popup configuration
-   */
+const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddTenantMutation,
@@ -88,14 +75,34 @@ const BasicInformationForm: React.FC<{ editData: any; handleClose: () => void }>
       successMessage: 'Tenant Updated Successfully',
     },
   });
-
-  /**
-   * Formik instance for form handling
-   * Manages form state, validation, and submission
-   */
   const formik = useFormik<IFormValues>({
-    initialValues: basicInformationInitialValues(editData),
-    validationSchema: basicInformationValidationSchema,
+    initialValues: {
+      instituteName: editData?.name || '',
+      instituteLogo: editData?.extraProperties?.Logo || [],
+      instituteBanner: editData?.extraProperties?.Banner || [],
+      addressLine1: editData?.extraProperties?.Address1 || '',
+      addressLine2: editData?.extraProperties?.Address2 || '',
+      addressLine3: editData?.extraProperties?.Address3 || '',
+      city: editData?.extraProperties?.City ? { name: editData?.extraProperties?.City } : undefined,
+      stateProvince: editData?.extraProperties?.State
+        ? {
+            name: editData?.extraProperties?.State?.name,
+            isoCode: editData?.extraProperties?.State?.isoCode,
+          }
+        : undefined,
+      zipPostalCode: editData?.extraProperties?.PostalCode || '',
+      country: editData?.extraProperties?.Country
+        ? {
+            name: editData?.extraProperties?.Country?.name,
+            isoCode: editData?.extraProperties?.Country?.isoCode,
+          }
+        : undefined,
+      contactNumber: editData?.extraProperties?.ContactNumber || '',
+      emailAddress: editData?.adminEmailAddress || '',
+      password: '',
+      principleSign: editData?.extraProperties?.PrincipleSign || [],
+    },
+    validationSchema: basicInformationvalidationSchema,
     onSubmit: async (formValues: IFormValues) => {
       try {
         if (editData) {
@@ -391,9 +398,7 @@ const BasicInformationForm: React.FC<{ editData: any; handleClose: () => void }>
             textAlign: 'right',
           }}
         >
-          <LoadingButton type="submit" variant="contained" loading={isLoading || isUpdateLoading}>
-            Save changes
-          </LoadingButton>
+          <SubmitButton loading={isLoading || isUpdateLoading} />
         </Stack>
       </DialogActions>
     </Box>
@@ -452,22 +457,12 @@ const BasicInformation = () => {
         <BasicInformationForm handleClose={handleClose} editData={editData} />
       ) : (
         <CustomizableTable
-          tableId="institute-setup"
-          searchFieldProps={{
-            placeholder: 'Search Institute',
-            label: 'Search Institute',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
           noDataText={
             <>
-              No Institute Found{' '}
+              No Institute have been added yet.{' '}
               <Box
                 onClick={() => {
                   form.onTrue();
-                  setEditData(null);
                 }}
                 color="primary.main"
                 fontWeight={600}
@@ -483,6 +478,15 @@ const BasicInformation = () => {
               </Box>
             </>
           }
+          tableId="institute-setup"
+          searchFieldProps={{
+            placeholder: 'Search Institute',
+            label: 'Search Institute',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             { label: 'Institute Name', id: 'name' },
             {
