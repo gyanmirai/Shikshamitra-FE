@@ -4,7 +4,7 @@ interface IFeeSubCategory {
   payableFee: number;
   generalDiscount: number;
   paymentMethod: string[];
-  lateFeeChargesType: 'fixed' | 'perDay';
+  lateFeeChargesType: string;
   lateFeeChargesAmount: string;
   isActive: boolean;
 }

@@ -1,0 +1,24 @@
+[
+    {
+      "id": 3,
+      "expenseCategory": "Internet Bills",
+      "expenseAmount": "1500",
+      "paymentMethod": "Credit Card",
+      "date": "2024-09-15",
+      "paymentStatus": "Paid",
+      "action": "View",
+      "expenseList": [
+        {
+          "expenseName": "Admin",
+          "amount": 500,
+          "date": "11-10-2024"
+        },
+        {
+          "expenseName": "School",
+          "amount": 1000,
+          "date": "11-10-2024"
+        }
+      ]
+    }
+  ]
+  

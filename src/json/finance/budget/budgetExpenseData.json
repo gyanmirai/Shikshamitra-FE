@@ -1,0 +1,35 @@
+[
+    {
+      "id": "expense_01",
+      "name": "Salaries",
+      "allocatedAmount": 100000000,
+      "spentAmount": 0,
+      "remainingAmount": 100000000,
+      "expensePercantage": "0 %"
+    },
+    {
+      "id": "expense_02",
+      "name": "Maintenance",
+      "allocatedAmount": 40000,
+      "spentAmount": 0,
+      "remainingAmount": 40000,
+      "expensePercantage": "0 %"
+    },
+    {
+      "id": "expense_03",
+      "name": "Educational Supplies",
+      "allocatedAmount": 20000,
+      "spentAmount": 0,
+      "remainingAmount": 20000,
+      "expensePercantage": "0 %"
+    },
+    {
+      "id": "expense_04",
+      "name": "Total",
+      "allocatedAmount": 60000,
+      "spentAmount": 0,
+      "remainingAmount": 60000,
+      "expensePercantage": "0 %"
+    }
+  ]
+  

@@ -10,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import expenseData from 'src/json/finance/expense/expenseTrackingData.json';
 import {
   FinancePaymentHistoryStatusType,
   FinancePaymentHistoryStatusOptions,
@@ -25,41 +26,6 @@ import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceExpenseDetailsDialog from './component/finance-expense-details-dialog';
 import FinanceAddExpenseTrackingDialog from './component/finance-add-expense-tracking-dialog';
-
-interface ExpenseData {
-  expenseCategory: string;
-  expenseAmount: string;
-  paymentMethod: string;
-  date: string;
-  id: number;
-  paymentStatus: string;
-  action?: string;
-  expenseList?: any;
-}
-
-const expenseData: ExpenseData[] = [
-  {
-    id: 3,
-    expenseCategory: 'Internet Bills',
-    expenseAmount: '1500',
-    paymentMethod: 'Credit Card',
-    date: '2024-09-15',
-    paymentStatus: 'Paid',
-    action: 'View',
-    expenseList: [
-      {
-        expenseName: 'Admin',
-        amount: 500,
-        date: '11-10-2024',
-      },
-      {
-        expenseName: 'School',
-        amount: 1000,
-        date: '11-10-2024',
-      },
-    ],
-  },
-];
 
 const FinanceExpenseTrackingScreen = () => {
   const dialog = useBoolean();
@@ -81,49 +47,12 @@ const FinanceExpenseTrackingScreen = () => {
 
   useEffect(() => {}, [selectedExpense, isEdit]);
 
-  const handleSave = (dataFromDialog: ExpenseData) => {
-    const { expenseCategory, expenseAmount, paymentMethod, date, paymentStatus, id } =
-      dataFromDialog;
-
-    if (dataFromDialog) {
-      const existingEntryIndex = expenseData.findIndex((val) => id === val.id);
-
-      const newExpenseEntry = {
-        expenseCategory,
-        expenseAmount,
-        paymentMethod,
-        date,
-        paymentStatus,
-        id,
-        action: isEdit ? 'edit' : 'add',
-      };
-
-      const updatedData = [...expenseData];
-
-      if (isEdit && existingEntryIndex !== -1) {
-        updatedData[existingEntryIndex] = newExpenseEntry;
-      } else {
-        updatedData.push(newExpenseEntry);
-      }
-
-      setTableData(updatedData);
-    }
-
-    closeDialog();
-    console.log('Updated Data:', dataFromDialog);
-  };
-
-  // const handleDelete = (item: any) => {
-  //   expenseData = expenseData.filter((val) => val.id !== item.id);
-  //   setTableData([...expenseData]);
-  // };
-
   return (
     <>
       {/* dialog for adding new expense */}
       {open ? (
         <FinanceAddExpenseTrackingDialog
-          onSave={handleSave}
+          onSave={() => {}}
           dialogValue={dialog.value}
           onClose={() => {
             setOpen(false);
@@ -171,6 +100,27 @@ const FinanceExpenseTrackingScreen = () => {
             </Box>
           </Box>
           <CustomizableTable
+            noDataText={
+              <>
+                No Expense Found{' '}
+                <Box
+                  onClick={() => {
+                    setOpen(true);
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Expense
+                </Box>
+              </>
+            }
             tableId="expenseTable"
             columns={[
               {

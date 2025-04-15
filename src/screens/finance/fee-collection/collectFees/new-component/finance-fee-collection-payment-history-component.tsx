@@ -8,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import studentPaymentHistoryData from 'src/json/finance/fee-collection/studentPaymentHistoryData.json';
 import {
   FinancePaymentHistoryStatusType,
   FinancePaymentHistoryStatusOptions,
@@ -19,42 +20,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import FinanceStudentPaymentHistoryDialog from './finance-student-payment-history-dialog';
-
-const paymentHistoryData = [
-  {
-    paymentId: 'john233',
-    date: '12-06-2024',
-    dueDate: '15 June',
-    amountPaid: 25000,
-    amountPending: 5000,
-    status: 'Paid',
-    paymentHistory: [
-      {
-        paymentMode: 'Cash',
-        amount: '20000',
-        paymentId: '54j8',
-        paymentStatus: 'Success',
-        isRefunded: false,
-        refundAmount: '',
-        refundDate: '',
-        refundReason: '',
-        feeHead: 'Library',
-      },
-      {
-        paymentMode: 'Cheque',
-        amount: '5000',
-        paymentId: '54j8',
-        paymentStatus: 'Success',
-        isRefunded: false,
-        refundAmount: '',
-        refundDate: '',
-        refundReason: '',
-        feeHead: 'Tuition',
-      },
-    ],
-  },
-];
+import FinanceStudentPaymentHistoryDialog from '../component/finance-student-payment-history-dialog';
 
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
   const dialog = useBoolean();
@@ -69,6 +35,12 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
   return (
     <>
       <CustomizableTable
+        noDataText={
+          <>
+            No payment history found. It looks like no payments have been made yet. Please ensure
+            you have completed a payment to see the history here.
+          </>
+        }
         tableId="finance-fee-collection-payment-history"
         columns={[
           { id: 'date', label: 'Paid Date' },
@@ -145,7 +117,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             ),
           },
         ]}
-        data={paymentHistoryData}
+        data={studentPaymentHistoryData}
       />
 
       {dialog.value && (

@@ -9,6 +9,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import budgetData from 'src/json/finance/budget/budgetData.json';
+import budgetExpenseData from 'src/json/finance/budget/budgetIncomeData.json';
+import budgetIncomeData from 'src/json/finance/budget/budgetExpenseData.json';
+
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -16,16 +20,17 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceNewBudgetCreateDialog from './component/finance-new-budget-create-dialog';
-import { incomeData, expenseData, budgetDummyData } from './budgeting_data/budgeting_data';
 
-import type { IncomeCategory, ExpenseCategory } from './budgeting_data/budgeting_data';
+import type { IIncomeCategory, IExpenseCategory } from './interface/budgeting_interface';
 
 const FinanceNewBudgetingScreen = () => {
   const tabs = useTabs('income');
   const dialog = useBoolean();
 
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<IncomeCategory | ExpenseCategory | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<IIncomeCategory | IExpenseCategory | null>(
+    null
+  );
   const [open, setOpen] = useState(false);
 
   const TABS = [
@@ -39,7 +44,7 @@ const FinanceNewBudgetingScreen = () => {
     setOpen(true);
   };
 
-  const openEditDialog = (entry: IncomeCategory | ExpenseCategory) => {
+  const openEditDialog = (entry: IIncomeCategory | IExpenseCategory) => {
     setIsEdit(true);
     setSelectedEntry(entry);
     setOpen(true);
@@ -133,12 +138,8 @@ const FinanceNewBudgetingScreen = () => {
                           title={
                             <Box sx={{ whiteSpace: 'pre-line' }}>
                               {tab.value === 'income'
-                                ? budgetDummyData.incomeCategories
-                                    .map((e: any) => e.name)
-                                    .join('\n')
-                                : budgetDummyData.expenseCategories
-                                    .map((e: any) => e.name)
-                                    .join('\n')}
+                                ? budgetData.incomeCategories.map((e: any) => e.name).join('\n')
+                                : budgetData.expenseCategories.map((e: any) => e.name).join('\n')}
                             </Box>
                           }
                           placement="top"
@@ -170,6 +171,29 @@ const FinanceNewBudgetingScreen = () => {
           <Box>
             {tabs.value === 'income' && (
               <CustomizableTable
+                noDataText={
+                  <>
+                    No budget has been created yet for income categories. Please set up a budget to
+                    track expected vs. actual collections.
+                    <Box
+                      color="primary.main"
+                      fontWeight={600}
+                      onClick={() => {
+                        setOpen(true);
+                      }}
+                      sx={{
+                        textDecoration: 'none',
+                        '&:hover': {
+                          cursor: 'pointer',
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      Create Budget
+                    </Box>
+                  </>
+                }
                 tableId="income-table"
                 columns={[
                   { id: 'name', label: 'Income Category' },
@@ -207,7 +231,7 @@ const FinanceNewBudgetingScreen = () => {
                           showEditIcon
                           handleEditClick={() => {
                             setIsEdit(true);
-                            setSelectedEntry(row as IncomeCategory);
+                            setSelectedEntry(row as IIncomeCategory);
                             setOpen(true);
                             // dialog.onTrue();
                           }}
@@ -216,12 +240,35 @@ const FinanceNewBudgetingScreen = () => {
                     },
                   },
                 ]}
-                data={incomeData}
+                data={budgetIncomeData}
               />
             )}
 
             {tabs.value === 'expenses' && (
               <CustomizableTable
+                noDataText={
+                  <>
+                    No budget has been created yet for expense categories. Please set up a budget to
+                    track expected vs. actual collections.
+                    <Box
+                      color="primary.main"
+                      fontWeight={600}
+                      onClick={() => {
+                        setOpen(true);
+                      }}
+                      sx={{
+                        textDecoration: 'none',
+                        '&:hover': {
+                          cursor: 'pointer',
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      Create Budget
+                    </Box>
+                  </>
+                }
                 tableId="expenses-table"
                 columns={[
                   { id: 'name', label: 'Expense Category' },
@@ -258,7 +305,7 @@ const FinanceNewBudgetingScreen = () => {
                           showEditIcon
                           handleEditClick={() => {
                             setIsEdit(true);
-                            setSelectedEntry(row as ExpenseCategory);
+                            setSelectedEntry(row as IExpenseCategory);
                             // dialog.onTrue();
                             setOpen(true);
                           }}
@@ -267,7 +314,7 @@ const FinanceNewBudgetingScreen = () => {
                     },
                   },
                 ]}
-                data={expenseData}
+                data={budgetExpenseData}
               />
             )}
           </Box>
