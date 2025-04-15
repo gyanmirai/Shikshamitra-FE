@@ -47,6 +47,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -327,10 +329,8 @@ const RoleForm = ({ handleClose, editData }: any) => {
           <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
         </Scrollbar>
         <DialogActions sx={{ flexShrink: 0 }}>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Submit
-          </Button>
+          <CancelButton onClick={handleClose} />
+          <SubmitButton />
         </DialogActions>
       </form>
     </Box>

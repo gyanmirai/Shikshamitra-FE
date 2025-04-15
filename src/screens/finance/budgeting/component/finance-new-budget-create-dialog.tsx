@@ -20,7 +20,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { validationSchemaForNewBudget } from '../budget_validation';
 
-import type { IFinanceNewBudgetCreateDialogProps } from '../finance-budget-screen-interface';
+import type { IFinanceNewBudgetCreateDialogProps } from '../interface/budgeting_interface';
 
 const incomeCategories = [
   { value: 'income_01', label: 'Tuition Fees' },
