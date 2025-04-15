@@ -160,27 +160,6 @@ const RoleScreen = () => {
           </>
         }
         tableId="role-table"
-        noDataText={
-          <>
-            No Role Found{' '}
-            <Box
-              onClick={() => {
-                setOpen(true);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Role
-            </Box>
-          </>
-        }
         searchFieldProps={{
           placeholder: 'Search Role',
           label: 'Search Role',
