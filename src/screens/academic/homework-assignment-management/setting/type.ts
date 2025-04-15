@@ -1,4 +1,4 @@
-export interface TType {
+export interface IHomeworkAssignmentType {
   id: number;
   name: string;
 }
@@ -6,7 +6,7 @@ export interface TType {
 export interface IAddCategoryProps {
   open?: boolean;
   onClose?: () => void;
-  onSubmit: (values: TType) => void;
-  data: TType | null;
+  onSubmit: (values: IHomeworkAssignmentType) => void;
+  data: IHomeworkAssignmentType | null;
   isEdit: boolean;
 }

@@ -33,9 +33,9 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { AddCategory } from '../../setting/setting';
 import { getValidationSchema } from './validationSchema';
 import { assignmentInitialValues } from './assignmentInitialValues';
+import { AddCategory } from '../../setting/addHomworkAssessmentTypeForm';
 
 import type { IHomeWorkCreationFormProps } from '../type';
 
