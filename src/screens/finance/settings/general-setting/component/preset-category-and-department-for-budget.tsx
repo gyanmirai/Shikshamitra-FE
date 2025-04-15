@@ -204,6 +204,10 @@ const PresetCategoryAndDepartmentForBudget = () => {
               {
                 id: 'action',
                 label: 'Action',
+                isFilter: false,
+                isSort: false,
+                sticky: true,
+                align: 'center',
                 render(row: any, value) {
                   return (
                     <ThreeDotsActions

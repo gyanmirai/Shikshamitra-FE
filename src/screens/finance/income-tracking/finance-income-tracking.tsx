@@ -86,6 +86,14 @@ const FinanceIncomeTrackingScreen = () => {
           </Box>
 
           <CustomizableTable
+            searchFieldProps={{
+              placeholder: 'Search by Income Source...',
+              label: 'Search by Income Source...',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             noDataText={
               <>
                 No Income Found{' '}
@@ -117,6 +125,7 @@ const FinanceIncomeTrackingScreen = () => {
               {
                 id: 'incomeAmount',
                 label: 'Income Amount',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
@@ -124,11 +133,15 @@ const FinanceIncomeTrackingScreen = () => {
                 },
               },
 
-              { id: 'date', label: `Today / Received Date` },
+              { id: 'date', label: `Today / Received Date`, filterType: 'date' },
 
               {
                 id: 'action',
                 label: 'Action',
+                isFilter: false,
+                isSort: false,
+                align: 'right',
+                sticky: true,
                 render(value, row: any) {
                   return (
                     <ThreeDotsActions

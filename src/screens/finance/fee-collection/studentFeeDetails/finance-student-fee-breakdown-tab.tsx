@@ -89,11 +89,12 @@ const FinanceStudentFeeBreakdownTab = () => {
         isPagination={false}
         isSearch={false}
         columns={[
-          { id: 'date', label: 'Due Date' },
+          { id: 'date', label: 'Due Date', filterType: 'date' },
           { id: 'type', label: 'Type' },
           {
             id: 'grossFee',
             label: 'Gross Fee',
+            filterType: 'number',
             render(value, row) {
               return (
                 <Typography
@@ -110,6 +111,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'discount',
             label: 'General Discount',
+            filterType: 'number',
             render(value, row) {
               return (
                 <Typography
@@ -126,6 +128,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'additionalDiscount',
             label: 'Additional Discount',
+            filterType: 'number',
             render(value, row) {
               return (
                 <Typography
@@ -143,6 +146,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'amount',
             label: 'Payable Fee',
+            filterType: 'number',
             render(value, row) {
               return (
                 <Typography
@@ -176,103 +180,3 @@ const FinanceStudentFeeBreakdownTab = () => {
 };
 
 export default FinanceStudentFeeBreakdownTab;
-
-// const FinanceStudentFeeBreakdownTab = () => {
-//     const [expandedRow, setExpandedRow] = useState<number | null>(null);
-
-//     const data = [
-//         {
-//             studentId: "12345",
-//             name: "John Doe",
-//             paymentDate: "2024-05-01",
-//             totalAmount: 500,
-//             feeHeadListArray: [
-//                 {
-//                     feeHead: "Tuition",
-//                     paymentTerm: "Annually",
-//                     paymentStatus: [{ title: "2024-2025", status: "Paid" }],
-//                 },
-//                 {
-//                     feeHead: "Sports",
-//                     paymentTerm: "Monthly",
-//                     paymentStatus: [
-//                         { title: "January", status: "Unpaid" },
-//                         { title: "February", status: "Paid" },
-//                         { title: "March", status: "Paid" },
-//                         { title: "April", status: "Paid" },
-//                         { title: "May", status: "Paid" },
-//                         { title: "June", status: "Paid" },
-//                         { title: "July", status: "Paid" },
-//                         { title: "August", status: "Paid" },
-//                         { title: "Septmber", status: "Paid" },
-//                         { title: "October", status: "Paid" },
-//                         { title: "November", status: "Paid" },
-//                         { title: "December", status: "Paid" },
-//                     ],
-//                 },
-//                 {
-//                     feeHead: "Lab Fees",
-//                     paymentTerm: "Quarterly",
-//                     paymentStatus: [
-//                         { title: "Q1", status: "Paid" },
-//                         { title: "Q2", status: "Unpaid" },
-//                     ],
-//                 },
-//             ],
-//         },
-//     ];
-
-//     const toggleRow = (index: number) => {
-//         setExpandedRow(expandedRow === index ? null : index);
-//     };
-
-//     return (
-//         <Box p={3}>
-//             {data.map(student => (
-//                 <Box key={student.studentId} mb={3}>
-//                     <Typography variant="h5" style={{ fontWeight: 'bold' }}>{student.name}</Typography>
-//                     <Typography variant="body1">Payment Due Date: {student.paymentDate}</Typography>
-//                     <Typography variant="body1" style={{ fontWeight: 'bold' }}>Total Amount Due: ${student.totalAmount}</Typography>
-
-//                     <TableContainer>
-//                         <Table>
-//                             <TableHead>
-//                                 <TableRow>
-//                                     <TableCell>Fee Head</TableCell>
-//                                     <TableCell>Payment Term</TableCell>
-//                                     <TableCell>Status</TableCell>
-//                                 </TableRow>
-//                             </TableHead>
-//                             <TableBody>
-//                                 {student.feeHeadListArray.map((feeHead, index) => (
-//                                     <>
-//                                         <TableRow key={index} onClick={() => toggleRow(index)} style={{ cursor: 'pointer' }}>
-//                                             <TableCell>{feeHead.feeHead}</TableCell>
-//                                             <TableCell>{feeHead.paymentTerm}</TableCell>
-//                                             <TableCell>
-//                                                 <Chip label={`Unpaid: ${feeHead.paymentStatus.filter(status => status.status === 'Unpaid').length}`} color="error" />
-//                                             </TableCell>
-//                                         </TableRow>
-//                                         {expandedRow === index && (
-//                                             <TableRow>
-//                                                 <TableCell colSpan={3}>
-//                                                     <FeeCard
-//                                                         feeHead={feeHead.feeHead}
-//                                                         paymentTerm={feeHead.paymentTerm}
-//                                                         paymentStatus={feeHead.paymentStatus}
-//                                                     />
-//                                                 </TableCell>
-//                                             </TableRow>
-//                                         )}
-//                                     </>
-//                                 ))}
-//                             </TableBody>
-//                         </Table>
-//                     </TableContainer>
-//                 </Box>
-//             ))}
-//         </Box>
-//     );
-// };
-
-// export default FinanceStudentFeeBreakdownTab;

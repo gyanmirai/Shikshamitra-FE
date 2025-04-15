@@ -28,3 +28,10 @@ export interface IExpenseData {
   action?: string;
   expenseList?: any;
 }
+
+export interface IFinanceExpenseDetailsDialogProps {
+  dialogValue: boolean;
+  data: any;
+
+  onClose: () => void;
+}

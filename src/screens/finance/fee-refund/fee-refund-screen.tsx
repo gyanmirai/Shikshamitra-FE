@@ -133,6 +133,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'requestedOn',
                   label: 'Requested On',
+                  filterType: 'date',
                   render(value, row) {
                     return (
                       <Typography minWidth="150px" fontSize="12px">
@@ -170,6 +171,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'askForRefund',
                   label: 'Ask For Refund',
+                  filterType: 'number',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px" textAlign="center">
@@ -181,6 +183,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'approvedAmount',
                   label: 'Approved Amount',
+                  filterType: 'number',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px">
@@ -196,6 +199,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   enumOptions: FinancePaymentHistoryStatusOptions,
                   minWidth: '180px',
                   align: 'left',
+                  isSort: false,
                   render(value, row) {
                     const color = FinancePaymentHistoryStatusTypeColors[
                       value as FinancePaymentHistoryStatusType
@@ -211,6 +215,10 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'action',
                   label: 'Action',
+                  isFilter: false,
+                  isSort: false,
+                  align: 'right',
+                  sticky: true,
                   render: (row: any, popover) => (
                     <ThreeDotsActions
                       placement="right-top"
@@ -273,6 +281,14 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 </Grid>
               </Grid>
               <CustomizableTable
+                searchFieldProps={{
+                  placeholder: 'Search by Roll No, Status...',
+                  label: 'Search by Roll No, Status...',
+                  sx: {
+                    maxWidth: '400px',
+                    width: '100%',
+                  },
+                }}
                 noDataText={
                   <>
                     No refund requests have been made yet for the selected filter.
@@ -346,6 +362,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'rollNo',
                     label: 'Roll No',
+                    filterType: 'number',
                     render(value, row) {
                       return (
                         <Typography minWidth="120px" fontSize="12px">
@@ -368,6 +385,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'standard',
                     label: 'Standard',
+                    filterType: 'number',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px">
@@ -379,6 +397,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'class',
                     label: 'Class',
+                    filterType: 'number',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px">
@@ -390,6 +409,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'requestedOn',
                     label: 'Requested On',
+                    filterType: 'date',
                     render(value, row) {
                       return (
                         <Typography minWidth="150px" fontSize="12px">
@@ -427,6 +447,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'askForRefund',
                     label: 'Ask For Refund',
+                    filterType: 'number',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px" textAlign="left">
@@ -438,6 +459,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'approvedAmount',
                     label: 'Approved Amount',
+                    filterType: 'number',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px">
@@ -453,6 +475,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                     enumOptions: RequestStatusTypeOptions,
                     minWidth: '180px',
                     align: 'left',
+                    isSort: false,
                     render(value, row) {
                       const color = RequestStatusTypeColors[
                         value as RequestStatusType
@@ -466,6 +489,9 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'action',
                     label: 'Action',
+                    isSort: false,
+                    isFilter: false,
+                    sticky: true,
                     render: (row: any, popover) => (
                       <ThreeDotsActions
                         placement="right-top"

@@ -36,11 +36,12 @@ const FinanceStudentPendingFeeTab = () => (
         {
           id: 'amountDue',
           label: 'Amount Due',
+          filterType: 'number',
           render(value, row) {
             return <Typography fontSize="12px">{formatNumber(row.amountDue, 'INR')}</Typography>;
           },
         },
-        { id: 'dueDate', label: 'Due Date' },
+        { id: 'dueDate', label: 'Due Date', filterType: 'date' },
         {
           id: 'status',
           label: 'Status',
@@ -48,6 +49,7 @@ const FinanceStudentPendingFeeTab = () => (
           enumOptions: FinancePendingFeeStatusTypeOptions,
           minWidth: '180px',
           align: 'left',
+          isSort: false,
           render(value, row) {
             const color = FinancePendingFeeStatusTypeColors[
               value as FinancePendingFeeStatusType
@@ -63,6 +65,10 @@ const FinanceStudentPendingFeeTab = () => (
         {
           id: 'action',
           label: 'Action',
+          isFilter: false,
+          isSort: false,
+          align: 'right',
+          sticky: true,
           render: (data, popover) => (
             <ThreeDotsActions
               placement="right-top"

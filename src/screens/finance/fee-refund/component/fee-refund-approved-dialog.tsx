@@ -17,13 +17,9 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { studentPayment } from '../data/fee-refund-approved-dialog-data';
 
 import type { StudentPayment } from '../data/fee-refund-approved-dialog-data';
+import type { IFinanceFeeCollectionRefundTabProps } from '../interface/fee-refund-interface';
 
-interface FinanceFeeCollectionRefundTabProps {
-  dialogValue: boolean;
-  onClose: () => void;
-}
-
-const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRefundTabProps> = ({
+const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRefundTabProps> = ({
   dialogValue,
   onClose,
 }) => {
@@ -139,6 +135,20 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
       handleClose={onClose}
     >
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+        <Box display="flex" flexDirection="row" gap={2} py="12px">
+          <Typography>
+            <strong>Name:</strong> Vishal RameshBhai Patel
+          </Typography>
+          <Typography>
+            <strong>Standard:</strong> 10/B
+          </Typography>
+          <Typography>
+            <strong>Gr Number:</strong> 89866
+          </Typography>
+          <Typography>
+            <strong>Roll Number:</strong> 1
+          </Typography>
+        </Box>
         <CustomizableTable
           tableId="fee-refund-table"
           isFilter={false}
@@ -147,12 +157,14 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
           isScrollbar={false}
           isSearch={false}
           columns={[
-            { id: 'grNumber', label: 'Gr Number' },
-            { id: 'studentName', label: 'Student Name' },
-            { id: 'feeHead', label: 'Fee Head' },
+            // { id: 'grNumber', label: 'Gr Number' },
+            // { id: 'studentName', label: 'Student Name' },
+            { id: 'feeHead', label: 'Fee Head', isSort: false },
             {
               id: 'paidAmount',
               label: 'Paid Amount',
+              filterType: 'number',
+              isSort: false,
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -166,10 +178,13 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<FinanceFeeCollectionRef
                 );
               },
             },
-            { id: 'askForRefund', label: 'Ask For Refund' },
+            { id: 'askForRefund', label: 'Ask For Refund', filterType: 'number', isSort: false },
             {
               id: 'refundAmount',
               label: 'Discount Amount',
+              filterType: 'number',
+              isFilter: false,
+              isSort: false,
               render: (value: any, row: any) =>
                 row.feeHead === paymentHistoryData[0].feeHead ? (
                   <NumericFormatCustom

@@ -6,167 +6,20 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import data from 'src/json/finance/fee-refund/feeRefundViewData.json';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface FinanceFeeRefundedViewDialogProps {
-  dialogValue: boolean;
-  selectedData: any;
-  onClose: () => void;
-}
+import type { IFinanceFeeRefundedViewDialogProps } from '../interface/fee-refund-interface';
 
-const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> = ({
+const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps> = ({
   dialogValue,
   selectedData,
   onClose,
 }) => {
-  const historyData = [
-    {
-      className: '1A',
-      grNo: '101',
-      receiptNo: 'RCPT001',
-      refundDate: '01-05-2024',
-      amount: 1500,
-      modeOfPayment: 'Cheque',
-      transactionId: 'TXN12345',
-      receiptBook: 'RB001',
-    },
-    {
-      className: '2B',
-      grNo: '102',
-      receiptNo: 'RCPT002',
-      refundDate: '15-05-2024',
-      amount: 2000,
-      modeOfPayment: 'Transaction',
-      transactionId: 'TXN12346',
-      receiptBook: 'RB002',
-    },
-  ];
-  const data = [
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Tuition',
-      paidAmount: '10000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      charges: 0,
-      askForRefund: 2000,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'June-2024',
-              date: '15-01-2024',
-              status: 'Unpaid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: '54j8',
-                  paymentStatus: 'Success',
-                },
-                { paymentMode: 'Cash', amount: '2000' },
-                {
-                  paymentMode: 'Online',
-                  amount: '1000',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Failed',
-                },
-                {
-                  paymentMode: 'Online',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Check',
-                  amount: '500',
-                  paymentId: 'h8749',
-                  paymentStatus: 'Not Clear',
-                  charges: 500,
-                },
-              ],
-            },
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      grNumber: '28877',
-      studentName: 'JAY',
-      paymentId: 'j878d',
-      feeHead: 'Library',
-      paidAmount: '4000',
-      refundAmount: '0',
-      paidDate: '20-04-2024',
-      status: 'Paid',
-      totalFees: 60000,
-      askForRefund: 2000,
-      charges: 0,
-      fees: [
-        {
-          feeHeadId: 198,
-          feeHead: 'Tuition',
-          totalFees: 60000,
-          amount: 5000,
-          paymentDates: [
-            {
-              month: 'July-2024',
-              date: '15-02-2024',
-              status: 'Paid',
-              amount: 5000,
-              paymentHistory: [
-                {
-                  paymentMode: 'Bank Transfer',
-                  amount: '3000',
-                  paymentId: 'jh238',
-                  paymentStatus: 'Success',
-                },
-                {
-                  paymentMode: 'Card',
-                  amount: '2000',
-                  paymentId: 'aa123',
-                  paymentStatus: 'Success',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
-
   const dialog = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
@@ -276,6 +129,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'paidAmount',
               label: 'Paid Amount',
+              filterType: 'number',
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -294,6 +148,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'askForRefund',
               label: 'Ask For Refund',
+              filterType: 'number',
               render(value, row) {
                 return (
                   <Typography fontSize="12px" minWidth="120px">
@@ -305,6 +160,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'refundAmount',
               label: 'Approved Refund Amount',
+              filterType: 'number',
               render: (value, row) => (
                 <Typography fontSize="12px" minWidth="150px">
                   {formatNumber(row.paidAmount, 'INR')}
@@ -314,6 +170,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'refundAmount',
               label: 'Refunded Amount',
+              filterType: 'number',
               render: (value, row) => (
                 <Typography fontSize="12px" minWidth="150px">
                   {formatNumber(row.paidAmount, 'INR')}
@@ -323,6 +180,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'requestedOn',
               label: 'Requested On',
+              filterType: 'date',
               render(value, row) {
                 return (
                   <Typography fontSize="12px" minWidth="120px">
@@ -334,6 +192,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'approvedDate',
               label: 'Approved Date',
+              filterType: 'date',
               render(value, row) {
                 return (
                   <Typography fontSize="12px" minWidth="120px">
@@ -345,6 +204,7 @@ const FinanceFeeRefundedViewDialog: React.FC<FinanceFeeRefundedViewDialogProps> 
             {
               id: 'refundedDate',
               label: 'Refunded Date',
+              filterType: 'date',
               render(value, row) {
                 return (
                   <Typography fontSize="12px" minWidth="120px">

@@ -221,6 +221,10 @@ const ConfigurePaymentStatusComponent = () => {
               {
                 id: 'action',
                 label: 'Action',
+                isFilter: false,
+                isSort: false,
+                sticky: true,
+                align: 'center',
                 render(_, value) {
                   return (
                     <ThreeDotsActions

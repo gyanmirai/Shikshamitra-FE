@@ -119,6 +119,8 @@ const FinanceReceiptBookSetting = () => {
               {
                 id: 'toggle',
                 label: 'InActive/Active',
+                isFilter: false,
+                isSort: false,
                 render() {
                   return <Switch />;
                 },
@@ -126,6 +128,10 @@ const FinanceReceiptBookSetting = () => {
               {
                 id: 'action',
                 label: 'Action',
+                isFilter: false,
+                isSort: false,
+                sticky: true,
+                align: 'right',
                 render: (value, row: any) => (
                   <ThreeDotsActions
                     showThreeDots={false}

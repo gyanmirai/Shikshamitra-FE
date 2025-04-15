@@ -136,10 +136,12 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
           isScrollbar={false}
           isSearch={false}
           columns={[
-            { id: 'feeHead', label: 'Fee Head' },
+            { id: 'feeHead', label: 'Fee Head', isSort: false },
             {
               id: 'paidAmount',
               label: 'Gross Fee',
+              filterType: 'number',
+              isSort: false,
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -156,6 +158,8 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'generalDiscount',
               label: 'General Discount',
+              filterType: 'number',
+              isSort: false,
               render(value, row) {
                 return (
                   <Typography fontSize="12px">
@@ -167,6 +171,8 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'payableFee',
               label: 'Payable Fee',
+              filterType: 'number',
+              isSort: false,
               render(value, row) {
                 return (
                   <Typography fontSize="12px">{formatNumber(row.payableFee, 'INR')}</Typography>
@@ -176,6 +182,9 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'refundAmount',
               label: 'Discount Amount',
+              filterType: 'number',
+              isSort: false,
+              isFilter: false,
               render: (value: any, row: any) =>
                 row.feeHead === paymentHistoryData[0].feeHead ? (
                   <NumericFormatCustom
@@ -199,6 +208,8 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'remark',
               label: 'Remark',
+              isSort: false,
+              isFilter: false,
               render: (value: any, row: any) => {
                 if (row.feeHead === 'Total') {
                   return <Box />; // Return an empty Box for "Total" row

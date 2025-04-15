@@ -100,6 +100,14 @@ const FinanceExpenseTrackingScreen = () => {
             </Box>
           </Box>
           <CustomizableTable
+            searchFieldProps={{
+              placeholder: 'Search by Expense Category...',
+              label: 'Search by Expense Category...',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             noDataText={
               <>
                 No Expense Found{' '}
@@ -130,12 +138,13 @@ const FinanceExpenseTrackingScreen = () => {
               {
                 id: 'expenseAmount',
                 label: 'Expense Amount',
+                filterType: 'number',
                 render(value) {
                   return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                 },
               },
               { id: 'paymentMethod', label: 'Payment Method' },
-              { id: 'date', label: 'Date' },
+              { id: 'date', label: 'Date', filterType: 'date' },
 
               {
                 id: 'paymentStatus',
@@ -144,6 +153,7 @@ const FinanceExpenseTrackingScreen = () => {
                 enumOptions: FinancePaymentHistoryStatusOptions,
                 minWidth: '180px',
                 align: 'left',
+                isSort: false,
                 render(value, row) {
                   const color = FinancePaymentHistoryStatusTypeColors[
                     value as FinancePaymentHistoryStatusType
@@ -159,6 +169,10 @@ const FinanceExpenseTrackingScreen = () => {
               {
                 id: 'action',
                 label: 'Action',
+                isFilter: false,
+                isSort: false,
+                align: 'right',
+                sticky: true,
                 render(value, row: any) {
                   return (
                     <ThreeDotsActions

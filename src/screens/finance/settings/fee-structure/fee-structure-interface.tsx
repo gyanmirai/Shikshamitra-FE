@@ -52,3 +52,13 @@ export interface IFeeItem {
 export interface IEditableFeeStructureTableProps {
   data: IFeeItem[];
 }
+
+export interface IReadOnlyFeeStructureTableProps {
+  data: IFeeItem[];
+}
+
+export interface IFinanceAddedFeeHeadForFeeStructureProps {
+  data: any;
+  onDelete: (data: any) => void;
+  onEdit: (data: any) => void;
+}

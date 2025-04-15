@@ -87,20 +87,29 @@ const FinanceChequeTransectionScreen = () => {
           </>
         }
         tableId="reconciliationTable"
+        searchFieldProps={{
+          placeholder: 'Search by Gr Number, Name...',
+          label: 'Search by Gr Number, Name...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
-          { id: 'grNumber', label: 'GR No' },
+          { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true },
 
           { id: 'studentName', label: 'Student Name' },
           { id: 'class', label: 'Class' },
           { id: 'chequeNo', label: 'Cheque No' },
           { id: 'bankName', label: 'Bank Name' },
-          { id: 'chequeDate', label: 'Date On Cheque' },
-          { id: 'receivedChequeDate', label: 'Received Cheque Date' },
+          { id: 'chequeDate', label: 'Date On Cheque', filterType: 'date' },
+          { id: 'receivedChequeDate', label: 'Received Cheque Date', filterType: 'date' },
 
           { id: 'feeHead', label: 'Fee Head' },
           {
             id: 'amount',
             label: 'Amount',
+            filterType: 'number',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },
@@ -108,6 +117,9 @@ const FinanceChequeTransectionScreen = () => {
           {
             id: 'action',
             label: 'Action',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
             render(value, row: any) {
               return (
                 <ThreeDotsActions

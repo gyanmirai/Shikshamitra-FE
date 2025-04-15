@@ -26,13 +26,9 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { chargesData } from '../charges-data/charges_data';
 
-interface FinanceCollectChargesProps {
-  dialogValue: boolean;
-  onClose: () => void;
-  data: any;
-}
+import type { IFinanceCollectChargesProps } from '../interface/charges-interface';
 
-const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
+const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
   dialogValue,
   onClose,
   data,
@@ -129,6 +125,9 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
                   {
                     id: 'chargesHeadId',
                     label: 'Select',
+                    isFilter: false,
+                    isSort: false,
+
                     render: (value, row) => (
                       <Checkbox
                         checked={selectedCharges.includes(value)}
@@ -137,10 +136,11 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
                     ),
                   },
 
-                  { id: 'dueDate', label: 'Due Date' },
+                  { id: 'dueDate', label: 'Due Date', filterType: 'date' },
                   {
                     id: 'chargesPerDay',
                     label: 'ChargesPerDay',
+                    filterType: 'number',
                     render(value, row) {
                       if (row.chargesPerDay !== null) {
                         return (
@@ -153,18 +153,20 @@ const FinanceCollectCharges: React.FC<FinanceCollectChargesProps> = ({
                   {
                     id: 'noOfDay',
                     label: 'No Of Day',
+                    filterType: 'number',
                   },
                   {
                     id: 'totalCharges',
                     label: 'Total Charges',
+                    filterType: 'number',
                     render(value, row) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
                   },
                   { id: 'feeHead', label: 'Fee Head' },
-                  { id: 'checkDate', label: 'Date on Check' },
-                  { id: 'receivedCheckDate', label: 'Received Check Date' },
-                  { id: 'chequeAmount', label: 'Cheque Amount' },
+                  { id: 'checkDate', label: 'Date on Check', filterType: 'date' },
+                  { id: 'receivedCheckDate', label: 'Received Check Date', filterType: 'date' },
+                  { id: 'chequeAmount', label: 'Cheque Amount', filterType: 'number' },
                   // { id: "charges", label: "Charges" },
                   { id: 'bankName', label: 'Bank Name' },
                 ]}

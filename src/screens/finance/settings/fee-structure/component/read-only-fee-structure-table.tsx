@@ -1,3 +1,5 @@
+import type { Column } from 'src/components/customizabaleTable';
+
 import React from 'react';
 
 import { Switch, Typography } from '@mui/material';
@@ -6,20 +8,17 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IFeeItem } from '../fee-structure-interface';
+import type { IReadOnlyFeeStructureTableProps } from '../fee-structure-interface';
 
 // import type { FeeItem } from '../data/fee-structure-data';
 
-interface ReadOnlyFeeStructureTableProps {
-  data: IFeeItem[];
-}
-
-const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ data }) => {
-  const columns = [
+const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ data }) => {
+  const column = [
     { id: 'feeHead', label: 'Fee Head' },
     {
       id: 'grossFee',
       label: 'Gross Fee',
+      filterType: 'number',
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -29,6 +28,7 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'generalDiscount',
       label: 'General Discount',
+      filterType: 'number',
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -38,6 +38,7 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'payableFee',
       label: 'Payable Fee',
+      filterType: 'number',
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -47,6 +48,7 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'monthly',
       label: 'Monthly Payable Fee',
+      filterType: 'number',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -58,6 +60,7 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'quartly',
       label: 'Quarterly Payable Fee',
+      filterType: 'number',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -69,6 +72,7 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'bi-annual',
       label: 'Bi-Annually Payable Fee',
+      filterType: 'number',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -91,10 +95,23 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'lateFeeCharges',
       label: 'Late Fee Charges',
+      filterType: 'number',
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
-            {`${row.lateFeeChargesAmount} ₹ / ${row.lateFeeChargesType} `}
+            {`${formatNumber(row.lateFeeChargesAmount)}   `}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'lateFeeChargesType',
+      label: 'Late Fee Charges Type',
+      filterType: 'string',
+      render(value: any, row: any) {
+        return (
+          <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+            {` ${row.lateFeeChargesType} `}
           </Typography>
         );
       },
@@ -102,6 +119,9 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
     {
       id: 'active',
       label: 'Active/In Active',
+      isSort: false,
+      isFilter: false,
+      sticky: true,
       render(value: any, row: any) {
         return <Switch name="creditcard" checked={row.isActive} onChange={() => {}} />;
       },
@@ -115,7 +135,7 @@ const ReadOnlyFeeStructureTable: React.FC<ReadOnlyFeeStructureTableProps> = ({ d
       isFilter={false}
       isPagination={false}
       isShowedDense={false}
-      columns={columns}
+      columns={column as Column[]}
       data={data}
     />
   );

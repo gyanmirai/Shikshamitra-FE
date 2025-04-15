@@ -66,10 +66,12 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     sx: { margin: '12px' },
                   })}
                   columns={[
-                    { id: 'feeHead', label: 'Fee Head' },
+                    { id: 'feeHead', label: 'Fee Head', isFilter: false, isSort: false },
                     {
                       id: 'grossFee',
                       label: 'Gross Fee',
+                      isFilter: false,
+                      isSort: false,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -111,6 +113,8 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     {
                       id: 'generalDiscount',
                       label: 'General Discount',
+                      isFilter: false,
+                      isSort: false,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -156,6 +160,8 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     {
                       id: 'payableFee',
                       label: 'Payable Fee',
+                      isFilter: false,
+                      isSort: false,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -172,6 +178,8 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     {
                       id: 'paymentMethod',
                       label: 'Payment Method',
+                      isFilter: false,
+                      isSort: false,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -211,6 +219,8 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     {
                       id: 'lateFeeChargesAmount',
                       label: 'Late Fee Charges Amount',
+                      isFilter: false,
+                      isSort: false,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -252,6 +262,8 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     {
                       id: 'lateFeeChargesType',
                       label: 'Late Fee Charges Type',
+                      isFilter: false,
+                      isSort: false,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -292,6 +304,9 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     {
                       id: 'active',
                       label: 'Active',
+                      isFilter: false,
+                      isSort: false,
+                      sticky: true,
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
