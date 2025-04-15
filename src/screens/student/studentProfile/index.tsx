@@ -293,6 +293,7 @@ export function StudentProfile() {
             onSendNotification={handlerSendNotification}
             showCheckbox={selectedStudents.length !== 0}
             tableId="student-list"
+            noDataText={<>No Student Data Found </>}
             data={tableData}
             isLoading={isLoading}
             columns={[

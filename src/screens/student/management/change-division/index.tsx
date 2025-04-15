@@ -19,6 +19,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import type { TableDivisionDropDownProps } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const initialData = [
@@ -38,42 +39,49 @@ const ChangeDivisionScreen = ({
   allDivision: Division[];
   division: string;
 }) => {
+  // State to manage table data
   const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
   const dispatch = useDispatch();
+
+  // Update table data when studentData changes
   useEffect(() => {
     setTableData(studentData);
   }, [studentData]);
 
+  // Mutation hook for changing student division
   const [changeDivision, { isLoading: isChangeDivisionLoading, data }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useChangeDivisionMutation,
   });
 
+  // Handle save button click to update student divisions
   const handelSave = async () => {
     try {
       const res = await changeDivision({
         studentDivisionUpdates: tableData
-          .filter((student) => !!student.divisionId)
+          .filter((student) => !!student.divisionId) // Filter students with division assigned
           .map((student) => ({
             studentId: student.id,
             divisionId: student.divisionId,
           })),
       }).unwrap();
+      // Invalidate cache to refetch updated data
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {
       console.error('Error saving data:', error);
     }
   };
 
+  // State to manage selected students for bulk actions
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
+  // Handler for opening notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
-
   return (
     <Box>
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
@@ -91,6 +99,7 @@ const ChangeDivisionScreen = ({
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}
           tableId="change-division-table"
+          noDataText={<>No Student Data Found </>}
           columns={[
             {
               id: 'checkBox',
@@ -194,13 +203,6 @@ const ChangeDivisionScreen = ({
 };
 
 export default ChangeDivisionScreen;
-
-interface TableDivisionDropDownProps {
-  allDivision: Division[];
-  division: string;
-  currentDivision: string;
-  onChange: (val: string | string[] | number | number[]) => void;
-}
 
 const TableDivisionDropDown = ({
   allDivision,
