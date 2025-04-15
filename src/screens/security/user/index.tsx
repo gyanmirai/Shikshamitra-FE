@@ -21,16 +21,24 @@ import AssignModule from '../role/modules';
 import { AccessControlForm } from '../accessControl';
 
 const UserManagementScreen = () => {
+  // Dialog control hook for permissions dialog
   const dialog = useBoolean();
+
+  // State to store selected user data
   const [user, setUser] = useState(null);
+
+  // Dialog control hook for academic permissions dialog
   const academicDialog = useBoolean();
+
+  // Query hook to fetch users data with loading state
   const { data: users, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetUsersQuery,
   });
+
+  // Transform users data to include formatted full name
   const tableData = users?.items?.map((item: any) => ({
     ...item,
-
     userName: `${item?.name} ${item?.surname || ''}`,
   }));
   return (
@@ -38,7 +46,11 @@ const UserManagementScreen = () => {
       <CustomBreadcrumbs
         heading="User Management"
         description="The process of creating, managing, and controlling user accounts, roles, and permissions within a system to ensure secure and efficient access to resources."
-        links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'User Management' }]}
+        links={[
+          { name: 'Security', href: '/security/role' },
+          { name: 'Role And Permission', href: '/security/role' },
+          { name: 'User Management' },
+        ]}
         sx={{ px: 1, mb: 3 }}
       />
 
@@ -47,6 +59,12 @@ const UserManagementScreen = () => {
         tableId="user-management-table"
         isLoading={isLoading}
         data={tableData || []}
+        noDataText="No User Found"
+        searchFieldProps={{
+          placeholder: 'Search by Name',
+          label: 'Search by Name',
+          sx: { width: 300 },
+        }}
         columns={[
           {
             id: 'userName',
@@ -67,6 +85,10 @@ const UserManagementScreen = () => {
           {
             label: 'Action',
             id: 'action',
+            minWidth: 80,
+            isSort: false,
+            isFilter: false,
+            sticky: true,
             render: (value, data) => (
               <ThreeDotsActions
                 actions={({ popover }) => (
@@ -98,7 +120,15 @@ const UserManagementScreen = () => {
         ]}
       />
       <CustomDialog fullScreen title="Permissions" open={dialog.value} handleClose={dialog.onFalse}>
-        <AssignModule />
+        <Box>
+          <AssignModule />
+          {/* <DialogActions sx={{ flexShrink: 0 }}>
+            <Button onClick={dialog.onFalse}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              Submit
+            </Button>
+          </DialogActions> */}
+        </Box>
       </CustomDialog>
       <CustomDialog
         maxWidth="md"
@@ -111,5 +141,4 @@ const UserManagementScreen = () => {
     </Box>
   );
 };
-
 export default UserManagementScreen;

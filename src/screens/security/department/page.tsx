@@ -1,5 +1,6 @@
 'use client';
 
+import * as yup from 'yup';
 import dynamic from 'next/dynamic';
 import { useFormik } from 'formik';
 import React, { useState, cloneElement } from 'react';
@@ -55,12 +56,17 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StandardNode from './standard-node';
+
+import type { IRoleData, IOrgChartListProps, IOrgChartSubListProps } from './type';
 
 const Tree = dynamic(() => import('react-organizational-chart').then((mod) => mod.Tree), {
   ssr: false,
@@ -69,33 +75,26 @@ const Tree = dynamic(() => import('react-organizational-chart').then((mod) => mo
 const TreeNode = dynamic(() => import('react-organizational-chart').then((mod) => mod.TreeNode), {
   ssr: false,
 });
-
-type RoleData = {
-  name: string;
-  count: number;
-  employee?: any[];
-  children?: RoleData[];
-};
-
-type OrgChartListProps<T extends RoleData> = {
-  data: T;
-  depth: number;
-  nodeItem: (props: T) => React.ReactElement<any>;
-};
-
-type OrgChartSubListProps<T extends RoleData> = {
-  data: T[];
-  depth: number;
-  nodeItem: (props: T) => React.ReactElement<any>;
-};
-
-export function TreeList<T extends RoleData>({ data, depth, nodeItem }: OrgChartListProps<T>) {
+/**
+ * TreeList Component - Renders a hierarchical tree structure with customizable nodes
+ * @template T - Generic type extending IRoleData interface
+ * @param {Object} props - Component props
+ * @param {T} props.data - The data object containing node information and children
+ * @param {number} props.depth - Current depth level in the tree
+ * @param {Function} props.nodeItem - Function to render custom node items
+ * @returns {JSX.Element} Tree node structure with its children
+ */
+export function TreeList<T extends IRoleData>({ data, depth, nodeItem }: IOrgChartListProps<T>) {
+  // Extract children from data object
   const childs = data.children;
 
-  const cloneNode = (props: RoleData) => cloneElement(nodeItem(props as T));
+  // Helper function to clone and customize node elements
+  const cloneNode = (props: IRoleData) => cloneElement(nodeItem(props as T));
 
+  // Calculate total number of nested children
   const totalChildren = childs ? flattenArray(childs).length : 0;
 
+  // Create the node label with additional props
   const label = cloneNode({ ...data, depth, count: totalChildren });
 
   return (
@@ -104,7 +103,16 @@ export function TreeList<T extends RoleData>({ data, depth, nodeItem }: OrgChart
     </TreeNode>
   );
 }
-function TreeSubList<T extends RoleData>({ data, depth, nodeItem }: OrgChartSubListProps<T>) {
+/**
+ * TreeSubList Component - Renders a list of child nodes in the organizational tree
+ * @template T - Generic type extending IRoleData interface
+ * @param {Object} props - Component props
+ * @param {T[]} props.data - Array of child node data
+ * @param {number} props.depth - Current depth level in the tree
+ * @param {Function} props.nodeItem - Function to render custom node items
+ * @returns {JSX.Element} Fragment containing child tree nodes
+ */
+function TreeSubList<T extends IRoleData>({ data, depth, nodeItem }: IOrgChartSubListProps<T>) {
   return (
     <>
       {data.map((list, index) => (
@@ -114,27 +122,42 @@ function TreeSubList<T extends RoleData>({ data, depth, nodeItem }: OrgChartSubL
   );
 }
 
+/**
+ * Department Component - Main component for managing organizational departments
+ * Handles department creation, editing, deletion, and role/user assignments
+ * @returns {JSX.Element} Department management interface
+ */
 const Department = () => {
+  /** Theme object from Material-UI for styling */
   const theme = useTheme();
-  // const assignDialog = useBoolean();
-  const confirm = useBoolean();
 
+  /** Dialog control hooks using boolean state */
+  const confirm = useBoolean();
   const roleAndUserDialog = useBoolean();
   const organizationUnitDialog = useBoolean();
-  const [editData, setEditData] = useState<any>(null);
+  const dialog = useBoolean();
 
+  /** State for managing edit operations and parent-child relationships */
+  const [editData, setEditData] = useState<any>(null);
   const [parentData, setParentData] = useState(null);
-  const { data: organizationUnit } = useQueryAndMutation({
+
+  /** Query hook for fetching organization units data */
+  const { data: organizationUnit, isLoading: isLoadingOrganizationUnit } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetOrganizationUnitsQuery,
   });
+
+  /** Mutation hook for deleting organization units */
   const [deleteOrganizationUnit, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteOrganizationUnitMutation,
   });
 
-  const dialog = useBoolean();
-
+  /**
+   * Renders the three dots action menu for each department node
+   * @param {any} item - Department item data
+   * @returns {JSX.Element} Three dots action menu
+   */
   const renderThreeDotsAction = (item: any) => (
     <ThreeDotsActions
       sx={{ position: 'absolute', top: 8, right: 8 }}
@@ -162,15 +185,7 @@ const Department = () => {
             <Iconify icon="solar:trash-bin-trash-bold" color="error.main" />
             Delete
           </MenuItem>
-          {/* <MenuItem
-            onClick={() => {
-              popover.onClose();
-              dialog.onTrue();
-            }}
-          >
-            <Iconify icon="si:assignment-duotone" />
-            Assign / Remove Employee
-          </MenuItem> */}
+
           <MenuItem
             onClick={() => {
               setEditData(item);
@@ -181,10 +196,7 @@ const Department = () => {
             <Iconify icon="tdesign:user-setting-filled" />
             Assign Role and Employee
           </MenuItem>
-          {/* <MenuItem onClick={assignDialog.onTrue}>
-            <Iconify icon="carbon:data-structured" />
-            Assign Module
-          </MenuItem> */}
+
           <MenuItem
             onClick={() => {
               setParentData(item);
@@ -200,74 +212,104 @@ const Department = () => {
     />
   );
 
+  /**
+   * Handles closing of organization unit dialog and resetting related states
+   */
   const handelCloseOrganizationUnitDialog = () => {
     organizationUnitDialog.onFalse();
     setEditData(null);
     setParentData(null);
   };
+
+  /**
+   * Handles role assignment click event
+   * @param {any} item - Department item data
+   */
   const handleRoleClick = (item: any) => {
     roleAndUserDialog.onTrue();
     setEditData({ ...item, tab: 'role' });
   };
+
+  /**
+   * Handles user assignment click event
+   * @param {any} item - Department item data
+   */
   const handleUserClick = (item: any) => {
     roleAndUserDialog.onTrue();
     setEditData({ ...item, tab: 'user' });
   };
 
   return (
-    <Box sx={{ height: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Button
-          startIcon={<Add />}
-          variant="contained"
-          size="small"
-          onClick={organizationUnitDialog.onTrue}
-        >
-          Department
-        </Button>
-      </Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Department"
+        description="Manage and organize departments, assign roles and user, and create hierarchical department structures"
+        links={[
+          { name: 'Security', href: '/security/role' },
+          { name: 'Role And Permission', href: '/security/role' },
+          { name: 'Department' },
+        ]}
+        sx={{ px: 1, mb: 3 }}
+        action={
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={organizationUnitDialog.onTrue}
+          >
+            Department
+          </Button>
+        }
+      />
+
       <ComponentBlock title="Department" sx={{ height: '100%', mt: 2 }}>
-        <ZoomAndDrag>
-          <Box>
-            {organizationUnit?.map((item: any, index: number) => (
-              <Tree
-                lineWidth="1px"
-                key={item.key}
-                nodePadding="4px"
-                lineBorderRadius="24px"
-                lineColor={theme.vars.palette.text.disabled}
-                label={
-                  <StandardNode
-                    name={item.title}
-                    count={5}
-                    RenderThreeDotsAction={renderThreeDotsAction}
-                    item={item}
-                    onRolesClick={handleRoleClick}
-                    onUserClick={handleUserClick}
-                  />
-                }
-              >
-                {item?.children?.map((list: any, ind: number) => (
-                  <TreeList
-                    key={ind}
-                    depth={1}
-                    data={list}
-                    nodeItem={(props) =>
-                      StandardNode({
-                        ...props,
-                        RenderThreeDotsAction: renderThreeDotsAction,
-                        item: list,
-                        name: list.title,
-                        onRolesClick: handleRoleClick,
-                        onUserClick: handleUserClick,
-                      })
-                    }
-                  />
-                ))}
-              </Tree>
-            ))}
-          </Box>
-        </ZoomAndDrag>
+        {isLoadingOrganizationUnit ? (
+          <Box className="loader" />
+        ) : organizationUnit.length ? (
+          <ZoomAndDrag>
+            <Box>
+              {organizationUnit?.map((item: any, index: number) => (
+                <Tree
+                  lineWidth="1px"
+                  key={item.key}
+                  nodePadding="4px"
+                  lineBorderRadius="24px"
+                  lineColor={theme.vars.palette.text.disabled}
+                  label={
+                    <StandardNode
+                      name={item.title}
+                      count={5}
+                      RenderThreeDotsAction={renderThreeDotsAction}
+                      item={item}
+                      onRolesClick={handleRoleClick}
+                      onUserClick={handleUserClick}
+                    />
+                  }
+                >
+                  {item?.children?.map((list: any, ind: number) => (
+                    <TreeList
+                      key={ind}
+                      depth={1}
+                      data={list}
+                      nodeItem={(props) =>
+                        StandardNode({
+                          ...props,
+                          RenderThreeDotsAction: renderThreeDotsAction,
+                          item: list,
+                          name: list.title,
+                          onRolesClick: handleRoleClick,
+                          onUserClick: handleUserClick,
+                        })
+                      }
+                    />
+                  ))}
+                </Tree>
+              ))}
+            </Box>
+          </ZoomAndDrag>
+        ) : (
+          <EmptyContent title="No Department Created" />
+        )}
       </ComponentBlock>
 
       <ConfirmDialog
@@ -293,14 +335,7 @@ const Department = () => {
           </LoadingButton>
         }
       />
-      {/* <CustomDialog
-        title="Assign Module"
-        open={assignDialog.value}
-        handleClose={assignDialog.onFalse}
-        fullScreen
-      >
-        <AssignModule />
-      </CustomDialog> */}
+
       <CustomDialog
         title="Department"
         open={organizationUnitDialog.value}
@@ -323,7 +358,6 @@ const Department = () => {
           setEditData(null);
           roleAndUserDialog.onFalse();
         }}
-        // slotProps={{ backdrop: { invisible: true } }}
         variant="temporary"
         sx={{
           [`& .${drawerClasses.paper}`]: {
@@ -342,12 +376,7 @@ const Department = () => {
             width: '100%',
             zIndex: 9999,
             height: '100%',
-
-            // transition: 'all 0.3s ease',
-            // transform: openDetails.value ? 'translateX(0)' : 'translateX(110%)',
           }}
-
-          // ref={ref}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
             <Typography variant="h6">Assign Role And User</Typography>
@@ -375,6 +404,12 @@ const Department = () => {
 
 export default Department;
 
+/**
+ * Component for creating or editing organization units
+ * @param {Function} handleClose - Function to close the form dialog
+ * @param {Object} editData - Data of the organization unit being edited
+ * @param {Object} parentData - Data of the parent organization unit
+ */
 const OrganizationUnitFrom = ({
   handleClose,
   editData,
@@ -384,20 +419,35 @@ const OrganizationUnitFrom = ({
   editData: any;
   parentData: any;
 }) => {
-  console.log('🚀 ~ file: page.tsx:265 ~ parentData:', parentData, editData);
-
+  /**
+   * Mutation hook for adding new organization units
+   * @returns {Array} [addOrganizationUnit, { isLoading }] - Mutation function and loading state
+   */
   const [addOrganizationUnit, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddOrganizationUnitMutation,
   });
+
+  /**
+   * Mutation hook for updating existing organization units
+   * @returns {Array} [updateOrganizationUnit, { isLoading }] - Mutation function and loading state
+   */
   const [updateOrganizationUnit, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateOrganizationUnitMutation,
   });
-  const formik = useFormik({
+
+  /**
+   * Formik instance for form handling
+   * Manages form state and submission logic
+   */
+  const formik = useFormik<{ title: string }>({
     initialValues: {
       title: editData?.title || '',
     },
+    validationSchema: yup.object().shape({
+      title: yup.string().required('Name is required'),
+    }),
     onSubmit: async (values) => {
       try {
         if (editData) {
@@ -420,14 +470,18 @@ const OrganizationUnitFrom = ({
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <TextField
-          name="title"
-          label="Title"
-          fullWidth
-          value={formik.values.title}
-          onChange={formik.handleChange}
-          size="small"
-        />
+        <ShakingTextField error={!!formik.errors.title && !!formik.touched.title}>
+          <TextField
+            name="title"
+            label="Name"
+            fullWidth
+            value={formik.values.title}
+            onChange={formik.handleChange}
+            size="small"
+            error={!!formik.errors.title && !!formik.touched.title}
+            helperText={formik.touched.title && formik.errors.title}
+          />
+        </ShakingTextField>
       </Scrollbar>
       <DialogActions>
         <CancelButton onClick={handleClose} />
@@ -437,7 +491,6 @@ const OrganizationUnitFrom = ({
     </Box>
   );
 };
-
 const AssignUserForm = () => {
   const formik = useFormik({
     initialValues: {
@@ -497,6 +550,11 @@ const AssignUserForm = () => {
     </Box>
   );
 };
+/**
+ * Array of tab configurations for the department security interface.
+ * Each tab object contains a value identifier and display label.
+ * Used to toggle between role and user management views.
+ */
 const TABS = [
   { value: 'role', label: 'Roles' },
   { value: 'user', label: 'Users' },
@@ -529,10 +587,31 @@ const RenderAssignRoleAndEmployee = ({
   );
 };
 
+/**
+ * Renders a table displaying roles associated with an organization unit and provides functionality
+ * to add and delete roles.
+ * @param {string} organizationId - The ID of the organization unit
+ * @returns {JSX.Element} A component containing a table of roles with management actions
+ */
 const RenderRoleTable = ({ organizationId }: { organizationId: string }) => {
+  /**
+   * Manages the state of the confirmation dialog
+   */
   const confirm = useBoolean();
+
+  /**
+   * Manages the state of the form dialog for adding roles
+   */
   const formDialog = useBoolean();
+
+  /**
+   * Stores the currently selected role data for editing/deleting
+   */
   const [editData, setEditData] = useState<any>(null);
+
+  /**
+   * Fetches the roles associated with the organization unit
+   */
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetOrganizationUnitRoleQuery,
@@ -542,6 +621,9 @@ const RenderRoleTable = ({ organizationId }: { organizationId: string }) => {
     },
   });
 
+  /**
+   * Mutation hook for removing a role from the organization unit
+   */
   const [deleteRole, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRemoveRoleFromOrganizationUnitMutation,
@@ -584,6 +666,28 @@ const RenderRoleTable = ({ organizationId }: { organizationId: string }) => {
       <CustomizableTable
         isLoading={isLoading}
         tableId="role-id"
+        searchFieldProps={{
+          label: 'Search Role',
+        }}
+        noDataText={
+          <>
+            No Roles found
+            <Box
+              onClick={formDialog.onTrue}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Roles
+            </Box>
+          </>
+        }
         columns={[
           { label: 'Role Name', id: 'name' },
           {
@@ -611,7 +715,11 @@ const RenderRoleTable = ({ organizationId }: { organizationId: string }) => {
     </>
   );
 };
-
+/**
+ * Form component for rendering and handling role assignments to organization units
+ * @param {string} organizationId - The ID of the organization unit
+ * @param {Function} handleClose - Callback function to close the form dialog
+ */
 const RenderRoleForm = ({
   organizationId,
   handleClose,
@@ -619,14 +727,24 @@ const RenderRoleForm = ({
   organizationId: string;
   handleClose: () => void;
 }) => {
+  /**
+   * Mutation hook for adding roles to organization unit
+   */
   const [addRole, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddRoleToOrganizationUnitMutation,
   });
+
+  /**
+   * Formik instance for managing form state and submission
+   */
   const formik = useFormik({
     initialValues: {
       role: [],
     },
+    validationSchema: yup.object({
+      role: yup.array().min(1, 'Please select at least one role'),
+    }),
     onSubmit: async (values) => {
       await addRole({
         organizationUnitId: organizationId,
@@ -636,26 +754,35 @@ const RenderRoleForm = ({
       handleClose();
     },
   });
+
+  /**
+   * Query hook for fetching available roles
+   */
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
   });
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <CustomSelect
-          options={data?.items || []}
-          value={formik.values.role}
-          multiple
-          isLoading={isLoading}
-          name="role"
-          label="Roles"
-          valueKey="id"
-          labelKey="name"
-          onChange={(val) => {
-            formik.setFieldValue('role', val);
-          }}
-        />
+        <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
+          <CustomSelect
+            options={data?.items || []}
+            value={formik.values.role}
+            multiple
+            isLoading={isLoading}
+            name="role"
+            label="Roles"
+            valueKey="id"
+            labelKey="name"
+            onChange={(val) => {
+              formik.setFieldValue('role', val);
+            }}
+            error={formik.touched.role && Boolean(formik.errors.role)}
+            helperText={((formik.touched.role && formik.errors.role) as string) || ''}
+          />
+        </ShakingTextField>
       </Scrollbar>
 
       <DialogActions>
@@ -672,11 +799,29 @@ const RenderRoleForm = ({
     </Box>
   );
 };
-
+/**
+ * Component for rendering a table of users associated with an organization unit
+ * @param {string} organizationId - The ID of the organization unit
+ */
 const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
+  /**
+   * Hook for managing confirmation dialog state
+   */
   const confirm = useBoolean();
+
+  /**
+   * Hook for managing form dialog state
+   */
   const formDialog = useBoolean();
+
+  /**
+   * State for storing data of the user being edited
+   */
   const [editData, setEditData] = useState<any>(null);
+
+  /**
+   * Query hook for fetching organization unit users
+   */
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetOrganizationUnitUserQuery,
@@ -687,6 +832,9 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
   });
   console.log('🚀 ~ file: page.tsx:718 ~ RenderUserTable ~ data:', data);
 
+  /**
+   * Mutation hook for removing a user from organization unit
+   */
   const [deleteUser, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRemoveUserFromOrganizationUnitMutation,
@@ -728,6 +876,28 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
       </Box>
       <CustomizableTable
         tableId="user-id"
+        searchFieldProps={{
+          label: 'Search Role',
+        }}
+        noDataText={
+          <>
+            No User found
+            <Box
+              onClick={formDialog.onTrue}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Users
+            </Box>
+          </>
+        }
         columns={[
           { label: 'User Name', id: 'userName' },
           {
@@ -755,7 +925,7 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
     </>
   );
 };
-
+// Component for rendering a form to add users to an organization unit
 const RenderUserForm = ({
   organizationId,
   handleClose,
@@ -763,14 +933,20 @@ const RenderUserForm = ({
   organizationId: string;
   handleClose: () => void;
 }) => {
+  // Hook for handling user addition mutation and loading state
   const [addUser, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddUserToOrganizationUnitMutation,
   });
-  const formik = useFormik({
+
+  // Formik hook for form state management and submission handling
+  const formik = useFormik<{ user: string[] }>({
     initialValues: {
       user: [],
     },
+    validationSchema: yup.object().shape({
+      user: yup.array().min(1, 'At least one user is required'),
+    }),
     onSubmit: async (values) => {
       await addUser({
         organizationUnitId: organizationId,
@@ -780,26 +956,33 @@ const RenderUserForm = ({
       handleClose();
     },
   });
+
+  // Hook for fetching users data and managing loading state
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetUsersQuery,
   });
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <CustomSelect
-          options={data?.items || []}
-          value={formik.values.user}
-          multiple
-          isLoading={isLoading}
-          name="user"
-          label="Users"
-          valueKey="id"
-          labelKey="name"
-          onChange={(val) => {
-            formik.setFieldValue('user', val);
-          }}
-        />
+        <ShakingTextField error={formik.touched.user && Boolean(formik.errors.user)}>
+          <CustomSelect
+            options={data?.items || []}
+            value={formik.values.user}
+            multiple
+            isLoading={isLoading}
+            name="user"
+            label="Users"
+            valueKey="id"
+            labelKey="name"
+            onChange={(val) => {
+              formik.setFieldValue('user', val);
+            }}
+            error={formik.touched.user && Boolean(formik.errors.user)}
+            helperText={((formik.touched.user && formik.errors.user) as string) || ''}
+          />
+        </ShakingTextField>
       </Scrollbar>
 
       <DialogActions>
