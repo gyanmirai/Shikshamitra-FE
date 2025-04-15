@@ -138,6 +138,27 @@ const RoleScreen = () => {
         }
       />
       <CustomizableTable
+        noDataText={
+          <>
+            No Role have been added yet{' '}
+            <Box
+              onClick={() => {
+                setOpen(true);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Role
+            </Box>
+          </>
+        }
         tableId="role-table"
         noDataText={
           <>
