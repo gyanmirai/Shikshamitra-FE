@@ -49,6 +49,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -98,7 +99,11 @@ const RoleScreen = () => {
       <CustomBreadcrumbs
         heading="Role Management"
         description="Defines and controls user roles, permissions, and access levels within the system, ensuring users have appropriate privileges based on their responsibilities."
-        links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'Role Management' }]}
+        links={[
+          { name: 'Security', href: '/security/role' },
+          { name: 'Role And Permission', href: '/security/role' },
+          { name: 'Role Management' },
+        ]}
         sx={{ px: 1, mb: 3 }}
         action={
           <Button
@@ -132,6 +137,31 @@ const RoleScreen = () => {
       />
       <CustomizableTable
         tableId="role-table"
+        noDataText={
+          <>
+            No Role Found{' '}
+            <Box
+              onClick={() => {
+                setOpen(true);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Role
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search Role',
+          label: 'Search Role',
+        }}
         columns={[
           { id: 'name', label: 'Role' },
           {
@@ -139,6 +169,8 @@ const RoleScreen = () => {
             id: 'action',
             isSort: false,
             isFilter: false,
+            sticky: true,
+            minWidth: 80,
             render: (value, data) => (
               <ThreeDotsActions
                 showDeleteIcon
@@ -228,7 +260,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
   });
 
   // Formik instance for form handling and validation
-  const formik = useFormik({
+  const formik = useFormik<{ role: string }>({
     initialValues: {
       role: editData ? editData.name : null,
     },
@@ -277,19 +309,20 @@ const RoleForm = ({ handleClose, editData }: any) => {
           }}
         >
           <Box sx={{ display: 'flex', gap: 2, mb: 1, height: '100%', alignItems: 'center' }}>
-            <TextField
-              label="Role"
-              name="role"
-              size="small"
-              disabled={isSuccess}
-              value={formik.values.role}
-              onChange={formik.handleChange}
-              error={formik.touched.role && !!formik.errors.role}
-              // @ts-ignore
-              helperText={formik.touched.role && formik.errors.role}
-              sx={{ maxWidth: 300, width: '100%' }}
-              onBlur={formik.handleBlur}
-            />
+            <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
+              <TextField
+                label="Role"
+                name="role"
+                size="small"
+                disabled={isSuccess}
+                value={formik.values.role}
+                onChange={formik.handleChange}
+                error={formik.touched.role && !!formik.errors.role}
+                helperText={(formik.touched.role && formik.errors.role) || ''}
+                sx={{ maxWidth: 300, width: '100%' }}
+                onBlur={formik.handleBlur}
+              />
+            </ShakingTextField>
           </Box>
           <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
         </Scrollbar>

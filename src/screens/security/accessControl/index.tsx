@@ -275,12 +275,12 @@ const BoardScreenStep = ({ formik }: any) => {
   });
 
   const allBoards = boards?.items?.filter(
-    (board: Board) => board.academicYearId === currentYear.id
+    (board: Board) => board.academicYearId === currentYear?.id
   );
   return (
     <Box sx={{ maxWidth: 300, width: '100%' }}>
       <Typography variant="body2" fontWeight={600} color="text.secondary">
-        (Academic Year :-{currentYear.name})
+        (Academic Year :-{currentYear?.name})
       </Typography>
       <Divider sx={{ my: 1 }} />
       <Autocomplete
