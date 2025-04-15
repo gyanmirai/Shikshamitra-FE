@@ -91,12 +91,13 @@ const LeaveAndAbsentScreen = () => {
     },
   ]);
 
-  // State to store selected students for bulk actions
+  // State to store selected students for notifications
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
-  // Dialog control for instant notification
+
+  // Boolean state to control instant notification dialog visibility
   const sendInstantNotificationDialogValue = useBoolean();
 
-  // Handler to open instant notification dialog
+  // Handler to open the instant notification dialog when students are selected
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -141,11 +142,20 @@ const LeaveAndAbsentScreen = () => {
             </Box>
           </>
         }
+        searchFieldProps={{
+          placeholder: 'Search by Student, Medium, Organization, Class...',
+          label: 'Search by Student, Medium, Organization, Class...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           {
             id: 'checkBox',
             label: ' ',
             isSort: false,
+            isFilter: false,
             renderColumn: (value) => (
               <Checkbox
                 checked={tableData.length === selectedStudent.length}
@@ -191,9 +201,21 @@ const LeaveAndAbsentScreen = () => {
           { id: 'organization', label: 'Organization' },
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
-          { id: 'leaveType', label: 'Leave Type' },
-          { id: 'startDate', label: 'Start Date', filterType: 'date' },
-          { id: 'endDate', label: 'End Date', filterType: 'date' },
+          { id: 'leaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
+          {
+            id: 'startDate',
+            label: 'Start Date',
+            filterType: 'date',
+            minWidth: '120px',
+            align: 'left',
+          },
+          {
+            id: 'endDate',
+            label: 'End Date',
+            filterType: 'date',
+            minWidth: '120px',
+            align: 'left',
+          },
           { id: 'description', label: 'Description' },
           { id: 'remarks', label: 'Remarks' },
           {
@@ -214,6 +236,8 @@ const LeaveAndAbsentScreen = () => {
           {
             id: 'actions',
             label: 'Actions',
+            sticky: true,
+            minWidth: 130,
             isSort: false,
             isFilter: false,
             render(value, row) {
@@ -237,7 +261,7 @@ const LeaveAndAbsentScreen = () => {
           },
         ]}
         data={tableData}
-      />
+      />{' '}
       <CustomDialog
         maxWidth="md"
         open={dialog.value}
@@ -257,7 +281,6 @@ const LeaveAndAbsentScreen = () => {
       >
         <LeaveRequestForm />
       </CustomDialog>
-
       <CustomDialog
         title="Remarks"
         open={confirmRejectDialog.value}
@@ -265,7 +288,6 @@ const LeaveAndAbsentScreen = () => {
       >
         <LeaveAbsent handleClose={confirmRejectDialog.onFalse} />
       </CustomDialog>
-
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}
@@ -511,10 +533,16 @@ const LeaveRequestForm = () => {
 };
 
 const LeaveAbsent = ({ handleClose }: any) => {
+  // Initialize form state and handlers using Formik
+  // values: contains form field values
+  // handleChange: handles input field changes
+  // handleSubmit: handles form submission
   const { values, handleChange, handleSubmit } = useFormik({
+    // Set initial form values
     initialValues: {
       remarks: '',
     },
+    // Empty submit handler - to be implemented
     onSubmit() {},
   });
 

@@ -474,6 +474,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             id: 'checkBox',
             label: ' ',
             isSort: false,
+            isFilter: false,
             renderColumn: (value) => (
               <Checkbox
                 checked={data.length === selectedStudent.length}
@@ -503,13 +504,23 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
               );
             },
           },
-          { id: 'student.rollNo', label: 'Roll No', align: 'left', minWidth: '100px' },
-          { id: 'student.grNoRecord', label: 'Gr No', align: 'left', minWidth: '100px' },
+          {
+            id: 'student.rollNo',
+            label: 'Roll No',
+            align: 'left',
+            minWidth: '100px',
+          },
+          {
+            id: 'student.grNoRecord',
+            label: 'Gr No',
+            align: 'left',
+            minWidth: '100px',
+          },
           {
             id: 'name',
             label: 'Name',
             align: 'left',
-            minWidth: '180px',
+            minWidth: '100px',
             render(value, row) {
               return (
                 <Box display="flex" alignItems="center" gap={1}>
@@ -528,12 +539,17 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
               );
             },
           },
-          { id: 'presentDays', label: 'Total Present Days', align: 'left', minWidth: '180px' },
+          {
+            id: 'presentDays',
+            label: 'Total Present Days',
+            align: 'left',
+            minWidth: '180px',
+          },
           {
             id: 'percentage',
             label: 'Attendance Percentage',
             align: 'left',
-            minWidth: '200px',
+            minWidth: '230px',
           },
           {
             id: 'isPresent',
@@ -544,9 +560,6 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                 <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>
               ) : (
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                  {/* <Typography component="small" fontSize="12px">
-                  Absent
-                </Typography> */}
                   <Switch
                     size="small"
                     inputProps={{ 'aria-label': 'controlled' }}
@@ -579,14 +592,10 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                       );
                     }}
                   />
-                  {/* <Typography component="small" fontSize="12px">
-                  Present
-                </Typography> */}
                 </Stack>
               );
             },
           },
-
           {
             id: 'remarks',
             label: 'Remarks',
@@ -614,7 +623,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           },
         ]}
         data={data}
-      />
+      />{' '}
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}

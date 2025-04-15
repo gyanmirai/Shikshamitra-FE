@@ -48,6 +48,14 @@ const StudentAttendanceNotificationScreen = () => {
       />
       <CustomizableTable
         tableId="student-attendance-notification-table"
+        searchFieldProps={{
+          placeholder: 'Search by Name, Date, Recipient...',
+          label: 'Search by Name, Date, Recipient...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'date', label: 'Date' },
@@ -57,13 +65,15 @@ const StudentAttendanceNotificationScreen = () => {
           {
             id: 'status',
             label: 'Status',
+            // Custom render function for status column with conditional styling
             render(value, row) {
               return <Label color={value === 'Delivered' ? 'success' : 'warning'}>{value}</Label>;
             },
           },
         ]}
+        // Data source for the table
         data={dummyData}
-      />
+      />{' '}
     </Box>
   );
 };
