@@ -620,6 +620,7 @@ const AdmissionScreen = () => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-enrollment-admission-table"
+        noDataText={<>No Admission Data Found</>}
         isLoading={isLoading}
         columns={[
           {

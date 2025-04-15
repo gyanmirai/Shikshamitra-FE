@@ -128,6 +128,28 @@ const RegistrationTable = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-registration-table"
+        noDataText={
+          <>
+            No Rubric Data Found{' '}
+            <Box
+              onClick={() => {
+                formDialog.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Registration
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         columns={[
           {

@@ -264,6 +264,7 @@ const EntranceExamScreen = () => {
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}
           tableId="entrance-exam-table"
+          noDataText={<>No Entrance Exam Data Found </>}
           isLoading={isLoading}
           columns={[
             {

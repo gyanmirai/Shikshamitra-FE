@@ -95,6 +95,27 @@ const StudentDocumentType = () => {
       </Box>
       <CustomizableTable
         tableId="student-document-type"
+        noDataText={
+          <>
+            No Document Type Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Document
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         columns={[
           { id: 'documentName', label: 'Document' },
