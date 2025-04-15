@@ -133,6 +133,14 @@ const BulkDataUpdateScreen = () => {
           <CustomizableTable
             tableId="bulk-data-update-table"
             noDataText={<>No Bulk Update Data Found </>}
+            searchFieldProps={{
+              placeholder: 'Search by Sr. No, GR No, Name',
+              label: 'Search by Sr. No, GR No, Name',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             columns={[
               { id: 'srNo', label: 'Sr. No.', minWidth: '150px', align: 'left' },
               { id: 'grNo', label: 'GR No.', minWidth: '200px', align: 'left' },

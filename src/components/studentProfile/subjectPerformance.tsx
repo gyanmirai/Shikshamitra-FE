@@ -5,13 +5,9 @@ import { Box, Card, Stack, Divider, Typography, CircularProgress } from '@mui/ma
 
 import CustomizableTable from '../customizabaleTable';
 
-interface Subject {
-  id: number;
-  subjectName: string;
-  progress: number;
-}
+import type { ISubject, ISubjectCardProps } from './type';
 
-const subjectsProgress: Subject[] = [
+const subjectsProgress: ISubject[] = [
   { id: 1, subjectName: 'Mathematics', progress: 20 },
   { id: 2, subjectName: 'Science', progress: 45 },
   { id: 3, subjectName: 'English', progress: 90 },
@@ -25,7 +21,8 @@ const subjectsProgress: Subject[] = [
 ];
 
 const SubjectPerformance = () => {
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  // State to track the currently selected subject and its details
+  const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
   return (
     <Box>
       <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
@@ -43,6 +40,14 @@ const SubjectPerformance = () => {
       </Typography>
       <CustomizableTable
         tableId="course-progress-table"
+        searchFieldProps={{
+          placeholder: 'Search by Chapter Name, Teacher Name...',
+          label: 'Search by Chapter Name, Teacher Name...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           { id: 'chapterName', label: 'Chapter Name', minWidth: '200px', align: 'left' },
           { id: 'teacherName', label: 'Teacher Name', minWidth: '200px', align: 'left' },
@@ -130,21 +135,14 @@ const SubjectPerformance = () => {
             timeLine: '2025-04-15',
           },
         ]}
-      />
+      />{' '}
     </Box>
   );
 };
 
 export default SubjectPerformance;
 
-interface SubjectCardProps {
-  selectedSubject: Subject | null;
-  subjectId: number;
-  subjectName: string;
-  progress: number;
-}
-
-const SubjectCard: React.FC<SubjectCardProps> = ({
+const SubjectCard: React.FC<ISubjectCardProps> = ({
   selectedSubject,
   subjectId,
   subjectName,

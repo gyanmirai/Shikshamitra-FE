@@ -33,10 +33,16 @@ const TABS = [
 ];
 
 const HomeworkAssignment = () => {
+  // State to track the active tab value (completed/pending)
   const [tabValue, setTabValue] = useState('completed');
+
+  // State to control the view mode (homework/other views)
   const [view, setView] = useState('homework');
+
+  // State to store homework assignment data initialized with default values
   const [assignmentData, setAssignmentData] = useState<any[]>(initialData);
 
+  // Handler function to update the view mode when user switches between views
   const handleChangeView = (event: React.MouseEvent<HTMLElement>, nextView: string) => {
     if (nextView) {
       setView(nextView);
@@ -265,9 +271,23 @@ const HomeworkAssignment = () => {
       </Tabs>
       <CustomizableTable
         tableId="homework-assignment-management"
+        searchFieldProps={{
+          placeholder:
+            view === 'homework'
+              ? 'Search by Title, Subject, Due Date, Status...'
+              : 'Search by Assignment Name, Subject, Due Date, Status...',
+          label:
+            view === 'homework'
+              ? 'Search by Title, Subject, Due Date, Status...'
+              : 'Search by Assignment Name, Subject, Due Date, Status...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={view === 'homework' ? homeworkColumns : assignmentColumns}
         data={filteredData}
-      />
+      />{' '}
     </Box>
   );
 };

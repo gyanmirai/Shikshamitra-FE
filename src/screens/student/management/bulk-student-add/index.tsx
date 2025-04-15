@@ -23,6 +23,14 @@ const BulkStudentAddScreen = () => (
     </Box>
     <CustomizableTable
       tableId="bulk-student-add"
+      searchFieldProps={{
+        placeholder: 'Search by Name, Roll No, Board, Medium...',
+        label: 'Search by Name, Roll No, Board, Medium...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
+      }}
       columns={[
         { id: 'name', label: 'Name' },
         { id: 'rollNo', label: 'Roll No' },
@@ -33,7 +41,7 @@ const BulkStudentAddScreen = () => (
         { id: 'division', label: 'Division' },
       ]}
       data={[]}
-    />
+    />{' '}
   </Box>
 );
 export default BulkStudentAddScreen;
