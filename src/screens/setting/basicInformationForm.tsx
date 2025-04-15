@@ -2,8 +2,6 @@
 
 // @ts-nocheck
 
-import type { ICity, IState, ICountry } from 'country-state-city';
-
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
@@ -53,24 +51,7 @@ import CountryComponent from 'src/components/stardard-address/country-component'
 
 import { basicInformationvalidationSchema } from './validationSchema';
 
-import type { IImageSliderProps } from './type';
-
-interface FormValues {
-  instituteName: string;
-  instituteLogo: string[];
-  instituteBanner: string[];
-  addressLine1: string;
-  addressLine2: string;
-  addressLine3: string;
-  city?: Partial<ICity>;
-  stateProvince?: Partial<IState>;
-  zipPostalCode: string;
-  country?: Partial<ICountry>;
-  contactNumber: string;
-  emailAddress: string;
-  password: string;
-  principleSign: string[];
-}
+import type { IFormValues, IImageSliderProps } from './type';
 
 const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
@@ -94,7 +75,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       successMessage: 'Tenant Updated Successfully',
     },
   });
-  const formik = useFormik<FormValues>({
+  const formik = useFormik<IFormValues>({
     initialValues: {
       instituteName: editData?.name || '',
       instituteLogo: editData?.extraProperties?.Logo || [],
@@ -122,7 +103,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       principleSign: editData?.extraProperties?.PrincipleSign || [],
     },
     validationSchema: basicInformationvalidationSchema,
-    onSubmit: async (formValues: FormValues) => {
+    onSubmit: async (formValues: IFormValues) => {
       try {
         if (editData) {
           await updateTenant({
