@@ -5,16 +5,21 @@ import React, { useState } from 'react';
 
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from '../validationSchema';
+import { getLearningResourceInitialData } from './getLearningResourceInitialData';
+import LearningResourceTypeForm from '../../settings/components/learningResourceForm';
 
 import type { IResourceData, ICreateLearningResourcesProps } from '../type';
 // Component for creating and editing learning resources
@@ -34,20 +39,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  const resourceDialog = useBoolean();
 
   // Initialize formik for form handling
   const formik = useFormik<IResourceData>({
     // Set initial form values based on edit mode and existing data
-    initialValues: {
-      id: isEdit && data ? data.id : Date.now(),
-      resourceTitle: isEdit && data ? data.resourceTitle : '',
-      typeOfResource: isEdit && data ? data.typeOfResource : '',
-      className: currentClass,
-      subject: isEdit && data ? data.subject : currentSubject,
-      description: isEdit && data ? data.description : '',
-      dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
-      status: isEdit && data ? data.status : 'draft',
-    },
+    initialValues: getLearningResourceInitialData(isEdit, currentClass, currentSubject, data),
     validationSchema,
     // Handle form submission
     onSubmit: (values) => {
@@ -145,6 +142,32 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   helperText={(formik.touched.typeOfResource && formik.errors.typeOfResource) || ''}
                 />
               </ShakingTextField>
+              <Typography
+                variant="body2"
+                fontWeight={500}
+                textAlign="right"
+                color="primary.main"
+                fontSize={12}
+                sx={{ cursor: 'pointer' }}
+                onClick={() => {
+                  resourceDialog.onTrue();
+                }}
+              >
+                Add Resource Type
+              </Typography>
+              <CustomDialog
+                open={resourceDialog.value}
+                handleClose={() => {
+                  resourceDialog.onFalse();
+                }}
+                title="Add Learning Resource"
+              >
+                <LearningResourceTypeForm
+                  data={null}
+                  onClose={resourceDialog.onFalse}
+                  isEdit={false}
+                />
+              </CustomDialog>
             </Grid>
             {/* Description text area */}
             <Grid item xs={12}>

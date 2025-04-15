@@ -11,6 +11,8 @@ import { Box, Card, Grid, Switch, Button, Checkbox, Typography } from '@mui/mate
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import LearningResourceType from './components/learningResourceType';
+
 // Settings component for managing course-related configurations
 const Settings = (props: TabComponentType) => (
   <Box>
@@ -27,6 +29,9 @@ const Settings = (props: TabComponentType) => (
     />
     <Grid container spacing={2}>
       {/* Notification Settings Card */}
+      <Grid item xs={12} md={6}>
+        <LearningResourceType />
+      </Grid>
       <Grid item xs={12} md={6}>
         <Card
           sx={{
