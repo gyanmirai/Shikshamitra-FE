@@ -13,7 +13,9 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const CreateNoOfLecture = () => {
+import type { ICreateNoOfLectureProps } from './type';
+
+const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open }) => {
   // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',

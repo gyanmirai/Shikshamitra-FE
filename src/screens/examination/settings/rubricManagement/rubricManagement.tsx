@@ -88,6 +88,8 @@ const RubricManagement = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
+
             render(value, row) {
               return (
                 <ThreeDotsActions

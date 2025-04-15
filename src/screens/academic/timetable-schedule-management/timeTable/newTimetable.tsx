@@ -5,6 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { Add } from '@mui/icons-material';
 import {
   Box,
   Paper,
@@ -21,11 +22,14 @@ import {
   TableContainer,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -33,6 +37,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import SubjectList from './component/subjectList';
 import TimeTableCell from './component/timeTableCell';
+import CreateSlotsForm from '../settings/components/lectureSlots/createSlotsForm';
 
 import type { TSubject, TRemainingLectures } from './type';
 
@@ -61,6 +66,8 @@ export const subjects: TSubject[] = [
 ];
 
 const TimeTableGrid = (props: TabComponentType) => {
+  const createSlotsDialog = useBoolean();
+
   // Query to fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -417,6 +424,30 @@ const TimeTableGrid = (props: TabComponentType) => {
           </Box>
         </Box>
       )}
+      {open && (
+        <Box
+          sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mt: 2, mb: 2 }}
+        >
+          <Button
+            startIcon={<Add />}
+            size="small"
+            variant="contained"
+            onClick={() => {
+              createSlotsDialog.onTrue();
+            }}
+          >
+            Create Slots
+          </Button>
+        </Box>
+      )}
+      <CustomDialog
+        open={createSlotsDialog.value}
+        handleClose={createSlotsDialog.onFalse}
+        title="Create Slots"
+        maxWidth="md"
+      >
+        <CreateSlotsForm onClose={createSlotsDialog.onFalse} />
+      </CustomDialog>
       {!open && (
         <>
           <CustomSelect

@@ -1,17 +1,24 @@
 import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 
-import { Box, Grid, TextField } from '@mui/material';
+import { Box, Grid, TextField, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+
+import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
 import type { ISubjectDetail, IExamFormValues } from '../type';
 
 const SelectExam = (props: FormikProps<IExamFormValues>) => {
+  const examTypeDialog = useBoolean();
+
   const formik = props;
   // Fetch class data using custom hook and handle loading state
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -46,6 +53,31 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               }
             />
           </ShakingTextField>
+          <Typography
+            variant="body2"
+            fontWeight={500}
+            textAlign="right"
+            color="primary.main"
+            fontSize={12}
+            sx={{ cursor: 'pointer' }}
+            onClick={() => {
+              examTypeDialog.onTrue();
+            }}
+          >
+            Add Exam Type
+          </Typography>
+          <CustomDialog
+            title="Create Exam Type"
+            open={examTypeDialog.value}
+            handleClose={examTypeDialog.onFalse}
+          >
+            <ExamTypeForm
+              onClose={examTypeDialog.onFalse}
+              data={null}
+              onSubmit={() => {}}
+              isEdit={false}
+            />
+          </CustomDialog>
         </Grid>
 
         <Grid item xs={12} md={6}>

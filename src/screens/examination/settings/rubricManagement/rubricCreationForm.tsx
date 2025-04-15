@@ -13,7 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 
-const RubricCreationForm = () => {
+const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,

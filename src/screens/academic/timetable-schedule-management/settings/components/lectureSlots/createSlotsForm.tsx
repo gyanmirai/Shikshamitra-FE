@@ -19,17 +19,26 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { ITimeSlot } from './type';
+import type { ITimeSlot, ICreateSlotsFormProps } from './type';
 
-const CreateSlotsForm = () => {
+const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => {
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  // State for managing total number of slots
   const [totalSlots, setTotalSlots] = useState('');
+  // State for controlling table visibility
   const [showTable, setShowTable] = useState(false);
+  // State for storing time slot data
   const [timeSlots, setTimeSlots] = useState<ITimeSlot[]>([]);
 
+  /**
+   * Creates empty time slots based on the total slots entered
+   * Initializes each slot with default values
+   */
   const handleCreateSlots = () => {
     const slotsCount = parseInt(totalSlots, 10);
     if (slotsCount > 0) {
@@ -46,6 +55,12 @@ const CreateSlotsForm = () => {
     }
   };
 
+  /**
+   * Updates the start or end time for a specific slot
+   * @param time - The selected time value
+   * @param slotIndex - Index of the slot to update
+   * @param type - Whether updating start or end time
+   */
   const handleTimeChange = (
     time: Dayjs | null,
     slotIndex: number,
@@ -61,6 +76,11 @@ const CreateSlotsForm = () => {
     });
   };
 
+  /**
+   * Updates the slot type (period/break) for a specific slot
+   * @param value - The selected slot type
+   * @param slotIndex - Index of the slot to update
+   */
   const handleSlotTypeChange = (value: any, slotIndex: number) => {
     setTimeSlots((prevSlots) => {
       const newSlots = [...prevSlots];
@@ -74,6 +94,11 @@ const CreateSlotsForm = () => {
     });
   };
 
+  /**
+   * Updates the break type for a specific slot
+   * @param value - The selected break type
+   * @param slotIndex - Index of the slot to update
+   */
   const handleBreakTypeChange = (value: any, slotIndex: number) => {
     setTimeSlots((prevSlots) => {
       const newSlots = [...prevSlots];
@@ -84,7 +109,6 @@ const CreateSlotsForm = () => {
       return newSlots;
     });
   };
-
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={() => {}}>

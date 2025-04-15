@@ -29,7 +29,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import type { TType } from './type';
+import type { TType, IAddCategoryProps } from './type';
 
 const initialHomeworkType: TType[] = [
   {
@@ -317,7 +317,7 @@ const Setting = (props: TabComponentType) => {
         <CustomDialog
           open={homeworkDialog.value}
           handleClose={handleCloseDialog}
-          title={isEdit ? 'Update Type' : 'Add Type'}
+          title={isEdit ? 'Update Homework Type' : 'Add Homework Type'}
         >
           <AddCategory
             onSubmit={handleHomeworkSubmit}
@@ -327,9 +327,9 @@ const Setting = (props: TabComponentType) => {
         </CustomDialog>
 
         <CustomDialog
-          open={homeworkDialog.value}
+          open={assignmentDialog.value}
           handleClose={handleCloseDialog}
-          title={isEdit ? 'Update Category' : 'Add Category'}
+          title={isEdit ? 'Update Assignment Type' : 'Add Assignment Type'}
         >
           <AddCategory
             onSubmit={handleAssignmentSubmit}
@@ -478,13 +478,13 @@ const Setting = (props: TabComponentType) => {
 
 export default Setting;
 
-interface AddCategoryProps {
-  onSubmit: (values: TType) => void;
-  data: TType | null;
-  isEdit: boolean;
-}
-
-const AddCategory: React.FC<AddCategoryProps> = ({ onSubmit, data, isEdit }) => {
+export const AddCategory: React.FC<IAddCategoryProps> = ({
+  open,
+  onClose,
+  onSubmit,
+  data,
+  isEdit,
+}) => {
   const formik = useFormik({
     initialValues: {
       id: isEdit && data ? data.id : Date.now(),

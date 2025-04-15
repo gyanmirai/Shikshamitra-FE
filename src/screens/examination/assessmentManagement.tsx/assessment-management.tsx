@@ -20,7 +20,7 @@ import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import AddNewAssessment from './assignmentForm';
+import AddNewAssessment from './assessmentForm';
 import StudentSubmissions from './studentSubmission';
 import AssessmentManagementTable from './assessmentManagementTable';
 

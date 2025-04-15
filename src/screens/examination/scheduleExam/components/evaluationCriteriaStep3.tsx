@@ -5,11 +5,17 @@ import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Grid, Radio, Button, RadioGroup, Typography, FormControlLabel } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+
+import RubricCreationForm from '../../settings/rubricManagement/rubricCreationForm';
 
 import type { IExamFormValues } from '../type';
 
 const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
+  const rubricCreationDialog = useBoolean();
   const formik = props;
   // State to track whether to use predefined or custom rubric
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
@@ -39,12 +45,27 @@ const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
               formControlProps={{ sx: { maxWidth: 300, width: '100%' } }}
             />
           ) : (
-            <Button variant="contained" startIcon={<Add />}>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => {
+                rubricCreationDialog.onTrue();
+              }}
+              size="small"
+            >
               Create New Rubric
             </Button>
           )}
         </Grid>
       </Grid>
+      <CustomDialog
+        maxWidth="sm"
+        open={rubricCreationDialog.value}
+        handleClose={rubricCreationDialog.onFalse}
+        title="New Rubric"
+      >
+        <RubricCreationForm onClose={rubricCreationDialog.onFalse} />
+      </CustomDialog>
     </Box>
   );
 };
