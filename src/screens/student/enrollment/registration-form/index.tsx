@@ -75,11 +75,18 @@ const RegistrationFormScreen = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-
       <CustomizableTable
         isLoading={isLoading}
         noDataText={<>No Issued Registration Form Data Found </>}
         tableId="student-registration-form-table"
+        searchFieldProps={{
+          placeholder: 'Search by Inquiry number, Student name, Class..',
+          label: 'Search by Inquiry number, Student name, Class..',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           { id: 'formNumber', label: 'Form No', minWidth: '110px' },
           {
@@ -161,7 +168,7 @@ const RegistrationFormScreen = () => {
           },
         ]}
         data={tableData || []}
-      />
+      />{' '}
       <CustomDialog
         maxWidth="xl"
         open={registerFormDialog.value}
@@ -196,7 +203,6 @@ const RegistrationFormScreen = () => {
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
       </CustomDialog>
-
       {/* <ConfirmDialog
         title="Move"
         content="Are you sure want to move in registration ?"

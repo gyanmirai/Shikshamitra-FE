@@ -25,8 +25,13 @@ import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 import type { ChartOptions } from '../chart';
 
 const ProfileExamination = () => {
+  // Get the current theme from MUI
   const theme = useTheme();
+
+  // State to track the selected year for data series
   const [selectedSeries, setSelectedSeries] = useState('2024');
+
+  // Callback handler for updating the selected series
   const handleChangeSeries = useCallback((newValue: string) => {
     setSelectedSeries(newValue);
   }, []);
@@ -195,14 +200,22 @@ const ProfileExamination = () => {
         <Grid item xs={12} md={6}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Previous Exams</Typography>
-
             <CustomizableTable
               tableId="previous-exams-table"
+              searchFieldProps={{
+                placeholder: 'Search by Exam Name, Percentage, Remarks...',
+                label: 'Search by Exam Name, Percentage, Remarks...',
+                sx: {
+                  maxWidth: '400px',
+                  width: '100%',
+                },
+              }}
               columns={[
-                { id: 'examName', label: 'Exam Name' },
+                { id: 'examName', label: 'Exam Name', minWidth: '160px', align: 'left' },
                 {
                   id: 'marks',
                   label: 'Subjects',
+                  minWidth: '200px',
                   render: (val, row) => (
                     <>
                       {Object.entries(row.marks).map(([key, value]: any) => (
@@ -216,11 +229,13 @@ const ProfileExamination = () => {
                 {
                   id: 'percentage',
                   label: 'Percentage',
+                  minWidth: '120px',
                   filterType: 'number',
                 },
                 {
                   id: 'remarks',
                   label: 'Remarks',
+                  minWidth: '160px',
                 },
               ]}
               data={[
@@ -249,7 +264,7 @@ const ProfileExamination = () => {
                   remarks: 'Satisfactory',
                 },
               ]}
-            />
+            />{' '}
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
@@ -265,6 +280,14 @@ const ProfileExamination = () => {
               isShowedDense={false}
               isSearch={false}
               tableId="upcoming-exams-table"
+              searchFieldProps={{
+                placeholder: 'Search by Subject Name, Exam Date, Exam Time...',
+                label: 'Search by Subject Name, Exam Date, Exam Time...',
+                sx: {
+                  maxWidth: '400px',
+                  width: '100%',
+                },
+              }}
               columns={[
                 { id: 'subjectName', label: 'Subject Name', minWidth: '160px', align: 'left' },
                 {
@@ -332,7 +355,7 @@ const ProfileExamination = () => {
                   passingMarks: 25,
                 },
               ]}
-            />
+            />{' '}
           </Card>
         </Grid>
       </Grid>

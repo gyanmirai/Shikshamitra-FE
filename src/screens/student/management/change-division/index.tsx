@@ -72,11 +72,11 @@ const ChangeDivisionScreen = ({
     }
   };
 
-  // State to manage selected students for bulk actions
+  // State to track selected students for bulk actions
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
-  // Handler for opening notification dialog
+  // Handler for sending notifications to selected students
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -100,6 +100,14 @@ const ChangeDivisionScreen = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="change-division-table"
           noDataText={<>No Student Data Found </>}
+          searchFieldProps={{
+            placeholder: 'Search by GR No. or Name...',
+            label: 'Search',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             {
               id: 'checkBox',
@@ -143,26 +151,6 @@ const ChangeDivisionScreen = ({
               id: 'divisionId',
               label: 'Division',
               isSort: false,
-              // renderColumn(value) {
-              //   return (
-              //     <>
-              //       &nbsp;
-              //       <TableDivisionDropDown
-              //         allDivision={allDivision}
-              //         division={columDivision}
-              //         onChange={(val) => {
-              //           setColumnDivision(val as string);
-              //           const newData = tableData.map((item) => ({
-              //             ...item,
-              //             division: val as string,
-              //           }));
-
-              //           setTableData(newData);
-              //         }}
-              //       />
-              //     </>
-              //   );
-              // },
               render(value, row) {
                 return (
                   <TableDivisionDropDown
@@ -188,7 +176,7 @@ const ChangeDivisionScreen = ({
             },
           ]}
           data={tableData}
-        />
+        />{' '}
         {sendInstantNotificationDialogValue.value && (
           <SendInstantNotificationDialog
             open={sendInstantNotificationDialogValue.value}

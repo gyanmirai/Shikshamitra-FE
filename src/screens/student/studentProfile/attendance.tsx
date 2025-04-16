@@ -73,9 +73,16 @@ const Dot: React.FC<DotProps> = ({
 );
 
 const Attendance = (props: StudentTabsComponentType) => {
+  // State to track active view mode (monthly or yearly)
   const [activeButton, setActiveButton] = useState<'monthly' | 'yearly'>('monthly');
+
+  // Get theme object for styling
   const theme = useTheme();
+
+  // State to store selected year (defaults to current year)
   const [year, setYear] = useState<string>(dayjs().format('YYYY'));
+
+  // State to store selected month (defaults to current month)
   const [month, setMonth] = useState<string>(dayjs().format('MM'));
   return (
     <Box
@@ -378,9 +385,16 @@ const Attendance = (props: StudentTabsComponentType) => {
           </Paper>
         </Grid>
       </Grid>
-
       <CustomizableTable
         tableId="student-attendance-table"
+        searchFieldProps={{
+          placeholder: 'Search by Date, Status, Reason, Remarks...',
+          label: 'Search by Date, Status, Reason, Remarks...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         data={[
           {
             date: '18/07/2024',
@@ -413,7 +427,7 @@ const Attendance = (props: StudentTabsComponentType) => {
           { id: 'reason', label: 'Reason', minWidth: '10%' },
           { id: 'remarks', label: 'Remarks', minWidth: '20%' },
         ]}
-      />
+      />{' '}
     </Box>
   );
 };
