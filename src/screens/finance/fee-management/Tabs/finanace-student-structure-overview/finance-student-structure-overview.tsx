@@ -1,6 +1,6 @@
 'use client';
 
-import type { Column } from 'src/components/customizabaleTable';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React, { useState } from 'react';
 
@@ -278,7 +278,7 @@ const FinanceStudentFeeManagement = () => {
         onSendNotification={handleSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-fee-management"
-        columns={tableColumns as Column[]}
+        columns={tableColumns as IColumn[]}
         data={studentFeeStructureData}
         noDataText={<>No Student found. Please select class and division to view the details.</>}
       />

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Column } from 'src/components/customizabaleTable';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React, { useState } from 'react';
 
@@ -189,7 +189,7 @@ const LibraryFineManagement = () => {
         onSendNotification={openNotificationDialog}
         showCheckbox={selectedStudents.length !== 0}
         tableId="library-fine-management"
-        columns={tableColumns as Column[]}
+        columns={tableColumns as IColumn[]}
         data={dummyDataForFineCirculation}
       />
 
