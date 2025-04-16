@@ -17,6 +17,7 @@ import {
 } from 'src/redux/student/student-group/student-group';
 
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -49,8 +50,8 @@ const GroupManagement = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-        <Button startIcon={<Add />} variant="outlined" onClick={dialog.onTrue}>
-          Add Group
+        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          House
         </Button>
       </Box>
       <ConfirmDialog
@@ -59,8 +60,8 @@ const GroupManagement = () => {
           confirm.onFalse();
           setEditData(null);
         }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Education Board ?`}
+        title="Delete House"
+        content={`Are you sure want to Delete ${editData?.name} House ?`}
         action={
           <LoadingButton
             variant="contained"
@@ -68,7 +69,11 @@ const GroupManagement = () => {
             color="error"
             onClick={async () => {
               try {
-                await deleteGroup().unwrap();
+                await deleteGroup(editData?.id).unwrap();
+                confirm.onFalse();
+                shikshaMitraToast.success({
+                  message: 'House Deleted Successfully',
+                });
               } catch (error) {
                 console.log(error);
               }
@@ -81,10 +86,28 @@ const GroupManagement = () => {
       />
       <CustomizableTable
         tableId="group-management-table"
-        noDataText={<>No Group Management Data Found </>}
+        noDataText={
+          <>
+            No House Data Found{' '}
+            <Box
+              onClick={dialog.onTrue}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add House
+            </Box>{' '}
+          </>
+        }
         searchFieldProps={{
-          placeholder: 'Search by name...',
-          label: 'Search by name',
+          placeholder: 'Search by house name...',
+          label: 'Search by house name',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -92,12 +115,14 @@ const GroupManagement = () => {
         }}
         isLoading={isLoading}
         columns={[
-          { label: 'Name', id: 'name' },
+          { label: 'House Name', id: 'name' },
           {
             label: 'Action',
             id: 'action',
             isSort: false,
             isFilter: false,
+            sticky: true,
+            minWidth: '100px',
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -122,7 +147,7 @@ const GroupManagement = () => {
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}
-        title={editData ? 'Update Group' : 'Add Group'}
+        title={editData ? 'Update House' : 'Add House'}
       >
         <GroupManagementForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
@@ -167,9 +192,11 @@ const GroupManagementForm = ({
               name: values.name,
             },
           }).unwrap();
+          shikshaMitraToast.success({ message: `House Updated Successfully` });
         } else {
           // Add new group if no editData
           await addGroup({ name: values.name }).unwrap();
+          shikshaMitraToast.success({ message: `House Added Successfully` });
         }
         // Close dialog after successful operation
         handleClose();
@@ -186,6 +213,8 @@ const GroupManagementForm = ({
           size="small"
           value={formik.values.name}
           name="name"
+          placeholder="Enter House Name"
+          label="House Name"
           autoFocus
           onChange={(e) => {
             const value = capitalize(e.target.value);
