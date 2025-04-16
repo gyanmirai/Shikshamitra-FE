@@ -2,8 +2,8 @@
 
 import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
-import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import React, { useState, useCallback } from 'react';
@@ -308,7 +308,7 @@ const HomeworkCreation = (props: TabComponentType) => {
 
   // Columns for Homework view
 
-  const homeworkColumns: Column[] = [
+  const homeworkColumns: IColumn[] = [
     {
       id: 'title',
       label: 'Homework Title',
@@ -406,7 +406,7 @@ const HomeworkCreation = (props: TabComponentType) => {
     },
   ];
   // Columns for Assignment view
-  const assignmentColumns: Column[] = [
+  const assignmentColumns: IColumn[] = [
     {
       id: 'title',
       label: 'Assignment Title',

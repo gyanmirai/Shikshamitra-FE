@@ -1,4 +1,4 @@
-import type { Column } from 'src/components/customizabaleTable';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React from 'react';
 
@@ -135,7 +135,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       isFilter={false}
       isPagination={false}
       isShowedDense={false}
-      columns={column as Column[]}
+      columns={column as IColumn[]}
       data={data}
     />
   );

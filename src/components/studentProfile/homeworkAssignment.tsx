@@ -11,7 +11,7 @@ import ThreeDotsActions from '../three-dots-actions';
 import CustomizableTable from '../customizabaleTable';
 
 import type { LabelColor } from '../label';
-import type { Column } from '../customizabaleTable';
+import type { IColumn } from '../customizabaleTable/type';
 
 const TABS = [
   {
@@ -49,7 +49,7 @@ const HomeworkAssignment = () => {
     }
   };
 
-  const homeworkColumns: Column[] = [
+  const homeworkColumns: IColumn[] = [
     {
       id: 'title',
       label: 'Homework Title',
@@ -124,7 +124,7 @@ const HomeworkAssignment = () => {
   ];
 
   // Columns for Assignment view
-  const assignmentColumns: Column[] = [
+  const assignmentColumns: IColumn[] = [
     {
       id: 'title',
       label: 'Assignment Title',

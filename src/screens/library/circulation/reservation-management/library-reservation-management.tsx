@@ -1,6 +1,6 @@
 'use client';
 
-import type { Column } from 'src/components/customizabaleTable';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React, { useState } from 'react';
 
@@ -133,7 +133,7 @@ const LibraryReservationManagement = () => {
         onSendNotification={() => handleDialogOpen('sendNotification')}
         showCheckbox={selectedStudents.length !== 0}
         tableId="library-reservation-management"
-        columns={tableColumns as Column[]}
+        columns={tableColumns as IColumn[]}
         data={dummyReservationData}
       />
 
