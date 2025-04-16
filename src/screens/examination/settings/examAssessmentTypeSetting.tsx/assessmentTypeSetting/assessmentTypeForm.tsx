@@ -11,6 +11,7 @@ import { assessmentTypeValidationSchema } from '../validationSchema';
 import type { IAssessmentTypeFormProps } from '../type';
 
 const AssessmentTypeForm: React.FC<IAssessmentTypeFormProps> = ({
+  onClose,
   onSubmit,
   data = null,
   isEdit = false,

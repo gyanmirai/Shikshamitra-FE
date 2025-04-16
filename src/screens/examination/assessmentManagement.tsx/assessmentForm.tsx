@@ -4,17 +4,21 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialValues } from './initialValues';
 import { validationSchema } from './validationSchema';
+import AssessmentTypeForm from '../settings/examAssessmentTypeSetting.tsx/assessmentTypeSetting/assessmentTypeForm';
 
 import type { AddNewAssessmentProps, IAssesmentFormikValues } from './type';
 
@@ -24,6 +28,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+  const assessmentTypeDialog = useBoolean();
 
   // State to manage selected class
   const [classes, setClasses] = useState<string>(data?.className || '');
@@ -147,6 +152,31 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                   helperText={(formik.touched.assessmentType && formik.errors.assessmentType) || ''}
                 />
               </ShakingTextField>
+              <Typography
+                variant="body2"
+                fontWeight={500}
+                textAlign="right"
+                color="primary.main"
+                fontSize={12}
+                sx={{ cursor: 'pointer' }}
+                onClick={() => {
+                  assessmentTypeDialog.onTrue();
+                }}
+              >
+                Add Assessment Type
+              </Typography>
+              <CustomDialog
+                open={assessmentTypeDialog.value}
+                handleClose={assessmentTypeDialog.onFalse}
+                title="Assessment Type"
+              >
+                <AssessmentTypeForm
+                  onClose={assessmentTypeDialog.onFalse}
+                  data={null}
+                  isEdit={false}
+                  onSubmit={() => {}}
+                />
+              </CustomDialog>
             </Grid>
 
             {formik.values.assessmentType === 'exam' && (

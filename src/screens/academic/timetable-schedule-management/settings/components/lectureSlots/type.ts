@@ -7,3 +7,8 @@ export interface ITimeSlot {
   slotType: string;
   breakType?: string; // Optional field for break type
 }
+
+export interface ICreateSlotsFormProps {
+  open?: boolean;
+  onClose?: () => void;
+}
