@@ -15,7 +15,6 @@ import type { INewExamFormProps } from '../type';
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   // Active step for stepper navigation
   const [activeStep, setActiveStep] = useState(0);
-
   const allTimetableSteps = [SelectExam, ExamDetails, EvaluationCriteria, AssignTeachers];
 
   return (

@@ -21,17 +21,21 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getValidationSchema } from './validationSchema';
 import { assignmentInitialValues } from './assignmentInitialValues';
+import { AddCategory } from '../../setting/addHomworkAssessmentTypeForm';
 
 import type { IHomeWorkCreationFormProps } from '../type';
 
@@ -39,6 +43,8 @@ const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
   onsubmit,
   view,
 }) => {
+  const homeworkTypeDialog = useBoolean();
+  const assignmentTypeDialog = useBoolean();
   // State to manage assignment type (homework/assignment)
   const [assignmentType, setAssignmentType] = useState<'homework' | 'assignment'>('homework');
   // State to store selected class ID
@@ -208,6 +214,32 @@ const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
                     helperText={(formik.touched.homeworkType && formik.errors.homeworkType) || ''}
                   />
                 </ShakingTextField>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    homeworkTypeDialog.onTrue();
+                  }}
+                >
+                  Add Homework Type ?
+                </Typography>
+
+                <CustomDialog
+                  open={homeworkTypeDialog.value}
+                  handleClose={homeworkTypeDialog.onFalse}
+                  title="Homework Type"
+                >
+                  <AddCategory
+                    onClose={homeworkTypeDialog.onFalse}
+                    data={null}
+                    onSubmit={() => {}}
+                    isEdit={false}
+                  />
+                </CustomDialog>
               </Grid>
             )}
             {view === 'assignment' && (
@@ -233,6 +265,32 @@ const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
                     }
                   />
                 </ShakingTextField>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    assignmentTypeDialog.onTrue();
+                  }}
+                >
+                  Add Assignment Type ?
+                </Typography>
+
+                <CustomDialog
+                  open={assignmentTypeDialog.value}
+                  handleClose={assignmentTypeDialog.onFalse}
+                  title="Assignment Type"
+                >
+                  <AddCategory
+                    onClose={assignmentTypeDialog.onFalse}
+                    data={null}
+                    onSubmit={() => {}}
+                    isEdit={false}
+                  />
+                </CustomDialog>
               </Grid>
             )}
 

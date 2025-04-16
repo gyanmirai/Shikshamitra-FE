@@ -38,6 +38,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   updatedSchedules[row.id].examDate = newTime;
                   setExamSchedules(updatedSchedules);
                 }}
+                slotProps={{ textField: { size: 'small' } }}
               />
             );
           },

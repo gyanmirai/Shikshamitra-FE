@@ -10,7 +10,12 @@ import { examTypeValidationSchema } from '../validationSchema';
 
 import type { IExamTypeFormProps } from '../type';
 
-const ExamTypeForm: React.FC<IExamTypeFormProps> = ({ onSubmit, data = null, isEdit = false }) => {
+const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
+  onClose,
+  onSubmit,
+  data = null,
+  isEdit = false,
+}) => {
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
 
   const formik = useFormik({

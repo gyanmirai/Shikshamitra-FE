@@ -10,23 +10,7 @@ export const validationSchema = [
     subjects: yup.array().min(1, 'At least one subject is required'),
   }),
 
-  yup.object().shape({
-    subjectName: yup.string().required('Subject name is required'),
-    examDate: yup.date().required('Exam date is required'),
-    examTime: yup.date().nullable().required('Exam time is required'),
-    examDuration: yup.date().nullable().required('Exam duration is required'),
-    totalMarks: yup
-      .number()
-      .required('Total marks required')
-      .positive('Total marks must be positive'),
-    passingMarks: yup
-      .number()
-      .required('Passing marks required')
-      .positive('Passing marks must be positive')
-      .test('passing-marks', 'Passing marks must be less than total marks', function (value) {
-        return value <= this.parent.totalMarks;
-      }),
-  }),
+  yup.object().shape({}),
 
   yup.object().shape({}),
 
