@@ -11,7 +11,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Settings from './settings';
+import Settings from './settings/settings';
 import Reports from './reportsAndAnalyics';
 import Dashboard from './dashboard/dashboard';
 import Subjects from './syllabusManagement/subjects';
@@ -49,7 +49,6 @@ const TABS = [
     label: 'Reports',
     component: (props: TabComponentType) => <Reports {...props} />,
   },
-
   {
     value: 'settings',
     label: 'Settings',
