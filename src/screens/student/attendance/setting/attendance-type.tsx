@@ -47,7 +47,7 @@ const AttendanceType = () => {
     currentQueryAndMutation: useDeleteStudentAttendanceTypeMutation,
   });
 
-  // Reset dialog state and edited data
+  // Close dialog and reset edit data
   const handleClose = () => {
     dialog.onFalse();
     setEditData(null);
@@ -61,6 +61,14 @@ const AttendanceType = () => {
       </Box>
       <CustomizableTable
         tableId="attendance-type"
+        searchFieldProps={{
+          placeholder: 'Search by Type, Color...',
+          label: 'Search by Type, Color...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading}
         columns={[
           { id: 'type', label: 'Type' },
@@ -84,6 +92,10 @@ const AttendanceType = () => {
           {
             id: 'action',
             label: 'Action',
+            sticky: true,
+            isFilter: false,
+            isSort: false,
+            minWidth: 130,
             render: (value, row) => (
               <ThreeDotsActions
                 showThreeDots={false}
@@ -102,7 +114,7 @@ const AttendanceType = () => {
           },
         ]}
         data={attendanceTypes?.items || []}
-      />
+      />{' '}
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -157,10 +169,13 @@ const AttendanceTypeForm = ({
   handleClose: () => void;
   editData?: IAttendanceRule | null;
 }) => {
+  // Mutation hook for updating attendance type with loading state
   const [updateAttendanceType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentAttendanceTypeMutation,
   });
+
+  // Mutation hook for adding new attendance type with loading state
   const [addAttendanceType, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentAttendanceTypeMutation,

@@ -151,6 +151,14 @@ const RegistrationTable = ({
           </>
         }
         isLoading={isLoading}
+        searchFieldProps={{
+          placeholder: 'Search by Form No, Inquiry number, Student name, Class..',
+          label: 'Search by  Form No, Inquiry number, Student name, Class..',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           {
             id: 'checkBox',
@@ -291,7 +299,6 @@ const RegistrationTable = ({
         ]}
         data={tableData || []}
       />
-
       <ConfirmDialog
         title="Move"
         content="Are you sure want to move in admission ?"

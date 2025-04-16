@@ -26,10 +26,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IInquiryPreference {
-  id: string;
-  preferenceName: string;
-}
+import type { IInquiryPreference } from './type';
 
 const InquiryPreference = () => {
   const dialog = useBoolean();
@@ -105,6 +102,14 @@ const InquiryPreference = () => {
             </Box>
           </>
         }
+        searchFieldProps={{
+          placeholder: 'Search by preference name',
+          label: 'Search by preference name',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading}
         columns={[
           { id: 'preferenceName', label: 'Name' },
@@ -133,7 +138,7 @@ const InquiryPreference = () => {
           },
         ]}
         data={inquiryPreference?.items || []}
-      />
+      />{' '}
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}

@@ -1,5 +1,4 @@
 import type { Board } from 'src/types/school';
-import type { SxProps, GridProps } from '@mui/material';
 
 import { capitalize } from 'lodash';
 
@@ -10,28 +9,12 @@ import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 
 import CustomSelect from 'src/components/custom-select';
 
-export interface SubCategoryType {
-  id: string;
-  name: string;
-  label?: string;
-  placeholder?: string;
-  type?: string;
-  sx?: SxProps;
-  otherProps?: Record<string, any> | ((props: any) => Record<string, any>);
-  renderComp?: (props: any) => React.ReactNode;
-  gridProps?: GridProps;
-}
-
-export interface FieldsType {
-  type: string;
-  id: string;
-  subCategory: SubCategoryType[];
-}
-
 const RenderAcademicYear = (props: any) => {
+  // Destructure props to get value, row (unused), and onChange function
   const { value, row, onChange } = props;
-  // const { formik, isEdit } = props;
-  // const { values, setFieldValue, touched, errors } = formik;
+
+  // Fetch academic year data using custom hook
+  // Returns data object containing items array and loading state
   const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
@@ -54,7 +37,11 @@ const RenderAcademicYear = (props: any) => {
 };
 
 const RenderBoard = (props: any) => {
+  // Destructure props to get value, row (unused), and onChange function
   const { value, row, onChange } = props;
+
+  // Fetch board data using custom hook
+  // Returns data object containing items array and loading state
   const { data: board, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
@@ -77,8 +64,11 @@ const RenderBoard = (props: any) => {
 };
 
 const RenderMedium = (props: any) => {
+  // Destructure props to get value, selected row data, and onChange handler
   const { value, row, onChange } = props;
 
+  // Fetch board data using custom hook
+  // Returns data object containing board items and loading state
   const { data: board, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
@@ -100,8 +90,12 @@ const RenderMedium = (props: any) => {
 };
 
 const RenderClass = (props: any) => {
+  // Destructure props to get value, selected row data, and onChange handler
   const { value, row, onChange } = props;
 
+  // Fetch classes data using custom hook based on selected medium
+  // Returns data object containing classes and loading state
+  // Skip query if no medium is selected
   const { data: classes, isLoading: classLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassByOrganizationIdQuery,

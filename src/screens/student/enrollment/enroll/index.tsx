@@ -134,6 +134,14 @@ const EnrollScreen = () => {
       />
       <CustomizableTable
         tableId="student-enrollment-enroll-table"
+        searchFieldProps={{
+          placeholder: 'Search by Temp GR, Name, Class, Division, Batch...',
+          label: 'Search by Temp GR, Name, Class, Division, Batch...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           {
             id: 'checkBox',
@@ -207,7 +215,7 @@ const EnrollScreen = () => {
           },
         ]}
         data={data}
-      />
+      />{' '}
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Assign Division">
         <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
           <CustomSelect

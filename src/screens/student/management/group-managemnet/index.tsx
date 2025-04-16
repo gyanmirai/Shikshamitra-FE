@@ -21,27 +21,20 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface IGroup {
-  name: string;
-  id: string;
-}
+import type { IGroup } from './type';
 
 const GroupManagement = () => {
   // Dialog state for add/edit form
   const dialog = useBoolean();
-
   // Dialog state for delete confirmation
   const confirm = useBoolean();
-
   // State to store group data being edited
   const [editData, setEditData] = useState<null | IGroup>(null);
-
   // Fetch all student groups
   const { data: groupData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentGroupQuery,
   });
-
   // Close dialog and reset edit data
   const handleClose = () => {
     setEditData(null);
@@ -89,6 +82,14 @@ const GroupManagement = () => {
       <CustomizableTable
         tableId="group-management-table"
         noDataText={<>No Group Management Data Found </>}
+        searchFieldProps={{
+          placeholder: 'Search by name...',
+          label: 'Search by name',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading}
         columns={[
           { label: 'Name', id: 'name' },
@@ -117,7 +118,7 @@ const GroupManagement = () => {
           },
         ]}
         data={groupData?.items || []}
-      />
+      />{' '}
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}

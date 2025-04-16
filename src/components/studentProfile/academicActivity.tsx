@@ -11,6 +11,14 @@ const AcademicActivity = () => {
 
   return (
     <CustomizableTable
+      searchFieldProps={{
+        placeholder: 'Search by Activity, Date...',
+        label: 'Search by Activity, Date...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
+      }}
       columns={[
         { id: 'activity', label: 'Activity' },
         { id: 'date', label: 'Date', filterType: 'date' },

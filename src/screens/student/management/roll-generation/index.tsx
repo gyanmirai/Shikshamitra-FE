@@ -27,16 +27,25 @@ const RollNoGenerationScreen = ({
   isLoading: boolean;
   tableData: IInquiryData[];
 }) => {
-  // State variables for managing roll number generation
+  // State for controlling how students are arranged (e.g., boys first, girls first)
   const [arrangementType, setArrangementType] = useState('');
+
+  // State to toggle between automatic and manual roll number assignment
   const [isManual, setIsManual] = useState(false);
+
+  // State for controlling the sorting criteria (e.g., by name, by GR number)
   const [arrangeBy, setArrangeBy] = useState('');
+
+  // State to store and manage the student data table
   const [tableData, setTableData] = useState(studentData);
+
+  // State to store validation errors for roll numbers
   const [error, setError] = useState<Record<number, string>>({});
 
+  // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
 
-  // Mutation hook for updating student roll numbers
+  // RTK Query mutation hook for updating student roll numbers in the backend
   const [updateStudentRollNumbers, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
 
   /**
@@ -70,19 +79,16 @@ const RollNoGenerationScreen = ({
     setTableData(filteredData);
   };
 
-  // Update table data when student data changes
+  // Update table data when studentData prop changes
   useEffect(() => {
     if (studentData) {
       setTableData(studentData);
     }
   }, [studentData]);
 
-  /**
-   * Handles manual roll number changes and validates for duplicates
-   * @param id - Student ID
-   * @param newValue - New roll number value
-   */
+  // Handle roll number change for a specific student
   const handleRollNoChange = (id: string, newValue: number) => {
+    // Update the roll number for the specified student
     const updatedData = tableData.map((item) =>
       item.id === id ? { ...item, rollNo: newValue } : item
     );
@@ -99,13 +105,13 @@ const RollNoGenerationScreen = ({
       [id]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
     }));
 
+    // Update the table data with new roll numbers
     setTableData(updatedData);
   };
 
-  /**
-   * Saves the updated roll numbers to the backend
-   */
+  // Save updated roll numbers to the server
   const handleSave = async () => {
+    // Prepare request body with student IDs and roll numbers
     const requestBody = {
       studentNumbers: tableData.map((item) => ({
         studentId: item.id,
@@ -115,8 +121,10 @@ const RollNoGenerationScreen = ({
 
     console.log('Request body:', requestBody);
     try {
+      // Send API request to update roll numbers
       const response = await updateStudentRollNumbers({ body: requestBody }).unwrap();
 
+      // Show success message and reset state
       toast.success('Roll Numbers updated successfully!');
       setIsManual(false);
       dispatch(StudentApi.util.invalidateTags(['Student']));
@@ -125,14 +133,11 @@ const RollNoGenerationScreen = ({
     }
   };
 
-  // State and handlers for instant notification feature
+  // State for managing selected students and notification dialog
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
-  /**
-   * Opens the instant notification dialog when triggered
-   * Used to send notifications to selected students
-   */
+  // Handler for opening notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -203,8 +208,15 @@ const RollNoGenerationScreen = ({
             showCheckbox={selectedStudents.length !== 0}
             noDataText={<>No Roll Genaration Data Found </>}
             tableId="roll-no-generation-table"
+            searchFieldProps={{
+              placeholder: 'Search by GR No, Name, Roll No',
+              label: 'Search by GR No, Name, Roll No',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             columns={[
-              // { id: 'srNo', label: 'Sr. No.' },
               {
                 id: 'checkBox',
                 align: 'left',
@@ -245,7 +257,6 @@ const RollNoGenerationScreen = ({
               },
               { id: 'grNoRecord', label: 'GR No.' },
               { id: 'name', label: 'Name' },
-              // { id: 'surname', label: 'Surname' },
               {
                 id: 'rollNo',
                 label: 'Roll No.',

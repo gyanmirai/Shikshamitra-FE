@@ -39,18 +39,19 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const AttendanceRule = () => {
-  // Boolean hooks for managing dialog and confirmation states
+  // Hooks for managing dialog and confirmation states
   const confirm = useBoolean();
   const dialog = useBoolean(false);
 
-  // State for managing edit and delete data
+  // State for managing edit and delete operations
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
 
-  // Callback function for menu actions (edit and delete)
+  // Menu actions for each row in the table
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
+        {/* Delete menu item */}
         <MenuItem
           onClick={() => {
             confirm.onTrue();
@@ -63,6 +64,7 @@ const AttendanceRule = () => {
           Delete
         </MenuItem>
 
+        {/* Edit menu item */}
         <MenuItem
           onClick={() => {
             setEditData(row);
@@ -90,7 +92,7 @@ const AttendanceRule = () => {
     currentQueryAndMutation: useDeleteStudentAttendanceRuleMutation,
   });
 
-  // Handler for closing the dialog and resetting edit data
+  // Handler for closing the dialog
   const handleClose = () => {
     setEditData(null);
     dialog.onFalse();
@@ -140,6 +142,14 @@ const AttendanceRule = () => {
             </Box>
           </>
         }
+        searchFieldProps={{
+          placeholder: 'Search by Name, Type, Threshold...',
+          label: 'Search by Name, Type, Threshold...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading}
         columns={[
           { label: 'Name', id: 'name' },
@@ -161,7 +171,10 @@ const AttendanceRule = () => {
           {
             label: 'Actions',
             id: 'action',
+            isFilter: false,
             isSort: false,
+            minWidth: 130,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -185,7 +198,6 @@ const AttendanceRule = () => {
         ]}
         data={tableData}
       />
-
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -230,17 +242,16 @@ const AttendanceRule = () => {
 
 export default AttendanceRule;
 
-interface AttendanceRuleFormProps {
-  handleClose: () => void;
-  editData: any;
-}
-
-const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) => {
+const AttendanceRuleForm = ({ handleClose, editData }: any) => {
+  // Hook for adding a new attendance rule
+  // Returns the mutation function and loading state
   const [addRule, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentAttendanceRuleMutation,
   });
 
+  // Hook for updating an existing attendance rule
+  // Returns the mutation function and loading state for updates
   const [updateRule, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentAttendanceRuleMutation,

@@ -1,7 +1,5 @@
 'use client';
 
-import type { Standards } from 'src/types/school';
-
 import React, { useState } from 'react';
 
 import { Box, Button, Checkbox } from '@mui/material';
@@ -14,6 +12,8 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+
+import type { TableClassDropDownProps } from './type';
 
 const initialData = [
   {
@@ -49,9 +49,13 @@ const initialData = [
 ];
 
 const ChangeClassScreen = ({ allClass }: any) => {
+  // State to store selected students for bulk actions
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
+
+  // State to store selected class column value
   const [columClass, setColumnClass] = useState<string>('');
 
+  // Initial table data with student information
   const [tableData, setTableData] = useState([
     {
       id: 1,
@@ -85,8 +89,10 @@ const ChangeClassScreen = ({ allClass }: any) => {
     },
   ]);
 
+  // Boolean state to control notification dialog visibility
   const sendInstantNotificationDialogValue = useBoolean();
 
+  // Handler to show notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -111,6 +117,14 @@ const ChangeClassScreen = ({ allClass }: any) => {
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudent.length !== 0}
           tableId="change-class-table"
+          searchFieldProps={{
+            placeholder: 'Search by Sr. No., GR No., Name, Fee Status, Exam Status',
+            label: 'Search by Sr. No., GR No., Name, Fee Status, Exam Status',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             {
               id: 'checkBox',
@@ -207,7 +221,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
             },
           ]}
           data={tableData}
-        />
+        />{' '}
         {sendInstantNotificationDialogValue.value && (
           <SendInstantNotificationDialog
             open={sendInstantNotificationDialogValue.value}
@@ -222,13 +236,6 @@ const ChangeClassScreen = ({ allClass }: any) => {
 };
 
 export default ChangeClassScreen;
-
-interface TableClassDropDownProps {
-  allClass: Standards[];
-  classes: string;
-
-  onChange: (val: string | string[] | number | number[]) => void;
-}
 
 const TableClassDropDown = ({ allClass, classes, onChange }: TableClassDropDownProps) => (
   <CustomSelect

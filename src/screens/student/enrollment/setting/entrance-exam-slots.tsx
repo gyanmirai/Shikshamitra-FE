@@ -29,27 +29,36 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const EntranceExamSlots = () => {
-  const dialog = useBoolean();
-  const confirm = useBoolean();
-  const [editData, setEditData] = useState<any>(null);
+import type { ISlot } from './type';
 
+const EntranceExamSlots = () => {
+  // Dialog state for opening/closing modal
+  const dialog = useBoolean();
+  // Dialog state for confirmation modal
+  const confirm = useBoolean();
+  // State to store data being edited
+  const [editData, setEditData] = useState<ISlot | null>(null);
+
+  // Fetch entrance exam slots data
   const { data: slots, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
   });
 
+  // Delete slot mutation hook
   const [deleteSlot, { isLoading: isDeleteSlotLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEntranceExamSlotMutation,
   });
 
-  const tableData = slots?.items?.map((item: any) => ({
+  // Transform slots data to include formatted time strings
+  const tableData = slots?.items?.map((item: ISlot) => ({
     ...item,
     startTime: dayjs(item.startDate).format('hh:mm A'),
     endTime: dayjs(item.endDate).format('hh:mm A'),
   }));
 
+  // Handle closing of dialog and reset edit data
   const handleClose = () => {
     dialog.onFalse();
     setEditData(null);
@@ -108,6 +117,14 @@ const EntranceExamSlots = () => {
             </Box>
           </>
         }
+        searchFieldProps={{
+          placeholder: 'Search by Slot Name, Room No...',
+          label: 'Search by Slot Name, Room No...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           { label: 'Slot Name', id: 'slotName' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },
@@ -126,12 +143,12 @@ const EntranceExamSlots = () => {
                   showEditIcon
                   showThreeDots={false}
                   handleDeleteClick={() => {
-                    setEditData(row as any);
+                    setEditData(row as ISlot);
                     confirm.onTrue();
                   }}
                   handleEditClick={() => {
                     dialog.onTrue();
-                    setEditData(row as any);
+                    setEditData(row as ISlot);
                   }}
                 />
               );
@@ -140,7 +157,6 @@ const EntranceExamSlots = () => {
         ]}
         data={tableData || []}
       />
-
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
@@ -170,17 +186,19 @@ export const SlotsForm = ({
   editData,
 }: {
   handleClose?: () => void;
-  editData: any;
+  editData: ISlot | null;
 }) => {
+  // Hook for adding a new entrance exam slot
   const [addSlot, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEntranceExamSlotMutation,
   });
+
+  // Hook for updating an existing entrance exam slot
   const [updateSlot, { isLoading: isUpdateSlotLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEntranceExamSlotMutation,
   });
-
   const formik = useFormik({
     initialValues: {
       slotName: editData?.slotName || null,
