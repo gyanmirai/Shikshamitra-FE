@@ -1,13 +1,19 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -43,15 +49,10 @@ const RoomDetails = () => {
 
   // State to track whether we are in edit mode
   const [isEdit, setIsEdit] = useState(false);
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // State to store all room data entries
   const [roomData, setRoomData] = useState(tableData);
-
-  // Function to close dialog and reset edit mode
-  const closeDialog = () => {
-    setIsEdit(false);
-    dialog.onFalse();
-  };
 
   /**
    * Handles saving room data from the dialog form
@@ -75,7 +76,7 @@ const RoomDetails = () => {
 
       // If the entry already exists and it's not an edit, show duplicate dialog
       if (existingEntryIndex !== -1 && !isEdit) {
-        closeDialog();
+        dialog.onFalse();
         return;
       }
 
@@ -97,8 +98,19 @@ const RoomDetails = () => {
         setRoomData(updatedRoomData); // Update room data
       }
     }
+    dialog.onFalse();
 
-    closeDialog();
+    shikshaMitraToast.success({ message: 'Room added successfully' });
+  };
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dialog.onFalse();
+
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      dialog.onFalse();
+    }
   };
 
   return (
@@ -176,7 +188,7 @@ const RoomDetails = () => {
         <RoomCreationForm
           onSave={handleSave}
           dialogValue={dialog.value}
-          onClose={closeDialog}
+          onClose={handleClose}
           data={selectedEntry}
           isEdit={isEdit}
           allData={roomData}

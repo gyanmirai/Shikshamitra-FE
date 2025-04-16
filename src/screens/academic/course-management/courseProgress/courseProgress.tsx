@@ -1,11 +1,13 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import {
@@ -22,6 +24,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -33,10 +36,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import CourseCardsGrid from './components/courseCardsGrid';
 
-import type { ICourse } from './type';
+import type { ICourse, IUpdateProgressProps } from './type';
 
 const CourseProgress = (props: TabComponentType) => {
   const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
@@ -50,6 +54,8 @@ const CourseProgress = (props: TabComponentType) => {
   const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
   };
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -115,6 +121,15 @@ const CourseProgress = (props: TabComponentType) => {
     ),
     [updateProgressDialog]
   );
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      updateProgressDialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      updateProgressDialog.onFalse();
+    }
+  };
 
   return (
     <Box>
@@ -246,10 +261,12 @@ const CourseProgress = (props: TabComponentType) => {
       {/* Dialog for updating progress */}
       <CustomDialog
         open={updateProgressDialog.value}
-        handleClose={updateProgressDialog.onFalse}
+        handleClose={() => {
+          updateProgressDialog.onFalse();
+        }}
         title="Update Progress"
       >
-        <UpdateProgress />
+        <UpdateProgress onClose={handleClose} />
       </CustomDialog>
     </Box>
   );
@@ -257,7 +274,7 @@ const CourseProgress = (props: TabComponentType) => {
 
 export default CourseProgress;
 
-const UpdateProgress = () => {
+const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProgressProps) => {
   const formik = useFormik({
     initialValues: {
       completePercentage: '', // Adjusted field name to match the input ID
@@ -274,27 +291,33 @@ const UpdateProgress = () => {
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <ShakingTextField
-        error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
-      >
-        <TextField
-          fullWidth
-          id="completePercentage"
-          name="completePercentage"
-          label="Add Approax Percentage"
-          value={formik.values.completePercentage}
-          onChange={formik.handleChange}
-          error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
-          // @ts-ignore
-          helperText={formik.touched.completePercentage && formik.errors.completePercentage}
-          size="small"
-        />
-      </ShakingTextField>
-      <DialogActions>
-        <CancelButton onClick={() => {}} />
-        <SubmitButton onClick={() => {}} />
-      </DialogActions>
-    </Box>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+        <ShakingTextField
+          error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
+        >
+          <TextField
+            fullWidth
+            id="completePercentage"
+            name="completePercentage"
+            label="Add Approax Percentage"
+            value={formik.values.completePercentage}
+            onChange={formik.handleChange}
+            error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
+            // @ts-ignore
+            helperText={formik.touched.completePercentage && formik.errors.completePercentage}
+            size="small"
+          />
+        </ShakingTextField>
+        <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <CancelButton
+            onClick={() => {
+              onClose(null, false);
+            }}
+          />
+          <SubmitButton onClick={() => {}} />
+        </DialogActions>
+      </Box>
+    </BackPopUpChecked>
   );
 };

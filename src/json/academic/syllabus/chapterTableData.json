@@ -1,53 +1,52 @@
 [
-    {
-      "id": 1,
-      "chapterNo": 1,
-      "chapterName": "Introduction to Algebra",
-      "startDate": "2025-03-01",
-      "endDate": "2025-04-01",
-      "assignedTeacher": ["Mr. Rajesh Sharma", "Ms. Neha Verma"],
-      "viewMaterial": { "videos": 5, "pdfs": 3 },
-      "progress": 75
-    },
-    {
-      "id": 2,
-      "chapterNo": 2,
-      "chapterName": "Biology Basics",
-      "startDate": "2025-02-15",
-      "endDate": "2025-03-20",
-      "assignedTeacher": ["Ms. Priya Mehta"],
-      "viewMaterial": { "videos": 8, "pdfs": 4 },
-      "progress": 60
-    },
-    {
-      "id": 3,
-      "chapterNo": 3,
-      "chapterName": "Shakespeare’s Literature",
-      "startDate": "2025-01-10",
-      "endDate": "2025-02-05",
-      "assignedTeacher": ["Mrs. Kavita Shah", "Mr. Ankit Tiwari"],
-      "viewMaterial": { "videos": 6, "pdfs": 2 },
-      "progress": 90
-    },
-    {
-      "id": 4,
-      "chapterNo": 4,
-      "chapterName": "World War History",
-      "startDate": "2025-04-01",
-      "endDate": "2025-05-15",
-      "assignedTeacher": ["Mr. Arvind Joshi"],
-      "viewMaterial": { "videos": 4, "pdfs": 1 },
-      "progress": 50
-    },
-    {
-      "id": 5,
-      "chapterNo": 5,
-      "chapterName": "Data Structures and Algorithms",
-      "startDate": "2025-06-01",
-      "endDate": "2025-07-10",
-      "assignedTeacher": ["Mr. Vikas Nair", "Ms. Divya Reddy"],
-      "viewMaterial": { "videos": 10, "pdfs": 5 },
-      "progress": 85
-    }
-  ]
-  
+  {
+    "id": "1",
+    "chapterNo": 1,
+    "chapterName": "Introduction to Algebra",
+    "startDate": "2025-03-01",
+    "endDate": "2025-04-01",
+    "assignedTeacher": ["Mr. Rajesh Sharma", "Ms. Neha Verma"],
+    "viewMaterial": { "videos": 5, "pdfs": 3 },
+    "progress": 75
+  },
+  {
+    "id": "2",
+    "chapterNo": 2,
+    "chapterName": "Biology Basics",
+    "startDate": "2025-02-15",
+    "endDate": "2025-03-20",
+    "assignedTeacher": ["Ms. Priya Mehta"],
+    "viewMaterial": { "videos": 8, "pdfs": 4 },
+    "progress": 60
+  },
+  {
+    "id": "3",
+    "chapterNo": 3,
+    "chapterName": "Shakespeare’s Literature",
+    "startDate": "2025-01-10",
+    "endDate": "2025-02-05",
+    "assignedTeacher": ["Mrs. Kavita Shah", "Mr. Ankit Tiwari"],
+    "viewMaterial": { "videos": 6, "pdfs": 2 },
+    "progress": 90
+  },
+  {
+    "id": "4",
+    "chapterNo": 4,
+    "chapterName": "World War History",
+    "startDate": "2025-04-01",
+    "endDate": "2025-05-15",
+    "assignedTeacher": ["Mr. Arvind Joshi"],
+    "viewMaterial": { "videos": 4, "pdfs": 1 },
+    "progress": 50
+  },
+  {
+    "id": "5",
+    "chapterNo": 5,
+    "chapterName": "Data Structures and Algorithms",
+    "startDate": "2025-06-01",
+    "endDate": "2025-07-10",
+    "assignedTeacher": ["Mr. Vikas Nair", "Ms. Divya Reddy"],
+    "viewMaterial": { "videos": 10, "pdfs": 5 },
+    "progress": 85
+  }
+]

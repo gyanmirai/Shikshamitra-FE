@@ -1,4 +1,4 @@
 export interface ICreateNoOfLectureProps {
   open?: boolean;
-  onClose?: () => void;
+  onClose?: (e: any, isSubmit: boolean) => void;
 }

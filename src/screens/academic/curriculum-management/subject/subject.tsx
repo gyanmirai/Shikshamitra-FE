@@ -1,8 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button, DialogActions, DialogContent, DialogContentText } from '@mui/material';
@@ -11,11 +13,13 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import subjectData from 'src/json/academic/curriculum/subjectTableData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -48,7 +52,8 @@ const Subject = (props: TabComponentType) => {
   // State for managing selected subject and edit mode
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // State to track pending status changes for subjects
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
@@ -92,6 +97,7 @@ const Subject = (props: TabComponentType) => {
     addSubjectDialog.onFalse();
     setIsEdit(false);
     setSelectedSubject(null);
+    shikshaMitraToast.success({ message: 'Subject added successfully' });
   };
 
   // Open dialog to view subject details
@@ -99,7 +105,18 @@ const Subject = (props: TabComponentType) => {
     setSelectedSubject(subject);
     showSubjectDialog.onTrue();
   };
-
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      addSubjectDialog.onFalse();
+      setIsEdit(false);
+      setSelectedSubject(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addSubjectDialog.onFalse();
+      setIsEdit(false);
+      setSelectedSubject(null);
+    }
+  };
   // Close all dialogs and reset form state
   const handleCloseDialog = () => {
     addSubjectDialog.onFalse();
@@ -166,7 +183,7 @@ const Subject = (props: TabComponentType) => {
             variant="contained"
             onClick={
               addSubjectDialog.value
-                ? handleCloseDialog
+                ? handleClose
                 : () => {
                     addSubjectDialog.onTrue();
                     setIsEdit(false);
@@ -185,7 +202,7 @@ const Subject = (props: TabComponentType) => {
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
             <SubjectForm
               onSubmit={handleSubmit}
-              onClose={handleCloseDialog}
+              onClose={handleClose}
               data={selectedSubject}
               isEdit={isEdit}
             />{' '}

@@ -9,7 +9,7 @@ import type { IChapter, IChapterTableProps } from '../type';
 
 const ChapterTable = ({
   addChapterDialog,
-  ediData,
+  onDelete,
   setEditData,
   data,
   actions,
@@ -138,8 +138,11 @@ const ChapterTable = ({
               showViewIcon
               showDeleteIcon
               handleViewClick={() => handleEyeClick(row.subjectName)}
-              handleEditClick={() => {}}
-              handleDeleteClick={() => {}}
+              handleEditClick={() => {
+                setEditData(row as IChapter);
+                addChapterDialog.onTrue();
+              }}
+              handleDeleteClick={() => onDelete(row as IChapter)}
             />
           );
         },

@@ -45,7 +45,7 @@ export interface ISubjectTableProps {
 
 export interface ISubjectFormProps {
   onSubmit: (values: ISubject) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   data: ISubject | null;
   isEdit: boolean;
 }

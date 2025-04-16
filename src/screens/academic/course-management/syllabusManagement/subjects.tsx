@@ -2,11 +2,13 @@
 
 // Client-side component declaration
 
+import type { RootState } from 'src/redux/store';
 // Import necessary types
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 // Import external dependencies
 import React, { useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 // Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
@@ -18,11 +20,13 @@ import { useBoolean } from 'src/hooks/use-boolean';
 // Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 
 // Import custom components
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AddNewChapter } from './addChapterForm';
@@ -30,7 +34,7 @@ import { AddNewChapter } from './addChapterForm';
 import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 
-import type { IChapter, IDocument, IChapterFormValues } from './type';
+import type { IChapter } from './type';
 
 const Subjects = (props: TabComponentType) => {
   // State for managing selected class
@@ -41,18 +45,17 @@ const Subjects = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
   // Custom hook for chapter dialog visibility
   const chapterDialog = useBoolean();
+  const deleteDialog = useBoolean();
   // Custom hook for add chapter dialog visibility
   const addChapterDialog = useBoolean();
   // State for storing subject data with initial temp data
   const [subjectData, setSubjectData] = useState<any>(subjectTempData);
-  // State for tracking selected subject
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
   // State for storing subject table data
   const [chapterData, setChapterData] = useState<IChapter[]>(chapterTableData);
   // State for storing dialog data
   const [dialogData, setDialogData] = useState<any>([]);
   // State for managing selected chapter
-  const [selectedChapter, setSelectedChapter] = useState<any>(null);
+  const [selectedChapter, setSelectedChapter] = useState<IChapter | null>(null);
   // State for tracking edit mode
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   // Query hook for fetching class data
@@ -61,112 +64,13 @@ const Subjects = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // Helper function to handle document uploads
-  const handleDocumentUpload = async (files: File[]): Promise<IDocument[]> =>
-    files.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      url: URL.createObjectURL(file),
-      file,
-    }));
-
-  // Handler for chapter form submission (create/update)
-  const handleChapterSubmit = async (values: IChapterFormValues) => {
-    const updatedSubjectData = { ...subjectData };
-    const selectedClass = updatedSubjectData.classes.find(
-      (cls: { name: string }) => cls.name === classes
-    );
-
-    if (selectedClass) {
-      // Process document uploads
-      let newDocuments: IDocument[] = [];
-      if (values.documents) {
-        const filesToUpload = values.documents.filter((doc) => doc.file) as IDocument[];
-        if (filesToUpload.length > 0) {
-          const uploadedDocs = await handleDocumentUpload(filesToUpload.map((doc) => doc.file!));
-          newDocuments = [
-            ...values.documents.filter((doc) => !doc.file), // Keep existing documents
-            ...uploadedDocs, // Add newly uploaded documents
-          ];
-        } else {
-          newDocuments = values.documents;
-        }
-      }
-
-      if (isEditMode && selectedChapter) {
-        // Update existing chapter
-        selectedClass.divisions.forEach((division: any) => {
-          const subj = division.subjects.find((sub: any) => sub.name === selectedSubject);
-          if (subject) {
-            const newChapter = {
-              chapterNo: values.chapterNo,
-              chapterName: values.chapterName,
-              assignedTeacher: values.assignedTeacher,
-              content: values.content,
-              startTime: values.startTime,
-              endTime: values.endTime,
-              documents: newDocuments,
-              progress: subj.progress,
-              assignments: subj.assignments,
-            };
-          }
-        });
-      } else {
-        // Create new chapter with auto-incremented ID
-        const newChapter = {
-          id:
-            Math.max(
-              ...selectedClass.divisions.flatMap((div: any) =>
-                div.subjects.flatMap((sub: any) => sub.chapters.map((ch: any) => ch.id))
-              ),
-              0
-            ) + 1,
-          chapterNo: values.chapterNo,
-          chapterName: values.chapterName,
-          assignedTeacher: values.assignedTeacher,
-          content: values.content,
-          startTime: values.startTime,
-          endTime: values.endTime,
-          documents: newDocuments,
-          progress: 0,
-          assignments: [],
-        };
-
-        // Add new chapter to all divisions
-        selectedClass.divisions.forEach((division: any) => {
-          const subj = division.subjects.find((sub: any) => sub.name === selectedSubject);
-          if (subject) {
-            subj.chapters.push({ ...newChapter });
-          }
-        });
-      }
-
-      // Update state with new data
-      setSubjectData(updatedSubjectData);
-      const updatedDialogData = selectedClass.divisions.map((division: any) => ({
-        divisionName: division.name,
-        chapters: division.subjects
-          .filter((sub: any) => sub.name === selectedSubject)
-          .flatMap((sub: any) => sub.chapters),
-      }));
-
-      setDialogData(updatedDialogData);
-    }
-    addChapterDialog.onFalse();
-  };
-
-  // Handler for editing existing chapters
-  const handleEditChapter = (chapter: any) => {
-    setSelectedChapter(chapter);
-    setIsEditMode(true);
-    addChapterDialog.onTrue();
-  };
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   // Handler for viewing chapter details
   const handleEyeClick = (subjectName: string) => {
     const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
 
-    setSelectedSubject(subjectName);
     // Get chapters for all divisions for the selected subject
     const allDivisionChapters =
       selectedClassData?.divisions.map((division: any) => {
@@ -224,6 +128,27 @@ const Subjects = (props: TabComponentType) => {
         { name: 'Syllabus', href: '/academic/courseSubjects' },
         { name: 'Syllabus Management' },
       ];
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      addChapterDialog.onFalse();
+      setIsEditMode(false);
+      setSelectedChapter(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addChapterDialog.onFalse();
+      setIsEditMode(false);
+      setSelectedChapter(null);
+    }
+  };
+
+  const handleDelete = (id: string | undefined) => {
+    if (selectedChapter) {
+      setChapterData(chapterData.filter((ch) => ch.id !== id));
+      deleteDialog.onFalse();
+      setSelectedChapter(null);
+    }
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
@@ -243,9 +168,7 @@ const Subjects = (props: TabComponentType) => {
             variant="contained"
             onClick={
               addChapterDialog.value
-                ? () => {
-                    addChapterDialog.onFalse();
-                  }
+                ? handleClose
                 : () => {
                     addChapterDialog.onTrue();
                   }
@@ -260,8 +183,8 @@ const Subjects = (props: TabComponentType) => {
         // Form view for adding/editing chapters
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewChapter
-            onSubmit={handleChapterSubmit}
-            selectedSubject={selectedSubject}
+            onClose={handleClose}
+            onSubmit={() => {}}
             initialValues={selectedChapter}
             isEdit={isEditMode}
           />
@@ -297,7 +220,10 @@ const Subjects = (props: TabComponentType) => {
           </Box>
           {/* Table component for displaying chapter data */}
           <ChapterTable
-            ediData={selectedChapter}
+            onDelete={(chapter) => {
+              setSelectedChapter(chapter as IChapter);
+              deleteDialog.onTrue();
+            }}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
             data={chapterData}
@@ -306,6 +232,27 @@ const Subjects = (props: TabComponentType) => {
           />
         </>
       )}
+
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          deleteDialog.onFalse();
+          setSelectedChapter(null);
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              handleDelete(selectedChapter?.id);
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

@@ -1,9 +1,14 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button, Tooltip, Typography, IconButton } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -27,6 +32,21 @@ const LearningResourceType = () => {
   const [isEdit, setIsEdit] = useState(false);
   const resourceDialog = useBoolean();
   const deleteDialog = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      resourceDialog.onFalse();
+      setIsEdit(false);
+      setSelectedResourceType(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      resourceDialog.onFalse();
+      setIsEdit(false);
+      setSelectedResourceType(null);
+    }
+  };
   return (
     <Box>
       <Card sx={{ p: 2, height: '100%' }}>
@@ -114,7 +134,7 @@ const LearningResourceType = () => {
       >
         <LearningResourceTypeForm
           data={selectedResourceType}
-          onClose={resourceDialog.onFalse}
+          onClose={handleClose}
           isEdit={isEdit}
         />
       </CustomDialog>

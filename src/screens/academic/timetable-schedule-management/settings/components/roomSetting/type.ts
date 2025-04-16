@@ -12,7 +12,7 @@ export interface IRoomCreationFormProps {
   dialogValue: boolean;
   data: any;
   onSave: (values: any) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: false) => void;
   isEdit: boolean;
   allData: any;
 }

@@ -1,10 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -15,7 +20,19 @@ import CreateNoOfLecture from './createWeeklyLectures';
 
 const WeeklyLectures = () => {
   // Dialog state to control the visibility of create lecture number dialog
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
   const createLectureNumberDialog = useBoolean();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      createLectureNumberDialog.onFalse();
+
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      createLectureNumberDialog.onFalse();
+    }
+  };
 
   return (
     <Box>

@@ -39,3 +39,7 @@ export interface IAppWidgetProps {
     options?: ChartOptions;
   };
 }
+
+export interface IUpdateProgressProps {
+  onClose: (e: any, isSubmit: boolean) => void;
+}

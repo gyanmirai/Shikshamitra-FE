@@ -10,7 +10,7 @@ interface FormikValue {
 }
 
 export interface IResourceData {
-  id: number; // Unique identifier for the resource
+  id: string; // Unique identifier for the resource
   resourceTitle: string; // Title of the learning resource
   typeOfResource: string; // Type of resource (document, audio, video, etc.)
   className: string; // Class/grade the resource is intended for
@@ -23,7 +23,7 @@ export interface IResourceData {
 // Interface for props used in CreateLearningResources component
 export interface ICreateLearningResourcesProps {
   onSave: (values: IResourceData) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   data: IResourceData | null;
   isEdit: boolean;
   currentClass: string;
