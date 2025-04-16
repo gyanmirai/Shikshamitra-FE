@@ -66,16 +66,26 @@ const FinanceFeeStructureOverviewComponent = () => {
             </>
           }
           tableId="fee-structure-overview"
+          searchFieldProps={{
+            placeholder: 'Search by Receipt Book, Class..',
+            label: 'Search by Receipt Book, Class..',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             {
               id: 'bookRecipt',
               label: 'Receipt Book',
+              filterType: 'string',
             },
-            { id: 'applicableGrade', label: 'Applicable Class' },
+            { id: 'applicableGrade', label: 'Applicable Class', filterType: 'number' },
 
             {
               id: 'grossFee',
               label: 'Gross Fees',
+              filterType: 'number',
               render(value, row) {
                 return (
                   <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -85,6 +95,7 @@ const FinanceFeeStructureOverviewComponent = () => {
             {
               id: 'totaldiscountAmount',
               label: 'General Discount',
+              filterType: 'number',
               render(value, row) {
                 return (
                   <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -94,6 +105,7 @@ const FinanceFeeStructureOverviewComponent = () => {
             {
               id: 'payableFees',
               label: 'Payable Fees',
+              filterType: 'number',
               render(value, row) {
                 return (
                   <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -104,11 +116,16 @@ const FinanceFeeStructureOverviewComponent = () => {
             {
               id: 'paymentDueDate',
               label: 'Payment Due Date',
+              filterType: 'date',
             },
 
             {
               id: 'action',
               label: 'Action',
+              isSort: false,
+              isFilter: false,
+
+              sticky: true,
               render(value, row: any) {
                 return (
                   <ThreeDotsActions

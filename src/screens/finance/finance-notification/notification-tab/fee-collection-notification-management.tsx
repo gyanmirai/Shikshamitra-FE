@@ -4,338 +4,11 @@ import React, { useState } from 'react';
 
 import { Box, Card, Switch } from '@mui/material';
 
+import notificationData from 'src/json/finance/notification/feeCollectionNotificationData.json';
 import EditNotificationDialog from 'src/screens/student/studentNotification/edit-notification-dialog';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-
-const notificationData = [
-  {
-    id: '4',
-    event: 'Apply Additional Discount',
-    triggerCondition: 'When granting an additional discount to a student.',
-    recipient: [
-      {
-        name: 'admin',
-        message: '[Student Name] has been granted an additional discount of [Amount].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Amount]'],
-        placeHolderOptions: [
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Amount]', label: 'Amount' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          "Dear [Parent Name], an additional discount of [Amount] has been applied to [Student Name]'s fees.",
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '5',
-    event: 'Collect Fee',
-    triggerCondition: 'When a fee is collected.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'Fee payment of [Amount] received for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], we have received a fee payment of [Amount] for [Student Name]. Thank you!',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '6',
-    event: 'Request Refund',
-    triggerCondition: 'When a refund request is created.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'A refund request of [Amount] has been submitted for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], a refund request of [Amount] has been submitted for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '7',
-    event: 'Approve Refund',
-    triggerCondition: 'When a refund request is approved.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'Refund request of [Amount] for [Student Name] has been approved.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], your refund request for [Student Name] has been approved. The amount of [Amount] will be processed soon.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '8',
-    event: 'Reject Refund',
-    triggerCondition: 'When a refund request is rejected.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'Refund request of [Amount] for [Student Name] has been rejected.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], unfortunately, your refund request for [Student Name] has been rejected. Please contact the school for further details.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '9',
-    event: 'Process Refund',
-    triggerCondition: 'When a refund is successfully completed.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'Refund of [Amount] has been successfully processed for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], your refund for [Student Name] amounting to [Amount] has been successfully processed.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '10',
-    event: 'Collect the Charges',
-    triggerCondition: 'When additional charges are collected.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'Additional charges of [Amount] have been collected for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], additional charges of [Amount] have been collected for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '11',
-    event: 'Pending Fee / Upcoming Fee',
-    triggerCondition: 'When the fee due date is approaching.',
-    recipient: [
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], the upcoming fee of [Amount] for [Student Name] is due on [Due Date]. Please make the payment before the due date.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]', '[Due Date]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Due Date]', label: 'Due Date' },
-        ],
-        isEnable: true,
-      },
-      {
-        name: 'student',
-        message:
-          'Dear [Student Name], your upcoming fee of [Amount] is due on [Due Date]. Please ensure timely payment.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Amount]', '[Due Date]'],
-        placeHolderOptions: [
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Due Date]', label: 'Due Date' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-
-  {
-    id: '12',
-    event: 'Collect the Charges',
-    triggerCondition: 'When additional charges are collected.',
-    recipient: [
-      {
-        name: 'admin',
-        message: 'Additional charges of [Amount] have been collected for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], additional charges of [Amount] have been collected for [Student Name].',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Amount]', '[Student Name]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Amount]', label: 'Amount' },
-          { value: '[Student Name]', label: 'Student Name' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '13',
-    event: 'Charges (Daily Late Fee)',
-    triggerCondition: 'When daily late charges start applying due to overdue fees.',
-    recipient: [
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], the overdue fee for [Student Name] is now [Amount], including a daily late fee of [Late Fee Amount]. Please clear the dues at the earliest.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Parent Name]', '[Student Name]', '[Amount]', '[Late Fee Amount]'],
-        placeHolderOptions: [
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Amount]', label: 'Total Overdue Amount' },
-          { value: '[Late Fee Amount]', label: 'Daily Late Fee Amount' },
-        ],
-        isEnable: true,
-      },
-      {
-        name: 'student',
-        message:
-          'Dear [Student Name], your overdue fee is now [Amount], including a daily late fee of [Late Fee Amount]. Please ensure timely payment to avoid further charges.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Amount]', '[Late Fee Amount]'],
-        placeHolderOptions: [
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Amount]', label: 'Total Overdue Amount' },
-          { value: '[Late Fee Amount]', label: 'Daily Late Fee Amount' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-];
 
 const FeeCollectionNotificationManagement = () => {
   const [open, setOpen] = useState(false);
@@ -356,8 +29,17 @@ const FeeCollectionNotificationManagement = () => {
         </Card>
       ) : (
         <CustomizableTable
+          noDataText={<>No event found for notification.</>}
           tableId="student-auto-notification-configuration"
           data={notificationData}
+          searchFieldProps={{
+            placeholder: 'Search by Event Name, Trigger Condition...',
+            label: 'Search by Event Name, Trigger Condition...',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             {
               id: 'event',
@@ -382,6 +64,8 @@ const FeeCollectionNotificationManagement = () => {
             {
               id: 'isActive',
               label: 'Active',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 return (
                   <Box>
@@ -398,6 +82,10 @@ const FeeCollectionNotificationManagement = () => {
             {
               id: 'action',
               label: 'Action',
+              isFilter: false,
+              isSort: false,
+              align: 'right',
+              sticky: true,
               render(value, row) {
                 return (
                   <ThreeDotsActions

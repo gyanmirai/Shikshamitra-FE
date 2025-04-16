@@ -15,14 +15,9 @@ import FeeRefundPaymentDialog from './fee-refund-payment-dialog';
 import { studentPayment } from '../data/fee-refund-approved-dialog-data';
 
 import type { StudentPayment } from '../data/fee-refund-approved-dialog-data';
+import type { IFinanceFeeRefundAllocationDialogProps } from '../interface/fee-refund-interface';
 
-interface FinanceFeeRefundAllocationDialogProps {
-  dialogValue: boolean;
-  selectedData: any;
-  onClose: () => void;
-}
-
-const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialogProps> = ({
+const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDialogProps> = ({
   dialogValue,
   selectedData,
   onClose,
@@ -125,6 +120,7 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
             {
               id: 'paidAmount',
               label: 'Paid Amount',
+              filterType: 'number',
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -141,6 +137,7 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
             {
               id: 'askForRefund',
               label: 'Ask For Refund',
+              filterType: 'number',
               render(value, row) {
                 return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
               },
@@ -148,6 +145,7 @@ const FinanceFeeRefundAllocationDialog: React.FC<FinanceFeeRefundAllocationDialo
             {
               id: 'refundAmount',
               label: 'Approved Refund Amount',
+              filterType: 'number',
               render: (value: any, row: any) => (
                 <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
               ),

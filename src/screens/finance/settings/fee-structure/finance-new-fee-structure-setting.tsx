@@ -106,16 +106,25 @@ const FinanceNewFeeStructureSetting = () => {
               </>
             }
             tableId="finance-fee-structure-setting-tab"
+            searchFieldProps={{
+              placeholder: 'Search by Class...',
+              label: 'Search by Class...',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             columns={[
               {
                 id: 'bookRecipt',
                 label: 'Receipt Book',
               },
-              { id: 'applicableGrade', label: 'Applicable Class' },
+              { id: 'applicableGrade', label: 'Applicable Class', filterType: 'number' },
 
               {
                 id: 'grossFee',
                 label: 'Gross Fees',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -125,6 +134,7 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'totaldiscountAmount',
                 label: 'General Discount',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -134,6 +144,7 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'totalPayableFee',
                 label: 'Payable Fees',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -144,6 +155,8 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'isActive',
                 label: 'InActive/Active',
+                isFilter: false,
+                isSort: false,
                 render(statusToggle) {
                   return <Switch value={statusToggle} />;
                 },
@@ -151,6 +164,10 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'action',
                 label: 'Action',
+                isFilter: false,
+                isSort: false,
+                sticky: true,
+                align: 'center',
                 render(value, row: any) {
                   return (
                     <ThreeDotsActions

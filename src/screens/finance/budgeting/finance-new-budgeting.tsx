@@ -171,6 +171,14 @@ const FinanceNewBudgetingScreen = () => {
           <Box>
             {tabs.value === 'income' && (
               <CustomizableTable
+                searchFieldProps={{
+                  placeholder: 'Search by Income category...',
+                  label: 'Search by Income category...',
+                  sx: {
+                    maxWidth: '400px',
+                    width: '100%',
+                  },
+                }}
                 noDataText={
                   <>
                     No budget has been created yet for income categories. Please set up a budget to
@@ -200,6 +208,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'totalAmountExpected',
                     label: 'Total Expected ',
+                    filterType: 'number',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -207,6 +216,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'collectedAmount',
                     label: 'Collected',
+                    filterType: 'number',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -214,6 +224,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'outstandingAmount',
                     label: 'Outstanding',
+                    filterType: 'number',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -223,6 +234,10 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'action',
                     label: 'Action',
+                    isFilter: false,
+                    isSort: false,
+                    align: 'right',
+                    sticky: true,
                     render(value, row) {
                       return (
                         <ThreeDotsActions
@@ -246,6 +261,14 @@ const FinanceNewBudgetingScreen = () => {
 
             {tabs.value === 'expenses' && (
               <CustomizableTable
+                searchFieldProps={{
+                  placeholder: 'Search by Expense category...',
+                  label: 'Search by Expense category...',
+                  sx: {
+                    maxWidth: '400px',
+                    width: '100%',
+                  },
+                }}
                 noDataText={
                   <>
                     No budget has been created yet for expense categories. Please set up a budget to
@@ -275,6 +298,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'allocatedAmount',
                     label: 'Allocated Amount',
+                    filterType: 'number',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -282,6 +306,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'spentAmount',
                     label: 'Spent Amount',
+                    filterType: 'number',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -289,6 +314,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'remainingAmount',
                     label: 'Remaining Amount',
+                    filterType: 'number',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -297,6 +323,10 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'action',
                     label: 'Action',
+                    isFilter: false,
+                    isSort: false,
+                    align: 'right',
+                    sticky: true,
                     render(value, row) {
                       return (
                         <ThreeDotsActions

@@ -34,3 +34,10 @@ export interface IFormikValue {
   incomeName: string;
   notes?: string;
 }
+
+export interface IFinanceIncomeDetailsDialogProps {
+  dialogValue: boolean;
+  data: any;
+
+  onClose: () => void;
+}

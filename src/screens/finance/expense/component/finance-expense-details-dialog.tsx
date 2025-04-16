@@ -8,44 +8,38 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface FinanceExpenseDetailsDialogProps {
-  dialogValue: boolean;
-  data: any;
+import type { IFinanceExpenseDetailsDialogProps } from '../expense-interface';
 
-  onClose: () => void;
-}
-const FinanceExpenseDetailsDialog: React.FC<FinanceExpenseDetailsDialogProps> = ({
+const FinanceExpenseDetailsDialog: React.FC<IFinanceExpenseDetailsDialogProps> = ({
   dialogValue,
   data,
   onClose,
-}) => {
-  console.log('data table', data);
-  return (
-    <CustomDialog maxWidth="md" title="Income Details" open={dialogValue} handleClose={onClose}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
-        <CustomizableTable
-          tableId="expenseDetails"
-          isFilter={false}
-          isScrollbar={false}
-          isSearch={false}
-          isPagination={false}
-          isShowedDense={false}
-          columns={[
-            { id: 'expenseName', label: 'Expense Name' },
-            {
-              id: 'amount',
-              label: 'Amount',
-              render(value) {
-                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
-              },
+}) => (
+  <CustomDialog maxWidth="md" title="Expense Details" open={dialogValue} handleClose={onClose}>
+    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
+      <CustomizableTable
+        tableId="expenseDetails"
+        isFilter={false}
+        isScrollbar={false}
+        isSearch={false}
+        isPagination={false}
+        isShowedDense={false}
+        columns={[
+          { id: 'expenseName', label: 'Expense Name' },
+          {
+            id: 'amount',
+            label: 'Amount',
+            filterType: 'number',
+            render(value) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
             },
-            { id: 'date', label: 'Received Date' },
-          ]}
-          data={data.expenseList}
-        />
-      </Scrollbar>
-    </CustomDialog>
-  );
-};
+          },
+          { id: 'date', label: 'Received Date', filterType: 'date' },
+        ]}
+        data={data.expenseList}
+      />
+    </Scrollbar>
+  </CustomDialog>
+);
 
 export default FinanceExpenseDetailsDialog;

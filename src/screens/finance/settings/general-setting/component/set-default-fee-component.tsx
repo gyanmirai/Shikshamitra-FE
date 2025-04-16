@@ -227,6 +227,10 @@ const SetDefaultFeeComponent = () => {
                 {
                   id: 'action',
                   label: 'Action',
+                  isFilter: false,
+                  isSort: false,
+                  sticky: true,
+                  align: 'center',
                   render(row, value) {
                     return (
                       <ThreeDotsActions

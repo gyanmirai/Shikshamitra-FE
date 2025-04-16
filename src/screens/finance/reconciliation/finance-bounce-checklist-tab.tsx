@@ -99,17 +99,26 @@ const FinanceBounceScreen = () => {
         noDataText={
           <>There are no Bounce cheque recorded for the selected class and division at this time.</>
         }
+        searchFieldProps={{
+          placeholder: 'Search by Gr Number, Name...',
+          label: 'Search by Gr Number, Name...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="finance-bounce-checklist-tab"
         columns={[
           //  {id:"srNo", label:"SR No"},
 
-          { id: 'grNumber', label: 'GR No' },
+          { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true },
           { id: 'parentsContactNumber', label: 'Contact Number' },
           { id: 'chequeNumber', label: 'Cheque Number' },
-          { id: 'chequeDate', label: 'Cheque Date' },
+          { id: 'chequeDate', label: 'Cheque Date', filterType: 'date' },
           {
             id: 'chargesAmount',
             label: 'Charges',
+            filterType: 'number',
             render(value, row) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
@@ -118,11 +127,12 @@ const FinanceBounceScreen = () => {
           },
           { id: 'feeHead', label: 'Fee Head' },
           { id: 'studentName', label: 'Student Name' },
-          { id: 'bounceDate', label: 'Bounce Date' },
+          { id: 'bounceDate', label: 'Bounce Date', filterType: 'date' },
           { id: 'reason', label: 'Reason' },
           {
             id: 'amount',
             label: 'Amount',
+            filterType: 'number',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },
@@ -132,6 +142,7 @@ const FinanceBounceScreen = () => {
             label: 'Conversation',
             isSort: false,
             align: 'center',
+            isFilter: false,
             render(value, row) {
               return (
                 <IconButton

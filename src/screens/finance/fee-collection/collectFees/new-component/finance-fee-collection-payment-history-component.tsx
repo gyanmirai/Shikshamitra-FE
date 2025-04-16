@@ -42,12 +42,21 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           </>
         }
         tableId="finance-fee-collection-payment-history"
+        searchFieldProps={{
+          placeholder: 'Search by Status, Date...',
+          label: 'Search by Status, Date...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
-          { id: 'date', label: 'Paid Date' },
+          { id: 'date', label: 'Paid Date', filterType: 'date' },
 
           {
             id: 'amountPaid',
             label: 'Amount',
+            filterType: 'number',
             render(value, row: any) {
               return <Typography fontSize="12px">{formatNumber(row.amountPaid, 'INR')}</Typography>;
             },
@@ -55,6 +64,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           {
             id: 'amountPending',
             label: 'Amount Pending',
+            filterType: 'number',
             render(value, row: any) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.amountPending, 'INR')}</Typography>
@@ -69,6 +79,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             enumOptions: FinancePaymentHistoryStatusOptions,
             minWidth: '180px',
             align: 'left',
+            isSort: false,
             render(value, row) {
               const color = FinancePaymentHistoryStatusTypeColors[
                 value as FinancePaymentHistoryStatusType
@@ -84,6 +95,10 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           {
             id: 'action',
             label: 'Action',
+            isFilter: false,
+            isSort: false,
+            align: 'right',
+            sticky: true,
             render: (value, row) => (
               <ThreeDotsActions
                 placement="right-top"

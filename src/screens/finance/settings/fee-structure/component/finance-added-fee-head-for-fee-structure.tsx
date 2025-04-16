@@ -7,13 +7,9 @@ import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface FinanceAddedFeeHeadForFeeStructureProps {
-  data: any;
-  onDelete: (data: any) => void;
-  onEdit: (data: any) => void;
-}
+import type { IFinanceAddedFeeHeadForFeeStructureProps } from '../fee-structure-interface';
 
-const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStructureProps> = ({
+const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStructureProps> = ({
   data,
   onDelete,
   onEdit,
@@ -27,6 +23,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'bookRecipt',
         label: 'Receipt Book',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px', textTransform: 'uppercase' }}>
@@ -38,6 +36,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'applicableGrade',
         label: 'Applicable Class',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -49,6 +49,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'feeHead',
         label: 'Fee Head',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -60,6 +62,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'grossFee',
         label: 'Gross Fee (₹)',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px' }}>{formatNumber('INR', row.grossFee)}</Typography>
@@ -69,6 +73,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'payableFee',
         label: 'Payable Fee (₹)',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px' }}>{formatNumber('INR', row.payableFee)}</Typography>
@@ -78,6 +84,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'discountAmount',
         label: 'Discount Amount (₹)',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px' }}>
@@ -89,6 +97,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'discountRemark',
         label: 'Discount Remark',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -100,6 +110,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'paymentMethod',
         label: 'Payment Method',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           const paymentMethods = Array.isArray(row.paymentMethod)
             ? row.paymentMethod.join(', ')
@@ -115,6 +127,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'lateFeeChargesType',
         label: 'Late Fee Type',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -126,6 +140,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'lateFeeChargesAmount',
         label: 'Late Fee Amount (₹)',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px' }}>
@@ -139,6 +155,10 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<FinanceAddedFeeHeadForFeeStru
       {
         id: 'action',
         label: 'Action',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        align: 'right',
         render(value, row) {
           return (
             <ThreeDotsActions

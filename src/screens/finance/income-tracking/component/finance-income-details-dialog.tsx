@@ -8,14 +8,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-interface FinanceIncomeDetailsDialogProps {
-  dialogValue: boolean;
-  data: any;
+import type { IFinanceIncomeDetailsDialogProps } from '../interface/income-screen-interface';
 
-  onClose: () => void;
-}
-
-const FinanceIncomeDetailsDialog: React.FC<FinanceIncomeDetailsDialogProps> = ({
+const FinanceIncomeDetailsDialog: React.FC<IFinanceIncomeDetailsDialogProps> = ({
   dialogValue,
   data,
   onClose,
@@ -36,11 +31,12 @@ const FinanceIncomeDetailsDialog: React.FC<FinanceIncomeDetailsDialogProps> = ({
             {
               id: 'amount',
               label: 'Amount',
+              filterType: 'number',
               render(value) {
                 return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
               },
             },
-            { id: 'date', label: 'Received Date' },
+            { id: 'date', label: 'Received Date', filterType: 'date' },
           ]}
           data={data.incomeList}
         />

@@ -33,10 +33,11 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
   );
 
   const tableColumns = [
-    { id: 'Month', label: 'Month' },
+    { id: 'Month', label: 'Due Date', filterType: 'date' },
     {
       id: 'Gross Fee',
       label: 'Gross Fee',
+      filterType: 'number',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -44,6 +45,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Payable Fee',
       label: 'Payable Fee',
+      filterType: 'number',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -51,6 +53,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Paid',
       label: 'Paid',
+      filterType: 'number',
       render: (value: number) => (
         <Typography fontSize={14} color="#138e58">
           {formatNumber(value, 'INR')}
@@ -60,6 +63,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Pending',
       label: 'Pending',
+      filterType: 'number',
       render: (value: number) => (
         <Typography fontSize={14} color="#b76e00">
           {formatNumber(value, 'INR')}
@@ -69,6 +73,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'General Discount',
       label: 'General Discount',
+      filterType: 'number',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -76,6 +81,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Additional Discount',
       label: 'Additional Discount',
+      filterType: 'number',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -83,6 +89,10 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Action',
       label: 'Action',
+      isSort: false,
+      isFilter: false,
+      sticky: true,
+      align: 'right',
       render: (_: unknown, row: { Pending: number }) => (
         <ThreeDotsActions
           placement="right-top"
@@ -112,7 +122,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     paymentDates: PaymentDate[]
   ) =>
     paymentDates.map((payment) => ({
-      Month: payment.month,
+      Month: payment.date,
       'Gross Fee': feeHead.grossAmount,
       'Payable Fee': feeHead.payableAmount ?? feeHead.paybleAmount ?? 0,
       Paid: Number(payment.paidAmount),

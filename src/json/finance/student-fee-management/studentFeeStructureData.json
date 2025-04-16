@@ -52,63 +52,63 @@
             },
             {
               "month": "Feb-2025",
-              "date": "15-03-2024",
+              "date": "15-02-2024",
               "status": "Unpaid",
               "paidAmount": "0",
               "pendingAmount": "5000"
             },
             {
               "month": "Jan-2025",
-              "date": "15-03-2024",
+              "date": "15-01-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "Dec-2024",
-              "date": "15-03-2024",
+              "date": "15-12-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "Nov-2024",
-              "date": "15-03-2024",
+              "date": "15-11-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "Oct-2024",
-              "date": "15-03-2024",
+              "date": "15-10-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "Sep-2024",
-              "date": "15-03-2024",
+              "date": "15-09-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "Aug-2024",
-              "date": "15-03-2024",
+              "date": "15-08-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "July-2024",
-              "date": "15-02-2024",
+              "date": "15-07-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"
             },
             {
               "month": "June-2024",
-              "date": "15-01-2024",
+              "date": "15-06-2024",
               "status": "Paid",
               "paidAmount": "5000",
               "pendingAmount": "0"

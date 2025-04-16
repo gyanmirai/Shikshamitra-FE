@@ -50,3 +50,20 @@ export interface IStudentRefundData {
 export interface IFeeRefundScreenProps {
   fromStudentDetailedView?: boolean;
 }
+
+export interface IFinanceFeeCollectionRefundTabProps {
+  dialogValue: boolean;
+  onClose: () => void;
+}
+
+export interface IFinanceFeeRefundAllocationDialogProps {
+  dialogValue: boolean;
+  selectedData: any;
+  onClose: () => void;
+}
+
+export interface IFinanceFeeRefundedViewDialogProps {
+  dialogValue: boolean;
+  selectedData: any;
+  onClose: () => void;
+}

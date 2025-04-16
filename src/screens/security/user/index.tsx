@@ -58,7 +58,6 @@ const UserManagementScreen = () => {
         tableId="user-management-table"
         isLoading={isLoading}
         data={tableData || []}
-        noDataText="No User Found"
         searchFieldProps={{
           placeholder: 'Search by Name',
           label: 'Search by Name',

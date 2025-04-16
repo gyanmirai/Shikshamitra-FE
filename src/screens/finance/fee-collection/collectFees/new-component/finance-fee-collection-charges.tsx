@@ -45,6 +45,14 @@ const FinanceFeeCollectionCharges = () => {
           </>
         }
         tableId="finance-fee-collection-charges"
+        searchFieldProps={{
+          placeholder: 'Search by Status, Fee Head...',
+          label: 'Search by Status, Fee Head...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           {
             id: 'chargeHead',
@@ -53,6 +61,7 @@ const FinanceFeeCollectionCharges = () => {
           {
             id: 'amount',
             label: 'Tota Charges Amount',
+            filterType: 'number',
             render(value, row) {
               return <Typography fontSize="12px">{row.amount}</Typography>;
             },
@@ -66,6 +75,7 @@ const FinanceFeeCollectionCharges = () => {
             enumOptions: FinancePaymentHistoryStatusOptions,
             minWidth: '180px',
             align: 'left',
+            isSort: false,
             render(value, row) {
               const color = FinancePaymentHistoryStatusTypeColors[
                 value as FinancePaymentHistoryStatusType
@@ -81,6 +91,10 @@ const FinanceFeeCollectionCharges = () => {
           {
             id: 'action',
             label: 'Action',
+            isFilter: false,
+            isSort: false,
+            align: 'right',
+            sticky: true,
             render(value, row: any) {
               return (
                 <ThreeDotsActions
