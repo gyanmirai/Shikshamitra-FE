@@ -1,3 +1,4 @@
+import type { LabelColor } from 'src/components/label';
 import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
@@ -160,9 +161,7 @@ const LeaveRequestForm = ({ editData }: any) => (
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Label
         color={
-          EmployeeLeaveStatusTypeColor[
-            EmployeeLeaveStatusType[editData?.status] as keyof typeof EmployeeLeaveStatusTypeColor
-          ]
+          EmployeeLeaveStatusTypeColor[editData?.status as EmployeeLeaveStatusType] as LabelColor
         }
       >
         {EmployeeLeaveStatusType[editData?.status]}
