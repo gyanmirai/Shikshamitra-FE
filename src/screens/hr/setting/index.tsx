@@ -75,6 +75,35 @@ const HrSetting = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Document Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Document
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Document Name, Document Type..',
+          label: 'Search by Document Name, Document Type..',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="documents"
         isLoading={isLoading}
         columns={[
@@ -93,6 +122,7 @@ const HrSetting = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+            minWidth: '140px',
             render: (value, data) => (
               <ThreeDotsActions
                 showEditIcon

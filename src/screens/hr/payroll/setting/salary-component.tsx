@@ -102,6 +102,35 @@ const SalaryComponent = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Pay-element Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Salary Component
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Name, Type...',
+          label: 'Search by Name, Type....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="pay-element-table"
         isLoading={isLoading}
         columns={[
@@ -136,6 +165,10 @@ const SalaryComponent = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
+            sticky: true,
+
+            minWidth: '140px',
             render(value, row) {
               return (
                 <ThreeDotsActions

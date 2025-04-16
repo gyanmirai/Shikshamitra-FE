@@ -209,6 +209,15 @@ const HrAttendanceNotificationManagementScreen = () => {
         </Card>
       ) : (
         <CustomizableTable
+          noDataText={<>No Event Notification Found </>}
+          searchFieldProps={{
+            placeholder: 'Search by Event Name, Trigger Condition..',
+            label: 'Search by Event Name, Trigger Condition..',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           tableId="student-auto-notification-configuration"
           data={notificationData}
           columns={[
@@ -236,6 +245,8 @@ const HrAttendanceNotificationManagementScreen = () => {
             {
               id: 'isActive',
               label: 'Active',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 return (
                   <Box>
@@ -252,6 +263,10 @@ const HrAttendanceNotificationManagementScreen = () => {
             {
               id: 'action',
               label: 'Action',
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+
               render(value, row) {
                 return (
                   <ThreeDotsActions

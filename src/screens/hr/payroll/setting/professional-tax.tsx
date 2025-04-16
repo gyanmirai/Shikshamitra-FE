@@ -94,6 +94,35 @@ const ProfessionalTax = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Tax Range Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Tax Range
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Gender, Tax Amount...',
+          label: 'Search by Gender, Tax Amount...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="professional-table"
         isLoading={isLoading}
         columns={[
@@ -101,6 +130,7 @@ const ProfessionalTax = () => {
           {
             id: 'fromSalary',
             label: 'From salary',
+            filterType: 'number',
             render(value, row) {
               return formatCurrency(value);
             },
@@ -108,6 +138,7 @@ const ProfessionalTax = () => {
           {
             id: 'toSalary',
             label: 'To salary',
+            filterType: 'number',
             render(value, row) {
               return formatCurrency(value);
             },
@@ -115,6 +146,7 @@ const ProfessionalTax = () => {
           {
             id: 'taxAmount',
             label: 'Tax Amount',
+            filterType: 'number',
             render(value, row) {
               return formatCurrency(value);
             },
@@ -122,6 +154,11 @@ const ProfessionalTax = () => {
           {
             id: 'action',
             label: 'Action',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+
+            minWidth: '140px',
             render(value, row) {
               return (
                 <ThreeDotsActions

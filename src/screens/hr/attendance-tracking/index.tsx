@@ -253,6 +253,15 @@ const DateWise = ({
       </Tabs>
       <Divider />
       <CustomizableTable
+        noDataText={<>No Data Availabel For Attendance </>}
+        searchFieldProps={{
+          placeholder: 'Search by Name, Hours Work...',
+          label: 'Search by Name, Hours Work....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="employee-attendance-table"
@@ -499,6 +508,7 @@ const EmployeeWise = ({
       )}
       {searchParams?.employeeId && (
         <CustomizableTable
+          noDataText={<>No Data Availabel For Attendance </>}
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}
           tableId="employee-wise-attendance-table"

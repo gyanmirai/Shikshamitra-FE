@@ -85,6 +85,35 @@ const PF = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No PF Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              PF
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Name, Code...',
+          label: 'Search by Name, Code....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="pf-table"
         isLoading={isLoading}
         columns={[
@@ -95,6 +124,11 @@ const PF = () => {
           {
             id: 'action',
             label: 'Action',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+
+            minWidth: '140px',
             render(value, row) {
               return (
                 <ThreeDotsActions

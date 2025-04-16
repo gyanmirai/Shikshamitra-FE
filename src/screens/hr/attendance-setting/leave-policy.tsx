@@ -124,6 +124,27 @@ const LeavePolicy = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Leave Policy Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Leave Policy
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         tableId="leave-policy-table"
         columns={[
@@ -134,6 +155,7 @@ const LeavePolicy = () => {
           {
             id: 'leaveDays',
             label: 'Leave Days',
+            filterType: 'number',
           },
           {
             id: 'isCarryForward',
@@ -147,6 +169,8 @@ const LeavePolicy = () => {
             id: 'color',
             label: 'Color',
             isSort: false,
+            isFilter: false,
+
             render(value, row) {
               return (
                 <Box
@@ -166,6 +190,7 @@ const LeavePolicy = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+
             render(value, row) {
               return (
                 <ThreeDotsActions

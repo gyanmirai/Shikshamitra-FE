@@ -1,5 +1,7 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
 
@@ -24,7 +26,11 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-import { EmployeeStatusType, EmployeeStatusTypeColor } from 'src/enums/employee-status-type';
+import {
+  EmployeeStatusType,
+  EmployeeStatusTypeColor,
+  EmployeeStatusTypeOptions,
+} from 'src/enums/employee-status-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -107,7 +113,6 @@ const HrEmployee = () => {
     roleValue: item?.role?.name || 'Not Assigned',
     statusValue: EmployeeStatusType[item?.employeeStatusType],
   }));
-
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -164,6 +169,35 @@ const HrEmployee = () => {
           />
           <Paper sx={{ px: 1, py: 2 }}>
             <CustomizableTable
+              noDataText={
+                <>
+                  No Employee Found{' '}
+                  <Box
+                    onClick={() => {
+                      setOpen(true);
+                    }}
+                    color="primary.main"
+                    fontWeight={600}
+                    sx={{
+                      '&:hover': {
+                        cursor: 'pointer',
+                        color: 'primary.main',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Add Employee
+                  </Box>
+                </>
+              }
+              searchFieldProps={{
+                placeholder: 'Search by Employee Code, Name...',
+                label: 'Search by Employee Code, Name....',
+                sx: {
+                  maxWidth: '400px',
+                  width: '100%',
+                },
+              }}
               onSendNotification={handlerSendNotification}
               showCheckbox={selectedStudents.length !== 0}
               isLoading={isLoading}
@@ -227,12 +261,12 @@ const HrEmployee = () => {
                   },
                 },
 
-                { id: 'dob', label: 'DOB', minWidth: 100 },
+                { id: 'dob', label: 'DOB', minWidth: 100, filterType: 'date' },
                 {
                   id: 'genderValue',
                   label: 'Gender',
                 },
-                { id: 'doi', label: 'Date Of Joining', minWidth: 150 },
+                { id: 'doi', label: 'Date Of Joining', minWidth: 150, filterType: 'date' },
                 { id: 'email', label: 'Email' },
                 { id: 'mobileNo', label: 'Mobile No', minWidth: 150 },
                 {
@@ -245,24 +279,25 @@ const HrEmployee = () => {
                 {
                   id: 'statusValue',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: EmployeeStatusTypeOptions,
+                  minWidth: '180px',
+                  align: 'left',
                   render(value, row) {
-                    return (
-                      <Label
-                        variant="soft"
-                        color={
-                          EmployeeStatusTypeColor[value as keyof typeof EmployeeStatusTypeColor]
-                        }
-                      >
-                        {value || '-'}
-                      </Label>
-                    );
+                    const color = EmployeeStatusTypeColor[
+                      row.employeeStatusType as EmployeeStatusType
+                    ] as LabelColor;
+                    return <Label color={color}>{value}</Label>;
                   },
                 },
+
                 {
                   id: 'actions',
                   label: 'Actions',
                   isSort: false,
                   sticky: true,
+                  isFilter: false,
+
                   render(value, row) {
                     return (
                       <ThreeDotsActions

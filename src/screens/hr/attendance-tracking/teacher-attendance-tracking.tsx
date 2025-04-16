@@ -135,12 +135,14 @@ const TeacherAttendanceTracking = ({
         </Card>
       </Box>
       <CustomizableTable
+        noDataText={<>No Data Availabel For Attendance </>}
         tableId="teacher-attendance-tracking"
         isLoading={attendanceLoading}
         columns={[
           {
             id: 'attendanceDate',
             label: 'Date',
+            filterType: 'date',
             render(value, row) {
               return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
             },

@@ -1,3 +1,4 @@
+import type { LabelColor } from 'src/components/label';
 import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
@@ -110,10 +111,39 @@ const LeaveHistory = (props: TabComponentType) => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Leave Request Found{' '}
+            <Box
+              onClick={() => {
+                modal.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Leave Request
+            </Box>
+          </>
+        }
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         isLoading={isLoading}
         tableId="leave-history-table"
+        searchFieldProps={{
+          placeholder: 'Search by Name, Status..',
+          label: 'Search by Name, Status...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           {
             id: 'checkBox',
@@ -193,20 +223,12 @@ const LeaveHistory = (props: TabComponentType) => {
             id: 'statusValue',
             filterType: 'enum',
             enumOptions: EmployeeLeaveStatusOptions,
-            render(value: number, row) {
-              const status = EmployeeLeaveStatusType[row.status];
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    EmployeeLeaveStatusTypeColor[
-                      status as keyof typeof EmployeeLeaveStatusTypeColor
-                    ]
-                  }
-                >
-                  {value}
-                </Label>
-              );
+
+            render(value, row) {
+              const color = EmployeeLeaveStatusTypeColor[
+                row.status as EmployeeLeaveStatusType
+              ] as LabelColor;
+              return <Label color={color}>{value}</Label>;
             },
           },
           {
@@ -215,6 +237,7 @@ const LeaveHistory = (props: TabComponentType) => {
             isFilter: false,
             sticky: true,
             isSort: false,
+
             render(value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />

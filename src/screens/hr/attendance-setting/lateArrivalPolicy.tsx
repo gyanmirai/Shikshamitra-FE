@@ -85,12 +85,33 @@ const LateArrivalPolicy = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Leave Rule Found{' '}
+            <Box
+              onClick={() => {
+                leaveRuleDialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Leave Rule
+            </Box>
+          </>
+        }
         tableId="late-arrival-policy-table"
         columns={[
           { id: 'policyName', label: 'Policy Name' },
           { id: 'gracePeriod', label: 'Grace Period' },
-          { id: 'thresHold', label: 'ThresHold(Day)' },
-          { id: 'penaltyAmount', label: 'Penalty Amount' },
+          { id: 'thresHold', label: 'ThresHold(Day)', filterType: 'number' },
+          { id: 'penaltyAmount', label: 'Penalty Amount', filterType: 'number' },
           {
             id: 'actions',
             label: 'Actions',

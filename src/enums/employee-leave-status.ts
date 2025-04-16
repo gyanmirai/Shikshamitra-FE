@@ -1,8 +1,8 @@
 export enum EmployeeLeaveStatusType {
-  Pending,
-  Approved,
-  Rejected,
-  Reviewed,
+  'Pending',
+  'Approved',
+  'Rejected',
+  'Reviewed',
 }
 
 export const EmployeeLeaveStatusOptions = [
@@ -24,9 +24,9 @@ export const EmployeeLeaveStatusOptions = [
   },
 ];
 
-export enum EmployeeLeaveStatusTypeColor {
-  Pending = 'warning',
-  Approved = 'success',
-  Rejected = 'error',
-  Reviewed = 'info',
-}
+export const EmployeeLeaveStatusTypeColor = {
+  [EmployeeLeaveStatusType.Pending]: 'warning',
+  [EmployeeLeaveStatusType.Approved]: 'success',
+  [EmployeeLeaveStatusType.Rejected]: 'error',
+  [EmployeeLeaveStatusType.Reviewed]: 'info',
+};
