@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
 export interface IScheduledExam {
-  id: number;
+  id: string;
   class: string;
   subjectName: string;
   examType: string;
@@ -40,6 +40,7 @@ export interface IScheduledExamTableProps {
   editData?: IScheduledExam | null;
   setEditData: (value: IScheduledExam | null) => void;
   data: IScheduledExam[];
+  onDelete: (data: IScheduledExam) => void;
 }
 
 export interface INewExamFormProps {

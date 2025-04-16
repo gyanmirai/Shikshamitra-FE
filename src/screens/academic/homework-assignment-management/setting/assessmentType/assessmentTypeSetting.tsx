@@ -1,9 +1,14 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button, Tooltip, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -30,7 +35,8 @@ const initialAssignmentType: IHomeworkAssignmentType[] = [
 const AssessmentTypeSetting = () => {
   // State for managing assignment type data - stores array of assignment types (Research-Based, Practical, etc.)
   const [assignmentTypeData, setAssignmentTypeData] = useState(initialAssignmentType);
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // State for currently selected assignment type - stores single assignment type object or null when none selected
   const [selectedAssignmentType, setSelectedAssignmentType] =
     useState<IHomeworkAssignmentType | null>(null);
@@ -50,6 +56,19 @@ const AssessmentTypeSetting = () => {
     setSelectedAssignmentType(null);
     assignmentDialog.onFalse();
     deleteConfirmDialog.onFalse();
+  };
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      assignmentDialog.onFalse();
+      setIsEdit(false);
+      setSelectedAssignmentType(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      assignmentDialog.onFalse();
+      setIsEdit(false);
+      setSelectedAssignmentType(null);
+    }
   };
 
   /**
@@ -162,6 +181,7 @@ const AssessmentTypeSetting = () => {
         title={isEdit ? 'Update Assignment Type' : 'Add Assignment Type'}
       >
         <AddCategory
+          onClose={handleClose}
           onSubmit={handleAssignmentSubmit}
           data={selectedAssignmentType}
           isEdit={isEdit}

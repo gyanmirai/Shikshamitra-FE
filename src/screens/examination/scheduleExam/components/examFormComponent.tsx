@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Box } from '@mui/material';
 
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import SelectExam from './selectExamStep1';
 import ExamDetails from './examDetailsStep2';
@@ -42,9 +43,11 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       renderItem={({ formik, activeStep: step }) => {
         const StepComponent = allTimetableSteps[step];
         return (
-          <Box p={2}>
-            <StepComponent {...formik} />
-          </Box>
+          <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+            <Box p={2}>
+              <StepComponent {...formik} />
+            </Box>
+          </BackPopUpChecked>
         );
       }}
     />

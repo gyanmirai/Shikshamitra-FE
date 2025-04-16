@@ -6,13 +6,14 @@ import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IScheduledExamTableProps } from '../type';
+import type { IScheduledExam, IScheduledExamTableProps } from '../type';
 
 const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   openDialog,
   setOpenDialog,
   editData,
   setEditData,
+  onDelete,
   data,
 }) => (
   <CustomizableTable
@@ -72,7 +73,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               showViewIcon
               showDeleteIcon
               showEditIcon
-              handleDeleteClick={() => {}}
+              handleDeleteClick={() => {
+                onDelete(row as IScheduledExam);
+              }}
               handleEditClick={() => {}}
               handleViewClick={() => {}}
             />

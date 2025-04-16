@@ -1,13 +1,18 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -21,6 +26,8 @@ const GradingScale = () => {
   const dialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
   const [grades, setGrades] = useState<IGrade[]>(gradeScalingData);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const handleCloseDialog = () => {
     setSelectedGrade(null);
@@ -29,10 +36,21 @@ const GradingScale = () => {
     deleteConfirmDialog.onFalse();
   };
 
-  const handleDelete = () => {
+  const handleDelete = (gradeData: IGrade) => {
     if (selectedGrade) {
-      setGrades(grades.filter((grade) => grade.id !== selectedGrade.id));
+      setGrades(grades.filter((grade) => grade.id !== gradeData.id));
       deleteConfirmDialog.onFalse();
+      setSelectedGrade(null);
+    }
+  };
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dialog.onFalse();
+      dispatch(setIsChanges(false));
+      setSelectedGrade(null);
+    } else if (!isChanges) {
+      dialog.onFalse();
       setSelectedGrade(null);
     }
   };
@@ -116,11 +134,33 @@ const GradingScale = () => {
       >
         <GradeForm
           onSubmit={handleSubmit}
-          onClose={dialog.onFalse}
+          onClose={handleClose}
           data={selectedGrade}
           isEdit={isEdit}
         />{' '}
       </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteConfirmDialog.value}
+        onClose={() => {
+          handleCloseDialog();
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              if (selectedGrade) {
+                handleDelete(selectedGrade);
+              }
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

@@ -1,12 +1,14 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { Division, Standards } from 'src/types/school';
 import type { Column } from 'src/components/customizabaleTable';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import React, { useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -30,6 +32,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
@@ -190,6 +193,8 @@ const HomeworkCreation = (props: TabComponentType) => {
   const [view, setView] = useState('homework');
   // State for managing dialog/modal open/close
   const [open, setOpen] = useState(false);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // Selected class state
   const [classes, setClasses] = useState<string>('');
   // Selected subject state
@@ -218,6 +223,14 @@ const HomeworkCreation = (props: TabComponentType) => {
   // State to track currently selected assignment for operations
   const [selectedAssignment, setSelectedAssignment] = useState<IHomeworkAssignment | null>(null);
 
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      setOpen(false);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      setOpen(false);
+    }
+  };
   /**
    * Handles the status switch change for an assignment
    * If the assignment is in draft status, shows confirmation dialog before publishing
@@ -553,10 +566,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               variant="contained"
               size="small"
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
-              onClick={() => {
-                dialog.onFalse();
-                setOpen(false);
-              }}
+              onClick={() => handleClose(null, false)}
             >
               Back
             </Button>
@@ -714,7 +724,11 @@ const HomeworkCreation = (props: TabComponentType) => {
 
       {open && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <HomeworkAssignmentCreationForm onsubmit={handleSubmit} view={view} />
+          <HomeworkAssignmentCreationForm
+            onClose={handleClose}
+            onsubmit={handleSubmit}
+            view={view}
+          />
         </Card>
       )}
 

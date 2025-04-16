@@ -28,9 +28,7 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
-import quizData from 'src/json/academic/examination/quizData.json';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -40,6 +38,7 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialValues } from './initialValues';
 import { stepValidationSchemas } from './validationSchema';
@@ -1000,7 +999,7 @@ const QuizSetting = ({ formik }: any) => {
 
 const allSurveySteps = [QuizInformation, QuizBuilder, QuizSetting];
 
-const AddNewQuiz = () => {
+const AddNewQuiz = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
   // State to track the current active step in the quiz creation stepper
   const [activeStep, setActiveStep] = useState(0);
 
@@ -1020,9 +1019,11 @@ const AddNewQuiz = () => {
       renderItem={({ formik, activeStep: step }: any) => {
         const StepComponent = allSurveySteps[step];
         return (
-          <Box p={2}>
-            <StepComponent formik={formik} />
-          </Box>
+          <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+            <Box p={2}>
+              <StepComponent formik={formik} />
+            </Box>
+          </BackPopUpChecked>
         );
       }}
     />

@@ -1,9 +1,14 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button, Tooltip, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -32,7 +37,8 @@ const HomeworkTypeSettingCard = () => {
   const [homeworkTypeData, setHomeworkTypeData] = useState(initialHomeworkType);
   // Boolean state to track whether we are in edit mode or create mode
   const [isEdit, setIsEdit] = useState(false);
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // Boolean state to control the visibility of homework type dialog
   const homeworkDialog = useBoolean();
   // State for currently selected homework type - stores single homework type object or null when none selected
@@ -47,6 +53,19 @@ const HomeworkTypeSettingCard = () => {
     setSelectedHomeworkType(null);
     homeworkDialog.onFalse();
     deleteConfirmDialog.onFalse();
+  };
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      homeworkDialog.onFalse();
+      setIsEdit(false);
+      setSelectedHomeworkType(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      homeworkDialog.onFalse();
+      setIsEdit(false);
+      setSelectedHomeworkType(null);
+    }
   };
 
   // Boolean state to control the visibility of delete confirmation dialog
@@ -133,7 +152,12 @@ const HomeworkTypeSettingCard = () => {
         handleClose={handleCloseDialog}
         title={isEdit ? 'Update Homework Type' : 'Add Homework Type'}
       >
-        <AddCategory onSubmit={handleHomeworkSubmit} data={selectedHomeworkType} isEdit={isEdit} />
+        <AddCategory
+          onClose={handleClose}
+          onSubmit={handleHomeworkSubmit}
+          data={selectedHomeworkType}
+          isEdit={isEdit}
+        />
       </CustomDialog>
     </Box>
   );

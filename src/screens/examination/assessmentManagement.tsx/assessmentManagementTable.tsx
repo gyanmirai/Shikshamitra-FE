@@ -83,6 +83,8 @@ const AssessmentManagementTable = ({
         id: 'actions',
         label: 'Actions',
         isSort: false,
+        isFilter: false,
+        sticky: true,
         render(_, row) {
           return (
             <ThreeDotsActions
