@@ -38,6 +38,15 @@ const BiometricIntegrationScreen = () => (
 
     <CustomizableTable
       // isLoading={isLoading}
+      noDataText={<>No Biometric Integration Data Found </>}
+      searchFieldProps={{
+        placeholder: 'Search by Name, Status..',
+        label: 'Search by Name, Status...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
+      }}
       tableId="biometric-integration-table"
       columns={[
         { id: 'employeeName', label: 'Name' },
@@ -49,6 +58,7 @@ const BiometricIntegrationScreen = () => (
           id: 'status',
           label: 'Status',
           filterType: 'enum',
+
           enumOptions: EmployeeAttendanceStatusOptions,
           render(value, row) {
             return (

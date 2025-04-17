@@ -46,6 +46,15 @@ export default VerifyPayrollComponent;
 
 const Attendance = ({ formik }: any) => (
   <CustomizableTable
+    noDataText={<>No Data Found For Payroll</>}
+    searchFieldProps={{
+      placeholder: 'Search by Employee Code, Name...',
+      label: 'Search by Employee Code, Name....',
+      sx: {
+        maxWidth: '400px',
+        width: '100%',
+      },
+    }}
     tableId="employee-table"
     columns={[
       { id: 'employeeCode', label: 'Employee Code', minWidth: '180px', align: 'left' },
@@ -74,17 +83,33 @@ const Attendance = ({ formik }: any) => (
         minWidth: '180px',
         align: 'left',
       },
-      { id: 'totalWorkingDays', label: 'Total Working Days', minWidth: '250px', align: 'left' },
-      { id: 'presentDays', label: 'Present Days', minWidth: '180px', align: 'left' },
+      {
+        id: 'totalWorkingDays',
+        label: 'Total Working Days',
+        minWidth: '250px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'presentDays',
+        label: 'Present Days',
+        minWidth: '180px',
+        align: 'left',
+        filterType: 'number',
+      },
       { id: 'mobileNo', label: 'Mobile No', minWidth: 150 },
       {
         id: 'leave',
         label: 'Leave',
+        filterType: 'number',
       },
       {
         id: 'actions',
         label: 'Actions',
         isSort: false,
+        isFilter: false,
+        sticky: true,
+
         render(value, row) {
           return (
             <ThreeDotsActions
@@ -151,6 +176,15 @@ const Attendance = ({ formik }: any) => (
 
 const Salary = ({ formik }: any) => (
   <CustomizableTable
+    noDataText={<>No Data Found For Payroll</>}
+    searchFieldProps={{
+      placeholder: 'Search by Employee Code, Name...',
+      label: 'Search by Employee Code, Name....',
+      sx: {
+        maxWidth: '400px',
+        width: '100%',
+      },
+    }}
     tableId="employee-salary-table"
     columns={[
       {
@@ -180,17 +214,39 @@ const Salary = ({ formik }: any) => (
         align: 'left',
       },
       { id: 'department', label: 'Department', minWidth: '150px', align: 'left' },
-      { id: 'basicSalary', label: 'Basic Salary', minWidth: '180px', align: 'left' },
-      { id: 'grossSalary', label: 'Gross Salary', minWidth: '150px', align: 'left' },
-      { id: 'totalDeduction', label: 'Total Deduction', minWidth: '180px', align: 'left' },
+      {
+        id: 'basicSalary',
+        label: 'Basic Salary',
+        minWidth: '180px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'grossSalary',
+        label: 'Gross Salary',
+        minWidth: '150px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'totalDeduction',
+        label: 'Total Deduction',
+        minWidth: '180px',
+        align: 'left',
+        filterType: 'number',
+      },
       {
         id: 'netPayble',
         label: 'Net Payble',
+        filterType: 'number',
       },
       {
         id: 'actions',
         label: 'Actions',
         isSort: false,
+        isFilter: false,
+        sticky: true,
+
         render(value, row) {
           return (
             <ThreeDotsActions

@@ -55,12 +55,35 @@ const AttendanceType = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Attendance Type Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Attendance Type
+            </Box>
+          </>
+        }
         tableId="attendance-type"
         columns={[
           { id: 'type', label: 'Type' },
           {
             id: 'color',
             label: 'Color',
+            isFilter: false,
+            isSort: false,
             render(value, row) {
               return (
                 <Box
@@ -77,6 +100,10 @@ const AttendanceType = () => {
           {
             id: 'action',
             label: 'Action',
+            isFilter: false,
+            isSort: false,
+            sticky: true,
+
             render: (value, row) => (
               <ThreeDotsActions
                 showEditIcon

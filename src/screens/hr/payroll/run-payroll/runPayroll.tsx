@@ -124,11 +124,14 @@ const RunPayroll = () => {
                   isPagination={false}
                   isSearch={false}
                   tableId="employee-payble-id"
+                  noDataText={<>No Employee Payble found</>}
                   columns={[
                     {
                       id: 'employeePayble',
                       label: 'Employee Payble',
                       align: 'left',
+                      isFilter: false,
+                      isSort: false,
                       render(value, row) {
                         if (!value || typeof value !== 'object') return null; // Ensure value is an object
                         return (
@@ -169,12 +172,15 @@ const RunPayroll = () => {
                   isShowedDense={false}
                   isPagination={false}
                   isSearch={false}
+                  noDataText={<>No TDS found</>}
                   tableId="incomeTaxTDS-table-id"
                   columns={[
                     {
                       id: 'incomeTaxTDS',
                       label: 'Income Tax TDS',
                       align: 'left',
+                      isFilter: false,
+                      isSort: false,
                       render(value, row) {
                         if (!value || typeof value !== 'object') return null; // Ensure value is an object
                         return (
@@ -209,6 +215,7 @@ const RunPayroll = () => {
               </Grid>
               <Grid item xs={12} md={3}>
                 <CustomizableTable
+                  noDataText={<>No PT found</>}
                   isFilter={false}
                   isShowedDense={false}
                   isPagination={false}
@@ -219,6 +226,8 @@ const RunPayroll = () => {
                       id: 'PT',
                       label: 'PT',
                       align: 'left',
+                      isFilter: false,
+                      isSort: false,
                       render(value, row) {
                         if (!value || typeof value !== 'object') return null; // Ensure value is an object
                         return (
@@ -253,6 +262,7 @@ const RunPayroll = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <CustomizableTable
+                  noDataText={<>No PF Deduction found</>}
                   isFilter={false}
                   isShowedDense={false}
                   isPagination={false}
@@ -263,6 +273,8 @@ const RunPayroll = () => {
                       id: 'pfDeduction',
                       label: 'PF Deduction',
                       align: 'left',
+                      isFilter: false,
+                      isSort: false,
                       render(value, row) {
                         if (!value || typeof value !== 'object') return null; // Ensure value is an object
                         return (
@@ -298,6 +310,7 @@ const RunPayroll = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <CustomizableTable
+                  noDataText={<>No ESIC Deduction found</>}
                   isFilter={false}
                   isShowedDense={false}
                   isPagination={false}
@@ -308,6 +321,8 @@ const RunPayroll = () => {
                       id: 'ESICDeduction',
                       label: 'ESIC Deduction',
                       align: 'left',
+                      isFilter: false,
+                      isSort: false,
                       render(value, row) {
                         if (!value || typeof value !== 'object') return null; // Ensure value is an object
                         return (

@@ -157,12 +157,22 @@ const PayrollSummary = ({ employee }: any) => {
         <Grid item xs={12} md={6}>
           <Typography variant="h5">Earning Section</Typography>
           <CustomizableTable
+            noDataText={<>No Data Found For Earning Section </>}
+            searchFieldProps={{
+              placeholder: 'Search by Employee Type...',
+              label: 'Search by Employee Type....',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             tableId="earning-section"
             columns={[
               { id: 'employeeType', label: 'Employee Type' },
               {
                 id: 'amount',
                 label: 'Amount',
+                filterType: 'number',
                 render(value, row) {
                   return formatCurrency(value);
                 },
@@ -170,6 +180,7 @@ const PayrollSummary = ({ employee }: any) => {
               {
                 id: 'total',
                 label: 'Total',
+                filterType: 'number',
                 render(value, row) {
                   return formatCurrency(value);
                 },
@@ -186,12 +197,22 @@ const PayrollSummary = ({ employee }: any) => {
         <Grid item xs={12} md={6}>
           <Typography variant="h5">Deductions Section</Typography>
           <CustomizableTable
+            noDataText={<>No Data Found For Deduction </>}
+            searchFieldProps={{
+              placeholder: 'Search by Deduction Type...',
+              label: 'Search by Deduction Type....',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             tableId="deduction-section"
             columns={[
               { id: 'deductionType', label: 'Deduction Type' },
               {
                 id: 'amount',
                 label: 'Amount',
+                filterType: 'number',
                 render(value, row) {
                   return formatCurrency(value);
                 },
@@ -199,6 +220,7 @@ const PayrollSummary = ({ employee }: any) => {
               {
                 id: 'totalDeduction',
                 label: 'Total Deduction',
+                filterType: 'number',
                 render(value, row) {
                   return formatCurrency(value);
                 },

@@ -210,11 +210,40 @@ const HrEventsAndHolidaysScreen = () => {
       </Box>
       {view === 'list' ? (
         <CustomizableTable
+          noDataText={
+            <>
+              No Event & Holidays Found{' '}
+              <Box
+                onClick={() => {
+                  dialog.onTrue();
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Leave Request
+              </Box>
+            </>
+          }
+          searchFieldProps={{
+            placeholder: 'Search by Start Date, End Date..',
+            label: 'Search by Start Date, End Date..',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[
-            { id: 'sDate', label: 'Start Date' },
-            { id: 'eDate', label: 'End Date' },
+            { id: 'sDate', label: 'Start Date', filterType: 'date' },
+            { id: 'eDate', label: 'End Date', filterType: 'date' },
             { id: 'reason', label: 'Reason' },
             {
               id: 'actions',

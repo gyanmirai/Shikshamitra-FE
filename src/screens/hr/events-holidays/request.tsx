@@ -6,6 +6,12 @@ import React from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
 
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusOptions,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -21,33 +27,42 @@ const EventsAndHolidaysRequest = () => (
       description="The Request Screen allows you to handle various requests. You can approve or reject requests based on the details provided."
     />
     <CustomizableTable
+      noDataText={<>No Leave Requet Found </>}
+      searchFieldProps={{
+        placeholder: 'Search by Start Date, End Date..',
+        label: 'Search by Start Date, End Date...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
+      }}
       tableId="event-holiday-request"
       columns={[
         { id: 'createdBy', label: 'Created By' },
-        { id: 'createdAt', label: 'Created At' },
-        { id: 'startDate', label: 'Start Date' },
-        { id: 'endDate', label: 'End Date' },
+        { id: 'createdAt', label: 'Created At', filterType: 'date' },
+        { id: 'startDate', label: 'Start Date', filterType: 'date' },
+        { id: 'endDate', label: 'End Date', filterType: 'date' },
         { id: 'reason', label: 'Reason' },
         { id: 'approvedBy', label: 'Approved By' },
         {
           id: 'status',
           label: 'Status',
+          filterType: 'enum',
+          enumOptions: EmployeeLeaveStatusOptions,
           render(value, row) {
-            let color: LabelColor = 'info';
-            if (row.status === 'Pending') {
-              color = 'warning';
-            } else if (row.status === 'Approved') {
-              color = 'success';
-            } else {
-              color = 'error';
-            }
-            return <Label color={color}>{value}</Label>;
+            const color = EmployeeLeaveStatusTypeColor[
+              row.status as EmployeeLeaveStatusType
+            ] as LabelColor;
+            return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
           },
         },
         {
           id: 'actions',
           label: 'Actions',
           isSort: false,
+          isFilter: false,
+
+          sticky: true,
           render(value, row) {
             return (
               <ThreeDotsActions
@@ -78,7 +93,7 @@ const EventsAndHolidaysRequest = () => (
           endDate: '2024-02-02',
           reason: 'Company Anniversary',
           approvedBy: '-',
-          status: 'Pending',
+          status: 0,
         },
         {
           id: 2,
@@ -88,7 +103,7 @@ const EventsAndHolidaysRequest = () => (
           endDate: '2024-02-14',
           reason: 'Valentine Day Celebration',
           approvedBy: 'Robert Wilson',
-          status: 'Approved',
+          status: 1,
         },
         {
           id: 3,
@@ -98,7 +113,7 @@ const EventsAndHolidaysRequest = () => (
           endDate: '2024-03-15',
           reason: 'Team Building Event',
           approvedBy: 'Sarah Davis',
-          status: 'Rejected',
+          status: 2,
         },
       ]}
     />

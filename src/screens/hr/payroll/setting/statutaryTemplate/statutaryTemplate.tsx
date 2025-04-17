@@ -52,6 +52,35 @@ const StatutoryTemplate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Statutory Template Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Statutory Template
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Template Name, Type...',
+          label: 'Search by Template Name, Type....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="Statutory-template-table"
         // isLoading={isLoading}
         columns={[
@@ -62,6 +91,11 @@ const StatutoryTemplate = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            isFilter: false,
+            sticky: true,
+
+            minWidth: '140px',
+
             render(value, row) {
               return (
                 <ThreeDotsActions

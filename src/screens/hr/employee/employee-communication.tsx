@@ -274,6 +274,35 @@ const EmployeeAnnouncement = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        noDataText={
+          <>
+            No Announcement Found{' '}
+            {/* <Box
+              onClick={() => {
+
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Announcement
+            </Box> */}
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Announcement Type, Date...',
+          label: 'Search by Announcement Type, Date....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="employeeAnnouncementTable"
         columns={[
           { id: 'title', label: 'Title' },
@@ -283,6 +312,7 @@ const EmployeeAnnouncement = () => {
             label: 'Publish Date',
             minWidth: '180px',
             align: 'left',
+            filterType: 'date',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -294,6 +324,7 @@ const EmployeeAnnouncement = () => {
             label: 'Expiry Date',
             minWidth: '180px',
             align: 'left',
+            filterType: 'date',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -303,6 +334,7 @@ const EmployeeAnnouncement = () => {
           {
             id: 'className',
             label: 'Class',
+            filterType: 'number',
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((className: string) => (
@@ -314,6 +346,7 @@ const EmployeeAnnouncement = () => {
           {
             id: 'division',
             label: 'Division',
+
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((audience: string) => (
@@ -368,6 +401,9 @@ const EmployeeAnnouncement = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
+            isFilter: false,
+            sticky: true,
+
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -464,6 +500,35 @@ const EmployeeEvent = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        noDataText={
+          <>
+            No Events Found{' '}
+            {/* <Box
+            onClick={() => {
+
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Announcement
+          </Box> */}
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Event Title, Venue Date...',
+          label: 'Search by Event Title, Venue Date....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="employeeEventId"
         columns={[
           { id: 'eventTitle', label: 'Event Title', minWidth: '180px', align: 'left' },
@@ -472,6 +537,7 @@ const EmployeeEvent = () => {
           {
             id: 'eventDate',
             label: 'Date',
+            filterType: 'date',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -518,6 +584,7 @@ const EmployeeEvent = () => {
           {
             id: 'className',
             label: 'Class',
+            filterType: 'number',
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((className: string) => (
@@ -533,11 +600,20 @@ const EmployeeEvent = () => {
             ),
           },
           { id: 'eventOrganizer', label: 'Event Organizer', minWidth: '200px', align: 'left' },
-          { id: 'eventBudget', label: 'Event Budget', minWidth: '180px', align: 'left' },
+          {
+            id: 'eventBudget',
+            label: 'Event Budget',
+            minWidth: '180px',
+            align: 'left',
+            filterType: 'number',
+          },
           {
             id: 'action',
             label: 'Action',
             isSort: false,
+            isFilter: false,
+
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -645,6 +721,35 @@ const EmployeeMeetings = () => {
       </Tabs>
       <Divider />
       <CustomizableTable
+        noDataText={
+          <>
+            No Meeting Found{' '}
+            {/* <Box
+            onClick={() => {
+
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Announcement
+          </Box> */}
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Meeting Time, ,Meeting Date...',
+          label: 'Search by Meeting Time, ,Meeting Date....',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         tableId="employeeMeetingId"
         columns={[
           { id: 'title', label: 'Title' },
@@ -654,6 +759,7 @@ const EmployeeMeetings = () => {
             label: 'Meeting Date',
             minWidth: '180px',
             align: 'left',
+            filterType: 'date',
             render: (value, row) => (
               <Typography fontSize="12px" gutterBottom>
                 {dayjs(value).format('DD MMM YYYY')}
@@ -704,6 +810,7 @@ const EmployeeMeetings = () => {
           {
             id: 'className',
             label: 'Class',
+            filterType: 'number',
             render: (value: any) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value && value.length > 0
@@ -731,6 +838,9 @@ const EmployeeMeetings = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
+            isFilter: false,
+
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions

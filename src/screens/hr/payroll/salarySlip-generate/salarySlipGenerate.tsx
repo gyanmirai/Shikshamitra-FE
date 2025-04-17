@@ -231,6 +231,7 @@ const PaySlipGenerationScreen = () => {
         <Grid item xs={12} md={6}>
           <Typography variant="h6">Earning Section</Typography>
           <CustomizableTable
+            noDataText="No Earning Found"
             isSearch={false}
             isFilter={false}
             isPagination={false}
@@ -254,6 +255,7 @@ const PaySlipGenerationScreen = () => {
               {
                 id: 'amount',
                 label: 'Amount',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Typography
@@ -278,6 +280,7 @@ const PaySlipGenerationScreen = () => {
         <Grid item xs={12} md={6}>
           <Typography variant="h6">Deduction Section</Typography>
           <CustomizableTable
+            noDataText="No Deduction Found"
             isSearch={false}
             isFilter={false}
             isPagination={false}
@@ -301,6 +304,7 @@ const PaySlipGenerationScreen = () => {
               {
                 id: 'amount',
                 label: 'Amount',
+                filterType: 'number',
                 render(value, row) {
                   return (
                     <Typography

@@ -91,6 +91,27 @@ const AttendanceRule = () => {
         </Button>
       </Box>
       <CustomizableTable
+        noDataText={
+          <>
+            No Attendance Rule Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Attendance Rule
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         tableId="attendance-rule"
         columns={[
@@ -104,6 +125,9 @@ const AttendanceRule = () => {
             label: 'Enable Notification',
             id: 'enableNotification',
             minWidth: '180px',
+            isFilter: false,
+
+            isSort: false,
           },
           {
             label: 'Actions',

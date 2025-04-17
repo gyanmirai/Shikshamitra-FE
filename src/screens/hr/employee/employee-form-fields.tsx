@@ -1,5 +1,7 @@
 import type { SxProps } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
+import type { LabelColor } from 'src/components/label';
+import type { DocumentStatusType } from 'src/enums/document-statusType';
 
 import { toast } from 'sonner';
 import { capitalize } from 'lodash';
@@ -39,6 +41,7 @@ import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-status-type';
+import { DocumentStatusOptions, DocumentStatusTypeColors } from 'src/enums/document-statusType';
 import {
   useUploadDocumentsMutation,
   useGetEmployeeDocumentsQuery,
@@ -201,6 +204,15 @@ export const RenderDocuments = (props: any) => {
   return (
     <>
       <CustomizableTable
+        noDataText={<>No Certificate Found </>}
+        searchFieldProps={{
+          placeholder: 'Search by Document Type, Name, Status..',
+          label: 'Search by Document Type, Name, Status...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         isLoading={isLoading || isEmployeeDocLoading}
         tableId="documents"
         columns={[
@@ -213,17 +225,27 @@ export const RenderDocuments = (props: any) => {
           {
             id: 'statusVal',
             label: 'Status',
+            enumOptions: DocumentStatusOptions,
+            filterType: 'enum',
             render(value, row) {
-              return (
-                <Label color={row.uploadDocument ? 'success' : 'warning'}>
-                  {row.uploadDocument ? 'Uploaded' : 'Pending'}
-                </Label>
-              );
+              const color = DocumentStatusTypeColors[
+                row.statusVal as DocumentStatusType
+              ] as LabelColor;
+              return <Label color={color}>{value}</Label>;
             },
+            // render(value, row) {
+            //   return (
+            //     <Label color={row.uploadDocument ? 'success' : 'warning'}>
+            //       {row.uploadDocument ? 'Uploaded' : 'Pending'}
+            //     </Label>
+            //   );
+            // },
           },
           {
             id: 'upload',
             label: 'Upload',
+            isFilter: false,
+            isSort: false,
             render(value, row) {
               return (
                 <UploadButton
