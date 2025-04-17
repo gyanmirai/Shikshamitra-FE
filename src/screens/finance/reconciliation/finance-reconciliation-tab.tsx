@@ -109,7 +109,7 @@ const FinanceChequeTransectionScreen = () => {
           {
             id: 'amount',
             label: 'Amount',
-            filterType: 'formattedNumber',
+            filterType: 'number',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },
