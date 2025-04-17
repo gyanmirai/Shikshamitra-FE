@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
+import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Button, Switch, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -10,7 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 import FinanceSettingPaymentMethodDialog from './component/finance-setting-payment-method-dialog';
 
@@ -197,15 +198,29 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
           />
 
           {dialogForDeleteConfirmation.value && (
-            <DeleteConfirmationDialog
+            <ConfirmDialog
               open={dialogForDeleteConfirmation.value}
               onClose={() => {
                 dialogForDeleteConfirmation.onFalse();
               }}
-              onConfirm={() => {}}
               title="Delete Item"
-              description="Are you sure you want to delete this item? This action cannot be undone."
+              content="Are you sure want to delete?"
+              action={
+                <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+                  Delete
+                </LoadingButton>
+              }
             />
+
+            // <DeleteConfirmationDialog
+            //   open={dialogForDeleteConfirmation.value}
+            //   onClose={() => {
+            //     dialogForDeleteConfirmation.onFalse();
+            //   }}
+            //   onConfirm={() => {}}
+            //   title="Delete Item"
+            //   description="Are you sure you want to delete this item? This action cannot be undone."
+            // />
           )}
         </>
       )}

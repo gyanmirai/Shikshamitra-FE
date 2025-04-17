@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
+import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -11,10 +12,10 @@ import { formatNumber } from 'src/utils/formate_number';
 import incomeTrackingData from 'src/json/finance/income/incomeTrackingData.json';
 
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 
 import FinanceAddNewIncomeDialog from './component/finance-add-new-income-dialog';
 import FinanceIncomeDetailsDialog from './component/finance-income-details-dialog';
@@ -173,15 +174,28 @@ const FinanceIncomeTrackingScreen = () => {
       )}
 
       {dialogForDeleteConfirmation.value && (
-        <DeleteConfirmationDialog
+        <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
           }}
-          onConfirm={() => {}}
           title="Delete Item"
-          description="Are you sure you want to delete this item? This action cannot be undone."
+          content="Are you sure want to delete?"
+          action={
+            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+              Delete
+            </LoadingButton>
+          }
         />
+        // <DeleteConfirmationDialog
+        //   open={dialogForDeleteConfirmation.value}
+        //   onClose={() => {
+        //     dialogForDeleteConfirmation.onFalse();
+        //   }}
+        //   onConfirm={() => {}}
+        //   title="Delete Item"
+        //   description="Are you sure you want to delete this item? This action cannot be undone."
+        // />
       )}
 
       {/* details of the income based on source type */}

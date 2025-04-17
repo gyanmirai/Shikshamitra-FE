@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -17,7 +18,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const SetDefaultFeeComponent = () => {
   // State to store and manage the new fee head name input value
@@ -261,23 +262,39 @@ const SetDefaultFeeComponent = () => {
 
       {/* Delete Confirmation Dialog */}
       {dialogForDeleteConfirmation.value && (
-        <DeleteConfirmationDialog
+        <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
             setSelectedFeeHeadId(null);
             setSelectedFeeHeadName(null);
           }}
-          onConfirm={handleDeleteFeeHead}
           title="Delete Item"
-          description={
-            <>
-              Are you sure you want to delete <strong>{`${selectedFeeHeadName} Fee Head`}</strong> ?
-              This action cannot be undone.
-            </>
+          content="Are you sure want to delete?"
+          action={
+            <LoadingButton
+              variant="contained"
+              loading={isDeleteLoading}
+              color="error"
+              onClick={handleDeleteFeeHead}
+            >
+              Delete
+            </LoadingButton>
           }
-          isDeleteLoading={isDeleteLoading}
         />
+
+        // <DeleteConfirmationDialog
+
+        //   onConfirm={handleDeleteFeeHead}
+        //   title="Delete Item"
+        //   description={
+        //     <>
+        //       Are you sure you want to delete <strong>{`${selectedFeeHeadName} Fee Head`}</strong> ?
+        //       This action cannot be undone.
+        //     </>
+        //   }
+        //   isDeleteLoading={isDeleteLoading}
+        // />
       )}
     </Box>
   );
