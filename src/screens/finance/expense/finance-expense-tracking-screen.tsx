@@ -138,7 +138,7 @@ const FinanceExpenseTrackingScreen = () => {
               {
                 id: 'expenseAmount',
                 label: 'Expense Amount',
-                filterType: 'number',
+                filterType: 'formattedNumber',
                 render(value) {
                   return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                 },

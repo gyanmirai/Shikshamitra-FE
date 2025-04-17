@@ -37,7 +37,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Gross Fee',
       label: 'Gross Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -45,7 +45,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Payable Fee',
       label: 'Payable Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -53,7 +53,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Paid',
       label: 'Paid',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render: (value: number) => (
         <Typography fontSize={14} color="#138e58">
           {formatNumber(value, 'INR')}
@@ -63,7 +63,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Pending',
       label: 'Pending',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render: (value: number) => (
         <Typography fontSize={14} color="#b76e00">
           {formatNumber(value, 'INR')}
@@ -73,7 +73,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'General Discount',
       label: 'General Discount',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -81,7 +81,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
     {
       id: 'Additional Discount',
       label: 'Additional Discount',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -92,7 +92,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       isSort: false,
       isFilter: false,
       sticky: true,
-      align: 'right',
+      // align: 'right',
       render: (_: unknown, row: { Pending: number }) => (
         <ThreeDotsActions
           placement="right-top"

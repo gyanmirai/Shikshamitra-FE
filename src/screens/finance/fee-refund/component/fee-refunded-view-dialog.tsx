@@ -129,7 +129,7 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
             {
               id: 'paidAmount',
               label: 'Paid Amount',
-              filterType: 'number',
+              filterType: 'formattedNumber',
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -148,7 +148,7 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
             {
               id: 'askForRefund',
               label: 'Ask For Refund',
-              filterType: 'number',
+              filterType: 'formattedNumber',
               render(value, row) {
                 return (
                   <Typography fontSize="12px" minWidth="120px">
@@ -160,7 +160,7 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
             {
               id: 'refundAmount',
               label: 'Approved Refund Amount',
-              filterType: 'number',
+              filterType: 'formattedNumber',
               render: (value, row) => (
                 <Typography fontSize="12px" minWidth="150px">
                   {formatNumber(row.paidAmount, 'INR')}
@@ -170,7 +170,7 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
             {
               id: 'refundAmount',
               label: 'Refunded Amount',
-              filterType: 'number',
+              filterType: 'formattedNumber',
               render: (value, row) => (
                 <Typography fontSize="12px" minWidth="150px">
                   {formatNumber(row.paidAmount, 'INR')}

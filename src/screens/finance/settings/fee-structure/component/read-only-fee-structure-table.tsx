@@ -18,7 +18,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'grossFee',
       label: 'Gross Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -28,7 +28,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'generalDiscount',
       label: 'General Discount',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -38,7 +38,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'payableFee',
       label: 'Payable Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -48,7 +48,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'monthly',
       label: 'Monthly Payable Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -60,7 +60,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'quartly',
       label: 'Quarterly Payable Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -72,7 +72,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'bi-annual',
       label: 'Bi-Annually Payable Fee',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -95,7 +95,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'lateFeeCharges',
       label: 'Late Fee Charges',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>

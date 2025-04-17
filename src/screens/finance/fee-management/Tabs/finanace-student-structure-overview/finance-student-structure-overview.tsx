@@ -145,7 +145,7 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'totalFees',
       label: 'Gross Fees',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       // Render formatted total fees in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="100px" fontSize="12px">
@@ -156,7 +156,7 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'finalFees',
       label: 'Payable Fees',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       // Render formatted final fees in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px">
@@ -167,7 +167,7 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'totalGeneralDiscount',
       label: 'Total General Discount',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       // Render formatted general discount amount in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography sx={{ textAlign: 'center' }} minWidth="200px" fontSize="12px">
@@ -178,7 +178,7 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'totalAdditionalDiscount',
       label: 'Total Additional Discount',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       // Render formatted additional discount amount in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="180px" fontSize="12px" sx={{ textAlign: 'center' }}>
@@ -189,7 +189,7 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'totalPaid',
       label: 'Total Paid',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       // Render formatted total paid amount in INR currency with green color
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="100px" fontSize="12px" color="#1a8877">
@@ -200,7 +200,7 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'totalPending',
       label: 'Total Pending',
-      filterType: 'number',
+      filterType: 'formattedNumber',
       // Render formatted pending amount in INR currency with red color
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px" color="red">
@@ -214,7 +214,7 @@ const FinanceStudentFeeManagement = () => {
       isSort: false,
       isFilter: false,
       sticky: true,
-      align: 'right',
+      // align: 'right',
 
       // Render view action button for each row
       render: (value: any, row: StudentForFeeStructure) => (

@@ -116,11 +116,17 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
           columns={[
             // { id: 'grNumber', label: 'Gr Number' },
 
-            { id: 'feeHead', label: 'Fee Head' },
+            {
+              id: 'feeHead',
+              label: 'Fee Head',
+              isFilter: false,
+              isSort: false,
+            },
             {
               id: 'paidAmount',
               label: 'Paid Amount',
-              filterType: 'number',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -137,7 +143,8 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
             {
               id: 'askForRefund',
               label: 'Ask For Refund',
-              filterType: 'number',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
               },
@@ -145,7 +152,8 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
             {
               id: 'refundAmount',
               label: 'Approved Refund Amount',
-              filterType: 'number',
+              isFilter: false,
+              isSort: false,
               render: (value: any, row: any) => (
                 <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
               ),
