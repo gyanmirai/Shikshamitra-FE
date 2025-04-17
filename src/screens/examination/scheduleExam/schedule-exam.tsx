@@ -1,13 +1,20 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import examTableData from 'src/json/examination/examTableData.json';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import NewExamForm from './components/examFormComponent';
@@ -20,6 +27,9 @@ const ScheduleExam = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState<IScheduledExam | null>(null);
   const [examData, setExamData] = useState(examTableData);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const deleteDialog = useBoolean();
+  const dispatch = useDispatch();
   // Dynamic breadcrumb navigation links based on current view (form or list)
   const links = open
     ? [
@@ -33,6 +43,25 @@ const ScheduleExam = (props: TabComponentType) => {
         { name: 'Examination', href: '/academic/examinationDashboard' },
         { name: 'Schedule Exam' },
       ];
+
+  const handleDelete = (id: string | undefined) => {
+    const updatedExamData = examData.filter((exam) => exam.id !== id);
+    setExamData(updatedExamData);
+    deleteDialog.onFalse();
+    setSelectedExam(null);
+  };
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      setOpen(false);
+      dispatch(setIsChanges(false));
+      setSelectedExam(null);
+    } else if (!isChanges) {
+      setOpen(false);
+      setSelectedExam(null);
+    }
+  };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -51,9 +80,7 @@ const ScheduleExam = (props: TabComponentType) => {
             variant="contained"
             onClick={
               open
-                ? () => {
-                    setOpen(false);
-                  }
+                ? () => handleClose(null, false)
                 : () => {
                     setOpen(true);
                   }
@@ -74,6 +101,10 @@ const ScheduleExam = (props: TabComponentType) => {
         </Card>
       ) : (
         <ScheduledExamTable
+          onDelete={(data) => {
+            setSelectedExam(data);
+            deleteDialog.onTrue();
+          }}
           openDialog={open}
           setOpenDialog={setOpen}
           editData={selectedExam}
@@ -81,6 +112,26 @@ const ScheduleExam = (props: TabComponentType) => {
           data={examData}
         />
       )}
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          deleteDialog.onFalse();
+          setSelectedExam(null);
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              handleDelete(selectedExam?.id);
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

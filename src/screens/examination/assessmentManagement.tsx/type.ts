@@ -39,6 +39,7 @@ export interface AddNewAssessmentProps {
   onSubmit: (values: IAssessment) => void;
   data: IAssessment | null;
   isEdit: boolean;
+  onClose: (e: any, isSubmit: boolean) => void;
 }
 
 /**

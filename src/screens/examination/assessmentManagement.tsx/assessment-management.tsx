@@ -1,8 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import { useSelector, useDispatch } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
@@ -12,6 +14,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assessmnentData from 'src/json/academic/examination/assessmentData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -50,6 +53,8 @@ const AssessmentManagement = (props: TabComponentType) => {
   const [division, setDivision] = useState('');
   // Available division options for selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // Query hook for fetching class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -97,6 +102,16 @@ const AssessmentManagement = (props: TabComponentType) => {
     deleteDialog.onFalse(); // Close delete confirmation dialog
   };
 
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      setOpen(false);
+      dispatch(setIsChanges(false));
+      setSelectedAssessment(null);
+    } else if (!isChanges) {
+      setOpen(false);
+      setSelectedAssessment(null);
+    }
+  };
   /**
    * Handles form submission for assessment data
    * @param values - Assessment form values to be submitted
@@ -192,9 +207,7 @@ const AssessmentManagement = (props: TabComponentType) => {
             variant="contained"
             onClick={
               open
-                ? () => {
-                    setOpen(false);
-                  }
+                ? () => handleClose(null, false)
                 : () => {
                     setOpen(true);
                   }
@@ -206,7 +219,12 @@ const AssessmentManagement = (props: TabComponentType) => {
       />
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <AddNewAssessment data={selectedAssessment} onSubmit={handleSubmit} isEdit={isEdit} />
+          <AddNewAssessment
+            onClose={handleClose}
+            data={selectedAssessment}
+            onSubmit={handleSubmit}
+            isEdit={isEdit}
+          />
         </Card>
       ) : (
         <>
