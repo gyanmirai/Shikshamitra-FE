@@ -1,8 +1,6 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { DatePickerProps } from '@mui/lab';
-import type { TableRowProps, TextFieldProps } from '@mui/material';
 
 import jsPDF from 'jspdf';
 import dayjs from 'dayjs';
@@ -58,84 +56,13 @@ import { Scrollbar } from '../scrollbar';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
 
+import type { IData, IColumn, IParams, IColumnFilterAnchor, ICustomizableTableProps } from './type';
+
 dayjs.extend(isSameOrAfter);
 
 dayjs.extend(isSameOrBefore);
 
-// Add this interface to your existing interfaces
-interface ColumnFilterAnchor {
-  element: HTMLElement;
-  column: Column;
-}
-
-export interface Column {
-  id: string;
-  label: string;
-  filterType?: 'string' | 'number' | 'date' | 'enum';
-  isFilter?: boolean;
-  minWidth?: number | string;
-  align?: 'right' | 'left' | 'center';
-  render?: (value: any, row: Data) => React.ReactNode;
-  renderColumn?: (value: Column) => React.ReactNode;
-  children?: (row: Data) => React.ReactNode;
-  onSort?: (a: any, b: any) => any[];
-  isSort?: boolean;
-  sticky?: boolean;
-  isDateFilter?: boolean;
-  isDateRangeFilter?: boolean;
-  enumOptions?: { label: string; value: any }[];
-}
-
-interface Data {
-  [key: string]: any;
-}
-
-interface CustomizableTableProps {
-  columns: Column[];
-  data: Data[];
-  serverSide?: boolean;
-  onServerSort?: (
-    column: string,
-    sortData: Array<{ column: string; direction: 'asc' | 'desc' }>
-  ) => void;
-  onServerPagination?: (page: number, rowsPerPage: number) => void;
-  onServerSearch?: (searchTerm: string) => void;
-  totalCount?: number;
-  handleRowClick?: (row: Data, index: number) => void;
-  isLoading?: boolean;
-  isPagination?: boolean;
-  isFilter?: boolean;
-  isSearch?: boolean;
-  isScrollbar?: boolean;
-  isShowedDense?: boolean;
-  rowProps?: (row: Data, index: number) => TableRowProps;
-  startDateProps?: DatePickerProps<Dayjs>;
-  endDateProps?: DatePickerProps<Dayjs>;
-  dateProps?: DatePickerProps<Dayjs>;
-  tableId: string;
-  showCheckbox?: boolean;
-  onSendNotification?: (data: any) => void;
-  searchFieldProps?: TextFieldProps;
-  noDataText?: React.ReactNode;
-}
-
-type IParams = {
-  page: number;
-  rowsPerPage: number;
-  searchTerm: string;
-  filterColumn: string;
-  filterType: string;
-  dense: boolean;
-  columnSearchTerm: string;
-  filters: Array<{ column: string; type: string; value: string; valueType: string }>;
-  sorts: Array<{ column: string; direction: 'asc' | 'desc' }>;
-  dateFilter: null | Dayjs;
-  dateRangeFilter: { start: null | Dayjs; end: null | Dayjs };
-  filterValue: string;
-  columnVisibility: Record<string, boolean>;
-};
-
-const CustomizableTable: React.FC<CustomizableTableProps> = ({
+const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
   data,
   serverSide = false,
@@ -245,7 +172,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   // const [sorts, setSorts] = useState<Array<{ column: string; direction: 'asc' | 'desc' }>>([]);
   const { sorts } = tableConfig;
 
-  const [filterAnchorEl, setFilterAnchorEl] = useState<ColumnFilterAnchor | null>(null);
+  const [filterAnchorEl, setFilterAnchorEl] = useState<IColumnFilterAnchor | null>(null);
 
   // const { dateRangeFilter } = tableConfig[paramsKey.current];
 
@@ -335,7 +262,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
   );
 
   const applyFilter = useCallback(
-    (row: Data) =>
+    (row: IData) =>
       filters.every((filter) => {
         const value = _.get(row, filter.column, '');
         const valueAsNumber = !isNumber(Number(value)) ? Number(value) : value;
@@ -494,7 +421,7 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
     // setPage(0);
     setAnchorEl(null);
   };
-  const handleColumnFilterClick = (event: React.MouseEvent, column: Column) => {
+  const handleColumnFilterClick = (event: React.MouseEvent, column: IColumn) => {
     event.stopPropagation(); // Prevent sort trigger
     setFilterAnchorEl({ element: event.currentTarget as HTMLElement, column });
   };
@@ -946,6 +873,15 @@ const CustomizableTable: React.FC<CustomizableTableProps> = ({
 
 export default CustomizableTable;
 
+/**
+ * FilterChips Component
+ * Displays active filters as chips with the ability to remove individual filters or clear all filters
+ * @param {Object} props - Component props
+ * @param {Array} props.filters - Array of active filters
+ * @param {Function} props.removeFilter - Function to remove a specific filter
+ * @param {Function} props.clearAllFilters - Function to clear all active filters
+ * @param {Array} props.columns - Array of table columns configuration
+ */
 const FilterChips = ({
   filters,
   removeFilter,
@@ -955,7 +891,7 @@ const FilterChips = ({
   filters: IParams['filters'];
   removeFilter: (index: number) => void;
   clearAllFilters: () => void;
-  columns: Column[];
+  columns: IColumn[];
 }) => (
   <Box
     sx={{
@@ -1000,14 +936,18 @@ const FilterChips = ({
     )}
   </Box>
 );
-
 const ColumnFilterMenu: React.FC<{
-  anchorEl: ColumnFilterAnchor | null;
+  anchorEl: IColumnFilterAnchor | null;
   onClose: () => void;
   onApplyFilter: (columnId: string, filterType: string, value: any, valueType: string) => void;
 }> = ({ anchorEl, onClose, onApplyFilter }) => {
+  // Stores the selected filter type (contains, equals, startsWith, etc.)
   const [filterType, setFilterType] = useState('');
+
+  // Stores the filter value entered by the user (can be string, date, or null)
   const [filterValue, setFilterValue] = useState<null | string | Dayjs>(null);
+
+  // Stores the date range for date filters (currently unused)
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
 
   const getFilterOptions = () => {

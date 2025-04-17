@@ -1,4 +1,4 @@
-import type { Column } from 'src/components/customizabaleTable';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { PaymentDate } from 'src/screens/student/studentProfile/finance-profile-data/finance-profile-fee-data';
 
 import React from 'react';
@@ -166,7 +166,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
 
           <AccordionDetails>
             <CustomizableTable
-              columns={tableColumns as Column[]}
+              columns={tableColumns as IColumn[]}
               data={getTableData(feeHead, feeHead.paymentDates as PaymentDate[])}
               tableId="student-fee-details"
             />

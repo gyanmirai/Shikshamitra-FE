@@ -61,7 +61,7 @@ const TABS = [
   { value: 'changeClass', label: 'Change Class', component: () => <ChangeClassScreen /> },
   { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
   { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
-  { value: 'groupManageMent', label: 'Group Management', component: () => <GroupManagement /> },
+  { value: 'groupManageMent', label: 'House Management', component: () => <GroupManagement /> },
 ];
 
 const StudentManagementScreen = () => {
