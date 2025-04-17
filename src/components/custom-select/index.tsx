@@ -8,6 +8,7 @@ import {
   MenuItem,
   Checkbox,
   InputLabel,
+  Typography,
   FormControl,
   ListItemText,
   FormHelperText,
@@ -32,6 +33,8 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   valueKey?: T;
   formControlProps?: FormControlProps;
   isSearch?: boolean;
+  addOtherItemText?: string;
+  addOtherItemOnClick?: () => void;
 };
 
 const CustomSelect = <T extends string, J extends boolean>({
@@ -49,6 +52,8 @@ const CustomSelect = <T extends string, J extends boolean>({
   valueKey = 'value' as T,
   formControlProps,
   isSearch = false,
+  addOtherItemText = '',
+  addOtherItemOnClick,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
   const handleChange = (event: any) => {
@@ -115,6 +120,20 @@ const CustomSelect = <T extends string, J extends boolean>({
         )}
       </Select>
       {helperText && <FormHelperText>{helperText}</FormHelperText>}
+
+      {addOtherItemText !== '' && (
+        <Typography
+          variant="body2"
+          fontWeight={500}
+          textAlign="right"
+          color="primary.main"
+          fontSize={12}
+          sx={{ cursor: 'pointer' }}
+          onClick={addOtherItemOnClick}
+        >
+          {addOtherItemText}
+        </Typography>
+      )}
     </FormControl>
   );
 };

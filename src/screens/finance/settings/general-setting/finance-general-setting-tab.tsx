@@ -9,15 +9,11 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import BankConfiguration from './component/bank-configuration';
+import SetPaymentMethodComponent from './component/set-payment-method';
 import SetDefaultFeeComponent from './component/set-default-fee-component';
-import BudgetThresoldAlertComponent from './component/budget-thresold-alert-component';
-import CurrencyAndTaxSavingsComponent from './component/currency-and-tax-savings-component';
 import ConfigurePaymentStatusComponent from './component/configure-payment-status-component';
-import DefinedSchoolWideRulesComponent from './component/defined-school-wide-rules-component';
 import PresetCategoryAndDepartmentForBudget from './component/preset-category-and-department-for-budget';
 import PredefinedCategoryIncomeExpenseComponent from './component/predefined-category-income-expense-component';
-import CurrencySettingForDifferentRegionComponent from './component/currency-setting-for-different-region-component';
 
 const TABS = [
   {
@@ -26,45 +22,52 @@ const TABS = [
     component: () => <SetDefaultFeeComponent />,
   },
   {
-    value: 'bankList',
-    label: 'Bank Configuration',
-    component: () => <BankConfiguration />,
+    value: 'setPaymentMethodComponents',
+    label: 'Set Payment Method',
+    component: () => <SetPaymentMethodComponent />,
   },
-  {
-    value: 'defineSchoolWideRules',
-    label: 'Define School-Wide Rules',
-    component: () => <DefinedSchoolWideRulesComponent />,
-  },
-  {
-    value: 'currencySettingsForDifferentRegions',
-    label: 'Currency Settings for Different Regions',
-    component: () => <CurrencySettingForDifferentRegionComponent />,
-  },
-  {
-    value: 'currencyAndTaxSettings',
-    label: 'Currency and Tax Settings',
-    component: () => <CurrencyAndTaxSavingsComponent />,
-  },
+
   {
     value: 'configurePaymentStatusOptions',
     label: 'Configure Payment Status Options',
     component: () => <ConfigurePaymentStatusComponent />,
   },
   {
-    value: 'predefinedCategoriesForincomeandexpenses',
-    label: 'Predefined Categories For income and expenses',
-    component: () => <PredefinedCategoryIncomeExpenseComponent />,
-  },
-  {
-    value: 'budgetThresholdAlerts',
-    label: 'Budget Threshold Alerts',
-    component: () => <BudgetThresoldAlertComponent />,
-  },
-  {
     value: 'presentCategoriesandDepartmentsforBudgeting',
     label: 'Present Categories and Departments for Budgeting',
     component: () => <PresetCategoryAndDepartmentForBudget />,
   },
+  {
+    value: 'predefinedCategoriesForincomeandexpenses',
+    label: 'Predefined Categories For income and expenses',
+    component: () => <PredefinedCategoryIncomeExpenseComponent />,
+  },
+
+  // {
+  //   value: 'budgetThresholdAlerts',
+  //   label: 'Budget Threshold Alerts',
+  //   component: () => <BudgetThresoldAlertComponent />,
+  // },
+  // {
+  //   value: 'bankList',
+  //   label: 'Bank Configuration',
+  //   component: () => <BankConfiguration />,
+  // },
+  // {
+  //   value: 'defineSchoolWideRules',
+  //   label: 'Define School-Wide Rules',
+  //   component: () => <DefinedSchoolWideRulesComponent />,
+  // },
+  // {
+  //   value: 'currencySettingsForDifferentRegions',
+  //   label: 'Currency Settings for Different Regions',
+  //   component: () => <CurrencySettingForDifferentRegionComponent />,
+  // },
+  // {
+  //   value: 'currencyAndTaxSettings',
+  //   label: 'Currency and Tax Settings',
+  //   component: () => <CurrencyAndTaxSavingsComponent />,
+  // },
 ];
 const FinanceGeneralSettingTab = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'setDefaultFeeComponents' });
