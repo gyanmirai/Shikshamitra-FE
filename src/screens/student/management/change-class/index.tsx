@@ -1,125 +1,117 @@
 'use client';
 
-import React, { useState } from 'react';
+import type { Standards } from 'src/types/school';
 
-import { Box, Button, Checkbox } from '@mui/material';
-import { Save, TransferWithinAStationSharp } from '@mui/icons-material';
+import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+
+import { LoadingButton } from '@mui/lab';
+import { Save } from '@mui/icons-material';
+import { Box, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Label } from 'src/components/label';
+import { StudentApi } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useChangeStudentClassMutation } from 'src/redux/student/student-change-class/student-change-class-api';
+
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
-import type { TableClassDropDownProps } from './type';
+import type { ITableClassDropDownProps } from './type';
+import type { IInquiryData } from '../../enrollment/Inquiry';
 
-const initialData = [
-  {
-    id: 1,
-    srNo: 1,
-    grNo: 'GR001',
-    name: 'John Doe',
-    division: 'A',
-    class: '',
-    feeStatus: 'Paid',
-    examStatus: 'Passed',
-  },
-  {
-    id: 2,
-    srNo: 2,
-    grNo: 'GR002',
-    name: 'Jane Smith',
-    division: 'B',
-    class: '',
-    feeStatus: 'Pending',
-    examStatus: 'Failed',
-  },
-  {
-    id: 3,
-    srNo: 3,
-    grNo: 'GR003',
-    name: 'Alice Johnson',
-    division: 'A',
-    class: '',
-    feeStatus: 'Paid',
-    examStatus: 'Passed',
-  },
-];
-
-const ChangeClassScreen = ({ allClass }: any) => {
-  // State to store selected students for bulk actions
+const ChangeClassScreen = ({
+  tableData: studentData,
+  isLoading,
+  allClass,
+  classes,
+}: {
+  isLoading: boolean;
+  tableData: IInquiryData[];
+  allClass: Standards[];
+  classes: string;
+}) => {
+  // State to manage selected students for bulk operations and notifications
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
 
-  // State to store selected class column value
+  // State to track the selected class value in the column header dropdown
   const [columClass, setColumnClass] = useState<string>('');
 
-  // Initial table data with student information
-  const [tableData, setTableData] = useState([
-    {
-      id: 1,
-      srNo: 1,
-      grNo: 'GR001',
-      name: 'John Doe',
-      division: 'A',
-      class: '',
-      feeStatus: 'Paid',
-      examStatus: 'Passed',
-    },
-    {
-      id: 2,
-      srNo: 2,
-      grNo: 'GR002',
-      name: 'Jane Smith',
-      division: 'B',
-      class: '',
-      feeStatus: 'Pending',
-      examStatus: 'Failed',
-    },
-    {
-      id: 3,
-      srNo: 3,
-      grNo: 'GR003',
-      name: 'Alice Johnson',
-      division: 'A',
-      class: '',
-      feeStatus: 'Paid',
-      examStatus: 'Passed',
-    },
-  ]);
+  // State to maintain and update the table data with student information
+  const [tableData, setTableData] = useState(studentData || []);
 
-  // Boolean state to control notification dialog visibility
+  // Custom hook to manage the visibility state of the notification dialog
   const sendInstantNotificationDialogValue = useBoolean();
 
-  // Handler to show notification dialog
+  // Redux dispatch hook for triggering actions
+  const dispatch = useDispatch();
+
+  // Handler function to toggle the notification dialog visibility
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  // Custom mutation hook for handling class change operations
+  const [changeClass, { isLoading: isClassChangLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeStudentClassMutation,
+  });
+
+  // Effect hook to update table data when studentData prop changes
+  useEffect(() => {
+    setTableData(studentData || []);
+  }, [studentData]);
+
+  // Handler function to process and save class changes
+  const handleSave = async () => {
+    try {
+      const res = await changeClass({
+        studentStandardUpdates: tableData.map((student) => ({
+          studentId: student.id,
+          standardId: student.standardId,
+        })),
+      }).unwrap();
+      // Invalidate cache to refetch updated data
+      dispatch(StudentApi.util.invalidateTags(['Student']));
+      shikshaMitraToast.success({ message: 'Class changed successfully' });
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+  };
   return (
     <Box>
-      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
+      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
-          <Button startIcon={<Save />} variant="outlined">
+          <LoadingButton
+            loading={isClassChangLoading}
+            startIcon={<Save />}
+            variant="outlined"
+            onClick={handleSave}
+          >
             Save
-          </Button>
-          <Button
+          </LoadingButton>
+          {/* <Button
             startIcon={<TransferWithinAStationSharp />}
             variant="outlined"
             disabled={!selectedStudent.length}
           >
             Promotion
-          </Button>
+          </Button> */}
         </Box>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudent.length !== 0}
           tableId="change-class-table"
+          isLoading={isLoading}
           searchFieldProps={{
-            placeholder: 'Search by Sr. No., GR No., Name, Fee Status, Exam Status',
-            label: 'Search by Sr. No., GR No., Name, Fee Status, Exam Status',
+            placeholder: 'Search by Sr. No., GR No...',
+            label: 'Search by Sr. No., GR No...',
             sx: {
               maxWidth: '400px',
               width: '100%',
@@ -159,26 +151,26 @@ const ChangeClassScreen = ({ allClass }: any) => {
                 );
               },
             },
-            { id: 'srNo', label: 'Sr. No.' },
-            { id: 'grNo', label: 'GR No.' },
+            // { id: 'srNo', label: 'Sr. No.' },
+            { id: 'grNoRecord', label: 'GR No.' },
             { id: 'name', label: 'Name' },
             // { id: 'division', label: 'Division' },
+            // {
+            //   id: 'feeStatus',
+            //   label: 'Fee Status',
+            //   render(value, row) {
+            //     return <Label color={value === 'Paid' ? 'success' : 'warning'}>{value}</Label>;
+            //   },
+            // },
+            // {
+            //   id: 'examStatus',
+            //   label: 'Exam Status',
+            //   render(value, row) {
+            //     return <Label color={value === 'Passed' ? 'success' : 'error'}>{value}</Label>;
+            //   },
+            // },
             {
-              id: 'feeStatus',
-              label: 'Fee Status',
-              render(value, row) {
-                return <Label color={value === 'Paid' ? 'success' : 'warning'}>{value}</Label>;
-              },
-            },
-            {
-              id: 'examStatus',
-              label: 'Exam Status',
-              render(value, row) {
-                return <Label color={value === 'Passed' ? 'success' : 'error'}>{value}</Label>;
-              },
-            },
-            {
-              id: 'class',
+              id: 'standardId',
               label: '',
               renderColumn(value) {
                 return (
@@ -189,7 +181,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
                       setColumnClass(val as string);
                       const newData = tableData.map((item) => ({
                         ...item,
-                        class: val as string,
+                        standardId: val as string,
                       }));
 
                       setTableData(newData);
@@ -207,7 +199,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
                         if (item.id === row.id) {
                           return {
                             ...item,
-                            class: val as string,
+                            standardId: val as string,
                           };
                         }
                         return item;
@@ -220,7 +212,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
               },
             },
           ]}
-          data={tableData}
+          data={tableData || []}
         />{' '}
         {sendInstantNotificationDialogValue.value && (
           <SendInstantNotificationDialog
@@ -237,7 +229,7 @@ const ChangeClassScreen = ({ allClass }: any) => {
 
 export default ChangeClassScreen;
 
-const TableClassDropDown = ({ allClass, classes, onChange }: TableClassDropDownProps) => (
+const TableClassDropDown = ({ allClass, classes, onChange }: ITableClassDropDownProps) => (
   <CustomSelect
     options={allClass || []}
     label="Class"
