@@ -70,6 +70,7 @@ import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
 import { DocumentForm } from '../setting/document-type';
+import { InquiryPreferenceForm } from '../setting/inquiryPreference';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -819,23 +820,43 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
   });
+  const dialog = useBoolean();
+
   return (
-    <CustomSelect
-      label="Inquiry Preferences"
-      name="inquiryPreference"
-      isLoading={inquiryPrefrenceLoading}
-      options={inquiryPreference?.items || []}
-      value={formik.values.inquiryPreference}
-      labelKey="preferenceName"
-      valueKey="id"
-      onChange={(value) => formik.setFieldValue('inquiryPreference', value)}
-      formControlProps={{
-        fullWidth: true,
-        sx: {
-          maxWidth: 'unset',
-        },
-      }}
-    />
+    <>
+      <CustomSelect
+        label="Inquiry Preferences"
+        name="inquiryPreference"
+        isLoading={inquiryPrefrenceLoading}
+        options={inquiryPreference?.items || []}
+        value={formik.values.inquiryPreference}
+        labelKey="preferenceName"
+        valueKey="id"
+        onChange={(value) => formik.setFieldValue('inquiryPreference', value)}
+        formControlProps={{
+          fullWidth: true,
+          sx: {
+            maxWidth: 'unset',
+          },
+        }}
+      />
+      <Typography
+        variant="body2"
+        fontWeight={500}
+        textAlign="right"
+        color="primary.main"
+        fontSize={12}
+        sx={{ cursor: 'pointer' }}
+        onClick={() => {
+          dialog.onTrue();
+        }}
+      >
+        Add Inquiry Preferences
+      </Typography>
+      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
+        <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
+      </CustomDialog>
+    </>
   );
 };
 
