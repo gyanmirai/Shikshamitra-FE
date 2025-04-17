@@ -25,6 +25,12 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { IGroup } from './type';
 
 const GroupManagement = () => {
+  // State to store query parameters
+  const [queryParams, setQueryParams] = useState({
+    SkipCount: 0,
+    MaxResultCount: 10,
+    Sorting: 'name ASC',
+  });
   // Dialog state for add/edit form
   const dialog = useBoolean();
   // Dialog state for delete confirmation
@@ -35,6 +41,7 @@ const GroupManagement = () => {
   const { data: groupData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentGroupQuery,
+    params: queryParams,
   });
   // Close dialog and reset edit data
   const handleClose = () => {
@@ -61,7 +68,11 @@ const GroupManagement = () => {
           setEditData(null);
         }}
         title="Delete House"
-        content={`Are you sure want to Delete ${editData?.name} House ?`}
+        content={
+          <>
+            Are you sure want to Delete <b>{`${editData?.name}`}</b> House ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -113,7 +124,18 @@ const GroupManagement = () => {
             width: '100%',
           },
         }}
+        totalCount={groupData?.totalCount || 0}
         isLoading={isLoading}
+        // serverSide
+        onServerPagination={async (page, rowPerPage) => {
+          const newParams = {
+            ...queryParams,
+            SkipCount: page * rowPerPage,
+            MaxResultCount: rowPerPage,
+          };
+          setQueryParams(newParams);
+        }}
+        onServerSort={async (column, sort) => {}}
         columns={[
           { label: 'House Name', id: 'name' },
           {
