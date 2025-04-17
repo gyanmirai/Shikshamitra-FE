@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -9,22 +10,31 @@ import capitalizeWords from 'src/utils/capitalizeText';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const SetPaymentMethodComponent = () => {
+  // State to manage the new payment method input
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
+  // State to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
+  // State to store the ID of the payment method being edited
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
+  // State to store the name of the payment method being deleted
   const [selectedPaymentMethodName, setSelectedPaymentMethodName] = useState<string | null>(null);
+  // State to store all payment methods
   const [data, setData] = useState<{ id: string; paymentMethodName: string }[]>([]);
+  // Hook to manage delete confirmation dialog visibility
   const dialogForDeleteConfirmation = useBoolean();
 
+  // Handler for adding new payment method or updating existing one
   const handleAddOrUpdate = () => {
+    // Validate empty input
     if (!newPaymentMethod.trim()) {
       alert('Payment Method name cannot be empty!');
       return;
     }
 
+    // Check for duplicate payment methods
     const isDuplicate = data.some(
       (item) =>
         item.paymentMethodName.toLowerCase() === newPaymentMethod.toLowerCase() &&
@@ -37,6 +47,7 @@ const SetPaymentMethodComponent = () => {
     }
 
     if (isEdit) {
+      // Update existing payment method
       setData((prev) =>
         prev.map((item) =>
           item.id === selectedPaymentMethodId
@@ -45,28 +56,31 @@ const SetPaymentMethodComponent = () => {
         )
       );
     } else {
+      // Add new payment method with timestamp as ID
       const newId = `${Date.now()}`;
       setData((prev) => [...prev, { id: newId, paymentMethodName: newPaymentMethod }]);
     }
 
+    // Reset form state after operation
     setNewPaymentMethod('');
     setIsEdit(false);
     setSelectedPaymentMethodId(null);
   };
 
+  // Handler for editing payment method
   const handleEdit = (row: any) => {
     setNewPaymentMethod(row.paymentMethodName);
     setSelectedPaymentMethodId(row.id);
     setIsEdit(true);
   };
 
+  // Handler for deleting payment method
   const handleDelete = () => {
     setData((prev) => prev.filter((item) => item.id !== selectedPaymentMethodId));
     dialogForDeleteConfirmation.onFalse();
     setSelectedPaymentMethodId(null);
     setSelectedPaymentMethodName(null);
   };
-
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <Grid item xs={12} md={6}>
@@ -146,21 +160,19 @@ const SetPaymentMethodComponent = () => {
       </Grid>
 
       {dialogForDeleteConfirmation.value && (
-        <DeleteConfirmationDialog
+        <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
             setSelectedPaymentMethodId(null);
             setSelectedPaymentMethodName(null);
           }}
-          onConfirm={handleDelete}
-          title="Delete Payment Method"
-          description={
-            <>
-              Are you sure you want to delete{' '}
-              <strong>{`${selectedPaymentMethodName} Payment Method`}</strong>? This action cannot
-              be undone.
-            </>
+          title="Delete Item"
+          content="Are you sure want to delete?"
+          action={
+            <LoadingButton variant="contained" loading={false} color="error" onClick={handleDelete}>
+              Delete
+            </LoadingButton>
           }
         />
       )}
