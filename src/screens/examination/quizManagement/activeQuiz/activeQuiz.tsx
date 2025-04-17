@@ -1,9 +1,13 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 import activeQuizTableData from 'src/json/academic/examination/activeQuizTableData.json';
 
@@ -19,6 +23,8 @@ const ActiveQuiz = () => {
   const [tableData, setTableData] = useState(activeQuizTableData);
   // Dialog state for adding new quiz
   const addQuizDialog = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // Dialog state for attempting quiz
   const attemptQuizDialog = useBoolean();
   // State to control quiz portal visibility
@@ -32,6 +38,15 @@ const ActiveQuiz = () => {
     setOpen(true);
   };
 
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      addQuizDialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addQuizDialog.onFalse();
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
@@ -41,7 +56,7 @@ const ActiveQuiz = () => {
             variant="contained"
             size="small"
             onClick={() => {
-              setOpen(false);
+              handleClose(null, false);
             }}
           >
             Back
@@ -77,7 +92,7 @@ const ActiveQuiz = () => {
         handleClose={addQuizDialog.onFalse}
         title="New Quiz"
       >
-        <AddNewQuiz />
+        <AddNewQuiz onClose={handleClose} />
       </CustomDialog>
     </Box>
   );

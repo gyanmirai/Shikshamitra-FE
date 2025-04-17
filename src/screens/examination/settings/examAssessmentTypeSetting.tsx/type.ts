@@ -6,7 +6,7 @@ export interface IExamType {
 }
 
 export interface IExamTypeFormProps {
-  onClose?: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   onSubmit: (values: any) => void;
   data?: any | null;
   isEdit?: boolean;
@@ -20,7 +20,7 @@ export interface IAssessmentType {
 }
 
 export interface IAssessmentTypeFormProps {
-  onClose?: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   onSubmit: (values: any) => void;
   data?: any | null;
   isEdit?: boolean;

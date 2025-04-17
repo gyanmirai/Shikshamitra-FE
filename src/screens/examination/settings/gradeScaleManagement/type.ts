@@ -1,6 +1,6 @@
 export interface IGradeFormProps {
   onSubmit: (values: any) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   data: IGrade | null;
   isEdit: boolean;
 }

@@ -5,7 +5,7 @@ export interface IHomeworkAssignmentType {
 
 export interface IAddCategoryProps {
   open?: boolean;
-  onClose?: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   onSubmit: (values: IHomeworkAssignmentType) => void;
   data: IHomeworkAssignmentType | null;
   isEdit: boolean;

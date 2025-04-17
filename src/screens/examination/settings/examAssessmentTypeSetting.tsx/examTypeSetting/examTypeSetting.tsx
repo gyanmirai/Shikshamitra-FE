@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import {
   Box,
@@ -12,6 +15,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -25,36 +29,54 @@ import ExamTypeForm from './examTypeForm';
 import type { IExamType } from '../type';
 
 const ExamTypeSettings = () => {
+  // Dialog state for managing the create/edit exam type form.
   const dialog = useBoolean();
+  // State for storing and managing the exam type table data.
   const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
+  // Dialog state for confirming the publish/unpublish status change.
   const confirmPublishDialog = useBoolean();
+  // Dialog state for confirming the deletion of an exam type.
   const confirmDeleteDialog = useBoolean();
-
+  // Redux state indicating if there are unsaved changes.
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Redux dispatch function for dispatching actions.
+  const dispatch = useDispatch();
+  // State for tracking whether the form is in edit mode.
   const [isEdit, setIsEdit] = useState(false);
+  // State for storing the currently selected exam type for editing or other actions.
   const [selectedExamType, setSelectedExamType] = useState<any | null>(null);
+  // State for storing the pending status change of an exam type before confirmation.
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
   } | null>(null);
 
+  // Function to handle changes in the status of an exam type.
   const handleStatusChange = (id: number, value: string) => {
+    // Set the pending status change for confirmation.
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
+    // Open the confirmation dialog for publishing/unpublishing.
     confirmPublishDialog.onTrue();
   };
 
+  // Function to confirm the status change of an exam type.
   const confirmStatusChange = () => {
     if (pendingStatusChange) {
       const { id, newValue } = pendingStatusChange;
+      // Update the exam type table with the new status.
       setExamTypeTable((prevSubject) =>
         prevSubject.map((examType) =>
           examType.id === id ? { ...examType, status: newValue } : examType
         )
       );
     }
+    // Close the confirmation dialog.
     confirmPublishDialog.onFalse();
+    // Reset the pending status change.
     setPendingStatusChange(null);
   };
 
+  // Function to close all dialogs.
   const handleCloseDialog = () => {
     dialog.onFalse();
     confirmPublishDialog.onFalse();
@@ -62,24 +84,47 @@ const ExamTypeSettings = () => {
     setSelectedExamType(null);
   };
 
+  // Function to handle the deletion of an exam type.
   const handleDelete = (comingExamType: any) => {
+    // Filter out the deleted exam type from the table data.
     setExamTypeTable((prevData) =>
       prevData.filter((examType) => examType.id !== comingExamType.id)
     );
+    // Close the dialogs after deletion.
     handleCloseDialog();
   };
 
+  // Function to handle form submission for creating or editing an exam type.
   const handleSubmit = (values: any) => {
     if (isEdit && selectedExamType) {
+      // Update the existing exam type in the table.
       setExamTypeTable(
         examTypeTable.map((examType) => (examType.id === values.id ? values : examType))
       );
     } else {
+      // Add the new exam type to the table.
       setExamTypeTable([...examTypeTable, values]);
     }
+    // Close the dialog after submission.
     dialog.onFalse();
+    // Reset the edit state.
     setIsEdit(false);
+    // Clear the selected exam type.
     setSelectedExamType(null);
+  };
+
+  // Function to handle closing of the dialog.
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    // If submit button is clicked or there are unsaved changes, show confirmation dialog.
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dialog.onFalse();
+      dispatch(setIsChanges(false));
+      setSelectedExamType(null);
+    } else if (!isChanges) {
+      // If no unsaved changes, close the dialog directly.
+      dialog.onFalse();
+      setSelectedExamType(null);
+    }
   };
 
   return (
@@ -168,9 +213,14 @@ const ExamTypeSettings = () => {
       <CustomDialog
         title={isEdit ? 'Edit Exam Type' : 'Create Exam Type'}
         open={dialog.value}
-        handleClose={handleCloseDialog}
+        handleClose={dialog.onFalse}
       >
-        <ExamTypeForm data={selectedExamType} onSubmit={handleSubmit} isEdit={isEdit} />
+        <ExamTypeForm
+          onClose={handleClose}
+          data={selectedExamType}
+          onSubmit={handleSubmit}
+          isEdit={isEdit}
+        />
       </CustomDialog>
 
       <CustomDialog

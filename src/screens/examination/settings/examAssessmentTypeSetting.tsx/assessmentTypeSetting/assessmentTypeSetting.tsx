@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import {
   Box,
@@ -12,10 +15,12 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assessmentTypeTableData from 'src/json/academic/examination/assessmentTypeTableData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -29,7 +34,8 @@ const AssessmentTypeSettings = () => {
     useState<IAssessmentType[]>(assessmentTypeTableData);
   const confirmPublishDialog = useBoolean();
   const confirmDeleteDialog = useBoolean();
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const [isEdit, setIsEdit] = useState(false);
   const [selectedAssessmentType, setSelectedAssessmentType] = useState<any | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
@@ -60,6 +66,20 @@ const AssessmentTypeSettings = () => {
     confirmPublishDialog.onFalse();
     confirmDeleteDialog.onFalse();
     setSelectedAssessmentType(null);
+  };
+
+  // Function to handle closing of the dialog.
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    // If submit button is clicked or there are unsaved changes, show confirmation dialog.
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dialog.onFalse();
+      dispatch(setIsChanges(false));
+      setSelectedAssessmentType(null);
+    } else if (!isChanges) {
+      // If no unsaved changes, close the dialog directly.
+      dialog.onFalse();
+      setSelectedAssessmentType(null);
+    }
   };
 
   const handleDelete = (comingAssessmentType: any) => {
@@ -178,9 +198,14 @@ const AssessmentTypeSettings = () => {
       <CustomDialog
         title={isEdit ? 'Edit Assessment Type' : 'Create Assessment Type'}
         open={dialog.value}
-        handleClose={handleCloseDialog}
+        handleClose={dialog.onFalse}
       >
-        <AssessmentTypeForm data={selectedAssessmentType} onSubmit={handleSubmit} isEdit={isEdit} />
+        <AssessmentTypeForm
+          onClose={handleClose}
+          data={selectedAssessmentType}
+          onSubmit={handleSubmit}
+          isEdit={isEdit}
+        />
       </CustomDialog>
 
       <CustomDialog
@@ -205,30 +230,25 @@ const AssessmentTypeSettings = () => {
         </DialogActions>
       </CustomDialog>
 
-      <CustomDialog
-        title="Confirm Delete"
+      <ConfirmDialog
         open={confirmDeleteDialog.value}
-        handleClose={handleCloseDialog}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>Are you sure to delete this Assessment Type?</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={confirmDeleteDialog.onFalse} variant="contained" color="error">
-            Cancel
-          </Button>
+        onClose={() => {
+          handleCloseDialog();
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
           <Button
+            variant="contained"
+            color="error"
             onClick={() => {
               handleDelete(selectedAssessmentType);
             }}
-            variant="contained"
-            color="success"
           >
-            Confirm
+            Delete
           </Button>
-        </DialogActions>
-      </CustomDialog>
+        }
+      />
     </Box>
   );
 };

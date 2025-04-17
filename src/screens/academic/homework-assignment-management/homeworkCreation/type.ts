@@ -55,4 +55,5 @@ export interface IAssignGradeProps {
 export interface IHomeWorkCreationFormProps {
   onsubmit: (values: IHomeworkAssignment, status: 'draft' | 'publish') => void;
   view: string;
+  onClose: (e: any, isSubmit: boolean) => void;
 }
