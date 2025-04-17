@@ -1,8 +1,8 @@
 export enum EmployeeLeaveStatusType {
-  'Pending',
-  'Approved',
-  'Rejected',
-  'Reviewed',
+  Pending,
+  Approved,
+  Rejected,
+  Reviewed,
 }
 
 export const EmployeeLeaveStatusOptions = [

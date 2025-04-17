@@ -111,7 +111,7 @@ const HrEmployee = () => {
     genderValue: GenderType[item?.genderType],
     doi: dayjs(item?.dateOfJoining, 'YYYY-MM-DD').format('DD-MM-YYYY'),
     roleValue: item?.role?.name || 'Not Assigned',
-    statusValue: EmployeeStatusType[item?.employeeStatusType],
+    statusValue: item?.employeeStatusType,
   }));
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -287,7 +287,7 @@ const HrEmployee = () => {
                     const color = EmployeeStatusTypeColor[
                       row.employeeStatusType as EmployeeStatusType
                     ] as LabelColor;
-                    return <Label color={color}>{value}</Label>;
+                    return <Label color={color}>{EmployeeStatusType[value]}</Label>;
                   },
                 },
 

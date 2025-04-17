@@ -1,8 +1,8 @@
 export enum EmployeeStatusType {
-  'Active',
-  'Inactive',
-  'Left',
-  'Retired',
+  Active,
+  Inactive,
+  Left,
+  Retired,
 }
 
 export const EmployeeStatusTypeOptions = [

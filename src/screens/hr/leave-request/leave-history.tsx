@@ -77,7 +77,7 @@ const LeaveHistory = (props: TabComponentType) => {
         ...item,
         start: dayjs(item.startDate).format('DD/MM/YYYY'),
         end: dayjs(item.endDate).format('DD/MM/YYYY'),
-        statusValue: EmployeeLeaveStatusType[item.status],
+        statusValue: item.status,
         description: item.description.replace(/<[^>]+>/g, ''),
       })) || [],
     [data]
@@ -226,9 +226,10 @@ const LeaveHistory = (props: TabComponentType) => {
 
             render(value, row) {
               const color = EmployeeLeaveStatusTypeColor[
-                row.status as EmployeeLeaveStatusType
+                value as EmployeeLeaveStatusType
               ] as LabelColor;
-              return <Label color={color}>{value}</Label>;
+
+              return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
             },
           },
           {

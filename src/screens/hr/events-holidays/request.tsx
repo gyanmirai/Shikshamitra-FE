@@ -1,13 +1,13 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
-import type { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 
 import React from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
 
 import {
+  EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
@@ -53,7 +53,7 @@ const EventsAndHolidaysRequest = () => (
             const color = EmployeeLeaveStatusTypeColor[
               row.status as EmployeeLeaveStatusType
             ] as LabelColor;
-            return <Label color={color}>{value}</Label>;
+            return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
           },
         },
         {
@@ -93,7 +93,7 @@ const EventsAndHolidaysRequest = () => (
           endDate: '2024-02-02',
           reason: 'Company Anniversary',
           approvedBy: '-',
-          status: 'Pending',
+          status: 0,
         },
         {
           id: 2,
@@ -103,7 +103,7 @@ const EventsAndHolidaysRequest = () => (
           endDate: '2024-02-14',
           reason: 'Valentine Day Celebration',
           approvedBy: 'Robert Wilson',
-          status: 'Approved',
+          status: 1,
         },
         {
           id: 3,
@@ -113,7 +113,7 @@ const EventsAndHolidaysRequest = () => (
           endDate: '2024-03-15',
           reason: 'Team Building Event',
           approvedBy: 'Sarah Davis',
-          status: 'Rejected',
+          status: 2,
         },
       ]}
     />
