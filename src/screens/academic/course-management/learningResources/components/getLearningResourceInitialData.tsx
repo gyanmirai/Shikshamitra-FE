@@ -6,7 +6,7 @@ export const getLearningResourceInitialData = (
   currentSubject: string,
   data?: IResourceData | null
 ) => ({
-  id: isEdit && data ? data.id : Date.now(),
+  id: isEdit && data ? data.id : Date.now().toString(),
   resourceTitle: isEdit && data ? data.resourceTitle : '',
   typeOfResource: isEdit && data ? data.typeOfResource : '',
   className: currentClass,

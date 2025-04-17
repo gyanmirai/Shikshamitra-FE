@@ -629,6 +629,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                         sx={{
                           fontSize: '14px',
                           width: column.minWidth,
+
                           position: 'sticky',
                           left: column.sticky ? 0 : 'auto',
                           right: column.sticky && columns.length === index + 1 ? 0 : 'auto',

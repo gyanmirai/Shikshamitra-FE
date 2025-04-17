@@ -1,8 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import {
@@ -20,6 +22,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import learningResourceTableData from 'src/json/academic/syllabus/learningResourceTableData.json';
 import {
   PublishUnpublishStatusType,
@@ -28,6 +31,8 @@ import {
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -52,11 +57,14 @@ const LearningResources = (props: TabComponentType) => {
   // State for managing selected resource entry and edit mode
   const [selectedEntry, setSelectedEntry] = useState<IResourceData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   // State for storing all learning resources data
   const [resourceData, setResourceData] = useState<IResourceData[]>(learningResourceTableData);
   // const dialog = useBoolean();
   // State for confirmation dialog
   const confirm_dialog = useBoolean();
+  const deleteDialog = useBoolean();
 
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -88,20 +96,29 @@ const LearningResources = (props: TabComponentType) => {
         ...resourceData,
         {
           ...dataFromDialog,
-          id: Date.now(), // Generate unique ID using timestamp
+          id: Date.now().toString(), // Generate unique ID using timestamp
           className: classes, // Set class from current filter
           dateUploaded: new Date().toLocaleDateString(), // Set current date
         },
       ]);
+      shikshaMitraToast.success({ message: 'Learning Resource added successfully' });
     }
-    // Close the dialog after saving
-    closeDialog();
   };
   // Function to close the dialog and reset form state
-  const closeDialog = () => {
-    setIsEdit(false);
-    setSelectedEntry(null);
-    addLearningResourceDialog.onFalse();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      console.log('isSubmit---', isSubmit);
+      console.log('isChanges---', isChanges);
+      dispatch(setIsChanges(false));
+
+      setIsEdit(false);
+      setSelectedEntry(null);
+      addLearningResourceDialog.onFalse();
+    } else if (!isChanges) {
+      setIsEdit(false);
+      setSelectedEntry(null);
+      addLearningResourceDialog.onFalse();
+    }
   };
 
   // Handle status change for publishing/unpublishing resources
@@ -142,6 +159,15 @@ const LearningResources = (props: TabComponentType) => {
     []
   );
 
+  // Delete selected subject from table
+  const handleDelete = (id: string | undefined) => {
+    if (selectedEntry) {
+      setResourceData(resourceData.filter((resource) => resource.id !== id));
+      deleteDialog.onFalse();
+      setSelectedEntry(null);
+    }
+  };
+
   // Define breadcrumb navigation links based on form state
   const links = addLearningResourceDialog.value
     ? [
@@ -177,7 +203,7 @@ const LearningResources = (props: TabComponentType) => {
             variant="contained"
             onClick={
               addLearningResourceDialog.value
-                ? closeDialog
+                ? () => handleClose(null, false)
                 : () => {
                     addLearningResourceDialog.onTrue();
                   }
@@ -193,7 +219,7 @@ const LearningResources = (props: TabComponentType) => {
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <CreateNewResource
             onSave={handleSave}
-            onClose={closeDialog}
+            onClose={handleClose}
             data={selectedEntry}
             isEdit={isEdit}
             currentClass={classes}
@@ -337,7 +363,10 @@ const LearningResources = (props: TabComponentType) => {
                         showDeleteIcon
                         showViewIcon
                         handleViewClick={() => {}}
-                        handleDeleteClick={() => {}}
+                        handleDeleteClick={() => {
+                          deleteDialog.onTrue();
+                          setSelectedEntry(row as IResourceData);
+                        }}
                         handleEditClick={() => {
                           setIsEdit(true);
                           setSelectedEntry(row as IResourceData);
@@ -360,6 +389,28 @@ const LearningResources = (props: TabComponentType) => {
             ))}
         </>
       )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          deleteDialog.onFalse();
+          setSelectedEntry(null);
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              handleDelete(selectedEntry?.id as string);
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

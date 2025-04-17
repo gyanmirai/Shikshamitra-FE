@@ -10,7 +10,7 @@ export interface IDocument {
 }
 
 export interface IChapter {
-  id: number;
+  id: string;
   chapterNo: number;
   chapterName: string;
   startDate: string; // Format: YYYY-MM-DD
@@ -21,6 +21,7 @@ export interface IChapter {
     pdfs: number;
   };
   progress: number; // Percentage from 0 to 100
+  documents?: IDocument[];
 }
 
 export interface IChapterFormValues {
@@ -37,26 +38,13 @@ export interface IChapterFormValues {
 // Props interface for AddNewChapter component
 export interface IAddNewChapterProps {
   onSubmit: (values: IChapterFormValues) => void;
-  selectedSubject: string;
+  onClose: (e: any, isSubmit: boolean) => void;
   isEdit?: boolean;
-  initialValues?: {
-    chapterNo: number;
-    chapterName: string;
-    assignedTeacher: string;
-    content: string;
-    startTime: Dayjs | null;
-    endTime: Dayjs | null;
-    timeLine: Dayjs | null;
-    documents?: Array<{
-      id: string;
-      name: string;
-      url: string;
-    }>;
-  } | null;
+  initialValues?: IChapter | null;
 }
 
 export interface IChapterTableProps {
-  ediData: IChapter;
+  onDelete: (chapter: IChapter) => void;
   setEditData: React.Dispatch<React.SetStateAction<IChapter | null>>;
   addChapterDialog: UseBooleanReturn;
   data: IChapter[];

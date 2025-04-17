@@ -378,8 +378,8 @@ const Course = (props: TabComponentType) => {
         maxWidth="sm"
       >
         <AddNewChapter
+          onClose={addChapterDialog.onFalse}
           onSubmit={handleChapterSubmit}
-          selectedSubject={selectedSubject}
           initialValues={selectedChapter}
           isEdit={isEditMode}
         />

@@ -5,6 +5,6 @@ export interface IResourceType {
 
 export interface ILearningResourceTypeFormProps {
   data?: IResourceType | null;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   isEdit?: boolean;
 }

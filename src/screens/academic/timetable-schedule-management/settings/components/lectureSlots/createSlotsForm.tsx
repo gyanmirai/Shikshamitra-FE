@@ -2,6 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 
+import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
@@ -17,7 +18,12 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import { initialValues } from './initialValues';
+import { validationSchema } from './validationSchema';
 
 import type { ITimeSlot, ICreateSlotsFormProps } from './type';
 
@@ -26,6 +32,15 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
+  });
+
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    onSubmit: (values) => {
+      console.log('Form Submitted', values);
+      // submission logic here
+    },
   });
 
   // State for managing total number of slots
@@ -110,182 +125,198 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
     });
   };
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={() => {}}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={classData?.items || []}
-                value=""
-                onChange={(val) => {
-                  //   formik.setFieldValue('className', val as string);
-                }}
-                label="Class"
-                // isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {/* {formik.touched.className && formik.errors.className && (
-                  <FormHelperText error>{formik.errors.className}</FormHelperText>
-                )} */}
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box display="flex" flexDirection="column" gap={2}>
+        <form onSubmit={formik.handleSubmit}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
+                  <CustomSelect
+                    options={classData?.items || []}
+                    value={formik.values.className}
+                    onChange={(val) => formik.setFieldValue('className', val as string)}
+                    label="Class"
+                    labelKey="name"
+                    valueKey="name"
+                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                    error={formik.touched.className && Boolean(formik.errors.className)}
+                    helperText={
+                      formik.touched.className && typeof formik.errors.className === 'string'
+                        ? formik.errors.className
+                        : undefined
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.schoolHours && formik.errors.schoolHours)}
+                >
+                  <TextField
+                    fullWidth
+                    label="School Hours"
+                    name="schoolHours"
+                    value={formik.values.schoolHours}
+                    onChange={formik.handleChange}
+                    error={formik.touched.schoolHours && Boolean(formik.errors.schoolHours)}
+                    helperText={formik.touched.schoolHours && formik.errors.schoolHours}
+                    size="small"
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.previousClassSlots && formik.errors.previousClassSlots)}
+                >
+                  <CustomSelect
+                    options={classData?.items || []}
+                    value={formik.values.previousClassSlots}
+                    onChange={(val) => formik.setFieldValue('previousClassSlots', val as string)}
+                    label="Previous Class Slots"
+                    labelKey="name"
+                    valueKey="name"
+                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                    error={
+                      formik.touched.previousClassSlots && Boolean(formik.errors.previousClassSlots)
+                    }
+                    helperText={
+                      formik.touched.previousClassSlots &&
+                      typeof formik.errors.previousClassSlots === 'string'
+                        ? formik.errors.previousClassSlots
+                        : undefined
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.totalSlots && formik.errors.totalSlots)}>
+                  <TextField
+                    fullWidth
+                    label="Total Slots"
+                    name="totalSlots"
+                    type="number"
+                    value={formik.values.totalSlots}
+                    onChange={(e) => formik.setFieldValue('totalSlots', e.target.value)}
+                    error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
+                    helperText={formik.touched.totalSlots && formik.errors.totalSlots}
+                    size="small"
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Button
+                  startIcon={<Add />}
+                  size="small"
+                  variant="contained"
+                  onClick={handleCreateSlots}
+                >
+                  Create Slots
+                </Button>
+              </Grid>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="School Hours"
-                name="schoolHours"
-                //   value={formik.values.eventVenue}
-                //   onChange={formik.handleChange}
-                //   error={formik.touched.eventVenue && Boolean(formik.errors.eventVenue)}
-                //   helperText={formik.touched.eventVenue && formik.errors.eventVenue}
-                size="small"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={classData?.items || []}
-                value=""
-                onChange={(val) => {
-                  //   formik.setFieldValue('className', val as string);
-                }}
-                label="Previous Class Slots"
-                // isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {/* {formik.touched.className && formik.errors.className && (
-                  <FormHelperText error>{formik.errors.className}</FormHelperText>
-                )} */}
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Total Slots"
-                name="totalSlots"
-                type="number"
-                value={totalSlots}
-                onChange={(e) => setTotalSlots(e.target.value)}
-                size="small"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Button
-                startIcon={<Add />}
-                size="small"
-                variant="contained"
-                onClick={handleCreateSlots}
-              >
-                Create Slots
-              </Button>
-            </Grid>
-          </Grid>
-
-          {showTable && (
-            <>
-              <Typography variant="subtitle2" sx={{ mt: 2 }}>
-                Slot Times
-              </Typography>
-              <CustomizableTable
-                tableId="time-schedule-management-setting"
-                isSearch={false}
-                isShowedDense={false}
-                isFilter={false}
-                columns={[
-                  {
-                    id: 'startTime',
-                    label: 'Start Time',
-                    render(value, row) {
-                      return (
-                        <TimePicker
-                          value={value}
-                          viewRenderers={{
-                            hours: renderTimeViewClock,
-                            minutes: renderTimeViewClock,
-                            seconds: renderTimeViewClock,
-                          }}
-                          onChange={(newTime) => handleTimeChange(newTime, row.id, 'startTime')}
-                          slotProps={{ textField: { size: 'small' } }}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    id: 'endTime',
-                    label: 'End Time',
-                    render(value, row) {
-                      return (
-                        <TimePicker
-                          value={value}
-                          viewRenderers={{
-                            hours: renderTimeViewClock,
-                            minutes: renderTimeViewClock,
-                            seconds: renderTimeViewClock,
-                          }}
-                          onChange={(newTime) => handleTimeChange(newTime, row.id, 'endTime')}
-                          slotProps={{ textField: { size: 'small' } }}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    id: 'slotType',
-                    label: 'Slot Type',
-                    render(value, row) {
-                      return (
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <CustomSelect
-                            label="Slot"
-                            options={[
-                              { value: 'period', label: 'Period' },
-                              { value: 'break', label: 'Break' },
-                            ]}
+            {showTable && (
+              <>
+                <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                  Slot Times
+                </Typography>
+                <CustomizableTable
+                  tableId="time-schedule-management-setting"
+                  isSearch={false}
+                  isShowedDense={false}
+                  isFilter={false}
+                  columns={[
+                    {
+                      id: 'startTime',
+                      label: 'Start Time',
+                      render(value, row) {
+                        return (
+                          <TimePicker
                             value={value}
-                            onChange={(val: any) => {
-                              handleSlotTypeChange(val, row.id);
+                            viewRenderers={{
+                              hours: renderTimeViewClock,
+                              minutes: renderTimeViewClock,
+                              seconds: renderTimeViewClock,
                             }}
-                            formControlProps={{ sx: { minWidth: '150px' } }}
+                            onChange={(newTime) => handleTimeChange(newTime, row.id, 'startTime')}
+                            slotProps={{ textField: { size: 'small' } }}
                           />
-                          {value === 'break' && (
+                        );
+                      },
+                    },
+                    {
+                      id: 'endTime',
+                      label: 'End Time',
+                      render(value, row) {
+                        return (
+                          <TimePicker
+                            value={value}
+                            viewRenderers={{
+                              hours: renderTimeViewClock,
+                              minutes: renderTimeViewClock,
+                              seconds: renderTimeViewClock,
+                            }}
+                            onChange={(newTime) => handleTimeChange(newTime, row.id, 'endTime')}
+                            slotProps={{ textField: { size: 'small' } }}
+                          />
+                        );
+                      },
+                    },
+                    {
+                      id: 'slotType',
+                      label: 'Slot Type',
+                      render(value, row) {
+                        return (
+                          <Box sx={{ display: 'flex', gap: 1 }}>
                             <CustomSelect
-                              label="Break Type"
+                              label="Slot"
                               options={[
-                                { value: 'lunch', label: 'Lunch Break' },
-                                { value: 'short', label: 'Short Break' },
-                                { value: 'recess', label: 'Recess' },
-                                { value: 'prayer', label: 'Prayer Break' },
+                                { value: 'period', label: 'Period' },
+                                { value: 'break', label: 'Break' },
                               ]}
-                              value={row.breakType || ''}
-                              onChange={(val: any) => {
-                                handleBreakTypeChange(val, row.id);
-                              }}
+                              value={value}
+                              onChange={(val: any) => handleSlotTypeChange(val, row.id)}
                               formControlProps={{ sx: { minWidth: '150px' } }}
                             />
-                          )}
-                        </Box>
-                      );
+                            {value === 'break' && (
+                              <CustomSelect
+                                label="Break Type"
+                                options={[
+                                  { value: 'lunch', label: 'Lunch Break' },
+                                  { value: 'short', label: 'Short Break' },
+                                  { value: 'recess', label: 'Recess' },
+                                  { value: 'prayer', label: 'Prayer Break' },
+                                ]}
+                                value={row.breakType || ''}
+                                onChange={(val: any) => handleBreakTypeChange(val, row.id)}
+                                formControlProps={{ sx: { minWidth: '150px' } }}
+                              />
+                            )}
+                          </Box>
+                        );
+                      },
                     },
-                  },
-                ]}
-                data={timeSlots}
-              />
-            </>
-          )}
-        </Scrollbar>
-        <DialogActions>
-          <Button type="submit" startIcon={<Iconify icon={GlobalIcons.eye} />} variant="outlined">
-            Preview
-          </Button>
-          <SubmitButton />
-        </DialogActions>
-      </form>
-    </Box>
+                  ]}
+                  data={timeSlots}
+                />
+              </>
+            )}
+          </Scrollbar>
+
+          <DialogActions>
+            <Button type="submit" startIcon={<Iconify icon={GlobalIcons.eye} />} variant="outlined">
+              Preview
+            </Button>
+            <SubmitButton />
+          </DialogActions>
+        </form>
+      </Box>
+    </BackPopUpChecked>
   );
 };
 export default CreateSlotsForm;

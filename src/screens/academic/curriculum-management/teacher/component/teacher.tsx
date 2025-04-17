@@ -14,6 +14,7 @@ import teacherTableData from 'src/json/academic/curriculum/teacherTableData.json
 
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -77,6 +78,7 @@ const Teacher = ({
       setTeacherData(updatedData);
       dialog.onFalse();
       setSelectedTeacher(null);
+      shikshaMitraToast.success({ message: 'Teachar added successfully' });
     }
   };
   /**
@@ -180,10 +182,10 @@ const Teacher = ({
           {
             id: 'action',
             label: 'Actions',
-            minWidth: 100,
             isFilter: false,
             isSort: false,
             sticky: true,
+            minWidth: 50,
             render(value, row) {
               return (
                 <ThreeDotsActions

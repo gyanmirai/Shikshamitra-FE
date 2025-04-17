@@ -1,5 +1,6 @@
 'use client';
 
+import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { Box, Grid, TextField, DialogActions } from '@mui/material';
@@ -11,15 +12,28 @@ import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesT
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import { getNoOfLectureInitialValues } from './initialValues';
+import { noOfLectureValidationSchema } from './validationSchema';
 
 import type { ICreateNoOfLectureProps } from './type';
 
-const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open }) => {
+const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose }) => {
   // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
+  });
+
+  const formik = useFormik({
+    initialValues: getNoOfLectureInitialValues(),
+    validationSchema: noOfLectureValidationSchema,
+    onSubmit: (values) => {
+      console.log('Submitted data:', values);
+    },
   });
 
   // Initialize subject list state with default data
@@ -39,64 +53,71 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open }) => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={() => {}}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={classData?.items || []}
-                value=""
-                onChange={(val) => {
-                  //   formik.setFieldValue('className', val as string);
-                }}
-                label="Class"
-                // isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
-              {/* {formik.touched.className && formik.errors.className && (
-                <FormHelperText error>{formik.errors.className}</FormHelperText>
-              )} */}
-            </Grid>
-            <Grid item xs={12}>
-              <CustomizableTable
-                tableId="table-subject-list"
-                isSearch={false}
-                isShowedDense={false}
-                isFilter={false}
-                columns={[
-                  {
-                    id: 'subjects',
-                    label: 'Subjects',
-                  },
-                  {
-                    id: 'weeklyLectures',
-                    label: 'Weekly Lectures',
-                    render(value, row) {
-                      return (
-                        <TextField
-                          type="number"
-                          size="small"
-                          value={value}
-                          onChange={(e) => handleInputChange(row.id, e.target.value)}
-                          className="w-24"
-                        />
-                      );
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box display="flex" flexDirection="column" gap={2}>
+        <form onSubmit={formik.handleSubmit}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
+                  <CustomSelect
+                    options={classData?.items || []}
+                    value={formik.values.className}
+                    onChange={(val) => {
+                      formik.setFieldValue('className', val as string);
+                    }}
+                    label="Class"
+                    // isLoading={isLoading}
+                    labelKey="name"
+                    valueKey="name"
+                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                    error={formik.touched.className && Boolean(formik.errors.className)}
+                    helperText={
+                      formik.touched.className && typeof formik.errors.className === 'string'
+                        ? formik.errors.className
+                        : undefined
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid item xs={12}>
+                <CustomizableTable
+                  tableId="table-subject-list"
+                  isSearch={false}
+                  isShowedDense={false}
+                  isFilter={false}
+                  columns={[
+                    {
+                      id: 'subjects',
+                      label: 'Subjects',
                     },
-                  },
-                ]}
-                data={subjectList}
-              />
+                    {
+                      id: 'weeklyLectures',
+                      label: 'Weekly Lectures',
+                      render(value, row) {
+                        return (
+                          <TextField
+                            type="number"
+                            size="small"
+                            value={value}
+                            onChange={(e) => handleInputChange(row.id, e.target.value)}
+                            className="w-24"
+                          />
+                        );
+                      },
+                    },
+                  ]}
+                  data={subjectList}
+                />
+              </Grid>
             </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <SubmitButton />
-        </DialogActions>
-      </form>
-    </Box>
+          </Scrollbar>
+          <DialogActions>
+            <SubmitButton />
+          </DialogActions>
+        </form>
+      </Box>
+    </BackPopUpChecked>
   );
 };
 

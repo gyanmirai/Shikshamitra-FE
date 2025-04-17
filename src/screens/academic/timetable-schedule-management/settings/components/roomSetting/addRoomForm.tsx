@@ -3,10 +3,14 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Create } from '@mui/icons-material';
+import { Close, Create } from '@mui/icons-material';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import { validationSchema } from './validationSchema';
 
 import type { IRoomCreationFormProps, IRoomCreationFormikValue } from './type';
 
@@ -28,7 +32,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
       floor: isEdit ? (data.floor ?? 0) : 0,
       capacity: isEdit ? (data.capacity ?? 0) : 0,
     },
-    // validationSchema: validationSchema,  // Uncomment this if you have validation schema
+    validationSchema,
     onSubmit: (values) => {
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
 
@@ -49,65 +53,97 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                disabled={isEdit}
-                label="Room Name"
-                size="small"
-                name="roomNumber"
-                type="number"
-                value={formik.values.roomNumber}
-                onChange={formik.handleChange}
-                fullWidth
-              />
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box display="flex" flexDirection="column" gap={2}>
+        <form onSubmit={formik.handleSubmit}>
+          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
+                  <TextField
+                    disabled={isEdit}
+                    label="Room Name"
+                    size="small"
+                    name="roomNumber"
+                    type="number"
+                    value={formik.values.roomNumber}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}
+                    helperText={formik.touched.roomNumber && formik.errors.roomNumber}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.buildingName && formik.errors.buildingName)}
+                >
+                  <TextField
+                    disabled={isEdit}
+                    label="Building Name"
+                    size="small"
+                    name="buildingName"
+                    value={formik.values.buildingName}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={!!(formik.touched.buildingName && formik.errors.buildingName)}
+                    helperText={formik.touched.buildingName && formik.errors.buildingName}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.floor && formik.errors.floor)}>
+                  <TextField
+                    disabled={isEdit}
+                    name="floor"
+                    label="Floors"
+                    size="small"
+                    type="number"
+                    value={formik.values.floor}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={!!(formik.touched.floor && formik.errors.floor)}
+                    helperText={formik.touched.floor && formik.errors.floor}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.capacity && formik.errors.capacity)}>
+                  <TextField
+                    name="capacity"
+                    label="Room Capacity"
+                    type="number"
+                    size="small"
+                    value={formik.values.capacity}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={!!(formik.touched.capacity && formik.errors.capacity)}
+                    helperText={formik.touched.capacity && formik.errors.capacity}
+                  />
+                </ShakingTextField>
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                disabled={isEdit}
-                label="Building Name"
-                size="small"
-                value={formik.values.buildingName}
-                name="buildingName"
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="floor"
-                disabled={isEdit}
-                type="number"
-                value={formik.values.floor}
-                onChange={formik.handleChange}
-                label="Floors"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="capacity"
-                value={formik.values.capacity}
-                onChange={formik.handleChange}
-                label="Room Capacity"
-                type="number"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button startIcon={<Create />} type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </form>
-    </Box>
+          </Scrollbar>
+          <DialogActions>
+            <Button
+              startIcon={<Close />}
+              onClick={() => {
+                onClose(null, false);
+              }}
+              variant="outlined"
+            >
+              Cancel
+            </Button>
+            <Button startIcon={<Create />} type="submit" variant="contained">
+              {isEdit ? 'Update' : 'Create'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Box>
+    </BackPopUpChecked>
   );
 };
 

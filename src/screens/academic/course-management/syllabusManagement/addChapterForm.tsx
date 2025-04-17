@@ -1,8 +1,7 @@
 'use client';
 
-import dayjs from 'dayjs';
+import { useState } from 'react';
 import { useFormik } from 'formik';
-import { useState, useEffect } from 'react';
 
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -25,6 +24,7 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from './validationSchema';
 import { getChapterInitialValues } from './initialValues';
@@ -33,8 +33,8 @@ import type { IDocument, IChapterFormValues, IAddNewChapterProps } from './type'
 
 // Component for adding or editing a chapter with form validation and file upload functionality
 export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
+  onClose,
   onSubmit,
-  selectedSubject,
   isEdit = false,
   initialValues = null,
 }: IAddNewChapterProps) => {
@@ -57,23 +57,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         timeLine: values.timeLine,
         documents,
       });
+      onClose(null, true);
     },
   });
-
-  // Effect to update form when initial values change
-  useEffect(() => {
-    if (initialValues) {
-      setEditorContent(initialValues.content);
-      setDocuments(initialValues.documents || []);
-      formik.setFieldValue(
-        'startTime',
-        initialValues.startTime ? dayjs(initialValues.startTime) : null
-      );
-
-      formik.setFieldValue('endTime', initialValues.endTime ? dayjs(initialValues.endTime) : null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialValues]);
 
   // Handler for file upload
   const handleFileUpload = (files: File[]) => {
@@ -92,196 +78,200 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   };
 
   return (
-    <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-      <Box display="flex" flexDirection="column" gap={2} height="100%">
-        <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container spacing={3}>
-            {/* Chapter Number Input */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
-              >
-                <TextField
-                  fullWidth
-                  label="Chapter Number"
-                  name="chapterNo"
-                  type="number"
-                  value={formik.values.chapterNo}
-                  onChange={formik.handleChange}
-                  size="small"
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+        <Box display="flex" flexDirection="column" gap={2} height="100%">
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
+            <Grid container spacing={3}>
+              {/* Chapter Number Input */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
                   error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
-                  helperText={formik.touched.chapterNo && formik.errors.chapterNo}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* Chapter Name Input */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
-              >
-                <TextField
-                  fullWidth
-                  label="Chapter Name"
-                  name="chapterName"
-                  value={formik.values.chapterName}
-                  onChange={formik.handleChange}
-                  size="small"
+                >
+                  <TextField
+                    fullWidth
+                    label="Chapter Number"
+                    name="chapterNo"
+                    type="number"
+                    value={formik.values.chapterNo}
+                    onChange={formik.handleChange}
+                    size="small"
+                    error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
+                    helperText={formik.touched.chapterNo && formik.errors.chapterNo}
+                  />
+                </ShakingTextField>
+              </Grid>
+              {/* Chapter Name Input */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
                   error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
-                  helperText={formik.touched.chapterName && formik.errors.chapterName}
-                />
-              </ShakingTextField>
-            </Grid>
-            {/* Start Time DatePicker */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.startTime && formik.errors.startTime) || false}
-              >
-                <DatePicker
-                  label="Chapter StartTime"
-                  format="DD/MM/YYYY"
-                  value={formik.values.startTime}
-                  onChange={(newValue) => {
-                    formik.setFieldValue('startTime', newValue);
-                  }}
-                  sx={{ minWidth: 180, width: '100%' }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      helperText: formik.touched.startTime && (formik.errors.startTime as string),
-                      error: formik.touched.startTime && Boolean(formik.errors.startTime),
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
+                >
+                  <TextField
+                    fullWidth
+                    label="Chapter Name"
+                    name="chapterName"
+                    value={formik.values.chapterName}
+                    onChange={formik.handleChange}
+                    size="small"
+                    error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
+                    helperText={formik.touched.chapterName && formik.errors.chapterName}
+                  />
+                </ShakingTextField>
+              </Grid>
+              {/* Start Time DatePicker */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+                >
+                  <DatePicker
+                    label="Chapter StartTime"
+                    format="DD/MM/YYYY"
+                    value={formik.values.startTime}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('startTime', newValue);
+                    }}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        helperText: formik.touched.startTime && (formik.errors.startTime as string),
+                        error: formik.touched.startTime && Boolean(formik.errors.startTime),
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            {/* End Time DatePicker */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.startTime && formik.errors.startTime) || false}
-              >
-                <DatePicker
-                  label="Chapter EndTime"
-                  format="DD/MM/YYYY"
-                  value={formik.values.endTime}
-                  onChange={(newValue) => {
-                    formik.setFieldValue('endTime', newValue);
-                  }}
-                  sx={{ minWidth: 180, width: '100%' }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      error: !!(formik.touched.endTime && formik.errors.endTime) || false,
-                      helperText: formik.touched.endTime && formik.errors.endTime,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
+              {/* End Time DatePicker */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+                >
+                  <DatePicker
+                    label="Chapter EndTime"
+                    format="DD/MM/YYYY"
+                    value={formik.values.endTime}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('endTime', newValue);
+                    }}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        error: !!(formik.touched.endTime && formik.errors.endTime) || false,
+                        helperText: formik.touched.endTime && formik.errors.endTime,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            {/* Teacher Assignment Dropdown */}
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false}
-              >
-                <CustomSelect
-                  label="Assigned Teacher"
-                  options={[
-                    { value: 'Jiya', label: 'Jiya' },
-                    { value: 'Riya', label: 'Riya' },
-                    { value: 'Priya', label: 'Priya' },
-                  ]}
-                  name="assignedTeacher"
-                  value={formik.values.assignedTeacher}
-                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                  onChange={(val) => {
-                    formik.setFieldValue('assignedTeacher', val);
-                  }}
+              {/* Teacher Assignment Dropdown */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
                   error={
                     !!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false
                   }
-                  helperText={
-                    (formik.touched.assignedTeacher && formik.errors.assignedTeacher) || ''
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Rich Text Editor for Chapter Content */}
-            <Grid item xs={12}>
-              <Editor
-                value={editorContent}
-                onChange={(value) => {
-                  formik.setFieldValue('content', value);
-                }}
-                placeholder="Chapter Description"
-                sx={{ width: '100%', marginTop: '10px' }}
-              />
-            </Grid>
-            {/* Document Upload Section */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom>
-                Upload the chapter Material
-              </Typography>
-              <UploadBox
-                onDrop={handleFileUpload}
-                placeholder={
-                  <Box
-                    sx={{
-                      gap: 0.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
-                      flexDirection: 'column',
+                >
+                  <CustomSelect
+                    label="Assigned Teacher"
+                    options={[
+                      { value: 'Jiya', label: 'Jiya' },
+                      { value: 'Riya', label: 'Riya' },
+                      { value: 'Priya', label: 'Priya' },
+                    ]}
+                    name="assignedTeacher"
+                    value={formik.values.assignedTeacher}
+                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                    onChange={(val) => {
+                      formik.setFieldValue('assignedTeacher', val);
                     }}
-                  >
-                    <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Drag Your Document</Typography>
-                  </Box>
-                }
-                sx={{
-                  py: 2.5,
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
-              />
-            </Grid>
-            {/* List of Uploaded Documents */}
-            {documents.length > 0 && (
+                    error={
+                      !!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false
+                    }
+                    helperText={
+                      (formik.touched.assignedTeacher && formik.errors.assignedTeacher) || ''
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              {/* Rich Text Editor for Chapter Content */}
+              <Grid item xs={12}>
+                <Editor
+                  value={editorContent}
+                  onChange={(value) => {
+                    formik.setFieldValue('content', value);
+                  }}
+                  placeholder="Chapter Description"
+                  sx={{ width: '100%', marginTop: '10px' }}
+                />
+              </Grid>
+              {/* Document Upload Section */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Uploaded Documents
+                  Upload the chapter Material
                 </Typography>
-                <List>
-                  {documents.map((doc, index) => (
-                    <ListItem
-                      key={doc.id}
-                      secondaryAction={
-                        <IconButton
-                          edge="end"
-                          onClick={() => handleRemoveDocument(doc.id as unknown as string)}
-                        >
-                          <Iconify icon="mdi:delete" />
-                        </IconButton>
-                      }
+                <UploadBox
+                  onDrop={handleFileUpload}
+                  placeholder={
+                    <Box
+                      sx={{
+                        gap: 0.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: 'text.disabled',
+                        flexDirection: 'column',
+                      }}
                     >
-                      <ListItemText primary={doc.name} />
-                    </ListItem>
-                  ))}
-                </List>
+                      <Iconify icon="eva:cloud-upload-fill" width={40} />
+                      <Typography variant="body2">Drag Your Document</Typography>
+                    </Box>
+                  }
+                  sx={{
+                    py: 2.5,
+                    width: '100%',
+                    height: 'auto',
+                    borderRadius: 1.5,
+                  }}
+                />
               </Grid>
-            )}
-          </Grid>
-        </Scrollbar>
-        {/* Form Actions */}
-        <DialogActions>
-          <Button startIcon={<Create />} type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Box>
-    </form>
+              {/* List of Uploaded Documents */}
+              {documents.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Uploaded Documents
+                  </Typography>
+                  <List>
+                    {documents.map((doc, index) => (
+                      <ListItem
+                        key={doc.id}
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            onClick={() => handleRemoveDocument(doc.id as unknown as string)}
+                          >
+                            <Iconify icon="mdi:delete" />
+                          </IconButton>
+                        }
+                      >
+                        <ListItemText primary={doc.name} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Grid>
+              )}
+            </Grid>
+          </Scrollbar>
+          {/* Form Actions */}
+          <DialogActions>
+            <Button startIcon={<Create />} type="submit" variant="contained">
+              {isEdit ? 'Update' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Box>
+      </form>
+    </BackPopUpChecked>
   );
 };

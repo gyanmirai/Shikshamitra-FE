@@ -1,10 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Box, Button, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -19,7 +24,8 @@ const LectureSlots = () => {
   const createSlotsDialog = useBoolean();
   // Dialog state for assigning slots to other classes
   const assignSlotsDialog = useBoolean();
-
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -38,6 +44,17 @@ const LectureSlots = () => {
     ),
     [assignSlotsDialog]
   );
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      createSlotsDialog.onFalse();
+
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      createSlotsDialog.onFalse();
+    }
+  };
+
   return (
     <Box>
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
