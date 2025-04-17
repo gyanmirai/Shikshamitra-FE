@@ -10,10 +10,16 @@ export const studentGroupApi = createApi({
   tagTypes: ['studentGroup'],
   endpoints: (builder) => ({
     getStudentGroup: builder.query({
-      query: () => ({
-        url: `/app/student-group`,
-        method: 'GET',
-      }),
+      query: ({ SkipCount, MaxResultCount }) => {
+        let query = '';
+        query += `?SkipCount=${SkipCount || 0}`;
+        if (+MaxResultCount > 0) query += `${query ? '&' : '?'}MaxResultCount=${MaxResultCount}`;
+
+        return {
+          url: `/app/student-group${query}`,
+          method: 'GET',
+        };
+      },
       providesTags: ['studentGroup'],
     }),
     addStudentGroup: builder.mutation({
