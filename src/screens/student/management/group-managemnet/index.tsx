@@ -1,21 +1,35 @@
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Button,
+  MenuList,
+  MenuItem,
+  TextField,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetAllStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetStudentGroupQuery,
+  useSetGroupLeaderMutation,
   useAddStudentGroupMutation,
   useDeleteStudentGroupMutation,
   useUpdateStudentGroupMutation,
+  useAssignStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -31,6 +45,10 @@ const GroupManagement = () => {
     MaxResultCount: 10,
     Sorting: 'name ASC',
   });
+  // State to manage dialog for assigning group leaders
+  const assignLeaderDialog = useBoolean();
+  // State to manage dialog for assigning students
+  const assignStudentDialog = useBoolean();
   // Dialog state for add/edit form
   const dialog = useBoolean();
   // Dialog state for delete confirmation
@@ -150,7 +168,6 @@ const GroupManagement = () => {
                 <ThreeDotsActions
                   showEditIcon
                   showDeleteIcon
-                  showThreeDots={false}
                   handleEditClick={() => {
                     setEditData(row as IGroup);
                     dialog.onTrue();
@@ -159,6 +176,31 @@ const GroupManagement = () => {
                     setEditData(row as IGroup);
                     confirm.onTrue();
                   }}
+                  placement="right-top"
+                  actions={({ popover }) => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={() => {
+                          setEditData(row as IGroup);
+                          assignStudentDialog.onTrue();
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="hugeicons:student" />
+                        Assign Student
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setEditData(row as IGroup);
+                          assignLeaderDialog.onTrue();
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="fluent-mdl2:party-leader" />
+                        Assign leader
+                      </MenuItem>
+                    </MenuList>
+                  )}
                 />
               );
             },
@@ -172,6 +214,38 @@ const GroupManagement = () => {
         title={editData ? 'Update House' : 'Add House'}
       >
         <GroupManagementForm editData={editData} handleClose={handleClose} />
+      </CustomDialog>
+      <CustomDialog
+        open={assignStudentDialog.value}
+        handleClose={() => {
+          assignStudentDialog.onFalse();
+          setEditData(null);
+        }}
+        title="Assign Students"
+      >
+        <AssignStudentForm
+          editData={editData}
+          handleClose={() => {
+            assignStudentDialog.onFalse();
+            setEditData(null);
+          }}
+        />
+      </CustomDialog>
+      <CustomDialog
+        open={assignLeaderDialog.value}
+        handleClose={() => {
+          assignLeaderDialog.onFalse();
+          setEditData(null);
+        }}
+        title="Assign Students"
+      >
+        <AssignLeaderForm
+          editData={editData}
+          handleClose={() => {
+            assignLeaderDialog.onFalse();
+            setEditData(null);
+          }}
+        />
       </CustomDialog>
     </Box>
   );
@@ -257,6 +331,213 @@ const GroupManagementForm = ({
           </LoadingButton>
         </DialogActions>
       </Stack>
+    </Box>
+  );
+};
+
+// Component for assigning students to groups
+const AssignStudentForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose: () => void;
+  editData: IGroup | null;
+}) => {
+  // Hook for assigning students to groups mutation
+  const [assignStudent, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAssignStudentGroupMutation,
+  });
+
+  // Hook for fetching all students data
+  const { data: studentData, isLoading: isStudentLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllStudentsQuery,
+  });
+
+  // Formik instance for form handling
+  const formik = useFormik<{
+    student: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
+  }>({
+    // Initial form values
+    initialValues: {
+      student: { id: '', firstName: '', lastName: '' },
+    },
+    // Validation schema for form fields
+    validationSchema: Yup.object({
+      student: Yup.object({
+        id: Yup.string().required('Student is required'),
+      }),
+    }),
+    // Form submission handler
+    onSubmit: async (values) => {
+      try {
+        await assignStudent({
+          studentId: values.student.id,
+          studentGroupId: editData?.id || '',
+          isLeader: false,
+        }).unwrap();
+        shikshaMitraToast.success({ message: `Student Assigned Successfully` });
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+
+  return (
+    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+      <Stack spacing={2}>
+        <Autocomplete
+          noOptionsText="No Student Found"
+          fullWidth
+          value={formik.values.student}
+          onChange={(_, val) => formik.setFieldValue('student', val)}
+          renderOption={(props, option: any) => (
+            <li {...props} key={option.id}>
+              {`${option?.firstName || ''} ${option?.lastName || ''}`}
+            </li>
+          )}
+          options={studentData?.items || []}
+          getOptionLabel={(option: any) => `${option?.firstName} ${option?.lastName}`}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              fullWidth
+              size="small"
+              label="Search Student"
+              placeholder="Search Student"
+              error={formik.touched.student && Boolean(formik.errors.student?.id)}
+              helperText={formik.touched.student && formik.errors.student?.id}
+            />
+          )}
+        />
+      </Stack>
+      <DialogActions sx={{ px: 0, pb: 0 }}>
+        <Button size="small" variant="outlined" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton size="small" type="submit" variant="contained" loading={isLoading}>
+          Assign
+        </LoadingButton>
+      </DialogActions>
+    </Box>
+  );
+};
+
+/**
+ * Component for assigning a leader to a group
+ * @param {Object} props - Component props
+ * @param {Function} props.handleClose - Function to handle dialog close
+ * @param {Object|null} props.editData - Group data being edited
+ */
+const AssignLeaderForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose: () => void;
+  editData: IGroup | null;
+}) => {
+  /**
+   * Custom hook for assigning students as group leaders
+   * Returns mutation function and loading state
+   */
+  const [assignLeader, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSetGroupLeaderMutation,
+  });
+
+  /**
+   * Custom hook for fetching all students data
+   * Returns students data and loading state
+   */
+  const { data: studentData, isLoading: isStudentLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllStudentsQuery,
+  });
+
+  /**
+   * Formik instance for handling form state and validation
+   * Manages student selection and form submission
+   */
+  const formik = useFormik<{
+    student: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      groupId: string;
+    };
+  }>({
+    // Initial form values
+    initialValues: {
+      student: { id: '', firstName: '', lastName: '', groupId: '' },
+    },
+    // Validation schema for form fields
+    validationSchema: Yup.object({
+      student: Yup.object({
+        id: Yup.string().required('Student is required'),
+      }),
+    }),
+    /**
+     * Handles form submission
+     * Assigns selected student as group leader
+     * @param {Object} values - Form values
+     */
+    onSubmit: async (values) => {
+      try {
+        await assignLeader({
+          studentId: values.student.id,
+          studentGroupId: editData?.id,
+        }).unwrap();
+        shikshaMitraToast.success({ message: `leader Assigned Successfully` });
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+
+  return (
+    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+      <Stack spacing={2}>
+        <Autocomplete
+          noOptionsText="No Student Found"
+          fullWidth
+          loading={isStudentLoading}
+          value={formik.values.student}
+          onChange={(_, val) => formik.setFieldValue('student', val)}
+          renderOption={(props, option: any) => (
+            <li {...props} key={option.id}>
+              {`${option?.firstName || ''} ${option?.lastName || ''}`}
+            </li>
+          )}
+          options={studentData?.items || []}
+          getOptionLabel={(option: any) => `${option?.firstName} ${option?.lastName}`}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              fullWidth
+              size="small"
+              label="Search Student"
+              placeholder="Search Student"
+              error={formik.touched.student && Boolean(formik.errors.student?.id)}
+              helperText={formik.touched.student && formik.errors.student?.id}
+            />
+          )}
+        />
+      </Stack>
+      <DialogActions sx={{ px: 0, pb: 0 }}>
+        <Button size="small" variant="outlined" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton size="small" type="submit" variant="contained" loading={isLoading}>
+          Assign
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
 };

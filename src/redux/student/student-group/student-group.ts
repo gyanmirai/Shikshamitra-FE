@@ -45,6 +45,22 @@ export const studentGroupApi = createApi({
       }),
       invalidatesTags: ['studentGroup'],
     }),
+    assignStudentGroup: builder.mutation({
+      query: (body) => ({
+        url: `/app/student-group-member/assign-student-to-group`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
+    setGroupLeader: builder.mutation({
+      query: (body) => ({
+        url: `/app/student-group-member/set-group-leader`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
   }),
 });
 
@@ -53,4 +69,6 @@ export const {
   useDeleteStudentGroupMutation,
   useGetStudentGroupQuery,
   useUpdateStudentGroupMutation,
+  useAssignStudentGroupMutation,
+  useSetGroupLeaderMutation,
 } = studentGroupApi;
