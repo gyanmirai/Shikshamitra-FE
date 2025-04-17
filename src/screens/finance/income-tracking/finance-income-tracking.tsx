@@ -140,7 +140,7 @@ const FinanceIncomeTrackingScreen = () => {
                 label: 'Action',
                 isFilter: false,
                 isSort: false,
-                align: 'right',
+                minWidth: '140px',
                 sticky: true,
                 render(value, row: any) {
                   return (
