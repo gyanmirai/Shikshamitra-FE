@@ -9,10 +9,13 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Card, Grid, Button, TextField } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -21,6 +24,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 import { addIncomeValidationSchema } from '../validationSchema';
+import BudgetCategoryDialog from '../../settings/general-setting/dialog/budget-category-dialog';
 
 import type {
   IFormikValue,
@@ -105,7 +109,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
       onClose();
     }
   };
-
+  const budgetCategoryDialog = useBoolean();
   return (
     <Box display="flex" flexDirection="column" gap={2} height="100%">
       {/* Header Section */}
@@ -163,8 +167,19 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                       helperText={
                         formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
                       }
+                      addOtherItemOnClick={budgetCategoryDialog.onTrue}
+                      addOtherItemText="Add New Category"
                     />
                   </ShakingTextField>
+                  {budgetCategoryDialog.value && (
+                    <CustomDialog
+                      title="Add Budget Category"
+                      open={budgetCategoryDialog.value}
+                      handleClose={budgetCategoryDialog.onFalse}
+                    >
+                      <BudgetCategoryDialog />
+                    </CustomDialog>
+                  )}
                 </Grid>
                 <Grid item xs={6}>
                   <ShakingTextField

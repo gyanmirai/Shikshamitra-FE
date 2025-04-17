@@ -9,18 +9,24 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { feeStructurevalidationSchema } from '../validationSchema';
+import FeeHeadDialog from '../../general-setting/dialog/fee-head-dialog';
+import PaymentMethodDialog from '../../general-setting/dialog/payment-method';
 import FinanceAddedFeeHeadForFeeStructure from './finance-added-fee-head-for-fee-structure';
+import FinanceReceiptBookDialogForDropdown from '../../general-setting/dialog/receipt-book-dialog';
 
 import type {
   IFormikValue,
@@ -147,6 +153,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   };
   const handleSubmit = () => {};
 
+  const receiptBookDialog = useBoolean();
+  const feeHeadDialog = useBoolean();
+  const paymentMethodDialog = useBoolean();
   return (
     <>
       <form onSubmit={formik.handleSubmit}>
@@ -214,8 +223,19 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                 disabled={isFieldsDisabled}
                 error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
                 helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
+                addOtherItemText="Add Receipt Book"
+                addOtherItemOnClick={receiptBookDialog.onTrue}
               />
             </ShakingTextField>
+            {receiptBookDialog.value && (
+              <CustomDialog
+                title="Add Receipt Book"
+                open={receiptBookDialog.value}
+                handleClose={receiptBookDialog.onFalse}
+              >
+                <FinanceReceiptBookDialogForDropdown />
+              </CustomDialog>
+            )}
           </Grid>
           <Grid item xs={12} md={6}>
             <ShakingTextField
@@ -251,8 +271,19 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                 onChange={(e) => formik.setFieldValue('feeHead', e)}
                 error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
                 helperText={formik.touched.feeHead ? formik.errors.feeHead : undefined}
+                addOtherItemText="Add Fee Type"
+                addOtherItemOnClick={feeHeadDialog.onTrue}
               />
             </ShakingTextField>
+            {feeHeadDialog.value && (
+              <CustomDialog
+                title="Add Receipt Book"
+                open={feeHeadDialog.value}
+                handleClose={feeHeadDialog.onFalse}
+              >
+                <FeeHeadDialog />
+              </CustomDialog>
+            )}
           </Grid>
           <Grid item xs={12} md={6}>
             <ShakingTextField error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}>
@@ -350,9 +381,20 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                 value={formik.values.paymentMethod}
                 onChange={(e) => formik.setFieldValue('paymentMethod', e)}
                 error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+                addOtherItemText="Add Payment Method"
+                addOtherItemOnClick={paymentMethodDialog.onTrue}
                 // helperText={formik.touched.paymentMethod ? formik.errors.paymentMethod : undefined}
               />
             </ShakingTextField>
+            {paymentMethodDialog.value && (
+              <CustomDialog
+                title="Add Receipt Book"
+                open={paymentMethodDialog.value}
+                handleClose={paymentMethodDialog.onFalse}
+              >
+                <PaymentMethodDialog />
+              </CustomDialog>
+            )}
           </Grid>
           <Grid item xs={12} md={6}>
             <ShakingTextField
