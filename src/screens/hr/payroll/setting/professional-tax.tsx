@@ -158,7 +158,7 @@ const ProfessionalTax = () => {
             isFilter: false,
             sticky: true,
 
-            minWidth: '140px',
+            minWidth: '70px',
             render(value, row) {
               return (
                 <ThreeDotsActions

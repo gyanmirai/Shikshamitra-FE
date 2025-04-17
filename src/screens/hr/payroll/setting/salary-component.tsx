@@ -153,7 +153,6 @@ const SalaryComponent = () => {
               return formatCurrency(value);
             },
           },
-          // { id: 'dependent', label: 'Dependent' },
           {
             id: 'isVisibleInPaySlip',
             label: 'Visible In Pay Slip',
@@ -167,8 +166,7 @@ const SalaryComponent = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
-
-            minWidth: '140px',
+            minWidth: '60px',
             render(value, row) {
               return (
                 <ThreeDotsActions

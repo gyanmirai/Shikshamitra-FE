@@ -42,36 +42,36 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-interface ILeavePolicy {
-  id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  leaveType: string;
-  leaveDays: number;
-  carryForward: boolean;
-  accrualRate: number;
-  color: string;
-}
+import type { ILeavePolicy } from './type';
 
 const LeavePolicy = () => {
+  // Dialog state for managing the leave policy dialog
   const dialog = useBoolean(false);
+  // Confirmation dialog state for delete actions
   const confirm = useBoolean(false);
+  // State variable to hold the data of the leave policy being edited
   const [editData, setEditData] = useState<any>(null);
   console.log('🚀 ~ file: leave-policy.tsx:55 ~ LeavePolicy ~ editData:', editData);
   const dispatch = useDispatch();
+  // Accessing the isChanges state from the Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Fetching leave policy data using a custom query hook
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
 
+  // Mutation hook for deleting a leave policy
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
   });
 
+  /**
+   * Handles closing of the leave policy dialog.
+   * @param _e - Event object (optional).
+   * @param isSubmit - Flag indicating whether the dialog was closed after submitting changes (optional).
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
@@ -190,7 +190,7 @@ const LeavePolicy = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
-
+            minWidth: 60,
             render(value, row) {
               return (
                 <ThreeDotsActions

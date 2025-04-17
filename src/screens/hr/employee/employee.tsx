@@ -209,6 +209,7 @@ const HrEmployee = () => {
                   minWidth: '60px',
                   isSort: false,
                   isFilter: false,
+                  sticky: true,
                   label: '',
                   renderColumn() {
                     return (
@@ -243,10 +244,18 @@ const HrEmployee = () => {
                     );
                   },
                 },
-                { id: 'employeeCode', label: 'Employee Code', sticky: true },
+                {
+                  id: 'employeeCode',
+                  label: 'Employee Code',
+                  sticky: true,
+                  minWidth: 150,
+                  align: 'left',
+                },
                 {
                   id: 'employeeName',
                   label: 'Full Name',
+                  minWidth: 150,
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Box display="flex" alignItems="center" gap={1}>
@@ -261,17 +270,27 @@ const HrEmployee = () => {
                   },
                 },
 
-                { id: 'dob', label: 'DOB', minWidth: 100, filterType: 'date' },
+                { id: 'dob', label: 'DOB', minWidth: 150, filterType: 'date', align: 'left' },
                 {
                   id: 'genderValue',
                   label: 'Gender',
+                  minWidth: 150,
+                  align: 'left',
                 },
-                { id: 'doi', label: 'Date Of Joining', minWidth: 150, filterType: 'date' },
-                { id: 'email', label: 'Email' },
-                { id: 'mobileNo', label: 'Mobile No', minWidth: 150 },
+                {
+                  id: 'doi',
+                  label: 'Date Of Joining',
+                  minWidth: 150,
+                  filterType: 'date',
+                  align: 'left',
+                },
+                { id: 'email', label: 'Email', minWidth: 150, align: 'left' },
+                { id: 'mobileNo', label: 'Mobile No', minWidth: 150, align: 'left' },
                 {
                   id: 'roleValue',
                   label: 'Role',
+                  minWidth: 150,
+                  align: 'left',
                   render(value, row) {
                     return <Label variant="soft">{value}</Label>;
                   },
@@ -290,14 +309,13 @@ const HrEmployee = () => {
                     return <Label color={color}>{EmployeeStatusType[value]}</Label>;
                   },
                 },
-
                 {
                   id: 'actions',
                   label: 'Actions',
                   isSort: false,
                   sticky: true,
                   isFilter: false,
-
+                  minWidth: 70,
                   render(value, row) {
                     return (
                       <ThreeDotsActions

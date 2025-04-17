@@ -93,8 +93,7 @@ const StatutoryTemplate = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
-
-            minWidth: '140px',
+            minWidth: '90px',
 
             render(value, row) {
               return (

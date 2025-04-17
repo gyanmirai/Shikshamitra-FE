@@ -192,13 +192,11 @@ const LeaveHistory = (props: TabComponentType) => {
             label: 'Start Date',
             id: 'start',
             filterType: 'date',
-            minWidth: '100px',
           },
           {
             label: 'End Date',
             id: 'end',
             filterType: 'date',
-            minWidth: '100px',
           },
           {
             label: 'Half Day',
@@ -238,7 +236,7 @@ const LeaveHistory = (props: TabComponentType) => {
             isFilter: false,
             sticky: true,
             isSort: false,
-
+            minWidth: 50,
             render(value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />

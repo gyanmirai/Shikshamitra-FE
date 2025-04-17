@@ -35,18 +35,26 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const LateArrivalPolicy = () => {
+  // Dialog state for leave rule
   const leaveRuleDialog = useBoolean();
+  // Dialog state for assigning employees
   const assignEmployeeDialog = useBoolean();
+  // State to hold edit data
   const [editData, setEditData] = useState<any>(null);
+  // useDispatch hook for redux
   const dispatch = useDispatch();
+  // useSelector hook for redux to access isChanges state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // Callback function for actions in the table
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
+            // Open assign employee dialog
             assignEmployeeDialog.onTrue();
+            // Close the popover
             pop.onClose();
           }}
         >
@@ -59,13 +67,23 @@ const LateArrivalPolicy = () => {
     [assignEmployeeDialog]
   );
 
+  /**
+   * Handle close event for the dialog.
+   * @param _e - Event object.
+   * @param isSubmit - Flag indicating if the form was submitted.
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      // Reset isChanges state
       dispatch(setIsChanges(false));
+      // Close leave rule dialog
       leaveRuleDialog.onFalse();
+      // Reset edit data
       setEditData(null);
     } else if (!isChanges) {
+      // Close leave rule dialog
       leaveRuleDialog.onFalse();
+      // Reset edit data
       setEditData(null);
     }
   };
@@ -118,6 +136,7 @@ const LateArrivalPolicy = () => {
             isFilter: false,
             isSort: false,
             sticky: true,
+            minWidth: 50,
             render(value: any, row: any) {
               return (
                 <ThreeDotsActions

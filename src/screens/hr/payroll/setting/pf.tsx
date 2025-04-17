@@ -119,16 +119,15 @@ const PF = () => {
         columns={[
           { id: 'code', label: 'Code' },
           { id: 'name', label: 'Name' },
-          { id: 'employeePercentage', label: 'Employee Percentage' },
-          { id: 'employerPercentage', label: 'Employer Percentage' },
+          { id: 'employeePercentage', label: 'Employee Percentage', filterType: 'number' },
+          { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
           {
             id: 'action',
             label: 'Action',
             isSort: false,
             isFilter: false,
             sticky: true,
-
-            minWidth: '140px',
+            minWidth: '70px',
             render(value, row) {
               return (
                 <ThreeDotsActions

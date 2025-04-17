@@ -44,28 +44,42 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const AttendanceRule = () => {
+  // Initialize confirm dialog state
   const confirm = useBoolean();
+  // Initialize add/edit dialog state
   const dialog = useBoolean(false);
+  // Initialize edit data state
   const [editData, setEditData] = useState<any>(null);
+  // Initialize delete information state
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
+  // Initialize redux dispatch
   const dispatch = useDispatch();
+  // Get isChanges state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // Fetch employee custom attendance rules
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });
 
+  // Initialize delete rule mutation
   const [deleteRule] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEmployeeCustomAttendanceRuleMutation,
   });
 
+  // Handle close dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    // If submit button is clicked or isChanges is true and user confirms to leave page
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      // Set isChanges to false
       dispatch(setIsChanges(false));
+      // Close dialog
       dialog.onFalse();
+      // Reset edit data
       setEditData(null);
+      // If isChanges is false, close dialog and reset edit data
     } else if (!isChanges) {
       dialog.onFalse();
       setEditData(null);
@@ -115,8 +129,8 @@ const AttendanceRule = () => {
         isLoading={isLoading}
         tableId="attendance-rule"
         columns={[
-          { label: 'Name', id: 'name' },
-          { label: 'Type', id: 'typeValue' },
+          { label: 'Name', id: 'name', minWidth: '150px', align: 'left' },
+          { label: 'Type', id: 'typeValue', minWidth: '150px' },
           { label: 'Late Threshold', id: 'lateThreshold', minWidth: '150px' },
           { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue', minWidth: '180px' },
           { label: 'Half Day Threshold', id: 'halfDayThreshold', minWidth: '180px' },
@@ -126,7 +140,7 @@ const AttendanceRule = () => {
             id: 'enableNotification',
             minWidth: '180px',
             isFilter: false,
-
+            align: 'left',
             isSort: false,
           },
           {
@@ -135,6 +149,7 @@ const AttendanceRule = () => {
             isFilter: false,
             sticky: true,
             isSort: false,
+            minWidth: 60,
             render(value, row) {
               return (
                 <ThreeDotsActions
