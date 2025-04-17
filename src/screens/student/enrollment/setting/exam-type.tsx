@@ -1,6 +1,9 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -10,6 +13,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
@@ -17,6 +22,7 @@ import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IExamType } from './type';
 
@@ -28,6 +34,10 @@ const ExamType = () => {
 
   // State to store exam type data being edited
   const [editData, setEditData] = useState<null | IExamType>(null);
+  // Get the isChanges state from the Redux store
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get the dispatch function from the Redux store
+  const dispatch = useDispatch();
 
   //   const { data: inquiryPreference, isLoading } = useQueryAndMutation({
   //     type: 'query',
@@ -40,10 +50,15 @@ const ExamType = () => {
   //   });
 
   // Handler to close dialog and reset edit data
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      dialog.onFalse();
+    }
   };
+
   return (
     <Box>
       <ConfirmDialog
@@ -160,7 +175,14 @@ const ExamType = () => {
           },
         ]}
       />{' '}
-      <CustomDialog open={dialog.value} handleClose={handleClose} title="Exam Type">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={() => {
+          dialog.onFalse();
+          setEditData(null);
+        }}
+        title="Exam Type"
+      >
         <ExamTypeForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>
@@ -174,16 +196,16 @@ export const ExamTypeForm = ({
   handleClose,
 }: {
   editData: null | IExamType;
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
-  const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
+  const { initialValues, values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
     examType: string;
   }>({
     initialValues: {
       examType: editData?.examType || '',
     },
     validationSchema: Yup.object({
-      fieldName: Yup.string().required('Preference Name is required'),
+      examType: Yup.string().required('Preference Name is required'),
     }),
     onSubmit: async (formikValues) => {
       console.log(formikValues);
@@ -200,37 +222,41 @@ export const ExamTypeForm = ({
       //   await addDocument({
       //     preferenceName: formikValues.fieldName,
       //   });
-      handleClose?.();
+      handleClose?.(null, true);
     },
   });
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Name"
-            name="fieldName"
-            value={values.examType}
-            onChange={(e) => setFieldValue('fieldName', e.target.value)}
-            error={Boolean(errors.examType && touched.examType)}
-            helperText={(touched.examType && errors.examType) || ''}
-          />
-        </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          variant="outlined"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+      <form onSubmit={handleSubmit}>
+        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Name"
+              name="examType"
+              value={values.examType}
+              onChange={(e) => setFieldValue('examType', e.target.value)}
+              error={Boolean(errors.examType && touched.examType)}
+              helperText={(touched.examType && errors.examType) || ''}
+            />
+          </Stack>
+        </Scrollbar>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            variant="outlined"
+            onClick={() => {
+              handleClose?.(null, false);
+            }}
+          >
+            Cancel
+          </Button>
 
-        <SubmitButton />
-      </DialogActions>
-    </form>
+          <SubmitButton />
+        </DialogActions>
+      </form>
+    </BackPopUpChecked>
   );
 };

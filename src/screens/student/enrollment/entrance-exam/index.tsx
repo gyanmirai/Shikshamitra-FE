@@ -62,21 +62,32 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
+import { ExamTypeForm } from '../setting/exam-type';
 import { SlotsForm } from '../setting/entrance-exam-slots';
 
 const EntranceExamScreen = () => {
   // const [view, setView] = React.useState('calender');
+  // State for managing search parameters (currently unused)
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
+  // State for storing the data of the entrance exam being edited
   const [editData, setEditData] = useState(null);
+  // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
+  // State indicating whether there are unsaved changes in the form
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // useDispatch hook for dispatching Redux actions
   const dispatch = useDispatch();
+  // State for controlling the visibility of the result dialog
   const resultDialog = useBoolean();
+  // State for controlling the visibility of the move confirmation popup
   const confirmMovePopup = useBoolean();
+
+  // Query for fetching entrance exam data
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
   });
+  // Mutation for moving a student to admission
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
@@ -85,8 +96,10 @@ const EntranceExamScreen = () => {
       success: true,
     },
   });
+  // MUI theme object
   const theme = useTheme();
 
+  // Computed table data derived from entranceExamData
   const tableData = useMemo(
     () =>
       entranceExamData?.items?.map((item: any) => ({
@@ -113,6 +126,7 @@ const EntranceExamScreen = () => {
     [entranceExamData]
   );
 
+  // Computed calendar data derived from entranceExamData
   const calendarData = useMemo(
     () =>
       entranceExamData?.items.map((i: any) => {
@@ -156,6 +170,7 @@ const EntranceExamScreen = () => {
     [entranceExamData?.items, theme.palette]
   );
 
+  // Callback function for rendering actions in each row of the table
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -186,6 +201,7 @@ const EntranceExamScreen = () => {
     [confirmMovePopup, resultDialog]
   );
 
+  // Handler function for closing the result dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       console.log('Are u sure to leave this page ');
@@ -198,9 +214,12 @@ const EntranceExamScreen = () => {
     }
   };
 
+  // State for storing selected students
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  // State for controlling the send instant notification dialog
   const sendInstantNotificationDialogValue = useBoolean();
 
+  // Handler function for opening the send instant notification dialog
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -436,7 +455,10 @@ export const ExamForm = ({
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
 }) => {
+  // State for controlling the visibility of the dialog (currently unused)
   const dialog = useBoolean();
+
+  // Yup validation schema for the form
   const validationSchema = Yup.object({
     examDate: Yup.date().required('Exam date is required'),
     // selectedStudents: Yup.string().required('Students are required'),
@@ -453,16 +475,25 @@ export const ExamForm = ({
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  // State for controlling the visibility of the add exam type dialog (currently unused)
+  const addExamTypeDialog = useBoolean();
+
+  // Fetch entrance exam slots using a custom hook
   const { data: slots } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
   });
 
+  // Mutation hook for scheduling an exam
   const [scheduleExam, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEntranceExamMutation,
   });
 
+  // Memoized array of formatted slots for the dropdown
   const allSlots = useMemo(
     () =>
       slots?.items?.map((slot: any) => ({
@@ -509,6 +540,15 @@ export const ExamForm = ({
     formik.setFieldValue('slots', allSlots || []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSlots]);
+
+  const handleCloseExamType = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      addExamTypeDialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addExamTypeDialog.onFalse();
+    }
+  };
 
   return (
     <form onSubmit={formik.handleSubmit}>
@@ -581,6 +621,19 @@ export const ExamForm = ({
                       formik.setFieldValue('examType', value?.examType);
                     }}
                   />
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    textAlign="right"
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      addExamTypeDialog.onTrue();
+                    }}
+                  >
+                    Add Exam Type
+                  </Typography>
                 </Grid>
                 <Grid xs={4}>
                   <TextField
@@ -704,6 +757,20 @@ export const ExamForm = ({
       </DialogActions>
       <CustomDialog title="Slots" open={dialog.value} handleClose={dialog.onFalse}>
         <SlotsForm handleClose={dialog.onFalse} editData={null} />
+      </CustomDialog>
+      <CustomDialog
+        open={addExamTypeDialog.value}
+        handleClose={() => {
+          addExamTypeDialog.onFalse();
+        }}
+        title="Exam Type"
+      >
+        <ExamTypeForm
+          handleClose={() => {
+            handleCloseExamType(null, false);
+          }}
+          editData={null}
+        />
       </CustomDialog>
     </form>
   );

@@ -1,6 +1,9 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -21,6 +24,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import {
   useGetStudentDocumentTypeQuery,
@@ -37,6 +41,7 @@ import SubmitButton from 'src/components/submit-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IStudentDocument } from './type';
 
@@ -47,7 +52,10 @@ const StudentDocumentType = () => {
   const confirm = useBoolean();
   // State to store document being edited
   const [editData, setEditData] = useState<null | IStudentDocument>(null);
-
+  // Get the isChanges state from the Redux store
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get the dispatch function from the Redux store
+  const dispatch = useDispatch();
   // Fetch all student document types
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -61,10 +69,17 @@ const StudentDocumentType = () => {
   });
 
   // Reset form and close dialog
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dialog.onFalse();
+      setEditData(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setEditData(null);
+    }
   };
+
   return (
     <Box>
       <ConfirmDialog
@@ -164,7 +179,10 @@ const StudentDocumentType = () => {
       />{' '}
       <CustomDialog
         open={dialog.value}
-        handleClose={handleClose}
+        handleClose={() => {
+          dialog.onFalse();
+          setEditData(null);
+        }}
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
             <Typography variant="h5">Document</Typography>
@@ -186,12 +204,12 @@ const StudentDocumentType = () => {
 
 export default StudentDocumentType;
 
-const DocumentForm = ({
+export const DocumentForm = ({
   editData,
   handleClose,
 }: {
   editData: null | IStudentDocument;
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -202,7 +220,7 @@ const DocumentForm = ({
     currentQueryAndMutation: useUpdateStudentDocumentTypeMutation,
   });
 
-  const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
+  const { initialValues, values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
     title: string;
     documentType: DocumentType[];
     isRequired: boolean;
@@ -227,7 +245,7 @@ const DocumentForm = ({
             isRequired: formikValues.isRequired,
           },
         });
-        handleClose?.();
+        handleClose?.(null, true);
         return;
       }
       await addDocument({
@@ -235,58 +253,62 @@ const DocumentForm = ({
         documentTypes: formikValues.documentType,
         isRequired: formikValues.isRequired,
       });
-      handleClose?.();
+      handleClose?.(null, true);
     },
   });
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Document Name"
-            name="document.title"
-            value={values.title}
-            onChange={(e) => setFieldValue('title', e.target.value)}
-            error={Boolean(errors.title && touched.title)}
-            helperText={(touched.title && errors.title) || ''}
-          />
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+      <form onSubmit={handleSubmit}>
+        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Document Name"
+              name="document.title"
+              value={values.title}
+              onChange={(e) => setFieldValue('title', e.target.value)}
+              error={Boolean(errors.title && touched.title)}
+              helperText={(touched.title && errors.title) || ''}
+            />
 
-          <CustomSelect
-            options={DocumentTypeArray}
-            value={values.documentType}
-            multiple
-            label="Select document Type"
-            onChange={(value) => setFieldValue('documentType', value)}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            error={Boolean(errors.documentType && touched.documentType)}
-            helperText={(touched.documentType && errors.documentType) as string}
-          />
+            <CustomSelect
+              options={DocumentTypeArray}
+              value={values.documentType}
+              multiple
+              label="Select document Type"
+              onChange={(value) => setFieldValue('documentType', value)}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              error={Boolean(errors.documentType && touched.documentType)}
+              helperText={(touched.documentType && errors.documentType) as string}
+            />
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={values.isRequired}
-                onChange={(e) => setFieldValue('isRequired', e.target.checked)}
-              />
-            }
-            label="Is Required"
-          />
-        </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          variant="outlined"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={values.isRequired}
+                  onChange={(e) => setFieldValue('isRequired', e.target.checked)}
+                />
+              }
+              label="Is Required"
+            />
+          </Stack>
+        </Scrollbar>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            variant="outlined"
+            onClick={() => {
+              handleClose?.(null, false);
+            }}
+          >
+            Cancel
+          </Button>
 
-        <SubmitButton loading={isUpdateLoading || isLoading} />
-      </DialogActions>
-    </form>
+          <SubmitButton loading={isUpdateLoading || isLoading} />
+        </DialogActions>
+      </form>
+    </BackPopUpChecked>
   );
 };
