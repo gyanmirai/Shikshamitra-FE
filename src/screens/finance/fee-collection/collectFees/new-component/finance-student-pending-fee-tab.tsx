@@ -36,7 +36,7 @@ const FinanceStudentPendingFeeTab = () => (
         {
           id: 'amountDue',
           label: 'Amount Due',
-          filterType: 'number',
+          filterType: 'formattedNumber',
           render(value, row) {
             return <Typography fontSize="12px">{formatNumber(row.amountDue, 'INR')}</Typography>;
           },

@@ -94,7 +94,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'grossFee',
             label: 'Gross Fee',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row) {
               return (
                 <Typography
@@ -111,7 +111,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'discount',
             label: 'General Discount',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row) {
               return (
                 <Typography
@@ -128,7 +128,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'additionalDiscount',
             label: 'Additional Discount',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row) {
               return (
                 <Typography
@@ -146,7 +146,7 @@ const FinanceStudentFeeBreakdownTab = () => {
           {
             id: 'amount',
             label: 'Payable Fee',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row) {
               return (
                 <Typography

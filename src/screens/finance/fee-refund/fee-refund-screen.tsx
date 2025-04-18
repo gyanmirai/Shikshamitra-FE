@@ -171,7 +171,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'askForRefund',
                   label: 'Ask For Refund',
-                  filterType: 'number',
+                  filterType: 'formattedNumber',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px" textAlign="center">
@@ -447,7 +447,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   {
                     id: 'askForRefund',
                     label: 'Ask For Refund',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px" textAlign="left">

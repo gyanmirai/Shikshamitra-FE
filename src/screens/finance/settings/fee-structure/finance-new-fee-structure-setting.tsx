@@ -124,7 +124,7 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'grossFee',
                 label: 'Gross Fees',
-                filterType: 'number',
+                filterType: 'formattedNumber',
                 render(value, row) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -134,7 +134,7 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'totaldiscountAmount',
                 label: 'General Discount',
-                filterType: 'number',
+                filterType: 'formattedNumber',
                 render(value, row) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -144,7 +144,7 @@ const FinanceNewFeeStructureSetting = () => {
               {
                 id: 'totalPayableFee',
                 label: 'Payable Fees',
-                filterType: 'number',
+                filterType: 'formattedNumber',
                 render(value, row) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -167,7 +167,7 @@ const FinanceNewFeeStructureSetting = () => {
                 isFilter: false,
                 isSort: false,
                 sticky: true,
-                align: 'center',
+                // align: 'center',
                 render(value, row: any) {
                   return (
                     <ThreeDotsActions

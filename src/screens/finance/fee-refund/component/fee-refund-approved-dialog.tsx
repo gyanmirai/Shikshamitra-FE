@@ -159,11 +159,11 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
           columns={[
             // { id: 'grNumber', label: 'Gr Number' },
             // { id: 'studentName', label: 'Student Name' },
-            { id: 'feeHead', label: 'Fee Head', isSort: false },
+            { id: 'feeHead', label: 'Fee Head', isSort: false, isFilter: false },
             {
               id: 'paidAmount',
               label: 'Paid Amount',
-              filterType: 'number',
+              isFilter: false,
               isSort: false,
               render(value, row) {
                 if (row.paidAmount === 'Total') {
@@ -178,11 +178,11 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
                 );
               },
             },
-            { id: 'askForRefund', label: 'Ask For Refund', filterType: 'number', isSort: false },
+            { id: 'askForRefund', label: 'Ask For Refund', isFilter: false, isSort: false },
             {
               id: 'refundAmount',
               label: 'Discount Amount',
-              filterType: 'number',
+
               isFilter: false,
               isSort: false,
               render: (value: any, row: any) =>

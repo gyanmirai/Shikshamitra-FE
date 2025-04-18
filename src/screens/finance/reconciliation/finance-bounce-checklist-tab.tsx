@@ -118,7 +118,7 @@ const FinanceBounceScreen = () => {
           {
             id: 'chargesAmount',
             label: 'Charges',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
@@ -132,7 +132,7 @@ const FinanceBounceScreen = () => {
           {
             id: 'amount',
             label: 'Amount',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },

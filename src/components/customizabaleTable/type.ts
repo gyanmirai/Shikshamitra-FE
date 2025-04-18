@@ -11,7 +11,7 @@ export interface IColumnFilterAnchor {
 export interface IColumn {
   id: string;
   label: string;
-  filterType?: 'string' | 'number' | 'date' | 'enum';
+  filterType?: 'string' | 'number' | 'date' | 'enum' | 'formattedNumber';
   isFilter?: boolean;
   minWidth?: number | string;
   align?: 'right' | 'left' | 'center';
