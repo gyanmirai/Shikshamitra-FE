@@ -127,6 +127,10 @@ const RoomDetails = () => {
       </Box>
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
+        searchFieldProps={{
+          placeholder: 'Search by Room Number, Building Name, Floor, Capacity',
+          label: 'Search by Room Number, Building Name, Floor, Capacity',
+        }}
         noDataText={
           <>
             No Rooms Data Found{' '}
@@ -178,7 +182,6 @@ const RoomDetails = () => {
         ]}
         data={roomData}
       />
-
       <CustomDialog
         title={isEdit ? 'Update Room' : 'Create Room'}
         open={dialog.value}

@@ -27,6 +27,12 @@ const SubjectTable = ({
 }: ISubjectTableProps) => (
   <CustomizableTable
     tableId="subject-table"
+    searchFieldProps={{
+      placeholder:
+        'Search by Subject Code, Subject Name, Primary Teacher, Secondary Teacher, Prerequisites, Learning Goal',
+      label:
+        'Search by Subject Code, Subject Name, Primary Teacher, Secondary Teacher, Prerequisites, Learning Goal',
+    }}
     noDataText={
       <>
         No Subject Found{' '}
